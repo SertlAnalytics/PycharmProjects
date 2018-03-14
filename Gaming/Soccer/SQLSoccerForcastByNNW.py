@@ -69,11 +69,14 @@ class GamePredictor:
 
     def load_match_data_frames(self):
         self.df_match_previous = MatchDataFrame(self.db.get_result_set_for_league(self.league_id_previous))
-        self.df_match_actual = MatchDataFrame(self.get_result_set_for_league(self.league_id_actual))
+        self.df_match_actual = MatchDataFrame(self.db.get_result_set_for_league(self.league_id_actual))
 
-    def load_positions_for_df_match_actual(self):
-        pass
-        # print(self.df_match_actual.np_team_position)
+    def calculate_positions_for_df_match_actual(self):
+        self.df_match_actual.fill_np_team_position_from_data_frame()
+        print(self.df_match_actual.np_team_position)
+
+    def calculate_actual_match_table(self):
+        self.df_match_actual.calculate_match_table()
 
     def init_actual_team_list(self):
         self.actual_team_list = TeamList(self.df_match_actual.get_team_list())
@@ -162,13 +165,8 @@ class MatchDataFrame:
         self.df = pd.DataFrame(db_result_set)
         self.df.columns = db_result_set[0].keys()
         self.team_list = np.sort(pd.unique(self.df["HomeTeamId"]))
-        print('self.team_list = {}'.format(self.team_list))
         self.group_id_list = np.sort(pd.unique(self.df["GroupId"]))
-        self.np_table = np.zeros((self.team_list.size, 11), dtype=np.int32)
-        self.np_team_position = np.zeros((self.team_list.size, self.group_id_list.size), dtype=np.int32)
-        self.fill_np_team_position_from_data_frame()
-        self.year_table = []
-        self.init_year_table()
+        self.match_table = []
 
     def get_team_list(self):
         return self.team_list
@@ -176,21 +174,24 @@ class MatchDataFrame:
     def get_group_id_list(self):
         return self.group_id_list
 
-    def init_year_table(self):  # 2 dim array for all matches with lists
+    def calculate_match_table(self):  # 2 dim array for all matches with lists
         default_list = [0, 0, 0, 0, 0, 0]  # (GoalHome, GoalForeign, 10 + GH - GF, PointsHome, PointsForeign, groupId)
-        self.year_table = [[default_list for t1 in self.team_list] for t2 in self.team_list]
-        for index_1, team_id1 in enumerate(self.team_list):
-            for index_2, team_id2 in enumerate(self.team_list):
-                for id, row in self.df.iterrows():
-                    if row["HomeTeamId"] == team_id1 and row["ForeignTeamId"] == team_id2:
-                        value_list = [0, 0, 0, 0, 0, row["GroupId"]]
-                        if not math.isnan(row["PointsTeam1"]) and not math.isnan(row["PointsTeam2"]):
-                            value_list[0] = row["PointsTeam1"]
-                            value_list[1] = row["PointsTeam2"]
-                            [value_list[2], value_list[3]] = self.get_points_for_teams(value_list[0], value_list[1])
-                            value_list[4] = 10 + value_list[0] - value_list[1]
-                        self.year_table[index_1][index_2] = value_list
+        self.match_table = [[default_list for t1 in self.team_list] for t2 in self.team_list]
 
+        for index_1, team_id_1 in enumerate(self.team_list):
+            for index_2, team_id_2 in enumerate(self.team_list):
+                df_sel = self.df[np.logical_and(self.df["HomeTeamId"] == team_id_1, self.df["ForeignTeamId"] == team_id_2)]
+                for id, row in df_sel.iterrows():
+                    value_list = [0, 0, 0, 0, 0, row["GroupId"]]
+                    if not math.isnan(row["PointsTeam1"]) and not math.isnan(row["PointsTeam2"]):
+                        value_list[0] = row["PointsTeam1"]
+                        value_list[1] = row["PointsTeam2"]
+                        [value_list[2], value_list[3]] = SoccerHelper.get_points_for_teams(value_list[0], value_list[1])
+                        value_list[4] = 10 + value_list[0] - value_list[1]
+                    self.match_table[index_1][index_2] = value_list
+
+
+class SoccerHelper:
     @staticmethod
     def get_points_for_teams(goal_1: int, goal_2: int):
         if goal_1 > goal_2:
@@ -199,67 +200,94 @@ class MatchDataFrame:
             return 0, 3
         return 1, 1
 
-    def fill_np_team_position_from_data_frame(self):
-        col_dic = {"TeamId": 0, "T_G": 1, "TF_G": 2, "T_DIFF": 3, "P_G": 4, "T_H": 5, "TF_H": 6, "P_H": 7, "T_F": 8,
-                   "TF_F": 9, "P_F": 10}
+
+class LeagueTable:
+    def __init__(self, mdf: MatchDataFrame):
+        self.mdf = mdf
+        self.df = mdf.df
+        self.TABLE_COL_DIC = {"TeamId": 0, "Goal_Total": 1, "Foreign_Goal_Total": 2, "Goal_Total_Diff": 3, "Points": 4
+            , "Goal_At_Home": 5, "Foreign_Goal_At_Home": 6, "Points_At_Home": 7
+            , "Goal_Not_At_Home": 8, "Foreign_Goal_Not_At_Home": 9, "Points_Not_At_Home": 10}
+        self.team_list = mdf.team_list
+        self.group_id_list = mdf.group_id_list
+        self.np_table = np.empty((self.team_list.size, len(self.TABLE_COL_DIC)))
+        self.np_team_position = np.empty((self.team_list.size, self.group_id_list.size))
+        self.__initialize_np_arrays__()
+
+    def __initialize_np_arrays__(self):
+        self.np_table = np.zeros((self.team_list.size, len(self.TABLE_COL_DIC)), dtype=np.int32)
+        self.np_team_position = np.zeros((self.team_list.size, self.group_id_list.size), dtype=np.int32)
+
+    def calculate_np_team_position(self):
+        self.__initialize_np_arrays__()
 
         for team_index, team_id in enumerate(self.team_list):
-            self.np_table[team_index, col_dic["TeamId"]] = team_id
+            print('Init np_table: team_index={}, team={}'.format(team_index, team_id))
+            self.np_table[team_index, self.TABLE_COL_DIC["TeamId"]] = team_id
 
         for group_id_index, group_id in enumerate(self.group_id_list):
-            for id, row in self.df.iterrows():
-                if row["GroupId"] == group_id:
-                    for team_index, team_id in enumerate(self.team_list):
-                        if (row["HomeTeamId"] == team_id or row["ForeignTeamId"] == team_id)\
-                                and not math.isnan(row["PointsTeam1"]) and not math.isnan(row["PointsTeam2"]):
-                            goals_team1 = row["PointsTeam1"]
-                            goals_team2 = row["PointsTeam2"]
-
-                            self.add_to_np_table(col_dic, goals_team1, goals_team2, row, team_id, team_index)
+            df_sel_group = self.df[self.df["GroupId"] == group_id]
+            for team_id in self.team_list:
+                df_sel_group_team = df_sel_group[np.logical_or(df_sel_group["HomeTeamId"] == team_id
+                                                               , df_sel_group["ForeignTeamId"] == team_id)]
+                for id, row in df_sel_group_team.iterrows():
+                    if not math.isnan(row["PointsTeam1"]) and not math.isnan(row["PointsTeam2"]):
+                        self.add_to_np_table(row, team_id)
 
             for team_index, team_id in enumerate(self.team_list):
-                self.np_table[team_index, col_dic["T_DIFF"]] = self.np_table[team_index, col_dic["T_G"]] - self.np_table[
-                    team_index, col_dic["TF_G"]]
+                self.np_table[team_index, self.TABLE_COL_DIC["Goal_Total_Diff"]] = \
+                    self.np_table[team_index, self.TABLE_COL_DIC["Goal_Total"]] - self.np_table[
+                    team_index, self.TABLE_COL_DIC["Foreign_Goal_Total"]]
 
             self.np_table = self.np_table[np.lexsort((self.np_table[:, 3], self.np_table[:, 4]))]
             self.np_table = self.np_table[::-1]  # reverse
-
             self.add_actual_positions(group_id_index)
 
     def add_actual_positions(self, group_id_index: int):
         np_table_sorted_team_col = self.np_table[:, 0]
         for index_team, team_id in enumerate(self.team_list):
             if team_id in np_table_sorted_team_col:
-                position = np.where(np_table_sorted_team_col == team_id)[0][0] + 1
+                position = self.get_team_index_in_sorted_np_table(team_id) + 1
             else:
                 position = np_table_sorted_team_col.size
             self.np_team_position[index_team, group_id_index] = position
 
-    def add_to_np_table(self, col_dic, goals_team1, goals_team2, row, team_id, team_index):
-        [points_team1, points_team2] = self.get_points_for_teams(goals_team1, goals_team2)
+    def get_team_index_in_sorted_np_table(self, team_id):
+        np_table_sorted_team_col = self.np_table[:, 0]
+        return np.where(np_table_sorted_team_col == team_id)[0][0]
 
+    def add_to_np_table(self, row, team_id):
+        goals_team1 = row["PointsTeam1"]
+        goals_team2 = row["PointsTeam2"]
+        [points_team1, points_team2] = SoccerHelper.get_points_for_teams(goals_team1, goals_team2)
+        team_index = self.get_team_index_in_sorted_np_table(team_id)
         if row["HomeTeamId"] == team_id:
-            self.np_table[team_index, col_dic["T_G"]] += goals_team1
-            self.np_table[team_index, col_dic["T_H"]] += goals_team1
+            self.np_table[team_index, self.TABLE_COL_DIC["Goal_Total"]] += goals_team1
+            self.np_table[team_index, self.TABLE_COL_DIC["Goal_At_Home"]] += goals_team1
 
-            self.np_table[team_index, col_dic["P_G"]] += points_team1
-            self.np_table[team_index, col_dic["P_H"]] += points_team1
+            self.np_table[team_index, self.TABLE_COL_DIC["Points"]] += points_team1
+            self.np_table[team_index, self.TABLE_COL_DIC["Points_At_Home"]] += points_team1
 
-            self.np_table[team_index, col_dic["TF_G"]] += goals_team2
-            self.np_table[team_index, col_dic["TF_H"]] += goals_team2
+            self.np_table[team_index, self.TABLE_COL_DIC["Foreign_Goal_Total"]] += goals_team2
+            self.np_table[team_index, self.TABLE_COL_DIC["Foreign_Goal_At_Home"]] += goals_team2
         if row["ForeignTeamId"] == team_id:
-            self.np_table[team_index, col_dic["T_G"]] += goals_team2
-            self.np_table[team_index, col_dic["T_F"]] += goals_team2
+            self.np_table[team_index, self.TABLE_COL_DIC["Goal_Total"]] += goals_team2
+            self.np_table[team_index, self.TABLE_COL_DIC["Goal_Not_At_Home"]] += goals_team2
 
-            self.np_table[team_index, col_dic["P_G"]] += points_team2
-            self.np_table[team_index, col_dic["P_F"]] += points_team2
+            self.np_table[team_index, self.TABLE_COL_DIC["Points"]] += points_team2
+            self.np_table[team_index, self.TABLE_COL_DIC["Points_Not_At_Home"]] += points_team2
 
-            self.np_table[team_index, col_dic["TF_G"]] += goals_team1
-            self.np_table[team_index, col_dic["TF_F"]] += goals_team1
+            self.np_table[team_index, self.TABLE_COL_DIC["Foreign_Goal_Total"]] += goals_team1
+            self.np_table[team_index, self.TABLE_COL_DIC["Foreign_Goal_Not_At_Home"]] += goals_team1
 
 
-# game_predictor = GamePredictor(3005, 4153)  # 3005|1. Fußball-Bundesliga 2016/2017 --- 4153 2017/2018
-# game_predictor.load_match_data_frames()
+game_predictor = GamePredictor(3005, 4153)  # 3005|1. Fußball-Bundesliga 2016/2017 --- 4153 2017/2018
+game_predictor.load_match_data_frames()
+# game_predictor.calculate_actual_match_table()
+league_table = LeagueTable(game_predictor.df_match_actual)
+league_table.calculate_np_team_position()
+print(league_table.np_table)
+print(league_table.np_team_position)
 
 # print('previous table: {}'.format(soccer_db.np_table_previous))
 # print('actual table: {}'.format(soccer_db.np_table_actual))
