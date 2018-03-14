@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
 import math
+import matplotlib.pyplot as plt
 
 
 class SoccerDatabase:
@@ -141,6 +142,11 @@ class DBBasedList:
     def get_column_value_for_id(self, id: int, column: str):
         pass  # will be overwritten by deferred classes
 
+    def get_column_values_for_id_list(self, id_list, column: str):
+        return_list = []
+        for ids in id_list:
+            return_list.append(self.get_column_value_for_id(ids, column))
+        return return_list
 
 class GroupList(DBBasedList):
     def get_result_set_from_db(self):
@@ -222,7 +228,6 @@ class LeagueTable:
         self.__initialize_np_arrays__()
 
         for team_index, team_id in enumerate(self.team_list):
-            print('Init np_table: team_index={}, team={}'.format(team_index, team_id))
             self.np_table[team_index, self.TABLE_COL_DIC["TeamId"]] = team_id
 
         for group_id_index, group_id in enumerate(self.group_id_list):
@@ -280,14 +285,32 @@ class LeagueTable:
             self.np_table[team_index, self.TABLE_COL_DIC["Foreign_Goal_Total"]] += goals_team1
             self.np_table[team_index, self.TABLE_COL_DIC["Foreign_Goal_Not_At_Home"]] += goals_team1
 
+    def plot_team_position(self):
+        print(self.group_id_list)
+        team = TeamList(self.team_list)
+        group = GroupList(self.group_id_list)
+        group_order_id = group.get_column_values_for_id_list(self.group_id_list, 'GroupOrderId')
+        position_list = [k+1 for k in range(len(self.team_list))]
+        for team_index, team_id in enumerate(self.team_list):
+            team_name = team.get_column_value_for_id(team_id, 'TeamName')
+            position_team = self.np_team_position[team_index]
+            plt.plot(group_order_id, position_team, label=team_name)
+            plt.title('Team positions for actual year')
+            plt.xlabel('Spieltag')
+            plt.ylabel('Position')
+            plt.xticks(group_order_id, rotation=0)
+            plt.yticks(position_list)
+            plt.tight_layout()
+            print("position_team for {} {}: {}".format(team_index, team_id, position_team))
+        plt.legend()
+        plt.show()
 
 game_predictor = GamePredictor(3005, 4153)  # 3005|1. Fußball-Bundesliga 2016/2017 --- 4153 2017/2018
 game_predictor.load_match_data_frames()
 # game_predictor.calculate_actual_match_table()
 league_table = LeagueTable(game_predictor.df_match_actual)
 league_table.calculate_np_team_position()
-print(league_table.np_table)
-print(league_table.np_team_position)
+league_table.plot_team_position()
 
 # print('previous table: {}'.format(soccer_db.np_table_previous))
 # print('actual table: {}'.format(soccer_db.np_table_actual))
