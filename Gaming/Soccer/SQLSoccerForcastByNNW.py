@@ -53,74 +53,6 @@ class SQLStatement:
         return stmt
 
 
-class GamePredictor:
-    def __init__(self, league_id_previous: int, league_id_actual: int):
-        self.db = SoccerDatabase()
-        self.league_id_previous = league_id_previous
-        self.league_id_actual = league_id_actual
-        self.df_match_previous = None
-        self.df_match_actual = None
-        self.actual_team_list = None
-        self.actual_group_id_list = None
-        self.test_data_list = []
-
-        # print(self.df_match_actual.year_table)
-        # self.get_test_data()
-        # print(self.test_data_list)
-
-    def load_match_data_frames(self):
-        self.df_match_previous = MatchDataFrame(self.db.get_result_set_for_league(self.league_id_previous))
-        self.df_match_actual = MatchDataFrame(self.db.get_result_set_for_league(self.league_id_actual))
-
-    def calculate_positions_for_df_match_actual(self):
-        self.df_match_actual.fill_np_team_position_from_data_frame()
-        print(self.df_match_actual.np_team_position)
-
-    def calculate_actual_match_table(self):
-        self.df_match_actual.calculate_match_table()
-
-    def init_actual_team_list(self):
-        self.actual_team_list = TeamList(self.df_match_actual.get_team_list())
-        print(self.actual_team_list.sorted_id_list)
-
-    def init_actual_group_list(self):
-        self.actual_group_id_list = GroupList(self.df_match_actual.get_group_id_list())
-
-    def get_test_data(self):
-        year_table = self.df_match_actual.year_table
-
-        for index_1, team_id1 in enumerate(self.actual_team_list):
-            for index_2, team_id2 in enumerate(self.actual_team_list):
-                value_list = year_table[index_1][index_2]
-                group_id = value_list[-1]
-                result = value_list[-2]
-
-                for group_ids in self.actual_group_id_list:
-                    if group_ids == group_id:
-                        continue
-                    test_data_list = [0, 0, 0, 0]  # positions last year / current year
-
-                    for index_f, team_id_f in enumerate(self.actual_team_list):
-                        test_data_list.append(0)  # default
-                        if team_id1 != team_id_f:
-                            value_list = year_table[index_1][index_f]
-                            if value_list[-1] == group_ids:
-                                test_data_list[-1] = value_list[-2]
-
-                    for index_f, team_id_f in enumerate(self.actual_team_list):
-                        test_data_list.append(0)  # default
-                        if team_id2 != team_id_f:
-                            value_list = year_table[index_f][index_2]
-                            if value_list[-1] == group_ids:
-                                test_data_list[-1] = value_list[-2]
-                    test_data_list.append(result)
-                    test_data_list.append(team_id1)
-                    test_data_list.append(team_id2)
-                    test_data_list.append(group_id)
-
-                    self.test_data_list.append(test_data_list)
-
-
 class DBBasedList:
     def __init__(self, sorted_id_list):
         self.db = SoccerDatabase()
@@ -148,6 +80,7 @@ class DBBasedList:
             return_list.append(self.get_column_value_for_id(ids, column))
         return return_list
 
+
 class GroupList(DBBasedList):
     def get_result_set_from_db(self):
         return self.db.get_result_set_for_table('GameGroup')
@@ -172,7 +105,22 @@ class MatchDataFrame:
         self.df.columns = db_result_set[0].keys()
         self.team_list = np.sort(pd.unique(self.df["HomeTeamId"]))
         self.group_id_list = np.sort(pd.unique(self.df["GroupId"]))
+        self.group_id_list_played = self.__get_played_played_group_id__()
+        print('group_id_list_played = {}'.format(self.group_id_list_played))
         self.match_table = []
+
+    def __get_played_played_group_id__(self):
+        return_list = []
+        for group_id in self.group_id_list:
+            df_sel = self.df[self.df["GroupId"] == group_id]
+            counter = 0
+            for id, row in df_sel.iterrows():
+                if math.isnan(row["PointsTeam1"]) or math.isnan(row["PointsTeam2"]):
+                    counter += 1
+                    if counter > 2:  # eventually there are some outstanding games - skip them in this check
+                        return return_list
+            return_list.append(group_id)
+        return return_list
 
     def get_team_list(self):
         return self.team_list
@@ -223,6 +171,13 @@ class LeagueTable:
     def __initialize_np_arrays__(self):
         self.np_table = np.zeros((self.team_list.size, len(self.TABLE_COL_DIC)), dtype=np.int32)
         self.np_team_position = np.zeros((self.team_list.size, self.group_id_list.size), dtype=np.int32)
+
+    def get_position_for_team_before_group_id(self, group_id: int, team_id: int):
+        team_index = self.team_list.index(team_id)
+        group_index = self.group_id_list.index(group_id) - 1
+        if group_index < 0:
+            group_index = 0
+        return self.np_team_position[team_index, group_index]
 
     def calculate_np_team_position(self):
         self.__initialize_np_arrays__()
@@ -305,12 +260,103 @@ class LeagueTable:
         plt.legend()
         plt.show()
 
+
+class GamePredictor:
+    def __init__(self, league_id_previous: int, league_id_actual: int):
+        self.db = SoccerDatabase()
+        self.league_id_previous = league_id_previous
+        self.league_id_actual = league_id_actual
+        self.df_match_previous = None
+        self.df_match_actual = None
+        self.actual_team_list = None
+        self.actual_group_id_list = None
+        self.training_set = []
+        self.validation_set = []
+        self.test_set = []
+
+        # print(self.df_match_actual.year_table)
+        # self.get_test_data()
+        # print(self.test_data_list)
+
+    def load_match_data_frames(self):
+        self.df_match_previous = MatchDataFrame(self.db.get_result_set_for_league(self.league_id_previous))
+        self.df_match_actual = MatchDataFrame(self.db.get_result_set_for_league(self.league_id_actual))
+
+    def calculate_positions_for_df_match_actual(self):
+        self.df_match_actual.fill_np_team_position_from_data_frame()
+        print(self.df_match_actual.np_team_position)
+
+    def calculate_actual_match_table(self):
+        self.df_match_actual.calculate_match_table()
+
+    def init_actual_team_list(self):
+        self.actual_team_list = TeamList(self.df_match_actual.get_team_list())
+        print(self.actual_team_list.sorted_id_list)
+
+    def init_actual_group_list(self):
+        self.actual_group_id_list = GroupList(self.df_match_actual.get_group_id_list())
+
+    def calculate_training_set(self, league_table_previous: LeagueTable, league_table_actual: LeagueTable):
+        for group_id in self.df_match_actual.group_id_list_played:
+            match_teams_list_for_group_id = self.get_match_teams_list_for_group_id(group_id)
+            for elements in match_teams_list_for_group_id:
+                match_id = elements[-4]
+                team_1 = elements[-3]
+                team_2 = elements[-2]
+                goal_difference = elements[-1]
+
+                position_team_1_last_year = 0
+                position_team_1_before_group_id = league_table_actual.\
+                    get_position_for_team_before_group_id(group_id, team_1)
+
+                position_team_2_last_year = 0
+                position_team_2_before_group_id = league_table_actual. \
+                    get_position_for_team_before_group_id(group_id, team_2)
+
+                data_position = [position_team_1_last_year, position_team_1_before_group_id,
+                                 position_team_2_last_year, position_team_2_before_group_id]
+                data_home_team = self.get_results_for_team_in_earlier_group_id(group_id, team_1, True)
+                data_foreign_team = self.get_results_for_team_in_earlier_group_id(group_id, team_2, False)
+
+                test_data = data_position + data_home_team + data_foreign_team
+                test_data.append(goal_difference)
+                print('calculate_training_set, group_id={}, match_id={}, team1={}, team2={}, test_data={}'
+                      .format(group_id, match_id, team_1, team_2, test_data))
+                self.training_set.append(test_data)
+
+    def get_match_teams_list_for_group_id(self, group_id: int):
+        return_list = []
+        df_sel = self.df_match_actual.df[self.df_match_actual.df["GroupId"] == group_id]
+        for id, row in df_sel.iterrows():
+            list_element = [group_id, row['MatchId'], row['HomeTeamId'], row['ForeignTeamId'], row['GoalDifference']]
+            return_list.append(list_element)
+        return return_list
+
+    def get_results_for_team_in_earlier_group_id(self, group_id: int, team_id: int, is_playing_home: bool):
+        return_list = []
+        if is_playing_home:
+            df_sel = self.df_match_actual.df[np.logical_and(self.df_match_actual.df["GroupId"] < group_id,
+                                                            self.df_match_actual.df["HomeTeamId"] == team_id)]
+        else:
+            df_sel = self.df_match_actual.df[np.logical_and(self.df_match_actual.df["GroupId"] < group_id,
+                                                            self.df_match_actual.df["ForeignTeamId"] == team_id)]
+
+        for team_id in self.df_match_actual.team_list:
+            return_list.append(0)
+            for id, row in df_sel.iterrows():
+                if is_playing_home and row['ForeignTeamId'] == team_id:
+                    return_list[-1] = row['GoalDifference']
+                elif not is_playing_home and row['HomeTeamId'] == team_id:
+                    return_list[-1] = row['GoalDifference']
+        return return_list
+
+
 game_predictor = GamePredictor(3005, 4153)  # 3005|1. Fußball-Bundesliga 2016/2017 --- 4153 2017/2018
 game_predictor.load_match_data_frames()
 # game_predictor.calculate_actual_match_table()
-league_table = LeagueTable(game_predictor.df_match_actual)
-league_table.calculate_np_team_position()
-league_table.plot_team_position()
+previous_table = LeagueTable(game_predictor.df_match_previous)
+actual_table = LeagueTable(game_predictor.df_match_actual)
+game_predictor.calculate_training_set(previous_table, actual_table )
 
 # print('previous table: {}'.format(soccer_db.np_table_previous))
 # print('actual table: {}'.format(soccer_db.np_table_actual))
