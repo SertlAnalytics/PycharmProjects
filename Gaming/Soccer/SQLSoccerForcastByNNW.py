@@ -1,20 +1,26 @@
+"""
+Description: This module generates test data from any league for predictions with different machine learning
+algorithms. We use neuron networks and linear and logistic regression.
+Author: Josef Sertl
+Copyright: SERTL Analytics, https://sertl-analytics.com
+Date: 2018-03-11
+"""
 import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
 import math
 import matplotlib.pyplot as plt
+from keras.layers import Dense
+from keras.models import Sequential
+from keras.utils import to_categorical
 
 
-class SoccerDatabase:
+class BaseDB:
     def __init__(self):
-        self.engine = create_engine('sqlite:///MySoccer.sqlite')
+        self.engine = self.__get_engine__()
 
-    def get_result_set_for_league(self, league_id: int):
-        connection = self.engine.connect()
-        stmt = SQLStatement.get_select_statement_for_league(league_id)
-        results = connection.execute(stmt).fetchall()
-        connection.close()
-        return results
+    def __get_engine__(self):
+        pass
 
     def get_result_set_for_table(self, table: str):
         connection = self.engine.connect()
@@ -24,11 +30,23 @@ class SoccerDatabase:
         return results
 
 
+class SoccerDatabase(BaseDB):
+    def __get_engine__(self):
+        return create_engine('sqlite:///MySoccer.sqlite')
+
+    def get_result_set_for_league(self, league_id: int):
+        connection = self.engine.connect()
+        stmt = SQLStatement.get_select_statement_for_league(league_id)
+        results = connection.execute(stmt).fetchall()
+        connection.close()
+        return results
+
+
 class SQLStatement:
     @staticmethod
     def get_select_statement_for_league(league_id: int):
         stmt = """
-                SELECT League.LeagueId, League.LeagueName, GameGroup.GroupId, GameGroup.GroupName
+                SELECT League.LeagueId, League.LeagueName, GameGroup.GroupOrderId, GameGroup.GroupName
                 , Match.MatchId, Match.MatchDateTime, Match.NumberOfViewers
                 , Team.TeamId as HomeTeamId, Team2.TeamId as ForeignTeamId, Team.TeamName as HomeTeam, Team2.TeamName as ForeignTeam
                 , MatchResult.PointsTeam1, MatchResult.PointsTeam2
@@ -43,7 +61,7 @@ class SQLStatement:
                 LEFT JOIN MatchResult on MatchResult.MatchId = Match.MatchId and MatchResult.ResultTypeId = 2
                 WHERE (League.LeagueId = """ + str(league_id) + """)
                 /*AND Not(MatchResult.PointsTeam1 is NULL OR MatchResult.PointsTeam2 is NULL)*/
-                Order by League.LeagueId, GameGroup.GroupId, Match.MatchId
+                Order by League.LeagueId, GameGroup.GroupOrderId, Match.MatchId
                 """
         return stmt
 
@@ -54,22 +72,14 @@ class SQLStatement:
 
 
 class DBBasedList:
-    def __init__(self, sorted_id_list):
+    def __init__(self):
         self.db = SoccerDatabase()
         self.result_set = self.get_result_set_from_db()
         self.df = pd.DataFrame(self.result_set)
         self.df.columns = self.result_set[0].keys()
-        self.sorted_id_list = sorted_id_list
-        self.sorted_index_list = self.sorted_id_list
 
     def get_result_set_from_db(self):
         pass  # will be overwritten by sub classes
-
-    def get_id_for_index(self, index: int):
-        return self.sorted_id_list[index]
-
-    def get_column_value_for_index(self, index: int, column: str):
-        return self.get_column_value_for_id(self.get_id_for_index(index), column)
 
     def get_column_value_for_id(self, id: int, column: str):
         pass  # will be overwritten by deferred classes
@@ -81,16 +91,16 @@ class DBBasedList:
         return return_list
 
 
-class GroupList(DBBasedList):
+class DBGroupList(DBBasedList):
     def get_result_set_from_db(self):
         return self.db.get_result_set_for_table('GameGroup')
 
     def get_column_value_for_id(self, id: int, column: str):
-        df_subset = self.df[self.df["GroupId"] == id]
+        df_subset = self.df[self.df["GroupOrderId"] == id]
         return df_subset[column].values[0]
 
 
-class TeamList(DBBasedList):
+class DBTeamList(DBBasedList):
     def get_result_set_from_db(self):
         return self.db.get_result_set_for_table('Team')
 
@@ -104,39 +114,38 @@ class MatchDataFrame:
         self.df = pd.DataFrame(db_result_set)
         self.df.columns = db_result_set[0].keys()
         self.team_list = np.sort(pd.unique(self.df["HomeTeamId"]))
-        self.group_id_list = np.sort(pd.unique(self.df["GroupId"]))
-        self.group_id_list_played = self.__get_played_played_group_id__()
-        print('group_id_list_played = {}'.format(self.group_id_list_played))
+        self.group_order_id_list = np.sort(pd.unique(self.df["GroupOrderId"]))
+        self.group_order_id_list_played = self.__get_played_played_group_order_id__()
         self.match_table = []
 
-    def __get_played_played_group_id__(self):
+    def __get_played_played_group_order_id__(self):
         return_list = []
-        for group_id in self.group_id_list:
-            df_sel = self.df[self.df["GroupId"] == group_id]
+        for group_order_id in self.group_order_id_list:
+            df_sel = self.df[self.df["GroupOrderId"] == group_order_id]
             counter = 0
             for id, row in df_sel.iterrows():
                 if math.isnan(row["PointsTeam1"]) or math.isnan(row["PointsTeam2"]):
                     counter += 1
                     if counter > 2:  # eventually there are some outstanding games - skip them in this check
                         return return_list
-            return_list.append(group_id)
+            return_list.append(group_order_id)
         return return_list
 
     def get_team_list(self):
         return self.team_list
 
-    def get_group_id_list(self):
-        return self.group_id_list
+    def get_group_order_id_list(self):
+        return self.group_order_id_list
 
     def calculate_match_table(self):  # 2 dim array for all matches with lists
-        default_list = [0, 0, 0, 0, 0, 0]  # (GoalHome, GoalForeign, 10 + GH - GF, PointsHome, PointsForeign, groupId)
+        default_list = [0, 0, 0, 0, 0, 0]  # (GoalHome, GoalForeign, 10 + GH - GF, PointsHome, PointsForeign, GroupOrderId)
         self.match_table = [[default_list for t1 in self.team_list] for t2 in self.team_list]
 
         for index_1, team_id_1 in enumerate(self.team_list):
             for index_2, team_id_2 in enumerate(self.team_list):
                 df_sel = self.df[np.logical_and(self.df["HomeTeamId"] == team_id_1, self.df["ForeignTeamId"] == team_id_2)]
                 for id, row in df_sel.iterrows():
-                    value_list = [0, 0, 0, 0, 0, row["GroupId"]]
+                    value_list = [0, 0, 0, 0, 0, row["GroupOrderId"]]
                     if not math.isnan(row["PointsTeam1"]) and not math.isnan(row["PointsTeam2"]):
                         value_list[0] = row["PointsTeam1"]
                         value_list[1] = row["PointsTeam2"]
@@ -163,21 +172,31 @@ class LeagueTable:
             , "Goal_At_Home": 5, "Foreign_Goal_At_Home": 6, "Points_At_Home": 7
             , "Goal_Not_At_Home": 8, "Foreign_Goal_Not_At_Home": 9, "Points_Not_At_Home": 10}
         self.team_list = mdf.team_list
-        self.group_id_list = mdf.group_id_list
+        # print('team_list={}'.format(self.team_list))
+        self.group_order_id_list = mdf.group_order_id_list
         self.np_table = np.empty((self.team_list.size, len(self.TABLE_COL_DIC)))
-        self.np_team_position = np.empty((self.team_list.size, self.group_id_list.size))
+        self.np_team_position = np.empty((self.team_list.size, self.group_order_id_list.size))
         self.__initialize_np_arrays__()
 
     def __initialize_np_arrays__(self):
         self.np_table = np.zeros((self.team_list.size, len(self.TABLE_COL_DIC)), dtype=np.int32)
-        self.np_team_position = np.zeros((self.team_list.size, self.group_id_list.size), dtype=np.int32)
+        self.np_team_position = np.zeros((self.team_list.size, self.group_order_id_list.size), dtype=np.int32)
 
-    def get_position_for_team_before_group_id(self, group_id: int, team_id: int):
-        team_index = self.team_list.index(team_id)
-        group_index = self.group_id_list.index(group_id) - 1
-        if group_index < 0:
-            group_index = 0
-        return self.np_team_position[team_index, group_index]
+    def get_position_for_team_before_group_order_id(self, group_order_id: int, team_id: int):
+        team_index, = np.where(self.team_list == team_id)
+        if team_index.size == 0:  # not available in this year
+            return self.team_list.size
+        group_index, = np.where(self.group_order_id_list == group_order_id)
+        if group_index > 0:
+            group_index = group_index - 1  # we want to have the previous entry
+        return self.np_team_position[team_index, group_index][0]
+
+    def get_last_position_for_team(self, team_id: int):
+        team_index, = np.where(self.team_list == team_id)
+        if team_index.size == 0:  # not available in this year
+            return self.team_list.size
+        group_index = self.group_order_id_list.size - 1
+        return self.np_team_position[team_index, group_index][0]
 
     def calculate_np_team_position(self):
         self.__initialize_np_arrays__()
@@ -185,8 +204,8 @@ class LeagueTable:
         for team_index, team_id in enumerate(self.team_list):
             self.np_table[team_index, self.TABLE_COL_DIC["TeamId"]] = team_id
 
-        for group_id_index, group_id in enumerate(self.group_id_list):
-            df_sel_group = self.df[self.df["GroupId"] == group_id]
+        for group_order_id_index, group_order_id in enumerate(self.group_order_id_list):
+            df_sel_group = self.df[self.df["GroupOrderId"] == group_order_id]
             for team_id in self.team_list:
                 df_sel_group_team = df_sel_group[np.logical_or(df_sel_group["HomeTeamId"] == team_id
                                                                , df_sel_group["ForeignTeamId"] == team_id)]
@@ -201,16 +220,16 @@ class LeagueTable:
 
             self.np_table = self.np_table[np.lexsort((self.np_table[:, 3], self.np_table[:, 4]))]
             self.np_table = self.np_table[::-1]  # reverse
-            self.add_actual_positions(group_id_index)
+            self.add_actual_positions(group_order_id_index)
 
-    def add_actual_positions(self, group_id_index: int):
+    def add_actual_positions(self, group_order_id_index: int):
         np_table_sorted_team_col = self.np_table[:, 0]
         for index_team, team_id in enumerate(self.team_list):
             if team_id in np_table_sorted_team_col:
                 position = self.get_team_index_in_sorted_np_table(team_id) + 1
             else:
                 position = np_table_sorted_team_col.size
-            self.np_team_position[index_team, group_id_index] = position
+            self.np_team_position[index_team, group_order_id_index] = position
 
     def get_team_index_in_sorted_np_table(self, team_id):
         np_table_sorted_team_col = self.np_table[:, 0]
@@ -241,22 +260,21 @@ class LeagueTable:
             self.np_table[team_index, self.TABLE_COL_DIC["Foreign_Goal_Not_At_Home"]] += goals_team1
 
     def plot_team_position(self):
-        print(self.group_id_list)
-        team = TeamList(self.team_list)
-        group = GroupList(self.group_id_list)
-        group_order_id = group.get_column_values_for_id_list(self.group_id_list, 'GroupOrderId')
+        print(self.group_order_id_list)
+        team = DBTeamList()
+        group = DBGroupList()
+        group_name_list = group.get_column_values_for_id_list(self.group_order_id_list, 'GroupName')
         position_list = [k+1 for k in range(len(self.team_list))]
         for team_index, team_id in enumerate(self.team_list):
             team_name = team.get_column_value_for_id(team_id, 'TeamName')
             position_team = self.np_team_position[team_index]
-            plt.plot(group_order_id, position_team, label=team_name)
+            plt.plot(group_name_list, position_team, label=team_name)
             plt.title('Team positions for actual year')
             plt.xlabel('Spieltag')
             plt.ylabel('Position')
-            plt.xticks(group_order_id, rotation=0)
+            plt.xticks(group_name_list, rotation=45)
             plt.yticks(position_list)
             plt.tight_layout()
-            print("position_team for {} {}: {}".format(team_index, team_id, position_team))
         plt.legend()
         plt.show()
 
@@ -269,7 +287,7 @@ class GamePredictor:
         self.df_match_previous = None
         self.df_match_actual = None
         self.actual_team_list = None
-        self.actual_group_id_list = None
+        self.actual_group_order_id_list = None
         self.training_set = []
         self.validation_set = []
         self.test_set = []
@@ -284,61 +302,69 @@ class GamePredictor:
 
     def calculate_positions_for_df_match_actual(self):
         self.df_match_actual.fill_np_team_position_from_data_frame()
-        print(self.df_match_actual.np_team_position)
 
     def calculate_actual_match_table(self):
         self.df_match_actual.calculate_match_table()
 
     def init_actual_team_list(self):
-        self.actual_team_list = TeamList(self.df_match_actual.get_team_list())
-        print(self.actual_team_list.sorted_id_list)
+        self.actual_team_list = DBTeamList()
 
     def init_actual_group_list(self):
-        self.actual_group_id_list = GroupList(self.df_match_actual.get_group_id_list())
+        self.actual_group_order_id_list = DBGroupList()
 
-    def calculate_training_set(self, league_table_previous: LeagueTable, league_table_actual: LeagueTable):
-        for group_id in self.df_match_actual.group_id_list_played:
-            match_teams_list_for_group_id = self.get_match_teams_list_for_group_id(group_id)
-            for elements in match_teams_list_for_group_id:
-                match_id = elements[-4]
-                team_1 = elements[-3]
-                team_2 = elements[-2]
-                goal_difference = elements[-1]
+    def calculate_training_set_for_next_group_order_id(self, league_table_previous: LeagueTable
+                                  , league_table_actual: LeagueTable, group_order_id_next: int):
+        self.training_set = []
+        self.validation_set = []
+        self.test_set = []
 
-                position_team_1_last_year = 0
-                position_team_1_before_group_id = league_table_actual.\
-                    get_position_for_team_before_group_id(group_id, team_1)
+        for group_order_id in range(1, group_order_id_next + 1):
+            match_teams_list_for_group_order_id = self.get_match_teams_list_for_group_order_id(group_order_id)
+            for match_teams_list in match_teams_list_for_group_order_id:
+                data = self.get_prediction_data_row(match_teams_list, group_order_id, league_table_actual, league_table_previous)
+                if group_order_id == group_order_id_next:
+                    self.test_set.append(data)
+                else:
+                    self.training_set.append(data)
 
-                position_team_2_last_year = 0
-                position_team_2_before_group_id = league_table_actual. \
-                    get_position_for_team_before_group_id(group_id, team_2)
+    def get_prediction_data_row(self, match_teams_list, group_order_id, league_table_actual, league_table_previous):
+        match_id = match_teams_list[-4]
+        team_1 = match_teams_list[-3]
+        team_2 = match_teams_list[-2]
+        goal_difference = match_teams_list[-1]
+        position_team_1_last_year = league_table_previous.get_last_position_for_team(team_1)
+        position_team_1_before_group_order_id = league_table_actual. \
+            get_position_for_team_before_group_order_id(group_order_id, team_1)
+        position_team_2_last_year = league_table_previous.get_last_position_for_team(team_2)
+        position_team_2_before_group_order_id = league_table_actual. \
+            get_position_for_team_before_group_order_id(group_order_id, team_2)
+        data_position = [position_team_1_last_year, position_team_1_before_group_order_id,
+                         position_team_2_last_year, position_team_2_before_group_order_id]
+        data_position = [0, 0, 0, 0]
+        data_home_team = self.get_results_for_team_in_earlier_group_order_id(group_order_id, team_1, True)
+        data_foreign_team = self.get_results_for_team_in_earlier_group_order_id(group_order_id, team_2, False)
+        test_data = data_position + data_home_team + data_foreign_team
+        test_data.append(goal_difference)
+        # print('calculate_training_set, group_order_id={}, match_id={}, team1={}, team2={}, test_data={}'
+        #       .format(group_order_id, match_id, team_1, team_2, test_data))
+        # test_data.append([group_order_id, match_id, team_1, team_2])
+        return test_data
 
-                data_position = [position_team_1_last_year, position_team_1_before_group_id,
-                                 position_team_2_last_year, position_team_2_before_group_id]
-                data_home_team = self.get_results_for_team_in_earlier_group_id(group_id, team_1, True)
-                data_foreign_team = self.get_results_for_team_in_earlier_group_id(group_id, team_2, False)
-
-                test_data = data_position + data_home_team + data_foreign_team
-                test_data.append(goal_difference)
-                print('calculate_training_set, group_id={}, match_id={}, team1={}, team2={}, test_data={}'
-                      .format(group_id, match_id, team_1, team_2, test_data))
-                self.training_set.append(test_data)
-
-    def get_match_teams_list_for_group_id(self, group_id: int):
+    def get_match_teams_list_for_group_order_id(self, group_order_id: int):
         return_list = []
-        df_sel = self.df_match_actual.df[self.df_match_actual.df["GroupId"] == group_id]
+        df_sel = self.df_match_actual.df[self.df_match_actual.df["GroupOrderId"] == group_order_id]
         for id, row in df_sel.iterrows():
-            list_element = [group_id, row['MatchId'], row['HomeTeamId'], row['ForeignTeamId'], row['GoalDifference']]
+            list_element = [group_order_id, row['MatchId'], row['HomeTeamId'], row['ForeignTeamId'], row['GoalDifference']]
             return_list.append(list_element)
         return return_list
 
-    def get_results_for_team_in_earlier_group_id(self, group_id: int, team_id: int, is_playing_home: bool):
+    def get_results_for_team_in_earlier_group_order_id(self, group_order_id: int, team_id: int, is_playing_home: bool):
         return_list = []
         if is_playing_home:
-            df_sel = self.df_match_actual.df[np.logical_and(self.df_match_actual.df["GroupId"] < group_id,
+            df_sel = self.df_match_actual.df[np.logical_and(self.df_match_actual.df["GroupOrderId"] < group_order_id,
                                                             self.df_match_actual.df["HomeTeamId"] == team_id)]
         else:
-            df_sel = self.df_match_actual.df[np.logical_and(self.df_match_actual.df["GroupId"] < group_id,
+            df_sel = self.df_match_actual.df[np.logical_and(self.df_match_actual.df["GroupOrderId"] < group_order_id,
                                                             self.df_match_actual.df["ForeignTeamId"] == team_id)]
 
         for team_id in self.df_match_actual.team_list:
@@ -351,43 +377,150 @@ class GamePredictor:
         return return_list
 
 
+class Optimizer:
+    ADAM = "adam"
+    SGD = "Stochastic gradient descent"
+
+
+class LossFunction:
+    MSE = "mean_squared_error"
+    CAT_CROSS = "categorical_crossentropy"
+
+
+class ModelType:
+    SEQUENTIAL_REGRESSION = "Model: Sequential, Type: Regression"
+    SEQUENTIAL_CLASSIFICATION = "Model: Sequential, Type: Classification"
+    LINEAR_REGRESSION = "Model: Linear, Type: Regression"
+    LINEAR_CLASSIFICATION = "Model: Linear, Type: Classification"
+
+
+class LearningMachine:
+    def __init__(self, hidden_layers, optimizer: Optimizer = Optimizer.ADAM
+                 , loss: LossFunction = LossFunction.MSE):
+        self.hidden_layers = hidden_layers
+        self.model = None
+        self.model_type = None
+        self.optimizer = optimizer
+        self.loss = loss
+        self.n_cols = 0
+        self.np_predictors = None
+        self.np_target = None
+        self.np_pred_data = None
+        self.prediction = None
+
+    def get_regression_prediction(self, np_predictors: np.array, np_target: np.array, np_pred_data: np.array):
+        return self.__get_prediction__(np_predictors, np_target, np_pred_data)
+
+    def __get_prediction__(self, np_predictors: np.array, np_target: np.array, np_pred_data: np.array):
+        self.np_predictors = np_predictors
+        self.__set_np_target__(np_target)
+        self.np_pred_data = np_pred_data
+        self.n_cols = self.np_predictors.shape[1]
+        self.print_details()
+        # run model
+        self.model = Sequential()
+        self.__add_hidden_layers__()
+        self.model.add(Dense(self.np_target.shape[1]))  # output layer
+        print(self.np_target[0])
+        self.__compile_model__()
+        self.model.fit(self.np_predictors, self.np_target)
+        # make prediction
+        print(self.np_pred_data)
+        self.prediction = self.model.predict(self.np_pred_data)
+        print(self.prediction)
+        return self.prediction
+
+    def __compile_model__(self):
+        pass
+
+    def __set_np_target__(self, np_target):
+        pass
+
+    def compare_prediction_with_results(self, np_test_set_target: np.array):
+        np_comparison = np.zeros((self.prediction.shape[0], 3), dtype=np.float)
+        for k in range(self.prediction.shape[0]):
+            np_comparison[k, 0] = self.__get_predicted_value_for_row_index__(k)
+            np_comparison[k, 1] = np_test_set_target[k]
+            np_comparison[k, 2] = self.prediction[k] - np_test_set_target[k]
+        print(np_comparison)
+
+    def __get_predicted_value_for_row_index__(self, k: int):
+        pass
+
+    def print_details(self):
+        print('optimzer={}, loss={}, np_predictors.shape={}, np_target.shape={}, np_pred_data.shape={}'.format(
+            self.optimizer, self.loss, self.np_predictors.shape, self.np_target.shape, self.np_pred_data.shape))
+
+    def __add_hidden_layers__(self):
+        for hl_index, hidder_layers in enumerate(self.hidden_layers):
+            if hl_index == 0:
+                self.model.add(Dense(hidder_layers, activation='relu', input_shape=(self.n_cols,)))
+            else:
+                self.model.add(Dense(hidder_layers, activation='relu'))
+
+
+class LmSequentialRegression(LearningMachine):
+    def __compile_model__(self):
+        self.model.compile(optimizer=self.optimizer, loss=self.loss)
+
+    def __set_np_target__(self, np_target):
+        self.np_target = np_target
+
+    def __get_predicted_value_for_row_index__(self, k: int):
+        return self.prediction[k][0]
+
+
+class LmSequentialClassification(LearningMachine):
+    def __init__(self, hidden_layers, optimizer: Optimizer = Optimizer.ADAM
+                 , loss: LossFunction = LossFunction.CAT_CROSS):
+        LearningMachine.__init__(self, hidden_layers, optimizer, loss)
+
+    def __compile_model__(self):
+        self.model.compile(optimizer=self.optimizer, loss=self.loss, metrics=['accuracy'])
+
+    def __set_np_target__(self, np_target):
+        np_target_cat = np.zeros((np_target.shape[0], 20), dtype=np.int)
+        for k in range(0, np_target.shape[0]):
+            np_target_cat[k, np_target[k]] = 1
+        self.np_target = np_target_cat  # to_categorical(np_target)
+
+    def __get_predicted_value_for_row_index__(self, k: int):
+        return self.prediction[k].argmax(axis=0) + 1
+
+
 game_predictor = GamePredictor(3005, 4153)  # 3005|1. Fußball-Bundesliga 2016/2017 --- 4153 2017/2018
 game_predictor.load_match_data_frames()
-# game_predictor.calculate_actual_match_table()
+
 previous_table = LeagueTable(game_predictor.df_match_previous)
+previous_table.calculate_np_team_position()
 actual_table = LeagueTable(game_predictor.df_match_actual)
-game_predictor.calculate_training_set(previous_table, actual_table )
+actual_table.calculate_np_team_position()
 
-# print('previous table: {}'.format(soccer_db.np_table_previous))
-# print('actual table: {}'.format(soccer_db.np_table_actual))
-# print('team positions: {}'.format(soccer_db.team_positions))
+game_predictor.calculate_training_set_for_next_group_order_id(previous_table, actual_table, 10)
+
+np_training_set = np.array(game_predictor.training_set)
+np_test_set = np.array(game_predictor.test_set)
+
+np_predictors = np_training_set[:,:-1]
+np_target = np_training_set[:,-1]
+np_pred_data = np_test_set[:,:-1]
+
+np_test_set_target = np_test_set[:,-1]
+np_test_set_target = np_test_set_target.reshape((np_test_set_target.size,1))
+
+hidden_layers = [100, 100, 100]
+
+# lm_regression = LmSequentialRegression(hidden_layers)
+# lm_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
+# lm_regression.compare_prediction_with_results(np_test_set_target)
+
+lm_classification = LmSequentialClassification(hidden_layers)
+lm_classification.get_regression_prediction(np_predictors, np_target, np_pred_data)
+# lm_classification.compare_prediction_with_results(np_test_set_target)
 
 
-def make_prediction(np_predictors: np.array, np_target: np.array, np_pred_data: np.array):
-    import numpy as np
-    from keras.layers import Dense
-    from keras.models import Sequential
-    # Specify, compile, and fit the model
-    print('np_predictors.shape={}, np_target.shape={}, np_pred_data.shape={}'.format(np_predictors.shape, np_target.shape, np_pred_data.shape))
-    n_cols = np_predictors.shape[1]
-    print('n_cols = {}'.format(n_cols))
-    model = Sequential()
-    model.add(Dense(32, activation='relu', input_shape=(n_cols,)))
-    model.add(Dense(30, activation='relu'))
-    model.add(Dense(306))  # output layer
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(np_predictors, np_target)
 
-    # Calculate predictions: predictions
-    predictions = model.predict(np_pred_data)
-    # Calculate predicted probability of survival: predicted_prob_true
-    print(predictions)
-    # predicted_prob_true = predictions[:, 1]
-    # # print predicted_prob_true
-    # print(predicted_prob_true)
 
-# [np_predictors, np_target, np_pred_data] = get_nparrays(df)
-# make_prediction(np_predictors, np_target, np_pred_data)
 
 
 
