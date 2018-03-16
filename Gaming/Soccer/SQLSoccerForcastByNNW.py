@@ -626,7 +626,7 @@ lm_regression.compare_prediction_with_results(np_test_set_target)
 
 # lm_logistic_regression = LmLogisticRegression()
 # lm_logistic_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
-# lm_logistic_regression.compare_prediction_with_results(np_test_set_target)
+# lm_logistic_regression.compare_prediction_with_results(np_test_set_target) a
 
 
 
