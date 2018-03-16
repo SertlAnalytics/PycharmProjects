@@ -160,10 +160,10 @@ class SoccerHelper:
     @staticmethod
     def map_goal_difference_to_points(goal_difference: int):
         if goal_difference > 10:
-            return 3
+            return 1
         elif goal_difference < 10:
-            return 0
-        return 1
+            return 2
+        return 0
 
     @staticmethod
     def get_points_for_teams(goal_1: int, goal_2: int):
@@ -415,16 +415,16 @@ class LearningMachine:
         self.n_cols = 0
         self.np_predictors = None
         self.np_target = None
-        self.np_pred_data = None
+        self.np_prediction_data = None
         self.prediction = None
 
-    def get_regression_prediction(self, np_predictors: np.array, np_target: np.array, np_pred_data: np.array):
+    def get_regression_prediction(self, predictors: np.array, target: np.array, prediction_data: np.array):
         return self.__get_prediction__(np_predictors, np_target, np_pred_data)
 
-    def __get_prediction__(self, np_predictors: np.array, np_target: np.array, np_pred_data: np.array):
-        self.np_predictors = np_predictors
-        self.__set_np_target__(np_target)
-        self.np_pred_data = np_pred_data
+    def __get_prediction__(self, predictors: np.array, target: np.array, prediction_data: np.array):
+        self.np_predictors = predictors
+        self.__set_np_target__(target)
+        self.np_prediction_data = prediction_data
         self.n_cols = self.np_predictors.shape[1]
         # self.print_details()
         self.model = self.get_model()
@@ -433,15 +433,15 @@ class LearningMachine:
         self.__compile_model__()
         self.model.fit(self.np_predictors, self.np_target)
         # make prediction
-        self.prediction = self.model.predict(self.np_pred_data)
-        self.prediction = self.prediction.reshape(self.prediction.size, 1)  # todo - works for lenear regression but...
+        self.prediction = self.model.predict(self.np_prediction_data)
+        self.prediction = self.prediction.reshape(self.prediction.shape[0], self.np_target.shape[1])
         return self.prediction
 
     def get_model(self):
         pass
 
-    def __set_np_target__(self, np_target):
-        self.np_target = np_target
+    def __set_np_target__(self, target: np.array):
+        self.np_target = target
 
     def __add_output_layer__(self):
         pass
@@ -452,46 +452,48 @@ class LearningMachine:
     def __compile_model__(self):
         pass
 
-    def compare_prediction_with_results(self, np_test_set_target: np.array):
+    def compare_prediction_with_results(self, test_set_target: np.array):
         np_comparison = np.zeros((self.prediction.shape[0], 3), dtype=np.float)
         for k in range(self.prediction.shape[0]):
             np_comparison[k, 0] = self.__get_predicted_value_for_row_index__(k)
-            np_comparison[k, 1] = np_test_set_target[k]
+            np_comparison[k, 1] = test_set_target[k]
             np_comparison[k, 2] = np_comparison[k, 0] - np_comparison[k, 1]
         print(np.round(np_comparison, 2))
-        # print(type(np_test_set_target))
-        # print(type(self.prediction))
-        # print(np_test_set_target.shape)
-        # print(self.prediction.shape)
+        self.__print_statistical_data__(test_set_target)
 
-        # print(confusion_matrix(np_test_set_target, self.prediction))
-        # print(classification_report(np_test_set_target, self.prediction))
+    def __print_statistical_data__(self, test_set_target: np.array):
+        pass
 
     def print_details(self):
         print('optimizer={}, loss={}, np_predictors.shape={}, np_target.shape={}, np_pred_data.shape={}'.format(
-            self.optimizer, self.loss, self.np_predictors.shape, self.np_target.shape, self.np_pred_data.shape))
+            self.optimizer, self.loss, self.np_predictors.shape, self.np_target.shape, self.np_prediction_data.shape))
 
     def __add_hidden_layers__(self):
         pass
 
 
 class LmLinearRegression(LearningMachine):
-    def __init__(self):
+    def __init__(self):  # is needed since we don't need any other parameters
         pass
 
     def get_model(self):
         return linear_model.LinearRegression()
 
+    def __print_statistical_data__(self, np_test_set_target : np.array):
+        print("Accuracy: {}".format(self.model.score(self.np_prediction_data, np_test_set_target)))
+
 
 class LmLogisticRegression(LearningMachine):
-    def __init__(self):
+    def __init__(self):  # is needed since we don't need any other parameters
         pass
 
     def get_model(self):
         return linear_model.LogisticRegression()
 
-    def __set_np_target__(self, np_target):
-        self.np_target = to_categorical(np_target)
+    def __print_statistical_data__(self, np_test_set_target : np.array):
+        print("Accuracy: {}".format(self.model.score(self.np_prediction_data, np_test_set_target)))
+        print(confusion_matrix(np_test_set_target, self.prediction))
+        print(classification_report(np_test_set_target, self.prediction))
 
 
 class LmSequentialRegression(LearningMachine):
@@ -530,8 +532,8 @@ class LmSequentialClassification(LearningMachine):
     def __compile_model__(self):
         self.model.compile(optimizer=self.optimizer, loss=self.loss, metrics=['accuracy'])
 
-    def __set_np_target__(self, np_target):
-        self.np_target = to_categorical(np_target)
+    def __set_np_target__(self, target: np.array):
+        self.np_target = to_categorical(target)
 
     def __add_output_layer__(self):
         self.model.add(Dense(self.np_target.shape[1], activation='softmax'))
@@ -551,7 +553,7 @@ class TestDataGenerator:
         np_predictors = np.array(list_1)
         np_target = np_predictors.sum(axis=1).reshape(np_predictors.shape[0], 1)
         list_2 = [
-            # [1, 1, 0, 0, 0], [0, 1, 1, 0, 0], [0, 0, 1, 1, 0], [0, 0, 0, 1, 1], [0, 0, 0, 0, 1]
+            [1, 1, 0, 0, 0], [0, 1, 1, 0, 0], [0, 0, 1, 1, 0], [0, 0, 0, 1, 1], [0, 0, 0, 0, 1],
             [1, 0, 1, 0, 1], [1, 1, 0, 0, 1], [0, 0, 1, 0, 1], [0, 0, 0, 1, 1], [1, 0, 0, 0, 1]
         ]
         np_pred_data = np.array(list_2)
@@ -574,12 +576,13 @@ np_test_set = np.array(game_predictor.test_set)
 
 np_predictors = np_training_set[:,:-1]
 np_target = np_training_set[:,-1]
+np_target = np_target.reshape((np_target.size, 1))
 np_pred_data = np_test_set[:,:-1]
 
 np_test_set_target = np_test_set[:,-1]
 np_test_set_target = np_test_set_target.reshape((np_test_set_target.size,1))
 
-# [np_predictors, np_target, np_pred_data, np_test_set_target] = TestDataGenerator.get_test_data_for_summation()
+[np_predictors, np_target, np_pred_data, np_test_set_target] = TestDataGenerator.get_test_data_for_summation()
 print(np_predictors.shape)
 print(np_target.shape)
 print(np_pred_data.shape)
@@ -590,10 +593,10 @@ print(np_test_set_target.shape)
 
 hidden_layers = [200, 50]
 
-# lm_regression = LmSequentialRegression(hidden_layers)
-# lm_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
-# lm_regression.compare_prediction_with_results(np_test_set_target)
-#
+lm_regression = LmSequentialRegression(hidden_layers)
+lm_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
+lm_regression.compare_prediction_with_results(np_test_set_target)
+
 # lm_classification = LmSequentialClassification(hidden_layers)
 # lm_classification.get_regression_prediction(np_predictors, np_target, np_pred_data)
 # lm_classification.compare_prediction_with_results(np_test_set_target)
@@ -602,9 +605,9 @@ hidden_layers = [200, 50]
 # lm_linear_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
 # lm_linear_regression.compare_prediction_with_results(np_test_set_target)
 
-lm_logistic_regression = LmLogisticRegression()
-lm_logistic_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
-lm_logistic_regression.compare_prediction_with_results(np_test_set_target)
+# lm_logistic_regression = LmLogisticRegression()
+# lm_logistic_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
+# lm_logistic_regression.compare_prediction_with_results(np_test_set_target)
 
 
 
