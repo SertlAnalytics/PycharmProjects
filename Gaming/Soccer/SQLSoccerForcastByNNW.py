@@ -15,6 +15,8 @@ from keras.models import Sequential
 from keras.utils import to_categorical
 from sklearn import linear_model
 from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import Imputer
 
 
 class BaseDB:
@@ -485,7 +487,24 @@ class LmLinearRegression(LearningMachine):
 
 class LmLogisticRegression(LearningMachine):
     def __init__(self):  # is needed since we don't need any other parameters
-        pass
+        self.pipeline = None
+
+    def __get_prediction__(self, predictors: np.array, target: np.array, prediction_data: np.array):
+        self.np_predictors = predictors
+        self.__set_np_target__(target)
+        self.np_prediction_data = prediction_data
+        self.model = self.get_model()
+        imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
+
+        steps = [('imputation', imp), ('logistic_regression', self.model)]
+        self.pipeline = Pipeline(steps)
+        self.pipeline.fit(self.np_predictors, self.np_target)
+        # make prediction
+        self.prediction = self.pipeline.predict(self.np_prediction_data)
+        print(self.prediction.shape)
+
+        self.prediction = self.prediction.reshape(self.prediction.shape[0], self.np_target.shape[1])
+        return self.prediction
 
     def get_model(self):
         return linear_model.LogisticRegression()
@@ -569,7 +588,7 @@ previous_table.calculate_np_team_position()
 actual_table = LeagueTable(game_predictor.df_match_actual)
 actual_table.calculate_np_team_position()
 
-game_predictor.calculate_training_set_for_next_group_order_id(previous_table, actual_table, 10)
+game_predictor.calculate_training_set_for_next_group_order_id(previous_table, actual_table, 25)
 
 np_training_set = np.array(game_predictor.training_set)
 np_test_set = np.array(game_predictor.test_set)
@@ -582,7 +601,7 @@ np_pred_data = np_test_set[:,:-1]
 np_test_set_target = np_test_set[:,-1]
 np_test_set_target = np_test_set_target.reshape((np_test_set_target.size,1))
 
-[np_predictors, np_target, np_pred_data, np_test_set_target] = TestDataGenerator.get_test_data_for_summation()
+# [np_predictors, np_target, np_pred_data, np_test_set_target] = TestDataGenerator.get_test_data_for_summation()
 print(np_predictors.shape)
 print(np_target.shape)
 print(np_pred_data.shape)
@@ -591,7 +610,7 @@ print(np_test_set_target.shape)
 # print(type(np_target))
 # print(np_target)
 
-hidden_layers = [200, 50]
+hidden_layers = [100, 100, 100, 100]
 
 lm_regression = LmSequentialRegression(hidden_layers)
 lm_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
