@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 from keras.layers import Dense
 from keras.models import Sequential
 from keras.utils import to_categorical
+from sklearn import linear_model
+from sklearn.metrics import confusion_matrix, classification_report
 
 
 class BaseDB:
@@ -155,6 +157,14 @@ class MatchDataFrame:
 
 
 class SoccerHelper:
+    @staticmethod
+    def map_goal_difference_to_points(goal_difference: int):
+        if goal_difference > 10:
+            return 3
+        elif goal_difference < 10:
+            return 0
+        return 1
+
     @staticmethod
     def get_points_for_teams(goal_1: int, goal_2: int):
         if goal_1 > goal_2:
@@ -340,11 +350,11 @@ class GamePredictor:
             get_position_for_team_before_group_order_id(group_order_id, team_2)
         data_position = [position_team_1_last_year, position_team_1_before_group_order_id,
                          position_team_2_last_year, position_team_2_before_group_order_id]
-        data_position = [0, 0, 0, 0]
+        # data_position = [0, 0, 0, 0]
         data_home_team = self.get_results_for_team_in_earlier_group_order_id(group_order_id, team_1, True)
         data_foreign_team = self.get_results_for_team_in_earlier_group_order_id(group_order_id, team_2, False)
         test_data = data_position + data_home_team + data_foreign_team
-        test_data.append(goal_difference)
+        test_data.append( SoccerHelper.map_goal_difference_to_points(goal_difference))
         # print('calculate_training_set, group_order_id={}, match_id={}, team1={}, team2={}, test_data={}'
         #       .format(group_order_id, match_id, team_1, team_2, test_data))
         # test_data.append([group_order_id, match_id, team_1, team_2])
@@ -416,24 +426,30 @@ class LearningMachine:
         self.__set_np_target__(np_target)
         self.np_pred_data = np_pred_data
         self.n_cols = self.np_predictors.shape[1]
-        self.print_details()
-        # run model
-        self.model = Sequential()
+        # self.print_details()
+        self.model = self.get_model()
         self.__add_hidden_layers__()
-        self.model.add(Dense(self.np_target.shape[1]))  # output layer
-        print(self.np_target[0])
+        self.__add_output_layer__()
         self.__compile_model__()
         self.model.fit(self.np_predictors, self.np_target)
         # make prediction
-        print(self.np_pred_data)
         self.prediction = self.model.predict(self.np_pred_data)
-        print(self.prediction)
+        self.prediction = self.prediction.reshape(self.prediction.size, 1)  # todo - works for lenear regression but...
         return self.prediction
 
-    def __compile_model__(self):
+    def get_model(self):
         pass
 
     def __set_np_target__(self, np_target):
+        self.np_target = np_target
+
+    def __add_output_layer__(self):
+        pass
+
+    def __get_predicted_value_for_row_index__(self, k: int):
+        return self.prediction[k][0]
+
+    def __compile_model__(self):
         pass
 
     def compare_prediction_with_results(self, np_test_set_target: np.array):
@@ -441,33 +457,59 @@ class LearningMachine:
         for k in range(self.prediction.shape[0]):
             np_comparison[k, 0] = self.__get_predicted_value_for_row_index__(k)
             np_comparison[k, 1] = np_test_set_target[k]
-            np_comparison[k, 2] = self.prediction[k] - np_test_set_target[k]
-        print(np_comparison)
+            np_comparison[k, 2] = np_comparison[k, 0] - np_comparison[k, 1]
+        print(np.round(np_comparison, 2))
+        # print(type(np_test_set_target))
+        # print(type(self.prediction))
+        # print(np_test_set_target.shape)
+        # print(self.prediction.shape)
 
-    def __get_predicted_value_for_row_index__(self, k: int):
-        pass
+        # print(confusion_matrix(np_test_set_target, self.prediction))
+        # print(classification_report(np_test_set_target, self.prediction))
 
     def print_details(self):
-        print('optimzer={}, loss={}, np_predictors.shape={}, np_target.shape={}, np_pred_data.shape={}'.format(
+        print('optimizer={}, loss={}, np_predictors.shape={}, np_target.shape={}, np_pred_data.shape={}'.format(
             self.optimizer, self.loss, self.np_predictors.shape, self.np_target.shape, self.np_pred_data.shape))
 
     def __add_hidden_layers__(self):
-        for hl_index, hidder_layers in enumerate(self.hidden_layers):
-            if hl_index == 0:
-                self.model.add(Dense(hidder_layers, activation='relu', input_shape=(self.n_cols,)))
-            else:
-                self.model.add(Dense(hidder_layers, activation='relu'))
+        pass
+
+
+class LmLinearRegression(LearningMachine):
+    def __init__(self):
+        pass
+
+    def get_model(self):
+        return linear_model.LinearRegression()
+
+
+class LmLogisticRegression(LearningMachine):
+    def __init__(self):
+        pass
+
+    def get_model(self):
+        return linear_model.LogisticRegression()
+
+    def __set_np_target__(self, np_target):
+        self.np_target = to_categorical(np_target)
 
 
 class LmSequentialRegression(LearningMachine):
+    def get_model(self):
+        return Sequential()
+
+    def __add_hidden_layers__(self):
+        for hl_index, hidden_layers in enumerate(self.hidden_layers):
+            if hl_index == 0:
+                self.model.add(Dense(hidden_layers, activation='relu', input_shape=(self.n_cols,)))
+            else:
+                self.model.add(Dense(hidden_layers, activation='relu'))
+
+    def __add_output_layer__(self):
+        self.model.add(Dense(self.np_target.shape[1]))  # output layer
+
     def __compile_model__(self):
         self.model.compile(optimizer=self.optimizer, loss=self.loss)
-
-    def __set_np_target__(self, np_target):
-        self.np_target = np_target
-
-    def __get_predicted_value_for_row_index__(self, k: int):
-        return self.prediction[k][0]
 
 
 class LmSequentialClassification(LearningMachine):
@@ -475,17 +517,46 @@ class LmSequentialClassification(LearningMachine):
                  , loss: LossFunction = LossFunction.CAT_CROSS):
         LearningMachine.__init__(self, hidden_layers, optimizer, loss)
 
+    def get_model(self):
+        return Sequential()
+
+    def __add_hidden_layers__(self):
+        for hl_index, hidden_layers in enumerate(self.hidden_layers):
+            if hl_index == 0:
+                self.model.add(Dense(hidden_layers, activation='relu', input_shape=(self.n_cols,)))
+            else:
+                self.model.add(Dense(hidden_layers, activation='relu'))
+
     def __compile_model__(self):
         self.model.compile(optimizer=self.optimizer, loss=self.loss, metrics=['accuracy'])
 
     def __set_np_target__(self, np_target):
-        np_target_cat = np.zeros((np_target.shape[0], 20), dtype=np.int)
-        for k in range(0, np_target.shape[0]):
-            np_target_cat[k, np_target[k]] = 1
-        self.np_target = np_target_cat  # to_categorical(np_target)
+        self.np_target = to_categorical(np_target)
+
+    def __add_output_layer__(self):
+        self.model.add(Dense(self.np_target.shape[1], activation='softmax'))
 
     def __get_predicted_value_for_row_index__(self, k: int):
-        return self.prediction[k].argmax(axis=0) + 1
+        return self.prediction[k].argmax(axis=0)
+
+
+class TestDataGenerator:
+    @staticmethod
+    def get_test_data_for_summation():
+        list_1 = [
+            [1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 1], [0, 1, 0, 0, 1], [0, 0, 1, 0, 1], [0, 0, 0, 1, 1], [0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1], [0, 1, 1, 1, 1]
+        ]
+        np_predictors = np.array(list_1)
+        np_target = np_predictors.sum(axis=1).reshape(np_predictors.shape[0], 1)
+        list_2 = [
+            # [1, 1, 0, 0, 0], [0, 1, 1, 0, 0], [0, 0, 1, 1, 0], [0, 0, 0, 1, 1], [0, 0, 0, 0, 1]
+            [1, 0, 1, 0, 1], [1, 1, 0, 0, 1], [0, 0, 1, 0, 1], [0, 0, 0, 1, 1], [1, 0, 0, 0, 1]
+        ]
+        np_pred_data = np.array(list_2)
+        np_pred_data_target = np_pred_data.sum(axis=1).reshape(np_pred_data.shape[0], 1)
+        return np_predictors, np_target, np_pred_data, np_pred_data_target
 
 
 game_predictor = GamePredictor(3005, 4153)  # 3005|1. Fußball-Bundesliga 2016/2017 --- 4153 2017/2018
@@ -508,15 +579,32 @@ np_pred_data = np_test_set[:,:-1]
 np_test_set_target = np_test_set[:,-1]
 np_test_set_target = np_test_set_target.reshape((np_test_set_target.size,1))
 
-hidden_layers = [100, 100, 100]
+# [np_predictors, np_target, np_pred_data, np_test_set_target] = TestDataGenerator.get_test_data_for_summation()
+print(np_predictors.shape)
+print(np_target.shape)
+print(np_pred_data.shape)
+print(np_test_set_target.shape)
+
+# print(type(np_target))
+# print(np_target)
+
+hidden_layers = [200, 50]
 
 # lm_regression = LmSequentialRegression(hidden_layers)
 # lm_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
 # lm_regression.compare_prediction_with_results(np_test_set_target)
-
-lm_classification = LmSequentialClassification(hidden_layers)
-lm_classification.get_regression_prediction(np_predictors, np_target, np_pred_data)
+#
+# lm_classification = LmSequentialClassification(hidden_layers)
+# lm_classification.get_regression_prediction(np_predictors, np_target, np_pred_data)
 # lm_classification.compare_prediction_with_results(np_test_set_target)
+
+# lm_linear_regression = LmLinearRegression()
+# lm_linear_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
+# lm_linear_regression.compare_prediction_with_results(np_test_set_target)
+
+lm_logistic_regression = LmLogisticRegression()
+lm_logistic_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
+lm_logistic_regression.compare_prediction_with_results(np_test_set_target)
 
 
 
