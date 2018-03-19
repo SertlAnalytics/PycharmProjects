@@ -28,7 +28,7 @@ location = Table('Location', metadata, autoload=True, autoload_with=engine)
 # print(repr(match))
 
 # Assign URL to variable: url - bl/2011 - 2017 available
-url = 'https://www.openligadb.de/api/getmatchdata/bl1/2017'
+url = 'https://www.openligadb.de/api/getmatchdata/bl1/2016'
 
 # Package the request, send the request and catch the response: r
 r = requests.get(url)
@@ -37,6 +37,7 @@ r = requests.get(url)
 json_data = r.json()
 
 # print(json_data)
+
 
 def get_number_table_records_by_id(table: Table, id: Integer):
     stmt = select([table])

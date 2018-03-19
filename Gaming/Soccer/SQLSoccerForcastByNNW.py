@@ -15,8 +15,6 @@ from keras.models import Sequential
 from keras.utils import to_categorical
 from sklearn import linear_model
 from sklearn.metrics import confusion_matrix, classification_report
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import Imputer
 
 
 class BaseDB:
@@ -113,6 +111,139 @@ class DBTeamList(DBBasedList):
         return df_subset[column].values[0]
 
 
+class Match:
+    def __init__(self, db_row: pd.DataFrame):
+        self.df = db_row
+        self.match_id = self.df['MatchId']
+        self.match_date_time = self.df['MatchDateTime']
+        self.league_id = self.df['LeagueId']
+        self.league_name = self.df['LeagueName']
+        self.group_order_id = self.df['GroupOrderId']
+        self.group_name = self.df['GroupName']
+        self.team_id_1 = self.df['HomeTeamId']
+        self.team_name_1 = self.df['HomeTeam']
+        self.team_id_2 = self.df['ForeignTeamId']
+        self.team_name_2 = self.df['ForeignTeam']
+        self.team_id_1_goals = self.df['PointsTeam1']
+        self.team_id_2_goals = self.df['PointsTeam2']
+        self.team_id_1_points = 0
+        self.team_id_2_points = 0
+        self.__init_parameters__()
+
+    def is_open(self):
+        if self.team_id_1_goals is None or self.team_id_2_goals is None:
+            return True
+        return False
+
+    def __init_parameters__(self):
+        if self.is_open():
+            return
+        [self.team_id_1_points, self.team_id_2_points] = \
+            SoccerHelper.get_points_for_teams(self.team_id_1_goals, self.team_id_2_goals)
+
+
+class TeamResult:
+    def __init__(self, match: Match, is_team1_home: bool):
+        self.match = match
+        self.match_id = self.match.match_id
+        self.group_order_id = self.match.group_order_id
+        self.is_home_result = is_team1_home
+        self.team_id = 0
+        self.goals_own = 0
+        self.goals_foreign = 0
+        self.points_own = 0
+        self.points_foreign = 0
+        self.__init_team_result_parameter__()
+
+    def __init_team_result_parameter__(self):
+        if self.is_home_result:
+            self.team_id = self.match.team_id_1
+            self.goals_own = self.match.team_id_1_goals
+            self.goals_foreign = self.match.team_id_2_goals
+            self.points_own = self.match.team_id_1_points
+            self.points_foreign = self.match.team_id_2_points
+        else:
+            self.team_id = self.match.team_id_2
+            self.goals_own = self.match.team_id_2_goals
+            self.goals_foreign = self.match.team_id_1_goals
+            self.points_own = self.match.team_id_2_points
+            self.points_foreign = self.match.team_id_1_points
+
+
+class TeamStatisticsIncrement:
+    def __init__(self, team_result: TeamResult):
+        self.dic = {}
+        if team_result.is_home_result:
+            self.dic['goals_own_total'] = team_result.goals_own
+            self.dic['goals_foreign_total'] = team_result.goals_foreign
+            self.dic['goals_at_home'] = team_result.goals_own
+            self.dic['goals_at_home_foreign'] = team_result.goals_foreign
+            self.dic['goals_not_at_home'] = 0
+            self.dic['goals_not_at_home_foreign'] = 0
+
+            self.dic['points_own_total'] = team_result.points_own
+            self.dic['points_foreign_total'] = team_result.points_foreign
+            self.dic['points_at_home'] = team_result.points_own
+            self.dic['points_at_home_foreign'] = team_result.points_foreign
+            self.dic['points_not_at_home'] = 0
+            self.dic['points_not_at_home_foreign'] = 0
+        else:
+            self.dic['goals_own_total'] = team_result.goals_own
+            self.dic['goals_foreign_total'] = team_result.goals_foreign
+            self.dic['goals_at_home'] = 0
+            self.dic['goals_at_home_foreign'] = 0
+            self.dic['goals_not_at_home'] = team_result.goals_own
+            self.dic['goals_not_at_home_foreign'] = team_result.goals_foreign
+
+            self.dic['points_own_total'] = team_result.points_own
+            self.dic['points_foreign_total'] = team_result.points_foreign
+            self.dic['points_at_home'] = 0
+            self.dic['points_at_home_foreign'] = 0
+            self.dic['points_not_at_home'] = team_result.points_own
+            self.dic['points_not_at_home_foreign'] = team_result.points_foreign
+
+
+class TeamStatistics:
+    def __init__(self, team_id: int):
+        self.actual_max_group_order_id = 0
+        self.team_statistics_by_group_order_id = {}
+
+    def add_team_result(self, team_result: TeamResult):
+        group_order_id = team_result.group_order_id
+        if group_order_id in self.team_statistics_by_group_order_id:  # this result was already added
+            return
+        incrementation = TeamStatisticsIncrement(team_result)
+        new_team_statistics_entry = TeamStatisticEntry(incrementation)
+        if self.actual_max_group_order_id == 0:  # this is the first entry in the dictionary
+            self.team_statistics_by_group_order_id[group_order_id] = new_team_statistics_entry
+        else:
+            latest_team_statistics_entry = self.get_predecessor_statistics_entry(group_order_id)
+            new_team_statistics_entry.add_team_statistic_dictionary(latest_team_statistics_entry.dic)
+            self.team_statistics_by_group_order_id[group_order_id] = new_team_statistics_entry
+
+            for k in range(self.actual_max_group_order_id, group_order_id):
+                self.team_statistics_by_group_order_id[k].add_team_statistic_dictionary(incrementation.dic)
+
+        if group_order_id > self.actual_max_group_order_id:   # adjust the actual maximal number
+            self.actual_max_group_order_id = group_order_id
+
+    def get_predecessor_statistics_entry(self, group_order_id: int):
+        if group_order_id > self.actual_max_group_order_id:
+            return self.team_statistics_by_group_order_id[self.actual_max_group_order_id]
+        for k in range(self.actual_max_group_order_id, 0, -1):
+            if k in self.team_statistics_by_group_order_id and k < group_order_id:
+                return self.team_statistics_by_group_order_id[k]
+
+
+class TeamStatisticEntry:
+    def __init__(self, increment: TeamStatisticsIncrement):
+        self.dic = increment.dic.copy()
+
+    def add_team_statistic_dictionary(self, team_statistics_dic):
+        for key in team_statistics_dic:
+            self.dic[key] = self.dic[key] + team_statistics_dic[key]
+
+
 class MatchDataFrame:
     def __init__(self, db_result_set):
         self.df = pd.DataFrame(db_result_set)
@@ -121,6 +252,33 @@ class MatchDataFrame:
         self.group_order_id_list = np.sort(pd.unique(self.df["GroupOrderId"]))
         self.group_order_id_list_played = self.__get_played_played_group_order_id__()
         self.match_table = []
+        self.team_statistics = {}
+        self.__init_team_statistics__()
+        self.print_team_statistics()
+
+    def print_team_statistics(self):
+        return
+        for team_id in self.team_statistics:
+            team_statistics = self.team_statistics[team_id]
+            for group_order_id in team_statistics.team_statistics_by_group_order_id:
+                statistics_group_order_id = team_statistics.team_statistics_by_group_order_id[group_order_id]
+                df = pd.DataFrame(statistics_group_order_id.dic, index=[0])
+                print('statistics for {} and {} \n{}'.format(team_id, group_order_id, df))
+
+    def __init_team_statistics__(self):
+        for team_id in self.team_list:
+            self.team_statistics[team_id] = TeamStatistics(team_id)
+
+        for group_order_id in self.group_order_id_list_played:
+            df_sel = self.df[self.df["GroupOrderId"] == group_order_id]
+            for id, row in df_sel.iterrows():
+                match = Match(row)
+                if not match.is_open():
+                    team_result_home = TeamResult(match, True)
+                    team_result_foreign = TeamResult(match, False)
+
+                    self.team_statistics[team_result_home.team_id].add_team_result(team_result_home)
+                    self.team_statistics[team_result_foreign.team_id].add_team_result(team_result_foreign)
 
     def __get_played_played_group_order_id__(self):
         return_list = []
@@ -303,6 +461,7 @@ class GamePredictor:
         self.training_set = []
         self.validation_set = []
         self.test_set = []
+        self.test_match_data = []
 
         # print(self.df_match_actual.year_table)
         # self.get_test_data()
@@ -333,13 +492,62 @@ class GamePredictor:
         for group_order_id in range(1, group_order_id_next + 1):
             match_teams_list_for_group_order_id = self.get_match_teams_list_for_group_order_id(group_order_id)
             for match_teams_list in match_teams_list_for_group_order_id:
-                data = self.get_prediction_data_row(match_teams_list, group_order_id, league_table_actual, league_table_previous)
+                [data, match_data] = self.get_prediction_data_row(match_teams_list, group_order_id, league_table_actual, league_table_previous)
                 if group_order_id == group_order_id_next:
                     self.test_set.append(data)
+                    self.test_match_data.append(match_data)
                 else:
                     self.training_set.append(data)
 
     def get_prediction_data_row(self, match_teams_list, group_order_id, league_table_actual, league_table_previous):
+        """
+        With new structure: goals at home, goals at home
+        :param match_teams_list:
+        :param group_order_id:
+        :param league_table_actual:
+        :param league_table_previous:
+        :return:
+        """
+        match_id = match_teams_list[-4]
+        team_1 = match_teams_list[-3]
+        team_2 = match_teams_list[-2]
+        goal_difference = match_teams_list[-1]
+
+        match_data = [match_id, team_1, team_2, goal_difference]
+
+        data_position_team_1 = self.get_position_data_for_team(team_1, group_order_id - 1, True)
+        data_position_team_2 = self.get_position_data_for_team(team_2, group_order_id - 1, False)
+
+        data_home_team = self.get_list_with_team_position(team_1)
+        data_foreign_team = self.get_list_with_team_position(team_2)
+        test_data = data_position_team_1 + data_position_team_2 + data_home_team + data_foreign_team
+
+        test_data.append( SoccerHelper.map_goal_difference_to_points(goal_difference))
+        return test_data, match_data
+
+    def get_position_data_for_team(self, team_id: int, group_order_id: int, is_home: bool):
+        if not team_id in self.df_match_actual.team_statistics:
+            return [0, 0, 0, 0]
+        team_statistics = self.df_match_actual.team_statistics[team_id]
+        if not group_order_id in team_statistics.team_statistics_by_group_order_id:
+            return [0, 0, 0, 0]
+
+        team_statistics_group_order = team_statistics.team_statistics_by_group_order_id[group_order_id]
+        if is_home:
+            goals = team_statistics_group_order.dic['goals_at_home']
+            goals_foreign = team_statistics_group_order.dic['goals_at_home_foreign']
+            points = team_statistics_group_order.dic['points_at_home']
+            points_foreign = team_statistics_group_order.dic['points_at_home_foreign']
+        else:
+            goals = team_statistics_group_order.dic['goals_not_at_home']
+            goals_foreign = team_statistics_group_order.dic['goals_not_at_home_foreign']
+            points = team_statistics_group_order.dic['points_not_at_home']
+            points_foreign = team_statistics_group_order.dic['points_not_at_home_foreign']
+
+        return [goals, goals_foreign, points, points_foreign]
+
+
+    def get_prediction_data_row_old(self, match_teams_list, group_order_id, league_table_actual, league_table_previous):
         match_id = match_teams_list[-4]
         team_1 = match_teams_list[-3]
         team_2 = match_teams_list[-2]
@@ -368,6 +576,15 @@ class GamePredictor:
         for id, row in df_sel.iterrows():
             list_element = [group_order_id, row['MatchId'], row['HomeTeamId'], row['ForeignTeamId'], row['GoalDifference']]
             return_list.append(list_element)
+        return return_list
+
+    def get_list_with_team_position(self, team_id_input: int):
+        return_list = []
+        for team_id in self.df_match_actual.team_list:
+            if team_id == team_id_input:
+                return_list.append(1)
+            else:
+                return_list.append(0)
         return return_list
 
     def get_results_for_team_in_earlier_group_order_id(self, group_order_id: int, team_id: int, is_playing_home: bool):
@@ -419,9 +636,10 @@ class LearningMachine:
         self.np_target = None
         self.np_prediction_data = None
         self.prediction = None
+        self.accuracy = 0
 
     def get_regression_prediction(self, predictors: np.array, target: np.array, prediction_data: np.array):
-        return self.__get_prediction__(np_predictors, np_target, np_pred_data)
+        return self.__get_prediction__(np_training_data, np_training_data_target, np_test_data)
 
     def __get_prediction__(self, predictors: np.array, target: np.array, prediction_data: np.array):
         self.np_predictors = predictors
@@ -456,11 +674,15 @@ class LearningMachine:
 
     def compare_prediction_with_results(self, test_set_target: np.array):
         np_comparison = np.zeros((self.prediction.shape[0], 3), dtype=np.float)
+        hit_counter = 0
         for k in range(self.prediction.shape[0]):
             np_comparison[k, 0] = self.__get_predicted_value_for_row_index__(k)
             np_comparison[k, 1] = test_set_target[k]
             np_comparison[k, 2] = np_comparison[k, 0] - np_comparison[k, 1]
-        print(np.round(np_comparison, 2))
+            if abs(np_comparison[k, 2]) < 0.5:
+                hit_counter += 1
+        # print(np.round(np_comparison, 2))
+        self.accuracy = hit_counter/self.prediction.shape[0]
         self.__print_statistical_data__(test_set_target)
 
     def __print_statistical_data__(self, test_set_target: np.array):
@@ -482,35 +704,18 @@ class LmLinearRegression(LearningMachine):
         return linear_model.LinearRegression()
 
     def __print_statistical_data__(self, np_test_set_target : np.array):
-        print("Accuracy: {}".format(self.model.score(self.np_prediction_data, np_test_set_target)))
+        self.accuracy = self.model.score(self.np_prediction_data, np_test_set_target)
 
 
 class LmLogisticRegression(LearningMachine):
     def __init__(self):  # is needed since we don't need any other parameters
-        self.pipeline = None
-
-    def __get_prediction__(self, predictors: np.array, target: np.array, prediction_data: np.array):
-        self.np_predictors = predictors
-        self.__set_np_target__(target)
-        self.np_prediction_data = prediction_data
-        self.model = self.get_model()
-        imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
-
-        steps = [('imputation', imp), ('logistic_regression', self.model)]
-        self.pipeline = Pipeline(steps)
-        self.pipeline.fit(self.np_predictors, self.np_target)
-        # make prediction
-        self.prediction = self.pipeline.predict(self.np_prediction_data)
-        print(self.prediction.shape)
-
-        self.prediction = self.prediction.reshape(self.prediction.shape[0], self.np_target.shape[1])
-        return self.prediction
+        pass
 
     def get_model(self):
         return linear_model.LogisticRegression()
 
     def __print_statistical_data__(self, np_test_set_target : np.array):
-        print("Accuracy: {}".format(self.model.score(self.np_prediction_data, np_test_set_target)))
+        self.accuracy = self.model.score(self.np_prediction_data, np_test_set_target)
         print(confusion_matrix(np_test_set_target, self.prediction))
         print(classification_report(np_test_set_target, self.prediction))
 
@@ -588,45 +793,71 @@ previous_table.calculate_np_team_position()
 actual_table = LeagueTable(game_predictor.df_match_actual)
 actual_table.calculate_np_team_position()
 
-game_predictor.calculate_training_set_for_next_group_order_id(previous_table, actual_table, 25)
+algorithms = ["Sequential_Regression", "Sequential_Classification", "Linear_Regression", "Logistic_Regression"]
+algorithms = ["Sequential_Classification", "Logistic_Regression"]
+statistics = []
 
-np_training_set = np.array(game_predictor.training_set)
-np_test_set = np.array(game_predictor.test_set)
+for k in range(5, 27):
+    for algorithm in algorithms:
+        accuracy = 0
+        game_predictor.calculate_training_set_for_next_group_order_id(previous_table, actual_table, k)
 
-np_predictors = np_training_set[:,:-1]
-np_target = np_training_set[:,-1]
-np_target = np_target.reshape((np_target.size, 1))
-np_pred_data = np_test_set[:,:-1]
+        np_training_set = np.array(game_predictor.training_set)
+        np_test_set = np.array(game_predictor.test_set)
 
-np_test_set_target = np_test_set[:,-1]
-np_test_set_target = np_test_set_target.reshape((np_test_set_target.size,1))
+        np_training_data = np_training_set[:, :-1]
+        np_training_data_target = np_training_set[:, -1]
+        np_training_data_target = np_training_data_target.reshape((np_training_data_target.size, 1))
+        np_test_data = np_test_set[:, :-1]
 
-# [np_predictors, np_target, np_pred_data, np_test_set_target] = TestDataGenerator.get_test_data_for_summation()
-print(np_predictors.shape)
-print(np_target.shape)
-print(np_pred_data.shape)
-print(np_test_set_target.shape)
+        np_test_data_target = np_test_set[:, -1]
+        np_test_data_target = np_test_data_target.reshape((np_test_data_target.size, 1))
 
-# print(type(np_target))
-# print(np_target)
+        # [np_predictors, np_target, np_pred_data, np_test_set_target] = TestDataGenerator.get_test_data_for_summation()
 
-hidden_layers = [100, 100, 100, 100]
+        hidden_layers = [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
 
-lm_regression = LmSequentialRegression(hidden_layers)
-lm_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
-lm_regression.compare_prediction_with_results(np_test_set_target)
+        if algorithm == "Sequential_Regression":
+            lm_regression = LmSequentialRegression(hidden_layers)
+            lm_regression.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
+            lm_regression.compare_prediction_with_results(np_test_data_target)
+            accuracy = lm_regression.accuracy
 
-# lm_classification = LmSequentialClassification(hidden_layers)
-# lm_classification.get_regression_prediction(np_predictors, np_target, np_pred_data)
-# lm_classification.compare_prediction_with_results(np_test_set_target)
+        if algorithm == "Sequential_Classification":
+            lm_classification = LmSequentialClassification(hidden_layers)
+            lm_classification.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
+            lm_classification.compare_prediction_with_results(np_test_data_target)
+            accuracy = lm_classification.accuracy
 
-# lm_linear_regression = LmLinearRegression()
-# lm_linear_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
-# lm_linear_regression.compare_prediction_with_results(np_test_set_target)
+        if algorithm == "Linear_Regression":
+            lm_linear_regression = LmLinearRegression()
+            lm_linear_regression.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
+            lm_linear_regression.compare_prediction_with_results(np_test_data_target)
+            accuracy = lm_linear_regression.accuracy
 
-# lm_logistic_regression = LmLogisticRegression()
-# lm_logistic_regression.get_regression_prediction(np_predictors, np_target, np_pred_data)
-# lm_logistic_regression.compare_prediction_with_results(np_test_set_target) a
+        if algorithm == "Logistic_Regression":
+            lm_logistic_regression = LmLogisticRegression()
+            lm_logistic_regression.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
+            lm_logistic_regression.compare_prediction_with_results(np_test_data_target)
+            accuracy = lm_logistic_regression.accuracy
+
+        statistics.append([algorithm, k, accuracy])
+
+df = pd.DataFrame(statistics)
+df.columns = ['Algorithm', 'Spieltag', 'Accuracy']
+
+for algorithm in algorithms:
+    df_sub = df[df['Algorithm'] == algorithm]
+    x = df_sub['Spieltag']
+    y = df_sub['Accuracy']
+    plt.plot(x, y, label=algorithm, marker='x')
+    plt.plot()
+
+plt.legend(loc='upper left')
+plt.show()
+
+
+
 
 
 
