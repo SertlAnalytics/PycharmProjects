@@ -703,9 +703,6 @@ class LmLinearRegression(LearningMachine):
     def get_model(self):
         return linear_model.LinearRegression()
 
-    def __print_statistical_data__(self, np_test_set_target : np.array):
-        self.accuracy = self.model.score(self.np_prediction_data, np_test_set_target)
-
 
 class LmLogisticRegression(LearningMachine):
     def __init__(self):  # is needed since we don't need any other parameters
@@ -794,7 +791,7 @@ actual_table = LeagueTable(game_predictor.df_match_actual)
 actual_table.calculate_np_team_position()
 
 algorithms = ["Sequential_Regression", "Sequential_Classification", "Linear_Regression", "Logistic_Regression"]
-algorithms = ["Sequential_Classification", "Logistic_Regression"]
+# algorithms = ["Sequential_Classification", "Logistic_Regression"]
 statistics = []
 
 for k in range(5, 27):
