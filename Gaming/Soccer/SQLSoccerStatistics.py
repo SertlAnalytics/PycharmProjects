@@ -71,7 +71,7 @@ def make_prediction(np_predictors: np.array, np_target: np.array, np_pred_data: 
     import numpy as np
     from keras.layers import Dense
     from keras.models import Sequential
-    # Specify, compile, and fit the model
+    # Specify, compile, and fit the models
     print('np_predictors.shape={}, np_target.shape={}, np_pred_data.shape={}'.format(np_predictors.shape, np_target.shape, np_pred_data.shape))
     n_cols = np_predictors.shape[1]
     print('n_cols = {}'.format(n_cols))
