@@ -231,15 +231,16 @@ class LeagueTable:
     def __init__(self, mdf: LeagueMatchesDataFrame):
         self.mdf = mdf
         self.df = mdf.df
+        self.db = self.mdf.db
         self.TABLE_COL_DIC = {"TeamId": 0, "Goal_Total": 1, "Foreign_Goal_Total": 2, "Goal_Total_Diff": 3, "Points": 4
             , "Goal_At_Home": 5, "Foreign_Goal_At_Home": 6, "Points_At_Home": 7
             , "Goal_Not_At_Home": 8, "Foreign_Goal_Not_At_Home": 9, "Points_Not_At_Home": 10}
         self.team_list = mdf.team_list
-        # print('team_list={}'.format(self.team_list))
         self.group_order_id_list = mdf.group_order_id_list
         self.np_table = np.empty((self.team_list.size, len(self.TABLE_COL_DIC)))
         self.np_team_position = np.empty((self.team_list.size, self.group_order_id_list.size))
         self.__initialize_np_arrays__()
+        self.calculate_np_team_position()
 
     def __initialize_np_arrays__(self):
         self.np_table = np.zeros((self.team_list.size, len(self.TABLE_COL_DIC)), dtype=np.int32)
@@ -273,7 +274,7 @@ class LeagueTable:
                 df_sel_group_team = df_sel_group[np.logical_or(df_sel_group["HomeTeamId"] == team_id
                                                                , df_sel_group["ForeignTeamId"] == team_id)]
                 for id, row in df_sel_group_team.iterrows():
-                    if not math.isnan(row["PointsTeam1"]) and not math.isnan(row["PointsTeam2"]):
+                    if row["Status"] != 'Open':
                         self.add_to_np_table(row, team_id)
 
             for team_index, team_id in enumerate(self.team_list):
@@ -299,8 +300,8 @@ class LeagueTable:
         return np.where(np_table_sorted_team_col == team_id)[0][0]
 
     def add_to_np_table(self, row, team_id):
-        goals_team1 = row["PointsTeam1"]
-        goals_team2 = row["PointsTeam2"]
+        goals_team1 = row["HomePoints"]
+        goals_team2 = row["ForeignPoints"]
         [points_team1, points_team2] = SoccerHelper.get_points_for_teams(goals_team1, goals_team2)
         team_index = self.get_team_index_in_sorted_np_table(team_id)
         if row["HomeTeamId"] == team_id:
@@ -324,8 +325,8 @@ class LeagueTable:
 
     def plot_team_position(self):
         print(self.group_order_id_list)
-        team = TeamDataFrame()
-        group = GroupDataFrame()
+        team = TeamDataFrame(self.db)
+        group = GroupDataFrame(self.db)
         group_name_list = group.get_column_values_for_id_list(self.group_order_id_list, 'GroupName')
         position_list = [k+1 for k in range(len(self.team_list))]
         for team_index, team_id in enumerate(self.team_list):
@@ -341,14 +342,23 @@ class LeagueTable:
         plt.legend()
         plt.show()
 
+    def show_table(self):
+        df_table = pd.DataFrame(self.np_table)
+        df_table.columns = self.TABLE_COL_DIC
+        df_teams = TeamDataFrame(self.db)
+        team_names = df_teams.get_column_values_for_key_list('TeamId', df_table['TeamId'], 'TeamName')
+        del df_table['TeamId']
+        df_table.insert(0, column='Team', value=team_names)
+        position_list = [k for k in range(1, self.team_list.size + 1)]
+        df_table.insert(0, column='Pos', value=position_list)
+        print(df_table)
 
-class GamePredictor:
-    def __init__(self, league_id: int):
-        self.db = SoccerDatabase()
-        self.league_id = league_id
-        self.df_match = LeagueMatchesDataFrame(self.db, '', self.league_id)
-        self.team_list = self.df_match.team_list
-        self.group_order_id_list = self.df_match.group_order_id_list
+
+class TrainingTestDataProvider:
+    def __init__(self, df_matches: LeagueMatchesDataFrame):
+        self.df_matches = df_matches
+        self.team_list = self.df_matches.team_list
+        self.group_order_id_list = self.df_matches.group_order_id_list
         self.training_set = []
         self.test_set = []
         self.test_match_data = []
@@ -373,8 +383,8 @@ class GamePredictor:
         team_2 = match.team_2_id
         goal_difference = match.goal_difference_1
 
-        data_position_team_1 = self.df_match.get_home_team_statistic_data_until_group_order(team_1, group_order_id - 1)
-        data_position_team_2 = self.df_match.get_foreign_team_statistic_data_until_group_order(team_2, group_order_id - 1)
+        data_position_team_1 = self.df_matches.get_home_team_statistic_data_until_group_order(team_1, group_order_id - 1)
+        data_position_team_2 = self.df_matches.get_foreign_team_statistic_data_until_group_order(team_2, group_order_id - 1)
 
         match_data = [match_id, group_order_id, team_1, team_2, goal_difference, data_position_team_1, data_position_team_2]
 
@@ -390,7 +400,7 @@ class GamePredictor:
 
     def get_result_list_for_team_until_group_order(self, team_id: int, group_order_id: int, is_home: bool):
         return_list = [0 for k in range(self.team_list.size)]
-        df_sel = self.df_match.get_data_frame_for_played_matches_for_team_until_group_order(team_id, group_order_id, is_home)
+        df_sel = self.df_matches.get_data_frame_for_played_matches_for_team_until_group_order(team_id, group_order_id, is_home)
         index = 0
         for order_id in range(1, group_order_id + 1):
             df_sel_order = df_sel[df_sel["GroupOrderId"] == order_id]
@@ -401,7 +411,7 @@ class GamePredictor:
 
     def get_match_list_for_group_order(self, group_order_id: int):
         match_list = []
-        df_sel = self.df_match.df[self.df_match.df["GroupOrderId"] == group_order_id]
+        df_sel = self.df_matches.df[self.df_matches.df["GroupOrderId"] == group_order_id]
         for id, row in df_sel.iterrows():
             match_list.append(Match(row))
         return match_list
@@ -413,10 +423,12 @@ class GamePredictor:
         return return_list
 
 
-class GamePrediction:
+class SoccerGamePrediction:
     def __init__(self, league_id: int):
         self.league_id = league_id
-        self.game_predictor = GamePredictor(self.league_id)
+        self.df_matches = LeagueMatchesDataFrame(SoccerDatabase(), '', self.league_id)
+        self.db = self.df_matches.db
+        self.training_test_provider = TrainingTestDataProvider(self.df_matches)
         self.algorithm_list = []
         self.statistics = []
         self.range_from = 0
@@ -429,10 +441,10 @@ class GamePrediction:
         self.range_from = range_from
         self.range_to = (range_from + 1) if range_to < range_from else range_to + 1
         for k in range(self.range_from, self.range_to):
-            self.game_predictor.calculate_training_set_for_next_group_order_id(k)
+            self.training_test_provider.calculate_training_set_for_next_group_order_id(k)
 
-            np_training_set = np.array(self.game_predictor.training_set)
-            np_test_set = np.array(self.game_predictor.test_set)
+            np_training_set = np.array(self.training_test_provider.training_set)
+            np_test_set = np.array(self.training_test_provider.test_set)
 
             np_training_data = np_training_set[:, :-1]
 
@@ -502,7 +514,7 @@ class GamePrediction:
         plt.show()
 
     def print_overview(self):
-        df = pd.DataFrame(self.game_predictor.test_match_data)
+        df = pd.DataFrame(self.training_test_provider.test_match_data)
         df.columns = ['Match', 'SpT', 'T_1', 'T_2', 'G_Df', 'Team_1_G:G P:P', 'Team_2_G:G P:P']
         df.insert(5, column='Pred', value=self.np_prediction)
         self.add_team_details_to_data_frame(df)
@@ -520,21 +532,25 @@ class GamePrediction:
             return True
 
     def add_team_details_to_data_frame(self, df: pd.DataFrame):
-        team = TeamDataFrame(self.game_predictor.db)
+        team = TeamDataFrame(self.db)
         for team_id in team.team_id_name_dic:
             df.loc[df.T_1 == team_id, 'T_1'] = team.team_id_name_dic[team_id]
             df.loc[df.T_2 == team_id, 'T_2'] = team.team_id_name_dic[team_id]
 
 
 
-algorithms = [lm.ModelType.SEQUENTIAL_REGRESSION, lm.ModelType.SEQUENTIAL_CLASSIFICATION,
-              lm.ModelType.LINEAR_CLASSIFICATION, lm.ModelType.LINEAR_REGRESSION]
-
-# 3005|1. Fußball-Bundesliga 2016/2017 - 4153|1. Fußball-Bundesliga 2017/2018
-game_prediction = GamePrediction(4153)
+# algorithms = [lm.ModelType.SEQUENTIAL_REGRESSION, lm.ModelType.SEQUENTIAL_CLASSIFICATION,
+#               lm.ModelType.LINEAR_CLASSIFICATION, lm.ModelType.LINEAR_REGRESSION]
+#
+# # 3005|1. Fußball-Bundesliga 2016/2017 - 4153|1. Fußball-Bundesliga 2017/2018
+game_prediction = SoccerGamePrediction(4153)
 game_prediction.run_algorithm([lm.ModelType.LINEAR_CLASSIFICATION], 27, 28)
 game_prediction.show_statistics()
 game_prediction.print_overview()
+
+
+
+
 
 
 

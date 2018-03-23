@@ -47,7 +47,6 @@ class DatabaseDataFrame:
         self.result_set = self.db.get_result_set_for_query(self.query_active)
         self.df = pd.DataFrame(self.result_set)
         self.df.columns = self.result_set[0].keys()
-        self.actual_key_column = ''
 
     def __get_query__(self):
         return self.query  # will be overwritten by sub classes
@@ -62,9 +61,7 @@ class DatabaseDataFrame:
         return return_list
 
     def get_column_value_for_key(self, key_column: str, key: int, value_column: str):
-        if self.actual_key_column != key_column:
-            self.actual_key_column = key_column
-            df_subset = self.df[self.df[key_column] == key]
+        df_subset = self.df[self.df[key_column] == key]
         return df_subset[value_column].values[0]
 
     def get_column_values_for_key_list(self, key_column: str, key_list, value_column: str):
