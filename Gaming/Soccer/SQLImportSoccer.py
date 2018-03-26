@@ -28,7 +28,7 @@ location = Table('Location', metadata, autoload=True, autoload_with=engine)
 # print(repr(match))
 
 # Assign URL to variable: url - bl/2011 - 2017 available
-url = 'https://www.openligadb.de/api/getmatchdata/bl1/2016'
+url = 'https://www.openligadb.de/api/getmatchdata/bl3/2017'
 
 # Package the request, send the request and catch the response: r
 r = requests.get(url)

@@ -76,9 +76,6 @@ class LearningMachine:
     def __add_output_layer__(self):
         pass
 
-    def __get_predicted_value_for_row_index__(self, k: int):
-        return self.prediction[k]
-
     def __compile_model__(self):
         pass
 
@@ -86,7 +83,7 @@ class LearningMachine:
         np_comparison = np.zeros((self.prediction.shape[0], 3), dtype=np.float)
         hit_counter = 0
         for k in range(self.prediction.shape[0]):
-            np_comparison[k, 0] = self.__get_predicted_value_for_row_index__(k)
+            np_comparison[k, 0] = self.prediction[k]
             np_comparison[k, 1] = test_set_target[k]
             np_comparison[k, 2] = np_comparison[k, 0] - np_comparison[k, 1]
             if abs(np_comparison[k, 2]) < 0.5:
@@ -171,6 +168,3 @@ class LmSequentialClassification(LearningMachine):
 
     def __add_output_layer__(self):
         self.model.add(Dense(self.np_target.shape[1], activation='softmax'))
-
-    def __get_predicted_value_for_row_index__(self, k: int):
-        return self.prediction[k].argmax(axis=0)

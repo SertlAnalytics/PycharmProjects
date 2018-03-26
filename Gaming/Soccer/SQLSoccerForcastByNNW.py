@@ -119,6 +119,32 @@ class LeagueMatchesDataFrame(dbf.DatabaseDataFrame):
     def __get_query__(self):
         return SQLStatement.get_select_statement_for_league(self.league_id)
 
+    def simulate_match(self, match_id: int, status: str, prediction: int):
+        if status != 'Open':
+            return
+        self.df.loc[self.df.MatchId == match_id, 'Status'] = 'Simulated'
+        if prediction == 0:
+            self.df.loc[self.df.MatchId == match_id, 'HomeTeamGoals'] = 1
+            self.df.loc[self.df.MatchId == match_id, 'ForeignTeamGoals'] = 1
+            self.df.loc[self.df.MatchId == match_id, 'GoalDifferenceHome'] = 10
+            self.df.loc[self.df.MatchId == match_id, 'GoalDifferenceForeign'] = 10
+            self.df.loc[self.df.MatchId == match_id, 'HomePoints'] = 1
+            self.df.loc[self.df.MatchId == match_id, 'ForeignPoints'] = 1
+        elif prediction == 1:
+            self.df.loc[self.df.MatchId == match_id, 'HomeTeamGoals'] = 2
+            self.df.loc[self.df.MatchId == match_id, 'ForeignTeamGoals'] = 1
+            self.df.loc[self.df.MatchId == match_id, 'GoalDifferenceHome'] = 11
+            self.df.loc[self.df.MatchId == match_id, 'GoalDifferenceForeign'] = 9
+            self.df.loc[self.df.MatchId == match_id, 'HomePoints'] = 3
+            self.df.loc[self.df.MatchId == match_id, 'ForeignPoints'] = 0
+        else:
+            self.df.loc[self.df.MatchId == match_id, 'HomeTeamGoals'] = 1
+            self.df.loc[self.df.MatchId == match_id, 'ForeignTeamGoals'] = 2
+            self.df.loc[self.df.MatchId == match_id, 'GoalDifferenceHome'] = 9
+            self.df.loc[self.df.MatchId == match_id, 'GoalDifferenceForeign'] = 11
+            self.df.loc[self.df.MatchId == match_id, 'HomePoints'] = 0
+            self.df.loc[self.df.MatchId == match_id, 'ForeignPoints'] = 3
+
     def add_calculated_columns(self):
         self.df['GoalDifferenceHome'] = 10 + np.subtract(self.df['HomeTeamGoals'], self.df['ForeignTeamGoals'])
         self.df['GoalDifferenceForeign'] = 10 + np.subtract(self.df['ForeignTeamGoals'], self.df['HomeTeamGoals'])
@@ -362,6 +388,10 @@ class TrainingTestDataProvider:
         self.training_set = []
         self.test_set = []
         self.test_match_data = []
+        self.np_training_data = None
+        self.np_training_data_target = None
+        self.np_test_data = None
+        self.np_test_data_target = None
 
     def calculate_training_set_for_next_group_order_id(self, group_order_id_next: int):
         self.training_set = []
@@ -376,24 +406,52 @@ class TrainingTestDataProvider:
                     self.test_match_data.append(match_data)
                 else:
                     self.training_set.append(data)
+        self.__calculate_training_test_sets_for_current_run__()
+
+    def add_as_simulation(self, prediction):
+        df = pd.DataFrame(self.test_match_data[-prediction.size:])  # get latest matches
+        df.columns = ['Match', 'SpT', 'Status', 'T_1', 'T_2', 'G_Df', 'Team_1_G:G P:P', 'Team_2_G:G P:P']
+        df.insert(6, column='Pred', value=prediction)
+        for ind, rows in df.iterrows():
+            self.df_matches.simulate_match(rows['Match'], rows['Status'], rows['Pred'])
+
+    def  __calculate_training_test_sets_for_current_run__(self):
+        np_training_set = np.array(self.training_set)
+        np_test_set = np.array(self.test_set)
+
+        self.np_training_data = np_training_set[:, :-1]
+
+        self.np_training_data_target = np_training_set[:, -1]
+        self.np_training_data_target = self.np_training_data_target.reshape((self.np_training_data_target.size, 1))
+        self.np_test_data = np_test_set[:, :-1]
+
+        # print('np_test_data = {}'.format(np_test_data))
+        self.np_test_data_target = np_test_set[:, -1]
+        self.np_test_data_target = self.np_test_data_target.reshape((self.np_test_data_target.size, 1))
 
     def get_prediction_data_row(self, match: Match, group_order_id):
         match_id = match.match_id
         team_1 = match.team_1_id
         team_2 = match.team_2_id
         goal_difference = match.goal_difference_1
+        match_status = match.status
 
         data_position_team_1 = self.df_matches.get_home_team_statistic_data_until_group_order(team_1, group_order_id - 1)
         data_position_team_2 = self.df_matches.get_foreign_team_statistic_data_until_group_order(team_2, group_order_id - 1)
 
-        match_data = [match_id, group_order_id, team_1, team_2, goal_difference, data_position_team_1, data_position_team_2]
+        match_data = [match_id, group_order_id, match_status, team_1, team_2, goal_difference
+            , data_position_team_1, data_position_team_2]
 
         data_team_1 = self.get_result_list_for_team_until_group_order(team_1, group_order_id, True)
         data_team_2 = self.get_result_list_for_team_until_group_order(team_2, group_order_id, False)
 
+        match_data_home_team = self.get_position_result_list_for_team_until_group_order(team_1, group_order_id, True)
+        match_data_foreign_team = self.get_position_result_list_for_team_until_group_order(team_2, group_order_id, False)
+
         data_home_team = self.get_list_with_team_position(team_1)
         data_foreign_team = self.get_list_with_team_position(team_2)
-        test_data = data_team_1 + data_team_2 + data_home_team + data_foreign_team
+        test_data = data_team_1 + data_team_2 + match_data_home_team + match_data_foreign_team + \
+                    data_home_team + data_foreign_team
 
         test_data.append( SoccerHelper.map_goal_difference_to_points(goal_difference))
         return test_data, match_data
@@ -422,6 +480,22 @@ class TrainingTestDataProvider:
         return_list[ind[0]] = 1
         return return_list
 
+    def get_position_result_list_for_team_until_group_order(self, team_id: int, group_order_id: int, is_home: bool):
+        return_list = [0 for k in range(self.team_list.size)]
+        df_sel = self.df_matches.get_data_frame_for_played_matches_for_team_until_group_order(team_id, group_order_id,
+                                                                                              is_home)
+        index = 0
+        for team_ind, team_id in enumerate(self.team_list):
+            if is_home:
+                df_sel_team = df_sel[df_sel["ForeignTeamId"] == team_id]
+            else:
+                df_sel_team = df_sel[df_sel["HomeTeamId"] == team_id]
+
+            for id, row in df_sel_team.iterrows():
+                return_list[team_ind] = row['GoalDifferenceHome'] if is_home else row['GoalDifferenceForeign']
+                index = index + 1
+        return return_list
+
 
 class SoccerGamePrediction:
     def __init__(self, league_id: int):
@@ -430,74 +504,75 @@ class SoccerGamePrediction:
         self.db = self.df_matches.db
         self.training_test_provider = TrainingTestDataProvider(self.df_matches)
         self.algorithm_list = []
+        self.np_prediction_dir = {}
+        self.column_prediction = ''
         self.statistics = []
         self.range_from = 0
         self.range_to = 0
+        self.with_simulation = False
 
-    def run_algorithm(self, algorithm_list, range_from: int, range_to: int = 0):
+    def run_algorithm(self, algorithm_list, range_from: int, range_to: int = 0, with_simulation: bool = False):
+        self.with_simulation = with_simulation
         self.algorithm_list = algorithm_list
+        self.np_prediction_dir = {}
+        for algorithm in self.algorithm_list:
+            self.np_prediction_dir[algorithm] = None
         self.statistics = []
-        self.np_prediction = None
         self.range_from = range_from
         self.range_to = (range_from + 1) if range_to < range_from else range_to + 1
         for k in range(self.range_from, self.range_to):
             self.training_test_provider.calculate_training_set_for_next_group_order_id(k)
-
-            np_training_set = np.array(self.training_test_provider.training_set)
-            np_test_set = np.array(self.training_test_provider.test_set)
-
-            np_training_data = np_training_set[:, :-1]
-
-            np_training_data_target = np_training_set[:, -1]
-            np_training_data_target = np_training_data_target.reshape((np_training_data_target.size, 1))
-            np_test_data = np_test_set[:, :-1]
-
-            # print('np_test_data = {}'.format(np_test_data))
-            np_test_data_target = np_test_set[:, -1]
-            np_test_data_target = np_test_data_target.reshape((np_test_data_target.size, 1))
+            np_training_data = self.training_test_provider.np_training_data
+            np_training_data_target = self.training_test_provider.np_training_data_target
+            print(self.training_test_provider.team_list)
+            np_test_data = self.training_test_provider.np_test_data
+            # print(self.training_test_provider.test_match_data)
+            # print(np_test_data)
+            np_test_data_target = self.training_test_provider.np_test_data_target
 
             # [np_training_data, np_training_data_target, np_test_data, np_test_data_target] = td.TestDataGenerator.get_test_data_for_summation()
 
-            for algorithm in algorithm_list:
+            for algorithm in self.algorithm_list:
                 accuracy = 0
+                prediction = None
 
-                hidden_layers = [100, 100, 100, 100, 100, 100]
+                hidden_layers = [1000, 1000, 1000, 1000, 1000, 1000]
 
                 if algorithm == lm.ModelType.SEQUENTIAL_REGRESSION:
                     lm_regression = lm.LmSequentialRegression(hidden_layers)
-                    lm_regression.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
-                    self.append_to_np_prediction(lm_regression.prediction)
+                    prediction = lm_regression.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
                     lm_regression.compare_prediction_with_results(np_test_data_target)
                     accuracy = lm_regression.accuracy
 
                 if algorithm == lm.ModelType.SEQUENTIAL_CLASSIFICATION:
                     lm_classification = lm.LmSequentialClassification(hidden_layers)
-                    lm_classification.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
-                    self.append_to_np_prediction(lm_classification.prediction)
+                    prediction = lm_classification.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
                     lm_classification.compare_prediction_with_results(np_test_data_target)
                     accuracy = lm_classification.accuracy
 
                 if algorithm == lm.ModelType.LINEAR_REGRESSION:
                     lm_linear_regression = lm.LmLinearRegression()
-                    lm_linear_regression.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
-                    self.append_to_np_prediction(lm_linear_regression.prediction)
+                    prediction = lm_linear_regression.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
                     lm_linear_regression.compare_prediction_with_results(np_test_data_target)
                     accuracy = lm_linear_regression.accuracy
 
                 if algorithm == lm.ModelType.LINEAR_CLASSIFICATION:
                     lm_logistic_regression = lm.LmLogisticRegression()
-                    lm_logistic_regression.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
-                    self.append_to_np_prediction(lm_logistic_regression.prediction)
+                    prediction = lm_logistic_regression.get_regression_prediction(np_training_data, np_training_data_target, np_test_data)
                     lm_logistic_regression.compare_prediction_with_results(np_test_data_target)
                     accuracy = lm_logistic_regression.accuracy
 
+                self.append_to_np_prediction(algorithm, prediction)
+                if self.with_simulation:
+                    self.training_test_provider.add_as_simulation(prediction)
+                print('algorithm={}, k={}, accuracy={}'.format(algorithm, k, accuracy))
                 self.statistics.append([algorithm, k, accuracy])
 
-    def append_to_np_prediction(self, prediction):
-        if self.np_prediction is None:
-            self.np_prediction = prediction
+    def append_to_np_prediction(self, algorithm: str, prediction):
+        if self.np_prediction_dir[algorithm] is None:
+            self.np_prediction_dir[algorithm] = prediction
         else:
-            self.np_prediction = np.append(self.np_prediction, prediction, axis=0)
+            self.np_prediction_dir[algorithm] = np.append(self.np_prediction_dir[algorithm], prediction, axis=0)
 
     def show_statistics(self):
         df = pd.DataFrame(self.statistics)
@@ -515,18 +590,24 @@ class SoccerGamePrediction:
 
     def print_overview(self):
         df = pd.DataFrame(self.training_test_provider.test_match_data)
-        df.columns = ['Match', 'SpT', 'T_1', 'T_2', 'G_Df', 'Team_1_G:G P:P', 'Team_2_G:G P:P']
-        df.insert(5, column='Pred', value=self.np_prediction)
+        columns = ['Match', 'SpT', 'Status', 'T_1', 'T_2', 'G_Df', 'Team_1_G:G P:P', 'Team_2_G:G P:P']
+        df.columns = columns
         self.add_team_details_to_data_frame(df)
-        df.insert(6, column='OK', value=df.apply(self.calculate_result, axis=1))
+        column = columns.index('G_Df') - 2
+        for ind, algorithm in enumerate(self.algorithm_list):
+            column = column + 2
+            self.column_prediction = 'P_' + str(ind)
+            np_prediction = self.np_prediction_dir[algorithm]
+            df.insert(column + 1, column=self.column_prediction, value=np_prediction)
+            df.insert(column + 2, column='OK_' + str(ind), value=df.apply(self.calculate_result, axis=1))
         print(df)
 
     def calculate_result(self, row):
-        if row['G_Df'] == 10 and row['Pred'] != 0:
+        if row['G_Df'] == 10 and row[self.column_prediction] != 0:
             return False
-        elif row['G_Df'] < 10 and row['Pred'] != 2:
+        elif row['G_Df'] < 10 and row[self.column_prediction] != 2:
             return False
-        elif row['G_Df'] > 10 and row['Pred'] != 1:
+        elif row['G_Df'] > 10 and row[self.column_prediction] != 1:
             return False
         else:
             return True
@@ -538,15 +619,16 @@ class SoccerGamePrediction:
             df.loc[df.T_2 == team_id, 'T_2'] = team.team_id_name_dic[team_id]
 
 
-
 # algorithms = [lm.ModelType.SEQUENTIAL_REGRESSION, lm.ModelType.SEQUENTIAL_CLASSIFICATION,
 #               lm.ModelType.LINEAR_CLASSIFICATION, lm.ModelType.LINEAR_REGRESSION]
 #
-# # 3005|1. Fußball-Bundesliga 2016/2017 - 4153|1. Fußball-Bundesliga 2017/2018
+# # 3005|1. Fußball-Bundesliga 2016/2017 - 4153|1. Fußball-Bundesliga 2017/2018, 4156|3. Fußball-Bundesliga 2017/2018
+
 game_prediction = SoccerGamePrediction(4153)
-game_prediction.run_algorithm([lm.ModelType.LINEAR_CLASSIFICATION], 27, 28)
-game_prediction.show_statistics()
+game_prediction.run_algorithm([lm.ModelType.LINEAR_CLASSIFICATION], 27, 28, True)
 game_prediction.print_overview()
+game_prediction.show_statistics()
+
 
 
 
