@@ -43,6 +43,7 @@ class LearningMachine:
         self.np_target = None
         self.np_prediction_data = None
         self.prediction = None
+        self.prediction_pct = None  # percentage for classification
         self.accuracy = 0
 
     def get_regression_prediction(self, np_training_data: np.array, np_training_data_target: np.array, np_test_data: np.array):
@@ -151,6 +152,7 @@ class LmSequentialClassification(LearningMachine):
         return Sequential()
 
     def __manipulate_model_prediction__(self):
+        self.prediction_pct = np.max(self.prediction, axis=1).round(2)
         self.prediction = np.argmax(self.prediction, axis=1)
 
     def __add_hidden_layers__(self):
