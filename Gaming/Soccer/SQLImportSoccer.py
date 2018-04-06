@@ -28,7 +28,7 @@ location = Table('Location', metadata, autoload=True, autoload_with=engine)
 # print(repr(match))
 
 # Assign URL to variable: url - bl/2011 - 2017 available
-url = 'https://www.openligadb.de/api/getmatchdata/bl3/2017'
+url = 'https://www.openligadb.de/api/getmatchdata/bl1/2017'
 
 # Package the request, send the request and catch the response: r
 r = requests.get(url)
@@ -61,11 +61,22 @@ def get_number_table_records_by_id(table: Table, id: Integer):
         stmt = stmt.where(table.c.TeamId == id)
     return len(connection.execute(stmt).fetchall())
 
+
+def was_match_played(match_id: int) -> bool:
+    stmt = """
+       SELECT M.*, MR.* 
+       FROM match M 
+       JOIN matchresult MR on M.MatchId = MR.MatchId 
+       WHERE M.MatchId = """ + str(match_id)
+    return len(connection.execute(stmt).fetchall())
+
+
 def insert_values(table: Table, insert_dic):
     stmt = insert(table)
     results = connection.execute(stmt, insert_dic)
     print('Inserted into table {}: {} record(s)'.format(table.name, results.rowcount))
     return results.rowcount
+
 
 for dictionaries in json_data:
     insert_dic = {}
@@ -77,9 +88,7 @@ for dictionaries in json_data:
     league_id = dictionaries["LeagueId"]
 
     if get_number_table_records_by_id(league, league_id) == 0:  # create league
-        insert_dic = {}
-        insert_dic['LeagueId'] = league_id
-        insert_dic['LeagueName'] = dictionaries["LeagueName"]
+        insert_dic = {'LeagueId' : league_id, 'LeagueName' : dictionaries["LeagueName"]}
         print('Creating League: {} - {}'.format(league_id, insert_dic['LeagueName']))
         insert_values(league, insert_dic)
 

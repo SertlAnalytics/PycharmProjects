@@ -11,6 +11,10 @@ from keras.models import Sequential
 from keras.utils import to_categorical
 from sklearn import linear_model
 from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import GridSearchCV
 
 
 class Optimizer:
@@ -81,16 +85,7 @@ class LearningMachine:
         pass
 
     def compare_prediction_with_results(self, test_set_target: np.array):
-        np_comparison = np.zeros((self.prediction.shape[0], 3), dtype=np.float)
-        hit_counter = 0
-        for k in range(self.prediction.shape[0]):
-            np_comparison[k, 0] = self.prediction[k]
-            np_comparison[k, 1] = test_set_target[k]
-            np_comparison[k, 2] = np_comparison[k, 0] - np_comparison[k, 1]
-            if abs(np_comparison[k, 2]) < 0.5:
-                hit_counter += 1
-        # print(np.round(np_comparison, 2))
-        self.accuracy = hit_counter/self.prediction.shape[0]
+        self.accuracy = accuracy_score(self.prediction, test_set_target )
         self.__print_statistical_data__(test_set_target)
 
     def __print_statistical_data__(self, test_set_target: np.array):
@@ -117,12 +112,21 @@ class LmLogisticRegression(LearningMachine):
         pass
 
     def get_model(self):
+        # Create the hyperparameter grid
+        # c_space = np.logspace(-5, 8, 15)
+        # param_grid = {'C': c_space, 'penalty': ['l1', 'l2']}
+        # logreg_cv = GridSearchCV(linear_model.LogisticRegression(), param_grid, cv=5)
+        # return logreg_cv
+        scaler = StandardScaler()
+        pipeline = make_pipeline(scaler, linear_model.LogisticRegression())
         return linear_model.LogisticRegression()
 
     def __print_statistical_data__(self, np_test_set_target : np.array):
         self.accuracy = self.model.score(self.np_prediction_data, np_test_set_target)
         print(confusion_matrix(np_test_set_target, self.prediction))
         print(classification_report(np_test_set_target, self.prediction))
+        # print("Tuned Logistic Regression Parameter: {}".format(self.model.best_params_))
+        # print("Tuned Logistic Regression Accuracy: {}".format(self.model.best_score_))
 
 
 class LmSequentialRegression(LearningMachine):

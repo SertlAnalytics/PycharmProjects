@@ -275,30 +275,35 @@ class ContinuousLeague:
 
     def get_training_data_for_match_id(self, match_id: int, levels_back: int):
         training_data = []
+        home_data = []
+        foreign_data = []
         match = self.match_dic[match_id]
-        group_order_until = match.group_order_id
-        start = group_order_until - levels_back  # - 1 because we run over index
-        for group_order in range(start, group_order_until):
-            home_data = self.get_cummulated_data_for_team_until_group_order(match.team_1_id, group_order, True)
-            foreign_data = self.get_cummulated_data_for_team_until_group_order(match.team_2_id, group_order, False)
-            training_data = training_data + home_data + foreign_data
-        return training_data
+        for level_back in range(levels_back, 0, -1):
+            home_data = home_data + self.get_cummulated_data_for_team_for_earlier_match(match.team_1_id, match.group_order_id, level_back, True)
+            foreign_data = foreign_data + self.get_cummulated_data_for_team_for_earlier_match(match.team_2_id, match.group_order_id, level_back, False)
+        return home_data + foreign_data
 
-    def get_cummulated_data_for_team_until_group_order(self, team_id:int, group_order_until:int, for_home:bool):
+    def get_cummulated_data_for_team_for_earlier_match(self, team_id:int, group_order_set_off:int, level_back: int, for_home:bool):
         points = 0
         own_goals = 0
         foreign_goals = 0
-        for group_order_ind in range(group_order_until):
+        counter_level = 0
+        for group_order_ind in range(group_order_set_off - 1, -1, -1):
             match = self.match_tableau[self.team_dic[team_id]][group_order_ind]
             if for_home and team_id == match.team_1_id:
-                points += match.team_1_points
-                own_goals += match.team_1_goals
-                foreign_goals += match.team_2_goals
+                counter_level += 1
+                if counter_level > level_back:
+                    points += match.team_1_points
+                    own_goals += match.team_1_goals
+                    foreign_goals += match.team_2_goals
             elif not for_home and team_id == match.team_2_id:
-                points += match.team_2_points
-                own_goals += match.team_2_goals
-                foreign_goals += match.team_1_goals
-        return [points, own_goals, foreign_goals]
+                counter_level += 1
+                if counter_level > level_back:
+                    points += match.team_2_points
+                    own_goals += match.team_2_goals
+                    foreign_goals += match.team_1_goals
+
+        return [points] #  [points, own_goals, foreign_goals]
 
 
 class LeagueTable:
@@ -489,7 +494,7 @@ class TrainingTestDataProvider:
 
     def get_prediction_data_row_for_continuous_league(self, match: Match, group_order_id):
         match_data = self.get_enhanced_match_data_for_match_and_group_order(match, group_order_id)
-        test_data = self.continuous_league.get_training_data_for_match_id(match.match_id, 5)
+        test_data = self.continuous_league.get_training_data_for_match_id(match.match_id, 6)
         test_data.append(SoccerHelper.map_goal_difference_to_points(match.goal_difference_1))
         return test_data, match_data
 
@@ -651,15 +656,15 @@ class SoccerGamePrediction:
         # self.hidden_layer_list.append([10, 10, 10, 10, 10, 10, 10, 10, 10])
 
     def run_prediction_for_group_order(self, group_order: int):
-        # self.training_test_provider.calculate_training_set_for_next_group_order_id(group_order)
-        self.training_test_provider.calculate_continuous_league_training_set_for_next_group_order_id(group_order)
+        self.training_test_provider.calculate_training_set_for_next_group_order_id(group_order)
+        # self.training_test_provider.calculate_continuous_league_training_set_for_next_group_order_id(group_order)
         np_training_data = self.training_test_provider.np_training_data
         np_training_data_target = self.training_test_provider.np_training_data_target
-        print(self.training_test_provider.team_list)
+        # print(self.training_test_provider.team_list)
         np_test_data = self.training_test_provider.np_test_data
         # print(self.training_test_provider.test_match_data)
         # print(pd.DataFrame(np_training_data))
-        # print(pd.DataFrame(np_test_data))
+        print(pd.DataFrame(np_test_data))
         # print(self.training_test_provider.test_match_data)
         np_test_data_target = self.training_test_provider.np_test_data_target
         # [np_training_data, np_training_data_target, np_test_data, np_test_data_target] = td.TestDataGenerator.get_test_data_for_summation()
@@ -731,6 +736,7 @@ class SoccerGamePrediction:
             plt.plot(x, y, label=key, marker='x')
             plt.plot()
 
+        plt.xticks(df_sub['Spieltag'])
         plt.legend(loc='upper left')
         plt.show()
 
@@ -773,7 +779,7 @@ class SoccerGamePrediction:
 # # 3005|1. Fußball-Bundesliga 2016/2017 - 4153|1. Fußball-Bundesliga 2017/2018, 4156|3. Fußball-Bundesliga 2017/2018
 
 game_prediction = SoccerGamePrediction(4153)
-game_prediction.run_algorithm([lm.ModelType.LINEAR_CLASSIFICATION, lm.ModelType.SEQUENTIAL_CLASSIFICATION], 25, 28, False)
+game_prediction.run_algorithm([lm.ModelType.LINEAR_CLASSIFICATION], 29, 29, False)
 game_prediction.print_overview()
 game_prediction.show_statistics()
 

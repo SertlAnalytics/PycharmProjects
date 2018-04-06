@@ -6,7 +6,6 @@ import math
 import time
 import os
 import sys
-import psutil
 import random
 import ast
 from typing import Union
