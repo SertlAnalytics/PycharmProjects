@@ -41,7 +41,7 @@ class ClassificationPlotter:
         self.xx, self.yy = self.get_meshgrid()
         self.current_subplot = 0
         self.y_c = self.get_y_color()
-        print(self.y_c)
+        # print(self.y_c)
 
     def show(self):
         # plt.legend(loc=0)
@@ -56,6 +56,25 @@ class ClassificationPlotter:
         self.activate_next_subplot()
         plt.scatter(self.X1, self.X2, marker='o', edgecolors='w', c=self.y_c, s=20)
         plt.title(title)
+
+    def mark_misclassified_test_data(self, X_test, y_test, y_pred):
+        mask_ok = np.where((y_test == y_pred), True, False)
+
+        X_test_ok = X_test[np.ix_(mask_ok)]
+        plt.scatter(X_test_ok[:, 0], X_test_ok[:, 1], s=40, facecolors='none', edgecolors='g'
+                    , label='correctly classified test data')
+
+        mask_nok = np.logical_not(mask_ok)
+        X_test_nok = X_test[mask_nok, :]
+        plt.scatter(X_test_nok[:, 0], X_test_nok[:, 1], s=40, facecolors='none', edgecolors='y'
+                    , label='misclassified test data')
+
+        plt.legend(loc=0)
+
+        # print(X_test)
+        # print(mask_ok)
+        # print(y_test)
+        # print(y_pred)
 
     def plot_decision_function_for_model(self, model_name, model):
         self.activate_next_subplot_with_original_data(model_name)
@@ -92,7 +111,8 @@ class Classification:
         self.to_be_plotted = to_be_plotted
         self.write_to_output = write_to_output
         self.df = self.get_data_frame_from_file()
-        # self.print_df_details()
+        # self.linearise_df()
+        self.print_df_details()
         self.np_input = np.array(self.df)
         self.np_values = self.np_input[:, :-1]
         self.np_labels = self.np_input[:, -1]  #.reshape(self.np_values.shape[0],1)
@@ -103,6 +123,10 @@ class Classification:
         self.output_list = []
         self.plotter = self.get_plotter()
         self.plot_start()
+
+    def linearise_df(self):
+        self.df.loc[self.df.A + self.df.B < 4, 'label'] = 1
+        self.df.loc[self.df.A + self.df.B > 4, 'label'] = 0
 
     def overwrite_with_iris_data(self):
         iris = datasets.load_iris()
@@ -170,6 +194,7 @@ class Classification:
         # print(classification_report(y_test, y_pred))
         if self.to_be_plotted:
             self.plotter.plot_decision_function_for_model(model_name, model)
+            self.plotter.mark_misclassified_test_data(X_test, y_test, y_pred)
         self.output_list.append('{},{},{}'.format(model_name, round(gs_cv.best_score_, 4),
                                                   round(model.score(X_test, y_test), 4)))
 
