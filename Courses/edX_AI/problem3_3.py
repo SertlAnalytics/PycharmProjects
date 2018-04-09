@@ -40,30 +40,32 @@ class ClassificationPlotter:
         self.X2 = self.X[:, 1]
         self.xx, self.yy = self.get_meshgrid()
         self.current_subplot = 0
+        self.y_c = self.get_y_color()
+        print(self.y_c)
 
     def show(self):
         # plt.legend(loc=0)
         plt.tight_layout()
         plt.show()
 
+    def get_y_color(self):
+        color = ['blue', 'green', 'red']
+        return [color[int(v)] for v in self.y]
+
     def activate_next_subplot_with_original_data(self, title: str):
         self.activate_next_subplot()
-        plt.scatter(self.X1, self.X2, marker='o', edgecolors='w', c=self.y, s=20)
+        plt.scatter(self.X1, self.X2, marker='o', edgecolors='w', c=self.y_c, s=20)
         plt.title(title)
 
     def plot_decision_function_for_model(self, model_name, model):
         self.activate_next_subplot_with_original_data(model_name)
-        # ['svm_linear', 'svm_polynomial', 'svm_rbf', 'logistic', 'knn', 'decision_tree', 'random_forest']
-        if not model_name in ['svm_linear', 'svm_polynomial', 'svm_rbf', 'decision_tree', 'random_forest', 'logistic']:
+        if model_name == 'xsvm_linear':
             Z = model.decision_function(np.c_[self.xx.ravel(), self.yy.ravel()])
-            print('self.xx.shape={}, Z.shape={}'.format(self.xx.shape, Z.shape))
-            print(Z)
             # Put the result into a color plot
             Z = Z.reshape(self.xx.shape)
-            # plt.pcolormesh(self.xx, self.yy, Z > 0, cmap=plt.cm.Paired)
-            plt.pcolormesh(self.xx, self.yy, Z)
-            # plt.contour(self.xx, self.yy, Z, colors=['k', 'k', 'k'],
-            #             linestyles=['--', '-', '--'], levels=[-.5, 0, .5])
+            plt.pcolormesh(self.xx, self.yy, Z > 0, cmap=plt.cm.Paired)
+            plt.contour(self.xx, self.yy, Z, colors=['k', 'k', 'k'],
+                        linestyles=['--', '-', '--'], levels=[-.5, 0, .5])
         else:
             Z = model.predict(np.c_[self.xx.ravel(), self.yy.ravel()])
             Z = Z.reshape(self.xx.shape)
@@ -73,7 +75,7 @@ class ClassificationPlotter:
         self.current_subplot += 1
         plt.subplot(self.number_subplot_rows, 2, self.current_subplot)
 
-    def get_meshgrid(self, h=0.002):
+    def get_meshgrid(self, h=0.02):
         x_min, x_max = self.X1.min() - 1, self.X1.max() + 1
         y_min, y_max = self.X2.min() - 1, self.X2.max() + 1
         print('x_min={}, x_max={}, y_min={}, y_max={}'.format(x_min, x_max, y_min, y_max))
@@ -94,15 +96,10 @@ class Classification:
         self.np_input = np.array(self.df)
         self.np_values = self.np_input[:, :-1]
         self.np_labels = self.np_input[:, -1]  #.reshape(self.np_values.shape[0],1)
-
         # self.overwrite_with_iris_data()
-
         self.number_test_cases = self.np_values.shape[0]
         self.np_mean = np.mean(self.np_values, axis=0)
         self.np_std = np.std(self.np_values, axis=0)
-        # self.scale_np_values()
-        # self.add_intercept_to_np_values()
-        # self.number_features = self.np_values.shape[1]
         self.output_list = []
         self.plotter = self.get_plotter()
         self.plot_start()
@@ -114,8 +111,8 @@ class Classification:
         self.np_labels = iris.target
 
     def get_model_names(self):
-        # return ['svm_linear', 'svm_polynomial', 'svm_rbf', 'logistic', 'knn', 'decision_tree', 'random_forest']
-        return ['svm_linear', 'svm_polynomial', 'svm_rbf', 'logistic']
+        return ['svm_linear', 'svm_polynomial', 'svm_rbf', 'logistic', 'knn', 'decision_tree', 'random_forest']
+        return ['svm_linear']
 
     def get_plotter(self):
         return ClassificationPlotter(self.np_values, self.np_labels, len(self.model_names))
@@ -241,7 +238,7 @@ class Classification:
         if model_name == 'svm_linear':
             return {'kernel': ['linear'], 'C': [0.1, 0.5, 1, 5, 10, 50, 100]}
         elif model_name == 'svm_polynomial':
-            return {'kernel': ['poly'], 'C': [0.1, 1, 3], 'degree': [4, 5, 6], 'gamma': [0.1, 0.5]}
+            return {'kernel': ['poly'], 'C': [0.1, 1, 3], 'degree': [3, 4, 5, 6], 'gamma': [0.1, 0.5]}
         elif model_name == 'svm_rbf':
             return {'kernel': ['rbf'], 'C': [0.1, 0.5, 1, 5, 10, 50, 100], 'gamma': [0.1, 0.5, 1, 3, 6, 10]}
         elif model_name == 'logistic':

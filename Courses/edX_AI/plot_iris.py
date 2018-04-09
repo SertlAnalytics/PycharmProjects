@@ -1,3 +1,5 @@
+# Reference: http://scikit-learn.org/stable/auto_examples/svm/plot_iris.html
+
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import svm, datasets
