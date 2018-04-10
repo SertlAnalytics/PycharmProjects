@@ -1,7 +1,7 @@
 # ColumbiaX: course-v1:ColumbiaX+CSMM.101x+1T2018 - Assigment week 7
 # II. Linear Regression- 2018-04-05
 # Each point is a comma-separated ordered triple, representing age, weight, and height.
-# Copyright Josef Sertl
+# Copyright Josef Sertl (https://www.sertl-analytics.com)
 # $ python3 problem2_3.py input2.csv output2.csv
 # CAUTION: Please remove all plotting - will raise an error within the workbench on vocareum
 

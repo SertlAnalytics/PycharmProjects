@@ -1,6 +1,6 @@
 # ColumbiaX: course-v1:ColumbiaX+CSMM.101x+1T2018 - Assigment week 7
 # I. Perceptron Learning Algorithm - 2018-04-04
-# Copyright Josef Sertl
+# Copyright Josef Sertl (https://www.sertl-analytics.com)
 # $ python3 problem1_3.py input1.csv output1.csv
 
 import sys
