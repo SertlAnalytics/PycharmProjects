@@ -3,6 +3,25 @@ import nltk
 from nltk.corpus import state_union
 from nltk.tokenize import PunktSentenceTokenizer
 from nltk.tokenize import TreebankWordTokenizer
+import ClassifierBasedGermanTagger
+
+def load_corpus():
+    for i in german_tokenized:
+        words = nltk.word_tokenize(i, language='german')
+        tagged = nltk.pos_tag(words)
+        print('i={}, \ntagged={}'.format(i, tagged))
+
+    corp = nltk.corpus.ConllCorpusReader('.', 'tiger_release_aug07.corrected.16012013.conll09',
+                                         ['ignore', 'words', 'ignore', 'ignore', 'pos'],
+                                         encoding='utf-8')
+
+    print(corp)
+
+    import random
+
+    tagged_sents = corp.tagged_sents()
+    print(tagged_sents)
+    random.shuffle(tagged_sents)
 
 print(type(state_union))
 train_text = state_union.raw('2005-GWBush.txt')
@@ -24,25 +43,13 @@ german_custom_sent_tokenizer = TreebankWordTokenizer()
 german_tokenized = custom_sent_tokenizer.tokenize(german_text)
 
 # german_tokenizer = nltk.data.load(resource_url='tokenizers/punkt/german.pickle')
-# german_sentences = german_tokenizer.tokenize(german_text)
-# print(german_sentences)
+german_tokenizer = nltk.data.load(resource_url='tokenizers/punkt/nltk_german_classifier_data.pickle')
 
 for i in german_tokenized:
-    words = nltk.word_tokenize(i, language='german')
-    tagged = nltk.pos_tag(words)
+    words = nltk.word_tokenize(i)
+    tagged = german_tokenizer.tag(words)
     print('i={}, \ntagged={}'.format(i, tagged))
 
-corp = nltk.corpus.ConllCorpusReader('.', 'tiger_release_aug07.corrected.16012013.conll09',
-                                     ['ignore', 'words', 'ignore', 'ignore', 'pos'],
-                                     encoding='utf-8')
-
-print(corp)
-
-import random
-
-tagged_sents = corp.tagged_sents()
-print(tagged_sents)
-random.shuffle(tagged_sents)
 
 
 
