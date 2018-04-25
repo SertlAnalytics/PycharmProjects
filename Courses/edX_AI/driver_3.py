@@ -1,304 +1,317 @@
-# ColumbiaX: course-v1:ColumbiaX+CSMM.101x+1T2018 - Assigment week 9
-# Week 9 Project: Constraint Satisfaction Problems - 2018-04-09
-# Sudoku
+# ColumbiaX: course-v1:ColumbiaX+CSMM.101x+1T2018 - Assigment week 11
+# Week 11 Project: NLP - 2018-04-19
+# NLP
 # Copyright Josef Sertl (https://www.sertl-analytics.com)
-# $ python3 problem2_3.py input2.csv output2.csv
+# $ python3 driver_3.py
+# The training data is provided in the directory "../resource/lib/publicdata/aclImdb/train/" of Vocareum
 # CAUTION: Please remove all plotting - will raise an error within the workbench on vocareum
 
-import numpy as np
 import pandas as pd
+import numpy as np
 import sys
+import os
+import re
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+import itertools
+from sklearn.linear_model import SGDClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
 
 
-class SudokuHelper:
-    ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
-    COLUMNS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-    GRID_SET_OFFS = [0, 3, 6]
-    n_rows = len(ROWS)
-    n_columns = len(COLUMNS)
+class Incrementer:
+    def __init__(self, subject: str, modulo: int, print: bool):
+        self.subject = subject
+        self.modulo = modulo
+        self.print = print
+        self.counter = 0
+        self.__print_start__()
 
-    def add_to_constraint_list(self, constraint_list: list, entry_list: list):
-        len_entry_list = len(entry_list)
-        for ind_1 in range(len_entry_list - 1):
-            for ind_2 in range(ind_1 + 1, len_entry_list):
-                new_entry_list = [[entry_list[ind_1], entry_list[ind_2], 'NOT_EQUAL'],
-                              [entry_list[ind_2], entry_list[ind_1], 'NOT_EQUAL']]
-                for entries in new_entry_list:
-                    if not entries in constraint_list:
-                        constraint_list.append(entries)
+    def __print_start__(self):
+        if self.print:
+            print('...incrementer process {} started...'. format(self.subject))
 
-    def get_binary_constraint_list(self):
-        constraint_list = []
-        # add row constraints to the list
-        for ind_r in range(self.n_rows):
-            entry_list = []
-            for ind_c in range(self.n_columns):
-                entry_list.append(self.ROWS[ind_r] + self.COLUMNS[ind_c])
-            self.add_to_constraint_list(constraint_list, entry_list)
-
-        # add column constraints to the list
-        for ind_c in range(self.n_columns):
-            entry_list = []
-            for ind_r in range(self.n_rows):
-                entry_list.append(self.ROWS[ind_r] + self.COLUMNS[ind_c])
-            self.add_to_constraint_list(constraint_list, entry_list)
-
-        # add grid constraints to the list
-        for off_set_r in self.GRID_SET_OFFS:
-            for off_set_c in self.GRID_SET_OFFS:
-                entry_list = []
-                for ind_r in range(off_set_r, off_set_r + 3):
-                    for ind_c in range(off_set_c, off_set_c + 3):
-                        entry_list.append(self.ROWS[ind_r] + self.COLUMNS[ind_c])
-                self.add_to_constraint_list(constraint_list, entry_list)
-        return constraint_list
+    def increment(self):
+        self.counter += 1
+        if self.print and self.modulo > 1:
+            if self.counter % self.modulo == 0:
+                print(self.counter)
 
 
-class Queue:  # First in - first out FIFO
-    def __init__(self):
-        self.items = []
+class NLPContentCleaner:
+    def __init__(self, local: bool):
+        self.local = local
+        self.stop_words_path = self.__get_stop_words_path__()
+        self.stop_words = []
+        self.__init_stop_words__()
 
-    @property
-    def is_empty(self):
-        return self.items == []
+    def __get_stop_words_path__(self):
+        return 'stopwords.en.txt' if self.local else 'stopwords.en.txt'
 
-    def enqueue(self, item):
-        self.items.insert(0, item)
+    def __init_stop_words__(self):
+        df = pd.read_csv(self.stop_words_path, header=None)
+        df.columns = ['text']
+        for ind, rows in df.iterrows():
+            self.stop_words.append(rows.text)
 
-    def dequeue(self):
-        return self.items.pop()
+    def get_cleaned_text(self, text: str):
+        text = text.strip().lower()
+        text = re.sub('[^ a-zA-Z0-9]', ' ', text)  # remove special characters unless space
+        text = re.sub(' +', ' ', text)  # remove duplicate white spaces
+        return self.__get_word_list_without_stop_words__(text)
 
-    def is_element(self, item):
-        return item in self.items
-
-    def size(self):
-        return len(self.items)
-
-
-class SudokuConstraints:
-    def __init__(self):
-        self.df = self.get_data_frame()
-        self.print_df_details()
-
-    def print_df_details(self):
-        print(self.df.info())
-        print(self.df.head())
-
-    @staticmethod
-    def get_data_frame():
-        df = pd.DataFrame(SudokuHelper().get_binary_constraint_list())
-        df.columns = ['Node_1', 'Node_2', 'Constraint']
-        return df
-
-    def get_all_constraints_for_node(self, node: str):
-        df = self.df[self.df.Node_1 == node]
-        # print('constraints for node {}\n{}'.format(node, df))
-        return df
-
-    def get_all_constraints_for_nodes(self, node_1: str, node_2: str):
-        df = self.df[np.logical_and(self.df.Node_1 == node_1, self.df.Node_2 == node_2)]
-        # print('constraints for node {} and {}\n{}'.format(node_1, node_2, df))
-        return df
+    def __get_word_list_without_stop_words__(self, text_input: str):
+        return ' '.join([word for word in text_input.split() if word not in self.stop_words])
 
 
-class SudokuBoard:
-    def __init__(self, input_str):
-        self.str = input_str
-        self.np_array = self.get_array_from_str()
-        self.value_dic = {}
-        self.domain_dic = {}
-        self.init_value_dic()
-        self.init_domain_dic()
-        self.grids_dic = {}
-        self.min_non_assigned_values_in_grid = 0  # will be updated in init_grids_dic
-        self.grid_min_non_assigned_values_in_grid = ''
-        self.init_variables_min_non_assigned_values_in_grid()
-        self.init_grids_dic()
-        # self.print_details()
+class TextFileCollector:
+    def __init__(self, local: bool):
+        self.local = local
+        self.content_cleaner = NLPContentCleaner(self.local)
+        self.incrementer = Incrementer('TextFileCollector', 1000, True)
+        self.root_train_path = self.__get_root_train_path__()
+        self.neg_train_text_dict = {}
+        self.pos_train_text_dict = {}
+        self.imdb_tr_csv_file_name = 'imdb_tr.csv'
 
-    def init_variables_min_non_assigned_values_in_grid(self):
-        self.min_non_assigned_values_in_grid = 10  # default
-        for grid_key in self.grids_dic:
-            new_number = self.grids_dic[grid_key].not_assigned
-            if new_number < self.min_non_assigned_values_in_grid:
-                self.min_non_assigned_values_in_grid = new_number
-                self.grid_min_non_assigned_values_in_grid = grid_key
+    def __get_root_train_path__(self):
+        # use terminal to ls files under this directory
+        return 'C:/Users/josef/Desktop/temp/aclImdb/train/' if self.local else '../resource/lib/publicdata/aclImdb/train/'
 
-    def print_details(self):
-        print(self.np_array)
-        print(self.value_dic)
-        print(self.domain_dic)
-        self.print_number_unassigned()
+    def read_train_text_files(self):
+        for subdir, dirs, files in os.walk(self.root_train_path):
+            if subdir.find('neg') > -1 or subdir.find('pos') > -1:
+                for file in files:
+                    self.incrementer.increment()
+                    file_path = subdir + '/' + file
+                    if file_path.endswith(".txt"):
+                        with open(file_path, encoding="ISO-8859-1") as f:
+                            self.__process_file_content__(f.readlines(), subdir.lower(), file.lower())
 
-    def init_value_dic(self):
-        self.value_dic = {}
-        for ind_r, row_name in enumerate(SudokuHelper.ROWS):
-            for ind_c, column_name in enumerate(SudokuHelper.COLUMNS):
-                self.value_dic[row_name + column_name] = self.np_array[ind_r, ind_c]
+    def __process_file_content__(self, content, subdir: str, file_name):
+        content_list = [x.strip() for x in content]
+        content = ' '.join(content_list).lower()
+        content_without_stop_word = self.content_cleaner.get_cleaned_text(content)
+        # content = re.sub('\W+','', content)
+        if subdir.find('neg') > -1:
+            self.neg_train_text_dict[file_name] = content_without_stop_word
+        elif subdir.find('pos') > -1:
+            self.pos_train_text_dict[file_name] = content_without_stop_word
 
-    def init_domain_dic(self):
-        self.domain_dic = {}
-        for ind_r, row_name in enumerate(SudokuHelper.ROWS):
-            for ind_c, column_name in enumerate(SudokuHelper.COLUMNS):
-                if self.np_array[ind_r, ind_c] == 0:
-                    self.domain_dic[row_name + column_name] = [i for i in range(1, 10)]
-                else:
-                    self.domain_dic[row_name + column_name] = [self.np_array[ind_r, ind_c]]
-
-    def print_number_unassigned(self):
-        for grid_key in self.grids_dic:
-            print('self.grids_dic[{}].not_assigned: {}'.format(grid_key, self.grids_dic[grid_key].not_assigned))
-
-    def get_array_from_str(self):
-        np_array = np.array(list(self.str), dtype=int)
-        return np_array.reshape(9,9)
-
-    def init_grids_dic(self):
-        set_offs = [0, 3, 6]
-        self.grids_dic = {}
-
-        for r in range(self.np_array.shape[0]):
-            self.grids_dic['R' + str(r+1)] = SudokuGrid(self.np_array[r, :])
-
-        for c in range(self.np_array.shape[1]):
-            self.grids_dic['C' + str(c + 1)] = SudokuGrid(self.np_array[:, c])
-
-        for ind_x, x in enumerate(set_offs):
-            for ind_y, y in enumerate(set_offs):
-                sub_array = self.np_array[x:x+3, y:y+3]
-                self.grids_dic['Q' + str(ind_x + 1) + str(ind_y + 1)] = SudokuGrid(sub_array)
-
-    def clone(self):
-        return SudokuBoard(*self.str)
-
-    # def is_identical(self, board_compare):
-    #     return self.arg_str == board_compare.arg_str
+    def write_file_content_to_csv(self):
+        row_number = 0
+        with open(self.imdb_tr_csv_file_name, 'w') as file_obj:
+            file_obj.write('row_number,text,polarity')
+            for key in self.pos_train_text_dict:
+                row_number += 1
+                file_obj.write('\n{},{},{}'.format(row_number, self.pos_train_text_dict[key], 1))
+            for key in self.neg_train_text_dict:
+                row_number += 1
+                file_obj.write('\n{},{},{}'.format(row_number, self.neg_train_text_dict[key], 0))
 
 
-class SudokuGrid:
-    def __init__(self, input_array: np.array):
-        self.np_array = input_array.reshape(1, 9)
+class UnigramModel:
+    def __init__(self, local: bool):
+        self.local = local
+        self.imdb_tr_csv_file_path = self.__get_imdb_tr_csv_file_path__()
+        self.df_csv = None
+        self.df_unigram = None
+        self.df_unigram_columns = []
+        self.sorted_vocabulary = []
+        self.sorted_vocabulary_dict = {}
+        self.np_array = None
+        self.max_rows = 10000
 
-    @property
-    def not_assigned(self):
-        return self.np_array.size - np.count_nonzero(self.np_array)
+    def __get_imdb_tr_csv_file_path__(self):
+        return 'C:/Users/josef/OneDrive/edX/Artificial_Intelligence/Week_11/aclImdb/train/imdb_tr.csv' \
+            if self.local else 'imdb_tr.csv'
 
+    def process_tr_csv_file(self):
+        self.df_csv = pd.read_csv(self.imdb_tr_csv_file_path, header=0)
+        self.init_sorted_vocabulary()
+        self.define_df_unigram_columns()
+        self.count_words_per_file_for_vocabulary()
 
-class Solver:
-    def __init__(self, input_str: str):
-        self.str = input_str
-        self.sudoku = SudokuBoard(self.str)
-        self.value_dic = self.sudoku.value_dic
-        self.domain_dic = self.sudoku.domain_dic
-        self.constraints = SudokuConstraints()
-        self.arc_queue = Queue()
-        self.init_arc_queue()
-        # print('len of arc_queue = {} - expected: 288 arcs'.format(self.arc_queue.size()))
+    def init_sorted_vocabulary(self):
+        row_number = 0
+        for ind, row in self.df_csv.iterrows():
+            row_number += 1
+            self.print_row_number(row_number)
+            self.sorted_vocabulary = list(set(self.sorted_vocabulary).union(row.text.split()))
+            if row_number > self.max_rows:
+                break
+        self.sorted_vocabulary.sort()
+        for ind, word in enumerate(self.sorted_vocabulary):
+            self.sorted_vocabulary_dict[word] = ind
 
-    """
-    function AC-3(csp)
-    returns False if an inconsistence is found. True otherwise
-    inputs: csp, a binary CSP with components (X, D, C)
-    local variables: queue, a queue of arcs, initially all the arcs in csp
+    def define_df_unigram_columns(self):
+        self.df_unigram_columns = list(self.sorted_vocabulary)
+        self.df_unigram_columns.append('polarity')
 
-    while queue is not empty do
-        (Xi, Xj) = REMOVE-FIRST(queue)
-        if Revise(csp, Xi, Xj) then
-            if size of Di = 0 then return False
-            for each Xk in Xi NEIGHBORS - {Xj} do 
-                add (Xk, Xi) to queue
-    return true
-    """
-    def perform_ac3(self, write_results_to_new_array: bool = False):  # QUEUE: FIRST IN FIRST OUT (FIFO)
-        while not self.arc_queue.is_empty:
-            queue_entry = self.arc_queue.dequeue()
-            if self.revise(queue_entry[0], queue_entry[1]):
-                if len(self.domain_dic[queue_entry[0]]) == 0:
-                    return False
-                else:
-                    self.add_neighbors_to_arc_queue(queue_entry[0], queue_entry[1], 2)
-        if write_results_to_new_array:
-            self.write_results_to_new_array()
-        return True
+    def count_words_per_file_for_vocabulary(self):
+        self.np_array = np.zeros([self.df_csv.shape[0], len(self.sorted_vocabulary) + 1], dtype=int)
+        row_number = 0
+        for ind, row in self.df_csv.iterrows():
+            row_number += 1
+            self.print_row_number(row_number)
+            self.np_array[row_number - 1, self.np_array.shape[1] - 1] = row.polarity
+            for words in row.text.split():
+                self.np_array[row_number - 1, self.sorted_vocabulary_dict[words]] += 1
+            if row_number > self.max_rows:
+                break
+        self.df_unigram = pd.DataFrame(self.np_array)
+        self.df_unigram.columns = self.df_unigram_columns
+        print(self.df_unigram.head())
 
-    def write_not_assignable_domain_entries(self):
-        print('Not assignable entries:\n')
-        for key in self.domain_dic:
-            if len(self.domain_dic[key]) > 1:
-                print('{}: {}'.format(key, self.domain_dic[key]))
-
-    def write_results_to_new_array(self):
-        np_result = np.array(self.sudoku.np_array)
-        for key in self.domain_dic:
-            if len(self.domain_dic[key]) == 1:
-                value = self.domain_dic[key][0]
-                ind_r = SudokuHelper.ROWS.index(key[0])
-                ind_c = SudokuHelper.COLUMNS.index(key[1])
-                np_result[ind_r, ind_c] = value
-        print('Result:\n{}'.format(np_result))
-
-    def init_arc_queue(self):
-        for ind_r in range(SudokuHelper.n_rows):
-            for ind_c in range(SudokuHelper.n_columns):
-                self.add_neighbors_to_arc_queue(SudokuHelper.ROWS[ind_r] + SudokuHelper.COLUMNS[ind_c])
-
-    def add_neighbors_to_arc_queue(self, node: str, node_to_skip: str = '', position: int = 1):
-        neighbors = self.get_node_neighbors(node)
-        for neighbor in neighbors:
-            if neighbor != node_to_skip:
-                if position == 1:
-                    new_entry = [node, neighbor]
-                else:
-                    new_entry = [neighbor, node]
-                if not self.arc_queue.is_element(new_entry):
-                    self.arc_queue.enqueue(new_entry)
-
-    def get_node_neighbors(self, node: str):
-        neighbors = []
-        fd_neighbors = self.constraints.get_all_constraints_for_node(node)
-        for ind, row in fd_neighbors.iterrows():
-            neighbor = row['Node_2']
-            if not neighbor in neighbors:
-                neighbors.append(neighbor)
-        return neighbors
-
-    def revise(self, node_i: str, node_j: str):
-        revised = False
-        domain_i = self.sudoku.domain_dic[node_i]
-        domain_j = self.sudoku.domain_dic[node_j]
-        df_ij = self.constraints.get_all_constraints_for_nodes(node_i, node_j)
-        for ind, rows in df_ij.iterrows():
-            if rows['Constraint'] == 'NOT_EQUAL':
-                for x in domain_i:
-                    constraint_satisfied = False
-                    for y in domain_j:
-                        if x != y:
-                            constraint_satisfied = True
-                            break
-                    if not constraint_satisfied:
-                        domain_i.remove(x)
-                        revised = True
-        return revised
-# AC3
-# '000001000020000008691200000000000014102506003800020506005000000730000000006319405'
-# '000260701680070090190004500820100040004602900050003028009300074040050036703018000'
-
-# BTS
-# 000000000302540000050301070000000004409006005023054790000000050700810000080060009
-
-test = True
-if test:
-    test_str = '000000000302540000050301070000000004409006005023054790000000050700810000080060009'
-elif len(sys.argv)> 1:  # started from command prompt
-    test_str = sys.argv[1].upper()
-else:
-    test_str = '000260701680070090190004500820100040004602900050003028009300074040050036703018000'
-
-solver = Solver(test_str)
-# df = solver.constraints.get_all_constraints_for_node('H3')
-# print(df)
-print('Original:\n{}'.format(solver.sudoku.np_array))
-solver.perform_ac3(True)
-solver.write_not_assignable_domain_entries()
+    def print_row_number(self, row_number: int):
+        if row_number % 1000 == 0:
+            print(row_number)
 
 
+class NLPClassifierHandler:
+    def __init__(self, local: bool):
+        self.local = local
+        self.ngram_range = (1, 1)
+        self.tfidf = False
+        self.content_cleaner = NLPContentCleaner(self.local)
+        self.imdb_tr_csv_file_path = self.__get_imdb_tr_csv_file_path__()
+        self.imdb_te_csv_file_path = self.__get_imdb_te_csv_file_path__()
+        self.df_tr = None
+        self.tr_row_list = []
+        self.df_te = None
+        self.te_row_list = []
+        self.vectorizer = None
+        self.X_train = None
+        self.y_train = None
+        self.X_test = None
+
+    def __get_vectorizer__(self):
+        if self.tfidf:
+            return TfidfVectorizer(analyzer='word',
+                                   stop_words=self.content_cleaner.stop_words, ngram_range=self.ngram_range)
+        else:
+            return CountVectorizer(analyzer='word',
+                                   stop_words=self.content_cleaner.stop_words, ngram_range=self.ngram_range)
+
+    def __get_imdb_tr_csv_file_path__(self):  # training data for grade evaluation
+        return 'imdb_tr.csv' if self.local else 'imdb_tr.csv'
+
+    def __get_imdb_te_csv_file_path__(self):  # test data for grade evaluation
+        return 'C:/Users/josef/OneDrive/edX/Artificial_Intelligence/Week_11/aclImdb/test/imdb_te.csv' \
+            if self.local else '../resource/asnlib/public/imdb_te.csv'
+
+    def load_data(self):
+        self.__load_tr_data__()
+        self.__load_te_data__()
+
+    def __load_tr_data__(self):
+        print('Load training data...')
+        self.df_tr = pd.read_csv(self.imdb_tr_csv_file_path, header=0, encoding="ISO-8859-1")
+        self.tr_row_list = self.get_row_list(self.df_tr)
+
+    def __load_te_data__(self):
+        print('Load test data...')
+        self.df_te = pd.read_csv(self.imdb_te_csv_file_path, header=0, encoding="ISO-8859-1")
+        self.te_row_list = self.get_row_list(self.df_te)
+
+    def run_vectorizer_on_model(self, ngram: int, tfidf: bool):
+        print('Run_Vectorizer_On_Model with ngram = {} and tfidf = {}'.format(ngram, tfidf))
+        self.ngram_range = ngram
+        self.tfidf = tfidf
+        self.vectorizer = self.__get_vectorizer__()
+        self.__run_vectorizer_for_tr_data__()
+        self.__run_vectorizer_for_te_data__()
+        # self.__transform_by_tfidf__()
+        self.__run_sgd_classifier__()
+
+    def __run_vectorizer_for_tr_data__(self):
+        self.vectorizer.fit(self.tr_row_list)
+        # self.__print_vectorizer_vocabulary__(10)
+        self.X_train = self.vectorizer.transform(self.tr_row_list)
+        print('self.X_train.shape={}'.format(self.X_train.shape))
+        self.y_train = np.array(self.df_tr.polarity)
+
+    def __run_vectorizer_for_te_data__(self):
+        self.X_test = self.vectorizer.transform(self.te_row_list)
+
+    def __transform_by_tfidf__(self):
+        if self.tfidf:
+            tdidf_transformer = TfidfTransformer(norm='l1', use_idf=True)
+            self.X_train = tdidf_transformer.fit_transform(self.X_train)
+            self.X_test = tdidf_transformer.fit_transform(self.X_test)
+
+    def get_row_list(self, df: pd.DataFrame):
+        incrementer = Incrementer('Get_Row_List', 1000, True)
+        row_number = 0
+        text_list = []
+        for ind, row in df.iterrows():
+            incrementer.increment()
+            text_cleaned = self.content_cleaner.get_cleaned_text(row.text)
+            text_list.append(text_cleaned)
+        return text_list
+
+    def __print_vectorizer_vocabulary__(self, elements: int = 2):
+        print(dict(itertools.islice(self.vectorizer.vocabulary_.items(), elements)))
+
+    def __run_sgd_classifier__(self):
+        reg = SGDClassifier(loss='hinge', penalty='l1')
+        if self.__run_cross_validation__(reg):
+            reg.fit(self.X_train, self.y_train)
+            predictions = reg.predict(self.X_test)
+            self.__write_prediction_to_file__(predictions)
+        else:
+            print('Accuracy is not enough...')
+
+    def __run_cross_validation__(self, reg):
+        X_train, X_test, y_train, y_test = train_test_split(self.X_train, self.y_train, test_size=0.40, stratify=self.y_train)
+        reg.fit(X_train, y_train)
+        predictions = reg.predict(X_test)
+        accuracy = accuracy_score(y_test, predictions)
+        cnf_matrix = confusion_matrix(y_test, predictions)
+        print(cnf_matrix)
+        print('Accuracy for SGDClassifier = {}'.format(accuracy))
+        return True if accuracy > 0.40 else False
+
+    def __write_prediction_to_file__(self, prediction: np.array):
+        with open(self.__get_output_file_name__(), 'w') as file_obj:
+            for i in prediction:
+                file_obj.write(str(i) + '\n')
+        print('File written: {}'.format(file_obj.name))
+
+    def __get_output_file_name__(self):
+        if self.ngram_range[1] == 1:
+            if self.tfidf:
+                return 'unigramtfidf.output.txt'
+            else:
+                return 'unigram.output.txt'
+        else:
+            if self.tfidf:
+                return 'bigramtfidf.output.txt'
+            else:
+                return 'bigram.output.txt'
+
+
+def imdb_data_preprocess(inpath, outpath="./", name="imdb_tr.csv", mix=False):
+    '''Implement this module to extract
+   and combine text files under train_path directory into
+   imdb_tr.csv. Each text file in train_path should be stored
+   as a row in imdb_tr.csv. And imdb_tr.csv should have two
+   columns, "text" and label'''
+    pass
+
+local = True
+
+if not local:
+    text_file_collector = TextFileCollector(local)
+    text_file_collector.read_train_text_files()
+    text_file_collector.write_file_content_to_csv()
+
+nlp_classifier = NLPClassifierHandler(local)
+nlp_classifier.load_data()
+
+for ngram_range in [(1, 1), (1, 2)]:
+    for tfidf in [False, True]:
+        nlp_classifier.run_vectorizer_on_model(ngram_range, tfidf)
