@@ -3,7 +3,6 @@ import nltk
 from nltk.corpus import state_union
 from nltk.tokenize import PunktSentenceTokenizer
 from nltk.tokenize import TreebankWordTokenizer
-import ClassifierBasedGermanTagger
 
 def load_corpus():
     for i in german_tokenized:

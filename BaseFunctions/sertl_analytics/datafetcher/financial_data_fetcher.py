@@ -19,7 +19,7 @@ class APIBaseFetcher:
         self.symbol = symbol  # like the symbol of a stock, e.g. MSFT
         self.period = period
         self.url = self.get_url()
-        # print('APIBaseFetcher.url={}'.format(self.url))
+        print(self.url)
         self.request = requests.get(self.url)
         self.df = self.get_data_frame()
         self.column_list = list(self.df.columns.values)
@@ -72,7 +72,6 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
         return os.environ["alphavantage_apikey"]
 
     def plot_data_frame(self):
-        print('AlphavantageJSONFetcher')
         fig, axes = plt.subplots(nrows=2, ncols=1)
         plot_01 = self.df_data[[self.column_data]].plot(ax=axes[0], title=self.symbol)
         plot_01.legend(loc='upper left')
@@ -210,29 +209,3 @@ class CryptoCorrelationHandler(CorrelationHandler):
     def __fill_df_dic_for_symbol_list__(self):
         for symbol in self.symbol_list:
             self.df_dic[symbol] = AlphavantageCryptoFetcher(symbol).df_data
-
-
-process = 'StockFetcher'
-
-if process == 'StockCorrelation':
-    correlation_handler = StocksCorrelationHandler()
-    # correlation_handler.fill_df_dic_for_symbol_list(['BTC', 'LTC', 'ETH', 'XRP', 'XMR', 'EOS'], '4b. close (USD)', 'Cryptocurrencies')
-    correlation_handler.fill_df_dic_for_symbol_list(['MSFT', 'AAPL', 'GM', 'DJI', 'BB', 'FSLR', 'AMZN'])
-    correlation_handler.show_correlation_heat_map('4. close', 'Stocks')
-elif process == 'CryptoCorrelation':
-    correlation_handler = CryptoCorrelationHandler()
-    # correlation_handler.fill_df_dic_for_symbol_list(['BTC', 'LTC', 'ETH', 'XRP', 'XMR', 'EOS'], '4b. close (USD)', 'Cryptocurrencies')
-    correlation_handler.fill_df_dic_for_symbol_list(['BTC', 'LTC'])
-    correlation_handler.show_correlation_heat_map('4b. close (USD)', 'Cryptocurrencies')
-elif process == 'StockFetcher':
-    fetcher = AlphavantageStockFetcher('XAG')  # stock: MSFT, Crypto: BTC
-    fetcher.plot_data_frame()
-elif process == 'CryptoFetcher':
-    fetcher = AlphavantageCryptoFetcher('BTC', 'DAILY', 'USD')  # stock: MSFT, Crypto: BTC
-    fetcher.plot_data_frame()
-else:
-    csvFetcher = AlphavantageCSVFetcher('CRYPTO')
-    print(csvFetcher.df.head())
-
-
-
