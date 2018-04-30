@@ -10,6 +10,7 @@ from keras.layers import Dense
 from keras.models import Sequential
 from keras.utils import to_categorical
 from sklearn import linear_model
+from sklearn import tree
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
@@ -32,6 +33,7 @@ class ModelType:
     SEQUENTIAL_CLASSIFICATION = "Model: Sequential, Type: Classification"
     LINEAR_REGRESSION = "Model: Linear, Type: Regression"
     LINEAR_CLASSIFICATION = "Model: Linear, Type: Classification"
+    TREEE_CLASSIFICATION = "Model: DecisionTree, Type: Classification"
 
 
 class LearningMachine:
@@ -84,6 +86,9 @@ class LearningMachine:
     def __compile_model__(self):
         pass
 
+    def predict_proba(self, prediction_data: np.array):
+        pass
+
     def compare_prediction_with_results(self, test_set_target: np.array):
         self.accuracy = accuracy_score(self.prediction, test_set_target )
         self.__print_statistical_data__(test_set_target)
@@ -97,6 +102,17 @@ class LearningMachine:
 
     def __add_hidden_layers__(self):
         pass
+
+
+class LmDecisionTreeClassifier(LearningMachine):
+    def __init__(self):  # is needed since we don't need any other parameters
+        pass
+
+    def get_model(self):
+        return tree.DecisionTreeClassifier()
+
+    def predict_proba(self, prediction_data: np.array):
+        return self.model.predict_proba(prediction_data)
 
 
 class LmLinearRegression(LearningMachine):

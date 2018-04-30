@@ -691,26 +691,33 @@ class SoccerGamePrediction:
 
     def get_prediction_accuracy_by_algorithm(self, algorithm, hidden_layers, np_test_data,
                                              np_test_data_target, np_training_data, np_training_data_target):
-        if algorithm == lm.ModelType.SEQUENTIAL_REGRESSION:
+        if algorithm == lm.ModelType.TREEE_CLASSIFICATION:
+            lm_classification = lm.LmDecisionTreeClassifier()
+            prediction = lm_classification.get_regression_prediction(np_training_data, np_training_data_target,
+                                                                 np_test_data)
+            print(algorithm + 'predict_prob(np_test_data)={}'.format(lm_classification.predict_proba(np_test_data)))
+            lm_classification.compare_prediction_with_results(np_test_data_target)
+            accuracy = lm_classification.accuracy
+        elif algorithm == lm.ModelType.SEQUENTIAL_REGRESSION:
             lm_regression = lm.LmSequentialRegression(hidden_layers)
             prediction = lm_regression.get_regression_prediction(np_training_data, np_training_data_target,
                                                                  np_test_data)
             lm_regression.compare_prediction_with_results(np_test_data_target)
             accuracy = lm_regression.accuracy
-        if algorithm == lm.ModelType.SEQUENTIAL_CLASSIFICATION:
+        elif algorithm == lm.ModelType.SEQUENTIAL_CLASSIFICATION:
             lm_classification = lm.LmSequentialClassification(hidden_layers)
             prediction = lm_classification.get_regression_prediction(np_training_data, np_training_data_target,
                                                                      np_test_data)
             lm_classification.compare_prediction_with_results(np_test_data_target)
             accuracy = lm_classification.accuracy
             # self.append_to_np_prediction(algorithm + '_pct', lm_classification.prediction_pct)
-        if algorithm == lm.ModelType.LINEAR_REGRESSION:
+        elif algorithm == lm.ModelType.LINEAR_REGRESSION:
             lm_linear_regression = lm.LmLinearRegression()
             prediction = lm_linear_regression.get_regression_prediction(np_training_data, np_training_data_target,
                                                                         np_test_data)
             lm_linear_regression.compare_prediction_with_results(np_test_data_target)
             accuracy = lm_linear_regression.accuracy
-        if algorithm == lm.ModelType.LINEAR_CLASSIFICATION:
+        elif algorithm == lm.ModelType.LINEAR_CLASSIFICATION:
             lm_logistic_regression = lm.LmLogisticRegression()
             prediction = lm_logistic_regression.get_regression_prediction(np_training_data, np_training_data_target,
                                                                           np_test_data)
@@ -773,13 +780,14 @@ class SoccerGamePrediction:
             df.loc[df.T_2 == team_id, 'T_2'] = team.team_id_name_dic[team_id]
 
 
-# algorithms = [lm.ModelType.SEQUENTIAL_REGRESSION, lm.ModelType.SEQUENTIAL_CLASSIFICATION,
+# algorithms = [lm.ModelType.TREEE_CLASSIFICATION,
+#               lm.ModelType.SEQUENTIAL_REGRESSION, lm.ModelType.SEQUENTIAL_CLASSIFICATION,
 #               lm.ModelType.LINEAR_CLASSIFICATION, lm.ModelType.LINEAR_REGRESSION]
 #
 # # 3005|1. Fußball-Bundesliga 2016/2017 - 4153|1. Fußball-Bundesliga 2017/2018, 4156|3. Fußball-Bundesliga 2017/2018
 
 game_prediction = SoccerGamePrediction(4153)
-game_prediction.run_algorithm([lm.ModelType.LINEAR_CLASSIFICATION], 29, 29, False)
+game_prediction.run_algorithm([lm.ModelType.TREEE_CLASSIFICATION], 27, 29, False)
 game_prediction.print_overview()
 game_prediction.show_statistics()
 
