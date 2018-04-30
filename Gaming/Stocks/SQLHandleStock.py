@@ -16,10 +16,12 @@ stocks = Table('Stocks', metadata, autoload=True, autoload_with=engine)
 print(engine.table_names())
 
 stmt = select([stocks])
-stmt = delete([stocks])
+# stmt = delete([stocks])
 
 # Execute the query to retrieve all the data returned: results
 results = connection.execute(stmt).fetchall()
+print(type(results))
+print(len(results))
 
 # Loop over the results
 for result in results:

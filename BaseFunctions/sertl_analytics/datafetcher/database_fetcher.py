@@ -6,14 +6,23 @@ Date: 2018-03-11
 """
 
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, MetaData, Table, insert
+import os
 
 
 class BaseDatabase:
     def __init__(self):
         self.engine = self.__get_engine__()
+        self.db_name = self.__get_db_name__()
+        self.db_path = self.__get_db_path__()
 
     def __get_engine__(self):
+        pass  # will be overwritten by sub classes
+
+    def __get_db_name__(self):
+        pass  # will be overwritten by sub classes
+
+    def __get_db_path__(self):
         pass  # will be overwritten by sub classes
 
     def get_result_set_for_query(self, query: str):
@@ -22,6 +31,12 @@ class BaseDatabase:
         connection.close()
         return results
 
+    def delete_records(self, query: str):
+        connection = self.engine.connect()
+        results = connection.execute(query)
+        connection.close()
+        print('Deleted {} records for query {}'.format(results.rowcount, query))
+
     def get_result_set_for_table(self, table: str):
         connection = self.engine.connect()
         stmt = "SELECT * from " + table
@@ -29,13 +44,30 @@ class BaseDatabase:
         connection.close()
         return results
 
+    def drop_database(self):
+        self.engine = None
+        os.remove(self.db_path)
+        print('Database {} removed: {}'.format(self.db_name, self.db_path))
+
+    def create_database_elements(self, metadata: MetaData):
+        metadata.create_all(self.engine)
+
+    def insert_data_into_table(self, table_name: str, insert_data_dict: dict):
+        connection = self.engine.connect()
+        metadata = MetaData()
+        table_object = Table(table_name, metadata, autoload=True, autoload_with=self.engine)
+        stmt = insert(table_object)
+        results = connection.execute(stmt, insert_data_dict)
+        connection.close()
+        print('Loaded into {}: {}'.format(table_name, results.rowcount))
+
 
 """
 Example for a derived class - connecting to a SQLite database
 
 class SoccerDatabase(BaseDB):
-    def __set_engine__(self):
-       self.engine = create_engine('sqlite:///MySoccer.sqlite')
+    def __get_engine__(self):
+       return create_engine('sqlite:///MySoccer.sqlite')
 """
 
 

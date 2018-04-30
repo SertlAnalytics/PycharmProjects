@@ -32,12 +32,15 @@ meta_data = json_data["Meta Data"]
 symbol = meta_data["2. Symbol"]
 time_series = json_data["Time Series (Daily)"]  # Time Series (Daily)
 
+
+
 # Symbol: MSFT - Date: 2017-10-10 - 1. open: 76.3300
 # Symbol: MSFT - Date: 2017-10-10 - 2. high: 76.6300
 # Symbol: MSFT - Date: 2017-10-10 - 3. low: 76.1400
 # Symbol: MSFT - Date: 2017-10-10 - 4. close: 76.2900
 # Symbol: MSFT - Date: 2017-10-10 - 5. volume: 13734627
 
+# Column('Period', String(20)),  # Monthly, Weekly, Daily, Hourly, Minutely
 # Column('Symbol', String(20)),
 # Column('Date', Date()),
 # Column('Open', Float()),

@@ -2,7 +2,6 @@ import pandas as pd
 from sqlalchemy import func
 from sqlalchemy import create_engine, MetaData
 import requests
-# Import Table, Column, String, Integer, Float, Boolean from sqlalchemy
 from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date
 
 # Create an engine that connects to the census.sqlite file: engine
@@ -10,13 +9,12 @@ engine = create_engine('sqlite:///MyStocks.sqlite')
 
 metadata = MetaData()
 
-
-
 # Print table names
 print(engine.table_names())
 
 # Define a new table with a name, count, amount, and valid column: data
 data = Table('Stocks', metadata,
+        Column('Period', String(20)), # Monthly, Weekly, Daily, Hourly, Minutely
         Column('Symbol', String(20)),
         Column('Date', Date()),
         Column('Open', Float()),
