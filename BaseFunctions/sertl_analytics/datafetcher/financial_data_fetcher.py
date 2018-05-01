@@ -103,7 +103,8 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
 
 class AlphavantageStockFetcher (AlphavantageJSONFetcher):
     def get_column_list_data(self):
-        return self.column_list[:-1]
+        # return self.column_list[:-1]
+        return self.column_list
 
     def get_column_data(self):
         return self.column_list[-2]

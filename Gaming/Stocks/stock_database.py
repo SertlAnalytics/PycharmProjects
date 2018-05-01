@@ -104,7 +104,7 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
         self.df_volume = self.df[self.column_volume]
 
     def get_column_list_data(self):
-        return self.column_list[2:6]
+        return self.column_list[2:7]
 
     def get_column_data(self):
         return self.column_list[5]
