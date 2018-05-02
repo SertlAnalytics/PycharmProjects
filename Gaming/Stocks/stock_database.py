@@ -9,6 +9,7 @@ from datetime import datetime
 
 class StockSymbols:
     Apple = 'AAPL'
+    Cisco = 'CSCO'
     IBM = 'IBM'
     Tesla = 'TSLA'
 
@@ -23,7 +24,8 @@ class StockDatabase(BaseDatabase):
     def __get_db_path__(self):
         return 'C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks/MyStocks.sqlite'
 
-    def import_stock_data(self, symbol: StockSymbols, period: ApiPeriod, output_size: ApiOutputsize):
+    def import_stock_data(self, symbol: StockSymbols, period: ApiPeriod = ApiPeriod.DAILY
+                          , output_size: ApiOutputsize = ApiOutputsize.COMPACT):
         self.delete_records("DELETE from Stocks WHERE Symbol = '" + str(symbol) + "'")
         input_list = self.get_input_values_for_stock_table(period, symbol, output_size)
         self.insert_data_into_table('Stocks', input_list)
@@ -112,12 +114,24 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
     def get_column_volume(self):
         return self.column_list[6]
 
+
+dow_jones_dic_orig = {"MMM": "3M", "AXP": "American", "AAPL": "Apple", "BA": "Boing",
+"CAT": "Caterpillar", "CVX": "Chevron", "CSCO": "Cisco", "KO": "Coca-Cola",
+"DIS": "Disney", "DWDP": "DowDuPont", "XOM": "Exxon", "GE": "General",
+"GS": "Goldman", "HD": "Home", "IBM": "IBM", "INTC": "Intel",
+"JNJ": "Johnson", "JPM": "JPMorgan", "MCD": "McDonald's", "MRK": "Merck",
+"MSFT": "Microsoft", "NKE": "Nike", "PFE": "Pfizer", "PG": "Procter",
+"TRV": "Travelers", "UTX": "United", "UNH": "UnitedHealth", "VZ": "Verizon",
+"V": "Visa", "WMT": "Wal-Mart"}
+
 if __name__ == '__main__':
     # fetcher.df, fetcher.df_data, fetcher.column_data,
     #                            fetcher.df_volume, fetcher.column_volume, fetcher.symbol
     stock_db = StockDatabase()
-    stock_db.import_stock_data(StockSymbols.IBM, ApiPeriod.DAILY, ApiOutputsize.FULL)
-    # stock_db.import_stock_data(StockSymbols.IBM, ApiPeriod.DAILY)
+    # for ticker in dow_jones_dic_orig:
+    #     print('\nProcessing {} - {}'.format(ticker, dow_jones_dic_orig[ticker]))
+    #     stock_db.import_stock_data(ticker, ApiPeriod.DAILY, ApiOutputsize.FULL)
+    stock_db.import_stock_data(StockSymbols.IBM, ApiPeriod.DAILY)
 
     # os.remove('C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks/MyStocks.sqlite')
     # print('Database {} removed: {}'.format(db_name, db_path))
