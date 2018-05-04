@@ -18,6 +18,8 @@ import matplotlib.dates as dt
 from matplotlib.patches import Circle, Wedge, Polygon, Rectangle
 from matplotlib.collections import PatchCollection
 from datetime import datetime
+import ftplib
+import tempfile
 
 
 class CN:
@@ -35,7 +37,6 @@ class Indices:
     DOW_JONES = 'Dow Jones'
     NASDAQ = 'Nasdaq'
     MIXED = 'Mixed'
-    OWN = 'Own'
 
 
 class FT:
@@ -64,14 +65,13 @@ class FormationConfiguration:
         self.breakout_over_upper_lower_range = False
         self.accuracy_pct = 0.01
         self.investment = 1000
+        self.max_number_securities = 1000
         self.show_final_statitics = True
         self.and_clause = "Date BETWEEN '2017-12-01' AND '2019-12-31'"
         self.actual_ticker = ''
         self.actual_ticker_name = ''
         self.statistics_excel_file_name = ''
         self._ticker_dic = {}
-        self.__index_dic = {}
-        self.__add_indices__()
 
     def print(self):
         source = 'DB' if self.get_data_from_db else 'Api'
@@ -92,14 +92,15 @@ class FormationConfiguration:
                      max_part_length, min_part_length, breakout_over_big_range, accuracy_pct))
 
     def use_index(self, index: Indices):
-        self._ticker_dic = self.__index_dic[index]
+        if index == Indices.DOW_JONES:
+            self._ticker_dic = self.dow_jones_dic
+        elif index == Indices.NASDAQ:
+            self._ticker_dic = self.nasdaq_dic
+        else:
+            self._ticker_dic = self.mixed_dic
 
     def use_own_dic(self, dic: dict):
         self._ticker_dic = dic
-
-    def __add_indices__(self):
-        self.__index_dic[Indices.DOW_JONES] = self.dow_jones_dic
-        self.__index_dic[Indices.MIXED] = self.mixed_dic
 
     @property
     def dow_jones_dic(self):
@@ -111,6 +112,26 @@ class FormationConfiguration:
                 "MSFT": "Microsoft", "NKE": "Nike", "PFE": "Pfizer", "PG": "Procter",
                 "TRV": "Travelers", "UTX": "United", "UNH": "UnitedHealth", "VZ": "Verizon",
                 "V": "Visa", "WMT": "Wal-Mart"}
+
+    @property
+    def nasdaq_dic(self):
+        """
+        Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares
+        AABA|Altaba Inc. - Common Stock|Q|N|N|100|N|N
+        """
+        dic = {}
+        file_name = 'nasdaqlisted.txt'
+        ftp = ftplib.FTP('ftp.nasdaqtrader.com', 'anonymous', 'josef.sertl@sertl-analytics.com')
+        ftp.cwd('SymbolDirectory')
+        with tempfile.TemporaryFile() as temp_file:
+            ftp.retrbinary('RETR {}'.format(file_name), temp_file.write)
+            temp_file.seek(0)
+            df = pd.read_csv(temp_file, '|')
+        ftp.quit()
+        for ind, rows in df.iterrows():
+            if rows['Market Category'] == 'Q':
+                dic[rows['Symbol']] = rows['Security Name']
+        return dic
 
     @property
     def mixed_dic(self):
@@ -884,6 +905,7 @@ class FormationController:
         if config.get_data_from_db:
             self.stock_db = stock_database.StockDatabase()
 
+        counter = 0
         for ticker in self.config._ticker_dic:
             self.config.actual_ticker = ticker
             self.config.actual_ticker_name = self.config._ticker_dic[ticker]
@@ -908,13 +930,17 @@ class FormationController:
                     plotter = FormationPlotter(self.plotter_input_obj, detector)
                     plotter.plot_data_frame()
 
+            counter += 1
+            if counter >= self.config.max_number_securities:
+                break
+
         if config.show_final_statitics:
             self.config.print()
             if self.config.statistics_excel_file_name == '':
                 self.formation_statistics.print_overview()
                 self.detector_statistics.print_overview()
             else:
-                writer = pd.ExcelWriter(self.config.statistics_excel_file_name, index=False)
+                writer = pd.ExcelWriter(self.config.statistics_excel_file_name)
                 self.formation_statistics.write_to_excel(writer, 'Formations')
                 self.detector_statistics.write_to_excel(writer, 'Overview')
                 print('Statistics were written to file: {}'.format(self.config.statistics_excel_file_name))
@@ -940,8 +966,9 @@ config.upper_bound_value = CN.CLOSE
 config.lower_bound_value = CN.CLOSE
 config.breakout_over_upper_lower_range = False
 config.show_final_statitics = True
-config.use_index(Indices.DOW_JONES)
-# config.use_own_dic({"DIS": "Disney"})
+config.max_number_securities = 20
+config.use_index(Indices.NASDAQ)
+config.use_own_dic({"ACGLP": "Disney"})
 config.and_clause = "Date BETWEEN '2010-03-07' AND '2019-04-17'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
