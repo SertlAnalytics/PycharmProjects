@@ -17,7 +17,7 @@ from mpl_finance import candlestick_ohlc
 import matplotlib.dates as dt
 from matplotlib.patches import Circle, Wedge, Polygon, Rectangle
 from matplotlib.collections import PatchCollection
-from datetime import datetime
+from datetime import datetime, timedelta
 import ftplib
 import tempfile
 
@@ -57,53 +57,71 @@ class FormationConfiguration:
         self.get_data_from_db = True
         self.api_period = ApiPeriod.DAILY
         self.api_output_size = ApiOutputsize.COMPACT
-        self.upper_bound_value = CN.HIGH
-        self.lower_bound_value = CN.LOW
+        self.bound_upper_value = CN.HIGH
+        self.bound_lower_value = CN.LOW
         self.plot_data = True
         self.max_length_of_a_formation_part = 10
         self.min_length_of_a_formation_part = 5
-        self.breakout_over_upper_lower_range = False
-        self.accuracy_pct = 0.01
+        self.check_previous_period = False   # default
+        self.__previous_period_length = self.max_length_of_a_formation_part  # default
+        self.breakout_over_congestion_range = False
+        self.accuracy_pct = 0.05  # the high/low values can be this percentage over the upper bounds w.r.t breadth
+        self.breakout_range_pct = 0.01
         self.investment = 1000
         self.max_number_securities = 1000
-        self.show_final_statitics = True
+        self.show_final_statistics = True
         self.and_clause = "Date BETWEEN '2017-12-01' AND '2019-12-31'"
         self.actual_ticker = ''
         self.actual_ticker_name = ''
+        self.actual_and_clause = ''
         self.statistics_excel_file_name = ''
-        self._ticker_dic = {}
+        self.ticker_dic = {}
+
+    def __get_previous_period_length__(self):
+        return self.__previous_period_length
+
+    def __set_previous_period_length__(self, value: int):
+        self.__previous_period_length = value
+
+    previous_period_length = property(__get_previous_period_length__, __set_previous_period_length__)
 
     def print(self):
         source = 'DB' if self.get_data_from_db else 'Api'
         and_clause = self.and_clause
         period = self.api_period
         output_size = self.api_output_size
-        upper_bound_v = self.upper_bound_value
-        lower_bound_v = self.lower_bound_value
+        bound_upper_v = self.bound_upper_value
+        bound_lower_v = self.bound_lower_value
         max_part_length = self.max_length_of_a_formation_part
         min_part_length = self.min_length_of_a_formation_part
-        breakout_over_big_range = self.breakout_over_upper_lower_range
+        breakout_over_big_range = self.breakout_over_congestion_range
         accuracy_pct = self.accuracy_pct
 
         print('\nConfiguration settings:')
-        print('Source: {} \nAnd clause: {} \nApi period/ApiOutput size: {}/{} \nUpper/Lower Bound Value: {}/{}'
-              ' \nMax/Min part length: {}/{} \nBreakout big range: {}  \nAccuracy: {} \n'.
-              format(source, and_clause, period, output_size, upper_bound_v, lower_bound_v,
-                     max_part_length, min_part_length, breakout_over_big_range, accuracy_pct))
+        if self.get_data_from_db:
+            print('Source: {} \nAnd clause: {} \nUpper/Lower Bound Value: {}/{}'
+                  ' \nMax/Min part length: {}/{} \nBreakout big range: {}  \nAccuracy: {} \n'.
+                  format(source, and_clause, bound_upper_v, bound_lower_v,
+                         max_part_length, min_part_length, breakout_over_big_range, accuracy_pct))
+        else:
+            print('Source: {} \n\nApiPeriod/ApiOutput size: {}/{} \nUpper/Lower Bound Value: {}/{}'
+                  ' \nMax/Min part length: {}/{} \nBreakout big range: {}  \nAccuracy: {} \n'.
+                    format(source, period, output_size, bound_upper_v, bound_lower_v,
+                        max_part_length, min_part_length, breakout_over_big_range, accuracy_pct))
 
     def use_index(self, index: Indices):
         if index == Indices.DOW_JONES:
-            self._ticker_dic = self.dow_jones_dic
+            self.ticker_dic = self.get_dow_jones_dic()
         elif index == Indices.NASDAQ:
-            self._ticker_dic = self.nasdaq_dic
+            self.ticker_dic = self.get_nasdaq_dic()
         else:
-            self._ticker_dic = self.mixed_dic
+            self.ticker_dic = self.get_mixed_dic()
 
     def use_own_dic(self, dic: dict):
-        self._ticker_dic = dic
+        self.ticker_dic = dic
 
-    @property
-    def dow_jones_dic(self):
+    @staticmethod
+    def get_dow_jones_dic():
         return {"MMM": "3M", "AXP": "American", "AAPL": "Apple", "BA": "Boing",
                 "CAT": "Caterpillar", "CVX": "Chevron", "CSCO": "Cisco", "KO": "Coca-Cola",
                 "DIS": "Disney", "DWDP": "DowDuPont", "XOM": "Exxon", "GE": "General",
@@ -113,8 +131,8 @@ class FormationConfiguration:
                 "TRV": "Travelers", "UTX": "United", "UNH": "UnitedHealth", "VZ": "Verizon",
                 "V": "Visa", "WMT": "Wal-Mart"}
 
-    @property
-    def nasdaq_dic(self):
+    @staticmethod
+    def get_nasdaq_dic():
         """
         Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares
         AABA|Altaba Inc. - Common Stock|Q|N|N|100|N|N
@@ -133,9 +151,37 @@ class FormationConfiguration:
                 dic[rows['Symbol']] = rows['Security Name']
         return dic
 
-    @property
-    def mixed_dic(self):
+    @staticmethod
+    def get_mixed_dic():
         return {"TSLA": "Tesla", "FCEL": "Full Cell"}
+
+
+class FCC:  # Formation Condition Columns
+    BREAKOUT_WITH_BUY_SIGNAL = 'breakout had a buy signal'
+    PREVIOUS_PERIOD_CHECK_OK = 'previous period check OK'  # eg. CN.LOW
+
+
+class FormationConditionHandler:
+    def __init__(self):
+        self.dic = {}
+        self.dic[FCC.BREAKOUT_WITH_BUY_SIGNAL] = False
+        self.dic[FCC.PREVIOUS_PERIOD_CHECK_OK] = False
+
+    def __set_breakout_with_buy_signal__(self, value: bool):
+        self.dic[FCC.BREAKOUT_WITH_BUY_SIGNAL] = value
+
+    def __get_breakout_with_buy_signal__(self):
+        return self.dic[FCC.BREAKOUT_WITH_BUY_SIGNAL]
+
+    breakout_with_buy_signal = property(__get_breakout_with_buy_signal__, __set_breakout_with_buy_signal__)
+
+    def __set_previous_period_check_ok__(self, value: bool):
+        self.dic[FCC.BREAKOUT_WITH_BUY_SIGNAL] = value
+
+    def __get_set_previous_period_check_ok__(self):
+        return self.dic[FCC.PREVIOUS_PERIOD_CHECK_OK]
+
+    previous_period_check_ok = property(__get_set_previous_period_check_ok__, __set_previous_period_check_ok__)
 
 
 class FormationDate:
@@ -180,37 +226,37 @@ class TradeResult:
         self.stop_loss_reached = False
         self.formation_consistent = False
 
-    def __get_bought_on(self):
+    def __get_bought_on__(self):
         return self.__bought_on
 
-    def __set_bought_on(self, value: datetime):
+    def __set_bought_on__(self, value: datetime):
         self.__bought_on = value
 
-    bought_on = property(__get_bought_on, __set_bought_on)
+    bought_on = property(__get_bought_on__, __set_bought_on__)
 
-    def __get_sold_on(self):
+    def __get_sold_on__(self):
         return self.__sold_on
 
-    def __set_sold_on(self, value: datetime):
+    def __set_sold_on__(self, value: datetime):
         self.__sold_on = value
 
-    sold_on = property(__get_sold_on, __set_sold_on)
+    sold_on = property(__get_sold_on__, __set_sold_on__)
 
-    def __get_bought_at(self):
+    def __get_bought_at__(self):
         return round(self.__bought_at, 2)
 
-    def __set_bought_at(self, value: float):
+    def __set_bought_at__(self, value: float):
         self.__bought_at = value
 
-    bought_at = property(__get_bought_at, __set_bought_at)
+    bought_at = property(__get_bought_at__, __set_bought_at__)
 
-    def __get_sold_at(self):
+    def __get_sold_at__(self):
         return round(self.__sold_at, 2)
 
-    def __set_sold_at(self, value: float):
+    def __set_sold_at__(self, value: float):
         self.__sold_at = value
 
-    sold_at = property(__get_sold_at, __set_sold_at)
+    sold_at = property(__get_sold_at__, __set_sold_at__)
 
     def print(self):
         print('bought_at = {}, expected_win = {}, actual_win = {}, ticks: {}/{}, stop_loss = {} ({}), formation_ok: {}'
@@ -223,8 +269,8 @@ class FormationBreakoutApi:
         self.formation_name = formation_name
         self.df = None
         self.previous_tick = None
-        self.upper_bound = 0
-        self.lower_bound = 0
+        self.bound_upper = 0
+        self.bound_lower = 0
         self.mean = 0
         self.accuracy_range = 0
 
@@ -239,15 +285,22 @@ class FormationBreakout:
         self.candle_stick_previous = Candlestick(api.previous_tick.Open, api.previous_tick.High
                                 , api.previous_tick.Low, api.previous_tick.Close, api.previous_tick.Volume)
         self.volume_change_pct = round(self.candle_stick.Volume/self.candle_stick_previous.Volume, 2)
-        self.upper_bound = api.upper_bound
-        self.lower_bound = api.lower_bound
+        self.bound_upper = api.bound_upper
+        self.bound_lower = api.bound_lower
         self.accuracy_range = api.accuracy_range
-        self.formation_range = abs(self.upper_bound - self.lower_bound)
+        self.formation_breadth = abs(self.bound_upper - self.bound_lower)
         self.breakout_direction = self.__get_breakout_direction__()
         self.sign = 1 if self.breakout_direction == FD.ASC else -1
-        self.upper_limit = self.upper_bound + self.accuracy_range
-        self.lower_limit = self.lower_bound - self.accuracy_range
-        self.is_breakout_a_signal = self.__is_breakout_a_signal__()
+        self.limit_upper = self.bound_upper + self.accuracy_range
+        self.limit_lower = self.bound_lower - self.accuracy_range
+
+    def is_breakout_a_signal(self) -> bool:
+        if self.__is_breakout_over_limit__():
+            if True or self.__is_breakout_in_allowed_range__():
+                if self.candle_stick.is_volume_rising(self.candle_stick_previous, 10): # i.e. 10% more volume required
+                    if self.__is_breakout_powerfull__():
+                        return True
+        return False
 
     def __get_candle_stick_from_df__(self) -> Candlestick:
         date = self.df.first_valid_index()
@@ -255,32 +308,24 @@ class FormationBreakout:
         return Candlestick(tick.Open, tick.High, tick.Low, tick.Close, tick.Volume, date)
 
     def __get_breakout_direction__(self) -> FD:
-        return FD.ASC if self.candle_stick.Close > self.upper_bound else FD.DESC
-
-    def __is_breakout_a_signal__(self) -> bool:
-        is_breakout_over_limit = self.__is_breakout_over_limit__()
-        is_breakout_in_allowed_range = True or self.__is_breakout_in_allowed_range__()
-        is_volume_rising = self.candle_stick.is_volume_rising(self.candle_stick_previous, 10) # i.e. 10% more volume required
-        is_breakout_powerfull = self.__is_breakout_powerfull__()
-
-        return is_breakout_over_limit and is_volume_rising and is_breakout_powerfull \
-               and is_breakout_in_allowed_range
+        return FD.ASC if self.candle_stick.Close > self.bound_upper else FD.DESC
 
     def __is_breakout_powerfull__(self) -> bool:
         return self.candle_stick.is_sustainable or self.candle_stick.has_gap_to(self.candle_stick_previous)
 
     def __is_breakout_over_limit__(self) -> bool:
-        limit_range = self.formation_range if self.config.breakout_over_upper_lower_range else self.accuracy_range
+        limit_range = self.formation_breadth if self.config.breakout_over_congestion_range \
+            else self.formation_breadth * self.config.breakout_range_pct
         if self.breakout_direction == FD.ASC:
-            return self.candle_stick.Close > self.upper_bound + limit_range
+            return self.candle_stick.Close >= self.bound_upper + limit_range
         else:
-            return self.candle_stick.Close < self.lower_bound - limit_range
+            return self.candle_stick.Close <= self.bound_lower - limit_range
 
     def __is_breakout_in_allowed_range__(self) -> bool:
         if self.breakout_direction == FD.ASC:
-            return self.candle_stick.Close < self.upper_bound + self.formation_range/2
+            return self.candle_stick.Close < self.bound_upper + self.formation_breadth / 2
         else:
-            return self.candle_stick.Close > self.lower_bound - self.formation_range/2
+            return self.candle_stick.Close > self.bound_lower - self.formation_breadth / 2
 
 
 class FormationPart:
@@ -293,21 +338,29 @@ class FormationPart:
         self.__min_close = self.df[CN.CLOSE].min()
         self.__min_low = self.df[CN.LOW].min()
         self.__id_min_low = self.df[CN.LOW].idxmin(axis=0)
-        self.__upper_bound = self.__max_high  # default
-        self.__lower_bound = self.__min_low  # default
+        self.__bound_upper = self.__max_high  # default
+        self.__bound_lower = self.__min_low  # default
         self.__use_configuration_boundary_columns__()
+
+    @property
+    def date_first(self):
+        return self.df.first_valid_index()
+
+    @property
+    def date_last(self):
+        return self.df.last_valid_index()
 
     @property
     def ticks(self):
         return self.df.shape[0]
 
     @property
-    def upper_bound(self):
-        return self.__upper_bound
+    def bound_upper(self):
+        return self.__bound_upper
 
     @property
-    def lower_bound(self):
-        return self.__lower_bound
+    def bound_lower(self):
+        return self.__bound_lower
 
     @property
     def max_close(self):
@@ -342,10 +395,10 @@ class FormationPart:
         return ((self.df[CN.HIGH]-self.mean).std() + (self.df[CN.LOW]-self.mean).std())/2
 
     def __use_configuration_boundary_columns__(self):
-        if self.config.upper_bound_value == CN.CLOSE:
-            self.__upper_bound = self.__max_close
-        if self.config.lower_bound_value == CN.CLOSE:
-            self.__lower_bound = self.__min_close
+        if self.config.bound_upper_value == CN.CLOSE:
+            self.__bound_upper = self.__max_close
+        if self.config.bound_lower_value == CN.CLOSE:
+            self.__bound_lower = self.__min_close
 
     def add_tick(self, tick_df: pd.DataFrame):
         self.df = pd.concat([self.df, tick_df])
@@ -356,48 +409,50 @@ class FormationPart:
 
 
 class Formation:
-    def __init__(self, df_start: pd.DataFrame, config: FormationConfiguration):
+    def __init__(self, df_previous: pd.DataFrame, df_start: pd.DataFrame, config: FormationConfiguration):
         self.config = config
         self.df_start = df_start
-        self.df_final = None
+        self.df_combined = df_start  # will be changed when a new tick is added
         self.ticks_initial = self.df_start.shape[0]
         self.check_length = int(self.ticks_initial/3)
+        self.part_previous = FormationPart(df_previous, self.config)
         self.part_left = FormationPart(self.df_start.iloc[0:self.check_length], self.config)
         self.part_middle = FormationPart(self.df_start.iloc[self.check_length:2 * self.check_length], self.config)
         self.part_right = FormationPart(self.df_start.iloc[2 * self.check_length:self.ticks_initial], self.config)
         self.accuracy_pct = self.config.accuracy_pct
-        self.upper_bound = self.__get_upper_bound__()
-        self.lower_bound = self.__get_lower_bound__()
-        self.accuracy_range = self.mean * self.accuracy_pct
-        self.upper_limit = self.upper_bound + self.accuracy_range
-        self.lower_limit = self.lower_bound - self.accuracy_range
+        self.bound_upper = self.__get_upper_bound__()
+        self.bound_lower = self.__get_lower_bound__()
+        self.breadth = self.bound_upper - self.bound_lower
+        self.accuracy_range = self.breadth * self.accuracy_pct
+        self.limit_upper = self.bound_upper + self.accuracy_range
+        self.limit_lower = self.bound_lower - self.accuracy_range
         self.xy = None
         self.xy_control = None
         self.control_df = pd.DataFrame   # DataFrame to be checked for expected/real results after breakout
         self.date_first = None
         self.date_last = None
-        self.breakout = FormationBreakout
+        self.breakout = None
         self.trade_result = TradeResult()
+        self.condition_handler = FormationConditionHandler()
 
-    @property
-    def is_finished(self):
+    def was_breakout_done(self):
         return True if self.breakout.__class__.__name__ == 'FormationBreakout' else False
 
-    @property
-    def buy_at_breakout(self):
-        if self.is_finished and self.is_passing_final_formation_check() and self.breakout.is_breakout_a_signal:
+    def buy_after_breakout(self):
+        if self.was_breakout_done() and self.breakout.is_breakout_a_signal():
+            self.condition_handler.breakout_with_buy_signal = True
             return True
         return False
 
     @property
     def breakout_direction(self):
-        if self.is_finished:
+        if self.was_breakout_done():
             return self.breakout.breakout_direction
         return FD.NONE
 
     @property
     def type(self):
-        return FT.NONE
+        return FT.NONE  # is overwritten
 
     @property
     def mean(self):
@@ -413,13 +468,25 @@ class Formation:
     def __get_lower_bound__(self):
         return min(self.part_left.min_low, self.part_right.min_low)
 
-    def is_formation_applicable(self):
+    def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
+        self.condition_handler.previous_period_check_ok = self.__is_previous_part_applicable_for_formation__()
+        if not self.config.check_previous_period or self.condition_handler.previous_period_check_ok:
+            if self.__are_left_right_parts_applicable_for_formation_type__():
+                if self.is_middle_part_applicable_for_formation_type():
+                    if self.__are_combined_parts_applicable_for_formation__():
+                        return True
         return False
 
-    def is_passing_final_formation_check(self):
+    def reset_df_combined(self):
+        self.df_combined = pd.concat([self.part_left.df, self.part_middle.df, self.part_right.df])
+
+    def __is_previous_part_applicable_for_formation__(self):
+        return True  # this is not always implemented in the deferred class
+
+    def __are_combined_parts_applicable_for_formation__(self):
         return False
 
-    def are_left_right_parts_applicable_for_formation_type(self):
+    def __are_left_right_parts_applicable_for_formation_type__(self):
         return False
 
     def is_middle_part_applicable_for_formation_type(self):
@@ -443,13 +510,16 @@ class Formation:
     def get_control_shape(self):
         pass
 
-    def finalize(self):
-        self.df_final = pd.concat([self.part_left.df, self.part_middle.df, self.part_right.df])
-        self.date_first = self.df_final.first_valid_index()
-        self.date_last = self.df_final.last_valid_index()
-        if self.control_df.__class__.__name__ == 'DataFrame':
-            if self.buy_at_breakout:
-                self.__fill_trade_result__()
+    def set_dates(self):
+        self.date_first = self.df_combined.first_valid_index()
+        self.date_last = self.df_combined.last_valid_index()
+
+    def fill_result_set(self):
+        if self.is_control_df_available():
+            self.__fill_trade_result__()
+
+    def is_control_df_available(self):
+        return self.control_df.__class__.__name__ == 'DataFrame'
 
     def print_formation_parts_data(self):
         self.part_left.print_data('Left')
@@ -457,17 +527,17 @@ class Formation:
         self.part_right.print_data('Right')
 
     def __fill_trade_result__(self):
-        self.trade_result.expected_win = round(self.upper_bound - self.lower_bound, 2)
+        self.trade_result.expected_win = round(self.bound_upper - self.bound_lower, 2)
         self.trade_result.bought_at = round(self.get_buying_price(), 2)
         self.trade_result.bought_on = self.breakout.df.first_valid_index()
         self.trade_result.max_ticks = self.control_df.shape[0]
         if self.breakout_direction == FD.ASC:
-            self.trade_result.stop_loss_at = self.upper_bound - self.accuracy_range
-            self.trade_result.limit = self.upper_bound + self.trade_result.expected_win
+            self.trade_result.stop_loss_at = self.bound_upper - self.accuracy_range
+            self.trade_result.limit = self.bound_upper + self.trade_result.expected_win
         else:
-            self.trade_result.stop_loss_at = self.lower_bound + self.accuracy_range
-            self.trade_result.limit = self.lower_bound - self.trade_result.expected_win
-        self.trade_result.stop_loss_at = self.mean  # much more worse for TSLA....
+            self.trade_result.stop_loss_at = self.bound_lower + self.accuracy_range
+            self.trade_result.limit = self.bound_lower - self.trade_result.expected_win
+        # self.trade_result.stop_loss_at = self.mean  # much more worse for TSLA....
 
         for ind, rows in self.control_df.iterrows():
             self.trade_result.actual_ticks += 1
@@ -527,28 +597,21 @@ class Channel(Formation):
         return (self.part_left.mean + self.part_right.mean) / 2
 
     def __get_upper_bound__(self):
-        return max(self.part_left.upper_bound, self.part_right.upper_bound)
+        return max(self.part_left.bound_upper, self.part_right.bound_upper)
 
     def __get_lower_bound__(self):
-        return min(self.part_left.lower_bound, self.part_right.lower_bound)
+        return min(self.part_left.bound_lower, self.part_right.bound_lower)
 
-    def is_formation_applicable(self):
-        if self.are_left_right_parts_applicable_for_formation_type():
-            return self.is_middle_part_applicable_for_formation_type()
+    def __are_combined_parts_applicable_for_formation__(self):
+        if self.__is_min_max_distribution_compliant__(True):
+            return self.__is_min_max_distribution_compliant__(False)
         return False
-
-    def is_passing_final_formation_check(self):
-        is_max_distribution_compliant = True or self.__is_min_max_distribution_compliant__(True)
-        is_min_distribution_compliant =  True or self.__is_min_max_distribution_compliant__(False)
-        std_v = round(self.df_final[CN.HIGH].std(), 2)
-        std_ok = std_v/(self.upper_bound - self.lower_bound) > 0.0  # this check doesn't bring the expected improvement
-        return is_max_distribution_compliant and is_min_distribution_compliant
 
     def __is_min_max_distribution_compliant__(self, check_max: bool):
         if check_max:
-            dist = self.df_final['Close'] > (self.upper_bound - self.accuracy_range)
+            dist = self.df_combined[CN.HIGH] > (self.bound_upper - self.accuracy_range)
         else:
-            dist = self.df_final['Close'] < (self.lower_bound + self.accuracy_range)
+            dist = self.df_combined[CN.LOW] < (self.bound_lower + self.accuracy_range)
         hit_counter = 0
         loop_counter = 0
         while loop_counter < dist.shape[0]:
@@ -559,27 +622,34 @@ class Channel(Formation):
                 loop_counter += 1
         return True if hit_counter >= 3 else False
 
-    def are_left_right_parts_applicable_for_formation_type(self):
-        return  self.__is_part_applicable_for_formation_type__(self.part_left) and \
-                self.__is_part_applicable_for_formation_type__(self.part_right)
+    def __is_previous_part_applicable_for_formation__(self):
+        upper_check = self.part_previous.min_close > self.df_combined[CN.CLOSE].max()
+        lower_check = self.part_previous.max_close < self.df_combined[CN.CLOSE].min()
+        return upper_check or lower_check
+
+    def __are_left_right_parts_applicable_for_formation_type__(self):
+        if self.__is_part_applicable_for_formation_type__(self.part_left):
+            return self.__is_part_applicable_for_formation_type__(self.part_right)
+        return False
 
     def is_middle_part_applicable_for_formation_type(self):
         return self.__is_part_applicable_for_formation_type__(self.part_middle)
 
     def __is_part_applicable_for_formation_type__(self, part: FormationPart):
-        is_near_upper_bound = abs(part.max_high - self.upper_bound) / self.mean < self.accuracy_pct
-        is_near_lower_bound = abs(part.min_low - self.lower_bound) / self.mean < self.accuracy_pct
-        is_near_mean = True or abs(part.mean - self.mean) / self.mean < self.accuracy_pct
-        return is_near_upper_bound and is_near_lower_bound and is_near_mean
+        if abs(part.max_high - self.bound_upper) < self.accuracy_range:  # is_near_upper_bound
+            if abs(part.min_low - self.bound_lower) < self.accuracy_range:  # is_near_lower_bound
+                if True or abs(part.mean - self.mean) < self.accuracy_range:  # is_near_mean
+                    return True
+        return False
 
     def is_tick_fitting_to_formation(self, tick_df: pd.DataFrame):
         row = tick_df.iloc[0]
-        return row.Close < self.upper_bound and row.Close > self.lower_bound
+        return row.Close <= self.bound_upper and row.Close >= self.bound_lower
 
     def set_xy_formation_parameter(self):
         x_dates = [self.date_first, self.date_first, self.date_last, self.date_last]
         x = list(dt.date2num(x_dates))
-        y = [self.upper_bound, self.lower_bound, self.lower_bound, self.upper_bound]
+        y = [self.bound_upper, self.bound_lower, self.bound_lower, self.bound_upper]
         self.xy = list(zip(x, y))
 
     def set_xy_control_parameter(self):
@@ -590,11 +660,11 @@ class Channel(Formation):
         x = list(dt.date2num(x_dates))
 
         if self.breakout_direction == FD.ASC:
-            y_max = self.upper_bound + (self.upper_bound - self.lower_bound)
-            y_min = self.upper_bound
+            y_max = self.bound_upper + (self.bound_upper - self.bound_lower)
+            y_min = self.bound_upper
         else:  # breakout downwards
-            y_max = self.lower_bound
-            y_min = self.lower_bound - (self.upper_bound - self.lower_bound)
+            y_max = self.bound_lower
+            y_min = self.bound_lower - (self.bound_upper - self.bound_lower)
         y = [y_max, y_min, y_min, y_max]
         self.xy_control = list(zip(x,y))
 
@@ -611,14 +681,104 @@ class Channel(Formation):
         return pol
 
 
+class FSC:  # Formation Statistics Columns
+    C_BOUND_UPPER_VALUE = 'conf.bound_upper_value'  # eg. CN.HIGH
+    C_BOUND_LOWER_VALUE = 'conf.bound_lower_value'  # eg. CN.LOW
+    C_PART_MAX_LEN = 'conf.max_length_of_a_formation_part'
+    C_PART_MIN_LEN = 'conf.min_length_of_a_formation_part'
+    C_CHECK_PREVIOUS_PERIOD = 'conf.check_previous_period'
+    C_BREAKOUT_OVER_CONGESTION = 'conf.breakout_over_congestion_range'
+    C_ACCURACY_PCT = 'conf.accuracy in %'
+    C_BREAKOUT_RANGE_PCT = 'conf.breakout range in %'
+    C_AND_CLAUSE = 'conf.and clause'
+
+    CON_BREAKOUT_WITH_BUY_SIGNAL = 'cond.breakout with buy signal'
+    CON_PREVIOUS_PERIOD_CHECK_OK = 'cond.previous period check'
+
+    STATUS = 'Status'
+    TICKER = 'Ticker'
+    NAME = 'Name'
+    FORMATION = 'Formation'
+    BEGIN_PREVIOUS = 'Begin previous period'
+    BEGIN = 'Begin'
+    END = 'End'
+    LOWER = 'Lower'
+    UPPER = 'Upper'
+    T_ORIG = 'Ticks original'
+    T_FINAL = 'Ticks final'
+    BREAKOUT_DATE = 'Breakout date'
+    BREAKOUT_DIRECTION = 'Breakout direction'
+    VOLUME_CHANGE = 'Volume change'
+    EXPECTED = 'Expected'
+    RESULT = 'Result'
+    EXT = 'Extended'
+    VAL = 'Validated'
+    BOUGHT_AT = 'Bought at'
+    SOLD_AT = 'Sold at'
+    BOUGHT_ON = 'Bought on'
+    SOLD_ON = 'Sold on'
+    T_NEEDED = 'Ticks needed'
+    LIMIT = 'Limit'
+    STOP_LOSS_AT = 'Stop loss at'
+    STOP_LOSS_TRIGGERED = 'Stop loss triggered'
+    RESULT_DF_MAX = 'Result DF max.'
+    RESULT_DF_MIN = 'Result DF min.'
+    FIRST_LIMIT_REACHED = 'First limit reached'
+    STOP_LOSS_MAX_REACHED = 'Max stop loss reached (bound of original range)'
+
+
 class FormationStatistics:
-    def __init__(self, config: FormationConfiguration):
-        self.config = config
+    def __init__(self):
         self.list = []
-        self.column_list = ['Status', 'Ticker', 'Name'
-            , 'Formation', 'Lower', 'Upper', 'Begin', 'End', 'Ticks original', 'Ticks final'
-            , 'Breakout date', 'Breakout direction', 'Volume change', 'Expected', 'Result', 'Extended', 'Validated'
-            , 'Bought at', 'Sold at', 'Bought on', 'Sold on', 'Ticks needed']
+        self.column_list = []
+
+        self.column_list.append(FSC.TICKER)
+        self.column_list.append(FSC.NAME)
+        self.column_list.append(FSC.STATUS)
+        self.column_list.append(FSC.FORMATION)
+        self.column_list.append(FSC.BEGIN_PREVIOUS)
+        self.column_list.append(FSC.BEGIN)
+        self.column_list.append(FSC.END)
+
+        self.column_list.append(FSC.C_BOUND_UPPER_VALUE)
+        self.column_list.append(FSC.C_BOUND_LOWER_VALUE)
+        self.column_list.append(FSC.C_PART_MAX_LEN)
+        self.column_list.append(FSC.C_PART_MIN_LEN)
+        self.column_list.append(FSC.C_CHECK_PREVIOUS_PERIOD)
+        self.column_list.append(FSC.C_BREAKOUT_OVER_CONGESTION)
+        self.column_list.append(FSC.C_ACCURACY_PCT)
+        self.column_list.append(FSC.C_BREAKOUT_RANGE_PCT)
+        self.column_list.append(FSC.C_AND_CLAUSE)
+
+        self.column_list.append(FSC.CON_BREAKOUT_WITH_BUY_SIGNAL)
+        self.column_list.append(FSC.CON_PREVIOUS_PERIOD_CHECK_OK)
+
+        self.column_list.append(FSC.LOWER)
+        self.column_list.append(FSC.UPPER)
+        self.column_list.append(FSC.T_ORIG)
+        self.column_list.append(FSC.T_FINAL)
+        self.column_list.append(FSC.BREAKOUT_DATE)
+        self.column_list.append(FSC.BREAKOUT_DIRECTION)
+        self.column_list.append(FSC.VOLUME_CHANGE)
+        self.column_list.append(FSC.EXPECTED)
+        self.column_list.append(FSC.RESULT)
+        self.column_list.append(FSC.EXT)
+        self.column_list.append(FSC.VAL)
+        self.column_list.append(FSC.BOUGHT_AT)
+        self.column_list.append(FSC.SOLD_AT)
+        self.column_list.append(FSC.BOUGHT_ON)
+        self.column_list.append(FSC.SOLD_ON)
+        self.column_list.append(FSC.T_NEEDED)
+
+        self.column_list.append(FSC.LIMIT)
+        self.column_list.append(FSC.STOP_LOSS_AT)
+        self.column_list.append(FSC.STOP_LOSS_TRIGGERED)
+
+        self.column_list.append(FSC.RESULT_DF_MAX)
+        self.column_list.append(FSC.RESULT_DF_MIN)
+        self.column_list.append(FSC.FIRST_LIMIT_REACHED)
+        self.column_list.append(FSC.STOP_LOSS_MAX_REACHED)
+
         self.dic = {}
 
     def __init_dic__(self):
@@ -627,29 +787,65 @@ class FormationStatistics:
 
     def add_entry(self, formation: Formation):
         self.__init_dic__()
-        self.dic['Status'] = 'Finished' if formation.is_finished else 'Open'
-        self.dic['Ticker'] = self.config.actual_ticker
-        self.dic['Name'] = self.config.actual_ticker_name
-        self.dic['Formation'] = formation.__class__.__name__
-        self.dic['Lower'] = round(formation.lower_bound, 2)
-        self.dic['Upper'] = round(formation.upper_bound, 2)
-        self.dic['Begin'] = FormationDate.get_date_from_datetime(formation.date_first)
-        self.dic['End'] = FormationDate.get_date_from_datetime(formation.date_last)
-        self.dic['Ticks original'] = formation.ticks_initial
-        self.dic['Ticks final'] = formation.ticks
-        if formation.is_finished:
-            self.dic['Breakout date'] = FormationDate.get_date_from_datetime(formation.breakout.breakout_date)
-            self.dic['Breakout direction'] = formation.breakout.breakout_direction
-            self.dic['Volume change'] = formation.breakout.volume_change_pct
-            self.dic['Expected'] = formation.trade_result.expected_win
-            self.dic['Result'] = formation.trade_result.actual_win
-            self.dic['Validated'] = formation.trade_result.formation_consistent
-            self.dic['Extended'] = formation.trade_result.limit_extended_counter
-            self.dic['Bought at'] = formation.trade_result.bought_at
-            self.dic['Sold at'] = formation.trade_result.sold_at
-            self.dic['Bought on'] = FormationDate.get_date_from_datetime(formation.trade_result.bought_on)
-            self.dic['Sold on'] = FormationDate.get_date_from_datetime(formation.trade_result.sold_on)
-            self.dic['Ticks needed'] = formation.trade_result.actual_ticks
+
+        self.dic[FSC.C_BOUND_UPPER_VALUE] = formation.config.bound_upper_value
+        self.dic[FSC.C_BOUND_LOWER_VALUE] = formation.config.bound_lower_value
+        self.dic[FSC.C_PART_MAX_LEN] = formation.config.max_length_of_a_formation_part
+        self.dic[FSC.C_PART_MIN_LEN] = formation.config.min_length_of_a_formation_part
+        self.dic[FSC.C_CHECK_PREVIOUS_PERIOD] = formation.config.check_previous_period
+        self.dic[FSC.C_BREAKOUT_OVER_CONGESTION] = formation.config.breakout_over_congestion_range
+        self.dic[FSC.C_ACCURACY_PCT] = formation.config.accuracy_pct
+        self.dic[FSC.C_BREAKOUT_RANGE_PCT] = formation.config.breakout_range_pct
+        self.dic[FSC.C_AND_CLAUSE] = formation.config.and_clause
+
+        self.dic[FSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = formation.condition_handler.breakout_with_buy_signal
+        self.dic[FSC.CON_PREVIOUS_PERIOD_CHECK_OK] = formation.condition_handler.previous_period_check_ok
+
+        self.dic[FSC.STATUS] = 'Finished' if formation.was_breakout_done() else 'Open'
+        self.dic[FSC.TICKER] = formation.config.actual_ticker
+        self.dic[FSC.NAME] = formation.config.actual_ticker_name
+        self.dic[FSC.FORMATION] = formation.__class__.__name__
+        self.dic[FSC.BEGIN_PREVIOUS] = FormationDate.get_date_from_datetime(formation.part_previous.date_first)
+        self.dic[FSC.BEGIN] = FormationDate.get_date_from_datetime(formation.date_first)
+        self.dic[FSC.END] = FormationDate.get_date_from_datetime(formation.date_last)
+        self.dic[FSC.LOWER] = round(formation.bound_lower, 2)
+        self.dic[FSC.UPPER] = round(formation.bound_upper, 2)
+        self.dic[FSC.T_ORIG] = formation.ticks_initial
+        self.dic[FSC.T_FINAL] = formation.ticks
+        if formation.was_breakout_done():
+            self.dic[FSC.BREAKOUT_DATE] = FormationDate.get_date_from_datetime(formation.breakout.breakout_date)
+            self.dic[FSC.BREAKOUT_DIRECTION] = formation.breakout.breakout_direction
+            self.dic[FSC.VOLUME_CHANGE] = formation.breakout.volume_change_pct
+            if formation.is_control_df_available():
+                self.dic[FSC.EXPECTED] = formation.trade_result.expected_win
+                self.dic[FSC.RESULT] = formation.trade_result.actual_win
+                self.dic[FSC.VAL] = formation.trade_result.formation_consistent
+                self.dic[FSC.EXT] = formation.trade_result.limit_extended_counter
+                self.dic[FSC.BOUGHT_AT] = round(formation.trade_result.bought_at, 2)
+                self.dic[FSC.SOLD_AT] = round(formation.trade_result.sold_at, 2)
+                self.dic[FSC.BOUGHT_ON] = FormationDate.get_date_from_datetime(formation.trade_result.bought_on)
+                self.dic[FSC.SOLD_ON] = FormationDate.get_date_from_datetime(formation.trade_result.sold_on)
+                self.dic[FSC.T_NEEDED] = formation.trade_result.actual_ticks
+                self.dic[FSC.LIMIT] = round(formation.trade_result.limit, 2)
+                self.dic[FSC.STOP_LOSS_AT] = round(formation.trade_result.stop_loss_at, 2)
+                self.dic[FSC.STOP_LOSS_TRIGGERED] = formation.trade_result.stop_loss_reached
+
+                self.dic[FSC.RESULT_DF_MAX] = formation.control_df[CN.CLOSE].max()
+                self.dic[FSC.RESULT_DF_MIN] = formation.control_df[CN.CLOSE].min()
+                self.dic[FSC.FIRST_LIMIT_REACHED] = False  # default
+                self.dic[FSC.STOP_LOSS_MAX_REACHED] = False  # default
+                if formation.breakout_direction == FD.ASC \
+                        and (formation.bound_upper + formation.breadth < self.dic[FSC.RESULT_DF_MAX]):
+                    self.dic[FSC.FIRST_LIMIT_REACHED] = True
+                if formation.breakout_direction == FD.DESC \
+                        and (formation.bound_lower - formation.breadth > self.dic[FSC.RESULT_DF_MIN]):
+                    self.dic[FSC.FIRST_LIMIT_REACHED] = True
+                if formation.breakout_direction == FD.ASC \
+                        and (formation.bound_lower > self.dic[FSC.RESULT_DF_MIN]):
+                    self.dic[FSC.STOP_LOSS_MAX_REACHED] = True
+                if formation.breakout_direction == FD.DESC \
+                        and (formation.bound_upper < self.dic[FSC.RESULT_DF_MAX]):
+                    self.dic[FSC.STOP_LOSS_MAX_REACHED] = True
 
         new_entry = [self.dic[column] for column in self.column_list]
         self.list.append(new_entry)
@@ -691,7 +887,7 @@ class FormationDetectorStatisticsApi:
     def __fill_parameter__(self):
         for ind in self.formation_dic:
             formation = self.formation_dic[ind]
-            if formation.is_finished:
+            if formation.was_breakout_done() and formation.is_control_df_available():
                 result = formation.trade_result
                 self.counter_actual_ticks += result.actual_ticks
                 self.counter_ticks += result.max_ticks
@@ -712,54 +908,83 @@ class FormationDetector:
         self.part_ticks_min = self.config.min_length_of_a_formation_part
         self.accuracy_pct = self.config.accuracy_pct
         self.formation_dic = {}
+        self.position_actual = self.config.min_length_of_a_formation_part  # we need some predecessor ticks
+        self.position_last = self.df.shape[0] - self.part_ticks_min * 3
 
     def parse_df(self):
-        pos = 0
-        max_pos = self.df.shape[0] - self.part_ticks_min * 3
-        while pos < max_pos:
-            pos = self.check_actual_position_for_valid_formation(pos)
+        while self.position_actual <= self.position_last:
+            self.position_actual = self.check_actual_position_for_valid_formation()
 
-    def check_actual_position_for_valid_formation(self, pos):
+    def check_actual_position_for_valid_formation(self):
         part_ticks = self.part_ticks_max
         while part_ticks >= self.part_ticks_min:  # try different lengths of the 3 parts of the formation
             ticks = part_ticks * 3
-            part_ticks -= 1
-            if pos + ticks < self.df.shape[0]:
-                formation = Channel(self.df.iloc[pos:pos + ticks], self.config)
-                if formation.is_formation_applicable():
-                    self.add_new_ticks_to_formation(formation, pos, pos + ticks + 1)
-                    formation.finalize()
-                    return self.get_next_pos_after_conditional_add_to_dictionary(formation, pos)
-        return pos + 1
+            if self.position_actual + ticks < self.df.shape[0]:
+                df_previous = self.__get_df_previous__()
+                df_start = self.df.iloc[self.position_actual:self.position_actual + ticks]
+                formation = Channel(df_previous, df_start, self.config)
+                # self.print_formation_details(formation, part_ticks)
+                if formation.is_formation_established():
+                    last_tick_fitting_to_formation, pos_last_tick, last_tick_df = \
+                        self.get_details_after_adding_new_ticks_to_formation(formation, ticks)
 
-    def add_new_ticks_to_formation(self, formation, pos, pos_new_tick):
-        continue_loop = True
-        while continue_loop and pos_new_tick <= self.df.shape[0]:
+                    if not last_tick_fitting_to_formation:  # is was a breakout...
+                        breakout_api = self.__get_breakout_api__(formation, last_tick_df)
+                        formation.breakout = FormationBreakout(breakout_api, self.config)
+                        self.add_control_df(formation, pos_last_tick)
+
+                    return self.get_next_pos_after_adding_to_dictionary(formation)
+            part_ticks -= 1
+        return self.position_actual + 1
+
+    def __get_df_previous__(self):
+        left_boundary = max(0, self.position_actual - config.previous_period_length)
+        return self.df.iloc[left_boundary:self.position_actual]
+
+    def print_formation_details(self, formation: Formation, part_ticks):
+        print('Checking position_actual = {} and part_ticks = {} and accuracy_range: {}'
+              '\nL/U = {} / {}, \nL_1/U_1 = {} / {}, \nL_2/U_2 = {} / {}, \nL_3/U_3 = {} / {}'
+              .format(self.position_actual, part_ticks, round(formation.accuracy_range, 2)
+                      , formation.bound_lower, formation.bound_upper
+                      , formation.part_left.bound_lower, formation.part_left.bound_upper
+                      , formation.part_middle.bound_lower, formation.part_middle.bound_upper
+                      , formation.part_right.bound_lower, formation.part_right.bound_upper
+                      ))
+
+    def add_control_df(self, formation, pos_new_tick):
+        if pos_new_tick < self.df.shape[0]:
+            left_boundary = pos_new_tick
+            right_boundary = min(left_boundary + formation.ticks, self.df.shape[0])
+            formation.control_df = self.df.iloc[left_boundary:right_boundary]
+            formation.fill_result_set()
+
+    def get_details_after_adding_new_ticks_to_formation(self, formation, ticks):
+        is_tick_fitting_to_formation = True
+        pos_new_tick = self.position_actual + ticks + 1
+        tick_df = pd.DataFrame
+        while is_tick_fitting_to_formation and pos_new_tick <= self.df.shape[0]:
             tick_df = self.df.iloc[pos_new_tick - 1:pos_new_tick]
-            continue_loop = formation.is_tick_fitting_to_formation(tick_df)
-            if continue_loop:
+            is_tick_fitting_to_formation = formation.is_tick_fitting_to_formation(tick_df)
+            if is_tick_fitting_to_formation:
                 formation.add_tick_to_formation(tick_df)
                 pos_new_tick += 1
-            else:
-                formation.breakout = FormationBreakout(self.__get_breakout_api__(formation, tick_df), self.config)
-                left_boundary = pos_new_tick
-                if left_boundary < self.df.shape[0]:
-                    right_boundary = min(left_boundary + formation.ticks, self.df.shape[0])
-                    formation.control_df = self.df.iloc[left_boundary:right_boundary]
+        return is_tick_fitting_to_formation, pos_new_tick, tick_df
 
-    def get_next_pos_after_conditional_add_to_dictionary(self, formation, pos):
-        if formation.buy_at_breakout or not formation.is_finished:
-            self.formation_dic[pos] = formation
-            return pos + formation.ticks * 2 + 1  # no other formation check in the control period
-        return pos + formation.ticks + 1
+    def get_next_pos_after_adding_to_dictionary(self, formation):
+        formation.reset_df_combined()
+        formation.set_dates()
+        self.formation_dic[self.position_actual] = formation
+        if formation.buy_after_breakout:
+            return self.position_actual + formation.ticks * 2 + 1  # no other formation check in the control period
+        return self.position_actual + formation.ticks + 1  # formation established but no valid breakout signal
 
     @staticmethod
     def __get_breakout_api__(formation: Formation, tick_df: pd.DataFrame):
         api = FormationBreakoutApi(formation.__class__.__name__)
         api.df = tick_df
         api.previous_tick = formation.part_right.df.loc[formation.part_right.df.last_valid_index()]
-        api.upper_bound = formation.upper_bound
-        api.lower_bound = formation.lower_bound
+        api.bound_upper = formation.bound_upper
+        api.bound_lower = formation.bound_lower
         api.accuracy_range = formation.accuracy_range
         api.mean = formation.mean
         return api
@@ -781,14 +1006,14 @@ class FormationColorHandler:
 
     @staticmethod
     def __get_formation_color__(formation: Formation):
-        if formation.is_finished:
+        if formation.was_breakout_done():
             return 'green'
         else:
             return 'yellow'
 
     @staticmethod
     def __get_control_color__(formation: Formation):
-        if formation.is_finished:
+        if formation.was_breakout_done():
             if formation.trade_result.actual_win > 0:
                 return 'lime'
             else:
@@ -825,7 +1050,8 @@ class FormationPlotter:
             self.__plot_candlesticks__(axes[0])
             self.__plot_volume__(axes[1])
 
-        plt.title(self.symbol)
+        plt.title('{} ({}) for {}'.format(self.detector.config.actual_ticker, self.detector.config.actual_ticker_name
+                                          , self.detector.config.actual_and_clause))
         plt.tight_layout()
         plt.xticks(rotation=45)
         plt.show()
@@ -856,7 +1082,7 @@ class FormationPlotter:
                 patches_dic[color_formation].append(formation.get_shape())
             else:
                 patches_dic[color_formation] = [formation.get_shape()]
-            if formation.is_finished:
+            if formation.was_breakout_done() and formation.is_control_df_available():
                 if color_control in patches_dic:
                     patches_dic[color_control].append(formation.get_control_shape())
                 else:
@@ -896,22 +1122,30 @@ class FormationController:
     def __init__(self, config: FormationConfiguration):
         self.config = config
         self.detector_statistics = DetectorStatistics()
-        self.formation_statistics = FormationStatistics(self.config)
+        self.formation_statistics = FormationStatistics()
         self.stock_db = stock_database.StockDatabase
         self.plotter_input_obj = None
         self.df_data = None
+        self.__excel_file_with_test_data = ''
+        self.df_test_data = pd.DataFrame
+        self.loop_list = []  # format of an entry (ticker, and_clause)
+        self.__start_row = 0
+        self.__end_row = 0
 
-    def run_formation_checker(self):
-        if config.get_data_from_db:
-            self.stock_db = stock_database.StockDatabase()
+    def run_formation_checker(self, excel_file_with_test_data: str = '', start_row: int = 1, end_row: int = 0):
+        self.__init_db_and_test_data__(excel_file_with_test_data, start_row, end_row)
+        self.__init_loop_list__()
 
         counter = 0
-        for ticker in self.config._ticker_dic:
-            self.config.actual_ticker = ticker
-            self.config.actual_ticker_name = self.config._ticker_dic[ticker]
+        for entries in self.loop_list:
+            ticker = entries[0]
+            and_clause = entries[1]
+            self.config.actual_ticker = '{}. {}'.format(entries[2], ticker)
+            self.config.actual_ticker_name = self.config.ticker_dic[ticker]
+            self.config.actual_and_clause = and_clause
             print('\nProcessing {} ({})...\n'.format(ticker, self.config.actual_ticker_name))
             if config.get_data_from_db:
-                stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.stock_db, ticker, self.config.and_clause)
+                stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.stock_db, ticker, and_clause)
                 self.plotter_input_obj = stock_db_df_obj
                 self.df_data = stock_db_df_obj.df_data
             else:
@@ -931,10 +1165,11 @@ class FormationController:
                     plotter.plot_data_frame()
 
             counter += 1
+
             if counter >= self.config.max_number_securities:
                 break
 
-        if config.show_final_statitics:
+        if config.show_final_statistics:
             self.config.print()
             if self.config.statistics_excel_file_name == '':
                 self.formation_statistics.print_overview()
@@ -946,11 +1181,39 @@ class FormationController:
                 print('Statistics were written to file: {}'.format(self.config.statistics_excel_file_name))
                 writer.save()
 
+    def __init_db_and_test_data__(self, excel_file_with_test_data: str, start_row: int, end_row: int):
+        if self.config.get_data_from_db:
+            self.stock_db = stock_database.StockDatabase()
+            if excel_file_with_test_data != '':
+                self.__excel_file_with_test_data = excel_file_with_test_data
+                self.df_test_data = pd.ExcelFile(self.__excel_file_with_test_data).parse(0)
+                self.__start_row = start_row
+                self.__end_row = self.df_test_data.shape[0] if end_row == 0 else end_row
+
+    def __init_loop_list__(self):
+        if self.config.get_data_from_db and self.__excel_file_with_test_data != '':
+            counter = 0
+            for ind, rows in self.df_test_data.iterrows():
+                counter += 1
+                if counter >= self.__start_row:
+                    self.config.ticker_dic[rows[FSC.TICKER]] = rows[FSC.NAME]
+                    start_date = FormationDate.get_date_from_datetime(rows[FSC.BEGIN_PREVIOUS])
+                    date_end = FormationDate.get_date_from_datetime(rows[FSC.END] + timedelta(days=rows[FSC.T_FINAL] + 20))
+                    and_clause = "Date BETWEEN '{}' AND '{}'".format(start_date, date_end)
+                    self.loop_list.append([rows[FSC.TICKER], and_clause, counter])
+                if counter >= self.__end_row:
+                    break
+        else:
+            counter = 0
+            for ticker in self.config.ticker_dic:
+                counter += 1
+                self.loop_list.append([ticker, self.config.and_clause, counter])
+
     def __handle_statistics__(self, detector: FormationDetector):
         for keys in detector.formation_dic:
             self.formation_statistics.add_entry(detector.formation_dic[keys])
 
-        if config.show_final_statitics:
+        if config.show_final_statistics:
             self.detector_statistics.add_entry(self.config.actual_ticker, self.config.actual_ticker_name
                                                , detector.get_statistics_api())
         else:
@@ -959,26 +1222,32 @@ class FormationController:
 
 config = FormationConfiguration()
 config.get_data_from_db = False
-config.plot_data = True
+config.plot_data = False
 config.statistics_excel_file_name = 'statistics.xlsx'
-config.statistics_excel_file_name = ''
-config.upper_bound_value = CN.CLOSE
-config.lower_bound_value = CN.CLOSE
-config.breakout_over_upper_lower_range = False
-config.show_final_statitics = True
-config.max_number_securities = 20
-config.use_index(Indices.NASDAQ)
-config.use_own_dic({"ACGLP": "Disney"})
-config.and_clause = "Date BETWEEN '2010-03-07' AND '2019-04-17'"
+# config.statistics_excel_file_name = ''
+config.bound_upper_value = CN.CLOSE
+config.bound_lower_value = CN.CLOSE
+config.max_length_of_a_formation_part = 15
+config.breakout_over_congestion_range = False
+# config.show_final_statistics = True
+config.max_number_securities = 1000
+config.accuracy_pct = 0.20  # default is 0.05
+config.breakout_range_pct = 0.1  # default is 0.01
+config.use_index(Indices.DOW_JONES)
+# config.use_own_dic({"AAPL": "Apple"})  # INTC	Intel NKE	Nike  V (Visa)
+config.and_clause = "Date BETWEEN '2016-05-20' AND '2019-02-05'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 
 formation_controller = FormationController(config)
-formation_controller.run_formation_checker()
+formation_controller.run_formation_checker('channel_test_data.xlsx', 1, 0)
 
 """
 DIS	Disney
 JPM	JPMorgan
+Date BETWEEN '2016-05-20' AND '2019-02-05
+- HD check - very well
+- JNJ false breakout - could be avoided by breakout range > 0
 """
 
 
