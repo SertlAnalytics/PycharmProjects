@@ -20,6 +20,7 @@ from matplotlib.collections import PatchCollection
 from datetime import datetime, timedelta
 import ftplib
 import tempfile
+import math
 
 
 class CN:
@@ -43,6 +44,7 @@ class FT:
     NONE = 'NONE'
     TRIANGLE = 'Triangle'
     CHANNEL = 'Channel'  # https://www.investopedia.com/articles/trading/05/020905.asp
+    TKE = 'Trend Korrektion Extrem'
 
 
 class FD:
@@ -52,9 +54,16 @@ class FD:
     DESC = 'descending'
 
 
+class FCC:  # Formation Condition Columns
+    BREAKOUT_WITH_BUY_SIGNAL = 'breakout had a buy signal'
+    PREVIOUS_PERIOD_CHECK_OK = 'previous period check OK'  # eg. CN.LOW
+    COMBINED_PARTS_APPLICABLE = 'combined parts are formation applicable'
+
+
 class FormationConfiguration:
     def __init__(self):
         self.get_data_from_db = True
+        self.formation_type = FT.TKE
         self.api_period = ApiPeriod.DAILY
         self.api_output_size = ApiOutputsize.COMPACT
         self.bound_upper_value = CN.HIGH
@@ -71,6 +80,7 @@ class FormationConfiguration:
         self.max_number_securities = 1000
         self.show_final_statistics = True
         self.and_clause = "Date BETWEEN '2017-12-01' AND '2019-12-31'"
+        self.actual_number = 0
         self.actual_ticker = ''
         self.actual_ticker_name = ''
         self.actual_and_clause = ''
@@ -156,16 +166,11 @@ class FormationConfiguration:
         return {"TSLA": "Tesla", "FCEL": "Full Cell"}
 
 
-class FCC:  # Formation Condition Columns
-    BREAKOUT_WITH_BUY_SIGNAL = 'breakout had a buy signal'
-    PREVIOUS_PERIOD_CHECK_OK = 'previous period check OK'  # eg. CN.LOW
-
-
 class FormationConditionHandler:
     def __init__(self):
-        self.dic = {}
-        self.dic[FCC.BREAKOUT_WITH_BUY_SIGNAL] = False
-        self.dic[FCC.PREVIOUS_PERIOD_CHECK_OK] = False
+        self.dic = {FCC.BREAKOUT_WITH_BUY_SIGNAL: False,
+                    FCC.PREVIOUS_PERIOD_CHECK_OK: False,
+                    FCC.COMBINED_PARTS_APPLICABLE: False}
 
     def __set_breakout_with_buy_signal__(self, value: bool):
         self.dic[FCC.BREAKOUT_WITH_BUY_SIGNAL] = value
@@ -176,18 +181,30 @@ class FormationConditionHandler:
     breakout_with_buy_signal = property(__get_breakout_with_buy_signal__, __set_breakout_with_buy_signal__)
 
     def __set_previous_period_check_ok__(self, value: bool):
-        self.dic[FCC.BREAKOUT_WITH_BUY_SIGNAL] = value
+        self.dic[FCC.PREVIOUS_PERIOD_CHECK_OK] = value
 
-    def __get_set_previous_period_check_ok__(self):
+    def __get_previous_period_check_ok__(self):
         return self.dic[FCC.PREVIOUS_PERIOD_CHECK_OK]
 
-    previous_period_check_ok = property(__get_set_previous_period_check_ok__, __set_previous_period_check_ok__)
+    previous_period_check_ok = property(__get_previous_period_check_ok__, __set_previous_period_check_ok__)
+
+    def __set_combined_parts_applicable__(self, value: bool):
+        self.dic[FCC.COMBINED_PARTS_APPLICABLE] = value
+
+    def __get_combined_parts_applicable__(self):
+        return self.dic[FCC.COMBINED_PARTS_APPLICABLE]
+
+    combined_parts_applicable = property(__get_combined_parts_applicable__, __set_combined_parts_applicable__)
 
 
 class FormationDate:
     @staticmethod
     def get_date_from_datetime(date_time):
         return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').date()
+
+    @staticmethod
+    def get_date_from_number(num: int):
+        return datetime(1, 1, 1) + timedelta(days=num)
 
 
 class Candlestick:
@@ -331,6 +348,7 @@ class FormationBreakout:
 class FormationPart:
     def __init__(self, df: pd.DataFrame, config: FormationConfiguration):
         self.df = df
+        self.first_tick = df.iloc[0]
         self.config = config
         self.__max_close = self.df[CN.CLOSE].max()
         self.__max_high = self.df[CN.HIGH].max()
@@ -375,6 +393,10 @@ class FormationPart:
         return self.__id_max_high
 
     @property
+    def id_max_high_num(self):
+        return dt.date2num(self.__id_max_high)
+
+    @property
     def min_close(self):
         return self.__min_close
 
@@ -385,6 +407,10 @@ class FormationPart:
     @property
     def id_min_low(self):
         return self.__id_min_low
+
+    @property
+    def id_min_low_num(self):
+        return dt.date2num(self.__id_min_low)
 
     @property
     def mean(self):
@@ -400,6 +426,18 @@ class FormationPart:
         if self.config.bound_lower_value == CN.CLOSE:
             self.__bound_lower = self.__min_close
 
+    def are_values_below_linear_function(self, f_lin, accuracy_range: float = 0):
+        for ind, rows in self.df.iterrows():
+            if rows[CN.HIGH] > f_lin(rows[CN.DATEASNUM]) + accuracy_range:
+                return False
+        return True
+
+    def is_high_first_tick(self):
+        return self.first_tick.High == self.max_high
+
+    def is_high_before_low(self):
+        return self.id_max_high_num < self.id_min_low_num
+
     def add_tick(self, tick_df: pd.DataFrame):
         self.df = pd.concat([self.df, tick_df])
 
@@ -409,16 +447,20 @@ class FormationPart:
 
 
 class Formation:
+    ticks_initial = 0
+    check_length = 0
+    part_previous = FormationPart
+    part_left = FormationPart
+    part_middle = FormationPart
+    part_right = FormationPart
+
     def __init__(self, df_previous: pd.DataFrame, df_start: pd.DataFrame, config: FormationConfiguration):
         self.config = config
         self.df_start = df_start
         self.df_combined = df_start  # will be changed when a new tick is added
         self.ticks_initial = self.df_start.shape[0]
         self.check_length = int(self.ticks_initial/3)
-        self.part_previous = FormationPart(df_previous, self.config)
-        self.part_left = FormationPart(self.df_start.iloc[0:self.check_length], self.config)
-        self.part_middle = FormationPart(self.df_start.iloc[self.check_length:2 * self.check_length], self.config)
-        self.part_right = FormationPart(self.df_start.iloc[2 * self.check_length:self.ticks_initial], self.config)
+        self.__init_type_formation_parts__(df_previous)
         self.accuracy_pct = self.config.accuracy_pct
         self.bound_upper = self.__get_upper_bound__()
         self.bound_lower = self.__get_lower_bound__()
@@ -434,6 +476,14 @@ class Formation:
         self.breakout = None
         self.trade_result = TradeResult()
         self.condition_handler = FormationConditionHandler()
+
+    def __init_type_formation_parts__(self, df_previous: pd.DataFrame):
+        self.ticks_initial = self.df_start.shape[0]
+        self.check_length = int(self.ticks_initial / 3)
+        self.part_previous = FormationPart(df_previous, self.config)
+        self.part_left = FormationPart(self.df_start.iloc[0:self.check_length], self.config)
+        self.part_middle = FormationPart(self.df_start.iloc[self.check_length:2 * self.check_length], self.config)
+        self.part_right = FormationPart(self.df_start.iloc[2 * self.check_length:self.ticks_initial], self.config)
 
     def was_breakout_done(self):
         return True if self.breakout.__class__.__name__ == 'FormationBreakout' else False
@@ -456,25 +506,26 @@ class Formation:
 
     @property
     def mean(self):
-        return (self.part_left.mean + self.part_right.mean)/2
+        return 0
 
     @property
     def ticks(self):
         return self.part_left.ticks + self.part_middle.ticks + self.part_right.ticks
 
     def __get_upper_bound__(self):
-        return max(self.part_left.max_high, self.part_right.max_high)
+        return 0
 
     def __get_lower_bound__(self):
-        return min(self.part_left.min_low, self.part_right.min_low)
+        return 0
 
     def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
-        self.condition_handler.previous_period_check_ok = self.__is_previous_part_applicable_for_formation__()
-        if not self.config.check_previous_period or self.condition_handler.previous_period_check_ok:
-            if self.__are_left_right_parts_applicable_for_formation_type__():
-                if self.is_middle_part_applicable_for_formation_type():
-                    if self.__are_combined_parts_applicable_for_formation__():
-                        return True
+        if self.__are_left_right_parts_applicable_for_formation_type__():
+            if self.is_middle_part_applicable_for_formation_type():
+                self.condition_handler.previous_period_check_ok = self.__is_previous_part_applicable_for_formation__()
+                if not self.config.check_previous_period or self.condition_handler.previous_period_check_ok:
+                    self.condition_handler.combined_parts_applicable \
+                        = self.__are_combined_parts_applicable_for_formation__()
+                    return self.condition_handler.combined_parts_applicable
         return False
 
     def reset_df_combined(self):
@@ -587,6 +638,158 @@ class Formation:
         return self.breakout.df.iloc[0].Close
 
 
+class TKE(Formation):
+    p_12 = None
+    p_13 = None
+    part_index_list = []
+    part_p_1_x_dic = {}
+    part_dic = {}
+    part_p_1_x_min = - math.inf
+
+    def __init__(self, df_previous: pd.DataFrame, df_start: pd.DataFrame, config: FormationConfiguration):
+        self.has_tke_parts = False  # default
+        Formation.__init__(self, df_previous, df_start, config)
+
+    @property
+    def type(self):
+        return FT.TKE
+
+    def __init_type_formation_parts__(self, df_previous: pd.DataFrame):
+        """
+        This script parses the df_start for the first part - this has to be a TKE - part already...
+        :param df_previous: the dataframe with is a predecessor to the rest, i.e. only a small part.
+        :return:
+        """
+        self.check_length = self.config.min_length_of_a_formation_part
+        self.ticks_initial = self.check_length * 3
+        self.part_left = FormationPart(self.df_start.iloc[0:self.check_length], self.config)
+        if self.part_left.is_high_first_tick():
+            self.has_tke_parts = True
+            self.part_previous = FormationPart(df_previous, self.config)
+            self.__reset_df_start__()
+            self.__add_parts_to_dictionaries__()
+            self.__check_parts__()
+
+    def __reset_df_start__(self):
+        counter = 0
+        pos_low = 0
+        low = math.inf
+        high = self.part_left.max_high
+        for ind, rows in self.df_start.iterrows():
+            counter += 1
+            if rows[CN.HIGH] > high:
+                break
+            else:
+                if rows[CN.LOW] < low:
+                    pos_low = counter
+        self.df_start = self.df_start[0:pos_low + 1]
+
+    def __add_parts_to_dictionaries__(self):
+        pos = self.part_left.df.shape[0]
+        limit = self.df_start.shape[0] - self.check_length
+        while pos < limit:
+            part_new = FormationPart(self.df_start.iloc[pos:pos + self.check_length], self.config)
+            if part_new.is_high_first_tick():
+                if part_new.max_high > self.part_left.max_high:
+                    break
+                else:
+                    self.__add_part_new__(part_new, pos)
+                pos += self.check_length
+            else:
+                pos += 1
+
+    def __add_part_new__(self, part_new: FormationPart, pos: int):
+        part_p_1_x = self.__get_function_parameter__(self.part_left, part_new)
+        if part_p_1_x[1] > self.part_p_1_x_min:  # add only parts which have a lesser slope
+            # reason: if not they are covered by one of the listed parts...
+            self.part_p_1_x_min = part_p_1_x[1]
+            self.part_index_list.append(pos)
+            self.part_p_1_x_dic[pos] = part_p_1_x
+            self.part_dic[pos] = part_new
+
+    def __check_parts__(self):
+        for i_1 in self.part_index_list:
+            if i_1 == self.part_index_list[0]:
+                self.part_middle = self.part_dic[i_1]
+                self.p_12 = self.part_p_1_x_dic[i_1]
+            for i_2 in self.part_index_list:
+                if i_2 > i_1:
+                    if i_1 == self.part_index_list[0]:
+                        self.part_right = self.part_dic[i_2]
+                        self.p_13 = self.part_p_1_x_dic[i_2]
+
+    def __get_function_parameter__(self, part_left: FormationPart, part_right: FormationPart):
+        x = np.array([part_left.id_max_high_num, part_right.id_max_high_num])
+        y = np.array([part_left.max_high, part_right.max_high])
+        z = np.polyfit(x, y, 1)
+        p = np.poly1d(z)
+        return p
+
+    def __are_combined_parts_applicable_for_formation__(self):
+        return True
+
+    def __is_previous_part_applicable_for_formation__(self):
+        return self.part_previous.max_close < self.part_left.max_high
+
+    def __are_left_right_parts_applicable_for_formation_type__(self):
+        if not self.has_tke_parts:
+            return False
+        if self.part_left.is_high_first_tick():
+            if self.part_right.is_high_before_low():
+                if self.part_left.min_low > self.part_right.max_high:
+                    if self.part_left.are_values_below_linear_function(self.p_13):
+                        if self.part_right.are_values_below_linear_function(self.p_13):
+                            return True
+        return False
+
+    def is_middle_part_applicable_for_formation_type(self):
+        if self.part_middle.is_high_before_low():
+            if self.part_left.max_high > self.part_middle.max_high:
+                if self.part_left.min_low < self.part_middle.max_high:
+                    if self.part_middle.max_high > self.part_right.max_high:
+                        if self.part_middle.min_low < self.part_right.max_high:
+                            if self.part_middle.are_values_below_linear_function(self.p_13, 10):
+                                return True
+        return False
+
+    def is_tick_fitting_to_formation(self, tick_df: pd.DataFrame):
+        return self.__is_tick_tke_conform__(tick_df.iloc[0])
+
+    def __is_tick_tke_conform__(self, row) -> bool:
+        # print('Date: {}, High: {}, TKE: {}'.format(FormationDate.get_date_from_number(row[CN.DATEASNUM])
+        #       , row.High, self.p_13(row[CN.DATEASNUM])))
+        return row[CN.HIGH] <= self.p_13(row[CN.DATEASNUM])
+
+    def set_xy_formation_parameter(self):
+        x_dates = [self.part_left.date_first, self.part_left.date_first
+            , self.part_middle.date_first, self.part_middle.date_first
+            , self.part_right.date_first, self.part_right.date_first, self.part_right.date_last]
+        x = list(dt.date2num(x_dates))
+        y = [self.part_left.max_high, self.part_left.min_low
+            , self.part_left.min_low, self.part_middle.min_low
+            , self.part_middle.min_low, self.part_right.min_low, self.part_right.min_low]
+        self.xy = list(zip(x, y))
+
+    def set_xy_control_parameter(self):
+        x_dates = [self.date_first, self.date_last]
+        x = list(dt.date2num(x_dates))
+
+        y = self.p_13(x)
+        self.xy_control = list(zip(x,y))
+
+    def get_shape(self):
+        self.set_xy_formation_parameter()
+        pol = Polygon(np.array(self.xy), True)
+        # pol.set_color('#eeefff')
+        return pol
+
+    def get_control_shape(self):
+        self.set_xy_control_parameter()
+        pol = Polygon(np.array(self.xy_control), True)
+        pol.set_color('#eeefff')
+        return pol
+
+
 class Channel(Formation):
     @property
     def type(self):
@@ -692,9 +895,11 @@ class FSC:  # Formation Statistics Columns
     C_BREAKOUT_RANGE_PCT = 'conf.breakout range in %'
     C_AND_CLAUSE = 'conf.and clause'
 
-    CON_BREAKOUT_WITH_BUY_SIGNAL = 'cond.breakout with buy signal'
-    CON_PREVIOUS_PERIOD_CHECK_OK = 'cond.previous period check'
+    CON_PREVIOUS_PERIOD_CHECK_OK = FCC.PREVIOUS_PERIOD_CHECK_OK
+    CON_COMBINED_PARTS_APPLICABLE = FCC.COMBINED_PARTS_APPLICABLE
+    CON_BREAKOUT_WITH_BUY_SIGNAL = FCC.BREAKOUT_WITH_BUY_SIGNAL
 
+    NUMBER = 'Number'
     STATUS = 'Status'
     TICKER = 'Ticker'
     NAME = 'Name'
@@ -732,6 +937,7 @@ class FormationStatistics:
         self.list = []
         self.column_list = []
 
+        self.column_list.append(FSC.NUMBER)
         self.column_list.append(FSC.TICKER)
         self.column_list.append(FSC.NAME)
         self.column_list.append(FSC.STATUS)
@@ -750,8 +956,9 @@ class FormationStatistics:
         self.column_list.append(FSC.C_BREAKOUT_RANGE_PCT)
         self.column_list.append(FSC.C_AND_CLAUSE)
 
-        self.column_list.append(FSC.CON_BREAKOUT_WITH_BUY_SIGNAL)
         self.column_list.append(FSC.CON_PREVIOUS_PERIOD_CHECK_OK)
+        self.column_list.append(FSC.CON_COMBINED_PARTS_APPLICABLE)
+        self.column_list.append(FSC.CON_BREAKOUT_WITH_BUY_SIGNAL)
 
         self.column_list.append(FSC.LOWER)
         self.column_list.append(FSC.UPPER)
@@ -798,10 +1005,12 @@ class FormationStatistics:
         self.dic[FSC.C_BREAKOUT_RANGE_PCT] = formation.config.breakout_range_pct
         self.dic[FSC.C_AND_CLAUSE] = formation.config.and_clause
 
-        self.dic[FSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = formation.condition_handler.breakout_with_buy_signal
         self.dic[FSC.CON_PREVIOUS_PERIOD_CHECK_OK] = formation.condition_handler.previous_period_check_ok
+        self.dic[FSC.CON_COMBINED_PARTS_APPLICABLE] = formation.condition_handler.combined_parts_applicable
+        self.dic[FSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = formation.condition_handler.breakout_with_buy_signal
 
         self.dic[FSC.STATUS] = 'Finished' if formation.was_breakout_done() else 'Open'
+        self.dic[FSC.NUMBER] = formation.config.actual_number
         self.dic[FSC.TICKER] = formation.config.actual_ticker
         self.dic[FSC.NAME] = formation.config.actual_ticker_name
         self.dic[FSC.FORMATION] = formation.__class__.__name__
@@ -914,6 +1123,7 @@ class FormationDetector:
     def parse_df(self):
         while self.position_actual <= self.position_last:
             self.position_actual = self.check_actual_position_for_valid_formation()
+            print('parse_df.self.position_actual={}'.format(self.position_actual))
 
     def check_actual_position_for_valid_formation(self):
         part_ticks = self.part_ticks_max
@@ -921,8 +1131,18 @@ class FormationDetector:
             ticks = part_ticks * 3
             if self.position_actual + ticks < self.df.shape[0]:
                 df_previous = self.__get_df_previous__()
-                df_start = self.df.iloc[self.position_actual:self.position_actual + ticks]
-                formation = Channel(df_previous, df_start, self.config)
+
+                if self.config.formation_type == FT.TKE:
+                    df_start = self.df.iloc[self.position_actual:]
+                    # df_start = self.df.iloc[self.position_actual:self.position_actual + ticks]
+                    formation = TKE(df_previous, df_start, self.config)
+                elif self.config.formation_type == FT.CHANNEL:
+                    df_start = self.df.iloc[self.position_actual:self.position_actual + ticks]
+                    formation = Channel(df_previous, df_start, self.config)
+                else:
+                    print('not configured yet: FormationType = {}'.format(self.config.formation_type))
+                    return
+
                 # self.print_formation_details(formation, part_ticks)
                 if formation.is_formation_established():
                     last_tick_fitting_to_formation, pos_last_tick, last_tick_df = \
@@ -1025,8 +1245,9 @@ class FormationColorHandler:
 class FormationPlotter:
     def __init__(self, api_object, detector: FormationDetector):
         self.api_object = api_object  # StockDatabaseDataFrame or AlphavantageStockFetcher
-        self.config = config
         self.api_object_class = self.api_object.__class__.__name__
+        self.detector = detector
+        self.config = self.detector.config
         self.part_ticks_max = self.config.max_length_of_a_formation_part
         self.accuracy_pct = self.config.accuracy_pct
         self.df = api_object.df
@@ -1035,23 +1256,22 @@ class FormationPlotter:
         self.df_volume = api_object.df_volume
         self.column_volume = api_object.column_volume
         self.symbol = api_object.symbol
-        self.detector = detector
 
     def plot_data_frame(self):
         with_close_plot = False
 
         if with_close_plot:
-            fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(15, 10), sharex=True)
+            fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(15, 10), sharex='all')
             self.__plot_close__(axes[0])
             self.__plot_candlesticks__(axes[1])
             self.__plot_volume__(axes[2])
         else:
-            fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(15, 7), sharex=True)
+            fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(15, 7), sharex='all')
             self.__plot_candlesticks__(axes[0])
             self.__plot_volume__(axes[1])
 
-        plt.title('{} ({}) for {}'.format(self.detector.config.actual_ticker, self.detector.config.actual_ticker_name
-                                          , self.detector.config.actual_and_clause))
+        plt.title('{}. {} ({}) for {}'.format(self.config.actual_number, self.config.actual_ticker
+                                              , self.config.actual_ticker_name, self.config.actual_and_clause))
         plt.tight_layout()
         plt.xticks(rotation=45)
         plt.show()
@@ -1097,11 +1317,12 @@ class FormationPlotter:
 class DetectorStatistics:
     def __init__(self):
         self.list = []
-        self.column_list = ['Ticker', 'Name', 'Investment', 'Result', 'Change%', 'SL', 'F_OK', 'F_NOK', 'Ticks']
+        self.column_list = ['Number', 'Ticker', 'Name', 'Investment', 'Result', 'Change%', 'SL', 'F_OK', 'F_NOK', 'Ticks']
 
-    def add_entry(self, ticker, name, api: FormationDetectorStatisticsApi):
-        new_entry = [ticker, name, api.investment_start, api.investment_working, api.diff_pct,
-                     api.counter_stop_loss, api.counter_formation_OK, api.counter_formation_NOK, api.counter_actual_ticks]
+    def add_entry(self, config: FormationConfiguration, api: FormationDetectorStatisticsApi):
+        new_entry = [config.actual_number, config.actual_ticker, config.actual_ticker_name
+            , api.investment_start, api.investment_working, api.diff_pct
+            , api.counter_stop_loss, api.counter_formation_OK, api.counter_formation_NOK, api.counter_actual_ticks]
         self.list.append(new_entry)
 
     def get_frame_set(self) -> pd.DataFrame:
@@ -1140,7 +1361,8 @@ class FormationController:
         for entries in self.loop_list:
             ticker = entries[0]
             and_clause = entries[1]
-            self.config.actual_ticker = '{}. {}'.format(entries[2], ticker)
+            self.config.actual_number = entries[2]
+            self.config.actual_ticker = ticker
             self.config.actual_ticker_name = self.config.ticker_dic[ticker]
             self.config.actual_and_clause = and_clause
             print('\nProcessing {} ({})...\n'.format(ticker, self.config.actual_ticker_name))
@@ -1214,38 +1436,40 @@ class FormationController:
             self.formation_statistics.add_entry(detector.formation_dic[keys])
 
         if config.show_final_statistics:
-            self.detector_statistics.add_entry(self.config.actual_ticker, self.config.actual_ticker_name
-                                               , detector.get_statistics_api())
+            self.detector_statistics.add_entry(self.config, detector.get_statistics_api())
         else:
             detector.print_statistics()
 
 
 config = FormationConfiguration()
-config.get_data_from_db = False
-config.plot_data = False
+config.get_data_from_db = True
+config.formation_type = FT.TKE
+config.plot_data = True
 config.statistics_excel_file_name = 'statistics.xlsx'
-# config.statistics_excel_file_name = ''
+config.statistics_excel_file_name = ''
 config.bound_upper_value = CN.CLOSE
 config.bound_lower_value = CN.CLOSE
 config.max_length_of_a_formation_part = 15
+config.min_length_of_a_formation_part = 5
 config.breakout_over_congestion_range = False
 # config.show_final_statistics = True
 config.max_number_securities = 1000
 config.accuracy_pct = 0.20  # default is 0.05
 config.breakout_range_pct = 0.1  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-# config.use_own_dic({"AAPL": "Apple"})  # INTC	Intel NKE	Nike  V (Visa)
-config.and_clause = "Date BETWEEN '2016-05-20' AND '2019-02-05'"
+config.use_own_dic({"GE": "Cisco"})  # INTC	Intel NKE	Nike  V (Visa)
+config.and_clause = "Date BETWEEN '2017-06-01' AND '2019-02-05'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 
 formation_controller = FormationController(config)
-formation_controller.run_formation_checker('channel_test_data.xlsx', 1, 0)
+formation_controller.run_formation_checker('')
+# formation_controller.run_formation_checker('channel_test_data.xlsx', 1, 1000)
 
 """
 DIS	Disney
 JPM	JPMorgan
-Date BETWEEN '2016-05-20' AND '2019-02-05
+Date BETWEEN '2017-06-01' AND '2019-02-05
 - HD check - very well
 - JNJ false breakout - could be avoided by breakout range > 0
 """
