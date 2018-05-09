@@ -15,7 +15,7 @@ import stock_database
 from stock_database import StockSymbols
 from mpl_finance import candlestick_ohlc
 import matplotlib.dates as dt
-from matplotlib.patches import Circle, Wedge, Polygon, Rectangle
+from matplotlib.patches import Circle, Wedge, Polygon, Rectangle, Arrow
 from matplotlib.collections import PatchCollection
 from datetime import datetime, timedelta
 import ftplib
@@ -32,6 +32,14 @@ class CN:
     VOL = 'Volume'
     DATE = 'Date'
     DATEASNUM = 'DateAsNumber'
+    TICKS_BREAK_HIGH_BEFORE = 'BREAK_HIGH_BEFORE'
+    TICKS_BREAK_HIGH_AFTER = 'BREAK_HIGH_AFTER'
+    TICKS_BREAK_LOW_BEFORE = 'BREAK_LOW_BEFORE'
+    TICKS_BREAK_LOW_AFTER = 'BREAK_LOW_AFTER'
+    GLOBAL_MIN = 'G_MIN'
+    GLOBAL_MAX = 'G_MAX'
+    LOCAL_MIN = 'L_MIN'
+    LOCAL_MAX = 'L_MAX'
 
 
 class Indices:
@@ -225,6 +233,146 @@ class Candlestick:
 
     def has_gap_to(self, candle_stick_comp):
         return self.Low > candle_stick_comp.High or self.High < candle_stick_comp.Low
+
+
+class Movement:
+    def __init__(self):
+        self.df = pd.DataFrame
+        self.min = 0
+        self.max = 0
+        self.date_begin = None
+        self.date_end = None
+        self.direction = FD.NONE
+        self.tick_list = []
+
+    @property
+    def ticks(self):
+        return len(self.tick_list)
+
+    def add_tick(self, tick):
+        self.tick_list.append(tick)
+
+
+class FibonacciSlider:
+    """
+    Has the task to slide over the graph to find Fibonacci movements and retracements
+    """
+    def __init__(self, df: pd.DataFrame, movement_min_length: int, retracement_min_length: int):
+        self.df_base = df
+        self.movement_min_length = movement_min_length
+        self.retracement_min_length = retracement_min_length
+        self.slider_length = self.movement_min_length
+        self.df_base_length = self.df_base.shape[0]
+        self.first_tick = self.df_base.iloc[0]
+        self.df_slider_first = self.df_base.iloc[0:self.slider_length + 1]
+        self.direction = FD.ASC if self.first_tick.High < self.slider_length[CN.HIGH].max() else FD.DESC
+        self.df_movement = None
+        self.df_retracement = None
+
+    def __parse_df__(self):
+        counter = 0
+        pos = 1
+        df_slider_previous = self.df_slider_first
+        while pos < self.df_base_length - self.slider_length:
+            max_previous = df_slider_previous[CN.HIGH].max()
+            min_previous = df_slider_previous[CN.LOW].min()
+            df_slider_next = self.df_base.iloc[pos:self.slider_length + 1]
+            max_next = df_slider_next[CN.HIGH].max()
+            min_next = df_slider_next[CN.LOW].min()
+            if self.direction == FD.ASC:
+                if max_next <= max_previous:
+                    pass
+            else:
+                if max_next <= max_previous:
+                    pass
+                    df_slider_next = self.df_base.iloc[pos:self.slider_length + 1]
+
+    def __get_ticks_to_next_break__(self, from_pos: int, value_comp: float) -> int:
+        pos = from_pos
+        while pos < self.df_base_length:
+            tick = self.df_base.iloc[pos]
+
+
+class FibonacciWaveParser:
+    def __init__(self, df: pd.DataFrame, movement_min_length: int, retracement_min_length: int = 0):
+        self.df = df
+        self.df_length = self.df.shape[0]
+        self.movement_min_length = movement_min_length
+        self.retracement_min_length = self.__get_retracement_min_length__(retracement_min_length)
+        self.pos_entry_list = []
+        self.__init_columns_for_ticks_distance__()
+
+    def get_xy_parameter(self, key: str):
+        if key == 'min':
+            df_global = self.df[self.df[CN.LOCAL_MIN]]
+            col = CN.LOW
+        else:
+            df_global = self.df[self.df[CN.LOCAL_MAX]]
+            col = CN.HIGH
+        x = df_global[CN.DATEASNUM]
+        y = df_global[col]
+        return list(zip(x,y))
+
+    def __get_retracement_min_length__(self, retracement_min_length: int):
+        return int(self.movement_min_length/2) if retracement_min_length == 0 else retracement_min_length
+
+    def __parse_df__(self):
+        pass
+
+    def __init_columns_for_ticks_distance__(self):
+        self.__fill_pos_entry_list__()
+        self.__add_distance_columns__()
+        self.__add_min_max_columns__()
+        # print(self.df.head(20))
+
+    def __fill_pos_entry_list__(self):
+        pos = 0
+        while pos < self.df.shape[0]:
+            row = self.df.iloc[pos]
+            self.pos_entry_list.append([row[CN.LOW], row[CN.HIGH], row[CN.DATEASNUM]])
+            pos += 1
+
+    def __add_distance_columns__(self):
+        for high in (False, True):
+            for before in (False, True):
+                value_list = []
+                pos = 0
+                while pos < len(self.pos_entry_list):
+                    value_list.append(self.__get_distance__(self.pos_entry_list, pos, high, before))
+                    pos += 1
+                if high and before:
+                    self.df[CN.TICKS_BREAK_HIGH_BEFORE] = value_list
+                elif high and not before:
+                    self.df[CN.TICKS_BREAK_HIGH_AFTER] = value_list
+                elif not high and before:
+                    self.df[CN.TICKS_BREAK_LOW_BEFORE] = value_list
+                elif not high and not before:
+                    self.df[CN.TICKS_BREAK_LOW_AFTER] = value_list
+
+    def __add_min_max_columns__(self):
+        len_global = int(self.df_length / 2)
+        len_local = 3
+        self.df[CN.GLOBAL_MIN] = np.logical_and(self.df[CN.TICKS_BREAK_LOW_AFTER] >  len_global
+                                                , self.df[CN.TICKS_BREAK_LOW_BEFORE] >  len_global)
+        self.df[CN.GLOBAL_MAX] = np.logical_and(self.df[CN.TICKS_BREAK_HIGH_AFTER] > len_global
+                                                , self.df[CN.TICKS_BREAK_HIGH_BEFORE] > len_global)
+        self.df[CN.LOCAL_MIN] = np.logical_and(self.df[CN.TICKS_BREAK_LOW_AFTER] > len_local
+                                               , self.df[CN.TICKS_BREAK_LOW_BEFORE] > len_local)
+        self.df[CN.LOCAL_MAX] = np.logical_and(self.df[CN.TICKS_BREAK_HIGH_AFTER] > len_local
+                                               , self.df[CN.TICKS_BREAK_HIGH_BEFORE] > len_local)
+
+    def __get_distance__(self, pos_entry_list, actual_pos: int, high: bool, before: bool) -> int:
+        signature = -1 if before else 1
+        pos = actual_pos + signature
+        value_actual_pos = pos_entry_list[actual_pos][1] if high else pos_entry_list[actual_pos][0]
+        while 0 <= pos < self.df_length:
+            value_pos = pos_entry_list[pos][1] if high else pos_entry_list[pos][0]
+            if value_pos > value_actual_pos and high:
+                break
+            if value_pos < value_actual_pos and not high:
+                break
+            pos += signature
+        return self.df_length + 1 if (pos < 0 or pos >= len(pos_entry_list)) else abs(actual_pos - pos)
 
 
 class TradeResult:
@@ -458,6 +606,7 @@ class Formation:
         self.config = config
         self.df_start = df_start
         self.df_combined = df_start  # will be changed when a new tick is added
+        self.condition_handler = FormationConditionHandler()
         self.ticks_initial = self.df_start.shape[0]
         self.check_length = int(self.ticks_initial/3)
         self.__init_type_formation_parts__(df_previous)
@@ -475,7 +624,6 @@ class Formation:
         self.date_last = None
         self.breakout = None
         self.trade_result = TradeResult()
-        self.condition_handler = FormationConditionHandler()
 
     def __init_type_formation_parts__(self, df_previous: pd.DataFrame):
         self.ticks_initial = self.df_start.shape[0]
@@ -520,7 +668,7 @@ class Formation:
 
     def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
         if self.__are_left_right_parts_applicable_for_formation_type__():
-            if self.is_middle_part_applicable_for_formation_type():
+            if self.__is_middle_part_applicable_for_formation_type__():
                 self.condition_handler.previous_period_check_ok = self.__is_previous_part_applicable_for_formation__()
                 if not self.config.check_previous_period or self.condition_handler.previous_period_check_ok:
                     self.condition_handler.combined_parts_applicable \
@@ -540,7 +688,7 @@ class Formation:
     def __are_left_right_parts_applicable_for_formation_type__(self):
         return False
 
-    def is_middle_part_applicable_for_formation_type(self):
+    def __is_middle_part_applicable_for_formation_type__(self):
         return False
 
     def is_tick_fitting_to_formation(self, tick_df: pd.DataFrame):
@@ -639,16 +787,9 @@ class Formation:
 
 
 class TKE(Formation):
+    has_tke_parts = False  # default
     p_12 = None
     p_13 = None
-    part_index_list = []
-    part_p_1_x_dic = {}
-    part_dic = {}
-    part_p_1_x_min = - math.inf
-
-    def __init__(self, df_previous: pd.DataFrame, df_start: pd.DataFrame, config: FormationConfiguration):
-        self.has_tke_parts = False  # default
-        Formation.__init__(self, df_previous, df_start, config)
 
     @property
     def type(self):
@@ -660,15 +801,16 @@ class TKE(Formation):
         :param df_previous: the dataframe with is a predecessor to the rest, i.e. only a small part.
         :return:
         """
+        self.has_tke_parts = False
         self.check_length = self.config.min_length_of_a_formation_part
         self.ticks_initial = self.check_length * 3
         self.part_left = FormationPart(self.df_start.iloc[0:self.check_length], self.config)
         if self.part_left.is_high_first_tick():
-            self.has_tke_parts = True
+            self.part_middle = None
+            self.part_right = None
             self.part_previous = FormationPart(df_previous, self.config)
             self.__reset_df_start__()
-            self.__add_parts_to_dictionaries__()
-            self.__check_parts__()
+            self.__add_missing_parts__()
 
     def __reset_df_start__(self):
         counter = 0
@@ -684,7 +826,7 @@ class TKE(Formation):
                     pos_low = counter
         self.df_start = self.df_start[0:pos_low + 1]
 
-    def __add_parts_to_dictionaries__(self):
+    def __add_missing_parts__(self):
         pos = self.part_left.df.shape[0]
         limit = self.df_start.shape[0] - self.check_length
         while pos < limit:
@@ -692,31 +834,45 @@ class TKE(Formation):
             if part_new.is_high_first_tick():
                 if part_new.max_high > self.part_left.max_high:
                     break
-                else:
-                    self.__add_part_new__(part_new, pos)
+                elif self.__check_part_new_against_existing_parts__(part_new):
+                    self.has_tke_parts = True
+                    break
                 pos += self.check_length
             else:
                 pos += 1
 
-    def __add_part_new__(self, part_new: FormationPart, pos: int):
-        part_p_1_x = self.__get_function_parameter__(self.part_left, part_new)
-        if part_p_1_x[1] > self.part_p_1_x_min:  # add only parts which have a lesser slope
-            # reason: if not they are covered by one of the listed parts...
-            self.part_p_1_x_min = part_p_1_x[1]
-            self.part_index_list.append(pos)
-            self.part_p_1_x_dic[pos] = part_p_1_x
-            self.part_dic[pos] = part_new
+    def __check_part_new_against_existing_parts__(self, part_new: FormationPart):
+        if not self.__does_part_new_replace_part_middle__(part_new):
+            if self.__does_part_new_replace_part_right__(part_new):
+                self.has_tke_parts = True
+                return self.is_formation_established()
+        return False
 
-    def __check_parts__(self):
-        for i_1 in self.part_index_list:
-            if i_1 == self.part_index_list[0]:
-                self.part_middle = self.part_dic[i_1]
-                self.p_12 = self.part_p_1_x_dic[i_1]
-            for i_2 in self.part_index_list:
-                if i_2 > i_1:
-                    if i_1 == self.part_index_list[0]:
-                        self.part_right = self.part_dic[i_2]
-                        self.p_13 = self.part_p_1_x_dic[i_2]
+    def __does_part_new_replace_part_middle__(self, part_new: FormationPart):
+        to_replace = True
+        param = self.__get_function_parameter__(self.part_left, part_new)
+        if self.part_middle is not None:
+            to_replace = not part_new.are_values_below_linear_function(self.p_12, 2)
+
+        if to_replace:
+            self.part_middle = part_new
+            self.p_12 = param
+            self.part_right = None
+            self.has_tke_parts = False
+
+        return to_replace
+
+    def __does_part_new_replace_part_right__(self, part_new: FormationPart):
+        to_replace = True
+        param = self.__get_function_parameter__(self.part_left, part_new)
+        if self.part_right is not None:
+            to_replace = not part_new.are_values_below_linear_function(self.p_13)
+
+        if to_replace:
+            self.part_right = part_new
+            self.p_13 = param
+
+        return to_replace
 
     def __get_function_parameter__(self, part_left: FormationPart, part_right: FormationPart):
         x = np.array([part_left.id_max_high_num, part_right.id_max_high_num])
@@ -742,7 +898,7 @@ class TKE(Formation):
                             return True
         return False
 
-    def is_middle_part_applicable_for_formation_type(self):
+    def __is_middle_part_applicable_for_formation_type__(self):
         if self.part_middle.is_high_before_low():
             if self.part_left.max_high > self.part_middle.max_high:
                 if self.part_left.min_low < self.part_middle.max_high:
@@ -835,7 +991,7 @@ class Channel(Formation):
             return self.__is_part_applicable_for_formation_type__(self.part_right)
         return False
 
-    def is_middle_part_applicable_for_formation_type(self):
+    def __is_middle_part_applicable_for_formation_type__(self):
         return self.__is_part_applicable_for_formation_type__(self.part_middle)
 
     def __is_part_applicable_for_formation_type__(self, part: FormationPart):
@@ -1111,6 +1267,7 @@ class FormationDetector:
     def __init__(self, df: pd.DataFrame, config: FormationConfiguration):
         self.config = config
         self.df = df.assign(MeanHL=(df.High + df.Low) / 2)
+        self.df_length = self.df.shape[0]
         self.df[CN.DATEASNUM] = self.df.index.map(dt.date2num)
         self.df[CN.DATEASNUM] = self.df[CN.DATEASNUM].apply(int)
         self.part_ticks_max = self.config.max_length_of_a_formation_part
@@ -1119,47 +1276,75 @@ class FormationDetector:
         self.formation_dic = {}
         self.position_actual = self.config.min_length_of_a_formation_part  # we need some predecessor ticks
         self.position_last = self.df.shape[0] - self.part_ticks_min * 3
+        self.fib_wave_parser = FibonacciWaveParser(self.df, 6)
 
     def parse_df(self):
-        while self.position_actual <= self.position_last:
-            self.position_actual = self.check_actual_position_for_valid_formation()
-            print('parse_df.self.position_actual={}'.format(self.position_actual))
+        if self.config.formation_type == FT.TKE:
+            pos = 0
+            for ind, rows in self.fib_wave_parser.df.iterrows():
+                if rows[CN.LOCAL_MAX]:
+                    if pos > self.position_actual:
+                        self.position_actual = pos
+                        # print('parse_df.self.position_actual={}'.format(self.position_actual))
+                        self.check_actual_position_for_valid_formation()
+                pos += 1
+        else:
+            while self.position_actual <= self.position_last:
+                self.position_actual = self.check_actual_position_for_valid_formation()
 
     def check_actual_position_for_valid_formation(self):
-        part_ticks = self.part_ticks_max
+        part_ticks = self.__get_part_ticks_max_for_loop__()
         while part_ticks >= self.part_ticks_min:  # try different lengths of the 3 parts of the formation
             ticks = part_ticks * 3
             if self.position_actual + ticks < self.df.shape[0]:
                 df_previous = self.__get_df_previous__()
-
-                if self.config.formation_type == FT.TKE:
-                    df_start = self.df.iloc[self.position_actual:]
-                    # df_start = self.df.iloc[self.position_actual:self.position_actual + ticks]
-                    formation = TKE(df_previous, df_start, self.config)
-                elif self.config.formation_type == FT.CHANNEL:
-                    df_start = self.df.iloc[self.position_actual:self.position_actual + ticks]
-                    formation = Channel(df_previous, df_start, self.config)
-                else:
-                    print('not configured yet: FormationType = {}'.format(self.config.formation_type))
-                    return
-
-                # self.print_formation_details(formation, part_ticks)
-                if formation.is_formation_established():
-                    last_tick_fitting_to_formation, pos_last_tick, last_tick_df = \
-                        self.get_details_after_adding_new_ticks_to_formation(formation, ticks)
-
-                    if not last_tick_fitting_to_formation:  # is was a breakout...
-                        breakout_api = self.__get_breakout_api__(formation, last_tick_df)
-                        formation.breakout = FormationBreakout(breakout_api, self.config)
-                        self.add_control_df(formation, pos_last_tick)
-
-                    return self.get_next_pos_after_adding_to_dictionary(formation)
+                if self.__is_precondition_for_df_previous_fullfilled__(df_previous):
+                    formation = self.__get_formation__(df_previous, ticks)
+                    if formation.is_formation_established():
+                        self.__check_for_breakout__(formation, ticks)
+                        return self.get_next_pos_after_adding_to_dictionary(formation)
             part_ticks -= 1
         return self.position_actual + 1
 
+    def __get_part_ticks_max_for_loop__(self):
+        if self.config.formation_type == FT.TKE:  # we don't need to loop for different sizes
+            return self.part_ticks_min
+        else:
+            return self.part_ticks_max
+
+    def __check_for_breakout__(self, formation: Formation, ticks: int):
+        last_tick_fitting_to_formation, pos_last_tick, last_tick_df = \
+            self.get_details_after_adding_new_ticks_to_formation(formation, ticks)
+        if not last_tick_fitting_to_formation:  # is was a breakout...
+            breakout_api = self.__get_breakout_api__(formation, last_tick_df)
+            formation.breakout = FormationBreakout(breakout_api, self.config)
+            self.add_control_df(formation, pos_last_tick)
+
+    def __get_formation__(self, df_previous, ticks):
+        if self.config.formation_type == FT.TKE:
+            df_start = self.df.iloc[self.position_actual:]
+            # df_start = self.df.iloc[self.position_actual:self.position_actual + ticks]
+            return TKE(df_previous, df_start, self.config)
+        elif self.config.formation_type == FT.CHANNEL:
+            df_start = self.df.iloc[self.position_actual:self.position_actual + ticks]
+            return Channel(df_previous, df_start, self.config)
+        else:
+            print('not implemented yet: FormationType = {}'.format(self.config.formation_type))
+            exit()
+
     def __get_df_previous__(self):
-        left_boundary = max(0, self.position_actual - config.previous_period_length)
+        if self.config.formation_type == FT.TKE:
+            left_boundary = max(0, self.position_actual - 4)
+        else:
+            left_boundary = max(0, self.position_actual - config.previous_period_length)
         return self.df.iloc[left_boundary:self.position_actual]
+
+    def __is_precondition_for_df_previous_fullfilled__(self, df_previous: pd.DataFrame):
+        if self.config.formation_type == FT.TKE:
+            actual_tick = self.df.iloc[self.position_actual]
+            return df_previous[CN.CLOSE].max() < actual_tick.High
+        else:
+            return True
 
     def print_formation_details(self, formation: Formation, part_ticks):
         print('Checking position_actual = {} and part_ticks = {} and accuracy_range: {}'
@@ -1194,9 +1379,12 @@ class FormationDetector:
         formation.reset_df_combined()
         formation.set_dates()
         self.formation_dic[self.position_actual] = formation
-        if formation.buy_after_breakout:
-            return self.position_actual + formation.ticks * 2 + 1  # no other formation check in the control period
-        return self.position_actual + formation.ticks + 1  # formation established but no valid breakout signal
+        if self.config.formation_type == FT.TKE:  # there can be more than one formation in the same range
+            return self.position_actual + self.config.min_length_of_a_formation_part
+        else:
+            if formation.buy_after_breakout:
+                return self.position_actual + formation.ticks * 2 + 1  # no other formation check in the control period
+            return self.position_actual + formation.ticks + 1  # formation established but no valid breakout signal
 
     @staticmethod
     def __get_breakout_api__(formation: Formation, tick_df: pd.DataFrame):
@@ -1288,6 +1476,7 @@ class FormationPlotter:
         candlestick_ohlc(axis, ohlc, width=0.4, colorup='g')
         axis.xaxis_date()
         self.add_formations(axis)
+        self.__add_fibonacci_waves__(axis)
 
     def __plot_volume__(self, axis):
         self.df_volume.plot(ax=axis, title=self.column_volume)
@@ -1311,6 +1500,21 @@ class FormationPlotter:
         for colors in patches_dic:
             p = PatchCollection(patches_dic[colors], alpha=0.4)
             p.set_color(colors)
+            ax.add_collection(p)
+
+    def __add_fibonacci_waves__(self, ax):
+        color_dic = {'min': 'aqua', 'max': 'blue'}
+        offset_dic = {'min': (1, 1), 'max': (-1, -1)}
+        for key in color_dic:
+            xy_list = self.detector.fib_wave_parser.get_xy_parameter(key)
+            offset = offset_dic[key]
+            patches = []
+            for xy in xy_list:
+                # patch = Circle(xy, radius=0.5)
+                patch = Arrow(xy[0]-offset[0], xy[1]-offset[1], offset[0], offset[1])
+                patches.append(patch)
+            p = PatchCollection(patches)
+            p.set_color(color_dic[key])
             ax.add_collection(p)
 
 
@@ -1457,10 +1661,10 @@ config.max_number_securities = 1000
 config.accuracy_pct = 0.20  # default is 0.05
 config.breakout_range_pct = 0.1  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-config.use_own_dic({"GE": "Cisco"})  # INTC	Intel NKE	Nike  V (Visa)
-config.and_clause = "Date BETWEEN '2017-06-01' AND '2019-02-05'"
+config.use_own_dic({"GE": "General Electric"})  # INTC	Intel NKE	Nike  V (Visa) GE
+config.and_clause = "Date BETWEEN '2017-09-18' AND '2019-02-05'"
 # config.and_clause = ''
-config.api_output_size = ApiOutputsize.COMPACT
+config.api_output_size = ApiOutputsize.FULL
 
 formation_controller = FormationController(config)
 formation_controller.run_formation_checker('')
