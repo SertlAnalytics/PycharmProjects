@@ -131,7 +131,7 @@ if __name__ == '__main__':
     # for ticker in dow_jones_dic_orig:
     #     print('\nProcessing {} - {}'.format(ticker, dow_jones_dic_orig[ticker]))
     #     stock_db.import_stock_data(ticker, ApiPeriod.DAILY, ApiOutputsize.FULL)
-    stock_db.import_stock_data(StockSymbols.IBM, ApiPeriod.DAILY)
+    stock_db.import_stock_data('ONVO', ApiPeriod.DAILY, ApiOutputsize.FULL)
 
     # os.remove('C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks/MyStocks.sqlite')
     # print('Database {} removed: {}'.format(db_name, db_path))

@@ -179,6 +179,35 @@ class FormationConfiguration:
         return {"TSLA": "Tesla", "FCEL": "Full Cell"}
 
 
+class FormationRange:
+    def __init__(self, start_date, end_date, min_value: float, max_value: float):
+        self.date_start = FormationDate.get_date_from_datetime(start_date)
+        self.date_start_num = dt.date2num(self.date_start)
+        self.date_end = FormationDate.get_date_from_datetime(end_date)
+        self.date_end_num = dt.date2num(self.date_end)
+        self.min = round(min_value, 2)
+        self.max = round(max_value, 2)
+
+    def is_tick_fitting_to_range(self, tick):
+        if self.min <= tick[CN.CLOSE] <= self.max:
+            if self.date_start_num <= tick[CN.DATEASNUM] <= self.date_end_num:
+                return True
+        return False
+
+    def plot_annotation(self, ax, for_max: bool = True, color: str = 'green'):
+        x = self.date_start_num
+        y = self.max if for_max else self.min
+        text = '{}: {}'.format(self.date_start, y)
+        offset_x = 0
+        offset_y = 1
+        offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
+        arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
+        ax.annotate(text, xy=(x, y), xytext=(x + offset[0], y + offset[1]), arrowprops=arrow_props)
+
+    def print(self):
+        print('{} until {}, min/max={}/{}'.format(self.date_start, self.date_end, self.min, self.max))
+
+
 class FormationConditionHandler:
     def __init__(self):
         self.dic = {FCC.BREAKOUT_WITH_BUY_SIGNAL: False,
@@ -213,6 +242,8 @@ class FormationConditionHandler:
 class FormationDate:
     @staticmethod
     def get_date_from_datetime(date_time):
+        if date_time.__class__.__name__ == 'date':  # no change
+            return date_time
         return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').date()
 
     @staticmethod
@@ -525,9 +556,14 @@ class FormationBreakout:
 class FormationPart:
     def __init__(self, df: pd.DataFrame, config: FormationConfiguration):
         self.df = df
-        self.first_tick = df.iloc[0]
         self.config = config
+        if self.df.shape[0] > 0:
+            self.__calculate_values__()
+
+    def __calculate_values__(self):
+        self.first_tick = self.df.iloc[0]
         self.__max_close = self.df[CN.CLOSE].max()
+        self.__id_max_close = self.df[CN.CLOSE].idxmax(axis=0)
         self.__max_high = self.df[CN.HIGH].max()
         self.__id_max_high = self.df[CN.HIGH].idxmax(axis=0)
         self.__min_close = self.df[CN.CLOSE].min()
@@ -536,6 +572,10 @@ class FormationPart:
         self.__bound_upper = self.__max_high  # default
         self.__bound_lower = self.__min_low  # default
         self.__use_configuration_boundary_columns__()
+
+    @property
+    def movement(self):
+        return abs(self.max_high - self.min_low)
 
     @property
     def date_first(self):
@@ -560,6 +600,10 @@ class FormationPart:
     @property
     def max_close(self):
         return self.__max_close
+
+    @property
+    def id_max_close_num(self):
+        return dt.date2num(self.__id_max_close)
 
     @property
     def max_high(self):
@@ -597,17 +641,42 @@ class FormationPart:
     def std(self):  # we need the standard deviation from the mean_HL for Low and High
         return ((self.df[CN.HIGH]-self.mean).std() + (self.df[CN.LOW]-self.mean).std())/2
 
+    def plot_annotation(self, ax, for_max: bool = True, color: str = 'blue'):
+        x, y, text = self.__get_annotation_parameters__(for_max)
+        offset_x = 10
+        offset_y = (20 / y)
+        offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
+        arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
+        ax.annotate(text, xy=(x, y), xytext=(x + offset[0], y + offset[1]), arrowprops=arrow_props)
+
+    def __get_annotation_parameters__(self, for_max: bool):
+        if for_max:
+            x = self.id_max_high_num
+            y = self.max_high
+            date = FormationDate.get_date_from_datetime(self.id_max_high)
+        else:
+            x = self.id_min_low_num
+            y = self.min_low
+            date = FormationDate.get_date_from_datetime(self.id_min_low)
+        return x, y, '{}: {}'.format(date, round(y, 2))
+
+    def get_retracement_pct(self, comp_part):
+        if self.min_low > comp_part.max_high:
+            return 0
+        intersection = abs(comp_part.max_high - self.min_low)
+        return round(intersection/self.movement, 2)
+
     def __use_configuration_boundary_columns__(self):
         if self.config.bound_upper_value == CN.CLOSE:
             self.__bound_upper = self.__max_close
         if self.config.bound_lower_value == CN.CLOSE:
             self.__bound_lower = self.__min_close
 
-    def are_values_below_linear_function(self, f_lin, accuracy_pct: float = 0.01):  # 1% accuracy allowed
+    def are_values_below_linear_function(self, f_lin, accuracy_pct: float = 0.01, column: CN = CN.HIGH):  # 1% accuracy allowed
         for ind, rows in self.df.iterrows():
             value_function = round(f_lin(rows[CN.DATEASNUM]), 2)
             accuracy_range = value_function * accuracy_pct
-            if value_function + accuracy_range < rows[CN.HIGH]:
+            if value_function + accuracy_range < rows[column]:
                 return False
         return True
 
@@ -617,6 +686,25 @@ class FormationPart:
         value = abs(self.max_high - value_function)/mean
         return value < accuracy_pct
 
+    def is_close_close_to_linear_function(self, f_lin, accuracy_pct: float = 0.01):  # 1% accuracy allowed
+        value_function = round(f_lin(self.id_max_close_num), 2)
+        mean = (value_function + self.max_high)/2
+        value = abs(self.max_close - value_function)/mean
+        return value < accuracy_pct
+
+    def get_cross_date_when_min_reached(self, f_lin):
+        return self.__get_cross_date__(f_lin, 'min')
+
+    def get_cross_date_when_curve_is_crossed(self, f_lin):
+        return self.__get_cross_date__(f_lin, 'curve')
+
+    def __get_cross_date__(self, f_lin, cross_type: str):
+        for ind, rows in self.df.iterrows():
+            if (cross_type == 'min' and f_lin(rows[CN.DATEASNUM]) < self.min_low) or \
+                    (cross_type == 'curve' and rows[CN.CLOSE] > f_lin(rows[CN.DATEASNUM])):
+                return rows[CN.DATE]
+        return None
+
     def is_high_first_tick(self):
         return self.first_tick.High == self.max_high
 
@@ -625,6 +713,9 @@ class FormationPart:
 
     def add_tick(self, tick_df: pd.DataFrame):
         self.df = pd.concat([self.df, tick_df])
+
+    def recalculate_values(self):
+        self.__calculate_values__()
 
     def print_data(self, part: str):
         print('\n{}: min={}, max={}, mean={}, std={} \n{}'.format(part, self.min_low, self.max_high, self.mean, self.std,
@@ -715,6 +806,9 @@ class Formation:
 
     def reset_df_combined(self):
         self.df_combined = pd.concat([self.part_left.df, self.part_middle.df, self.part_right.df])
+
+    def add_annotations(self, ax):
+            pass
 
     def __is_previous_part_applicable_for_formation__(self):
         return True  # this is not always implemented in the deferred class
@@ -825,10 +919,28 @@ class Formation:
 
 class TKE(Formation):
     p_13 = None
+    tail_range = None  # this is the part of the curve which is the last part below the linear function
 
     @property
     def type(self):
         return FT.TKE
+
+    @property
+    def ticks(self):
+        self.reset_df_combined()
+        return self.df_combined.shape[0]
+
+    def add_annotations(self, ax):
+        self.part_left.plot_annotation(ax, True, 'blue')
+        self.part_middle.plot_annotation(ax, True, 'blue')
+        self.part_right.plot_annotation(ax, True, 'blue')
+        if self.tail_range is not None:
+            self.tail_range.plot_annotation(ax, True, 'red')
+
+    def reset_df_combined(self):
+        date_left = self.part_left.df.first_valid_index()
+        date_right = self.part_right.df.last_valid_index()
+        self.df_combined = self.df_start.loc[date_left:date_right]
 
     def __init_type_formation_parts__(self, df_previous: pd.DataFrame):
         """
@@ -846,29 +958,41 @@ class TKE(Formation):
             self.__add_missing_parts__()
 
     def __add_missing_parts__(self):
-        reversed_list = self.config.actual_list[::-1]
-        wave_tick = reversed_list[0]
-        pos = self.__get_wave_tick_position_in_start_df__(wave_tick.position)
+        wave_tick_last = self.config.actual_list[-1]
+        pos = self.__get_wave_tick_position_in_start_df__(wave_tick_last.position)
         self.part_right = FormationPart(self.df_start.iloc[pos:pos + self.check_length], self.config)
         self.p_13 = self.__get_function_parameter__(self.part_left, self.part_right)
-        if self.__are_left_right_parts_applicable_for_formation_type__():
-            changed_list = self.__remove_entries_not_close_to_linear_p_13_function__(reversed_list[1:])
-            for wave_ticks in changed_list:
-                pos = self.__get_wave_tick_position_in_start_df__(wave_ticks.position)
-                self.part_middle = FormationPart(self.df_start.iloc[pos:pos + self.check_length], self.config)
-                if self.__is_middle_part_applicable_for_formation_type__():
-                    break
-                else:
-                    self.part_middle = None
+        if self.__is_right_part_applicable_for_formation_type__():
+            if self.__are_left_right_parts_applicable_for_formation_type__():
+                reversed_list = self.config.actual_list[::-1]
+                changed_list = self.__remove_entries_not_close_to_linear_p_13_function__(reversed_list[1:])
+                for wave_ticks in changed_list:
+                    pos = self.__get_wave_tick_position_in_start_df__(wave_ticks.position)
+                    self.part_middle = FormationPart(self.df_start.iloc[pos:pos + self.check_length], self.config)
+                    if self.__is_middle_part_applicable_for_formation_type__():
+                        break
+                    else:
+                        self.part_middle = None
 
     def __remove_entries_not_close_to_linear_p_13_function__(self, input_list):
         return_list = []
+        if self.__is_any_entry_not_allowed_for_linear_p_13_function__(input_list):
+            return return_list  # i.e. empty list
+
         for wave_ticks in input_list:
             pos = self.__get_wave_tick_position_in_start_df__(wave_ticks.position)
             part = FormationPart(self.df_start.iloc[pos:pos + self.check_length], self.config)
-            if part.is_high_close_to_linear_function(self.p_13):
+            if part.is_close_close_to_linear_function(self.p_13):
                 return_list.append(wave_ticks)
         return return_list
+
+    def __is_any_entry_not_allowed_for_linear_p_13_function__(self, input_list):
+        for wave_ticks in input_list:
+            pos = self.__get_wave_tick_position_in_start_df__(wave_ticks.position)
+            part = FormationPart(self.df_start.iloc[pos:pos + self.check_length], self.config)
+            if not part.are_values_below_linear_function(self.p_13, column=CN.CLOSE):
+                return True
+        return False
 
     def __get_wave_tick_position_in_start_df__(self, position_original: int):
         return position_original - self.config.actual_position
@@ -887,6 +1011,21 @@ class TKE(Formation):
     def __is_previous_part_applicable_for_formation__(self):
         return self.part_previous.max_close < self.part_left.max_high
 
+    def __is_right_part_applicable_for_formation_type__(self):
+        df = self.df_start.loc[self.part_left.id_max_high:self.part_right.id_max_high]
+        left_to_right_part = FormationPart(df, self.config)
+        df_from_right_to_end = self.df_start.loc[self.part_right.id_max_high:]
+        if df_from_right_to_end.shape[0] < 2:
+            return True
+        part_after_right_to_end = FormationPart(df_from_right_to_end[1:], self.config)  # don't take the first = HIGH
+        cross_date = part_after_right_to_end.get_cross_date_when_curve_is_crossed(self.p_13)
+        if cross_date is not None:  # i.e. there is a crossing
+            df_from_right_to_cross = self.df_start.loc[self.part_right.id_max_high:cross_date]
+            part_from_right_to_cross = FormationPart(df_from_right_to_cross, self.config)
+            if left_to_right_part.min_low < part_from_right_to_cross.min_low:
+                return False
+        return True
+
     def __are_left_right_parts_applicable_for_formation_type__(self):
         if self.part_left.is_high_first_tick():
             if self.part_right.is_high_before_low():
@@ -899,12 +1038,14 @@ class TKE(Formation):
     def __is_middle_part_applicable_for_formation_type__(self):
         if self.part_middle is None:
             return False
+        if self.part_left.get_retracement_pct(self.part_middle) > 0.7:
+            return False
         if self.part_middle.is_high_before_low():
             if self.part_left.max_high > self.part_middle.max_high:
                 if self.part_left.min_low < self.part_middle.max_high:
                     if self.part_middle.max_high > self.part_right.max_high:
                         if self.part_middle.min_low > self.part_right.max_high:
-                            if self.part_middle.are_values_below_linear_function(self.p_13, self.accuracy_pct):
+                            if self.part_middle.are_values_below_linear_function(self.p_13, self.accuracy_pct, CN.CLOSE):
                                 return True
         return False
 
@@ -912,23 +1053,63 @@ class TKE(Formation):
         return self.__is_tick_tke_conform__(tick_df.iloc[0])
 
     def __is_tick_tke_conform__(self, row) -> bool:
-        return row[CN.HIGH] <= self.p_13(row[CN.DATEASNUM])
+        if row[CN.HIGH] > self.p_13(row[CN.DATEASNUM]):
+            return self.__is_tick_in_tke_tail__(row)
+        return True
+
+    def __print_break_information__(self, row):
+        left_date = FormationDate.get_date_from_datetime(self.part_left.id_max_high)
+        middle_date = FormationDate.get_date_from_datetime(self.part_middle.id_max_high)
+        right_date = FormationDate.get_date_from_datetime(self.part_right.id_max_high)
+
+        print('Break on {}: row[CN.HIGH]={} > self.p_13(row[CN.DATEASNUM]={})'.
+              format(row[CN.DATE], row[CN.HIGH], self.p_13(row[CN.DATEASNUM])))
+        print('...Hights: {} -> {} -> {}'.format(left_date, middle_date, right_date))
+
+    def __is_tick_in_tke_tail__(self, row) -> bool:
+        if self.tail_range is None:
+            # self.__print_break_information__(row)
+            self.part_right.recalculate_values()
+            self.__set_tail_range__()
+        return self.tail_range.is_tick_fitting_to_range(row)
+
+    def __set_tail_range__(self):
+        date_start = self.part_right.id_min_low
+        df_tail = self.df_start.loc[date_start:]
+        part_tail = FormationPart(df_tail, self.config)
+        min_value = self.part_right.min_low
+        max_value = self.p_13(self.part_right.id_min_low_num)
+        date_end = part_tail.get_cross_date_when_min_reached(self.p_13)
+        if date_end is None:
+            date_end = df_tail.iloc[-1][CN.DATE]
+        self.tail_range = FormationRange(date_start, date_end, min_value, max_value)
+        self.bound_upper = max_value
+        self.bound_lower = min_value
+        # self.tail_range.print()
 
     def set_xy_formation_parameter(self):
-        x_dates = [self.part_left.date_first, self.part_left.date_first
-            , self.part_middle.date_first, self.part_middle.date_first
-            , self.part_right.date_first, self.part_right.date_first, self.part_right.date_last]
-        x = list(dt.date2num(x_dates))
-        y = [self.part_left.max_high, self.part_left.min_low
-            , self.part_left.min_low, self.part_middle.min_low
-            , self.part_middle.min_low, self.part_right.min_low, self.part_right.min_low]
-        self.xy = list(zip(x, y))
-
-    def set_xy_control_parameter(self):
         x_dates = [self.date_first, self.date_last]
         x = list(dt.date2num(x_dates))
         y = self.p_13(x)
-        self.xy_control = list(zip(x,y))
+        self.xy = list(zip(x, y)) + self.__get_xy_for_tail_range__(False)
+
+    def set_xy_control_parameter(self):
+        self.xy_control = self.__get_xy_for_tail_range__(True)
+
+    def __get_xy_for_tail_range__(self, for_control: bool):
+        if self.tail_range is None:
+            return []
+        date_left_num = self.tail_range.date_start_num
+        date_right_num = self.tail_range.date_end_num
+        min_value = self.tail_range.min
+        max_value = self.tail_range.max
+        range = max_value - min_value
+        if for_control:
+            min_value += range
+            max_value += range
+        x = [date_left_num, date_left_num, date_right_num, date_right_num, date_left_num]
+        y = [max_value, min_value, min_value, max_value, max_value]
+        return list(zip(x, y))
 
     def get_shape(self):
         self.set_xy_formation_parameter()
@@ -1296,9 +1477,12 @@ class FormationDetector:
                 if self.__is_precondition_for_df_previous_fullfilled__(df_previous):
                     formation = self.__get_formation__(df_previous, ticks)
                     if formation.is_formation_established():
+                        ticks = formation.ticks  # the ticks in some formation are different from the sum over the parts
                         self.__check_for_breakout__(formation, ticks)
                         next_pos = self.get_next_pos_after_adding_to_dictionary(formation)
-                        if self.config.formation_type != FT.TKE:  # if TKE: there can be more than one formation
+                        if self.config.formation_type == FT.TKE:  # if TKE: there can be more than one formation
+                            pass
+                        else:
                             return next_pos
             part_ticks -= 1
             if self.config.formation_type == FT.TKE:
@@ -1379,7 +1563,7 @@ class FormationDetector:
     def add_control_df(self, formation, pos_new_tick):
         if pos_new_tick < self.df.shape[0]:
             left_boundary = pos_new_tick
-            right_boundary = min(left_boundary + formation.ticks, self.df.shape[0])
+            right_boundary = min(left_boundary + formation.ticks, self.df_length)
             formation.control_df = self.df.iloc[left_boundary:right_boundary]
             formation.fill_result_set()
 
@@ -1387,7 +1571,7 @@ class FormationDetector:
         is_tick_fitting_to_formation = True
         pos_new_tick = self.position_actual + ticks + 1
         tick_df = pd.DataFrame
-        while is_tick_fitting_to_formation and pos_new_tick <= self.df.shape[0]:
+        while is_tick_fitting_to_formation and pos_new_tick <= self.df_length:
             tick_df = self.df.iloc[pos_new_tick - 1:pos_new_tick]
             is_tick_fitting_to_formation = formation.is_tick_fitting_to_formation(tick_df)
             if is_tick_fitting_to_formation:
@@ -1496,7 +1680,7 @@ class FormationPlotter:
         candlestick_ohlc(axis, ohlc, width=0.4, colorup='g')
         axis.xaxis_date()
         self.add_formations(axis)
-        self.__add_fibonacci_waves__(axis)
+        # self.__add_fibonacci_waves__(axis)
 
     def __plot_volume__(self, axis):
         self.df_volume.plot(ax=axis, title=self.column_volume)
@@ -1511,11 +1695,13 @@ class FormationPlotter:
                 patches_dic[color_formation].append(formation.get_shape())
             else:
                 patches_dic[color_formation] = [formation.get_shape()]
+
             if formation.was_breakout_done() and formation.is_control_df_available():
                 if color_control in patches_dic:
                     patches_dic[color_control].append(formation.get_control_shape())
                 else:
                     patches_dic[color_control] = [formation.get_control_shape()]
+            formation.add_annotations(ax)
 
         for colors in patches_dic:
             p = PatchCollection(patches_dic[colors], alpha=0.4)
@@ -1669,9 +1855,10 @@ class FormationController:
 
 config = FormationConfiguration()
 config.get_data_from_db = True
+config.api_period = ApiPeriod.DAILY
 config.formation_type = FT.TKE
 config.plot_data = True
-config.statistics_excel_file_name = 'statistics.xlsx'
+config.statistics_excel_file_name = 'statistics_tke.xlsx'
 config.statistics_excel_file_name = ''
 config.bound_upper_value = CN.CLOSE
 config.bound_lower_value = CN.CLOSE
@@ -1683,10 +1870,10 @@ config.max_number_securities = 1000
 config.accuracy_pct = 0.03  # default is 0.05
 config.breakout_range_pct = 0.1  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-config.use_own_dic({"GE": "General Electric"})  # INTC	Intel NKE	Nike  V (Visa) GE
-config.and_clause = "Date BETWEEN '2017-09-18' AND '2018-02-05'"
+# config.use_own_dic({"ONVO": "Wal-Mart"})  # INTC	Intel NKE	Nike  V (Visa) GE
+config.and_clause = "Date BETWEEN '2017-02-18' AND '2019-09-05'"
 # config.and_clause = ''
-config.api_output_size = ApiOutputsize.FULL
+config.api_output_size = ApiOutputsize.COMPACT
 
 formation_controller = FormationController(config)
 formation_controller.run_formation_checker('')
@@ -1698,6 +1885,10 @@ JPM	JPMorgan
 Date BETWEEN '2017-06-01' AND '2019-02-05
 - HD check - very well
 - JNJ false breakout - could be avoided by breakout range > 0
+-----------
+TKE: 20 MRK (Merck) perfect for Date BETWEEN '2016-09-18' AND '2019-02-05
+- VZ (verizon)?
+Processing WMT (Wal-Mart)... ERROR
 """
 
 
