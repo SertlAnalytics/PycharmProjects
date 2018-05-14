@@ -20,7 +20,8 @@ from matplotlib.collections import PatchCollection
 from datetime import datetime, timedelta
 import ftplib
 import tempfile
-import math
+from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
+import stock_database as sdb
 
 
 class CN:
@@ -47,6 +48,7 @@ class Indices:
     DOW_JONES = 'Dow Jones'
     NASDAQ = 'Nasdaq'
     MIXED = 'Mixed'
+    ALL_DATABASE = 'All in database'
 
 
 class FT:
@@ -137,6 +139,8 @@ class FormationConfiguration:
             self.ticker_dic = self.get_dow_jones_dic()
         elif index == Indices.NASDAQ:
             self.ticker_dic = self.get_nasdaq_dic()
+        elif index == Indices.ALL_DATABASE:
+            self.ticker_dic = self.get_all_in_database()
         else:
             self.ticker_dic = self.get_mixed_dic()
 
@@ -176,7 +180,15 @@ class FormationConfiguration:
 
     @staticmethod
     def get_mixed_dic():
-        return {"TSLA": "Tesla", "FCEL": "Full Cell"}
+        return {"TSLA": "Tesla", "FCEL": "Full Cell", "ONVO": "Organovo", "MRAM": "MRAM"}
+
+    def get_all_in_database(self):
+        dic = {}
+        stock_db = sdb.StockDatabase()
+        db_data_frame = DatabaseDataFrame(stock_db, query='SELECT Symbol, count(*) FROM Stocks GROUP BY Symbol HAVING count(*) > 4000')
+        for ind, rows in db_data_frame.df.iterrows():
+            dic[rows['Symbol']] = rows['Symbol']
+        return dic
 
 
 class FormationRange:
@@ -187,6 +199,7 @@ class FormationRange:
         self.date_end_num = dt.date2num(self.date_end)
         self.min = round(min_value, 2)
         self.max = round(max_value, 2)
+        self.range = self.max - self.min
 
     def is_tick_fitting_to_range(self, tick):
         if self.min <= tick[CN.CLOSE] <= self.max:
@@ -199,7 +212,7 @@ class FormationRange:
         y = self.max if for_max else self.min
         text = '{}: {}'.format(self.date_start, y)
         offset_x = 0
-        offset_y = 1
+        offset_y = self.range + y/10
         offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
         arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
         ax.annotate(text, xy=(x, y), xytext=(x + offset[0], y + offset[1]), arrowprops=arrow_props)
@@ -557,6 +570,15 @@ class FormationPart:
     def __init__(self, df: pd.DataFrame, config: FormationConfiguration):
         self.df = df
         self.config = config
+        self.__max_close = 0
+        self.__id_max_close = None
+        self.__max_high = 0
+        self.__id_max_high = None
+        self.__min_close = 0
+        self.__min_low = 0
+        self.__id_min_low = None
+        self.__bound_upper = self.__max_high  # default
+        self.__bound_lower = self.__min_low  # default
         if self.df.shape[0] > 0:
             self.__calculate_values__()
 
@@ -643,8 +665,8 @@ class FormationPart:
 
     def plot_annotation(self, ax, for_max: bool = True, color: str = 'blue'):
         x, y, text = self.__get_annotation_parameters__(for_max)
-        offset_x = 10
-        offset_y = (20 / y)
+        offset_x = 0
+        offset_y = (y/10)
         offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
         arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
         ax.annotate(text, xy=(x, y), xytext=(x + offset[0], y + offset[1]), arrowprops=arrow_props)
@@ -1346,7 +1368,8 @@ class FormationStatistics:
         self.dic[FSC.TICKER] = formation.config.actual_ticker
         self.dic[FSC.NAME] = formation.config.actual_ticker_name
         self.dic[FSC.FORMATION] = formation.__class__.__name__
-        self.dic[FSC.BEGIN_PREVIOUS] = FormationDate.get_date_from_datetime(formation.part_previous.date_first)
+        if formation.part_previous.df.shape[0] != 0:
+            self.dic[FSC.BEGIN_PREVIOUS] = FormationDate.get_date_from_datetime(formation.part_previous.date_first)
         self.dic[FSC.BEGIN] = FormationDate.get_date_from_datetime(formation.date_first)
         self.dic[FSC.END] = FormationDate.get_date_from_datetime(formation.date_last)
         self.dic[FSC.LOWER] = round(formation.bound_lower, 2)
@@ -1852,7 +1875,6 @@ class FormationController:
         else:
             detector.print_statistics()
 
-
 config = FormationConfiguration()
 config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
@@ -1869,8 +1891,8 @@ config.breakout_over_congestion_range = False
 config.max_number_securities = 1000
 config.accuracy_pct = 0.03  # default is 0.05
 config.breakout_range_pct = 0.1  # default is 0.01
-config.use_index(Indices.DOW_JONES)
-# config.use_own_dic({"ONVO": "Wal-Mart"})  # INTC	Intel NKE	Nike  V (Visa) GE
+config.use_index(Indices.ALL_DATABASE)
+config.use_own_dic({"WMT": "???"})  # INTC	Intel NKE	Nike  V (Visa) GE
 config.and_clause = "Date BETWEEN '2017-02-18' AND '2019-09-05'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
@@ -1878,6 +1900,25 @@ config.api_output_size = ApiOutputsize.COMPACT
 formation_controller = FormationController(config)
 formation_controller.run_formation_checker('')
 # formation_controller.run_formation_checker('channel_test_data.xlsx', 1, 1000)
+"""
+ACGL
+BBBY
+BELFA
+FARM
+FNSR
+GE
+MATW
+MSTR
+ONB
+OPK
+SAFM
+SANM
+SNH
+SNHY
+THFF
+TTEC
+WMT
+"""
 
 """
 DIS	Disney

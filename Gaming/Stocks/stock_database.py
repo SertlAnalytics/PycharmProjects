@@ -5,6 +5,8 @@ from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStock
 import pandas as pd
 import math
 from datetime import datetime
+import ftplib
+import tempfile
 
 
 class StockSymbols:
@@ -50,11 +52,12 @@ class StockDatabase(BaseDatabase):
                     direction = math.copysign(1, close - close_previous)
             close_previous = close
 
-            input_dic = {'Period': str(period), 'Symbol': symbol, 'Date': date,
-                         'Open': open, 'High': high, 'Low': low, 'Close': close,
-                         'Volume': volume, 'BigMove': big_move, 'Direction': direction}
+            if not math.isnan(high):
+                input_dic = {'Period': str(period), 'Symbol': symbol, 'Date': date,
+                             'Open': open, 'High': high, 'Low': low, 'Close': close,
+                             'Volume': volume, 'BigMove': big_move, 'Direction': direction}
 
-            input_list.append(input_dic)
+                input_list.append(input_dic)
         return input_list
 
     def create_tables(self):
@@ -124,6 +127,28 @@ dow_jones_dic_orig = {"MMM": "3M", "AXP": "American", "AAPL": "Apple", "BA": "Bo
 "TRV": "Travelers", "UTX": "United", "UNH": "UnitedHealth", "VZ": "Verizon",
 "V": "Visa", "WMT": "Wal-Mart"}
 
+
+def get_nasdaq_dic():
+    """
+    Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares
+    AABA|Altaba Inc. - Common Stock|Q|N|N|100|N|N
+    """
+    dic = {}
+    file_name = 'nasdaqlisted.txt'
+    ftp = ftplib.FTP('ftp.nasdaqtrader.com', 'anonymous', 'josef.sertl@sertl-analytics.com')
+    ftp.cwd('SymbolDirectory')
+    with tempfile.TemporaryFile() as temp_file:
+        ftp.retrbinary('RETR {}'.format(file_name), temp_file.write)
+        temp_file.seek(0)
+        df = pd.read_csv(temp_file, '|')
+    ftp.quit()
+    for ind, rows in df.iterrows():
+        if rows['Market Category'] == 'Q':
+            dic[rows['Symbol']] = rows['Security Name']
+    return dic
+
+dic_own = {'ONVO': 'Organovo', 'FCEL':'Fuelcell', 'MRAM':'MRAM'}
+
 if __name__ == '__main__':
     # fetcher.df, fetcher.df_data, fetcher.column_data,
     #                            fetcher.df_volume, fetcher.column_volume, fetcher.symbol
@@ -131,7 +156,18 @@ if __name__ == '__main__':
     # for ticker in dow_jones_dic_orig:
     #     print('\nProcessing {} - {}'.format(ticker, dow_jones_dic_orig[ticker]))
     #     stock_db.import_stock_data(ticker, ApiPeriod.DAILY, ApiOutputsize.FULL)
-    stock_db.import_stock_data('ONVO', ApiPeriod.DAILY, ApiOutputsize.FULL)
+    dic = dic_own
+    dic = get_nasdaq_dic()
+    # dic = {"OVID": "OVID"}
+    # dic = dow_jones_dic_orig
+    for symbol in dic:
+        if symbol[0] in ['P', 'T']:
+            print('Loading: {}'.format(symbol))
+            try:
+                stock_db.import_stock_data(symbol, ApiPeriod.DAILY, ApiOutputsize.FULL)
+            except:
+                stock_db = StockDatabase()
+                print('An error occured')
 
     # os.remove('C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks/MyStocks.sqlite')
     # print('Database {} removed: {}'.format(db_name, db_path))
