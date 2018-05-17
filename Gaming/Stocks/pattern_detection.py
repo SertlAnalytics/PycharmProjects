@@ -672,9 +672,18 @@ class ChannelConstraints(Constraints):
 
 class ToleranceCalculator:
     @staticmethod
-    def are_equal(val_1: float, val_2: float, tolerance_pct: float):
+    def are_values_in_tolerance_range(val_1: float, val_2: float, tolerance_pct: float):
         test = abs((val_1 - val_2)/np.mean([val_1, val_2]))
         return True if 0 == val_1 == val_2 else abs((val_1 - val_2)/np.mean([val_1, val_2])) < tolerance_pct
+
+    @staticmethod
+    def are_values_in_function_tolerance_range(x: list, y: list, f, tolerance_pct: float):
+        for k in range(len(x)):
+            y_k = y[k]
+            f_k = f(x[k])
+            if not ToleranceCalculator.are_values_in_tolerance_range(y_k, f_k, tolerance_pct):
+                return False
+        return True
 
 
 class ValueCategorizer:
@@ -1052,22 +1061,38 @@ class DataFramePatternFactory(DataFrameFactory):
         self.df[CN.IS_MIN] = np.logical_or(self.df[CN.GLOBAL_MIN], self.df[CN.LOCAL_MIN])
         self.df[CN.IS_MAX] = np.logical_or(self.df[CN.GLOBAL_MAX], self.df[CN.LOCAL_MAX])
 
-    def __get_distance__(self, row_pos: int, high: bool, before: bool) -> int:
-        signature = -1 if before else 1
-        actual_pos = row_pos
-        pos = actual_pos + signature
-        row_actual_pos = self.df.iloc[actual_pos]
-        value_actual_pos = row_actual_pos[CN.HIGH] if high else row_actual_pos[CN.LOW]
-        while 0 <= pos < self.df_length:
-            row_pos = self.df.iloc[pos]
-            value_pos = row_pos[CN.HIGH] if high else row_pos[CN.LOW]
-            if value_pos > value_actual_pos and high:
+    def __get_distance__(self, row_pos: int, for_high: bool, for_before: bool) -> int:
+        signature = -1 if for_before else 1
+        pos_compare = row_pos + signature
+        actual_value_pair = self.__get_value_pair_for_comparison__(self.df.iloc[row_pos], for_high)
+        while 0 <= pos_compare < self.df_length:
+            if self.__is_new_value_a_break__(actual_value_pair, pos_compare, for_high):
                 break
-            elif value_pos < value_actual_pos and not high:
-                break
-            pos += signature
-        return self.df_length + 1 if (pos < 0 or pos >= self.df_length) else abs(actual_pos - pos)
+            pos_compare += signature
+        return self.df_length + 1 if (pos_compare < 0 or pos_compare >= self.df_length) else abs(row_pos - pos_compare)
 
+    def __is_new_value_a_break__(self, actual_value_pair: list, pos_compare: int, for_high: bool) -> bool:
+        """
+        We need a separate script for handling when values are different to avoid min/max neighbors with the same value
+        The idea behind this algorithm is that the extrema is mostly not the longest tick.
+        """
+        value_pair_compare = self.__get_value_pair_for_comparison__(self.df.iloc[pos_compare], for_high)
+        if for_high:
+            if value_pair_compare[0] > actual_value_pair[0]:
+                return True
+            if value_pair_compare[0] == actual_value_pair[0]:
+                return value_pair_compare[1] > actual_value_pair[1]  # break if the compare has a greater low value
+        else:
+            if value_pair_compare[0] < actual_value_pair[0]:
+                return True
+            if value_pair_compare[0] == actual_value_pair[0]:
+                return value_pair_compare[1] < actual_value_pair[1]  # break if the compare has a smaller high value
+        return False
+
+    def __get_value_pair_for_comparison__(self, row, for_high: bool) -> list:
+        value_first = row[CN.HIGH] if for_high else row[CN.LOW]
+        value_second = row[CN.LOW] if for_high else row[CN.HIGH]
+        return [value_first, value_second]
 
 
 class PatternRangeDetector:
@@ -1078,72 +1103,125 @@ class PatternRangeDetector:
         self.config = config
         self.for_max = for_max
         self.__number_required_ticks = self.__get_number_required_ticks__()
-        self.__position_in_df_list = []
         self.__position_list = []
-        self.__date_list = []
         self.__value_list = []
+        self.__date_list = []
+        self.__f_param = None
+        self.__breakout_predecessor = []  # [pos, value]
+        self.__breakout_successor = []  # [pos, value]
         self.__result_list = []
         self.__fill_lists__()
 
     def __get_number_required_ticks__(self):
         return self.constraints.max_ticks_required if self.for_max else self.constraints.min_ticks_required
 
-    def get_start_end_list(self):
+    def get_list_of_possible_pattern_ranges(self):
         return self.__result_list
+
+    def print_list_of_possible_pattern_ranges(self):
+        for entries in self.__result_list:
+            print(entries)
 
     def __fill_lists__(self):
         for i in range(0, self.df_min_max_length - self.constraints.min_max_ticks_required):
             tick_i = self.df_min_max.iloc[i]
             if (self.for_max and tick_i[CN.IS_MAX]) or (not self.for_max and tick_i[CN.IS_MIN]):
-                self.__write_values_to_result_list_and_init_by_tick__(tick_i, i)
+                self.__f_param = None  # start a new series...
+                self.__write_values_to_result_list_and_init_by_tick__(tick_i)
                 for k in range(i+1, self.df_min_max_length):
                     tick_k = self.df_min_max.iloc[k]
                     if (self.for_max and tick_k[CN.IS_MAX]) or (not self.for_max and tick_k[CN.IS_MIN]):
-                        if len(self.__position_list) == 1:
-                            self.__add_tick_to_internal_lists__(tick_k, k)
-                        elif self.__is_end_for_single_check_reached__(i, k, tick_i, tick_k):
-                            self.__write_values_to_result_list_and_init_by_tick__(tick_i, i)
+                        if len(self.__position_list) == 1:  # start a new one if the values is above/below the old function
+                            self.__add_tick_to_internal_lists__(tick_k, None)  # this is only done in the real beginning
+                        elif self.__is_end_for_single_check_reached__(tick_i, tick_k):
+                            self.__write_values_to_result_list_and_init_by_tick__(tick_i, tick_k)
             self.__write_values_to_result_list_and_init_lists__()
 
-    def __is_end_for_single_check_reached__(self, i, k, tick_i, tick_k):
+    def __is_end_for_single_check_reached__(self, tick_i, tick_k):
         f_param_new = CN.get_function_parameters_by_ticks(tick_i, tick_k, self.for_max)
-        last_position = self.__position_list[-1]
-        f_value_new_last_position_right = f_param_new(last_position)
-        last_value = self.__value_list[-1]
 
-        if ToleranceCalculator.are_equal(last_value, f_value_new_last_position_right, self.config.accuracy_pct):
-            self.__add_tick_to_internal_lists__(tick_k, k)
-        elif (self.for_max and last_value < tick_k[CN.HIGH]) or (not self.for_max and last_value > tick_k[CN.LOW]):
-            if len(self.__position_list) >= self.__number_required_ticks:
-                return True
-            else:  # reset and start with new one...
-                self.__init_lists__()
-                self.__add_tick_to_internal_lists__(tick_i, i)
-                self.__add_tick_to_internal_lists__(tick_k, k)
+        if ToleranceCalculator.are_values_in_function_tolerance_range(self.__position_list, self.__value_list
+                , f_param_new, self.config.accuracy_pct):
+            self.__add_tick_to_internal_lists__(tick_k, f_param_new)
+        else:
+            last_position = self.__position_list[-1]
+            f_value_new_last_position_right = f_param_new(last_position)
+            last_value = self.__value_list[-1]
+
+            if (self.for_max and last_value < f_value_new_last_position_right) \
+                    or (not self.for_max and last_value > f_value_new_last_position_right):
+                if len(self.__position_list) >= self.__number_required_ticks:
+                    return True
+                else:  # reset and start with new one...
+                    self.__init_lists__()
+                    self.__add_tick_to_internal_lists__(tick_i, self.__f_param)
+                    self.__add_tick_to_internal_lists__(tick_k, f_param_new)
         return False
 
     def __init_lists__(self):
-        self.__position_in_df_list = []
         self.__position_list = []
-        self.__date_list = []
         self.__value_list = []
+        self.__date_list = []
+        self.__breakout_predecessor = []
+        self.__breakout_successor = []
 
-    def __add_tick_to_internal_lists__(self, tick, tick_pos: int):
-        self.__position_in_df_list.append(tick_pos)
+    def __add_tick_to_internal_lists__(self, tick, f_param):
         self.__position_list.append(tick[CN.POSITION])
-        self.__date_list.append(tick[CN.DATE].strftime("%Y-%m-%d"))
         self.__value_list.append(tick[CN.HIGH] if self.for_max else tick[CN.LOW])
+        self.__date_list.append(tick[CN.DATE].strftime("%Y-%m-%d"))
+        self.__f_param = f_param
 
-    def __write_values_to_result_list_and_init_by_tick__(self,  tick, tick_pos: int):
+    def __write_values_to_result_list_and_init_by_tick__(self, tick, tick_breakout = None):
+        self.__fill_successor_list__(tick_breakout)
         self.__write_values_to_result_list_and_init_lists__()
-        self.__add_tick_to_internal_lists__(tick, tick_pos)
+        self.__add_tick_to_internal_lists__(tick, None)
+        if tick_breakout is not None:
+            self.__add_tick_to_internal_lists__(tick_breakout, None)
 
     def __write_values_to_result_list_and_init_lists__(self):
-        if len(self.__position_list) >= self.__number_required_ticks:
-            self.__result_list.append([self.__position_in_df_list, self.__position_list
-                                          , self.__date_list, self.__value_list])
+        self.__write_values_to_result_list__()
         self.__init_lists__()
 
+    def __write_values_to_result_list__(self):
+        if self.__are_conditions_fulfilled_for_adding_values_to_result_list():
+            self.__fill_predecessor_list__()
+            self.__fill_successor_list__()
+            self.__result_list.append([self.__position_list, self.__value_list
+                                    , self.__breakout_predecessor, self.__breakout_successor
+                                    , self.__date_list])
+
+    def __fill_successor_list__(self, tick_breakout = None):
+        if self.__f_param is None:
+            return
+
+        if tick_breakout is None:
+            if len(self.__breakout_successor) == 0:
+                pos = self.df_min_max.iloc[-1][CN.POSITION]
+                self.__breakout_successor = [pos, round(self.__f_param(pos), 2)]
+        else:
+            pos = tick_breakout[CN.POSITION]
+            self.__breakout_successor = [pos, round(self.__f_param(pos), 2)]
+
+    def __fill_predecessor_list__(self, tick_breakout = None):
+        if self.__f_param is None:
+            return
+
+        if tick_breakout is None:
+            if len(self.__breakout_predecessor) == 0:
+                pos = self.df_min_max.iloc[0][CN.POSITION]
+                self.__breakout_predecessor = [pos, round(self.__f_param(pos), 2)]
+        else:
+            pos = tick_breakout[CN.POSITION]
+            self.__breakout_predecessor = [pos, round(self.__f_param(pos), 2)]
+
+    def __are_conditions_fulfilled_for_adding_values_to_result_list(self) -> bool:
+        if len(self.__position_list) < self.__number_required_ticks:
+            return False
+        for k in range(len(self.__result_list)):  # check if this list is already a sublist of an earlier list
+            position_list_old = self.__result_list[k][0]
+            if len(set(position_list_old) & set(self.__position_list)) == len(self.__position_list):
+                return False
+        return True
 
 
 class PatternDetector:
@@ -1157,31 +1235,80 @@ class PatternDetector:
         self.accuracy_pct = self.config.accuracy_pct
         self.pattern_check_list = ['Channel', 'TKE']
         self.constraints = None
+        self.__possible_pattern_ranges_top = []  # format [0] = list of positions, [1] pos, value of pre, [2] for post
+        self.__possible_pattern_ranges_bottom = []  # we above
+        self.__possible_pattern_ranges = []
+
+    @property
+    def possible_pattern_ranges_available(self):
+        return len(self.__possible_pattern_ranges_top) + len(self.__possible_pattern_ranges_bottom) > 0
+
+    def get_shapes_for_possible_pattern_ranges_top(self):
+        return self.__get_shapes_for_possible_pattern_ranges__(True)
+
+    def get_shapes_for_possible_pattern_ranges_bottom(self):
+        return self.__get_shapes_for_possible_pattern_ranges__(False)
+
+    def __get_shapes_for_possible_pattern_ranges__(self, for_top: bool):
+        loop_list = self.__possible_pattern_ranges_top if for_top else self.__possible_pattern_ranges_bottom
+        shape_list = []
+        for entries in loop_list:
+            pos_list = entries[0]
+            value_list = entries[1]
+            # predecessor_list = entries[2]
+            successor_list = entries[3]
+            x = [self.df_min_max.loc[pos_list[0]][CN.DATEASNUM], self.df_min_max.loc[successor_list[0]][CN.DATEASNUM]]
+            y = [value_list[0], successor_list[1]]
+            xy = list(zip(x, y))
+            pol = Polygon(np.array(xy), True)
+            shape_list.append(pol)
+        return shape_list
 
     def parse_for_pattern(self):
+        """
+        We parse only over the actual known min-max-dataframe
+        """
         for patterns in self.pattern_check_list:
             if patterns == 'Channel':
                 self.constraints = ChannelConstraints()
-                # range_detector = PatternRangeDetector(self.df_min_max, self.constraints, self.config, True)
-                # start_end_list_max = range_detector.get_start_end_list()
-                # print(start_end_list_max)
+                self.__fill_possible_pattern_ranges__()
+                for df_min_max_range_list in self.__possible_pattern_ranges:
+                    len_list = len(df_min_max_range_list)
+                    for i in range(0, len_list - self.constraints.min_max_ticks_required + 1):
+                        left_tick = self.df_min_max.iloc[i]
+                        if left_tick[CN.IS_MAX]:
+                            for k in range(i + self.constraints.min_max_ticks_required, len_list):
+                                right_tick = self.df_min_max.iloc[k]
+                                if right_tick[CN.IS_MAX]:
+                                    # print('Checking max ticks for pos {} and {}'.format(i, k))
+                                    df_check = self.df_min_max.iloc[i:k]
+                                    is_check_ok = self.check_tick_range(df_check)
+                                    # print('...check: {}'.format(is_check_ok))
 
-                range_detector = PatternRangeDetector(self.df_min_max, self.constraints, self.config, False)
-                start_end_list_min = range_detector.get_start_end_list()
-                print(start_end_list_min)
-                break
-                for i in range(0, self.df_min_max_length - self.constraints.min_max_ticks_required):
-                    left_tick = self.df_min_max.iloc[i]
-                    if left_tick[CN.IS_MAX]:
-                        for k in range(i + self.constraints.min_max_ticks_required, self.df_min_max_length):
-                            right_tick = self.df_min_max.iloc[k]
-                            if right_tick[CN.IS_MAX]:
-                                print('Checking max ticks for pos {} and {}'.format(i, k))
-                                df_check = self.df_min_max.iloc[i:k]
-                                is_check_ok = self.check_tick_range(df_check)
-                                print('...check: {}'.format(is_check_ok))
+    def __fill_possible_pattern_ranges__(self):
+        range_detector = PatternRangeDetector(self.df_min_max, self.constraints, self.config, True)
+        self.__possible_pattern_ranges_top = range_detector.get_list_of_possible_pattern_ranges()
+        # range_detector.print_list_of_possible_pattern_ranges()
+        range_detector = PatternRangeDetector(self.df_min_max, self.constraints, self.config, False)
+        self.__possible_pattern_ranges_bottom = range_detector.get_list_of_possible_pattern_ranges()
+        # range_detector.print_list_of_possible_pattern_ranges()
+        self.__combine_possible_pattern_ranges__()
 
-    def check_tick_range(self, df_check: pd.DataFrame):
+    def __combine_possible_pattern_ranges__(self):
+        for entry_top in self.__possible_pattern_ranges_top:
+            for entry_bottom in self.__possible_pattern_ranges_bottom:
+                range_top = range(entry_top[0][0], entry_top[0][-1])
+                range_bottom = range(entry_bottom[0][0], entry_bottom[0][-1])
+                range_top_len = len(range_top)
+                range_bottom_len = len(range_bottom)
+                min_len_ranges = min(range_top_len, range_bottom_len)
+                if np.mean([range_top_len, range_bottom_len]) < 1.5 * min_len_ranges:
+                    range_intersection = set(range_top).intersection(range_bottom)
+                    if len(range_intersection) > min_len_ranges/1.5:
+                        union_set = set(entry_top[0]).union(entry_bottom[0])
+                        self.__possible_pattern_ranges.append(sorted(list(union_set)))
+
+    def check_tick_range(self, df_check: pd.DataFrame) -> bool:
         df_min = df_check[df_check[CN.IS_MIN]]
         df_max = df_check[df_check[CN.IS_MAX]]
         left_tick = df_check.iloc[0]
@@ -1198,7 +1325,7 @@ class PatternDetector:
                         return True
         return False
 
-    def __get_valid_f_lower_function_parameters__(self, df_min: pd.DataFrame, f_upper):
+    def __get_valid_f_lower_function_parameters__(self, df_min: pd.DataFrame, f_upper) -> list:
         parameter_list = []
         for i in range(0, df_min.shape[0] - 1):
             for m in range(i + 1, df_min.shape[0]):
@@ -1334,6 +1461,7 @@ class PatternPlotter:
         candlestick_ohlc(axis, ohlc, width=0.4, colorup='g')
         axis.xaxis_date()
         self.add_formations(axis)
+        self.add_possible_pattern(axis)
         # self.__add_fibonacci_waves__(axis)
 
     def __plot_volume__(self, axis):
@@ -1356,6 +1484,19 @@ class PatternPlotter:
                 else:
                     patches_dic[color_control] = [formation.get_control_shape()]
             formation.add_annotations(ax)
+
+        for colors in patches_dic:
+            p = PatchCollection(patches_dic[colors], alpha=0.4)
+            p.set_color(colors)
+            ax.add_collection(p)
+
+    def add_possible_pattern(self, ax):
+        patches_dic = {'green': [], 'blue': []}
+
+        for shapes in self.detector.get_shapes_for_possible_pattern_ranges_top():
+            patches_dic['green'].append(shapes)
+        for shapes in self.detector.get_shapes_for_possible_pattern_ranges_bottom():
+            patches_dic['blue'].append(shapes)
 
         for colors in patches_dic:
             p = PatchCollection(patches_dic[colors], alpha=0.4)
@@ -1671,7 +1812,7 @@ class PatternController:
             self.__handle_statistics__(detector)
 
             if self.config.plot_data:
-                if len(detector.pattern_dic) == 0:
+                if len(detector.pattern_dic) == 0 and not detector.possible_pattern_ranges_available:
                     print('...no formations found.')
                 else:
                     plotter = PatternPlotter(self.plotter_input_obj, detector)
@@ -1733,7 +1874,7 @@ class PatternController:
 
 
 config = PatternConfiguration()
-config.get_data_from_db = True
+config.get_data_from_db = False
 config.api_period = ApiPeriod.DAILY
 config.formation_type = FT.CHANNEL
 config.plot_data = True
@@ -1749,8 +1890,8 @@ config.max_number_securities = 1000
 config.accuracy_pct = 0.005  # default is 0.05
 config.breakout_range_pct = 0.01  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-config.use_own_dic({"IBM": "???"})  # INTC	Intel NKE	Nike  V (Visa) GE
-config.and_clause = "Date BETWEEN '2017-08-15' AND '2017-10-30'"
+# config.use_own_dic({"FCEL": "???"})  # INTC	Intel NKE	Nike  V (Visa) GE
+config.and_clause = "Date BETWEEN '2017-01-01' AND '2019-10-30'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 
