@@ -24,6 +24,7 @@ from datetime import datetime, timedelta
 import ftplib
 import tempfile
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
+from sertl_analytics.datafetcher.file_fetcher import NasdaqFtpFileFetcher
 import stock_database as sdb
 from sertl_analytics.searches.smart_searches import Queue, Stack
 from sertl_analytics.functions import math_functions
@@ -77,18 +78,15 @@ class FCC:  # Formation Condition Columns
 class PatternConfiguration:
     def __init__(self):
         self.get_data_from_db = True
-        self.formation_type = FT.CHANNEL
+        self.pattern_type = FT.CHANNEL
         self.api_period = ApiPeriod.DAILY
         self.api_output_size = ApiOutputsize.COMPACT
         self.bound_upper_value = CN.HIGH
         self.bound_lower_value = CN.LOW
         self.plot_data = True
-        self.max_length_of_a_formation_part = 10
-        self.min_length_of_a_formation_part = 5
         self.check_previous_period = False   # default
-        self.__previous_period_length = self.max_length_of_a_formation_part  # default
         self.breakout_over_congestion_range = False
-        self.accuracy_pct = 0.05  # the high/low values can be this percentage over the upper bounds w.r.t breadth
+        self.accuracy_pct = 0.01  # the high/low values can be this percentage over the upper bounds w.r.t breadth
         self.breakout_range_pct = 0.01
         self.investment = 1000
         self.max_number_securities = 1000
@@ -114,28 +112,26 @@ class PatternConfiguration:
 
     def print(self):
         source = 'DB' if self.get_data_from_db else 'Api'
-        type = self.formation_type
+        pattern_type = self.pattern_type
         and_clause = self.and_clause
         period = self.api_period
         output_size = self.api_output_size
         bound_upper_v = self.bound_upper_value
         bound_lower_v = self.bound_lower_value
-        max_part_length = self.max_length_of_a_formation_part
-        min_part_length = self.min_length_of_a_formation_part
         breakout_over_big_range = self.breakout_over_congestion_range
         accuracy_pct = self.accuracy_pct
 
         print('\nConfiguration settings:')
         if self.get_data_from_db:
             print('Formation: {} \nSource: {} \nAnd clause: {} \nUpper/Lower Bound Value: {}/{}'
-                  ' \nMax/Min part length: {}/{} \nBreakout big range: {}  \nAccuracy: {} \n'.format(
-                type, source, and_clause, bound_upper_v, bound_lower_v
-                , max_part_length, min_part_length, breakout_over_big_range, accuracy_pct))
+                  ' \nBreakout big range: {}  \nAccuracy: {} \n'.format(
+                    pattern_type, source, and_clause, bound_upper_v, bound_lower_v
+                    , breakout_over_big_range, accuracy_pct))
         else:
             print('Formation: {} \nSource: {} \n\nApiPeriod/ApiOutput size: {}/{} \nUpper/Lower Bound Value: {}/{}'
-                  ' \nMax/Min part length: {}/{} \nBreakout big range: {}  \nAccuracy: {} \n'.format(
-                type, source, period, output_size, bound_upper_v, bound_lower_v
-                , max_part_length, min_part_length, breakout_over_big_range, accuracy_pct))
+                  ' \nBreakout big range: {}  \nAccuracy: {} \n'.format(
+                    pattern_type, source, period, output_size, bound_upper_v, bound_lower_v
+                    , breakout_over_big_range, accuracy_pct))
 
     def use_index(self, index: Indices):
         if index == Indices.DOW_JONES:
@@ -168,14 +164,8 @@ class PatternConfiguration:
         AABA|Altaba Inc. - Common Stock|Q|N|N|100|N|N
         """
         dic = {}
-        file_name = 'nasdaqlisted.txt'
-        ftp = ftplib.FTP('ftp.nasdaqtrader.com', 'anonymous', 'josef.sertl@sertl-analytics.com')
-        ftp.cwd('SymbolDirectory')
-        with tempfile.TemporaryFile() as temp_file:
-            ftp.retrbinary('RETR {}'.format(file_name), temp_file.write)
-            temp_file.seek(0)
-            df = pd.read_csv(temp_file, '|')
-        ftp.quit()
+        ftp_fetcher = NasdaqFtpFileFetcher()
+        df = ftp_fetcher.get_data_frame()
         for ind, rows in df.iterrows():
             if rows['Market Category'] == 'Q':
                 dic[rows['Symbol']] = rows['Security Name']
@@ -1421,7 +1411,6 @@ class PatternPlotter:
         self.api_object_class = self.api_object.__class__.__name__
         self.detector = detector
         self.config = self.detector.config
-        self.part_ticks_max = self.config.max_length_of_a_formation_part
         self.accuracy_pct = self.config.accuracy_pct
         self.df = api_object.df
         self.df_data = api_object.df_data
@@ -1524,8 +1513,6 @@ class PatternPlotter:
 class FSC:  # Formation Statistics Columns
     C_BOUND_UPPER_VALUE = 'conf.bound_upper_value'  # eg. CN.HIGH
     C_BOUND_LOWER_VALUE = 'conf.bound_lower_value'  # eg. CN.LOW
-    C_PART_MAX_LEN = 'conf.max_length_of_a_formation_part'
-    C_PART_MIN_LEN = 'conf.min_length_of_a_formation_part'
     C_CHECK_PREVIOUS_PERIOD = 'conf.check_previous_period'
     C_BREAKOUT_OVER_CONGESTION = 'conf.breakout_over_congestion_range'
     C_ACCURACY_PCT = 'conf.accuracy in %'
@@ -1585,8 +1572,6 @@ class PatternStatistics:
 
         self.column_list.append(FSC.C_BOUND_UPPER_VALUE)
         self.column_list.append(FSC.C_BOUND_LOWER_VALUE)
-        self.column_list.append(FSC.C_PART_MAX_LEN)
-        self.column_list.append(FSC.C_PART_MIN_LEN)
         self.column_list.append(FSC.C_CHECK_PREVIOUS_PERIOD)
         self.column_list.append(FSC.C_BREAKOUT_OVER_CONGESTION)
         self.column_list.append(FSC.C_ACCURACY_PCT)
@@ -1634,8 +1619,6 @@ class PatternStatistics:
 
         self.dic[FSC.C_BOUND_UPPER_VALUE] = pattern.config.bound_upper_value
         self.dic[FSC.C_BOUND_LOWER_VALUE] = pattern.config.bound_lower_value
-        self.dic[FSC.C_PART_MAX_LEN] = pattern.config.max_length_of_a_formation_part
-        self.dic[FSC.C_PART_MIN_LEN] = pattern.config.min_length_of_a_formation_part
         self.dic[FSC.C_CHECK_PREVIOUS_PERIOD] = pattern.config.check_previous_period
         self.dic[FSC.C_BREAKOUT_OVER_CONGESTION] = pattern.config.breakout_over_congestion_range
         self.dic[FSC.C_ACCURACY_PCT] = pattern.config.accuracy_pct
@@ -1876,21 +1859,19 @@ class PatternController:
 config = PatternConfiguration()
 config.get_data_from_db = False
 config.api_period = ApiPeriod.DAILY
-config.formation_type = FT.CHANNEL
+config.pattern_type = FT.CHANNEL
 config.plot_data = True
 config.statistics_excel_file_name = 'statistics_channel.xlsx'
 config.statistics_excel_file_name = ''
 config.bound_upper_value = CN.CLOSE
 config.bound_lower_value = CN.CLOSE
-config.max_length_of_a_formation_part = 15
-config.min_length_of_a_formation_part = 5
 config.breakout_over_congestion_range = False
 # config.show_final_statistics = True
 config.max_number_securities = 1000
 config.accuracy_pct = 0.005  # default is 0.05
 config.breakout_range_pct = 0.01  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-# config.use_own_dic({"FCEL": "???"})  # INTC	Intel NKE	Nike  V (Visa) GE
+config.use_own_dic({"KO": "Coca Cola"})  # INTC	Intel NKE	Nike  V (Visa) GE "FCEL": "FuelCell"
 config.and_clause = "Date BETWEEN '2017-01-01' AND '2019-10-30'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT

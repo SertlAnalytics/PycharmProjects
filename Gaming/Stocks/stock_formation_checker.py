@@ -448,6 +448,110 @@ class FibonacciParser(WaveParser):
         return int(self.movement_min_length/2) if retracement_min_length == 0 else retracement_min_length
 
 
+class WaveParser:
+    def __init__(self, df: pd.DataFrame):
+        self.df = df
+        self.df_length = self.df.shape[0]
+        self.length_for_global = int(self.df_length / 2)
+        self.length_for_local = 3
+        self.wave_tick_list = []
+        self.wave_max_tick_list = []
+        self.wave_min_tick_list = []
+        self.__init_columns_for_ticks_distance__()
+        self.__fill_wave_tick_lists__()
+
+    def get_wave_tick_for_position(self, pos: int) -> WaveTick:
+        return self.wave_tick_list[pos]
+
+    def get_xy_max_parameter(self):
+        return self.__get_xy_parameter__(False)
+
+    def get_xy_min_parameter(self):
+        return self.__get_xy_parameter__(True)
+
+    def get_max_tick_list_for_range(self, pos_start: int, limit_value: float):
+        return self.__get_tick_list_for_range__(pos_start, limit_value, True)
+
+    def get_min_tick_list_for_range(self, pos_start: int, limit_value: float):
+        return self.__get_tick_list_for_range__(pos_start, limit_value, False)
+
+    def __get_xy_parameter__(self, is_min: bool):
+        if is_min:
+            df_global = self.df[self.df[CN.LOCAL_MIN]]
+            col = CN.LOW
+        else:
+            df_global = self.df[self.df[CN.LOCAL_MAX]]
+            col = CN.HIGH
+        x = df_global[CN.DATEASNUM]
+        y = df_global[col]
+        return list(zip(x,y))
+
+    def __get_tick_list_for_range__(self, pos_start: int, limit_value: float, is_max: bool):
+        source_list = self.wave_max_tick_list if is_max else self.wave_min_tick_list
+        wave_tick_list_return = []
+        for ticks in source_list:
+            if ticks.position > pos_start:
+                if (is_max and ticks.high > limit_value) or (not is_max and ticks.low < limit_value):
+                    break
+                else:
+                    wave_tick_list_return.append(ticks)
+        return wave_tick_list_return
+
+    def __init_columns_for_ticks_distance__(self):
+        self.__add_distance_columns__()
+        self.__add_min_max_columns__()
+
+    def __fill_wave_tick_lists__(self):
+        for ind, rows in self.df.iterrows():
+            wave_tick = WaveTick(rows)
+            self.wave_tick_list.append(wave_tick)
+            if wave_tick.is_local_max:
+                self.wave_max_tick_list.append(wave_tick)
+            elif wave_tick.is_local_min:
+                self.wave_min_tick_list.append(wave_tick)
+
+    def __add_distance_columns__(self):
+        for high in (False, True):
+            for before in (False, True):
+                value_list = []
+                for ind, rows in self.df.iterrows():
+                    value_list.append(self.__get_distance__(rows, high, before))
+                if high and before:
+                    self.df[CN.TICKS_BREAK_HIGH_BEFORE] = value_list
+                elif high and not before:
+                    self.df[CN.TICKS_BREAK_HIGH_AFTER] = value_list
+                elif not high and before:
+                    self.df[CN.TICKS_BREAK_LOW_BEFORE] = value_list
+                elif not high and not before:
+                    self.df[CN.TICKS_BREAK_LOW_AFTER] = value_list
+
+    def __add_min_max_columns__(self):
+        self.df[CN.GLOBAL_MIN] = np.logical_and(self.df[CN.TICKS_BREAK_LOW_AFTER] > self.length_for_global
+                                                , self.df[CN.TICKS_BREAK_LOW_BEFORE] > self.length_for_global)
+        self.df[CN.GLOBAL_MAX] = np.logical_and(self.df[CN.TICKS_BREAK_HIGH_AFTER] > self.length_for_global
+                                                , self.df[CN.TICKS_BREAK_HIGH_BEFORE] > self.length_for_global)
+        self.df[CN.LOCAL_MIN] = np.logical_and(self.df[CN.TICKS_BREAK_LOW_AFTER] > self.length_for_local
+                                               , self.df[CN.TICKS_BREAK_LOW_BEFORE] > self.length_for_local)
+        self.df[CN.LOCAL_MAX] = np.logical_and(self.df[CN.TICKS_BREAK_HIGH_AFTER] > self.length_for_local
+                                               , self.df[CN.TICKS_BREAK_HIGH_BEFORE] > self.length_for_local)
+
+    def __get_distance__(self, row, high: bool, before: bool) -> int:
+        signature = -1 if before else 1
+        actual_pos = int(row[CN.POSITION])
+        pos = actual_pos + signature
+        row_actual_pos = self.df.iloc[actual_pos]
+        value_actual_pos = row_actual_pos[CN.HIGH] if high else row_actual_pos[CN.LOW]
+        while 0 <= pos < self.df_length:
+            row_pos = self.df.iloc[pos]
+            value_pos = row_pos[CN.HIGH] if high else row_pos[CN.LOW]
+            if value_pos > value_actual_pos and high:
+                break
+            elif value_pos < value_actual_pos and not high:
+                break
+            pos += signature
+        return self.df_length + 1 if (pos < 0 or pos >= self.df_length) else abs(actual_pos - pos)
+
+
 class TradeResult:
     def __init__(self):
         self.__bought_on = None
@@ -1875,10 +1979,11 @@ class FormationController:
         else:
             detector.print_statistics()
 
+
 config = FormationConfiguration()
 config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
-config.formation_type = FT.TKE
+config.formation_type = FT.CHANNEL
 config.plot_data = True
 config.statistics_excel_file_name = 'statistics_tke.xlsx'
 config.statistics_excel_file_name = ''
@@ -1891,9 +1996,9 @@ config.breakout_over_congestion_range = False
 config.max_number_securities = 1000
 config.accuracy_pct = 0.03  # default is 0.05
 config.breakout_range_pct = 0.1  # default is 0.01
-config.use_index(Indices.ALL_DATABASE)
-config.use_own_dic({"WMT": "???"})  # INTC	Intel NKE	Nike  V (Visa) GE
-config.and_clause = "Date BETWEEN '2017-02-18' AND '2019-09-05'"
+config.use_index(Indices.DOW_JONES)
+# config.use_own_dic({"GE": "???"})  # INTC	Intel NKE	Nike  V (Visa) GE
+config.and_clause = "Date BETWEEN '2017-01-23' AND '2019-09-05'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 
