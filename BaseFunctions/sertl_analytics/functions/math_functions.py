@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def get_function_parameters(ind_left, value_left, ind_right, value_right):
     """
     Gets the function parameter for the linear function which joins both points on the x-y-diagram
