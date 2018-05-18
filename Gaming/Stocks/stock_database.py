@@ -93,7 +93,7 @@ class StockDatabase(BaseDatabase):
         print(repr(data))
 
 class StockDatabaseDataFrame(DatabaseDataFrame):
-    def __init__(self, db: BaseDatabase, symbol: str = '', and_clause: str = ''):
+    def __init__(self, db: StockDatabase, symbol: str = '', and_clause: str = ''):
         self.symbol = symbol
         self.statement = "SELECT * from Stocks WHERE Symbol = '" + symbol + "'"
         if and_clause != '':
@@ -127,6 +127,12 @@ dow_jones_dic_orig = {"MMM": "3M", "AXP": "American", "AAPL": "Apple", "BA": "Bo
 "TRV": "Travelers", "UTX": "United", "UNH": "UnitedHealth", "VZ": "Verizon",
 "V": "Visa", "WMT": "Wal-Mart"}
 
+dow_jones_dic = {"DWDP": "DowDuPont", "XOM": "Exxon", "GE": "General",
+"GS": "Goldman", "HD": "Home", "IBM": "IBM", "INTC": "Intel",
+"JNJ": "Johnson", "JPM": "JPMorgan", "MCD": "McDonald's", "MRK": "Merck",
+"MSFT": "Microsoft", "NKE": "Nike", "PFE": "Pfizer", "PG": "Procter",
+"TRV": "Travelers", "UTX": "United", "UNH": "UnitedHealth", "VZ": "Verizon",
+"V": "Visa", "WMT": "Wal-Mart"}
 
 def get_nasdaq_dic():
     """
@@ -158,10 +164,10 @@ if __name__ == '__main__':
     #     stock_db.import_stock_data(ticker, ApiPeriod.DAILY, ApiOutputsize.FULL)
     dic = dic_own
     dic = get_nasdaq_dic()
-    # dic = {"OVID": "OVID"}
-    # dic = dow_jones_dic_orig
+    dic = {"BMWYY": "OVID"}
+    # dic = dow_jones_dic
     for symbol in dic:
-        if symbol[0] in ['P', 'T']:
+        if symbol[0] > 'D' or True:  # in ['P', 'T'] or True:
             print('Loading: {}'.format(symbol))
             try:
                 stock_db.import_stock_data(symbol, ApiPeriod.DAILY, ApiOutputsize.FULL)

@@ -25,6 +25,7 @@ import ftplib
 import tempfile
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.file_fetcher import NasdaqFtpFileFetcher
+from sertl_analytics.pybase.df_base import PyBaseDataFrame
 import stock_database as sdb
 from sertl_analytics.searches.smart_searches import Queue, Stack
 from sertl_analytics.functions import math_functions
@@ -163,25 +164,19 @@ class PatternConfiguration:
         Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares
         AABA|Altaba Inc. - Common Stock|Q|N|N|100|N|N
         """
-        dic = {}
         ftp_fetcher = NasdaqFtpFileFetcher()
         df = ftp_fetcher.get_data_frame()
-        for ind, rows in df.iterrows():
-            if rows['Market Category'] == 'Q':
-                dic[rows['Symbol']] = rows['Security Name']
-        return dic
+        return PyBaseDataFrame.get_rows_as_dictionary(df, 'Symbol', ['Security Name'], {'Market Category': 'Q'})
 
     @staticmethod
     def get_mixed_dic():
         return {"TSLA": "Tesla", "FCEL": "Full Cell", "ONVO": "Organovo", "MRAM": "MRAM"}
 
-    def get_all_in_database(self):
-        dic = {}
+    @staticmethod
+    def get_all_in_database():
         stock_db = sdb.StockDatabase()
         db_data_frame = DatabaseDataFrame(stock_db, query='SELECT Symbol, count(*) FROM Stocks GROUP BY Symbol HAVING count(*) > 4000')
-        for ind, rows in db_data_frame.df.iterrows():
-            dic[rows['Symbol']] = rows['Symbol']
-        return dic
+        return PyBaseDataFrame.get_rows_as_dictionary(db_data_frame, 'Symbol', ['Symbol'])
 
 
 class FormationDate:
@@ -219,14 +214,6 @@ class CN:  # Column Names
     IS_MIN = 'Is_MIN'
     IS_MAX = 'Is_MAX'
 
-    @staticmethod
-    def get_function_parameters_by_ticks(tick_i, tick_k, for_high: bool = True):
-        if for_high:
-            return math_functions.get_function_parameters(tick_i[CN.POSITION], tick_i[CN.HIGH]
-                                                      , tick_k[CN.POSITION], tick_k[CN.HIGH])
-        else:
-            return math_functions.get_function_parameters(tick_i[CN.POSITION], tick_i[CN.LOW]
-                                                          , tick_k[CN.POSITION], tick_k[CN.LOW])
 
 class ValueCategories:
     pass
@@ -620,6 +607,10 @@ class Constraints:
         self.global_all_in = []
         self.global_count = []
         self.global_series = []
+        self.f_upper_slope_bounds = [-0.02, 0.02]
+        self.f_lower_slope_bounds = [-0.02, 0.02]
+        self.f_upper_lower_slope_bounds = [-5, 5]  # the relationship bounds for the linear functions increase
+        # [0.8, 1.2] Channel,
         self.__fill_global_constraints__()
         self.min_ticks_required = self.__get_min_ticks_required__()
         self.max_ticks_required = self.__get_max_ticks_required__()
@@ -646,7 +637,7 @@ class ChannelConstraints(Constraints):
         return 3
 
     def __get_min_ticks_required__(self):
-        return 3
+        return 2
 
     def __fill_global_constraints__(self):
         """
@@ -655,9 +646,9 @@ class ChannelConstraints(Constraints):
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
-        self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 3), CountConstraint(SVC.L_in, '>=', 3)]
+        self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 3), CountConstraint(SVC.L_in, '>=', 2)]
         self.global_series = ['OR', [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
-                          [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.L_in]]
+                          [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
 
 
 class ToleranceCalculator:
@@ -689,7 +680,8 @@ class ValueCategorizer:
         self.__calculate_value_categories__()
 
     def are_all_values_above_f_lower(self, with_accurary: bool = False) -> bool:
-        df_local = self.df[self.df[CN.LOW] >= self.df[CN.F_LOWER]]
+        tolerance = self.df[CN.LOW].mean() * self.__accuracy_ptc
+        df_local = self.df[self.df[CN.LOW] < self.df[CN.F_LOWER] - tolerance]
         return df_local.shape[0] == 0
 
     def are_all_values_in_value_category(self, value_category: SVC) -> bool:
@@ -772,20 +764,17 @@ class ChannelValueCategorizer(ValueCategorizer):
 class Pattern:
     ticks_initial = 0
     check_length = 0
-    part_previous = PatternPart
-    part_left = PatternPart
-    part_middle = PatternPart
-    part_right = PatternPart
 
-    def __init__(self, df_previous: pd.DataFrame, df_start: pd.DataFrame, config: PatternConfiguration):
+    def __init__(self, df_start: pd.DataFrame, f_upper, f_lower, config: PatternConfiguration):
         self.config = config
         self.df_start = df_start
-        self.df_combined = df_start  # will be changed when a new tick is added
+        self.f_upper = f_upper
+        self.f_lower = f_lower
+        self.left_tick = WaveTick(self.df_start.iloc[0])
+        self.right_tick = WaveTick(self.df_start.iloc[-1])
         self.condition_handler = FormationConditionHandler()
         self.ticks_initial = self.df_start.shape[0]
-        self.check_length = int(self.ticks_initial/3)
         self.accuracy_pct = self.config.accuracy_pct
-        self.__init_type_formation_parts__(df_previous)
         self.bound_upper = self.__get_upper_bound__()
         self.bound_lower = self.__get_lower_bound__()
         self.breadth = self.bound_upper - self.bound_lower
@@ -795,18 +784,10 @@ class Pattern:
         self.xy = None
         self.xy_control = None
         self.control_df = pd.DataFrame   # DataFrame to be checked for expected/real results after breakout
-        self.date_first = None
-        self.date_last = None
+        self.date_first = self.left_tick.date
+        self.date_last = self.right_tick.date
         self.breakout = None
         self.trade_result = TradeResult()
-
-    def __init_type_formation_parts__(self, df_previous: pd.DataFrame):
-        self.ticks_initial = self.df_start.shape[0]
-        self.check_length = int(self.ticks_initial / 3)
-        self.part_previous = PatternPart(df_previous, self.config)
-        self.part_left = PatternPart(self.df_start.iloc[0:self.check_length], self.config)
-        self.part_middle = PatternPart(self.df_start.iloc[self.check_length:2 * self.check_length], self.config)
-        self.part_right = PatternPart(self.df_start.iloc[2 * self.check_length:self.ticks_initial], self.config)
 
     def was_breakout_done(self):
         return True if self.breakout.__class__.__name__ == 'FormationBreakout' else False
@@ -833,7 +814,7 @@ class Pattern:
 
     @property
     def ticks(self):
-        return self.part_left.ticks + self.part_middle.ticks + self.part_right.ticks
+        return self.df_start.shape[0]
 
     def __get_upper_bound__(self):
         return 0
@@ -842,54 +823,28 @@ class Pattern:
         return 0
 
     def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
-        if self.__are_left_right_parts_applicable_for_formation_type__():
-            if self.__is_middle_part_applicable_for_formation_type__():
-                self.condition_handler.previous_period_check_ok = self.__is_previous_part_applicable_for_formation__()
-                if not self.config.check_previous_period or self.condition_handler.previous_period_check_ok:
-                    self.condition_handler.combined_parts_applicable \
-                        = self.__are_combined_parts_applicable_for_formation__()
-                    return self.condition_handler.combined_parts_applicable
-        return False
-
-    def reset_df_combined(self):
-        self.df_combined = pd.concat([self.part_left.df, self.part_middle.df, self.part_right.df])
+        return True
 
     def add_annotations(self, ax):
-            pass
-
-    def __is_previous_part_applicable_for_formation__(self):
-        return True  # this is not always implemented in the deferred class
-
-    def __are_combined_parts_applicable_for_formation__(self):
-        return False
-
-    def __are_left_right_parts_applicable_for_formation_type__(self):
-        return False
-
-    def __is_middle_part_applicable_for_formation_type__(self):
-        return False
-
-    def is_tick_fitting_to_formation(self, tick_df: pd.DataFrame):
-        return False
-
-    def add_tick_to_formation(self, tick_db: pd.DataFrame):
-        self.part_right.add_tick(tick_db)
+        pass
 
     def set_xy_formation_parameter(self):
-        pass
+        x_dates = [self.date_first, self.date_first, self.date_last, self.date_last]
+        x = list(dt.date2num(x_dates))
+        x_pos = [self.left_tick.position, self.left_tick.position, self.right_tick.position, self.right_tick.position]
+        y = [self.f_upper(x_pos[0]), self.f_lower(x_pos[1]), self.f_lower(x_pos[2]), self.f_upper(x_pos[3])]
+        self.xy = list(zip(x, y))
 
     def set_xy_control_parameter(self):
         pass
 
     def get_shape(self):
-        return None
+        self.set_xy_formation_parameter()
+        pol = Polygon(np.array(self.xy), True)
+        return pol
 
     def get_control_shape(self):
         pass
-
-    def set_dates(self):
-        self.date_first = self.df_combined.first_valid_index()
-        self.date_last = self.df_combined.last_valid_index()
 
     def fill_result_set(self):
         if self.is_control_df_available():
@@ -897,11 +852,6 @@ class Pattern:
 
     def is_control_df_available(self):
         return self.control_df.__class__.__name__ == 'DataFrame'
-
-    def print_formation_parts_data(self):
-        self.part_left.print_data('Left')
-        self.part_middle.print_data('Middle')
-        self.part_right.print_data('Right')
 
     def __fill_trade_result__(self):
         self.trade_result.expected_win = round(self.bound_upper - self.bound_lower, 2)
@@ -973,8 +923,20 @@ class WaveTick:
         return self.tick[CN.DATE]
 
     @property
+    def date_str(self):
+        return self.tick[CN.DATE].strftime("%Y-%m-%d")
+
+    @property
     def position(self):
         return self.tick[CN.POSITION]
+
+    @property
+    def is_max(self):
+        return self.tick[CN.IS_MAX]
+
+    @property
+    def is_min(self):
+        return self.tick[CN.IS_MIN]
 
     @property
     def is_local_max(self):
@@ -995,6 +957,193 @@ class WaveTick:
     def print(self):
         print('Pos: {}, Date: {}, High: {}, Low: {}'.format(self.position, self.date, self.high, self.low))
 
+    def get_linear_f_params_for_max(self, tick):
+        return math_functions.get_function_parameters(self.position, self.high, tick.position, tick.high)
+
+    def get_linear_f_params_for_min(self, tick):
+        return math_functions.get_function_parameters(self.position, self.low, tick.position, tick.low)
+
+
+class PatternRange:
+    def __init__(self, df_min_max: pd.DataFrame, tick: WaveTick, min_length: int):
+        self.df_min_max = df_min_max
+        self.tick_list = []
+        self.tick_breakout_predecessor = None
+        self.tick_breakout_successor = None
+        self.last_added_position = 0
+        self.last_added_value = 0
+        self.__min_length = min_length
+        self.__f_param = None
+        self.__position_list = []
+        self.__value_list = []
+        self.__date_list = []
+        self.add_tick(tick, None)
+
+    @property
+    def length(self) -> int:
+        return len(self.tick_list)
+
+    @property
+    def position_list(self):
+        return self.__position_list
+
+    def add_tick(self, tick: WaveTick, f_param):
+        self.tick_list.append(tick)
+        self.__f_param = f_param
+        self.last_added_position = tick.position
+        self.last_added_value = self.__get_value__(tick)
+        self.__position_list.append(tick.position)
+        self.__value_list.append(self.__get_value__(tick))
+        self.__date_list.append(tick.date_str)
+
+    @property
+    def is_min_length_reached(self) -> bool:
+        return self.length >= self.__min_length
+
+    def is_covering_all_positions(self, pos_list_input: list) -> bool:
+        return len(set(pos_list_input) & set(self.__position_list)) == len(pos_list_input)
+
+    def get_range_details(self):
+        breakout_predecessor = self.__get_breakout_details__(self.tick_breakout_predecessor, False)
+        breakout_successor = self.__get_breakout_details__(self.tick_breakout_successor, True)
+        return [self.__position_list, self.__value_list, breakout_predecessor, breakout_successor, self.__date_list]
+
+    def are_values_in_function_tolerance_range(self, f_param, accuracy_pct) -> bool:
+        for ticks in self.tick_list:
+            v_1 = self.__get_value__(ticks)
+            v_2 = f_param(ticks.position)
+            if not ToleranceCalculator.are_values_in_tolerance_range(v_1, v_2, accuracy_pct):
+                return False
+        return True
+
+    def __get_breakout_details__(self, tick: WaveTick, is_breakout_successor: bool):
+        if tick is None:  # extend the breakouts until the end....
+            if is_breakout_successor:
+                pos = self.df_min_max.iloc[-1][CN.POSITION]
+            else:
+                pos = self.df_min_max.iloc[0][CN.POSITION]
+            return [pos, round(self.__f_param(pos), 2)]
+        else:
+            return [tick.position, round(self.__f_param(tick.position), 2)]
+
+    @staticmethod
+    def __get_value__(tick: WaveTick):
+        return tick.high
+
+
+class PatternRangeMax(PatternRange):
+    @staticmethod
+    def __get_value__(tick: WaveTick):
+        return tick.high
+
+
+class PatternRangeMin(PatternRange):
+    @staticmethod
+    def __get_value__(tick: WaveTick):
+        return tick.low
+
+
+class PatternRangeDetector:
+    def __init__(self, df_min_max: pd.DataFrame, accuracy_pct: float = 0.01, ticks_required: int = 3):
+        self.df = self.__get_df_for_processing__(df_min_max)
+        self.df_length = self.df.shape[0]
+        self._number_required_ticks = ticks_required
+        self._pattern_range = None
+        self.__accuracy_pct = accuracy_pct
+        self.__pattern_range_list = []
+        self.__parse_data_frame__()
+
+    def __get_df_for_processing__(self, df_min_max: pd.DataFrame):
+        pass
+
+    def __get_pattern_range__(self):
+        return self._pattern_range
+
+    def __set_pattern_range__(self, value: PatternRange):
+        self.__add_pattern_range_to_list_after_check__()
+        self._pattern_range = value
+
+    def __add_pattern_range_to_list_after_check__(self):
+        if self.__are_conditions_fulfilled_for_adding_to_pattern_range_list__():
+            self.__pattern_range_list.append(self._pattern_range)
+
+    def __are_conditions_fulfilled_for_adding_to_pattern_range_list__(self) -> bool:
+        if self._pattern_range is None:
+            return False
+        if not self._pattern_range.is_min_length_reached:
+            return False
+        for pattern in self.__pattern_range_list:  # check if this list is already a sublist of an earlier list
+            if pattern.is_covering_all_positions(self._pattern_range.position_list):
+                return False
+        return True
+
+    def get_list_of_possible_pattern_ranges(self):
+        return [pattern.get_range_details() for pattern in self.__pattern_range_list]
+
+    def print_list_of_possible_pattern_ranges(self):
+        for pattern in self.__pattern_range_list:
+            print(pattern.get_range_details())
+
+    def __parse_data_frame__(self):
+        for i in range(0, self.df_length - self._number_required_ticks):
+            tick_i = WaveTick(self.df.iloc[i])
+            self.__init_pattern_range_by_tick__(tick_i)
+            for k in range(i+1, self.df_length):
+                tick_k = WaveTick(self.df.iloc[k])
+                if self._pattern_range.length == 1:  # start a new one if the values is above/below the old function
+                    self._pattern_range.add_tick(tick_k, None)
+                elif self.__is_end_for_single_check_reached__(tick_i, tick_k):
+                    self.__init_pattern_range_by_tick__(tick_i)
+                    self._pattern_range.add_tick(tick_k, None)
+        self.__add_pattern_range_to_list_after_check__()  # for the latest...
+
+    def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick):
+        pass
+
+    def __is_end_for_single_check_reached__(self, tick_i: WaveTick, tick_k: WaveTick):
+        f_param_new = self.__get_linear_f_params__(tick_i, tick_k)
+        if self._pattern_range.are_values_in_function_tolerance_range(f_param_new, self.__accuracy_pct):
+            self._pattern_range.add_tick(tick_k, f_param_new)
+        else:
+            f_value_new_last_position_right = f_param_new(self._pattern_range.last_added_position)
+            if self.__is_new_tick_a_breakout__(f_value_new_last_position_right):
+                return True
+        return False
+
+    def __is_new_tick_a_breakout__(self, f_value_new_last_position_right: float):
+        pass
+
+    def __init_pattern_range_by_tick__(self, tick: WaveTick):
+        pass
+
+
+class PatternRangeDetectorMax(PatternRangeDetector):
+    def __get_df_for_processing__(self, df_min_max: pd.DataFrame):
+        return df_min_max[df_min_max[CN.IS_MAX]]
+
+    def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick):
+        return tick_i.get_linear_f_params_for_max(tick_k)
+
+    def __is_new_tick_a_breakout__(self, f_value_new_last_position_right: float):
+        return self._pattern_range.last_added_value < f_value_new_last_position_right
+
+    def __init_pattern_range_by_tick__(self, tick: WaveTick):
+        self.__set_pattern_range__(PatternRangeMax(self.df, tick, self._number_required_ticks))
+
+
+class PatternRangeDetectorMin(PatternRangeDetector):
+    def __get_df_for_processing__(self, df_min_max: pd.DataFrame):
+        return df_min_max[df_min_max[CN.IS_MIN]]
+
+    def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick):
+        return tick_i.get_linear_f_params_for_min(tick_k)
+
+    def __is_new_tick_a_breakout__(self, f_value_new_last_position_right: float):
+        return self._pattern_range.last_added_value > f_value_new_last_position_right
+
+    def __init_pattern_range_by_tick__(self, tick: WaveTick):
+        self.__set_pattern_range__(PatternRangeMin(self.df, tick, self._number_required_ticks))
+
 
 class DataFrameFactory:
     def __init__(self, df: pd.DataFrame):
@@ -1008,6 +1157,11 @@ class DataFrameFactory:
 
 
 class DataFramePatternFactory(DataFrameFactory):
+    """
+    This class has two purposes:
+    1. Identify all extrema: global and local maxima and minima which is used as checkpoint for pattern detections.
+    2. Identify ranges which can be used for a thorough inspection in the further process
+    """
     def __init__(self, df: pd.DataFrame):
         DataFrameFactory.__init__(self, df)
         self.__length_for_global = int(self.df_length / 2)
@@ -1085,145 +1239,16 @@ class DataFramePatternFactory(DataFrameFactory):
         return [value_first, value_second]
 
 
-class PatternRangeDetector:
-    def __init__(self, df_min_max: pd.DataFrame, constraints: Constraints, config: PatternConfiguration, for_max: bool):
-        self.df_min_max = df_min_max
-        self.df_min_max_length = self.df_min_max.shape[0]
-        self.constraints = constraints
-        self.config = config
-        self.for_max = for_max
-        self.__number_required_ticks = self.__get_number_required_ticks__()
-        self.__position_list = []
-        self.__value_list = []
-        self.__date_list = []
-        self.__f_param = None
-        self.__breakout_predecessor = []  # [pos, value]
-        self.__breakout_successor = []  # [pos, value]
-        self.__result_list = []
-        self.__fill_lists__()
-
-    def __get_number_required_ticks__(self):
-        return self.constraints.max_ticks_required if self.for_max else self.constraints.min_ticks_required
-
-    def get_list_of_possible_pattern_ranges(self):
-        return self.__result_list
-
-    def print_list_of_possible_pattern_ranges(self):
-        for entries in self.__result_list:
-            print(entries)
-
-    def __fill_lists__(self):
-        for i in range(0, self.df_min_max_length - self.constraints.min_max_ticks_required):
-            tick_i = self.df_min_max.iloc[i]
-            if (self.for_max and tick_i[CN.IS_MAX]) or (not self.for_max and tick_i[CN.IS_MIN]):
-                self.__f_param = None  # start a new series...
-                self.__write_values_to_result_list_and_init_by_tick__(tick_i)
-                for k in range(i+1, self.df_min_max_length):
-                    tick_k = self.df_min_max.iloc[k]
-                    if (self.for_max and tick_k[CN.IS_MAX]) or (not self.for_max and tick_k[CN.IS_MIN]):
-                        if len(self.__position_list) == 1:  # start a new one if the values is above/below the old function
-                            self.__add_tick_to_internal_lists__(tick_k, None)  # this is only done in the real beginning
-                        elif self.__is_end_for_single_check_reached__(tick_i, tick_k):
-                            self.__write_values_to_result_list_and_init_by_tick__(tick_i, tick_k)
-            self.__write_values_to_result_list_and_init_lists__()
-
-    def __is_end_for_single_check_reached__(self, tick_i, tick_k):
-        f_param_new = CN.get_function_parameters_by_ticks(tick_i, tick_k, self.for_max)
-
-        if ToleranceCalculator.are_values_in_function_tolerance_range(self.__position_list, self.__value_list
-                , f_param_new, self.config.accuracy_pct):
-            self.__add_tick_to_internal_lists__(tick_k, f_param_new)
-        else:
-            last_position = self.__position_list[-1]
-            f_value_new_last_position_right = f_param_new(last_position)
-            last_value = self.__value_list[-1]
-
-            if (self.for_max and last_value < f_value_new_last_position_right) \
-                    or (not self.for_max and last_value > f_value_new_last_position_right):
-                if len(self.__position_list) >= self.__number_required_ticks:
-                    return True
-                else:  # reset and start with new one...
-                    self.__init_lists__()
-                    self.__add_tick_to_internal_lists__(tick_i, self.__f_param)
-                    self.__add_tick_to_internal_lists__(tick_k, f_param_new)
-        return False
-
-    def __init_lists__(self):
-        self.__position_list = []
-        self.__value_list = []
-        self.__date_list = []
-        self.__breakout_predecessor = []
-        self.__breakout_successor = []
-
-    def __add_tick_to_internal_lists__(self, tick, f_param):
-        self.__position_list.append(tick[CN.POSITION])
-        self.__value_list.append(tick[CN.HIGH] if self.for_max else tick[CN.LOW])
-        self.__date_list.append(tick[CN.DATE].strftime("%Y-%m-%d"))
-        self.__f_param = f_param
-
-    def __write_values_to_result_list_and_init_by_tick__(self, tick, tick_breakout = None):
-        self.__fill_successor_list__(tick_breakout)
-        self.__write_values_to_result_list_and_init_lists__()
-        self.__add_tick_to_internal_lists__(tick, None)
-        if tick_breakout is not None:
-            self.__add_tick_to_internal_lists__(tick_breakout, None)
-
-    def __write_values_to_result_list_and_init_lists__(self):
-        self.__write_values_to_result_list__()
-        self.__init_lists__()
-
-    def __write_values_to_result_list__(self):
-        if self.__are_conditions_fulfilled_for_adding_values_to_result_list():
-            self.__fill_predecessor_list__()
-            self.__fill_successor_list__()
-            self.__result_list.append([self.__position_list, self.__value_list
-                                    , self.__breakout_predecessor, self.__breakout_successor
-                                    , self.__date_list])
-
-    def __fill_successor_list__(self, tick_breakout = None):
-        if self.__f_param is None:
-            return
-
-        if tick_breakout is None:
-            if len(self.__breakout_successor) == 0:
-                pos = self.df_min_max.iloc[-1][CN.POSITION]
-                self.__breakout_successor = [pos, round(self.__f_param(pos), 2)]
-        else:
-            pos = tick_breakout[CN.POSITION]
-            self.__breakout_successor = [pos, round(self.__f_param(pos), 2)]
-
-    def __fill_predecessor_list__(self, tick_breakout = None):
-        if self.__f_param is None:
-            return
-
-        if tick_breakout is None:
-            if len(self.__breakout_predecessor) == 0:
-                pos = self.df_min_max.iloc[0][CN.POSITION]
-                self.__breakout_predecessor = [pos, round(self.__f_param(pos), 2)]
-        else:
-            pos = tick_breakout[CN.POSITION]
-            self.__breakout_predecessor = [pos, round(self.__f_param(pos), 2)]
-
-    def __are_conditions_fulfilled_for_adding_values_to_result_list(self) -> bool:
-        if len(self.__position_list) < self.__number_required_ticks:
-            return False
-        for k in range(len(self.__result_list)):  # check if this list is already a sublist of an earlier list
-            position_list_old = self.__result_list[k][0]
-            if len(set(position_list_old) & set(self.__position_list)) == len(self.__position_list):
-                return False
-        return True
-
-
 class PatternDetector:
     def __init__(self, df: pd.DataFrame, df_min_max: pd.DataFrame, config: PatternConfiguration):
         self.config = config
-        self.pattern_dic = {}
+        self.pattern_list = []
         self.df = df
         self.df_length = self.df.shape[0]
         self.df_min_max = df_min_max
         self.df_min_max_length = self.df_min_max.shape[0]
         self.accuracy_pct = self.config.accuracy_pct
-        self.pattern_check_list = ['Channel', 'TKE']
+        self.pattern_check_list = ['Channel']
         self.constraints = None
         self.__possible_pattern_ranges_top = []  # format [0] = list of positions, [1] pos, value of pre, [2] for post
         self.__possible_pattern_ranges_bottom = []  # we above
@@ -1232,6 +1257,35 @@ class PatternDetector:
     @property
     def possible_pattern_ranges_available(self):
         return len(self.__possible_pattern_ranges_top) + len(self.__possible_pattern_ranges_bottom) > 0
+
+    def parse_for_pattern(self):
+        """
+        We parse only over the actual known min-max-dataframe
+        """
+        for patterns in self.pattern_check_list:
+            if patterns == 'Channel':
+                self.constraints = ChannelConstraints()
+            self.__fill_possible_pattern_ranges__()
+            for range_lists in self.__possible_pattern_ranges:
+                df_check = self.df_min_max.loc[range_lists[0]:range_lists[-1]]
+                is_check_ok, f_upper, f_lower = self.check_tick_range(df_check)
+                if is_check_ok:
+                    self.pattern_list.append(Pattern(df_check, f_upper, f_lower, self.config))
+
+    def check_tick_range(self, df_check: pd.DataFrame) -> bool:
+        df_min = df_check[df_check[CN.IS_MIN]]
+        df_max = df_check[df_check[CN.IS_MAX]]
+        l_tick = WaveTick(df_max.iloc[0])
+        r_tick =  WaveTick(df_max.iloc[-1])
+        f_upper = math_functions.get_function_parameters(l_tick.position, l_tick.high, r_tick.position, r_tick.high)
+        f_lower_list = self.__get_valid_f_lower_function_parameters__(df_min, f_upper)
+        for f_lower in f_lower_list:
+            value_categorizer = ChannelValueCategorizer(df_check, self.accuracy_pct, f_upper, f_lower)
+            if self.__is_global_constraint_all_in_satisfied__(df_check, value_categorizer):
+                if self.__is_global_constraint_count_satisfied__(value_categorizer):
+                    if self.__is_global_constraint_series_satisfied__(df_check, value_categorizer):
+                        return True, f_upper, f_lower
+        return False, None, None
 
     def get_shapes_for_possible_pattern_ranges_top(self):
         return self.__get_shapes_for_possible_pattern_ranges__(True)
@@ -1254,37 +1308,21 @@ class PatternDetector:
             shape_list.append(pol)
         return shape_list
 
-    def parse_for_pattern(self):
-        """
-        We parse only over the actual known min-max-dataframe
-        """
-        for patterns in self.pattern_check_list:
-            if patterns == 'Channel':
-                self.constraints = ChannelConstraints()
-                self.__fill_possible_pattern_ranges__()
-                for df_min_max_range_list in self.__possible_pattern_ranges:
-                    len_list = len(df_min_max_range_list)
-                    for i in range(0, len_list - self.constraints.min_max_ticks_required + 1):
-                        left_tick = self.df_min_max.iloc[i]
-                        if left_tick[CN.IS_MAX]:
-                            for k in range(i + self.constraints.min_max_ticks_required, len_list):
-                                right_tick = self.df_min_max.iloc[k]
-                                if right_tick[CN.IS_MAX]:
-                                    # print('Checking max ticks for pos {} and {}'.format(i, k))
-                                    df_check = self.df_min_max.iloc[i:k]
-                                    is_check_ok = self.check_tick_range(df_check)
-                                    # print('...check: {}'.format(is_check_ok))
-
     def __fill_possible_pattern_ranges__(self):
-        range_detector = PatternRangeDetector(self.df_min_max, self.constraints, self.config, True)
-        self.__possible_pattern_ranges_top = range_detector.get_list_of_possible_pattern_ranges()
-        # range_detector.print_list_of_possible_pattern_ranges()
-        range_detector = PatternRangeDetector(self.df_min_max, self.constraints, self.config, False)
-        self.__possible_pattern_ranges_bottom = range_detector.get_list_of_possible_pattern_ranges()
-        # range_detector.print_list_of_possible_pattern_ranges()
+        range_detector_max = PatternRangeDetectorMax(self.df_min_max, self.config.accuracy_pct, 3)
+        self.__possible_pattern_ranges_top = range_detector_max.get_list_of_possible_pattern_ranges()
+        # range_detector_max.print_list_of_possible_pattern_ranges()
+        range_detector_min = PatternRangeDetectorMin(self.df_min_max, self.config.accuracy_pct, 3)
+        self.__possible_pattern_ranges_bottom = range_detector_min.get_list_of_possible_pattern_ranges()
+        # range_detector_min.print_list_of_possible_pattern_ranges()
         self.__combine_possible_pattern_ranges__()
+        # TODO get rid of print statements
 
     def __combine_possible_pattern_ranges__(self):
+        for entry_top in self.__possible_pattern_ranges_top:
+            self.__possible_pattern_ranges.append(entry_top[0])
+
+    def __combine_possible_pattern_ranges_old__(self):
         for entry_top in self.__possible_pattern_ranges_top:
             for entry_bottom in self.__possible_pattern_ranges_bottom:
                 range_top = range(entry_top[0][0], entry_top[0][-1])
@@ -1298,37 +1336,39 @@ class PatternDetector:
                         union_set = set(entry_top[0]).union(entry_bottom[0])
                         self.__possible_pattern_ranges.append(sorted(list(union_set)))
 
-    def check_tick_range(self, df_check: pd.DataFrame) -> bool:
-        df_min = df_check[df_check[CN.IS_MIN]]
-        df_max = df_check[df_check[CN.IS_MAX]]
-        left_tick = df_check.iloc[0]
-        left_pos = left_tick[CN.POSITION]
-        right_tick = df_check.iloc[-1]
-        right_pos = right_tick[CN.POSITION]
-        f_upper = math_functions.get_function_parameters(left_pos, left_tick[CN.HIGH], right_pos, right_tick[CN.HIGH])
-        f_lower_list = self.__get_valid_f_lower_function_parameters__(df_min, f_upper)
-        for f_lower in f_lower_list:
-            value_categorizer = ChannelValueCategorizer(df_check, self.accuracy_pct, f_upper, f_lower)
-            if self.__is_global_constraint_all_in_satisfied__(df_check, value_categorizer):
-                if self.__is_global_constraint_count_satisfied__(value_categorizer):
-                    if self.__is_global_constraint_series_satisfied__(df_check, value_categorizer):
-                        return True
-        return False
-
     def __get_valid_f_lower_function_parameters__(self, df_min: pd.DataFrame, f_upper) -> list:
         parameter_list = []
+        if df_min.shape[0] < 2:
+            return parameter_list
+
         for i in range(0, df_min.shape[0] - 1):
             for m in range(i + 1, df_min.shape[0]):
-                left_tick = df_min.iloc[i]
-                right_tick = df_min.iloc[m]
-                left_pos = left_tick[CN.POSITION]
-                right_pos = right_tick[CN.POSITION]
-                f_lower = math_functions.get_function_parameters(left_pos, left_tick[CN.LOW]
-                                                                 , right_pos, right_tick[CN.LOW])
-                value_categorizer = ChannelValueCategorizer(df_min, self.accuracy_pct, f_upper, f_lower)
-                if value_categorizer.are_all_values_above_f_lower():
-                    parameter_list.append(f_lower)
+                left_tick = WaveTick(df_min.iloc[i])
+                right_tick = WaveTick(df_min.iloc[m])
+                f_lower = math_functions.get_function_parameters(left_tick.position, left_tick.low
+                                                                 , right_tick.position, right_tick.low)
+                if self.__is_f_lower_according_to_f_upper_lower_bounds_constraint__(f_upper, f_lower):
+                    value_categorizer = ChannelValueCategorizer(df_min, self.accuracy_pct, f_upper, f_lower)
+                    if value_categorizer.are_all_values_above_f_lower():
+                        parameter_list.append(f_lower)
         return parameter_list
+
+    def __is_f_lower_according_to_f_upper_lower_bounds_constraint__(self, f_upper, f_lower):
+        f_upper_slope = round(f_upper(1) - f_upper(0), 4)
+        if not self.constraints.f_upper_slope_bounds[0] <= f_upper_slope <= self.constraints.f_upper_slope_bounds[1]:
+            return False
+
+        f_lower_slope = round(f_lower(1) - f_lower(0), 4)
+        if not self.constraints.f_lower_slope_bounds[0] <= f_lower_slope <= self.constraints.f_lower_slope_bounds[1]:
+            return False
+
+        if f_lower_slope == 0:
+            return True  # TODO handle f_lower_slope == 0, i.e. parallel to x-axis...
+        relation_u_l = round(f_upper_slope/f_lower_slope, 4)
+
+        print('f_upper = {}, f_lower = {}, relation_u_l = {}'.format(f_upper, f_lower, relation_u_l))
+
+        return self.constraints.f_upper_lower_slope_bounds[0] <= relation_u_l <= self.constraints.f_upper_lower_slope_bounds[1]
 
     def __is_global_constraint_all_in_satisfied__(self, df_check: pd.DataFrame, value_categorizer):
         if len(self.constraints.global_all_in) == 0:
@@ -1380,7 +1420,7 @@ class PatternDetector:
         ))
 
     def get_statistics_api(self):
-        return PatternDetectorStatisticsApi(self.pattern_dic, self.config.investment)
+        return PatternDetectorStatisticsApi(self.pattern_list, self.config.investment)
 
 
 class FormationColorHandler:
@@ -1451,6 +1491,7 @@ class PatternPlotter:
         axis.xaxis_date()
         self.add_formations(axis)
         self.add_possible_pattern(axis)
+        axis.grid()
         # self.__add_fibonacci_waves__(axis)
 
     def __plot_volume__(self, axis):
@@ -1459,20 +1500,19 @@ class PatternPlotter:
     def add_formations(self, ax):
         color_handler = FormationColorHandler()
         patches_dic = {}
-        for ind in self.detector.pattern_dic:
-            formation = self.detector.pattern_dic[ind]
-            color_formation, color_control = color_handler.get_colors_for_formation(formation)
+        for pattern in self.detector.pattern_list:
+            color_formation, color_control = color_handler.get_colors_for_formation(pattern)
             if color_formation in patches_dic:
-                patches_dic[color_formation].append(formation.get_shape())
+                patches_dic[color_formation].append(pattern.get_shape())
             else:
-                patches_dic[color_formation] = [formation.get_shape()]
+                patches_dic[color_formation] = [pattern.get_shape()]
 
-            if formation.was_breakout_done() and formation.is_control_df_available():
+            if pattern.was_breakout_done() and pattern.is_control_df_available():
                 if color_control in patches_dic:
-                    patches_dic[color_control].append(formation.get_control_shape())
+                    patches_dic[color_control].append(pattern.get_control_shape())
                 else:
-                    patches_dic[color_control] = [formation.get_control_shape()]
-            formation.add_annotations(ax)
+                    patches_dic[color_control] = [pattern.get_control_shape()]
+            pattern.add_annotations(ax)
 
         for colors in patches_dic:
             p = PatchCollection(patches_dic[colors], alpha=0.4)
@@ -1484,8 +1524,8 @@ class PatternPlotter:
 
         for shapes in self.detector.get_shapes_for_possible_pattern_ranges_top():
             patches_dic['green'].append(shapes)
-        for shapes in self.detector.get_shapes_for_possible_pattern_ranges_bottom():
-            patches_dic['blue'].append(shapes)
+        # for shapes in self.detector.get_shapes_for_possible_pattern_ranges_bottom():
+        #     patches_dic['blue'].append(shapes)
 
         for colors in patches_dic:
             p = PatchCollection(patches_dic[colors], alpha=0.4)
@@ -1634,8 +1674,7 @@ class PatternStatistics:
         self.dic[FSC.TICKER] = pattern.config.actual_ticker
         self.dic[FSC.NAME] = pattern.config.actual_ticker_name
         self.dic[FSC.FORMATION] = pattern.__class__.__name__
-        if pattern.part_previous.df.shape[0] != 0:
-            self.dic[FSC.BEGIN_PREVIOUS] = FormationDate.get_date_from_datetime(pattern.part_previous.date_first)
+        self.dic[FSC.BEGIN_PREVIOUS] = 'TODO'
         self.dic[FSC.BEGIN] = FormationDate.get_date_from_datetime(pattern.date_first)
         self.dic[FSC.END] = FormationDate.get_date_from_datetime(pattern.date_last)
         self.dic[FSC.LOWER] = round(pattern.bound_lower, 2)
@@ -1702,8 +1741,8 @@ class PatternStatistics:
 
 
 class PatternDetectorStatisticsApi:
-    def __init__(self, pattern_dic, investment: float):
-        self.pattern_dic = pattern_dic
+    def __init__(self, pattern_list, investment: float):
+        self.pattern_list = pattern_list
         self.counter_actual_ticks = 0
         self.counter_ticks = 0
         self.counter_stop_loss = 0
@@ -1715,10 +1754,9 @@ class PatternDetectorStatisticsApi:
         self.diff_pct = round(100 * (self.investment_working - self.investment_start) / self.investment_start, 2)
 
     def __fill_parameter__(self):
-        for ind in self.pattern_dic:
-            formation = self.pattern_dic[ind]
-            if formation.was_breakout_done() and formation.is_control_df_available():
-                result = formation.trade_result
+        for pattern in self.pattern_list:
+            if pattern.was_breakout_done() and pattern.is_control_df_available():
+                result = pattern.trade_result
                 self.counter_actual_ticks += result.actual_ticks
                 self.counter_ticks += result.max_ticks
                 self.counter_stop_loss = self.counter_stop_loss + 1 if result.stop_loss_reached else self.counter_stop_loss
@@ -1795,7 +1833,7 @@ class PatternController:
             self.__handle_statistics__(detector)
 
             if self.config.plot_data:
-                if len(detector.pattern_dic) == 0 and not detector.possible_pattern_ranges_available:
+                if len(detector.pattern_list) == 0 and not detector.possible_pattern_ranges_available:
                     print('...no formations found.')
                 else:
                     plotter = PatternPlotter(self.plotter_input_obj, detector)
@@ -1847,8 +1885,8 @@ class PatternController:
                 self.loop_list.append([ticker, self.config.and_clause, counter])
 
     def __handle_statistics__(self, detector: PatternDetector):
-        for keys in detector.pattern_dic:
-            self.formation_statistics.add_entry(detector.pattern_dic[keys])
+        for pattern in detector.pattern_list:
+            self.formation_statistics.add_entry(pattern)
 
         if config.show_final_statistics:
             self.detector_statistics.add_entry(self.config, detector.get_statistics_api())
@@ -1857,7 +1895,7 @@ class PatternController:
 
 
 config = PatternConfiguration()
-config.get_data_from_db = False
+config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
 config.pattern_type = FT.CHANNEL
 config.plot_data = True
@@ -1871,8 +1909,9 @@ config.max_number_securities = 1000
 config.accuracy_pct = 0.005  # default is 0.05
 config.breakout_range_pct = 0.01  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-config.use_own_dic({"KO": "Coca Cola"})  # INTC	Intel NKE	Nike  V (Visa) GE "FCEL": "FuelCell"
-config.and_clause = "Date BETWEEN '2017-01-01' AND '2019-10-30'"
+config.use_own_dic({"KO": "Coca Cola"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE"
+# "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW"
+config.and_clause = "Date BETWEEN '2017-03-25' AND '2019-10-30'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 
