@@ -58,7 +58,9 @@ class FT:
     CHANNEL_UP = 'Channel_Up'
     CHANNEL_DOWN = 'Channel_DOWN'
     TKE = 'Trend correction extrema'
+    HEAD_SHOULDER = 'Head_Shoulder'
     ALL = 'All'
+
 
 class Indices:
     DOW_JONES = 'Dow Jones'
@@ -79,10 +81,11 @@ class FCC:  # Formation Condition Columns
     PREVIOUS_PERIOD_CHECK_OK = 'previous period check OK'  # eg. CN.LOW
     COMBINED_PARTS_APPLICABLE = 'combined parts are formation applicable'
 
+
 class PatternConfiguration:
     def __init__(self):
         self.get_data_from_db = True
-        self.pattern_type = FT.CHANNEL
+        self.pattern_type_list = [FT.CHANNEL]
         self.api_period = ApiPeriod.DAILY
         self.api_output_size = ApiOutputsize.COMPACT
         self.bound_upper_value = CN.HIGH
@@ -90,7 +93,6 @@ class PatternConfiguration:
         self.plot_data = True
         self.check_previous_period = False   # default
         self.breakout_over_congestion_range = False
-        self.accuracy_pct = 0.01  # the high/low values can be this percentage over the upper bounds w.r.t breadth
         self.breakout_range_pct = 0.01
         self.investment = 1000
         self.max_number_securities = 1000
@@ -116,26 +118,25 @@ class PatternConfiguration:
 
     def print(self):
         source = 'DB' if self.get_data_from_db else 'Api'
-        pattern_type = self.pattern_type
+        pattern_type = self.pattern_type_list
         and_clause = self.and_clause
         period = self.api_period
         output_size = self.api_output_size
         bound_upper_v = self.bound_upper_value
         bound_lower_v = self.bound_lower_value
         breakout_over_big_range = self.breakout_over_congestion_range
-        accuracy_pct = self.accuracy_pct
 
         print('\nConfiguration settings:')
         if self.get_data_from_db:
             print('Formation: {} \nSource: {} \nAnd clause: {} \nUpper/Lower Bound Value: {}/{}'
-                  ' \nBreakout big range: {}  \nAccuracy: {} \n'.format(
+                  ' \nBreakout big range: {}\n'.format(
                     pattern_type, source, and_clause, bound_upper_v, bound_lower_v
-                    , breakout_over_big_range, accuracy_pct))
+                    , breakout_over_big_range))
         else:
             print('Formation: {} \nSource: {} \n\nApiPeriod/ApiOutput size: {}/{} \nUpper/Lower Bound Value: {}/{}'
-                  ' \nBreakout big range: {}  \nAccuracy: {} \n'.format(
+                  ' \nBreakout big range: {}\n'.format(
                     pattern_type, source, period, output_size, bound_upper_v, bound_lower_v
-                    , breakout_over_big_range, accuracy_pct))
+                    , breakout_over_big_range))
 
     def use_index(self, index: Indices):
         if index == Indices.DOW_JONES:
@@ -352,7 +353,7 @@ class FormationBreakoutApi:
         self.bound_upper = 0
         self.bound_lower = 0
         self.mean = 0
-        self.accuracy_range = 0
+        self.tolerance_range = 0
 
 
 class FormationBreakout:
@@ -367,12 +368,12 @@ class FormationBreakout:
         self.volume_change_pct = round(self.candle_stick.Volume/self.candle_stick_previous.Volume, 2)
         self.bound_upper = api.bound_upper
         self.bound_lower = api.bound_lower
-        self.accuracy_range = api.accuracy_range
+        self.tolerance_range = api.tolerance_range
         self.formation_breadth = abs(self.bound_upper - self.bound_lower)
         self.breakout_direction = self.__get_breakout_direction__()
         self.sign = 1 if self.breakout_direction == FD.ASC else -1
-        self.limit_upper = self.bound_upper + self.accuracy_range
-        self.limit_lower = self.bound_lower - self.accuracy_range
+        self.limit_upper = self.bound_upper + self.tolerance_range
+        self.limit_lower = self.bound_lower - self.tolerance_range
 
     def is_breakout_a_signal(self) -> bool:
         if self.__is_breakout_over_limit__():
@@ -536,25 +537,25 @@ class PatternPart:
         if self.config.bound_lower_value == CN.CLOSE:
             self.__bound_lower = self.__min_close
 
-    def are_values_below_linear_function(self, f_lin, accuracy_pct: float = 0.01, column: CN = CN.HIGH):  # 1% accuracy allowed
+    def are_values_below_linear_function(self, f_lin, tolerance_pct: float = 0.01, column: CN = CN.HIGH):
         for ind, rows in self.df.iterrows():
             value_function = round(f_lin(rows[CN.DATEASNUM]), 2)
-            accuracy_range = value_function * accuracy_pct
-            if value_function + accuracy_range < rows[column]:
+            tolerance_range = value_function * tolerance_pct
+            if value_function + tolerance_range < rows[column]:
                 return False
         return True
 
-    def is_high_close_to_linear_function(self, f_lin, accuracy_pct: float = 0.01):  # 1% accuracy allowed
+    def is_high_close_to_linear_function(self, f_lin, tolerance_pct: float = 0.01):
         value_function = round(f_lin(self.id_max_high_num), 2)
         mean = (value_function + self.max_high)/2
         value = abs(self.max_high - value_function)/mean
-        return value < accuracy_pct
+        return value < tolerance_pct
 
-    def is_close_close_to_linear_function(self, f_lin, accuracy_pct: float = 0.01):  # 1% accuracy allowed
+    def is_close_close_to_linear_function(self, f_lin, tolerance_pct: float = 0.01):
         value_function = round(f_lin(self.id_max_close_num), 2)
         mean = (value_function + self.max_high)/2
         value = abs(self.max_close - value_function)/mean
-        return value < accuracy_pct
+        return value < tolerance_pct
 
     def get_cross_date_when_min_reached(self, f_lin):
         return self.__get_cross_date__(f_lin, 'min')
@@ -606,6 +607,9 @@ class CountConstraint:
 
 
 class Constraints:
+    type = 'Constraint'
+    tolerance_pct = 0.01
+
     def __init__(self):
         self.global_all_in = []
         self.global_count = []
@@ -645,7 +649,15 @@ class Constraints:
             self.f_upper_slope_bounds = [-1.0, -0.2]
             self.f_lower_slope_bounds = [-0.02, 0.02]
             self.f_upper_lower_slope_bounds = [-10, 10]
+        elif pattern_type == FT.HEAD_SHOULDER:
+            self.f_upper_slope_bounds = [-0.01, 0.01]
+            self.f_lower_slope_bounds = []
+            self.f_upper_lower_slope_bounds = []
         elif pattern_type == FT.ALL:
+            self.f_upper_slope_bounds = [-100.0, 100]
+            self.f_lower_slope_bounds = self.f_upper_slope_bounds
+            self.f_upper_lower_slope_bounds = [-100, 100]
+        else:
             self.f_upper_slope_bounds = [-100.0, 100]
             self.f_lower_slope_bounds = self.f_upper_slope_bounds
             self.f_upper_lower_slope_bounds = [-100, 100]
@@ -657,16 +669,18 @@ class Constraints:
         pass
 
     def __get_min_ticks_required__(self):
-        pass
+        return 2
 
     def __get_max_ticks_required__(self):
-        pass
+        return 3
 
     def __fill_global_constraints__(self):
         pass
 
 
 class ChannelConstraints(Constraints):
+    type = FT.CHANNEL
+
     def __get_max_ticks_required__(self):
         return 3
 
@@ -683,6 +697,27 @@ class ChannelConstraints(Constraints):
         self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 3), CountConstraint(SVC.L_in, '>=', 2)]
         self.global_series = ['OR', [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
                           [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
+
+
+class HeadShoulderConstraints(Constraints):
+    type = FT.HEAD_SHOULDER
+    tolerance_pct = 0.01
+
+    def __get_max_ticks_required__(self):
+        return 4
+
+    def __get_min_ticks_required__(self):
+        return 1
+
+    def __fill_global_constraints__(self):
+        """
+        1. All values have to be in a range (channel)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        """
+        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
+        self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 4), CountConstraint(SVC.L_in, '>=', 1)]
+        self.global_series = ['OR', [SVC.U_on, SVC.M_in, SVC.U_on, SVC.L_on, SVC.U_on, SVC.M_in, SVC.U_on]]
 
 
 class ToleranceCalculator:
@@ -702,19 +737,19 @@ class ToleranceCalculator:
 
 
 class ValueCategorizer:
-    def __init__(self, df: pd.DataFrame, accuracy_pct: float, f_upper, f_lower = None):
+    def __init__(self, df: pd.DataFrame, tolerance_pct: float, f_upper, f_lower = None):
         self.df = df
         self.df_length = self.df.shape[0]
         self.value_category_dic = {}  # list of value categories by position of each entry
-        self.__accuracy_ptc = accuracy_pct
-        self.__accuracy_ptc_equal = 0.001
+        self.__tolerance_pct = tolerance_pct
+        self.__tolerance_pct_equal = 0.001
         self.__f_upper = f_upper
         self.__f_lower = f_lower
         self.__set_f_upper_f_lower_values()
         self.__calculate_value_categories__()
 
     def are_all_values_above_f_lower(self, with_accurary: bool = False) -> bool:
-        tolerance = self.df[CN.LOW].mean() * self.__accuracy_ptc
+        tolerance = self.df[CN.LOW].mean() * self.__tolerance_pct
         df_local = self.df[self.df[CN.LOW] < self.df[CN.F_LOWER] - tolerance]
         return df_local.shape[0] == 0
 
@@ -748,16 +783,16 @@ class ValueCategorizer:
         pass
 
     def __is_row_value_in_f_upper_range__(self, row):
-        return abs(row[CN.HIGH] - row[CN.F_UPPER])/np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self.__accuracy_ptc
+        return abs(row[CN.HIGH] - row[CN.F_UPPER])/np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self.__tolerance_pct
 
     def __is_row_value_in_f_lower_range__(self, row):
-        return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) <= self.__accuracy_ptc
+        return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) <= self.__tolerance_pct
 
     def __is_row_value_between_f_lower_f_upper__(self, row):
         return row[CN.F_LOWER] < row[CN.LOW] <= row[CN.HIGH] < row[CN.F_UPPER]
 
     def __is_row_value_equal_f_upper__(self, row):
-        return abs(row[CN.HIGH] - row[CN.F_UPPER]) / np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self.__accuracy_ptc_equal
+        return abs(row[CN.HIGH] - row[CN.F_UPPER]) / np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self.__tolerance_pct_equal
 
     def __is_row_value_larger_f_upper__(self, row):
         return row[CN.HIGH] > row[CN.F_UPPER] and not self.__is_row_value_in_f_upper_range__(row)
@@ -766,7 +801,7 @@ class ValueCategorizer:
         return row[CN.HIGH] < row[CN.F_UPPER]
 
     def __is_row_value_equal_f_lower__(self, row):
-        return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) <= self.__accuracy_ptc_equal
+        return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) <= self.__tolerance_pct_equal
 
     def __is_row_value_larger_f_lower__(self, row):
         return row[CN.LOW] > row[CN.F_LOWER]
@@ -799,22 +834,22 @@ class Pattern:
     ticks_initial = 0
     check_length = 0
 
-    def __init__(self, df_start: pd.DataFrame, f_upper, f_lower, config: PatternConfiguration):
+    def __init__(self, df_start: pd.DataFrame, f_upper, f_lower, config: PatternConfiguration, tolerance_pct: float):
         self.config = config
         self.df_start = df_start
         self.f_upper = f_upper
         self.f_lower = f_lower
+        self.tolerance_pct = tolerance_pct
         self.left_tick = WaveTick(self.df_start.iloc[0])
         self.right_tick = WaveTick(self.df_start.iloc[-1])
         self.condition_handler = FormationConditionHandler()
         self.ticks_initial = self.df_start.shape[0]
-        self.accuracy_pct = self.config.accuracy_pct
         self.bound_upper = self.__get_upper_bound__()
         self.bound_lower = self.__get_lower_bound__()
         self.breadth = self.bound_upper - self.bound_lower
-        self.accuracy_range = self.breadth * self.accuracy_pct
-        self.limit_upper = self.bound_upper + self.accuracy_range
-        self.limit_lower = self.bound_lower - self.accuracy_range
+        self.tolerance_range = self.breadth * self.tolerance_pct
+        self.limit_upper = self.bound_upper + self.tolerance_range
+        self.limit_lower = self.bound_lower - self.tolerance_range
         self.xy = None
         self.xy_control = None
         self.control_df = pd.DataFrame   # DataFrame to be checked for expected/real results after breakout
@@ -833,8 +868,8 @@ class Pattern:
         return False
 
     def __get_slope_values__(self):
-        f_upper_slope = round(self.f_upper(1) - self.f_upper(0), 4)
-        f_lower_slope = round(self.f_lower(1) - self.f_lower(0), 4)
+        f_upper_slope = round(self.f_upper[1], 4)
+        f_lower_slope = round(self.f_lower[1], 4)
         relation_u_l = round(f_upper_slope/f_lower_slope, 4)
         return f_upper_slope, f_lower_slope, relation_u_l
 
@@ -917,10 +952,10 @@ class Pattern:
         self.trade_result.bought_on = self.breakout.df.first_valid_index()
         self.trade_result.max_ticks = self.control_df.shape[0]
         if self.breakout_direction == FD.ASC:
-            self.trade_result.stop_loss_at = self.bound_upper - self.accuracy_range
+            self.trade_result.stop_loss_at = self.bound_upper - self.tolerance_range
             self.trade_result.limit = self.bound_upper + self.trade_result.expected_win
         else:
-            self.trade_result.stop_loss_at = self.bound_lower + self.accuracy_range
+            self.trade_result.stop_loss_at = self.bound_lower + self.tolerance_range
             self.trade_result.limit = self.bound_lower - self.trade_result.expected_win
         # self.trade_result.stop_loss_at = self.mean  # much more worse for TSLA....
 
@@ -1070,11 +1105,11 @@ class PatternRange:
         breakout_successor = self.__get_breakout_details__(self.tick_breakout_successor, True)
         return [self.__position_list, self.__value_list, breakout_predecessor, breakout_successor, self.__date_list]
 
-    def are_values_in_function_tolerance_range(self, f_param, accuracy_pct) -> bool:
+    def are_values_in_function_tolerance_range(self, f_param, tolerance_pct: float) -> bool:
         for ticks in self.tick_list:
             v_1 = self.__get_value__(ticks)
             v_2 = f_param(ticks.position)
-            if not ToleranceCalculator.are_values_in_tolerance_range(v_1, v_2, accuracy_pct):
+            if not ToleranceCalculator.are_values_in_tolerance_range(v_1, v_2, tolerance_pct):
                 return False
         return True
 
@@ -1106,12 +1141,12 @@ class PatternRangeMin(PatternRange):
 
 
 class PatternRangeDetector:
-    def __init__(self, df_min_max: pd.DataFrame, accuracy_pct: float = 0.01, ticks_required: int = 3):
+    def __init__(self, df_min_max: pd.DataFrame, tolerance_pct: float = 0.01, ticks_required: int = 3):
         self.df = self.__get_df_for_processing__(df_min_max)
         self.df_length = self.df.shape[0]
         self._number_required_ticks = ticks_required
         self._pattern_range = None
-        self.__accuracy_pct = accuracy_pct
+        self.__tolerance_pct = tolerance_pct
         self.__pattern_range_list = []
         self.__parse_data_frame__()
 
@@ -1159,12 +1194,12 @@ class PatternRangeDetector:
                     self._pattern_range.add_tick(tick_k, None)
         self.__add_pattern_range_to_list_after_check__()  # for the latest...
 
-    def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick):
+    def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick) -> np.poly1d:
         pass
 
     def __is_end_for_single_check_reached__(self, tick_i: WaveTick, tick_k: WaveTick):
         f_param_new = self.__get_linear_f_params__(tick_i, tick_k)
-        if self._pattern_range.are_values_in_function_tolerance_range(f_param_new, self.__accuracy_pct):
+        if self._pattern_range.are_values_in_function_tolerance_range(f_param_new, self.__tolerance_pct):
             self._pattern_range.add_tick(tick_k, f_param_new)
         else:
             f_value_new_last_position_right = f_param_new(self._pattern_range.last_added_position)
@@ -1183,7 +1218,7 @@ class PatternRangeDetectorMax(PatternRangeDetector):
     def __get_df_for_processing__(self, df_min_max: pd.DataFrame):
         return df_min_max[df_min_max[CN.IS_MAX]]
 
-    def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick):
+    def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick) -> np.poly1d:
         return tick_i.get_linear_f_params_for_max(tick_k)
 
     def __is_new_tick_a_breakout__(self, f_value_new_last_position_right: float):
@@ -1197,7 +1232,7 @@ class PatternRangeDetectorMin(PatternRangeDetector):
     def __get_df_for_processing__(self, df_min_max: pd.DataFrame):
         return df_min_max[df_min_max[CN.IS_MIN]]
 
-    def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick):
+    def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick) -> np.poly1d:
         return tick_i.get_linear_f_params_for_min(tick_k)
 
     def __is_new_tick_a_breakout__(self, f_value_new_last_position_right: float):
@@ -1304,17 +1339,17 @@ class DataFramePatternFactory(DataFrameFactory):
 class PatternDetector:
     def __init__(self, df: pd.DataFrame, df_min_max: pd.DataFrame, config: PatternConfiguration):
         self.config = config
-        self.pattern_list = []
+        self.pattern_type_list = config.pattern_type_list
         self.df = df
         self.df_length = self.df.shape[0]
         self.df_min_max = df_min_max
         self.df_min_max_length = self.df_min_max.shape[0]
-        self.accuracy_pct = self.config.accuracy_pct
-        self.pattern_check_list = ['Channel']
+        self.tolerance_pct = 0
         self.constraints = None
         self.__possible_pattern_ranges_top = []  # format [0] = list of positions, [1] pos, value of pre, [2] for post
         self.__possible_pattern_ranges_bottom = []  # we above
         self.__possible_pattern_ranges = []
+        self.pattern_list = []
 
     @property
     def possible_pattern_ranges_available(self):
@@ -1324,15 +1359,24 @@ class PatternDetector:
         """
         We parse only over the actual known min-max-dataframe
         """
-        for patterns in self.pattern_check_list:
-            if patterns == 'Channel':
-                self.constraints = ChannelConstraints()
+        for patterns in self.pattern_type_list:
+            self.constraints = self.__get_channel_constraints__(patterns)
+            self.tolerance_pct = self.constraints.tolerance_pct  # type specific tolerance ranges
             self.__fill_possible_pattern_ranges__()
             for range_lists in self.__possible_pattern_ranges:
                 df_check = self.df_min_max.loc[range_lists[0]:range_lists[-1]]
                 is_check_ok, f_upper, f_lower = self.check_tick_range(df_check)
                 if is_check_ok:
-                    self.pattern_list.append(Pattern(df_check, f_upper, f_lower, self.config))
+                    self.pattern_list.append(Pattern(df_check, f_upper, f_lower, self.config, self.tolerance_pct))
+
+    @staticmethod
+    def __get_channel_constraints__(patterns):
+        if patterns == FT.CHANNEL:
+            return ChannelConstraints()
+        elif patterns == FT.HEAD_SHOULDER:
+            return HeadShoulderConstraints()
+        else:
+            return Constraints()
 
     def check_tick_range(self, df_check: pd.DataFrame) -> bool:
         df_min = df_check[df_check[CN.IS_MIN]]
@@ -1342,7 +1386,7 @@ class PatternDetector:
         f_upper = math_functions.get_function_parameters(l_tick.position, l_tick.high, r_tick.position, r_tick.high)
         f_lower_list = self.__get_valid_f_lower_function_parameters__(df_min, f_upper)
         for f_lower in f_lower_list:
-            value_categorizer = ChannelValueCategorizer(df_check, self.accuracy_pct, f_upper, f_lower)
+            value_categorizer = ChannelValueCategorizer(df_check, self.tolerance_pct, f_upper, f_lower)
             if self.__is_global_constraint_all_in_satisfied__(df_check, value_categorizer):
                 if self.__is_global_constraint_count_satisfied__(value_categorizer):
                     if self.__is_global_constraint_series_satisfied__(df_check, value_categorizer):
@@ -1371,10 +1415,10 @@ class PatternDetector:
         return shape_list
 
     def __fill_possible_pattern_ranges__(self):
-        range_detector_max = PatternRangeDetectorMax(self.df_min_max, self.config.accuracy_pct, 3)
+        range_detector_max = PatternRangeDetectorMax(self.df_min_max, self.tolerance_pct, 3)
         self.__possible_pattern_ranges_top = range_detector_max.get_list_of_possible_pattern_ranges()
-        # range_detector_max.print_list_of_possible_pattern_ranges()
-        range_detector_min = PatternRangeDetectorMin(self.df_min_max, self.config.accuracy_pct, 3)
+        range_detector_max.print_list_of_possible_pattern_ranges()
+        range_detector_min = PatternRangeDetectorMin(self.df_min_max, self.tolerance_pct, 3)
         self.__possible_pattern_ranges_bottom = range_detector_min.get_list_of_possible_pattern_ranges()
         # range_detector_min.print_list_of_possible_pattern_ranges()
         self.__combine_possible_pattern_ranges__()
@@ -1398,8 +1442,12 @@ class PatternDetector:
                         union_set = set(entry_top[0]).union(entry_bottom[0])
                         self.__possible_pattern_ranges.append(sorted(list(union_set)))
 
-    def __get_valid_f_lower_function_parameters__(self, df_min: pd.DataFrame, f_upper) -> list:
+    def __get_valid_f_lower_function_parameters__(self, df_min: pd.DataFrame, f_upper: np.poly1d) -> list:
         parameter_list = []
+
+        if self.constraints.type == FT.HEAD_SHOULDER:
+            return [self.__get_parallel_to_upper_by_low__(df_min, f_upper)]
+
         if df_min.shape[0] < 2:
             return parameter_list
 
@@ -1410,17 +1458,29 @@ class PatternDetector:
                 f_lower = math_functions.get_function_parameters(left_tick.position, left_tick.low
                                                                  , right_tick.position, right_tick.low)
                 if self.__is_f_lower_according_to_f_upper_lower_bounds_constraint__(f_upper, f_lower):
-                    value_categorizer = ChannelValueCategorizer(df_min, self.accuracy_pct, f_upper, f_lower)
+                    value_categorizer = ChannelValueCategorizer(df_min, self.tolerance_pct, f_upper, f_lower)
                     if value_categorizer.are_all_values_above_f_lower():
                         parameter_list.append(f_lower)
         return parameter_list
 
-    def __is_f_lower_according_to_f_upper_lower_bounds_constraint__(self, f_upper, f_lower):
-        f_upper_slope = round(f_upper(1) - f_upper(0), 4)
+    def __get_parallel_to_upper_by_low__(self, df_min: pd.DataFrame, f_upper: np.poly1d):
+        pos_of_min = df_min[CN.LOW].idxmin()
+        value_min = df_min[CN.LOW].min()
+        diff = f_upper(pos_of_min) - value_min
+        return np.poly1d([f_upper[1], f_upper[0] - diff])
+    # TODO parallel to f_upper through the min of the dataframe
+    # HINT https://docs.scipy.org/doc/numpy-1.14.0/reference/generated/numpy.poly1d.html
+    # Parellel can eventually be constructed through the roots...
+    # poly1d([1, 2, 3], True) returns one that represents (x-1)(x-2)(x-3) = x^3 - 6x^2 + 11x -6
+    # OR https://stackoverflow.com/questions/8230638/parallel-coordinates-plot-in-matplotlib
+    # NICE (interactive): https://plot.ly/python/parallel-coordinates-plot/
+
+    def __is_f_lower_according_to_f_upper_lower_bounds_constraint__(self, f_upper: np.poly1d, f_lower: np.poly1d):
+        f_upper_slope = f_upper[1]  # component of first level = derivative
         if not self.constraints.f_upper_slope_bounds[0] <= f_upper_slope <= self.constraints.f_upper_slope_bounds[1]:
             return False
 
-        f_lower_slope = round(f_lower(1) - f_lower(0), 4)
+        f_lower_slope = f_lower[1]
         if not self.constraints.f_lower_slope_bounds[0] <= f_lower_slope <= self.constraints.f_lower_slope_bounds[1]:
             return False
 
@@ -1513,7 +1573,6 @@ class PatternPlotter:
         self.api_object_class = self.api_object.__class__.__name__
         self.detector = detector
         self.config = self.detector.config
-        self.accuracy_pct = self.config.accuracy_pct
         self.df = api_object.df
         self.df_data = api_object.df_data
         self.column_data = api_object.column_data
@@ -1617,7 +1676,7 @@ class FSC:  # Formation Statistics Columns
     C_BOUND_LOWER_VALUE = 'conf.bound_lower_value'  # eg. CN.LOW
     C_CHECK_PREVIOUS_PERIOD = 'conf.check_previous_period'
     C_BREAKOUT_OVER_CONGESTION = 'conf.breakout_over_congestion_range'
-    C_ACCURACY_PCT = 'conf.accuracy in %'
+    C_TOLERANCE_PCT = 'conf.tolerance in %'
     C_BREAKOUT_RANGE_PCT = 'conf.breakout range in %'
     C_AND_CLAUSE = 'conf.and clause'
 
@@ -1676,7 +1735,7 @@ class PatternStatistics:
         self.column_list.append(FSC.C_BOUND_LOWER_VALUE)
         self.column_list.append(FSC.C_CHECK_PREVIOUS_PERIOD)
         self.column_list.append(FSC.C_BREAKOUT_OVER_CONGESTION)
-        self.column_list.append(FSC.C_ACCURACY_PCT)
+        self.column_list.append(FSC.C_TOLERANCE_PCT)
         self.column_list.append(FSC.C_BREAKOUT_RANGE_PCT)
         self.column_list.append(FSC.C_AND_CLAUSE)
 
@@ -1723,7 +1782,7 @@ class PatternStatistics:
         self.dic[FSC.C_BOUND_LOWER_VALUE] = pattern.config.bound_lower_value
         self.dic[FSC.C_CHECK_PREVIOUS_PERIOD] = pattern.config.check_previous_period
         self.dic[FSC.C_BREAKOUT_OVER_CONGESTION] = pattern.config.breakout_over_congestion_range
-        self.dic[FSC.C_ACCURACY_PCT] = pattern.config.accuracy_pct
+        self.dic[FSC.C_TOLERANCE_PCT] = pattern.f
         self.dic[FSC.C_BREAKOUT_RANGE_PCT] = pattern.config.breakout_range_pct
         self.dic[FSC.C_AND_CLAUSE] = pattern.config.and_clause
 
@@ -1959,7 +2018,7 @@ class PatternController:
 config = PatternConfiguration()
 config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
-config.pattern_type = FT.CHANNEL
+config.pattern_type_list = [FT.HEAD_SHOULDER]
 config.plot_data = True
 config.statistics_excel_file_name = 'statistics_channel.xlsx'
 config.statistics_excel_file_name = ''
@@ -1968,14 +2027,15 @@ config.bound_lower_value = CN.CLOSE
 config.breakout_over_congestion_range = False
 # config.show_final_statistics = True
 config.max_number_securities = 1000
-config.accuracy_pct = 0.005  # default is 0.05
 config.breakout_range_pct = 0.01  # default is 0.01
 config.use_index(Indices.DOW_JONES)
 config.use_own_dic({"GE": "GE"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE"
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW"
-config.and_clause = "Date BETWEEN '2017-03-25' AND '2019-10-30'"
+config.and_clause = "Date BETWEEN '2018-01-25' AND '2019-10-30'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 
 pattern_controller = PatternController(config)
 pattern_controller.run_pattern_checker('')
+
+# Head Shoulder: GE Date BETWEEN '2017-03-25' AND '2019-10-30'
