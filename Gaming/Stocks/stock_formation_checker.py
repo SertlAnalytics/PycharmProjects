@@ -1983,7 +1983,7 @@ class FormationController:
 config = FormationConfiguration()
 config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
-config.formation_type = FT.CHANNEL
+config.formation_type = FT.TKE
 config.plot_data = True
 config.statistics_excel_file_name = 'statistics_tke.xlsx'
 config.statistics_excel_file_name = ''
@@ -1997,8 +1997,8 @@ config.max_number_securities = 1000
 config.accuracy_pct = 0.03  # default is 0.05
 config.breakout_range_pct = 0.1  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-# config.use_own_dic({"GE": "???"})  # INTC	Intel NKE	Nike  V (Visa) GE
-config.and_clause = "Date BETWEEN '2017-01-23' AND '2019-09-05'"
+config.use_own_dic({"NKE": "???"})  # INTC	Intel NKE	Nike  V (Visa) GE
+config.and_clause = "Date BETWEEN '2016-01-23' AND '2019-09-05'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 

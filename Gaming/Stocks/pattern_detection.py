@@ -52,9 +52,13 @@ e) Factored representation: Each state has some attribute-value properties, e.g.
 class FT:
     NONE = 'NONE'
     TRIANGLE = 'Triangle'
+    TRIANGLE_TOP = 'Triangle_Top'
+    TRIANGLE_BOTTOM = 'Triangle_Top'
     CHANNEL = 'Channel'  # https://www.investopedia.com/articles/trading/05/020905.asp
+    CHANNEL_UP = 'Channel_Up'
+    CHANNEL_DOWN = 'Channel_DOWN'
     TKE = 'Trend correction extrema'
-
+    ALL = 'All'
 
 class Indices:
     DOW_JONES = 'Dow Jones'
@@ -74,7 +78,6 @@ class FCC:  # Formation Condition Columns
     BREAKOUT_WITH_BUY_SIGNAL = 'breakout had a buy signal'
     PREVIOUS_PERIOD_CHECK_OK = 'previous period check OK'  # eg. CN.LOW
     COMBINED_PARTS_APPLICABLE = 'combined parts are formation applicable'
-
 
 class PatternConfiguration:
     def __init__(self):
@@ -615,6 +618,37 @@ class Constraints:
         self.min_ticks_required = self.__get_min_ticks_required__()
         self.max_ticks_required = self.__get_max_ticks_required__()
         self.min_max_ticks_required = self.min_ticks_required + self.max_ticks_required
+        self.__set_bounds_for_(FT.ALL)
+
+    def __set_bounds_for_(self, pattern_type: FT):
+        if pattern_type == FT.CHANNEL:
+            self.f_upper_slope_bounds = [-0.01, 0.01]
+            self.f_lower_slope_bounds = self.f_upper_slope_bounds
+            self.f_upper_lower_slope_bounds = [0.6, 1.4]
+        elif pattern_type == FT.CHANNEL_UP:
+            self.f_upper_slope_bounds = [0.02, 2]
+            self.f_lower_slope_bounds = self.f_lower_slope_bounds
+            self.f_upper_lower_slope_bounds = [0.8, 1.2]
+        elif pattern_type == FT.CHANNEL_DOWN:
+            self.f_upper_slope_bounds = [-0.02, -2]
+            self.f_lower_slope_bounds = self.f_lower_slope_bounds
+            self.f_upper_lower_slope_bounds = [0.8, 1.2]
+        elif pattern_type == FT.TRIANGLE:
+            self.f_upper_slope_bounds = [-1.0, -0.2]
+            self.f_lower_slope_bounds = - self.f_lower_slope_bounds
+            self.f_upper_lower_slope_bounds = [-0.8, -1.2]
+        elif pattern_type == FT.TRIANGLE_TOP:
+            self.f_upper_slope_bounds = [-0.02, 0.02]
+            self.f_lower_slope_bounds = [-1.0, -0.2]
+            self.f_upper_lower_slope_bounds = [-10, 10]
+        elif pattern_type == FT.TRIANGLE_BOTTOM:
+            self.f_upper_slope_bounds = [-1.0, -0.2]
+            self.f_lower_slope_bounds = [-0.02, 0.02]
+            self.f_upper_lower_slope_bounds = [-10, 10]
+        elif pattern_type == FT.ALL:
+            self.f_upper_slope_bounds = [-100.0, 100]
+            self.f_lower_slope_bounds = self.f_upper_slope_bounds
+            self.f_upper_lower_slope_bounds = [-100, 100]
 
     def get_unary_constraints(self, df: pd.DataFrame):
         pass
@@ -798,6 +832,12 @@ class Pattern:
             return True
         return False
 
+    def __get_slope_values__(self):
+        f_upper_slope = round(self.f_upper(1) - self.f_upper(0), 4)
+        f_lower_slope = round(self.f_lower(1) - self.f_lower(0), 4)
+        relation_u_l = round(f_upper_slope/f_lower_slope, 4)
+        return f_upper_slope, f_lower_slope, relation_u_l
+
     @property
     def breakout_direction(self):
         if self.was_breakout_done():
@@ -826,7 +866,25 @@ class Pattern:
         return True
 
     def add_annotations(self, ax):
-        pass
+        self.plot_annotation(ax, True, 'blue')
+
+    def plot_annotation(self, ax, for_max: bool = True, color: str = 'blue'):
+        x, y, text = self.__get_annotation_parameters__(for_max)
+        offset_x = 0
+        offset_y = (y / 50)
+        offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
+        arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
+        ax.annotate(text, xy=(x, y), xytext=(x + offset[0], y + offset[1]), arrowprops=arrow_props)
+
+    def __get_annotation_parameters__(self, for_max: bool):
+        if for_max:
+            x = self.left_tick.date_num
+            y = self.left_tick.high
+        else:
+            x = self.left_tick.date_num
+            y = self.left_tick.low
+        f_upper_slope, f_lower_slope, relation_u_l = self.__get_slope_values__()
+        return x, y, 'U_S={} / L_S={}\nU_S/L_S={}'.format(f_upper_slope, f_lower_slope, relation_u_l )
 
     def set_xy_formation_parameter(self):
         x_dates = [self.date_first, self.date_first, self.date_last, self.date_last]
@@ -921,6 +979,10 @@ class WaveTick:
     @property
     def date(self):
         return self.tick[CN.DATE]
+
+    @property
+    def date_num(self):
+        return self.tick[CN.DATEASNUM]
 
     @property
     def date_str(self):
@@ -1366,7 +1428,7 @@ class PatternDetector:
             return True  # TODO handle f_lower_slope == 0, i.e. parallel to x-axis...
         relation_u_l = round(f_upper_slope/f_lower_slope, 4)
 
-        print('f_upper = {}, f_lower = {}, relation_u_l = {}'.format(f_upper, f_lower, relation_u_l))
+        # print('f_upper = {}, f_lower = {}, relation_u_l = {}'.format(f_upper, f_lower, relation_u_l))
 
         return self.constraints.f_upper_lower_slope_bounds[0] <= relation_u_l <= self.constraints.f_upper_lower_slope_bounds[1]
 
@@ -1909,7 +1971,7 @@ config.max_number_securities = 1000
 config.accuracy_pct = 0.005  # default is 0.05
 config.breakout_range_pct = 0.01  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-config.use_own_dic({"KO": "Coca Cola"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE"
+config.use_own_dic({"GE": "GE"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE"
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW"
 config.and_clause = "Date BETWEEN '2017-03-25' AND '2019-10-30'"
 # config.and_clause = ''

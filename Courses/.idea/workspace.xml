@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="6986d208-fcf2-4a49-86eb-f9b02e404a25" name="Default" comment="" />
+    <list default="true" id="77bbd6b1-225b-4ef4-b90b-1ce33e4b4bf8" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/Stocks.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/Stocks.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/Tesla_Data_2010.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/Tesla_Data_2010.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/mpl_finance-master.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_detection.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_detection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/statistics.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/statistics.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/stock_database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/stock_formation_checker.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/stock_formation_checker.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -9,55 +20,23 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="mdp.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/edX_AI/rl/mdp.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="1" column="24" lean-forward="true" selection-start-line="1" selection-start-column="24" selection-end-line="1" selection-end-column="24" />
-              <folding>
-                <element signature="e#0#19#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
-  </component>
-  <component name="IdeDocumentHistory">
-    <option name="CHANGED_PATHS">
-      <list>
-        <option value="$PROJECT_DIR$/edX_AI/rl/mdp.py" />
-      </list>
-    </option>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1279" />
-    <option name="width" value="1288" />
+    <option name="x" value="1273" />
+    <option name="width" value="1294" />
     <option name="height" value="1407" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="ProjectPane" />
       <pane id="Scope" />
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="Courses" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Courses" type="462c0819:PsiDirectoryNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
     </panes>
-  </component>
-  <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -76,25 +55,25 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="6986d208-fcf2-4a49-86eb-f9b02e404a25" name="Default" comment="" />
-      <created>1524731033077</created>
+      <changelist id="77bbd6b1-225b-4ef4-b90b-1ce33e4b4bf8" name="Default" comment="" />
+      <created>1526388723123</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1524731033077</updated>
+      <updated>1526388723123</updated>
     </task>
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1279" y="0" width="1288" height="1407" extended-state="0" />
+    <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2496" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" side_tool="true" />
-      <window_info anchor="bottom" id="Version Control" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Python Console" visible="true" weight="0.32941177" />
+      <window_info active="true" anchor="bottom" id="Event Log" side_tool="true" visible="true" weight="0.32941177" />
+      <window_info anchor="bottom" id="Version Control" />
+      <window_info anchor="bottom" id="Python Console" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" weight="0.32941177" />
+      <window_info anchor="bottom" id="Terminal" />
       <window_info id="Favorites" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Find" order="1" />
@@ -108,17 +87,5 @@
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
-  </component>
-  <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/edX_AI/rl/mdp.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="24" lean-forward="true" selection-start-line="1" selection-start-column="24" selection-end-line="1" selection-end-column="24" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
   </component>
 </project>
