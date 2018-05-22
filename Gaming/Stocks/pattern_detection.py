@@ -30,6 +30,7 @@ from sertl_analytics.functions import math_functions
 from sertl_analytics.pybase.loop_list import LL, LoopList, DictionaryLoopList
 from sertl_analytics.pybase.exceptions import MyException
 import itertools
+import math
 
 """
 Implementation steps:
@@ -476,7 +477,7 @@ class PatternPart:
     def get_slope_values(self):
         f_upper_slope = round(self.f_upper[1], 4)
         f_lower_slope = round(self.f_lower[1], 4)
-        relation_u_l = round(f_upper_slope / f_lower_slope, 4)
+        relation_u_l = math.inf if f_lower_slope == 0 else round(f_upper_slope / f_lower_slope, 4)
         return f_upper_slope, f_lower_slope, relation_u_l
 
     def plot_annotation(self, ax, for_max: bool = True, color: str = 'blue'):
@@ -639,12 +640,12 @@ class TKEConstraints(Constraints):
         2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
-        self.global_all_in = [SVC.U_on, SVC.U_in, SVC.M_in, SVC.H_M_in]
+        self.global_all_in = [SVC.U_on, SVC.U_in, SVC.M_in, SVC.L_in, SVC.L_on, SVC.H_M_in]
         self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 3)]
         self.global_series = ['OR', [SVC.U_on, SVC.U_in, SVC.U_on], [SVC.U_on, SVC.U_on, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.5, -0.1]
+        self.f_upper_slope_bounds = [-0.6, -0.3]
         self.f_lower_slope_bounds = []  # not required
         self.f_upper_lower_slope_bounds = []
 
@@ -712,7 +713,7 @@ class TriangleConstraints(ChannelConstraints):
 
     def __set_bounds_for_pattern_type__(self):
         self.f_upper_slope_bounds = [-0.5, -0.1]
-        self.f_lower_slope_bounds = self.__get_multiplied_list__(self.f_upper_slope_bounds, -1)
+        self.f_lower_slope_bounds = [0.1, 0.5]
         self.f_upper_lower_slope_bounds = [-10, -0.2]
 
 
@@ -754,29 +755,29 @@ class TriangleDownConstraints(TriangleConstraints):
 
 class ConstraintsHelper:
     @staticmethod
-    def get_constraints_for_pattern_type(pattern: FT):
-        if pattern == FT.CHANNEL:
+    def get_constraints_for_pattern_type(pattern_type: FT):
+        if pattern_type == FT.CHANNEL:
             return ChannelConstraints()
-        elif pattern == FT.CHANNEL_DOWN:
+        elif pattern_type == FT.CHANNEL_DOWN:
             return ChannelDownConstraints()
-        elif pattern == FT.CHANNEL_UP:
+        elif pattern_type == FT.CHANNEL_UP:
             return ChannelUpConstraints()
-        elif pattern == FT.HEAD_SHOULDER:
+        elif pattern_type == FT.HEAD_SHOULDER:
             return HeadShoulderConstraints()
-        elif pattern == FT.TRIANGLE:
+        elif pattern_type == FT.TRIANGLE:
             return TriangleConstraints()
-        elif pattern == FT.TRIANGLE_TOP:
+        elif pattern_type == FT.TRIANGLE_TOP:
             return TriangleTopConstraints()
-        elif pattern == FT.TRIANGLE_BOTTOM:
+        elif pattern_type == FT.TRIANGLE_BOTTOM:
             return TriangleBottomConstraints()
-        elif pattern == FT.TRIANGLE_UP:
+        elif pattern_type == FT.TRIANGLE_UP:
             return TriangleUpConstraints()
-        elif pattern == FT.TRIANGLE_DOWN:
+        elif pattern_type == FT.TRIANGLE_DOWN:
             return TriangleDownConstraints()
-        elif pattern == FT.TKE:
+        elif pattern_type == FT.TKE:
             return TKEConstraints()
         else:
-            raise MyException('No constraints defined for pattern "{}"'.format(pattern))
+            raise MyException('No constraints defined for pattern type "{}"'.format(pattern_type))
 
 
 class ToleranceCalculator:
@@ -880,7 +881,8 @@ class ValueCategorizer:
         return row[CN.F_LOWER] < row[CN.LOW] <= row[CN.HIGH] < row[CN.F_UPPER]
 
     def __is_row_value_between_h_lower_h_upper__(self, row):
-        return row[CN.H_LOWER] < row[CN.LOW] <= row[CN.HIGH] < row[CN.H_UPPER]
+        return row[CN.H_LOWER] < row[CN.LOW] <= row[CN.HIGH] < row[CN.H_UPPER] and row[CN.CLOSE] > row[CN.F_UPPER]
+        # the second condition is needed to get only the values which are in the tail of the TKE pattern.
 
     def __is_row_value_equal_f_upper__(self, row):
         return abs(row[CN.HIGH] - row[CN.F_UPPER]) / np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self.__tolerance_pct_equal
@@ -1055,12 +1057,72 @@ class Pattern:
         return self.breakout.df.iloc[0].Close
 
 
+class ChannelPattern(Pattern):
+    pass  # TODO ChannelPattern
+
+
+class ChannelUpPattern(ChannelPattern):
+    pass  # TODO ChannelUpPattern
+
+
+class ChannelDownPattern(ChannelPattern):
+    pass  # TODO ChannelDownPattern
+
+
+class HeadShoulderPattern(Pattern):
+    pass  # TODO HeadShoulderPattern
+
+
 class TrianglePattern(Pattern):
     pass  # TODO: Most triangles take their first tick (e.g. min) before the 3 ticks on the other side => enhance range
 
 
+class TriangleBottomPattern(TrianglePattern):
+    pass  # TODO: TriangleBottomPattern
+
+
+class TriangleTopPattern(TrianglePattern):
+    pass  # TODO: TriangleTopPattern
+
+
+class TriangleUpPattern(TrianglePattern):
+    pass  # TODO: TriangleUpPattern
+
+
+class TriangleDownPattern(TrianglePattern):
+    pass  # TODO: TriangleDownPattern
+
+
 class TKEPattern(Pattern):
-    pass  # TODO: Most triangles take their first tick (e.g. min) before the 3 ticks on the other side => enhance range
+    pass  # TODO: TKEPattern
+
+
+class PatternHelper:
+    @staticmethod
+    def get_pattern_for_pattern_type(pattern_type: FT, df_start: pd.DataFrame, f_upper: np.poly1d, f_lower: np.poly1d
+                                     , config: PatternConfiguration, tolerance_pct: float):
+        if pattern_type == FT.CHANNEL:
+            return ChannelPattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        elif pattern_type == FT.CHANNEL_DOWN:
+            return ChannelDownPattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        elif pattern_type == FT.CHANNEL_UP:
+            return ChannelUpPattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        elif pattern_type == FT.HEAD_SHOULDER:
+            return HeadShoulderPattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        elif pattern_type == FT.TRIANGLE:
+            return TrianglePattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        elif pattern_type == FT.TRIANGLE_TOP:
+            return TriangleTopPattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        elif pattern_type == FT.TRIANGLE_BOTTOM:
+            return TriangleBottomPattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        elif pattern_type == FT.TRIANGLE_UP:
+            return TriangleUpPattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        elif pattern_type == FT.TRIANGLE_DOWN:
+            return TriangleDownPattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        elif pattern_type == FT.TKE:
+            return TKEPattern(df_start, f_upper, f_lower, config, tolerance_pct)
+        else:
+            raise MyException('No pattern defined for pattern type "{}"'.format(pattern_type))
 
 
 class WaveTick:
@@ -1216,6 +1278,9 @@ class PatternRangeDetector:
         self.__add_pattern_range_to_list_after_check__()
         self._pattern_range = value
 
+    def __set_tick_as_successor__(self, tick_k: WaveTick):
+        self._pattern_range.tick_breakout_successor = tick_k
+
     def __add_pattern_range_to_list_after_check__(self):
         if self.__are_conditions_fulfilled_for_adding_to_pattern_range_list__():
             self.__pattern_range_list.append(self._pattern_range)
@@ -1246,6 +1311,8 @@ class PatternRangeDetector:
                 if self._pattern_range.length == 1:  # start a new one if the values is above/below the old function
                     self._pattern_range.add_tick(tick_k, None)
                 elif self.__is_end_for_single_check_reached__(tick_i, tick_k):
+                    # TODO add tick_k as successor
+                    self.__set_tick_as_successor__(tick_k)
                     self.__init_pattern_range_by_tick__(tick_i)
                     self._pattern_range.add_tick(tick_k, None)
         self.__add_pattern_range_to_list_after_check__()  # for the latest...
@@ -1415,15 +1482,17 @@ class PatternDetector:
         """
         We parse only over the actual known min-max-dataframe
         """
-        for patterns in self.pattern_type_list:
-            self.constraints = ConstraintsHelper.get_constraints_for_pattern_type(patterns)
+        for pattern_type in self.pattern_type_list:
+            self.constraints = ConstraintsHelper.get_constraints_for_pattern_type(pattern_type)
             self.tolerance_pct = self.constraints.tolerance_pct  # type specific tolerance ranges
             self.__fill_possible_pattern_ranges__()
             for range_lists in self.__possible_pattern_ranges:
                 df_check = self.df_min_max.loc[range_lists[0]:range_lists[-1]]
                 is_check_ok, f_upper, f_lower = self.check_tick_range(df_check)
                 if is_check_ok:
-                    self.pattern_list.append(Pattern(df_check, f_upper, f_lower, self.config, self.tolerance_pct))
+                    pattern = PatternHelper.get_pattern_for_pattern_type(
+                        pattern_type, df_check, f_upper, f_lower, self.config, self.tolerance_pct)
+                    self.pattern_list.append(pattern)
 
     def check_tick_range(self, df_check: pd.DataFrame):
         df_min = df_check[df_check[CN.IS_MIN]]
@@ -1437,7 +1506,7 @@ class PatternDetector:
         for f_lower in f_lower_list:
             function_dic = self.__get_function_dic_for_value_categorizer__(df_check, f_upper, f_lower)
             value_categorizer = ChannelValueCategorizer(df_check, self.tolerance_pct, function_dic)
-            value_categorizer.print_data()  # TODO remove value_categorizer.print_data()
+            # value_categorizer.print_data()  # TODO remove value_categorizer.print_data()
             if self.__is_global_constraint_all_in_satisfied__(df_check, value_categorizer):
                 if self.__is_global_constraint_count_satisfied__(value_categorizer):
                     if self.__is_global_constraint_series_satisfied__(df_check, value_categorizer):
@@ -1450,7 +1519,7 @@ class PatternDetector:
     def __get_function_dic_for_value_categorizer__(self, df_check: pd.DataFrame, f_upper: np.poly1d, f_lower: np.poly1d):
         result_dic = {'f_lower': f_lower, 'f_upper': f_upper}
         if self.constraints.pattern_type == FT.TKE:
-            result_dic['h_lower'] = np.poly1d([0, df_check[CN.LOW].min()])
+            result_dic['h_lower'] = f_lower
             result_dic['h_upper'] = np.poly1d([0, f_upper(df_check[CN.LOW].idxmin(axis=0))])
         return result_dic
 
@@ -1461,6 +1530,7 @@ class PatternDetector:
         loop_list = self.__possible_pattern_ranges_top if for_top else self.__possible_pattern_ranges_bottom
         shape_list = []
         for entries in loop_list:
+            # print('Shape: {}'.format(entries))
             pos_list = entries[0]
             value_list = entries[1]
             # predecessor_list = entries[2]
@@ -1505,7 +1575,7 @@ class PatternDetector:
             f_lower = self.__get_parallel_to_upper_by_low__(df_min, f_upper)
             return [] if f_lower is None else [f_lower]
         elif self.constraints.pattern_type == FT.TKE:
-            f_lower = np.poly1d(0, 0)
+            f_lower = np.poly1d([0, df_min[CN.LOW].min()])
             return [f_lower] if self.constraints.are_f_lower_f_upper_compliant(f_lower, f_upper) else []
 
         if df_min.shape[0] < 2:
@@ -2071,10 +2141,10 @@ class PatternController:
 config = PatternConfiguration()
 config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
-config.pattern_type_list = [FT.TKE]
-config.plot_data = True
+config.pattern_type_list = [FT.CHANNEL, FT.TRIANGLE, FT.TKE]
+config.plot_data = False
 config.statistics_excel_file_name = 'statistics_pattern.xlsx'
-config.statistics_excel_file_name = ''
+# config.statistics_excel_file_name = ''
 config.bound_upper_value = CN.CLOSE
 config.bound_lower_value = CN.CLOSE
 config.breakout_over_congestion_range = False
@@ -2082,7 +2152,7 @@ config.breakout_over_congestion_range = False
 config.max_number_securities = 1000
 config.breakout_range_pct = 0.01  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-config.use_own_dic({"KO": "Coca Cola"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+# config.use_own_dic({"KO": "Coca Cola"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike",
 config.and_clause = "Date BETWEEN '2017-10-25' AND '2019-10-30'"
 # config.and_clause = ''
