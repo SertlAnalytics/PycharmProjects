@@ -21,15 +21,13 @@ import matplotlib.dates as dt
 from matplotlib.patches import Circle, Wedge, Polygon, Rectangle, Arrow
 from matplotlib.collections import PatchCollection
 from datetime import datetime, timedelta
-import ftplib
-import tempfile
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.file_fetcher import NasdaqFtpFileFetcher
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
+from sertl_analytics.pybase.date_time import MyPyDate
 import stock_database as sdb
-from sertl_analytics.searches.smart_searches import Queue, Stack
 from sertl_analytics.functions import math_functions
-import math
+from sertl_analytics.pybase.loop_list import LL, LoopList, DictionaryLoopList
 import itertools
 
 """
@@ -53,7 +51,9 @@ class FT:
     NONE = 'NONE'
     TRIANGLE = 'Triangle'
     TRIANGLE_TOP = 'Triangle_Top'
-    TRIANGLE_BOTTOM = 'Triangle_Top'
+    TRIANGLE_BOTTOM = 'Triangle_Bottom'
+    TRIANGLE_UP = 'Triangle_Up'
+    TRIANGLE_DOWN = 'Triangle_Down'
     CHANNEL = 'Channel'  # https://www.investopedia.com/articles/trading/05/020905.asp
     CHANNEL_UP = 'Channel_Up'
     CHANNEL_DOWN = 'Channel_DOWN'
@@ -82,6 +82,16 @@ class FCC:  # Formation Condition Columns
     COMBINED_PARTS_APPLICABLE = 'combined parts are formation applicable'
 
 
+class RuntimeConfiguration:
+    actual_list = []
+    actual_position = 0
+    actual_tick_position = 0
+    actual_number = 0
+    actual_ticker = ''
+    actual_ticker_name = ''
+    actual_and_clause = ''
+
+
 class PatternConfiguration:
     def __init__(self):
         self.get_data_from_db = True
@@ -98,13 +108,7 @@ class PatternConfiguration:
         self.max_number_securities = 1000
         self.show_final_statistics = True
         self.and_clause = "Date BETWEEN '2017-12-01' AND '2019-12-31'"
-        self.actual_list = []
-        self.actual_position = 0
-        self.actual_tick_position = 0
-        self.actual_number = 0
-        self.actual_ticker = ''
-        self.actual_ticker_name = ''
-        self.actual_and_clause = ''
+        self.runtime = RuntimeConfiguration()
         self.statistics_excel_file_name = ''
         self.ticker_dic = {}
 
@@ -180,19 +184,7 @@ class PatternConfiguration:
     def get_all_in_database():
         stock_db = sdb.StockDatabase()
         db_data_frame = DatabaseDataFrame(stock_db, query='SELECT Symbol, count(*) FROM Stocks GROUP BY Symbol HAVING count(*) > 4000')
-        return PyBaseDataFrame.get_rows_as_dictionary(db_data_frame, 'Symbol', ['Symbol'])
-
-
-class FormationDate:
-    @staticmethod
-    def get_date_from_datetime(date_time):
-        if date_time.__class__.__name__ == 'date':  # no change
-            return date_time
-        return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').date()
-
-    @staticmethod
-    def get_date_from_number(num: int):
-        return datetime(1, 1, 1) + timedelta(days=num)
+        return PyBaseDataFrame.get_rows_as_dictionary(db_data_frame.df, 'Symbol', ['Symbol'])
 
 
 class CN:  # Column Names
@@ -231,6 +223,14 @@ class SVC(ValueCategories):  # Stock value categories:
     L_in = 'Low_in'
     L_on = 'Low_on'
     L_out = 'Low_out'
+    H_U_out = 'Helper_Upper_out'
+    H_U_in = 'Helper_Upper_in'
+    H_U_on = 'Helper_Upper_on'
+    H_M_in = 'Helper_Middle_in'
+    H_L_in = 'Helper_Low_in'
+    H_L_on = 'Helper_Low_on'
+    H_L_out = 'Helper_Low_out'
+
     NONE = 'NONE'
 
 
@@ -314,7 +314,7 @@ class TradeResult:
                         self.stop_loss_at, self.stop_loss_reached, self.formation_consistent))
 
 
-class FormationConditionHandler:
+class PatternConditionHandler:
     def __init__(self):
         self.dic = {FCC.BREAKOUT_WITH_BUY_SIGNAL: False,
                     FCC.PREVIOUS_PERIOD_CHECK_OK: False,
@@ -345,7 +345,7 @@ class FormationConditionHandler:
     combined_parts_applicable = property(__get_combined_parts_applicable__, __set_combined_parts_applicable__)
 
 
-class FormationBreakoutApi:
+class PatternBreakoutApi:
     def __init__(self, formation_name: str):
         self.formation_name = formation_name
         self.df = None
@@ -356,8 +356,8 @@ class FormationBreakoutApi:
         self.tolerance_range = 0
 
 
-class FormationBreakout:
-    def __init__(self, api: FormationBreakoutApi, config: PatternConfiguration):
+class PatternBreakout:
+    def __init__(self, api: PatternBreakoutApi, config: PatternConfiguration):
         self.config = config
         self.formation_name = api.formation_name
         self.df = api.df
@@ -410,33 +410,33 @@ class FormationBreakout:
 
 
 class PatternPart:
-    def __init__(self, df: pd.DataFrame, config: PatternConfiguration):
+    def __init__(self, df: pd.DataFrame, config: PatternConfiguration
+                 , f_upper: np.poly1d = None, f_lower: np.poly1d = None):
         self.df = df
         self.config = config
-        self.__max_close = 0
-        self.__id_max_close = None
-        self.__max_high = 0
-        self.__id_max_high = None
-        self.__min_close = 0
-        self.__min_low = 0
-        self.__id_min_low = None
-        self.__bound_upper = self.__max_high  # default
-        self.__bound_lower = self.__min_low  # default
+        self.f_upper = f_upper
+        self.f_lower = f_lower
+        self.__breadth = 0
+        self.__xy = None
         if self.df.shape[0] > 0:
             self.__calculate_values__()
+            self.__set_xy_parameter__()
 
     def __calculate_values__(self):
-        self.first_tick = self.df.iloc[0]
-        self.__max_close = self.df[CN.CLOSE].max()
-        self.__id_max_close = self.df[CN.CLOSE].idxmax(axis=0)
-        self.__max_high = self.df[CN.HIGH].max()
-        self.__id_max_high = self.df[CN.HIGH].idxmax(axis=0)
-        self.__min_close = self.df[CN.CLOSE].min()
-        self.__min_low = self.df[CN.LOW].min()
-        self.__id_min_low = self.df[CN.LOW].idxmin(axis=0)
-        self.__bound_upper = self.__max_high  # default
-        self.__bound_lower = self.__min_low  # default
-        self.__use_configuration_boundary_columns__()
+        self.tick_first = WaveTick(self.df.iloc[0])
+        self.tick_last = WaveTick(self.df.iloc[-1])
+        self.tick_high = WaveTick(self.df.loc[self.df[CN.HIGH].idxmax(axis=0)])
+        self.tick_low = WaveTick(self.df.loc[self.df[CN.LOW].idxmin(axis=0)])
+
+    def __set_xy_parameter__(self):
+        x = [self.tick_first.date_num, self.tick_first.date_num, self.tick_last.date_num, self.tick_last.date_num]
+        x_pos = [self.tick_first.position, self.tick_first.position, self.tick_last.position, self.tick_last.position]
+        y = [self.f_upper(x_pos[0]), self.f_lower(x_pos[1]), self.f_lower(x_pos[2]), self.f_upper(x_pos[3])]
+        self.__xy = list(zip(x, y))
+
+    @property
+    def xy(self):
+        return self.__xy
 
     @property
     def movement(self):
@@ -444,59 +444,23 @@ class PatternPart:
 
     @property
     def date_first(self):
-        return self.df.first_valid_index()
+        return self.tick_first.date
+
+    @property
+    def date_first_str(self):
+        return self.tick_first.date_str
 
     @property
     def date_last(self):
-        return self.df.last_valid_index()
+        return self.tick_last.date
+
+    @property
+    def date_last_str(self):
+        return self.tick_last.date_str
 
     @property
     def ticks(self):
         return self.df.shape[0]
-
-    @property
-    def bound_upper(self):
-        return self.__bound_upper
-
-    @property
-    def bound_lower(self):
-        return self.__bound_lower
-
-    @property
-    def max_close(self):
-        return self.__max_close
-
-    @property
-    def id_max_close_num(self):
-        return dt.date2num(self.__id_max_close)
-
-    @property
-    def max_high(self):
-        return self.__max_high
-
-    @property
-    def id_max_high(self):
-        return self.__id_max_high
-
-    @property
-    def id_max_high_num(self):
-        return dt.date2num(self.__id_max_high)
-
-    @property
-    def min_close(self):
-        return self.__min_close
-
-    @property
-    def min_low(self):
-        return self.__min_low
-
-    @property
-    def id_min_low(self):
-        return self.__id_min_low
-
-    @property
-    def id_min_low_num(self):
-        return dt.date2num(self.__id_min_low)
 
     @property
     def mean(self):
@@ -506,38 +470,40 @@ class PatternPart:
     def std(self):  # we need the standard deviation from the mean_HL for Low and High
         return ((self.df[CN.HIGH]-self.mean).std() + (self.df[CN.LOW]-self.mean).std())/2
 
+    def get_slope_values(self):
+        f_upper_slope = round(self.f_upper[1], 4)
+        f_lower_slope = round(self.f_lower[1], 4)
+        relation_u_l = round(f_upper_slope / f_lower_slope, 4)
+        return f_upper_slope, f_lower_slope, relation_u_l
+
     def plot_annotation(self, ax, for_max: bool = True, color: str = 'blue'):
-        x, y, text = self.__get_annotation_parameters__(for_max)
+        x, y, text = self.__get_annotation_parameters_for_slope__(for_max)
         offset_x = 0
-        offset_y = (y/10)
+        offset_y = 0
         offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
         arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
         ax.annotate(text, xy=(x, y), xytext=(x + offset[0], y + offset[1]), arrowprops=arrow_props)
 
     def __get_annotation_parameters__(self, for_max: bool):
-        if for_max:
-            x = self.id_max_high_num
-            y = self.max_high
-            date = FormationDate.get_date_from_datetime(self.id_max_high)
-        else:
-            x = self.id_min_low_num
-            y = self.min_low
-            date = FormationDate.get_date_from_datetime(self.id_min_low)
+        tick = self.tick_high if for_max else self.tick_low
+        x = tick.date_num
+        y = tick.high if for_max else tick.low
+        date = MyPyDate.get_date_from_datetime(tick.date)
         return x, y, '{}: {}'.format(date, round(y, 2))
 
+    def __get_annotation_parameters_for_slope__(self, for_max: bool):
+        x = self.tick_first.date_num
+        y = self.tick_first.high if for_max else self.tick_first.low
+        f_upper_slope, f_lower_slope, relation_u_l = self.get_slope_values()
+        return x, y, 'Slopes: U={}, L={}, U/L={}'.format(f_upper_slope, f_lower_slope, relation_u_l)
+
     def get_retracement_pct(self, comp_part):
-        if self.min_low > comp_part.max_high:
+        if self.tick_low.low > comp_part.tick_high.high:
             return 0
-        intersection = abs(comp_part.max_high - self.min_low)
+        intersection = abs(comp_part.tick_high.high - self.tick_low.low)
         return round(intersection/self.movement, 2)
 
-    def __use_configuration_boundary_columns__(self):
-        if self.config.bound_upper_value == CN.CLOSE:
-            self.__bound_upper = self.__max_close
-        if self.config.bound_lower_value == CN.CLOSE:
-            self.__bound_lower = self.__min_close
-
-    def are_values_below_linear_function(self, f_lin, tolerance_pct: float = 0.01, column: CN = CN.HIGH):
+    def are_values_below_linear_function(self, f_lin: np.poly1d, tolerance_pct: float = 0.01, column: CN = CN.HIGH):
         for ind, rows in self.df.iterrows():
             value_function = round(f_lin(rows[CN.DATEASNUM]), 2)
             tolerance_range = value_function * tolerance_pct
@@ -545,46 +511,31 @@ class PatternPart:
                 return False
         return True
 
-    def is_high_close_to_linear_function(self, f_lin, tolerance_pct: float = 0.01):
-        value_function = round(f_lin(self.id_max_high_num), 2)
-        mean = (value_function + self.max_high)/2
-        value = abs(self.max_high - value_function)/mean
+    def is_high_close_to_linear_function(self, f_lin: np.poly1d, tolerance_pct: float = 0.01):
+        value_function = round(f_lin(self.tick_high.high), 2)
+        mean = (value_function + self.tick_high.high)/2
+        value = abs(self.tick_high.high - value_function)/mean
         return value < tolerance_pct
 
-    def is_close_close_to_linear_function(self, f_lin, tolerance_pct: float = 0.01):
-        value_function = round(f_lin(self.id_max_close_num), 2)
-        mean = (value_function + self.max_high)/2
-        value = abs(self.max_close - value_function)/mean
-        return value < tolerance_pct
-
-    def get_cross_date_when_min_reached(self, f_lin):
+    def get_cross_date_when_min_reached(self, f_lin: np.poly1d):
         return self.__get_cross_date__(f_lin, 'min')
 
-    def get_cross_date_when_curve_is_crossed(self, f_lin):
+    def get_cross_date_when_curve_is_crossed(self, f_lin: np.poly1d):
         return self.__get_cross_date__(f_lin, 'curve')
 
     def __get_cross_date__(self, f_lin, cross_type: str):
         for ind, rows in self.df.iterrows():
-            if (cross_type == 'min' and f_lin(rows[CN.DATEASNUM]) < self.min_low) or \
+            if (cross_type == 'min' and f_lin(rows[CN.DATEASNUM]) < self.tick_low.low) or \
                     (cross_type == 'curve' and rows[CN.CLOSE] > f_lin(rows[CN.DATEASNUM])):
                 return rows[CN.DATE]
         return None
 
-    def is_high_first_tick(self):
-        return self.first_tick.High == self.max_high
-
     def is_high_before_low(self):
-        return self.id_max_high_num < self.id_min_low_num
-
-    def add_tick(self, tick_df: pd.DataFrame):
-        self.df = pd.concat([self.df, tick_df])
-
-    def recalculate_values(self):
-        self.__calculate_values__()
+        return self.tick_high.position < self.tick_low.position
 
     def print_data(self, part: str):
-        print('\n{}: min={}, max={}, mean={}, std={} \n{}'.format(part, self.min_low, self.max_high, self.mean, self.std,
-                                                                  self.df.head(self.ticks)))
+        print('\n{}: min={}, max={}, mean={}, std={} \n{}'.format(part, self.tick_low.low, self.tick_high.high
+            , self.mean, self.std, self.df.head(self.ticks)))
 
 
 class CountConstraint:
@@ -621,6 +572,25 @@ class Constraints:
         self.__fill_global_constraints__()
         self.__set_bounds_for_pattern_type__()
 
+    def are_f_lower_f_upper_compliant(self, f_lower: np.poly1d, f_upper: np.poly1d):
+        if self.__is_f_lower_compliant__(f_lower):
+            if self.__is_f_upper_compliant__(f_upper):
+                return self.__is_relation_f_upper_f_lower_compliant__(f_upper, f_lower)
+        return False
+
+    def __is_f_lower_compliant__(self, f_lower: np.poly1d):
+        return self.f_lower_slope_bounds[0] <= f_lower[1] <= self.f_lower_slope_bounds[1]
+
+    def __is_f_upper_compliant__(self, f_upper: np.poly1d):
+        return self.f_upper_slope_bounds[0] <= f_upper[1] <= self.f_upper_slope_bounds[1]
+
+    def __is_relation_f_upper_f_lower_compliant__(self, f_upper: np.poly1d, f_lower: np.poly1d):
+        if len(self.f_upper_lower_slope_bounds) == 0:  # no relation defined for both slopes
+            return True
+        if f_lower[1] == 0:
+            return True
+        return self.f_upper_lower_slope_bounds[0] <= (f_upper[1]/f_lower[1]) <= self.f_upper_lower_slope_bounds[1]
+
     def __set_bounds_for_pattern_type__(self):
         self.f_upper_slope_bounds = [-100.0, 100]
         self.f_lower_slope_bounds = self.f_upper_slope_bounds
@@ -634,6 +604,25 @@ class Constraints:
 
     def __fill_global_constraints__(self):
         pass
+
+    @property
+    def f_upper_slope_bounds_complementary(self):
+        return [-1 * x for x in reversed(self.f_upper_slope_bounds)]
+
+    @property
+    def f_lower_slope_bounds_complementary(self):
+        return [-1 * x for x in reversed(self.f_lower_slope_bounds)]
+
+    @property
+    def f_upper_lower_slope_bounds_complementary(self):
+        if len(self.f_upper_lower_slope_bounds) == 0:
+            return []
+        return [round(1/x, 3) for x in reversed(self.f_upper_lower_slope_bounds)]
+
+    def __set_bounds_by_complementary_constraints__(self, comp_constaints):
+        self.f_upper_slope_bounds = comp_constaints.f_upper_slope_bounds_complementary
+        self.f_lower_slope_bounds = comp_constaints.f_lower_slope_bounds_complementary
+        self.f_upper_lower_slope_bounds = comp_constaints.f_upper_lower_slope_bounds_complementary
 
 
 class ChannelConstraints(Constraints):
@@ -651,17 +640,17 @@ class ChannelConstraints(Constraints):
                           [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.01, 0.01]
+        self.f_upper_slope_bounds = [-0.03, 0.03]
         self.f_lower_slope_bounds = self.f_upper_slope_bounds
-        self.f_upper_lower_slope_bounds = [0.6, 1.4]
+        self.f_upper_lower_slope_bounds = []
 
 
 class ChannelUpConstraints(ChannelConstraints):
     pattern_type = FT.CHANNEL_UP
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [0.02, 2]
-        self.f_lower_slope_bounds = self.f_lower_slope_bounds
+        self.f_upper_slope_bounds = [0.03, 0.9]
+        self.f_lower_slope_bounds = self.f_upper_slope_bounds
         self.f_upper_lower_slope_bounds = [0.8, 1.2]
 
 
@@ -669,9 +658,7 @@ class ChannelDownConstraints(ChannelConstraints):
     pattern_type = FT.CHANNEL_DOWN
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.02, -2]
-        self.f_lower_slope_bounds = self.f_lower_slope_bounds
-        self.f_upper_lower_slope_bounds = [0.8, 1.2]
+        self.__set_bounds_by_complementary_constraints__(ChannelUpConstraints())
 
 
 class HeadShoulderConstraints(Constraints):
@@ -700,9 +687,9 @@ class TriangleConstraints(ChannelConstraints):
     tolerance_pct = 0.01
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.5, -0.3]
-        self.f_lower_slope_bounds = [-1 * x for x in reversed(self.f_upper_slope_bounds)]
-        self.f_upper_lower_slope_bounds = [-100, 100]
+        self.f_upper_slope_bounds = [-0.5, -0.1]
+        self.f_lower_slope_bounds = self.__get_multiplied_list__(self.f_upper_slope_bounds, -1)
+        self.f_upper_lower_slope_bounds = [-10, -0.2]
 
 
 class TriangleTopConstraints(TriangleConstraints):
@@ -710,9 +697,9 @@ class TriangleTopConstraints(TriangleConstraints):
     tolerance_pct = 0.01
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.01, 0.01]
-        self.f_lower_slope_bounds = [-1.0, -0.2]
-        self.f_upper_lower_slope_bounds = [-100, 100]
+        self.f_upper_slope_bounds = [-0.03, 0.03]
+        self.f_lower_slope_bounds = [0.2, 1.0]
+        self.f_upper_lower_slope_bounds = []
 
 
 class TriangleBottomConstraints(TriangleConstraints):
@@ -720,9 +707,25 @@ class TriangleBottomConstraints(TriangleConstraints):
     tolerance_pct = 0.01
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.2, -10.0]
-        self.f_lower_slope_bounds = [-0.2, 0.2]
-        self.f_upper_lower_slope_bounds = [-100, 100]
+        self.__set_bounds_by_complementary_constraints__(TriangleTopConstraints())
+
+
+class TriangleUpConstraints(TriangleConstraints):
+    pattern_type = FT.TRIANGLE_UP
+    tolerance_pct = 0.01
+
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [0.1, 1.0]
+        self.f_lower_slope_bounds = self.f_upper_slope_bounds
+        self.f_upper_lower_slope_bounds = [0.3, 0.65]
+
+
+class TriangleDownConstraints(TriangleConstraints):
+    pattern_type = FT.TRIANGLE_DOWN
+    tolerance_pct = 0.01
+
+    def __set_bounds_for_pattern_type__(self):
+        self.__set_bounds_by_complementary_constraints__(TriangleUpConstraints())
 
 
 class ToleranceCalculator:
@@ -844,27 +847,18 @@ class Pattern:
     ticks_initial = 0
     check_length = 0
 
-    def __init__(self, df_start: pd.DataFrame, f_upper, f_lower, config: PatternConfiguration, tolerance_pct: float):
+    def __init__(self, df_start: pd.DataFrame, f_upper: np.poly1d, f_lower: np.poly1d
+                 , config: PatternConfiguration, tolerance_pct: float):
         self.config = config
-        self.df_start = df_start
-        self.f_upper = f_upper
-        self.f_lower = f_lower
+        self.part_predecessor = None
+        self.part_pattern = PatternPart(df_start, config, f_upper, f_lower)
+        self.part_control = None
         self.tolerance_pct = tolerance_pct
-        self.left_tick = WaveTick(self.df_start.iloc[0])
-        self.right_tick = WaveTick(self.df_start.iloc[-1])
-        self.condition_handler = FormationConditionHandler()
-        self.ticks_initial = self.df_start.shape[0]
-        self.bound_upper = self.__get_upper_bound__()
-        self.bound_lower = self.__get_lower_bound__()
-        self.breadth = self.bound_upper - self.bound_lower
-        self.tolerance_range = self.breadth * self.tolerance_pct
-        self.limit_upper = self.bound_upper + self.tolerance_range
-        self.limit_lower = self.bound_lower - self.tolerance_range
-        self.xy = None
+        self.condition_handler = PatternConditionHandler()
+        self.xy = self.part_pattern.xy
         self.xy_control = None
-        self.control_df = pd.DataFrame   # DataFrame to be checked for expected/real results after breakout
-        self.date_first = self.left_tick.date
-        self.date_last = self.right_tick.date
+        self.date_first = self.part_pattern.date_first
+        self.date_last = self.part_pattern.date_last
         self.breakout = None
         self.trade_result = TradeResult()
 
@@ -876,12 +870,6 @@ class Pattern:
             self.condition_handler.breakout_with_buy_signal = True
             return True
         return False
-
-    def __get_slope_values__(self):
-        f_upper_slope = round(self.f_upper[1], 4)
-        f_lower_slope = round(self.f_lower[1], 4)
-        relation_u_l = round(f_upper_slope/f_lower_slope, 4)
-        return f_upper_slope, f_lower_slope, relation_u_l
 
     @property
     def breakout_direction(self):
@@ -899,13 +887,7 @@ class Pattern:
 
     @property
     def ticks(self):
-        return self.df_start.shape[0]
-
-    def __get_upper_bound__(self):
-        return 0
-
-    def __get_lower_bound__(self):
-        return 0
+        return self.part_pattern.ticks
 
     def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
         return True
@@ -914,36 +896,9 @@ class Pattern:
         self.plot_annotation(ax, True, 'blue')
 
     def plot_annotation(self, ax, for_max: bool = True, color: str = 'blue'):
-        x, y, text = self.__get_annotation_parameters__(for_max)
-        offset_x = 0
-        offset_y = (y / 50)
-        offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
-        arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
-        ax.annotate(text, xy=(x, y), xytext=(x + offset[0], y + offset[1]), arrowprops=arrow_props)
-        print('Annotation: {}'.format(text))
-
-    def __get_annotation_parameters__(self, for_max: bool):
-        if for_max:
-            x = self.left_tick.date_num
-            y = self.left_tick.high
-        else:
-            x = self.left_tick.date_num
-            y = self.left_tick.low
-        f_upper_slope, f_lower_slope, relation_u_l = self.__get_slope_values__()
-        return x, y, 'U_S={} / L_S={}\nU_S/L_S={}'.format(f_upper_slope, f_lower_slope, relation_u_l )
-
-    def set_xy_formation_parameter(self):
-        x_dates = [self.date_first, self.date_first, self.date_last, self.date_last]
-        x = list(dt.date2num(x_dates))
-        x_pos = [self.left_tick.position, self.left_tick.position, self.right_tick.position, self.right_tick.position]
-        y = [self.f_upper(x_pos[0]), self.f_lower(x_pos[1]), self.f_lower(x_pos[2]), self.f_upper(x_pos[3])]
-        self.xy = list(zip(x, y))
-
-    def set_xy_control_parameter(self):
-        pass
+        self.part_pattern.plot_annotation(ax, True)
 
     def get_shape(self):
-        self.set_xy_formation_parameter()
         pol = Polygon(np.array(self.xy), True)
         return pol
 
@@ -955,7 +910,7 @@ class Pattern:
             self.__fill_trade_result__()
 
     def is_control_df_available(self):
-        return self.control_df.__class__.__name__ == 'DataFrame'
+        return self.part_control is not None
 
     def __fill_trade_result__(self):
         self.trade_result.expected_win = round(self.bound_upper - self.bound_lower, 2)
@@ -1019,6 +974,10 @@ class Pattern:
 
 
 class TrianglePattern(Pattern):
+    pass  # TODO: Most triangles take their first tick (e.g. min) before the 3 ticks on the other side => enhance range
+
+
+class TKEPattern(Pattern):
     pass  # TODO: Most triangles take their first tick (e.g. min) before the 3 ticks on the other side => enhance range
 
 
@@ -1283,7 +1242,7 @@ class DataFramePatternFactory(DataFrameFactory):
 
     def __add_columns__(self):
         self.df = self.df.assign(MeanHL=round((self.df.High + self.df.Low) / 2, 2))
-        self.df = self.df.assign(Date=self.df.index.map(FormationDate.get_date_from_datetime))
+        self.df = self.df.assign(Date=self.df.index.map(MyPyDate.get_date_from_datetime))
         self.df = self.df.assign(DateAsNumber=self.df.index.map(dt.date2num))
         self.df[CN.DATEASNUM] = self.df[CN.DATEASNUM].apply(int)
         self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
@@ -1400,6 +1359,10 @@ class PatternDetector:
             return TriangleTopConstraints()
         elif patterns == FT.TRIANGLE_BOTTOM:
             return TriangleBottomConstraints()
+        elif patterns == FT.TRIANGLE_UP:
+            return TriangleUpConstraints()
+        elif patterns == FT.TRIANGLE_DOWN:
+            return TriangleDownConstraints()
         else:
             return Constraints()
 
@@ -1486,7 +1449,7 @@ class PatternDetector:
                 right_tick = WaveTick(df_min.iloc[m])
                 f_lower = math_functions.get_function_parameters(left_tick.position, left_tick.low
                                                                  , right_tick.position, right_tick.low)
-                if self.__is_f_lower_according_to_f_upper_lower_bounds_constraint__(f_upper, f_lower):
+                if self.constraints.are_f_lower_f_upper_compliant(f_lower, f_upper):
                     value_categorizer = ChannelValueCategorizer(df_min, self.tolerance_pct, f_upper, f_lower)
                     if value_categorizer.are_all_values_above_f_lower():
                         parameter_list.append(f_lower)
@@ -1497,26 +1460,9 @@ class PatternDetector:
         value_min = df_min[CN.LOW].min()
         diff = f_upper(pos_of_min) - value_min
         f_lower = np.poly1d([f_upper[1], f_upper[0] - diff])
-        if self.__is_f_lower_according_to_f_upper_lower_bounds_constraint__(f_upper, f_lower):
+        if self.constraints.are_f_lower_f_upper_compliant(f_lower, f_upper):
             return f_lower
         return None
-
-    def __is_f_lower_according_to_f_upper_lower_bounds_constraint__(self, f_upper: np.poly1d, f_lower: np.poly1d):
-        f_upper_slope = f_upper[1]  # component of first level = derivative
-        if not self.constraints.f_upper_slope_bounds[0] <= f_upper_slope <= self.constraints.f_upper_slope_bounds[1]:
-            return False
-
-        f_lower_slope = f_lower[1]
-        if not self.constraints.f_lower_slope_bounds[0] <= f_lower_slope <= self.constraints.f_lower_slope_bounds[1]:
-            return False
-
-        if f_lower_slope == 0:
-            return True  # TODO handle f_lower_slope == 0, i.e. parallel to x-axis...
-        relation_u_l = round(f_upper_slope/f_lower_slope, 4)
-
-        # print('f_upper = {}, f_lower = {}, relation_u_l = {}'.format(f_upper, f_lower, relation_u_l))
-
-        return self.constraints.f_upper_lower_slope_bounds[0] <= relation_u_l <= self.constraints.f_upper_lower_slope_bounds[1]
 
     def __is_global_constraint_all_in_satisfied__(self, df_check: pd.DataFrame, value_categorizer):
         if len(self.constraints.global_all_in) == 0:
@@ -1624,8 +1570,8 @@ class PatternPlotter:
                 fig, axes = plt.subplots(figsize=(15, 7))
                 self.__plot_candlesticks__(axes)
 
-        plt.title('{}. {} ({}) for {}'.format(self.config.actual_number, self.config.actual_ticker
-                                              , self.config.actual_ticker_name, self.config.actual_and_clause))
+        plt.title('{}. {} ({}) for {}'.format(self.config.runtime.actual_number, self.config.runtime.actual_ticker
+                            , self.config.runtime.actual_ticker_name, self.config.runtime.actual_and_clause))
         plt.tight_layout()
         plt.xticks(rotation=45)
         plt.show()
@@ -1719,14 +1665,16 @@ class FSC:  # Formation Statistics Columns
     STATUS = 'Status'
     TICKER = 'Ticker'
     NAME = 'Name'
-    FORMATION = 'Formation'
+    PATTERN = 'Pattern'
     BEGIN_PREVIOUS = 'Begin previous period'
     BEGIN = 'Begin'
     END = 'End'
     LOWER = 'Lower'
     UPPER = 'Upper'
-    T_ORIG = 'Ticks original'
-    T_FINAL = 'Ticks final'
+    SLOPE_UPPER = 'Slope_upper'
+    SLOPE_LOWER = 'Slope_lower'
+    SLOPE_RELATION = 'Slope_relation'
+    TICKS = 'Ticks'
     BREAKOUT_DATE = 'Breakout date'
     BREAKOUT_DIRECTION = 'Breakout direction'
     VOLUME_CHANGE = 'Volume change'
@@ -1757,7 +1705,7 @@ class PatternStatistics:
         self.column_list.append(FSC.TICKER)
         self.column_list.append(FSC.NAME)
         self.column_list.append(FSC.STATUS)
-        self.column_list.append(FSC.FORMATION)
+        self.column_list.append(FSC.PATTERN)
         self.column_list.append(FSC.BEGIN_PREVIOUS)
         self.column_list.append(FSC.BEGIN)
         self.column_list.append(FSC.END)
@@ -1776,8 +1724,10 @@ class PatternStatistics:
 
         self.column_list.append(FSC.LOWER)
         self.column_list.append(FSC.UPPER)
-        self.column_list.append(FSC.T_ORIG)
-        self.column_list.append(FSC.T_FINAL)
+        self.column_list.append(FSC.SLOPE_UPPER)
+        self.column_list.append(FSC.SLOPE_LOWER)
+        self.column_list.append(FSC.SLOPE_RELATION)
+        self.column_list.append(FSC.TICKS)
         self.column_list.append(FSC.BREAKOUT_DATE)
         self.column_list.append(FSC.BREAKOUT_DIRECTION)
         self.column_list.append(FSC.VOLUME_CHANGE)
@@ -1822,19 +1772,20 @@ class PatternStatistics:
         self.dic[FSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = pattern.condition_handler.breakout_with_buy_signal
 
         self.dic[FSC.STATUS] = 'Finished' if pattern.was_breakout_done() else 'Open'
-        self.dic[FSC.NUMBER] = pattern.config.actual_number
-        self.dic[FSC.TICKER] = pattern.config.actual_ticker
-        self.dic[FSC.NAME] = pattern.config.actual_ticker_name
-        self.dic[FSC.FORMATION] = pattern.__class__.__name__
+        self.dic[FSC.NUMBER] = pattern.config.runtime.actual_number
+        self.dic[FSC.TICKER] = pattern.config.runtime.actual_ticker
+        self.dic[FSC.NAME] = pattern.config.runtime.actual_ticker_name
+        self.dic[FSC.PATTERN] = pattern.__class__.__name__
         self.dic[FSC.BEGIN_PREVIOUS] = 'TODO'
-        self.dic[FSC.BEGIN] = FormationDate.get_date_from_datetime(pattern.date_first)
-        self.dic[FSC.END] = FormationDate.get_date_from_datetime(pattern.date_last)
-        self.dic[FSC.LOWER] = round(pattern.bound_lower, 2)
-        self.dic[FSC.UPPER] = round(pattern.bound_upper, 2)
-        self.dic[FSC.T_ORIG] = pattern.ticks_initial
-        self.dic[FSC.T_FINAL] = pattern.ticks
+        self.dic[FSC.BEGIN] = MyPyDate.get_date_from_datetime(pattern.date_first)
+        self.dic[FSC.END] = MyPyDate.get_date_from_datetime(pattern.date_last)
+        self.dic[FSC.LOWER] = round(0, 2)
+        self.dic[FSC.UPPER] = round(0, 2)  # TODO Lower & Upper bound for statistics
+        self.dic[FSC.SLOPE_UPPER], self.dic[FSC.SLOPE_LOWER], self.dic[FSC.SLOPE_RELATION] \
+            = pattern.part_pattern.get_slope_values()
+        self.dic[FSC.TICKS] = pattern.part_pattern.ticks
         if pattern.was_breakout_done():
-            self.dic[FSC.BREAKOUT_DATE] = FormationDate.get_date_from_datetime(pattern.breakout.breakout_date)
+            self.dic[FSC.BREAKOUT_DATE] = MyPyDate.get_date_from_datetime(pattern.breakout.breakout_date)
             self.dic[FSC.BREAKOUT_DIRECTION] = pattern.breakout.breakout_direction
             self.dic[FSC.VOLUME_CHANGE] = pattern.breakout.volume_change_pct
             if pattern.is_control_df_available():
@@ -1844,29 +1795,29 @@ class PatternStatistics:
                 self.dic[FSC.EXT] = pattern.trade_result.limit_extended_counter
                 self.dic[FSC.BOUGHT_AT] = round(pattern.trade_result.bought_at, 2)
                 self.dic[FSC.SOLD_AT] = round(pattern.trade_result.sold_at, 2)
-                self.dic[FSC.BOUGHT_ON] = FormationDate.get_date_from_datetime(pattern.trade_result.bought_on)
-                self.dic[FSC.SOLD_ON] = FormationDate.get_date_from_datetime(pattern.trade_result.sold_on)
+                self.dic[FSC.BOUGHT_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.bought_on)
+                self.dic[FSC.SOLD_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.sold_on)
                 self.dic[FSC.T_NEEDED] = pattern.trade_result.actual_ticks
                 self.dic[FSC.LIMIT] = round(pattern.trade_result.limit, 2)
                 self.dic[FSC.STOP_LOSS_AT] = round(pattern.trade_result.stop_loss_at, 2)
                 self.dic[FSC.STOP_LOSS_TRIGGERED] = pattern.trade_result.stop_loss_reached
-
-                self.dic[FSC.RESULT_DF_MAX] = pattern.control_df[CN.CLOSE].max()
-                self.dic[FSC.RESULT_DF_MIN] = pattern.control_df[CN.CLOSE].min()
+                if pattern.part_control is not None:
+                    self.dic[FSC.RESULT_DF_MAX] = pattern.part_control.max
+                    self.dic[FSC.RESULT_DF_MIN] = pattern.part_control.min
                 self.dic[FSC.FIRST_LIMIT_REACHED] = False  # default
                 self.dic[FSC.STOP_LOSS_MAX_REACHED] = False  # default
-                if pattern.breakout_direction == FD.ASC \
-                        and (pattern.bound_upper + pattern.breadth < self.dic[FSC.RESULT_DF_MAX]):
-                    self.dic[FSC.FIRST_LIMIT_REACHED] = True
-                if pattern.breakout_direction == FD.DESC \
-                        and (pattern.bound_lower - pattern.breadth > self.dic[FSC.RESULT_DF_MIN]):
-                    self.dic[FSC.FIRST_LIMIT_REACHED] = True
-                if pattern.breakout_direction == FD.ASC \
-                        and (pattern.bound_lower > self.dic[FSC.RESULT_DF_MIN]):
-                    self.dic[FSC.STOP_LOSS_MAX_REACHED] = True
-                if pattern.breakout_direction == FD.DESC \
-                        and (pattern.bound_upper < self.dic[FSC.RESULT_DF_MAX]):
-                    self.dic[FSC.STOP_LOSS_MAX_REACHED] = True
+                # if pattern.breakout_direction == FD.ASC \
+                #         and (pattern.bound_upper + pattern.breadth < self.dic[FSC.RESULT_DF_MAX]):
+                #     self.dic[FSC.FIRST_LIMIT_REACHED] = True
+                # if pattern.breakout_direction == FD.DESC \
+                #         and (pattern.bound_lower - pattern.breadth > self.dic[FSC.RESULT_DF_MIN]):
+                #     self.dic[FSC.FIRST_LIMIT_REACHED] = True
+                # if pattern.breakout_direction == FD.ASC \
+                #         and (pattern.bound_lower > self.dic[FSC.RESULT_DF_MIN]):
+                #     self.dic[FSC.STOP_LOSS_MAX_REACHED] = True
+                # if pattern.breakout_direction == FD.DESC \
+                #         and (pattern.bound_upper < self.dic[FSC.RESULT_DF_MAX]):
+                #     self.dic[FSC.STOP_LOSS_MAX_REACHED] = True
 
         new_entry = [self.dic[column] for column in self.column_list]
         self.list.append(new_entry)
@@ -1924,7 +1875,7 @@ class DetectorStatistics:
         self.column_list = ['Number', 'Ticker', 'Name', 'Investment', 'Result', 'Change%', 'SL', 'F_OK', 'F_NOK', 'Ticks']
 
     def add_entry(self, config: PatternConfiguration, api: PatternDetectorStatisticsApi):
-        new_entry = [config.actual_number, config.actual_ticker, config.actual_ticker_name
+        new_entry = [config.runtime.actual_number, config.runtime.actual_ticker, config.runtime.actual_ticker_name
             , api.investment_start, api.investment_working, api.diff_pct
             , api.counter_stop_loss, api.counter_formation_OK, api.counter_formation_NOK, api.counter_actual_ticks]
         self.list.append(new_entry)
@@ -1943,43 +1894,16 @@ class DetectorStatistics:
         df.to_excel(excel_writer, sheet)
 
 
-class LL:
-    AND_CLAUSE = 'and_clause'
-    NUMBER = 'Number'
-    TICKER = 'Ticker'
-
-
-class LoopList:
-    def __init__(self):
-        self.counter = 0
-        self.value_list = []
-
-    def append(self, value):
-        self.counter += 1
-        self.index_list.append(self.counter)
-        self.value_list.append(value)
-
-
-class DictionaryLoopList(LoopList):
-    index_list = []
-
-    def append(self, value_dic: dict):
-        self.counter += 1
-        value_dic[LL.NUMBER] = self.counter  # add of number to dictionary
-        self.index_list.append(self.counter)
-        self.value_list.append(value_dic)
-
-
 class PatternController:
     def __init__(self, config: PatternConfiguration):
         self.config = config
         self.detector_statistics = DetectorStatistics()
         self.formation_statistics = PatternStatistics()
-        self.stock_db = stock_database.StockDatabase
+        self.stock_db = None
         self.plotter_input_obj = None
         self.df_data = None
         self.__excel_file_with_test_data = ''
-        self.df_test_data = pd.DataFrame
+        self.df_test_data = None
         self.loop_list_ticker = DictionaryLoopList  # format of an entry (ticker, and_clause, number)
         self.__start_row = 0
         self.__end_row = 0
@@ -1988,11 +1912,10 @@ class PatternController:
         self.__init_db_and_test_data__(excel_file_with_test_data, start_row, end_row)
         self.__init_loop_list_for_ticker__()
 
-        counter = 0
         for value_dic in self.loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
             self.__add_runtime_parameter_to_config__(value_dic)
-            print('\nProcessing {} ({})...\n'.format(ticker, self.config.actual_ticker_name))
+            print('\nProcessing {} ({})...\n'.format(ticker, self.config.runtime.actual_ticker_name))
             if config.get_data_from_db:
                 and_clause = value_dic[LL.AND_CLAUSE]
                 stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.stock_db, ticker, and_clause)
@@ -2014,19 +1937,18 @@ class PatternController:
                 else:
                     plotter = PatternPlotter(self.plotter_input_obj, detector)
                     plotter.plot_data_frame()
-            counter += 1
 
-            if counter >= self.config.max_number_securities:
+            if value_dic[LL.NUMBER] >= self.config.max_number_securities:
                 break
 
         if config.show_final_statistics:
             self.__show_statistics__()
 
     def __add_runtime_parameter_to_config__(self, entry_dic: dict):
-        self.config.actual_ticker = entry_dic[LL.TICKER]
-        self.config.actual_and_clause = entry_dic[LL.AND_CLAUSE]
-        self.config.actual_number = entry_dic[LL.NUMBER]
-        self.config.actual_ticker_name = self.config.ticker_dic[self.config.actual_ticker]
+        self.config.runtime.actual_ticker = entry_dic[LL.TICKER]
+        self.config.runtime.actual_and_clause = entry_dic[LL.AND_CLAUSE]
+        self.config.runtime.actual_number = entry_dic[LL.NUMBER]
+        self.config.runtime.actual_ticker_name = self.config.ticker_dic[self.config.runtime.actual_ticker]
 
     def __show_statistics__(self):
         self.config.print()
@@ -2055,8 +1977,8 @@ class PatternController:
             for ind, rows in self.df_test_data.iterrows():
                 if self.loop_list_ticker.counter >= self.__start_row:
                     self.config.ticker_dic[rows[FSC.TICKER]] = rows[FSC.NAME]
-                    start_date = FormationDate.get_date_from_datetime(rows[FSC.BEGIN_PREVIOUS])
-                    date_end = FormationDate.get_date_from_datetime(rows[FSC.END] + timedelta(days=rows[FSC.T_FINAL] + 20))
+                    start_date = MyPyDate.get_date_from_datetime(rows[FSC.BEGIN_PREVIOUS])
+                    date_end = MyPyDate.get_date_from_datetime(rows[FSC.END] + timedelta(days=rows[FSC.T_FINAL] + 20))
                     and_clause = "Date BETWEEN '{}' AND '{}'".format(start_date, date_end)
                     self.loop_list_ticker.append({LL.TICKER: rows[FSC.TICKER], LL.AND_CLAUSE: and_clause})
                 if self.loop_list_ticker.counter >= self.__end_row:
@@ -2078,9 +2000,9 @@ class PatternController:
 config = PatternConfiguration()
 config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
-config.pattern_type_list = [FT.ALL]
+config.pattern_type_list = [FT.TRIANGLE_DOWN]
 config.plot_data = True
-config.statistics_excel_file_name = 'statistics_head_shoulder_2.xlsx'
+config.statistics_excel_file_name = 'statistics_pattern.xlsx'
 config.statistics_excel_file_name = ''
 config.bound_upper_value = CN.CLOSE
 config.bound_lower_value = CN.CLOSE
@@ -2089,7 +2011,7 @@ config.breakout_over_congestion_range = False
 config.max_number_securities = 1000
 config.breakout_range_pct = 0.01  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-# config.use_own_dic({"KO": "3M"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+# config.use_own_dic({"AXP": "3M"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike",
 config.and_clause = "Date BETWEEN '2017-10-25' AND '2019-10-30'"
 # config.and_clause = ''
