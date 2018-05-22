@@ -607,7 +607,7 @@ class CountConstraint:
 
 
 class Constraints:
-    type = 'Constraint'
+    pattern_type = FT.ALL
     tolerance_pct = 0.01
 
     def __init__(self):
@@ -619,48 +619,12 @@ class Constraints:
         self.f_upper_lower_slope_bounds = [-5, 5]  # the relationship bounds for the linear functions increase
         # [0.8, 1.2] Channel,
         self.__fill_global_constraints__()
-        self.min_ticks_required = self.__get_min_ticks_required__()
-        self.max_ticks_required = self.__get_max_ticks_required__()
-        self.min_max_ticks_required = self.min_ticks_required + self.max_ticks_required
-        self.__set_bounds_for_(FT.ALL)
+        self.__set_bounds_for_pattern_type__()
 
-    def __set_bounds_for_(self, pattern_type: FT):
-        if pattern_type == FT.CHANNEL:
-            self.f_upper_slope_bounds = [-0.01, 0.01]
-            self.f_lower_slope_bounds = self.f_upper_slope_bounds
-            self.f_upper_lower_slope_bounds = [0.6, 1.4]
-        elif pattern_type == FT.CHANNEL_UP:
-            self.f_upper_slope_bounds = [0.02, 2]
-            self.f_lower_slope_bounds = self.f_lower_slope_bounds
-            self.f_upper_lower_slope_bounds = [0.8, 1.2]
-        elif pattern_type == FT.CHANNEL_DOWN:
-            self.f_upper_slope_bounds = [-0.02, -2]
-            self.f_lower_slope_bounds = self.f_lower_slope_bounds
-            self.f_upper_lower_slope_bounds = [0.8, 1.2]
-        elif pattern_type == FT.TRIANGLE:
-            self.f_upper_slope_bounds = [-1.0, -0.2]
-            self.f_lower_slope_bounds = - self.f_lower_slope_bounds
-            self.f_upper_lower_slope_bounds = [-0.8, -1.2]
-        elif pattern_type == FT.TRIANGLE_TOP:
-            self.f_upper_slope_bounds = [-0.02, 0.02]
-            self.f_lower_slope_bounds = [-1.0, -0.2]
-            self.f_upper_lower_slope_bounds = [-10, 10]
-        elif pattern_type == FT.TRIANGLE_BOTTOM:
-            self.f_upper_slope_bounds = [-1.0, -0.2]
-            self.f_lower_slope_bounds = [-0.02, 0.02]
-            self.f_upper_lower_slope_bounds = [-10, 10]
-        elif pattern_type == FT.HEAD_SHOULDER:
-            self.f_upper_slope_bounds = [-0.01, 0.01]
-            self.f_lower_slope_bounds = []
-            self.f_upper_lower_slope_bounds = []
-        elif pattern_type == FT.ALL:
-            self.f_upper_slope_bounds = [-100.0, 100]
-            self.f_lower_slope_bounds = self.f_upper_slope_bounds
-            self.f_upper_lower_slope_bounds = [-100, 100]
-        else:
-            self.f_upper_slope_bounds = [-100.0, 100]
-            self.f_lower_slope_bounds = self.f_upper_slope_bounds
-            self.f_upper_lower_slope_bounds = [-100, 100]
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [-100.0, 100]
+        self.f_lower_slope_bounds = self.f_upper_slope_bounds
+        self.f_upper_lower_slope_bounds = [-100, 100]
 
     def get_unary_constraints(self, df: pd.DataFrame):
         pass
@@ -668,24 +632,12 @@ class Constraints:
     def get_binary_constraints(self, df: pd.DataFrame):
         pass
 
-    def __get_min_ticks_required__(self):
-        return 2
-
-    def __get_max_ticks_required__(self):
-        return 3
-
     def __fill_global_constraints__(self):
         pass
 
 
 class ChannelConstraints(Constraints):
-    type = FT.CHANNEL
-
-    def __get_max_ticks_required__(self):
-        return 3
-
-    def __get_min_ticks_required__(self):
-        return 2
+    pattern_type = FT.CHANNEL
 
     def __fill_global_constraints__(self):
         """
@@ -698,16 +650,33 @@ class ChannelConstraints(Constraints):
         self.global_series = ['OR', [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
                           [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
 
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [-0.01, 0.01]
+        self.f_lower_slope_bounds = self.f_upper_slope_bounds
+        self.f_upper_lower_slope_bounds = [0.6, 1.4]
+
+
+class ChannelUpConstraints(ChannelConstraints):
+    pattern_type = FT.CHANNEL_UP
+
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [0.02, 2]
+        self.f_lower_slope_bounds = self.f_lower_slope_bounds
+        self.f_upper_lower_slope_bounds = [0.8, 1.2]
+
+
+class ChannelDownConstraints(ChannelConstraints):
+    pattern_type = FT.CHANNEL_DOWN
+
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [-0.02, -2]
+        self.f_lower_slope_bounds = self.f_lower_slope_bounds
+        self.f_upper_lower_slope_bounds = [0.8, 1.2]
+
 
 class HeadShoulderConstraints(Constraints):
-    type = FT.HEAD_SHOULDER
+    pattern_type = FT.HEAD_SHOULDER
     tolerance_pct = 0.01
-
-    def __get_max_ticks_required__(self):
-        return 4
-
-    def __get_min_ticks_required__(self):
-        return 1
 
     def __fill_global_constraints__(self):
         """
@@ -717,7 +686,43 @@ class HeadShoulderConstraints(Constraints):
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
         self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 4), CountConstraint(SVC.L_in, '>=', 1)]
-        self.global_series = ['OR', [SVC.U_on, SVC.M_in, SVC.U_on, SVC.L_on, SVC.U_on, SVC.M_in, SVC.U_on]]
+        self.global_series = ['OR', [SVC.U_on, SVC.M_in, SVC.U_on, SVC.L_on, SVC.U_on, SVC.M_in, SVC.U_on],
+                              [SVC.U_on, SVC.M_in, SVC.U_in, SVC.L_on, SVC.M_in, SVC.M_in, SVC.U_on]]
+
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [-0.01, 0.01]
+        self.f_lower_slope_bounds = self.f_upper_slope_bounds
+        self.f_upper_lower_slope_bounds = [0.8, 1.1]
+
+
+class TriangleConstraints(ChannelConstraints):
+    pattern_type = FT.TRIANGLE
+    tolerance_pct = 0.01
+
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [-0.5, -0.3]
+        self.f_lower_slope_bounds = [-1 * x for x in reversed(self.f_upper_slope_bounds)]
+        self.f_upper_lower_slope_bounds = [-100, 100]
+
+
+class TriangleTopConstraints(TriangleConstraints):
+    pattern_type = FT.TRIANGLE_TOP
+    tolerance_pct = 0.01
+
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [-0.01, 0.01]
+        self.f_lower_slope_bounds = [-1.0, -0.2]
+        self.f_upper_lower_slope_bounds = [-100, 100]
+
+
+class TriangleBottomConstraints(TriangleConstraints):
+    pattern_type = FT.TRIANGLE_BOTTOM
+    tolerance_pct = 0.01
+
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [-0.2, -10.0]
+        self.f_lower_slope_bounds = [-0.2, 0.2]
+        self.f_upper_lower_slope_bounds = [-100, 100]
 
 
 class ToleranceCalculator:
@@ -737,7 +742,7 @@ class ToleranceCalculator:
 
 
 class ValueCategorizer:
-    def __init__(self, df: pd.DataFrame, tolerance_pct: float, f_upper, f_lower = None):
+    def __init__(self, df: pd.DataFrame, tolerance_pct: float, f_upper: np.poly1d, f_lower: np.poly1d = None):
         self.df = df
         self.df_length = self.df.shape[0]
         self.value_category_dic = {}  # list of value categories by position of each entry
@@ -769,15 +774,20 @@ class ValueCategorizer:
                 counter += 1
         return counter
 
+    def print_data(self):
+        print('\nValue categories for u=({}) and l=({}):'.format(self.__f_upper, self.__f_lower), end='\n')
+        for ind, row in self.df.iterrows():
+            tick = WaveTick(row)
+            print('Pos: {}, Date: {}, H/L:{}/{}, Cat={}'.format(
+                tick.position, tick.date_str, tick.high, tick.low, self.value_category_dic[tick.position]))
+
     def __set_f_upper_f_lower_values(self):
         self.df = self.df.assign(F_UPPER=(self.__f_upper(self.df[CN.POSITION])))
         self.df = self.df.assign(F_LOWER=(self.__f_lower(self.df[CN.POSITION])))
 
     def __calculate_value_categories__(self):
-        position = 0
         for ind, row in self.df.iterrows():
-            self.value_category_dic[position] = self.__get_value_categories_for_df_row__(row)
-            position += 1
+            self.value_category_dic[row[CN.POSITION]] = self.__get_value_categories_for_df_row__(row)
 
     def __get_value_categories_for_df_row__(self, row) -> list:
         pass
@@ -910,6 +920,7 @@ class Pattern:
         offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
         arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
         ax.annotate(text, xy=(x, y), xytext=(x + offset[0], y + offset[1]), arrowprops=arrow_props)
+        print('Annotation: {}'.format(text))
 
     def __get_annotation_parameters__(self, for_max: bool):
         if for_max:
@@ -1005,6 +1016,10 @@ class Pattern:
 
     def get_buying_price(self):  # the breakout will be bought after the confirmation (close!!!)
         return self.breakout.df.iloc[0].Close
+
+
+class TrianglePattern(Pattern):
+    pass  # TODO: Most triangles take their first tick (e.g. min) before the 3 ticks on the other side => enhance range
 
 
 class WaveTick:
@@ -1373,20 +1388,33 @@ class PatternDetector:
     def __get_channel_constraints__(patterns):
         if patterns == FT.CHANNEL:
             return ChannelConstraints()
+        elif patterns == FT.CHANNEL_DOWN:
+            return ChannelDownConstraints()
+        elif patterns == FT.CHANNEL_UP:
+            return ChannelUpConstraints()
         elif patterns == FT.HEAD_SHOULDER:
             return HeadShoulderConstraints()
+        elif patterns == FT.TRIANGLE:
+            return TriangleConstraints()
+        elif patterns == FT.TRIANGLE_TOP:
+            return TriangleTopConstraints()
+        elif patterns == FT.TRIANGLE_BOTTOM:
+            return TriangleBottomConstraints()
         else:
             return Constraints()
 
-    def check_tick_range(self, df_check: pd.DataFrame) -> bool:
+    def check_tick_range(self, df_check: pd.DataFrame):
         df_min = df_check[df_check[CN.IS_MIN]]
         df_max = df_check[df_check[CN.IS_MAX]]
+        if df_min.shape[0] == 0 or df_max.shape[0] == 0:
+            return False, None, None
         l_tick = WaveTick(df_max.iloc[0])
         r_tick =  WaveTick(df_max.iloc[-1])
         f_upper = math_functions.get_function_parameters(l_tick.position, l_tick.high, r_tick.position, r_tick.high)
         f_lower_list = self.__get_valid_f_lower_function_parameters__(df_min, f_upper)
         for f_lower in f_lower_list:
             value_categorizer = ChannelValueCategorizer(df_check, self.tolerance_pct, f_upper, f_lower)
+            # value_categorizer.print_data()  # TODO remove value_categorizer.print_data()
             if self.__is_global_constraint_all_in_satisfied__(df_check, value_categorizer):
                 if self.__is_global_constraint_count_satisfied__(value_categorizer):
                     if self.__is_global_constraint_series_satisfied__(df_check, value_categorizer):
@@ -1417,7 +1445,7 @@ class PatternDetector:
     def __fill_possible_pattern_ranges__(self):
         range_detector_max = PatternRangeDetectorMax(self.df_min_max, self.tolerance_pct, 3)
         self.__possible_pattern_ranges_top = range_detector_max.get_list_of_possible_pattern_ranges()
-        range_detector_max.print_list_of_possible_pattern_ranges()
+        # range_detector_max.print_list_of_possible_pattern_ranges()
         range_detector_min = PatternRangeDetectorMin(self.df_min_max, self.tolerance_pct, 3)
         self.__possible_pattern_ranges_bottom = range_detector_min.get_list_of_possible_pattern_ranges()
         # range_detector_min.print_list_of_possible_pattern_ranges()
@@ -1443,13 +1471,14 @@ class PatternDetector:
                         self.__possible_pattern_ranges.append(sorted(list(union_set)))
 
     def __get_valid_f_lower_function_parameters__(self, df_min: pd.DataFrame, f_upper: np.poly1d) -> list:
-        parameter_list = []
-
-        if self.constraints.type == FT.HEAD_SHOULDER:
-            return [self.__get_parallel_to_upper_by_low__(df_min, f_upper)]
+        if self.constraints.pattern_type == FT.HEAD_SHOULDER:
+            f_lower = self.__get_parallel_to_upper_by_low__(df_min, f_upper)
+            return [] if f_lower is None else [f_lower]
 
         if df_min.shape[0] < 2:
-            return parameter_list
+            return []
+
+        parameter_list = []
 
         for i in range(0, df_min.shape[0] - 1):
             for m in range(i + 1, df_min.shape[0]):
@@ -1467,13 +1496,10 @@ class PatternDetector:
         pos_of_min = df_min[CN.LOW].idxmin()
         value_min = df_min[CN.LOW].min()
         diff = f_upper(pos_of_min) - value_min
-        return np.poly1d([f_upper[1], f_upper[0] - diff])
-    # TODO parallel to f_upper through the min of the dataframe
-    # HINT https://docs.scipy.org/doc/numpy-1.14.0/reference/generated/numpy.poly1d.html
-    # Parellel can eventually be constructed through the roots...
-    # poly1d([1, 2, 3], True) returns one that represents (x-1)(x-2)(x-3) = x^3 - 6x^2 + 11x -6
-    # OR https://stackoverflow.com/questions/8230638/parallel-coordinates-plot-in-matplotlib
-    # NICE (interactive): https://plot.ly/python/parallel-coordinates-plot/
+        f_lower = np.poly1d([f_upper[1], f_upper[0] - diff])
+        if self.__is_f_lower_according_to_f_upper_lower_bounds_constraint__(f_upper, f_lower):
+            return f_lower
+        return None
 
     def __is_f_lower_according_to_f_upper_lower_bounds_constraint__(self, f_upper: np.poly1d, f_lower: np.poly1d):
         f_upper_slope = f_upper[1]  # component of first level = derivative
@@ -1524,14 +1550,14 @@ class PatternDetector:
                 return False
         return False if conjunction == 'OR' else True
 
-    def __is_series_constraint_check_done__(self, series: list, df_check, position: int, value_categorizer):
+    def __is_series_constraint_check_done__(self, series: list, df_check: pd.DataFrame, iloc: int, value_categorizer):
         if len(series) == 0:
             return True
-        if position == df_check.shape[0]:
+        if iloc == df_check.shape[0]:
             return False
-        if series[0] in value_categorizer.value_category_dic[position]:
+        if series[0] in value_categorizer.value_category_dic[df_check.iloc[iloc][CN.POSITION]]:
             series = series[1:]
-        return self.__is_series_constraint_check_done__(series, df_check, position + 1, value_categorizer)
+        return self.__is_series_constraint_check_done__(series, df_check, iloc + 1, value_categorizer)
 
     def print_statistics(self):
         api = self.get_statistics_api()
@@ -1582,6 +1608,7 @@ class PatternPlotter:
 
     def plot_data_frame(self):
         with_close_plot = False
+        with_volume_plot = False
 
         if with_close_plot:
             fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(15, 10), sharex='all')
@@ -1589,9 +1616,13 @@ class PatternPlotter:
             self.__plot_candlesticks__(axes[1])
             self.__plot_volume__(axes[2])
         else:
-            fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(15, 7), sharex='all')
-            self.__plot_candlesticks__(axes[0])
-            self.__plot_volume__(axes[1])
+            if with_volume_plot:
+                fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(15, 7), sharex='all')
+                self.__plot_candlesticks__(axes[0])
+                self.__plot_volume__(axes[1])
+            else:
+                fig, axes = plt.subplots(figsize=(15, 7))
+                self.__plot_candlesticks__(axes)
 
         plt.title('{}. {} ({}) for {}'.format(self.config.actual_number, self.config.actual_ticker
                                               , self.config.actual_ticker_name, self.config.actual_and_clause))
@@ -1782,7 +1813,7 @@ class PatternStatistics:
         self.dic[FSC.C_BOUND_LOWER_VALUE] = pattern.config.bound_lower_value
         self.dic[FSC.C_CHECK_PREVIOUS_PERIOD] = pattern.config.check_previous_period
         self.dic[FSC.C_BREAKOUT_OVER_CONGESTION] = pattern.config.breakout_over_congestion_range
-        self.dic[FSC.C_TOLERANCE_PCT] = pattern.f
+        self.dic[FSC.C_TOLERANCE_PCT] = pattern.tolerance_pct
         self.dic[FSC.C_BREAKOUT_RANGE_PCT] = pattern.config.breakout_range_pct
         self.dic[FSC.C_AND_CLAUSE] = pattern.config.and_clause
 
@@ -1912,6 +1943,33 @@ class DetectorStatistics:
         df.to_excel(excel_writer, sheet)
 
 
+class LL:
+    AND_CLAUSE = 'and_clause'
+    NUMBER = 'Number'
+    TICKER = 'Ticker'
+
+
+class LoopList:
+    def __init__(self):
+        self.counter = 0
+        self.value_list = []
+
+    def append(self, value):
+        self.counter += 1
+        self.index_list.append(self.counter)
+        self.value_list.append(value)
+
+
+class DictionaryLoopList(LoopList):
+    index_list = []
+
+    def append(self, value_dic: dict):
+        self.counter += 1
+        value_dic[LL.NUMBER] = self.counter  # add of number to dictionary
+        self.index_list.append(self.counter)
+        self.value_list.append(value_dic)
+
+
 class PatternController:
     def __init__(self, config: PatternConfiguration):
         self.config = config
@@ -1922,24 +1980,21 @@ class PatternController:
         self.df_data = None
         self.__excel_file_with_test_data = ''
         self.df_test_data = pd.DataFrame
-        self.loop_list = []  # format of an entry (ticker, and_clause)
+        self.loop_list_ticker = DictionaryLoopList  # format of an entry (ticker, and_clause, number)
         self.__start_row = 0
         self.__end_row = 0
 
     def run_pattern_checker(self, excel_file_with_test_data: str = '', start_row: int = 1, end_row: int = 0):
         self.__init_db_and_test_data__(excel_file_with_test_data, start_row, end_row)
-        self.__init_loop_list__()
+        self.__init_loop_list_for_ticker__()
 
         counter = 0
-        for entries in self.loop_list:
-            ticker = entries[0]
-            and_clause = entries[1]
-            self.config.actual_number = entries[2]
-            self.config.actual_ticker = ticker
-            self.config.actual_ticker_name = self.config.ticker_dic[ticker]
-            self.config.actual_and_clause = and_clause
+        for value_dic in self.loop_list_ticker.value_list:
+            ticker = value_dic[LL.TICKER]
+            self.__add_runtime_parameter_to_config__(value_dic)
             print('\nProcessing {} ({})...\n'.format(ticker, self.config.actual_ticker_name))
             if config.get_data_from_db:
+                and_clause = value_dic[LL.AND_CLAUSE]
                 stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.stock_db, ticker, and_clause)
                 self.plotter_input_obj = stock_db_df_obj
                 self.df_data = stock_db_df_obj.df_data
@@ -1954,28 +2009,36 @@ class PatternController:
             self.__handle_statistics__(detector)
 
             if self.config.plot_data:
-                if len(detector.pattern_list) == 0 and not detector.possible_pattern_ranges_available:
+                if len(detector.pattern_list) == 0: # and not detector.possible_pattern_ranges_available:
                     print('...no formations found.')
                 else:
                     plotter = PatternPlotter(self.plotter_input_obj, detector)
                     plotter.plot_data_frame()
-
             counter += 1
 
             if counter >= self.config.max_number_securities:
                 break
 
         if config.show_final_statistics:
-            self.config.print()
-            if self.config.statistics_excel_file_name == '':
-                self.formation_statistics.print_overview()
-                self.detector_statistics.print_overview()
-            else:
-                writer = pd.ExcelWriter(self.config.statistics_excel_file_name)
-                self.formation_statistics.write_to_excel(writer, 'Formations')
-                self.detector_statistics.write_to_excel(writer, 'Overview')
-                print('Statistics were written to file: {}'.format(self.config.statistics_excel_file_name))
-                writer.save()
+            self.__show_statistics__()
+
+    def __add_runtime_parameter_to_config__(self, entry_dic: dict):
+        self.config.actual_ticker = entry_dic[LL.TICKER]
+        self.config.actual_and_clause = entry_dic[LL.AND_CLAUSE]
+        self.config.actual_number = entry_dic[LL.NUMBER]
+        self.config.actual_ticker_name = self.config.ticker_dic[self.config.actual_ticker]
+
+    def __show_statistics__(self):
+        self.config.print()
+        if self.config.statistics_excel_file_name == '':
+            self.formation_statistics.print_overview()
+            self.detector_statistics.print_overview()
+        else:
+            writer = pd.ExcelWriter(self.config.statistics_excel_file_name)
+            self.formation_statistics.write_to_excel(writer, 'Formations')
+            self.detector_statistics.write_to_excel(writer, 'Overview')
+            print('Statistics were written to file: {}'.format(self.config.statistics_excel_file_name))
+            writer.save()
 
     def __init_db_and_test_data__(self, excel_file_with_test_data: str, start_row: int, end_row: int):
         if self.config.get_data_from_db:
@@ -1986,24 +2049,21 @@ class PatternController:
                 self.__start_row = start_row
                 self.__end_row = self.df_test_data.shape[0] if end_row == 0 else end_row
 
-    def __init_loop_list__(self):
+    def __init_loop_list_for_ticker__(self):
+        self.loop_list_ticker = DictionaryLoopList()
         if self.config.get_data_from_db and self.__excel_file_with_test_data != '':
-            counter = 0
             for ind, rows in self.df_test_data.iterrows():
-                counter += 1
-                if counter >= self.__start_row:
+                if self.loop_list_ticker.counter >= self.__start_row:
                     self.config.ticker_dic[rows[FSC.TICKER]] = rows[FSC.NAME]
                     start_date = FormationDate.get_date_from_datetime(rows[FSC.BEGIN_PREVIOUS])
                     date_end = FormationDate.get_date_from_datetime(rows[FSC.END] + timedelta(days=rows[FSC.T_FINAL] + 20))
                     and_clause = "Date BETWEEN '{}' AND '{}'".format(start_date, date_end)
-                    self.loop_list.append([rows[FSC.TICKER], and_clause, counter])
-                if counter >= self.__end_row:
+                    self.loop_list_ticker.append({LL.TICKER: rows[FSC.TICKER], LL.AND_CLAUSE: and_clause})
+                if self.loop_list_ticker.counter >= self.__end_row:
                     break
         else:
-            counter = 0
             for ticker in self.config.ticker_dic:
-                counter += 1
-                self.loop_list.append([ticker, self.config.and_clause, counter])
+                self.loop_list_ticker.append({LL.TICKER: ticker, LL.AND_CLAUSE: self.config.and_clause})
 
     def __handle_statistics__(self, detector: PatternDetector):
         for pattern in detector.pattern_list:
@@ -2018,9 +2078,9 @@ class PatternController:
 config = PatternConfiguration()
 config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
-config.pattern_type_list = [FT.HEAD_SHOULDER]
+config.pattern_type_list = [FT.ALL]
 config.plot_data = True
-config.statistics_excel_file_name = 'statistics_channel.xlsx'
+config.statistics_excel_file_name = 'statistics_head_shoulder_2.xlsx'
 config.statistics_excel_file_name = ''
 config.bound_upper_value = CN.CLOSE
 config.bound_lower_value = CN.CLOSE
@@ -2029,13 +2089,14 @@ config.breakout_over_congestion_range = False
 config.max_number_securities = 1000
 config.breakout_range_pct = 0.01  # default is 0.01
 config.use_index(Indices.DOW_JONES)
-config.use_own_dic({"GE": "GE"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE"
-# "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW"
-config.and_clause = "Date BETWEEN '2018-01-25' AND '2019-10-30'"
+# config.use_own_dic({"KO": "3M"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+# "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike",
+config.and_clause = "Date BETWEEN '2017-10-25' AND '2019-10-30'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 
 pattern_controller = PatternController(config)
 pattern_controller.run_pattern_checker('')
 
-# Head Shoulder: GE Date BETWEEN '2017-03-25' AND '2019-10-30'
+# Head Shoulder: GE Date BETWEEN '2017-01-25' AND '2019-10-30'
+# Triangle: Processing KO (Coca Cola)...Date BETWEEN '2017-10-25' AND '2019-10-30'

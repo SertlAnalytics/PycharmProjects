@@ -153,7 +153,7 @@ def get_nasdaq_dic():
             dic[rows['Symbol']] = rows['Security Name']
     return dic
 
-dic_own = {'ONVO': 'Organovo', 'FCEL':'Fuelcell', 'MRAM':'MRAM'}
+dic_own = {"MMM": "3M", 'ONVO': 'Organovo', 'FCEL':'Fuelcell', 'MRAM':'MRAM'}
 
 if __name__ == '__main__':
     # fetcher.df, fetcher.df_data, fetcher.column_data,
@@ -163,9 +163,9 @@ if __name__ == '__main__':
     #     print('\nProcessing {} - {}'.format(ticker, dow_jones_dic_orig[ticker]))
     #     stock_db.import_stock_data(ticker, ApiPeriod.DAILY, ApiOutputsize.FULL)
     dic = dic_own
-    dic = get_nasdaq_dic()
-    dic = {"BMWYY": "OVID"}
-    # dic = dow_jones_dic
+    # dic = get_nasdaq_dic()
+    dic = {"CAT": "OVID"}
+    dic = dow_jones_dic_orig
     for symbol in dic:
         if symbol[0] > 'D' or True:  # in ['P', 'T'] or True:
             print('Loading: {}'.format(symbol))
