@@ -17,20 +17,11 @@
       <file leaf-file-name="pattern_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="569">
-              <caret line="1491" column="31" lean-forward="true" selection-start-line="1491" selection-start-column="31" selection-end-line="1491" selection-end-column="31" />
+            <state relative-caret-position="263">
+              <caret line="820" column="85" selection-start-line="820" selection-start-column="85" selection-end-line="820" selection-end-column="85" />
               <folding>
                 <element signature="e#465#484#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="stock_formation_checker.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/stock_formation_checker.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17782">
-              <caret line="1062" column="39" selection-start-line="1062" selection-start-column="39" selection-end-line="1062" selection-end-column="39" />
             </state>
           </provider>
         </entry>
@@ -49,6 +40,8 @@
       <find>__possible_pattern_ranges_top</find>
       <find>H_M_in</find>
       <find>print</find>
+      <find>TKEPattern</find>
+      <find>TKE</find>
     </findStrings>
     <replaceStrings>
       <replace>MyPyDate</replace>
@@ -79,7 +72,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -91,6 +83,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -221,14 +214,14 @@
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4816294" visible="true" weight="0.2571656" />
-      <window_info anchor="bottom" id="TODO" order="6" weight="0.32827476" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4803805" visible="true" weight="0.2571656" />
+      <window_info active="true" anchor="bottom" id="TODO" order="6" visible="true" weight="0.32827476" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32827476" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.40335464" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.3298722" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.3298722" />
-      <window_info id="Structure" order="1" sideWeight="0.5183706" side_tool="true" visible="true" weight="0.2571656" />
+      <window_info id="Structure" order="1" sideWeight="0.5196195" side_tool="true" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.3985623" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -245,19 +238,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pattern_detection.py</url>
-          <line>1540</line>
-          <option name="timeStamp" value="43" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pattern_detection.py</url>
-          <line>1310</line>
-          <option name="timeStamp" value="45" />
-        </line-breakpoint>
-      </breakpoints>
-      <option name="time" value="46" />
+      <option name="time" value="50" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -280,6 +261,23 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="25347">
+          <caret line="1491" column="31" lean-forward="true" selection-start-line="1491" selection-start-column="31" selection-end-line="1491" selection-end-column="31" />
+          <folding>
+            <element signature="e#465#484#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/stock_formation_checker.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18054">
+          <caret line="1062" column="39" selection-start-line="1062" selection-start-column="39" selection-end-line="1062" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="21658">
@@ -514,15 +512,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/stock_formation_checker.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17782">
+        <state relative-caret-position="17">
           <caret line="1062" column="39" selection-start-line="1062" selection-start-column="39" selection-end-line="1062" selection-end-column="39" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="569">
-          <caret line="1491" column="31" lean-forward="true" selection-start-line="1491" selection-start-column="31" selection-end-line="1491" selection-end-column="31" />
+        <state relative-caret-position="263">
+          <caret line="820" column="85" selection-start-line="820" selection-start-column="85" selection-end-line="820" selection-end-column="85" />
           <folding>
             <element signature="e#465#484#0" expanded="true" />
           </folding>
