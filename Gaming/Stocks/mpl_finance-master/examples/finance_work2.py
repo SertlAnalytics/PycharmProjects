@@ -180,7 +180,7 @@ ax3.text(0.025, 0.95, 'MACD (%d, %d, %d)' % (nfast, nslow, nema), va='top',
 for ax in ax1, ax2, ax2t, ax3:
     if ax != ax3:
         for label in ax.get_xticklabels():
-            label.set_visible(False)
+            label.__set_visible__(False)
     else:
         for label in ax.get_xticklabels():
             label.set_rotation(30)

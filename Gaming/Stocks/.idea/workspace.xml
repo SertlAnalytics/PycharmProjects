@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/plt_pick_circle.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mpl_finance-master/examples/finance_work2.py" beforeDir="false" afterPath="$PROJECT_DIR$/mpl_finance-master/examples/finance_work2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_detection.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_detection.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/statistics_pattern.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/statistics_pattern.xlsx" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -12,13 +15,18 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileColors">
+    <fileColor scope="Changed Files" color="Orange" />
+    <fileColor scope="Problems" color="Violet" />
+    <fileColor scope="Project Files" color="Blue" />
+  </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="pattern_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="263">
-              <caret line="820" column="85" selection-start-line="820" selection-start-column="85" selection-end-line="820" selection-end-column="85" />
+            <state relative-caret-position="252">
+              <caret line="1898" column="21" selection-start-line="1898" selection-start-column="21" selection-end-line="1898" selection-end-column="21" />
               <folding>
                 <element signature="e#465#484#0" expanded="true" />
               </folding>
@@ -26,7 +34,23 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="loop_list.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="357">
+              <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
+            </state>
+          </provider>
+        </entry>
+      </file>
     </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -42,6 +66,11 @@
       <find>print</find>
       <find>TKEPattern</find>
       <find>TKE</find>
+      <find>get_f_param_shape:</find>
+      <find>Pattern_type:</find>
+      <find>regression</find>
+      <find>Circle</find>
+      <find>f_reg</find>
     </findStrings>
     <replaceStrings>
       <replace>MyPyDate</replace>
@@ -53,10 +82,14 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/stock_formation_checker.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/SQLCreateDatabase.py" />
         <option value="$PROJECT_DIR$/stock_database.py" />
+        <option value="$PROJECT_DIR$/draggable_rectangle.py" />
+        <option value="$PROJECT_DIR$/plt_mouse_over_alert.py" />
+        <option value="$PROJECT_DIR$/stock_formation_checker.py" />
+        <option value="$PROJECT_DIR$/plt_mouse_events.py" />
+        <option value="$PROJECT_DIR$/plt_pick_circle.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py" />
         <option value="$PROJECT_DIR$/pattern_detection.py" />
       </list>
@@ -64,7 +97,7 @@
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="1273" />
-    <option name="width" value="1294" />
+    <option name="width" value="1288" />
     <option name="height" value="1407" />
   </component>
   <component name="ProjectView">
@@ -72,6 +105,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -83,11 +117,10 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="editor.preferences.appearance" />
+    <property name="settings.editor.selected.configurable" value="reference.settings.ide.settings.file-colors" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -102,7 +135,7 @@
     </option>
   </component>
   <component name="RunManager" selected="Python.pattern_detection">
-    <configuration name="SQLCreateDatabase" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="finance_demo" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -110,11 +143,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/mpl_finance-master/examples" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SQLCreateDatabase.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/mpl_finance-master/examples/finance_demo.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -138,7 +171,7 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
-    <configuration name="stock_database" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="plt_mouse_events" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -150,13 +183,13 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/stock_database.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plt_mouse_events.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
-    <configuration name="stock_formation_checker" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="plt_mouse_over_alert" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -168,24 +201,44 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/stock_formation_checker.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plt_mouse_over_alert.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="plt_pick_circle" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Stocks" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/plt_pick_circle.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
     <list>
-      <item itemvalue="Python.stock_formation_checker" />
       <item itemvalue="Python.pattern_detection" />
-      <item itemvalue="Python.stock_database" />
-      <item itemvalue="Python.SQLCreateDatabase" />
+      <item itemvalue="Python.plt_mouse_over_alert" />
+      <item itemvalue="Python.finance_demo" />
+      <item itemvalue="Python.plt_pick_circle" />
+      <item itemvalue="Python.plt_mouse_events" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.pattern_detection" />
-        <item itemvalue="Python.stock_database" />
-        <item itemvalue="Python.SQLCreateDatabase" />
-        <item itemvalue="Python.stock_formation_checker" />
+        <item itemvalue="Python.plt_pick_circle" />
+        <item itemvalue="Python.plt_mouse_events" />
+        <item itemvalue="Python.plt_mouse_over_alert" />
+        <item itemvalue="Python.finance_demo" />
       </list>
     </recent_temporary>
   </component>
@@ -212,19 +265,19 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <frame x="1273" y="0" width="1288" height="1407" extended-state="0" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4803805" visible="true" weight="0.2571656" />
-      <window_info active="true" anchor="bottom" id="TODO" order="6" visible="true" weight="0.32827476" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.7027451" visible="true" weight="0.2584" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32784313" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.32827476" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.40335464" />
-      <window_info anchor="bottom" id="Version Control" order="7" weight="0.3298722" />
-      <window_info anchor="bottom" id="Python Console" order="7" weight="0.3298722" />
-      <window_info id="Structure" order="1" sideWeight="0.5196195" side_tool="true" visible="true" weight="0.2571656" />
-      <window_info anchor="bottom" id="Terminal" order="7" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.3985623" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.3262745" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.3290735" />
+      <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.40235293" />
+      <window_info id="Structure" order="1" sideWeight="0.2972549" side_tool="true" visible="true" weight="0.2584" />
+      <window_info anchor="bottom" id="Terminal" order="7" weight="0.3290735" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39843136" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -238,7 +291,14 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="50" />
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_detection.py</url>
+          <line>1839</line>
+          <option name="timeStamp" value="72" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="73" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -263,11 +323,66 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="25347">
-          <caret line="1491" column="31" lean-forward="true" selection-start-line="1491" selection-start-column="31" selection-end-line="1491" selection-end-column="31" />
+        <state relative-caret-position="30362">
+          <caret line="1786" column="41" lean-forward="true" selection-start-line="1786" selection-start-column="41" selection-end-line="1786" selection-end-column="41" />
           <folding>
             <element signature="e#465#484#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plt_pick_circle.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="22" column="42" lean-forward="true" selection-start-line="22" selection-start-column="42" selection-end-line="22" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="38318">
+          <caret line="2254" column="45" selection-start-line="2254" selection-start-column="45" selection-end-line="2254" selection-end-column="45" />
+          <folding>
+            <element signature="e#465#484#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="38318">
+          <caret line="2254" column="45" lean-forward="true" selection-start-line="2254" selection-start-column="45" selection-end-line="2254" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30481">
+          <caret line="1793" selection-start-line="1793" selection-end-line="1793" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30617">
+          <caret line="1801" column="23" lean-forward="true" selection-start-line="1801" selection-start-column="23" selection-end-line="1801" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="13940">
+          <caret line="820" column="85" selection-start-line="820" selection-start-column="85" selection-end-line="820" selection-end-column="85" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="25347">
+          <caret line="1491" column="31" lean-forward="true" selection-start-line="1491" selection-start-column="31" selection-end-line="1491" selection-end-column="31" />
         </state>
       </provider>
     </entry>
@@ -282,9 +397,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="21658">
           <caret line="1274" column="48" lean-forward="true" selection-start-line="1274" selection-start-column="48" selection-end-line="1274" selection-end-column="48" />
-          <folding>
-            <element signature="e#465#484#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -299,9 +411,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="24531">
           <caret line="1443" column="27" lean-forward="true" selection-start-line="1443" selection-start-column="27" selection-end-line="1443" selection-end-column="27" />
-          <folding>
-            <element signature="e#465#484#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -309,9 +418,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="27608">
           <caret line="1624" column="42" lean-forward="true" selection-start-line="1624" selection-start-column="42" selection-end-line="1624" selection-end-column="42" />
-          <folding>
-            <element signature="e#465#484#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -495,7 +601,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py" />
     <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/df_base.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
@@ -510,17 +615,59 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/plt_draggable_rectangle.py" />
+    <entry file="file://$PROJECT_DIR$/mpl_finance-master/examples/finance_demo.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plt_mouse_over_alert.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="22" column="41" lean-forward="true" selection-start-line="22" selection-start-column="41" selection-end-line="22" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/stock_formation_checker.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1062" column="39" selection-start-line="1062" selection-start-column="39" selection-end-line="1062" selection-end-column="39" />
+        <state relative-caret-position="136">
+          <caret line="1794" column="31" selection-start-line="1794" selection-start-column="31" selection-end-line="1794" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plt_mouse_events.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="167">
+          <caret line="24" column="23" lean-forward="true" selection-start-line="24" selection-start-column="4" selection-end-line="24" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plt_pick_circle.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="558">
+          <caret line="65" column="46" lean-forward="true" selection-start-line="65" selection-start-column="4" selection-end-line="65" selection-end-column="46" />
+          <folding>
+            <element signature="e#0#24#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/matplotlib/collections.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-17">
+          <caret line="121" selection-start-line="121" selection-end-line="121" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="263">
-          <caret line="820" column="85" selection-start-line="820" selection-start-column="85" selection-end-line="820" selection-end-column="85" />
+        <state relative-caret-position="252">
+          <caret line="1898" column="21" selection-start-line="1898" selection-start-column="21" selection-end-line="1898" selection-end-column="21" />
           <folding>
             <element signature="e#465#484#0" expanded="true" />
           </folding>

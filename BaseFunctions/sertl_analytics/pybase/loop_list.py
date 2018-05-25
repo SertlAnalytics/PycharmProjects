@@ -16,8 +16,9 @@ class LL:
 
 
 class LoopList:
-    counter = 0
-    value_list = []
+    def __init__(self):
+        self.counter = 0
+        self.value_list = []
 
     def append(self, value):
         self.counter += 1
