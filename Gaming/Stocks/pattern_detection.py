@@ -340,8 +340,8 @@ class PatternBreakoutApi:
         self.pattern_type = pattern_type
         self.tick_previous = None
         self.tick_breakout = None
-        self.bound_upper = 0
-        self.bound_lower = 0
+        self.f_upper = None
+        self.f_lower = None
         self.pattern_breadth = 0
         self.tolerance_range = 0
 
@@ -356,8 +356,10 @@ class PatternBreakout:
         self.volume_change_pct = round(self.tick_breakout.volume/self.tick_previous.volume, 2)
         self.tolerance_range = api.tolerance_range
         self.pattern_breadth = api.pattern_breadth
-        self.bound_upper = api.bound_upper
-        self.bound_lower = api.bound_lower
+        self.f_upper = api.f_upper
+        self.f_lower = api.f_lower
+        self.bound_upper = self.f_upper(self.tick_breakout.position)
+        self.bound_lower = self.f_lower(self.tick_breakout.position)
         self.limit_upper = self.bound_upper + self.tolerance_range
         self.limit_lower = self.bound_lower - self.tolerance_range
         self.breakout_direction = self.__get_breakout_direction__()
@@ -519,12 +521,11 @@ class PatternPart:
         relation_u_l = math.inf if f_lower_slope == 0 else round(f_upper_slope / f_lower_slope, 4)
         return f_upper_slope, f_lower_slope, relation_u_l
 
-    def __get_f_regression__(self) -> np.poly1d:
-        np_array = np.polyfit(self.df[CN.POSITION], self.df[CN.CLOSE], 1)
-        return np.poly1d([np_array[0], np_array[1]])
+    def get_f_regression(self) -> np.poly1d:
+        return self.stock_df.get_f_regression()
 
     def __get_text_for_annotation__(self, for_max: bool):
-        f_regression = self.__get_f_regression__()
+        f_regression = self.get_f_regression()
         reg_slope = round(f_regression[1], 3)
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_slope, f_lower_slope, relation_u_l = self.get_slope_values()
@@ -1671,13 +1672,24 @@ class PatternDetector:
         if not pattern.was_breakout_done():
             return None
         df = self.df.loc[pattern.breakout.tick_breakout.position:pattern.breakout.tick_breakout.position + 5]
-        f_upper_neg = self.__get_negative_f_params__(pattern.part_pattern.f_upper)
-        f_lower_neg = self.__get_negative_f_params__(pattern.part_pattern.f_lower)
+        f_upper_neg = self.__get_control_f_params__(pattern.part_pattern.f_upper, pattern, True)
+        f_lower_neg = self.__get_control_f_params__(pattern.part_pattern.f_lower, pattern, False)
         part = PatternPart(df, self.config, f_upper_neg, f_lower_neg)
         pattern.add_part_control(part)
 
-    def __get_negative_f_params__(self, f_params: np.poly1d):
-        return np.poly1d([-f_params[1], f_params[0]])
+    def __get_control_f_params__(self, f_params: np.poly1d, pattern: Pattern, for_upper: bool):
+        # return np.poly1d([-f_params[1], f_params[0]])
+        range = pattern.part_pattern.breadth/2
+        if pattern.breakout.breakout_direction == FD.ASC:
+            const = pattern.part_pattern.bound_upper
+            if for_upper:
+                const += range
+        else:
+            const = pattern.part_pattern.bound_lower
+            if not for_upper:
+                const += - range
+        return np.poly1d([0, const])
+
 
     def __get_df_check_with_added_valid_ticks__(self, df_check: pd.DataFrame, f_upper: np.poly1d, f_lower: np.poly1d):
         last_tick = WaveTick(df_check.iloc[-1])
@@ -1703,8 +1715,8 @@ class PatternDetector:
         breakout_api.tick_previous = tick_previous
         breakout_api.tick_breakout = tick_breakout
         breakout_api.pattern_breadth = pattern.part_pattern.breadth
-        breakout_api.bound_lower = pattern.part_pattern.bound_lower
-        breakout_api.bound_upper = pattern.part_pattern.bound_upper
+        breakout_api.f_lower = pattern.part_pattern.f_lower
+        breakout_api.f_upper = pattern.part_pattern.f_upper
         breakout_api.tolerance_range = breakout_api.pattern_breadth * pattern.constraints.tolerance_pct
         return PatternBreakout(breakout_api, self.config)
 
@@ -2415,7 +2427,7 @@ class PatternController:
 
 
 config = PatternConfiguration()
-config.get_data_from_db = True
+config.get_data_from_db = False
 config.api_period = ApiPeriod.DAILY
 config.pattern_type_list = FT.get_all()
 config.plot_data = True
@@ -2427,8 +2439,8 @@ config.breakout_over_congestion_range = False
 # config.show_final_statistics = True
 config.max_number_securities = 1000
 config.breakout_range_pct = 0.01  # default is 0.01
-config.use_index(Indices.DOW_JONES)
-config.use_own_dic({"AXP": "American"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+config.use_index(Indices.NASDAQ)
+# config.use_own_dic({"AXP": "American"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", AXP	American
 config.and_clause = "Date BETWEEN '2017-10-25' AND '2019-01-30'"
 # config.and_clause = ''

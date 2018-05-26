@@ -4,7 +4,6 @@
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_detection.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_detection.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stock_formation_checker.py" beforeDir="false" afterPath="$PROJECT_DIR$/stock_formation_checker.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -23,20 +22,8 @@
       <file leaf-file-name="pattern_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="252">
-              <caret line="1675" selection-start-line="1675" selection-end-line="1675" />
-              <folding>
-                <element signature="e#465#484#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="stock_formation_checker.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/stock_formation_checker.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="259">
-              <caret line="1655" column="50" selection-start-line="1655" selection-start-column="33" selection-end-line="1655" selection-end-column="50" />
+            <state relative-caret-position="622">
+              <caret line="2441" column="31" selection-start-line="2441" selection-start-column="31" selection-end-line="2441" selection-end-column="31" />
             </state>
           </provider>
         </entry>
@@ -78,6 +65,9 @@
       <find>breakout</find>
       <find>np.poly1d</find>
       <find>np.poly1d(</find>
+      <find>part_control</find>
+      <find>neg</find>
+      <find>print(</find>
     </findStrings>
     <replaceStrings>
       <replace>MyPyDate</replace>
@@ -105,7 +95,7 @@
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="1273" />
-    <option name="width" value="1288" />
+    <option name="width" value="1294" />
     <option name="height" value="1407" />
   </component>
   <component name="ProjectView">
@@ -273,19 +263,20 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="1273" y="0" width="1288" height="1407" extended-state="0" />
+    <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4054902" visible="true" weight="0.2584" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.40371457" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32784313" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.3254902" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32428116" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.18290734" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.3290735" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.1835294" />
-      <window_info id="Structure" order="1" sideWeight="0.5945098" side_tool="true" visible="true" weight="0.2584" />
+      <window_info id="Structure" order="1" sideWeight="0.59628546" side_tool="true" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3290735" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39696485" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39764705" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -302,16 +293,16 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/pattern_detection.py</url>
-          <line>1875</line>
+          <line>1977</line>
           <option name="timeStamp" value="83" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/pattern_detection.py</url>
-          <line>1675</line>
-          <option name="timeStamp" value="85" />
+          <line>376</line>
+          <option name="timeStamp" value="89" />
         </line-breakpoint>
       </breakpoints>
-      <option name="time" value="86" />
+      <option name="time" value="90" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -659,18 +650,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/stock_formation_checker.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="259">
-          <caret line="1655" column="50" selection-start-line="1655" selection-start-column="33" selection-end-line="1655" selection-end-column="50" />
+        <state relative-caret-position="500">
+          <caret line="1831" lean-forward="true" selection-start-line="1831" selection-end-line="1831" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="1675" selection-start-line="1675" selection-end-line="1675" />
-          <folding>
-            <element signature="e#465#484#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="622">
+          <caret line="2441" column="31" selection-start-line="2441" selection-start-column="31" selection-end-line="2441" selection-end-column="31" />
         </state>
       </provider>
     </entry>
