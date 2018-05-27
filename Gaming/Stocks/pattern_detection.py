@@ -1540,11 +1540,28 @@ class DataFrameFactory:
         self.df = df
         self.df_length = self.df.shape[0]
         self.__add_columns__()
-        self.df.reset_index(drop=True, inplace=True)  # get position index
 
     def __add_columns__(self):
         pass
 
+
+class DataFramePlotterFactory(DataFrameFactory):
+    """
+    This class has two purposes:
+    1. Identify all extrema: global and local maxima and minima which is used as checkpoint for pattern detections.
+    2. Identify ranges which can be used for a thorough inspection in the further process
+    """
+    def __init__(self, df: pd.DataFrame):
+        DataFrameFactory.__init__(self, df)
+        self.__length_for_global = int(self.df_length / 2)
+        self.__length_for_local = 3
+
+    def __add_columns__(self):
+        self.df = self.df.assign(Date=self.df.index.map(MyPyDate.get_date_from_datetime))
+        self.df = self.df.assign(DateAsNumber=self.df.index.map(dt.date2num))
+        self.df[CN.DATEASNUM] = self.df[CN.DATEASNUM].apply(int)
+        self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
+        self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)
 
 class DataFramePatternFactory(DataFrameFactory):
     """
@@ -1566,6 +1583,7 @@ class DataFramePatternFactory(DataFrameFactory):
         self.df[CN.DATEASNUM] = self.df[CN.DATEASNUM].apply(int)
         self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
         self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)
+        self.df.reset_index(drop=True, inplace=True)  # get position index
 
     def __init_columns_for_ticks_distance__(self):
         self.__add_distance_columns__()
@@ -1978,13 +1996,15 @@ class PatternPlotter:
         self.api_object_class = self.api_object.__class__.__name__
         self.detector = detector
         self.config = self.detector.config
-        self.df = api_object.df
+        self.df = DataFramePlotterFactory(api_object.df).df
         self.df_data = api_object.df_data
         self.column_data = api_object.column_data
         self.df_volume = api_object.df_volume
         self.column_volume = api_object.column_volume
         self.symbol = api_object.symbol
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
+        self.axes = None
+        self.tick_by_date_num_dic = self.__get_tick_by_date_num_dic__()
 
     def plot_data_frame(self):
         with_close_plot = False
@@ -2004,6 +2024,7 @@ class PatternPlotter:
                 self.__plot_volume__(axes[1])
             else:
                 fig, axes = plt.subplots(figsize=(15, 7))
+                self.axes = axes
                 self.__plot_candlesticks__(axes)
                 self.__plot_patterns__(axes)
 
@@ -2012,10 +2033,26 @@ class PatternPlotter:
         plt.tight_layout()
         plt.xticks(rotation=45)
         fig.canvas.mpl_connect('button_press_event', self.__on_click__)
+        self.axes.format_coord = self.__on_hover__
         plt.show()
+
+    def __get_tick_by_date_num_dic__(self):
+        dic = {}
+        for ind, rows in self.df.iterrows():
+            tick = WaveTick(rows)
+            dic[tick.date_num] = tick
+        return dic
 
     def __on_click__(self, event):
         self.pattern_plot_container_loop_list.show_only_selected_containers(event)
+
+    def __on_hover__(self, x, y):
+        x_int = int(x + 0.5)
+        if x_int in self.tick_by_date_num_dic:
+            tick = self.tick_by_date_num_dic[x_int]
+            return '{} ({:3.0f}): [{:5.1f}; {:5.1f}]; y={:0.2f}'.format(tick.date_str, tick.position, tick.low, tick.high, y)
+        else:
+            return 'x={:0.0f}, y={:0.2f}'.format(x, y)
 
     def __plot_close__(self, axis):
         plot_01 = self.df_data[[self.column_data]].plot(ax=axis)
@@ -2427,7 +2464,7 @@ class PatternController:
 
 
 config = PatternConfiguration()
-config.get_data_from_db = False
+config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
 config.pattern_type_list = FT.get_all()
 config.plot_data = True
@@ -2439,8 +2476,8 @@ config.breakout_over_congestion_range = False
 # config.show_final_statistics = True
 config.max_number_securities = 1000
 config.breakout_range_pct = 0.01  # default is 0.01
-config.use_index(Indices.NASDAQ)
-# config.use_own_dic({"AXP": "American"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+config.use_index(Indices.MIXED)
+config.use_own_dic({"AXP": "American"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", AXP	American
 config.and_clause = "Date BETWEEN '2017-10-25' AND '2019-01-30'"
 # config.and_clause = ''

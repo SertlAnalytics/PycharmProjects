@@ -22,8 +22,8 @@
       <file leaf-file-name="pattern_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="622">
-              <caret line="2441" column="31" selection-start-line="2441" selection-start-column="31" selection-end-line="2441" selection-end-column="31" />
+            <state relative-caret-position="782">
+              <caret line="2052" column="47" selection-start-line="2052" selection-start-column="47" selection-end-line="2052" selection-end-column="47" />
             </state>
           </provider>
         </entry>
@@ -68,6 +68,7 @@
       <find>part_control</find>
       <find>neg</find>
       <find>print(</find>
+      <find>on_cli</find>
     </findStrings>
     <replaceStrings>
       <replace>MyPyDate</replace>
@@ -264,16 +265,15 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.40371457" visible="true" weight="0.2571656" />
-      <window_info anchor="bottom" id="TODO" order="6" weight="0.32784313" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.40095848" visible="true" weight="0.2571656" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32747602" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32428116" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.18290734" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.18290734" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.3290735" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
-      <window_info id="Structure" order="1" sideWeight="0.59628546" side_tool="true" visible="true" weight="0.2571656" />
+      <window_info id="Structure" order="1" sideWeight="0.5990415" side_tool="true" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3290735" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39696485" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -290,19 +290,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pattern_detection.py</url>
-          <line>1977</line>
-          <option name="timeStamp" value="83" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pattern_detection.py</url>
-          <line>376</line>
-          <option name="timeStamp" value="89" />
-        </line-breakpoint>
-      </breakpoints>
-      <option name="time" value="90" />
+      <option name="time" value="95" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -550,13 +538,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/_strptime.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="276">
-          <caret line="361" selection-start-line="361" selection-end-line="361" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SQLCreateDatabase.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="289">
@@ -655,10 +636,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/_strptime.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="837">
+          <caret line="361" selection-start-line="361" selection-end-line="361" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="622">
-          <caret line="2441" column="31" selection-start-line="2441" selection-start-column="31" selection-end-line="2441" selection-end-column="31" />
+        <state relative-caret-position="782">
+          <caret line="2052" column="47" selection-start-line="2052" selection-start-column="47" selection-end-line="2052" selection-end-column="47" />
         </state>
       </provider>
     </entry>
