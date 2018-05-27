@@ -25,7 +25,7 @@ class LoopList:
         self.value_list.append(value)
 
 
-class DictionaryLoopList(LoopList):
+class LoopList4Dictionaries(LoopList):
     index_list = []
 
     def append(self, value_dic: dict):
@@ -33,3 +33,31 @@ class DictionaryLoopList(LoopList):
         value_dic[LL.NUMBER] = self.counter  # add of number to dictionary
         self.index_list.append(self.counter)
         self.value_list.append(value_dic)
+
+
+class ExtendedDictionary:
+    def __init__(self):
+        self.counter = 0
+        self.min_index = None
+        self.max_index = None
+        self.dic = {}
+
+    def append(self, key, value):
+        self.counter += 1
+        self.dic[key] = value
+        if self.min_index == None:
+            self.min_index = key
+            self.max_index = key
+        else:
+            if key < self.min_index:
+                self.min_index = key
+            if key > self.max_index:
+                self.max_index = key
+
+    def get_value(self, key):
+        for x in range(key, self.min_index, -1):
+            if x in self.dic:
+                return self.dic[x]
+        for x in range(key, self.max_index):
+            if x in self.dic:
+                return self.dic[x]

@@ -27,7 +27,7 @@ from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.pybase.date_time import MyPyDate
 import stock_database as sdb
 from sertl_analytics.functions import math_functions
-from sertl_analytics.pybase.loop_list import LL, DictionaryLoopList, LoopList
+from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries, LoopList, ExtendedDictionary
 from sertl_analytics.pybase.exceptions import MyException
 import itertools
 import math
@@ -1302,6 +1302,18 @@ class WaveTick:
         return self.low > tick_comp.high or self.high < tick_comp.low
 
 
+class ExtendedDictionary4WaveTicks(ExtendedDictionary):
+    def __init__(self, df: pd.DataFrame):
+        ExtendedDictionary.__init__(self)
+        self.df = df
+        self.__process_df__()
+
+    def __process_df__(self):
+        for ind, rows in self.df.iterrows():
+            tick = WaveTick(rows)
+            self.append(tick.date_num, tick)
+
+
 class PatternRange:
     def __init__(self, df_min_max: pd.DataFrame, df: pd.DataFrame, tick: WaveTick, min_length: int):
         self.df_min_max = df_min_max
@@ -2004,7 +2016,8 @@ class PatternPlotter:
         self.symbol = api_object.symbol
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
         self.axes = None
-        self.tick_by_date_num_dic = self.__get_tick_by_date_num_dic__()
+        self.tick_by_date_num_ext_dic = ExtendedDictionary4WaveTicks(self.df)
+        # TODO ext dic
 
     def plot_data_frame(self):
         with_close_plot = False
@@ -2036,23 +2049,12 @@ class PatternPlotter:
         self.axes.format_coord = self.__on_hover__
         plt.show()
 
-    def __get_tick_by_date_num_dic__(self):
-        dic = {}
-        for ind, rows in self.df.iterrows():
-            tick = WaveTick(rows)
-            dic[tick.date_num] = tick
-        return dic
-
     def __on_click__(self, event):
         self.pattern_plot_container_loop_list.show_only_selected_containers(event)
 
     def __on_hover__(self, x, y):
-        x_int = int(x + 0.5)
-        if x_int in self.tick_by_date_num_dic:
-            tick = self.tick_by_date_num_dic[x_int]
-            return '{} ({:3.0f}): [{:5.1f}; {:5.1f}]; y={:0.2f}'.format(tick.date_str, tick.position, tick.low, tick.high, y)
-        else:
-            return 'x={:0.0f}, y={:0.2f}'.format(x, y)
+        tick = self.tick_by_date_num_ext_dic.get_value(int(x + 0.5))
+        return '{} ({:3.0f}): [{:5.1f}; {:5.1f}]; y={:0.2f}'.format(tick.date_str, tick.position, tick.low, tick.high, y)
 
     def __plot_close__(self, axis):
         plot_01 = self.df_data[[self.column_data]].plot(ax=axis)
@@ -2438,7 +2440,7 @@ class PatternController:
                 self.__end_row = self.df_test_data.shape[0] if end_row == 0 else end_row
 
     def __init_loop_list_for_ticker__(self):
-        self.loop_list_ticker = DictionaryLoopList()
+        self.loop_list_ticker = LoopList4Dictionaries()
         if self.config.get_data_from_db and self.__excel_file_with_test_data != '':
             for ind, rows in self.df_test_data.iterrows():
                 if self.loop_list_ticker.counter >= self.__start_row:
