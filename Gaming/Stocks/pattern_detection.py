@@ -59,14 +59,15 @@ class FT:
     CHANNEL = 'Channel'  # https://www.investopedia.com/articles/trading/05/020905.asp
     CHANNEL_UP = 'Channel up'
     CHANNEL_DOWN = 'Channel down'
-    TKE = 'TKE'  # Trend correction extrema
+    TKE_DOWN = 'TKE down'  # Trend correction extrema
+    TKE_UP = 'TKE up'  # Trend correction extrema
     HEAD_SHOULDER = 'Head-Shoulder'
     ALL = 'All'
 
     @staticmethod
     def get_all():
         return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN
-                , FT.CHANNEL, FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE, FT.HEAD_SHOULDER]
+                , FT.CHANNEL, FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN, FT.HEAD_SHOULDER]
 
 
 class Indices:
@@ -98,6 +99,7 @@ class RuntimeConfiguration:
     actual_ticker_name = ''
     actual_and_clause = ''
     actual_pattern_type = FT.NONE
+    actual_breakout = None
 
 
 class PatternConfiguration:
@@ -336,70 +338,121 @@ class PatternConditionHandler:
     combined_parts_applicable = property(__get_combined_parts_applicable__, __set_combined_parts_applicable__)
 
 
+class WaveTick:
+    def __init__(self, tick):
+        self.tick = tick
+
+    @property
+    def date(self):
+        return self.tick[CN.DATE]
+
+    @property
+    def date_num(self):
+        return self.tick[CN.DATEASNUM]
+
+    @property
+    def date_str(self):
+        return self.tick[CN.DATE].strftime("%Y-%m-%d")
+
+    @property
+    def position(self):
+        return self.tick[CN.POSITION]
+
+    @property
+    def is_max(self):
+        return self.tick[CN.IS_MAX]
+
+    @property
+    def is_min(self):
+        return self.tick[CN.IS_MIN]
+
+    @property
+    def is_local_max(self):
+        return self.tick[CN.LOCAL_MAX]
+
+    @property
+    def is_local_min(self):
+        return self.tick[CN.LOCAL_MIN]
+
+    @property
+    def open(self):
+        return self.tick[CN.OPEN]
+
+    @property
+    def high(self):
+        return self.tick[CN.HIGH]
+
+    @property
+    def low(self):
+        return self.tick[CN.LOW]
+
+    @property
+    def close(self):
+        return self.tick[CN.CLOSE]
+
+    @property
+    def volume(self):
+        return self.tick[CN.VOL]
+
+    def print(self):
+        print('Pos: {}, Date: {}, High: {}, Low: {}'.format(self.position, self.date, self.high, self.low))
+
+    def get_linear_f_params_for_max(self, tick):
+        return math_functions.get_function_parameters(self.position, self.high, tick.position, tick.high)
+
+    def get_linear_f_params_for_min(self, tick):
+        return math_functions.get_function_parameters(self.position, self.low, tick.position, tick.low)
+
+    def is_sustainable(self):
+        return abs((self.open - self.close) / (self.high - self.low)) > 0.6
+
+    def is_volume_rising(self, tick_comp, min_percentage: int):
+        return self.volume / tick_comp.volume > (100 + min_percentage) / 100
+
+    def has_gap_to(self, tick_comp):
+        return self.low > tick_comp.high or self.high < tick_comp.low
+
+
 class PatternFunctionContainer:
     def __init__(self, pattern_type: str, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
         self.pattern_type = pattern_type
         self.df = df
-        self.__tick_start_helper = None
-        self.__f_lower = None
-        self.__f_upper = None
-        self.__h_lower = None
-        self.__h_upper = None
-        self.__set_f_lower__(f_lower)
-        self.__set_f_upper__(f_upper)
-
-    def is_valid(self):
-        return not(self.__f_lower is None or self.__f_upper is None)
-
-    @property
-    def has_helper_functions(self):
-        return not(self.__h_lower is None or self.__h_upper is None)
-
-    def set_tick_start_helper(self, tick):
-        self.__tick_start_helper = tick
-        if self.pattern_type == FT.TKE:
-            self.__h_upper = np.poly1d([0, self.__f_upper(tick.position)])
-        elif self.pattern_type == FT.TRIANGLE_UP:
-            self.__h_upper = np.poly1d([0, self.__f_upper(tick.position)])
-            self.__h_lower = np.poly1d([0, self.__f_lower(tick.position)])
-
-    def update_functions(self, df: pd.DataFrame):
-        self.df = df
-        if self.pattern_type == FT.TKE:
-            self.__set_f_lower__(np.poly1d([0, self.df[CN.LOW].min()]))
-            self.__set_f_upper__(self.__f_upper)
+        self.__tick_for_helper = None
+        self.__tick_first = WaveTick(self.df.iloc[0])
+        self.__tick_last = WaveTick(self.df.iloc[-1])
+        self.__f_lower = f_lower
+        self.__f_upper = f_upper
+        self.__h_lower = f_lower
+        self.__h_upper = f_upper
+        self.__f_regression = self.__get_f_regression__()
+        self.__breakout_direction = None
+        self.__pattern_direction = FD.ASC if self.__f_regression[1] > 0 else FD.DESC
+        if self.is_valid():
+            self.__init_tick_for_helper__()
 
     @property
-    def is_pattern_type_configured_for_helper_functions(self) -> bool:
-        return self.pattern_type in [FT.TKE, FT.TRIANGLE_UP]
+    def number_of_positions(self):
+        return self.__tick_last.position - self.__tick_first.position
 
-    def get_upper_value_for_position(self, pos: int):
-        return max(self.__f_upper(pos), self.__h_upper(pos)) if self.has_helper_functions else self.__f_upper(pos)
+    @property
+    def tick_first(self):
+        return self.__tick_first
 
-    def get_lower_value_for_position(self, pos: int):
-        return self.__f_lower(pos)
+    @property
+    def tick_last(self):
+        return self.__tick_last
 
-    def __get_f_lower__(self):
+    @property
+    def pattern_direction(self):
+        return self.__pattern_direction
+
+    @property
+    def f_lower(self):
         return self.__f_lower
 
-    def __set_f_lower__(self, value: np.poly1d):
-        self.__f_lower = value
-        if self.__f_lower is not None and self.is_pattern_type_configured_for_helper_functions:
-            self.__h_lower = self.__f_lower
-
-    f_lower = property(__get_f_lower__, __set_f_lower__)
-
-    def __get_f_upper__(self):
+    @property
+    def f_upper(self):
         return self.__f_upper
-
-    def __set_f_upper__(self, value: np.poly1d):
-        self.__f_upper = value
-        if self.__f_upper is not None and self.is_pattern_type_configured_for_helper_functions:
-            if self.pattern_type == FT.TKE:
-                pos = self.df[CN.LOW].idxmin(axis=0)
-                self.set_tick_start_helper(WaveTick(self.df.loc[pos]))
-
-    f_upper = property(__get_f_upper__, __set_f_upper__)
 
     @property
     def h_lower(self):
@@ -408,6 +461,127 @@ class PatternFunctionContainer:
     @property
     def h_upper(self):
         return self.__h_upper
+
+    @property
+    def f_upper_control(self):
+        if self.__breakout_direction == FD.DESC:
+            return self.__h_lower
+        else:
+            return np.poly1d([0, self.__h_upper[0] + self.pattern_breadth])
+
+    @property
+    def f_lower_control(self):
+        if self.__breakout_direction == FD.DESC:
+            return np.poly1d([0, self.__h_lower[0] - self.pattern_breadth])
+        else:
+            return self.__h_upper
+
+    @property
+    def f_regression(self):
+        return self.__f_regression
+
+    @property
+    def pattern_breadth(self):
+        breadth_left = self.__f_upper(self.tick_first.position) - self.__f_lower(self.tick_first.position)
+        breadth_right = self.__f_upper(self.tick_for_helper.position) - self.__f_lower(self.tick_for_helper.position)
+        if self.pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
+            return round(breadth_right, 2)
+        else:
+            return round((breadth_left + breadth_right)/2, 2)
+
+    def __set_breakout_direction__(self, breakout_direction: str):
+        self.__breakout_direction = breakout_direction
+
+    def __get_breakout_direction__(self):
+        return self.__breakout_direction
+
+    breakout_direction = property(__get_breakout_direction__, __set_breakout_direction__)
+
+    def is_regression_value_in_pattern_for_position(self, pos):
+        return self.__f_lower(pos) <= self.__f_regression(pos) <= self.__f_upper(pos)
+
+    def is_valid(self):
+        return not(self.__f_lower is None or self.__f_upper is None)
+
+    def is_tick_breakout(self, tick: WaveTick):
+        f_upper_value = self.get_upper_value_for_position(tick.position)
+        f_lower_value = self.get_lower_value_for_position(tick.position)
+
+        if self.pattern_type in [FT.TKE_UP, FT.TRIANGLE_UP, FT.CHANNEL_UP]:
+            return tick.close < f_lower_value
+        elif self.pattern_type in [FT.TKE_DOWN, FT.TRIANGLE_DOWN, FT.CHANNEL_DOWN]:
+            return tick.close > f_upper_value
+        else:
+            return not (f_lower_value <= tick.close <= f_upper_value)
+
+    def is_tick_inside_pattern_range(self, tick: WaveTick):
+        if self.__pattern_direction == FD.ASC:
+            h_upper_value = self.__h_upper(tick.position)
+            f_lower_value = self.__f_lower(tick.position)
+            return f_lower_value < h_upper_value
+        else:
+            h_lower_value = self.__h_lower(tick.position)
+            f_upper_value = self.__f_upper(tick.position)
+        return h_lower_value < f_upper_value
+
+    def add_tick_from_main_df_to_df(self, df_main: pd.DataFrame, tick: WaveTick):
+        if tick is not None:
+            self.__tick_last = tick
+            self.df = pd.concat([self.df, df_main.loc[tick.position:tick.position]])
+
+    def __get_f_regression__(self) -> np.poly1d:
+        np_array = np.polyfit(self.df[CN.POSITION], self.df[CN.CLOSE], 1)
+        return np.poly1d([np_array[0], np_array[1]])
+
+    def __get_tick_for_helper__(self):
+        return self.__tick_for_helper
+
+    def __set_tick_for_helper__(self, tick):
+        self.__tick_for_helper = tick
+        self.__h_upper = np.poly1d([0, self.__f_upper(tick.position)])
+        self.__h_lower = np.poly1d([0, self.__f_lower(tick.position)])
+
+    tick_for_helper = property(__get_tick_for_helper__, __set_tick_for_helper__)
+
+    def set_tick_for_breakout(self, tick: WaveTick):
+        if self.pattern_type != FT.TKE_DOWN:
+            self.__set_tick_for_helper__(tick)
+
+    def adjust_functions_when_required(self, tick: WaveTick):
+        if self.pattern_type == FT.TKE_DOWN:
+            if tick.low < self.__f_lower(tick.position):
+                self.__f_lower = np.poly1d([0, tick.low])
+                self.__set_tick_for_helper__(tick)
+
+    @property
+    def is_pattern_type_configured_for_helper_functions(self) -> bool:
+        return self.pattern_type in [FT.TKE_DOWN, FT.TRIANGLE_UP]
+
+    def get_upper_value_for_position(self, pos: int):
+        if self.tick_for_helper is None or self.tick_for_helper.position > pos:
+            return round(self.__f_upper(pos), 2)
+        if self.pattern_direction == FD.ASC:
+            return round(min(self.__f_upper(pos), self.__h_upper(pos)), 2)
+        else:
+            return round(max(self.__f_upper(pos), self.__h_upper(pos)), 2)
+
+    def get_lower_value_for_position(self, pos: int):
+        if self.tick_for_helper is None or self.tick_for_helper.position > pos:
+            return round(self.__f_lower(pos), 2)
+        if self.pattern_direction == FD.ASC:
+            return round(min(self.__f_lower(pos), self.__h_lower(pos)), 2)
+        else:
+            return round(max(self.__f_lower(pos), self.__h_lower(pos)), 2)
+
+    def __init_tick_for_helper__(self):
+        if self.pattern_type == FT.TKE_UP:
+            pos = self.df[CN.HIGH].idxmax(axis=0)
+            tick = WaveTick(self.df.loc[pos])
+            self.__set_tick_for_helper__(tick)
+        elif self.pattern_type == FT.TKE_DOWN:
+            pos = self.df[CN.LOW].idxmin(axis=0)
+            tick = WaveTick(self.df.loc[pos])
+            self.__set_tick_for_helper__(tick)
 
 
 class PatternBreakoutApi:
@@ -446,6 +620,10 @@ class PatternBreakout:
                     if self.__is_breakout_powerful__():
                         return True
         return False
+
+    def get_details_for_annotations(self):
+        vol_change = round(((self.tick_breakout.volume/self.tick_previous.volume) - 1) * 100, 0)
+        return '{} - Volume change: {}%'.format(self.tick_breakout.date_str, vol_change)
 
     def __get_breakout_direction__(self) -> str:
         return FD.ASC if self.tick_breakout.close > self.bound_upper else FD.DESC
@@ -488,11 +666,13 @@ class PatternPart:
         self.df = self.function_cont.df
         self.config = config
         self.pattern_type = self.function_cont.pattern_type
+        self.breakout = self.config.runtime.actual_breakout
         self.tick_first = None
         self.tick_last = None
         self.tick_high = None
         self.tick_low = None
         self.breadth = 0
+        self.breadth_first = 0
         self.bound_upper = 0
         self.bound_lower = 0
         self.__distance_min = 0
@@ -526,14 +706,20 @@ class PatternPart:
         self.tick_last = WaveTick(self.df.iloc[-1])
         self.tick_high = WaveTick(self.df.loc[self.df[CN.HIGH].idxmax(axis=0)])
         self.tick_low = WaveTick(self.df.loc[self.df[CN.LOW].idxmin(axis=0)])
+        tick_helper = self.function_cont.tick_for_helper
         f_upper_first = self.function_cont.get_upper_value_for_position(self.tick_first.position)
-        f_upper_last = self.function_cont.get_upper_value_for_position(self.tick_last.position)
         f_lower_first = self.function_cont.get_lower_value_for_position(self.tick_first.position)
-        f_lower_last = self.function_cont.get_lower_value_for_position(self.tick_last.position)
+        self.breadth_first = f_upper_first - f_lower_first
+        if tick_helper is None:
+            f_upper_last = self.function_cont.get_upper_value_for_position(self.tick_last.position)
+            f_lower_last = self.function_cont.get_lower_value_for_position(self.tick_last.position)
+        else:
+            f_upper_last = self.function_cont.get_upper_value_for_position(tick_helper.position)
+            f_lower_last = self.function_cont.get_lower_value_for_position(tick_helper.position)
         self.bound_upper = f_upper_last
         self.bound_lower = f_lower_last
-        if self.pattern_type == FT.TKE:
-            self.breadth = self.bound_upper - self.bound_lower
+        if self.pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
+            self.breadth = round(self.bound_upper - self.bound_lower, 2)
         else:
             self.__distance_min = round(min(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
             self.__distance_max = round(max(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
@@ -543,10 +729,10 @@ class PatternPart:
         self.__xy = self.stock_df.get_xy_parameter(self.function_cont)
 
     def __set_xy_center__(self):
-        self.__xy_center = self.stock_df.get_xy_center()
+        self.__xy_center = self.stock_df.get_xy_center(self.function_cont.f_regression)
 
     def get_f_regression_shape(self):
-        return self.stock_df.get_f_regression_shape()
+        return self.stock_df.get_f_regression_shape(self.function_cont.f_regression)
 
     def get_f_upper_shape(self):
         return self.stock_df.get_f_upper_shape(self.function_cont)
@@ -608,12 +794,26 @@ class PatternPart:
         reg_slope = round(f_regression[1], 3)
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_slope, f_lower_slope, relation_u_l = self.get_slope_values()
-        text = 'Type={}: {} - {}\nSlopes: U={}, L={}, U/L={}, Reg={}\nBreadth={}, Max={}, Min={}, Std_dev={}'.\
-            format(
-                self.pattern_type, self.tick_first.date_str, self.tick_last.date_str
-                , f_upper_slope, f_lower_slope, relation_u_l, reg_slope
-                , self.breadth, self.__distance_max, self.__distance_min, std_dev)
-        return text
+
+        type_date = 'Type={}: {} - {}'.format(self.pattern_type, self.tick_first.date_str, self.tick_last.date_str)
+
+        if self.pattern_type == FT.TKE_UP:
+            slopes = 'Slopes: L={}, Reg={}'.format(f_lower_slope, reg_slope)
+            breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
+        elif self.pattern_type == FT.TKE_DOWN:
+            slopes = 'Slopes: U={}, Reg={}'.format(f_upper_slope, reg_slope)
+            breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
+        else:
+            slopes = 'Slopes: U={}, L={}, U/L={}, Reg={}'.format(f_upper_slope, f_lower_slope, relation_u_l, reg_slope)
+            breadth = 'Breadth={}, Max={}, Min={}, Std_dev={}'.format(self.breadth,
+                                        self.__distance_max, self.__distance_min, std_dev)
+
+        if self.breakout is None:
+            breakout_str = 'Breakout: not yet'
+        else:
+            breakout_str = 'Breakout: {}'.format(self.breakout.get_details_for_annotations())
+
+        return '{}\n{}\n{}\n{}'.format(type_date, slopes, breadth, breakout_str)
 
     def get_retracement_pct(self, comp_part):
         if self.tick_low.low > comp_part.tick_high.high:
@@ -635,19 +835,6 @@ class PatternPart:
         value = abs(self.tick_high.high - value_function)/mean
         return value < tolerance_pct
 
-    def get_cross_date_when_min_reached(self, f_lin: np.poly1d):
-        return self.__get_cross_date__(f_lin, 'min')
-
-    def get_cross_date_when_curve_is_crossed(self, f_lin: np.poly1d):
-        return self.__get_cross_date__(f_lin, 'curve')
-
-    def __get_cross_date__(self, f_lin, cross_type: str):
-        for ind, rows in self.df.iterrows():
-            if (cross_type == 'min' and f_lin(rows[CN.DATEASNUM]) < self.tick_low.low) or \
-                    (cross_type == 'curve' and rows[CN.CLOSE] > f_lin(rows[CN.DATEASNUM])):
-                return rows[CN.DATE]
-        return None
-
     def is_high_before_low(self):
         return self.tick_high.position < self.tick_low.position
 
@@ -657,7 +844,7 @@ class PatternPart:
 
 
 class CountConstraint:
-    def __init__(self, value_category: ValueCategories, comparison: str, value: float):
+    def __init__(self, value_category: str, comparison: str, value: float):
         self.value_category = value_category
         self.comparison = comparison
         self.comparison_value = value
@@ -706,6 +893,8 @@ class Constraints:
         return self.f_lower_slope_bounds[0] <= f_lower[1] <= self.f_lower_slope_bounds[1]
 
     def __is_f_upper_compliant__(self, f_upper: np.poly1d):
+        if len(self.f_upper_slope_bounds) == 0:  # no upper bounds defined
+            return True
         return self.f_upper_slope_bounds[0] <= f_upper[1] <= self.f_upper_slope_bounds[1]
 
     def __is_relation_f_upper_f_lower_compliant__(self, f_upper: np.poly1d, f_lower: np.poly1d):
@@ -744,13 +933,13 @@ class Constraints:
         return [round(1/x, 3) for x in reversed(self.f_upper_lower_slope_bounds)]
 
     def __set_bounds_by_complementary_constraints__(self, comp_constaints):
-        self.f_upper_slope_bounds = comp_constaints.f_upper_slope_bounds_complementary
-        self.f_lower_slope_bounds = comp_constaints.f_lower_slope_bounds_complementary
+        self.f_upper_slope_bounds = comp_constaints.f_lower_slope_bounds_complementary
+        self.f_lower_slope_bounds = comp_constaints.f_upper_slope_bounds_complementary
         self.f_upper_lower_slope_bounds = comp_constaints.f_upper_lower_slope_bounds_complementary
 
 
-class TKEConstraints(Constraints):
-    pattern_type = FT.TKE
+class TKEDownConstraints(Constraints):
+    pattern_type = FT.TKE_DOWN
 
     def __fill_global_constraints__(self):
         """
@@ -763,10 +952,30 @@ class TKEConstraints(Constraints):
         self.global_series = ['OR', [SVC.U_on, SVC.U_in, SVC.U_on], [SVC.U_on, SVC.U_on, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.6, -0.1]
+        self.f_upper_slope_bounds = [-0.6, -0.3]
         self.f_lower_slope_bounds = []  # not required
         self.f_upper_lower_slope_bounds = []
         self.f_regression_slope_bounds = self.f_upper_slope_bounds
+
+
+class TKEUpConstraints(Constraints):
+    pattern_type = FT.TKE_UP
+
+    def __fill_global_constraints__(self):
+        """
+        1. All values have to be in a range (channel)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        """
+        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_M_in]
+        self.global_count = ['AND', CountConstraint(SVC.L_in, '>=', 3)]
+        self.global_series = ['OR', [SVC.L_on, SVC.L_in, SVC.L_on], [SVC.L_on, SVC.L_on, SVC.L_on]]
+
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = []  # not required
+        self.f_lower_slope_bounds = [0.3, 0.6]
+        self.f_upper_lower_slope_bounds = []
+        self.f_regression_slope_bounds = self.f_lower_slope_bounds
 
 
 class ChannelConstraints(Constraints):
@@ -901,8 +1110,10 @@ class ConstraintsHelper:
             return TriangleUpConstraints()
         elif pattern_type == FT.TRIANGLE_DOWN:
             return TriangleDownConstraints()
-        elif pattern_type == FT.TKE:
-            return TKEConstraints()
+        elif pattern_type == FT.TKE_DOWN:
+            return TKEDownConstraints()
+        elif pattern_type == FT.TKE_UP:
+            return TKEUpConstraints()
         else:
             raise MyException('No constraints defined for pattern type "{}"'.format(pattern_type))
 
@@ -1213,7 +1424,16 @@ class TriangleDownPattern(TrianglePattern):
 
 
 class TKEPattern(Pattern):
-    pass  # TODO: TKEPattern
+    def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
+        return self.part_pattern.breadth / self.part_pattern.breadth_first < 0.4
+
+
+class TKEDownPattern(TKEPattern):
+    pass  # TODO: TKEDownPattern
+
+
+class TKEUpPattern(TKEPattern):
+    pass  # TODO: TKEUpPattern
 
 
 class PatternHelper:
@@ -1238,8 +1458,10 @@ class PatternHelper:
             return TriangleUpPattern(function_cont, config, constraints)
         elif function_cont.pattern_type == FT.TRIANGLE_DOWN:
             return TriangleDownPattern(function_cont, config, constraints)
-        elif function_cont.pattern_type == FT.TKE:
-            return TKEPattern(function_cont, config, constraints)
+        elif function_cont.pattern_type == FT.TKE_DOWN:
+            return TKEDownPattern(function_cont, config, constraints)
+        elif function_cont.pattern_type == FT.TKE_UP:
+            return TKEUpPattern(function_cont, config, constraints)
         else:
             raise MyException('No pattern defined for pattern type "{}"'.format(function_cont.pattern_type))
 
@@ -1257,18 +1479,14 @@ class StockDataFrame:
         return self.__get_f_param_shape__(function_cont, False)
 
     def __get_f_param_shape__(self, function_cont: PatternFunctionContainer, for_upper: bool) -> Polygon:
-        if function_cont.has_helper_functions:
-            tick_cross = function_cont.tick_start_helper
-            x = [self.tick_first.position, tick_cross.position, self.tick_last.position]
-            x_date_num = [self.tick_first.date_num, tick_cross.date_num, self.tick_last.date_num]
+        if function_cont.tick_for_helper is None:
+            tick_list = [self.tick_first, self.tick_last]
         else:
-            x = [self.tick_first.position, self.tick_last.position]
-            x_date_num = [self.tick_first.date_num, self.tick_last.date_num]
-        if for_upper:
-            y = [function_cont.get_upper_value_for_position(value) for value in x]
-        else:
-            y = [function_cont.get_lower_value_for_position(value) for value in x]
-        xy = list(zip(x_date_num, y))
+            tick_list = [self.tick_first, function_cont.tick_for_helper, self.tick_last]
+        f = function_cont.get_upper_value_for_position if for_upper else function_cont.get_lower_value_for_position
+        x = [tick.date_num for tick in tick_list]
+        y = [f(tick.position) for tick in tick_list]
+        xy = list(zip(x, y))
         return Polygon(np.array(xy), closed=False)
 
     def get_f_regression(self) -> np.poly1d:
@@ -1277,8 +1495,9 @@ class StockDataFrame:
         np_array = np.polyfit(self.df[CN.POSITION], self.df[CN.CLOSE], 1)
         return np.poly1d([np_array[0], np_array[1]])
 
-    def get_f_regression_shape(self) -> Polygon:
-        f_regression = self.get_f_regression()
+    def get_f_regression_shape(self, f_regression: np.poly1d = None) -> Polygon:
+        if f_regression is None:
+            f_regression = self.get_f_regression()
         x_date_num = [self.tick_first.date_num, self.tick_last.date_num]
         x = [self.tick_first.position, self.tick_last.position]
         y = [f_regression(value) for value in x]
@@ -1286,109 +1505,49 @@ class StockDataFrame:
         return Polygon(np.array(xy), True)
 
     def get_xy_parameter(self, function_cont: PatternFunctionContainer):
+        tick_first, tick_last, tick_helper = self.tick_first, self.tick_last, function_cont.tick_for_helper
         f_upper = function_cont.f_upper
         f_lower = function_cont.f_lower
-        tick_cross = function_cont.tick_start_helper
-        if function_cont.has_helper_functions:
-            x = [self.tick_first.date_num, tick_cross.date_num,  self.tick_last.date_num
-                , self.tick_last.date_num, self.tick_first.date_num]
-            x_pos = [self.tick_first.position, tick_cross.position,  self.tick_last.position
-                , self.tick_last.position, self.tick_first.position]
-            y = [f_upper(x_pos[0]), function_cont.h_upper(x_pos[1]), function_cont.h_upper(x_pos[2])
-                , f_lower(x_pos[3]), f_lower(x_pos[4])]
-            return list(zip(x, y))
-        else:
-            x = [self.tick_first.date_num, self.tick_first.date_num, self.tick_last.date_num, self.tick_last.date_num]
-            x_pos = [self.tick_first.position, self.tick_first.position, self.tick_last.position, self.tick_last.position]
-            y = [f_upper(x_pos[0]), f_lower(x_pos[1]), f_lower(x_pos[2]), f_upper(x_pos[3])]
-            return list(zip(x, y))
+        h_upper = function_cont.h_upper
+        h_lower = function_cont.h_lower
+        f_upper_extended = function_cont.get_upper_value_for_position
+        f_lower_extended = function_cont.get_lower_value_for_position
 
-    def get_xy_center(self):
+        if function_cont.tick_for_helper is None:
+            tick_list = [tick_first, tick_first, tick_last, tick_last]
+            function_list = [f_upper, f_lower, f_lower, f_upper]
+        else:
+            tick_helper = function_cont.tick_for_helper
+            if function_cont.pattern_type == FT.TKE_UP:
+                tick_list = [tick_first, tick_last, tick_last, tick_helper, tick_first]
+                function_list = [h_upper, h_upper, h_lower, h_lower, f_lower]
+            elif function_cont.pattern_type == FT.TKE_DOWN:
+                tick_list = [tick_first, tick_helper, tick_last, tick_last, tick_first]
+                function_list = [f_upper, h_upper, h_upper, f_lower, f_lower]
+            else:
+                tick_list = [tick_first, tick_helper, tick_last, tick_last, tick_first]
+                if function_cont.pattern_direction == FD.ASC:
+                    function_list = [f_upper_extended, f_upper_extended, f_upper_extended, f_lower, f_lower]
+                else:
+                    function_list = [f_lower_extended, f_lower_extended, f_lower_extended, f_upper, f_upper]
+
+        x = [tick.date_num for tick in tick_list]
+        y = [func(tick_list[ind].position) for ind, func in enumerate(function_list)]
+
+        return list(zip(x, y))
+
+    def get_xy_center(self, f_regression: np.poly1d = None):
         diff_position = self.tick_last.position - self.tick_first.position
         middle_position = self.tick_first.position + int(diff_position/2)
         tick = self.get_nearest_tick_to_position(middle_position)
-        f_reg = self.get_f_regression()
-        return tick.date_num, f_reg(tick.position)
+        if f_regression is None:
+            f_regression = self.get_f_regression()
+        return tick.date_num, f_regression(tick.position)
 
     def get_nearest_tick_to_position(self, pos: int):
         df = self.df.assign(DistancePos=(abs(self.df.Position - pos)))
         df = df[df["DistancePos"] == df["DistancePos"].min()]
         return WaveTick(df.iloc[0])
-
-
-class WaveTick:
-    def __init__(self, tick):
-        self.tick = tick
-
-    @property
-    def date(self):
-        return self.tick[CN.DATE]
-
-    @property
-    def date_num(self):
-        return self.tick[CN.DATEASNUM]
-
-    @property
-    def date_str(self):
-        return self.tick[CN.DATE].strftime("%Y-%m-%d")
-
-    @property
-    def position(self):
-        return self.tick[CN.POSITION]
-
-    @property
-    def is_max(self):
-        return self.tick[CN.IS_MAX]
-
-    @property
-    def is_min(self):
-        return self.tick[CN.IS_MIN]
-
-    @property
-    def is_local_max(self):
-        return self.tick[CN.LOCAL_MAX]
-
-    @property
-    def is_local_min(self):
-        return self.tick[CN.LOCAL_MIN]
-
-    @property
-    def open(self):
-        return self.tick[CN.OPEN]
-
-    @property
-    def high(self):
-        return self.tick[CN.HIGH]
-
-    @property
-    def low(self):
-        return self.tick[CN.LOW]
-
-    @property
-    def close(self):
-        return self.tick[CN.CLOSE]
-
-    @property
-    def volume(self):
-        return self.tick[CN.VOL]
-
-    def print(self):
-        print('Pos: {}, Date: {}, High: {}, Low: {}'.format(self.position, self.date, self.high, self.low))
-
-    def get_linear_f_params_for_max(self, tick):
-        return math_functions.get_function_parameters(self.position, self.high, tick.position, tick.high)
-
-    def get_linear_f_params_for_min(self, tick):
-        return math_functions.get_function_parameters(self.position, self.low, tick.position, tick.low)
-
-    def is_sustainable(self):
-        return abs((self.open - self.close) / (self.high - self.low)) > 0.6
-
-    def is_volume_rising(self, tick_comp, min_percentage: int):
-        return self.volume / tick_comp.volume > (100 + min_percentage) / 100
-
-    def has_gap_to(self, tick_comp):
-        return self.low > tick_comp.high or self.high < tick_comp.low
 
 
 class ExtendedDictionary4WaveTicks(ExtendedDictionary):
@@ -1779,86 +1938,80 @@ class PatternDetector:
                 df_check = self.df_min_max.loc[pattern_range.position_first:pattern_range.position_last]
                 function_cont = self.__get_pattern_function_container_for_df__(pattern_type, df_check)
                 if function_cont.is_valid():
-                    breakout = self.__get_breakout_after_adding_valid_ticks__(function_cont, self.constraints)
+                    breakout, pattern_end_passed = self.__get_breakout_after_checking_next_ticks__(function_cont)
+                    if breakout is None and pattern_end_passed:
+                        continue
+                    self.config.runtime.actual_breakout = breakout
                     pattern = PatternHelper.get_pattern_for_pattern_type(function_cont, self.config, self.constraints)
-                    if breakout is not None:
-                        pattern.breakout = breakout
-                        self.__add_part_control__(pattern)
-                    pattern.pattern_range = pattern_range
-                    self.pattern_list.append(pattern)
+                    if pattern.is_formation_established():
+                        if breakout is not None:
+                            pattern.breakout = breakout
+                            function_cont.breakout_direction = breakout.breakout_direction
+                            self.__add_part_control__(pattern)
+                        pattern.pattern_range = pattern_range
+                        self.pattern_list.append(pattern)
 
     def __add_part_control__(self, pattern: Pattern):
         if not pattern.was_breakout_done():
             return None
         df = self.__get_control_df__(pattern)
-        f_upper_control = self.__get_control_f_params__(pattern.part_pattern.function_cont.f_upper, pattern, True)
-        f_lower_control = self.__get_control_f_params__(pattern.part_pattern.function_cont.f_lower, pattern, False)
+        f_upper_control = pattern.function_cont.f_upper_control
+        f_lower_control = pattern.function_cont.f_lower_control
         function_cont = PatternFunctionContainer(pattern.pattern_type, df, f_lower_control, f_upper_control)
         part = PatternPart(function_cont, self.config)
         pattern.add_part_control(part)
 
     def __get_control_df__(self, pattern: Pattern):
-        if pattern.pattern_type == FT.TKE:
-            left_pos = pattern.function_cont.tick_start_helper.position
-            right_pos = pattern.part_pattern.tick_last.position
-            right_pos += right_pos - left_pos  # double length
-        else:
-            left_pos = pattern.breakout.tick_breakout.position
-            right_pos_max = left_pos + int((pattern.part_pattern.length)/3)
-            right_pos = min(right_pos_max, right_pos_max)
+        left_pos = pattern.function_cont.tick_for_helper.position
+        right_pos = pattern.function_cont.tick_last.position
+        right_pos += right_pos - left_pos  # double length
         return self.df.loc[left_pos:min(right_pos, self.df_length)]
 
-    def __get_control_f_params__(self, f_params: np.poly1d, pattern: Pattern, for_upper: bool):
-        range = pattern.part_pattern.breadth
-        if pattern.breakout.breakout_direction == FD.ASC:
-            const = pattern.part_pattern.bound_upper
-            if for_upper:
-                const += range
-        else:
-            const = pattern.part_pattern.bound_lower
-            if not for_upper:
-                const += - range
-        return np.poly1d([0, const])
-
-    def __get_breakout_after_adding_valid_ticks__(self, function_cont: PatternFunctionContainer, constraints: Constraints):
-        breakout = None
-        last_tick = WaveTick(function_cont.df.iloc[-1])
-        pos_start = last_tick.position + 1
+    def __get_breakout_after_checking_next_ticks__(self, function_cont: PatternFunctionContainer):
+        confirmed_breakout = None
+        tick_last = function_cont.tick_last
+        pos_start = tick_last.position + 1
+        number_of_positions = function_cont.number_of_positions
+        counter = 0
+        pattern_end_passed = False
         for pos in range(pos_start, self.df_length):
+            counter += 1
             next_tick = WaveTick(self.df.loc[pos])
-            f_upper_value = function_cont.get_upper_value_for_position(next_tick.position)
-            f_lower_value = function_cont.get_lower_value_for_position(next_tick.position)
-            if not (f_lower_value <= next_tick.close <= f_upper_value):
-                if breakout is None:
-                    breakout = self.__get_pattern_breakout__(function_cont, last_tick, next_tick, constraints)
-                    if breakout.is_breakout_a_signal():
-                        function_cont.set_tick_start_helper(next_tick)
-                    else:
-                        breakout = None
-            if breakout is not None:  # already breakout - but continue with the pattern to see the end
-                if function_cont.pattern_type == FT.TKE:
-                    f_upper_value = function_cont.f_upper(next_tick.position)
-                    if f_upper_value < f_lower_value:
-                        break
-                elif function_cont.pattern_type == FT.TRIANGLE_UP:
-                    if function_cont.h_upper(next_tick.position) < function_cont.f_lower(next_tick.position):
-                        break
-                else:
-                    break
-            last_tick = next_tick
-            # the helper functions are changed during the adding of new ticks (low could be lower !!!)
-            if breakout is None:
-                function_cont.update_functions(pd.concat([function_cont.df, self.df.loc[pos:pos]]))
-            else:
-                function_cont.df = pd.concat([function_cont.df, self.df.loc[pos:pos]])
-        return breakout
+            break_loop = self.__check_for_break__(function_cont, counter, number_of_positions, next_tick)
+            if break_loop:
+                pattern_end_passed = True
+                tick_last = next_tick
+                break
+            function_cont.adjust_functions_when_required(next_tick)
+            if confirmed_breakout is None:
+                confirmed_breakout = self.__get_confirmed_breakout__(function_cont, tick_last, next_tick)
+            tick_last = next_tick
+        function_cont.add_tick_from_main_df_to_df(self.df, tick_last)
+        return confirmed_breakout, pattern_end_passed
+
+    def __check_for_break__(self, function_cont, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
+        if counter > number_of_positions:  # maximal number for the whole pattern after its building
+           return True
+        if not function_cont.is_regression_value_in_pattern_for_position(tick.position):
+            return True
+        if not function_cont.is_tick_inside_pattern_range(tick):
+            return True
+        return False
+
+    def __get_confirmed_breakout__(self, function_cont, last_tick: WaveTick, next_tick: WaveTick):
+        if function_cont.is_tick_breakout(next_tick):
+            breakout = self.__get_pattern_breakout__(function_cont, last_tick, next_tick)
+            if breakout.is_breakout_a_signal():
+                function_cont.set_tick_for_breakout(next_tick)
+                return breakout
+        return None
 
     def __get_pattern_breakout__(self, function_cont: PatternFunctionContainer, tick_previous: WaveTick
-                                 , tick_breakout: WaveTick, constraints: Constraints) -> PatternBreakout:
+                                 , tick_breakout: WaveTick) -> PatternBreakout:
         breakout_api = PatternBreakoutApi(function_cont, self.config)
         breakout_api.tick_previous = tick_previous
         breakout_api.tick_breakout = tick_breakout
-        breakout_api.constraints = constraints
+        breakout_api.constraints = self.constraints
         return PatternBreakout(breakout_api)
 
     def __get_pattern_function_container_for_df__(self, pattern_type: str, df_check: pd.DataFrame) \
@@ -1893,7 +2046,7 @@ class PatternDetector:
         if pattern_type == FT.HEAD_SHOULDER:
             f_lower = self.__get_parallel_to_upper_by_low__(df_min, f_upper)
             return [] if f_lower is None else [f_lower]
-        elif pattern_type == FT.TKE:
+        elif pattern_type == FT.TKE_DOWN:
             f_lower = np.poly1d([0, df_min[CN.LOW].min()])
             return [f_lower] if self.constraints.are_f_lower_f_upper_compliant(f_lower, f_upper) else []
 
@@ -2151,19 +2304,25 @@ class PatternPlotter:
                 self.__plot_patterns__(axes)
 
         plt.title('{}. {} ({}) for {}'.format(self.config.runtime.actual_number, self.config.runtime.actual_ticker
-                            , self.config.runtime.actual_ticker_name, self.config.runtime.actual_and_clause))
+                            , self.config.runtime.actual_ticker_name, self.__get_date_range_for_title__()))
         plt.tight_layout()
         plt.xticks(rotation=45)
         fig.canvas.mpl_connect('button_press_event', self.__on_click__)
         self.axes.format_coord = self.__on_hover__
         plt.show()
 
+    def __get_date_range_for_title__(self):
+        tick_first = WaveTick(self.df.iloc[0])
+        tick_last = WaveTick(self.df.iloc[-1])
+        return 'Date between "{}" AND "{}"'.format(tick_first.date_str, tick_last.date_str)
+
     def __on_click__(self, event):
         self.pattern_plot_container_loop_list.show_only_selected_containers(event)
 
     def __on_hover__(self, x, y):
         tick = self.tick_by_date_num_ext_dic.get_value(int(x + 0.5))
-        return '{} ({:3.0f}): [{:5.1f}; {:5.1f}]; y={:0.2f}'.format(tick.date_str, tick.position, tick.low, tick.high, y)
+        return '{} ({:3.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
+            tick.date_str, tick.position, tick.low, tick.high, tick.volume/1000, y)
 
     def __plot_close__(self, axis):
         plot_01 = self.df_data[[self.column_data]].plot(ax=axis)
@@ -2195,8 +2354,8 @@ class PatternPlotter:
                 plot_container.add_control_shape(pattern.get_control_shape(), color_control)
             plot_container.add_center_shape(pattern.get_center_shape())
             plot_container.annotation_param = pattern.get_annotation_parameter(True, 'blue')
-            plot_container.add_border_line_top_shape(pattern.part_pattern.get_f_upper_shape())
-            plot_container.add_border_line_bottom_shape(pattern.part_pattern.get_f_lower_shape())
+            # plot_container.add_border_line_top_shape(pattern.part_pattern.get_f_upper_shape())
+            # plot_container.add_border_line_bottom_shape(pattern.part_pattern.get_f_lower_shape())
             plot_container.add_regression_line_shape(pattern.part_pattern.get_f_regression_shape())
             self.pattern_plot_container_loop_list.append(plot_container)
 
@@ -2575,10 +2734,10 @@ class PatternController:
 
 
 config = PatternConfiguration()
-config.get_data_from_db = True
+config.get_data_from_db = False
 config.api_period = ApiPeriod.DAILY
-# config.pattern_type_list = FT.get_all()
-config.pattern_type_list = [FT.TRIANGLE_UP]
+config.pattern_type_list = FT.get_all()
+# config.pattern_type_list = [FT.TKE_DOWN]
 config.plot_data = True
 config.statistics_excel_file_name = 'statistics_pattern.xlsx'
 config.statistics_excel_file_name = ''
@@ -2588,11 +2747,11 @@ config.breakout_over_congestion_range = False
 # config.show_final_statistics = True
 config.max_number_securities = 1000
 config.breakout_range_pct = 0.01  # default is 0.01
-config.use_index(Indices.MIXED)
-config.use_own_dic({"AXP": "American"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
-# "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", AXP	American
+config.use_index(Indices.DOW_JONES)
+# config.use_own_dic({"CVX": "American"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+# "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", "AXP": "American", "WMT": "Wall mart",
 # config.and_clause = "Date BETWEEN '2017-10-25' AND '2018-04-18'"
-config.and_clause = "Date BETWEEN '2017-10-25' AND '2019-04-17'"
+config.and_clause = "Date BETWEEN '2017-01-25' AND '2018-02-18'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 
