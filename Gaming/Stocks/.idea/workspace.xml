@@ -3,7 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MyStocks.sqlite" beforeDir="false" afterPath="$PROJECT_DIR$/MyStocks.sqlite" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_detection.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_detection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/stock_database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stock_formation_checker.py" beforeDir="false" afterPath="$PROJECT_DIR$/stock_formation_checker.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,17 +25,8 @@
       <file leaf-file-name="pattern_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="602">
-              <caret line="500" column="85" lean-forward="true" selection-start-line="500" selection-start-column="85" selection-end-line="500" selection-end-column="85" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="stock_formation_checker.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/stock_formation_checker.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="500">
-              <caret line="619" column="6" selection-start-line="619" selection-start-column="6" selection-end-line="619" selection-end-column="6" />
+            <state relative-caret-position="167">
+              <caret line="662" column="6" selection-start-line="662" selection-start-column="6" selection-end-line="662" selection-end-column="6" />
             </state>
           </provider>
         </entry>
@@ -48,12 +42,18 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
+      <find>== FT.HEAD_SHOULDER</find>
+      <find>h_upper</find>
+      <find>__possible_pattern_ranges_top</find>
+      <find>H_M_in</find>
+      <find>print</find>
       <find>TKEPattern</find>
       <find>TKE</find>
       <find>get_f_param_shape:</find>
       <find>Pattern_type:</find>
       <find>regression</find>
       <find>Circle</find>
+      <find>f_reg</find>
       <find>add</find>
       <find>center</find>
       <find>Ellips</find>
@@ -72,12 +72,6 @@
       <find>ChannelValueCategorizer</find>
       <find>property</find>
       <find>control</find>
-      <find>__f_regression</find>
-      <find>f_reg</find>
-      <find>slope</find>
-      <find>pattern_breadth</find>
-      <find>anno</find>
-      <find>slopes</find>
     </findStrings>
     <replaceStrings>
       <replace>MyPyDate</replace>
@@ -92,13 +86,13 @@
       <list>
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/SQLCreateDatabase.py" />
-        <option value="$PROJECT_DIR$/stock_database.py" />
         <option value="$PROJECT_DIR$/draggable_rectangle.py" />
         <option value="$PROJECT_DIR$/plt_mouse_over_alert.py" />
         <option value="$PROJECT_DIR$/plt_mouse_events.py" />
         <option value="$PROJECT_DIR$/plt_pick_circle.py" />
         <option value="$PROJECT_DIR$/stock_formation_checker.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py" />
+        <option value="$PROJECT_DIR$/stock_database.py" />
         <option value="$PROJECT_DIR$/pattern_detection.py" />
       </list>
     </option>
@@ -113,7 +107,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -125,6 +118,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -143,24 +137,6 @@
     </option>
   </component>
   <component name="RunManager" selected="Python.pattern_detection">
-    <configuration name="finance_demo" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Stocks" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/mpl_finance-master/examples" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/mpl_finance-master/examples/finance_demo.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-    </configuration>
     <configuration name="pattern_detection" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -233,20 +209,38 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
+    <configuration name="stock_database" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Stocks" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/stock_database.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
     <list>
       <item itemvalue="Python.pattern_detection" />
       <item itemvalue="Python.plt_mouse_over_alert" />
-      <item itemvalue="Python.finance_demo" />
       <item itemvalue="Python.plt_pick_circle" />
       <item itemvalue="Python.plt_mouse_events" />
+      <item itemvalue="Python.stock_database" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.pattern_detection" />
+        <item itemvalue="Python.stock_database" />
         <item itemvalue="Python.plt_pick_circle" />
         <item itemvalue="Python.plt_mouse_events" />
         <item itemvalue="Python.plt_mouse_over_alert" />
-        <item itemvalue="Python.finance_demo" />
       </list>
     </recent_temporary>
   </component>
@@ -274,19 +268,19 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.39607844" visible="true" weight="0.2571656" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.3940556" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32747602" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Inspection Results" weight="0.23215686" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32392156" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.3290735" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.18196079" />
-      <window_info id="Structure" order="1" sideWeight="0.6039216" side_tool="true" visible="true" weight="0.2571656" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.18196079" />
+      <window_info id="Structure" order="1" sideWeight="0.6059444" side_tool="true" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3290735" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39607844" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39616615" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -300,17 +294,17 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_detection.py</url>
+          <line>447</line>
+          <option name="timeStamp" value="129" />
+        </line-breakpoint>
+      </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <default-breakpoints>
-        <breakpoint type="python-exception">
-          <properties notifyOnTerminate="true" exception="BaseException">
-            <option name="notifyOnTerminate" value="true" />
-          </properties>
-        </breakpoint>
-      </default-breakpoints>
-      <option name="time" value="139" />
+      <option name="time" value="130" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -345,6 +339,9 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="38318">
@@ -576,18 +573,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SQLImportStock.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-408" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/stock_database.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="571">
-          <caret line="168" column="22" selection-start-line="168" selection-start-column="22" selection-end-line="168" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/df_base.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
@@ -632,6 +617,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/stock_formation_checker.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="500">
+          <caret line="1831" lean-forward="true" selection-start-line="1831" selection-end-line="1831" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/_strptime.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="837">
@@ -669,22 +661,22 @@
     </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/pandas/core/nanops.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
+        <state relative-caret-position="-14">
           <caret line="533" selection-start-line="533" selection-end-line="533" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/stock_formation_checker.py">
+    <entry file="file://$PROJECT_DIR$/stock_database.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="500">
-          <caret line="619" column="6" selection-start-line="619" selection-start-column="6" selection-end-line="619" selection-end-column="6" />
+        <state relative-caret-position="707">
+          <caret line="167" column="17" selection-start-line="166" selection-start-column="17" selection-end-line="167" selection-end-column="17" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="602">
-          <caret line="500" column="85" lean-forward="true" selection-start-line="500" selection-start-column="85" selection-end-line="500" selection-end-column="85" />
+        <state relative-caret-position="167">
+          <caret line="662" column="6" selection-start-line="662" selection-start-column="6" selection-end-line="662" selection-end-column="6" />
         </state>
       </provider>
     </entry>

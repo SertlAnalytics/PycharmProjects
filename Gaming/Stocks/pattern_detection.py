@@ -463,14 +463,14 @@ class PatternFunctionContainer:
         return self.__h_upper
 
     @property
-    def f_upper_control(self):
+    def f_upper_trade(self):
         if self.__breakout_direction == FD.DESC:
             return self.__h_lower
         else:
             return np.poly1d([0, self.__h_upper[0] + self.pattern_breadth])
 
     @property
-    def f_lower_control(self):
+    def f_lower_trade(self):
         if self.__breakout_direction == FD.DESC:
             return np.poly1d([0, self.__h_lower[0] - self.pattern_breadth])
         else:
@@ -804,9 +804,10 @@ class PatternPart:
             slopes = 'Slopes: U={}, Reg={}'.format(f_upper_slope, reg_slope)
             breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
         else:
-            slopes = 'Slopes: U={}, L={}, U/L={}, Reg={}'.format(f_upper_slope, f_lower_slope, relation_u_l, reg_slope)
-            breadth = 'Breadth={}, Max={}, Min={}, Std_dev={}'.format(self.breadth,
-                                        self.__distance_max, self.__distance_min, std_dev)
+            slopes = 'Slopes: U={}, L={}, U/L={}, Reg={}'.format(
+                f_upper_slope, f_lower_slope, relation_u_l, reg_slope)
+            breadth = 'Breadth={}, Max={}, Min={}, Std_dev={}'.format(
+                self.breadth, self.__distance_max, self.__distance_min, std_dev)
 
         if self.breakout is None:
             breakout_str = 'Breakout: not yet'
@@ -1264,22 +1265,22 @@ class Pattern:
         self.config = config
         self.constraints = constraints
         self.part_predecessor = None
-        self.part_pattern = PatternPart(function_cont, config)
-        self.__part_control = None
+        self.part_main = PatternPart(function_cont, config)
+        self.__part_trade = None
         self.tolerance_pct = constraints.tolerance_pct
         self.condition_handler = PatternConditionHandler()
-        self.xy = self.part_pattern.xy
-        self.xy_center = self.part_pattern.xy_center
-        self.xy_control = None
-        self.date_first = self.part_pattern.date_first
-        self.date_last = self.part_pattern.date_last
+        self.xy = self.part_main.xy
+        self.xy_center = self.part_main.xy_center
+        self.xy_trade = None
+        self.date_first = self.part_main.date_first
+        self.date_last = self.part_main.date_last
         self.breakout = None
         self.trade_result = TradeResult()
         self.pattern_range = PatternRange
 
-    def add_part_control(self, part_control: PatternPart):
-        self.__part_control = part_control
-        self.xy_control = self.__part_control.xy
+    def add_part_trade(self, part_trade: PatternPart):
+        self.__part_trade = part_trade
+        self.xy_trade = self.__part_trade.xy
 
     def was_breakout_done(self):
         return True if self.breakout.__class__.__name__ == 'PatternBreakout' else False
@@ -1306,44 +1307,44 @@ class Pattern:
 
     @property
     def ticks(self):
-        return self.part_pattern.ticks
+        return self.part_main.ticks
 
     def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
         return True
 
     def get_annotation_parameter(self, for_max: bool = True, color: str = 'blue'):
-        return self.part_pattern.get_annotation_parameter(for_max, color)
+        return self.part_main.get_annotation_parameter(for_max, color)
 
-    def get_shape(self):
+    def get_shape_part_main(self):
         return Polygon(np.array(self.xy), True)
 
-    def get_control_shape(self):
-        return Polygon(np.array(self.xy_control), True)
+    def get_shape_part_trade(self):
+        return Polygon(np.array(self.xy_trade), True)
 
     def get_center_shape(self):
         return Ellipse(np.array(self.xy_center), 4, 1)
 
     def fill_result_set(self):
-        if self.is_part_control_available():
+        if self.is_part_trade_available():
             self.__fill_trade_result__()
 
-    def is_part_control_available(self):
-        return self.__part_control is not None
+    def is_part_trade_available(self):
+        return self.__part_trade is not None
 
     def __fill_trade_result__(self):
-        tolerance_range = self.part_pattern.breadth * self.constraints.tolerance_pct
-        self.trade_result.expected_win = round(self.part_pattern.breadth, 2)
+        tolerance_range = self.part_main.breadth * self.constraints.tolerance_pct
+        self.trade_result.expected_win = round(self.part_main.breadth, 2)
         self.trade_result.bought_at = round(self.breakout.tick_breakout.close, 2)
         self.trade_result.bought_on = self.breakout.tick_breakout.date
-        self.trade_result.max_ticks = self.__part_control.df.shape[0]
+        self.trade_result.max_ticks = self.__part_trade.df.shape[0]
         if self.breakout_direction == FD.ASC:
-            self.trade_result.stop_loss_at = self.part_pattern.bound_upper - tolerance_range
-            self.trade_result.limit = self.part_pattern.bound_upper + self.trade_result.expected_win
+            self.trade_result.stop_loss_at = self.part_main.bound_upper - tolerance_range
+            self.trade_result.limit = self.part_main.bound_upper + self.trade_result.expected_win
         else:
-            self.trade_result.stop_loss_at = self.part_pattern.bound_lower + tolerance_range
-            self.trade_result.limit = self.part_pattern.bound_lower - self.trade_result.expected_win
+            self.trade_result.stop_loss_at = self.part_main.bound_lower + tolerance_range
+            self.trade_result.limit = self.part_main.bound_lower - self.trade_result.expected_win
 
-        for ind, rows in self.__part_control.df.iterrows():
+        for ind, rows in self.__part_trade.df.iterrows():
             self.trade_result.actual_ticks += 1
             cont = self.__fill_trade_results_for_breakout_direction__(ind, rows)
             if not cont:
@@ -1387,6 +1388,7 @@ class Pattern:
         else:
             return row.Close < self.trade_result.limit or (row.Close - row.Low)/row.Close < threshold
 
+
 class ChannelPattern(Pattern):
     pass  # TODO ChannelPattern
 
@@ -1425,7 +1427,7 @@ class TriangleDownPattern(TrianglePattern):
 
 class TKEPattern(Pattern):
     def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
-        return self.part_pattern.breadth / self.part_pattern.breadth_first < 0.4
+        return self.part_main.breadth / self.part_main.breadth_first < 0.4
 
 
 class TKEDownPattern(TKEPattern):
@@ -1947,21 +1949,21 @@ class PatternDetector:
                         if breakout is not None:
                             pattern.breakout = breakout
                             function_cont.breakout_direction = breakout.breakout_direction
-                            self.__add_part_control__(pattern)
+                            self.__add_part_trade__(pattern)
                         pattern.pattern_range = pattern_range
                         self.pattern_list.append(pattern)
 
-    def __add_part_control__(self, pattern: Pattern):
+    def __add_part_trade__(self, pattern: Pattern):
         if not pattern.was_breakout_done():
             return None
-        df = self.__get_control_df__(pattern)
-        f_upper_control = pattern.function_cont.f_upper_control
-        f_lower_control = pattern.function_cont.f_lower_control
-        function_cont = PatternFunctionContainer(pattern.pattern_type, df, f_lower_control, f_upper_control)
+        df = self.__get_trade_df__(pattern)
+        f_upper_trade = pattern.function_cont.f_upper_trade
+        f_lower_trade = pattern.function_cont.f_lower_trade
+        function_cont = PatternFunctionContainer(pattern.pattern_type, df, f_lower_trade, f_upper_trade)
         part = PatternPart(function_cont, self.config)
-        pattern.add_part_control(part)
+        pattern.add_part_trade(part)
 
-    def __get_control_df__(self, pattern: Pattern):
+    def __get_trade_df__(self, pattern: Pattern):
         left_pos = pattern.function_cont.tick_for_helper.position
         right_pos = pattern.function_cont.tick_last.position
         right_pos += right_pos - left_pos  # double length
@@ -2132,7 +2134,7 @@ class PatternDetector:
 
 class FormationColorHandler:
     def get_colors_for_formation(self, formation: Pattern):
-        return self.__get_formation_color__(formation), self.__get_control_color__(formation)
+        return self.__get_formation_color__(formation), self.__get_trade_color__(formation)
 
     @staticmethod
     def __get_formation_color__(formation: Pattern):
@@ -2142,7 +2144,7 @@ class FormationColorHandler:
             return 'yellow'
 
     @staticmethod
-    def __get_control_color__(formation: Pattern):
+    def __get_trade_color__(formation: Pattern):
         if formation.was_breakout_done():
             if formation.trade_result.actual_win > 0:
                 return 'lime'
@@ -2171,10 +2173,10 @@ class PatternPlotContainer:
         self.annotation_param = None
         self.annotation = None
 
-    def add_control_shape(self, control_shape, control_color: str):
-        self.index_list.append('control')
-        self.shape_dic['control'] = control_shape
-        self.color_dic['control'] = control_color
+    def add_trade_shape(self, trade_shape, trade_color: str):
+        self.index_list.append('trade')
+        self.shape_dic['trade'] = trade_shape
+        self.color_dic['trade'] = trade_color
 
     def add_border_line_top_shape(self, line_shape):
         self.index_list.append('top')
@@ -2348,15 +2350,15 @@ class PatternPlotter:
     def __fill_plot_container_list__(self):
         color_handler = FormationColorHandler()
         for pattern in self.detector.pattern_list:
-            color_pattern, color_control = color_handler.get_colors_for_formation(pattern)
-            plot_container = PatternPlotContainer(pattern.get_shape(), color_pattern)
-            if pattern.was_breakout_done() and pattern.is_part_control_available():
-                plot_container.add_control_shape(pattern.get_control_shape(), color_control)
+            color_pattern, color_trade = color_handler.get_colors_for_formation(pattern)
+            plot_container = PatternPlotContainer(pattern.get_shape_part_main(), color_pattern)
+            if pattern.was_breakout_done() and pattern.is_part_trade_available():
+                plot_container.add_trade_shape(pattern.get_shape_part_trade(), color_trade)
             plot_container.add_center_shape(pattern.get_center_shape())
             plot_container.annotation_param = pattern.get_annotation_parameter(True, 'blue')
-            # plot_container.add_border_line_top_shape(pattern.part_pattern.get_f_upper_shape())
-            # plot_container.add_border_line_bottom_shape(pattern.part_pattern.get_f_lower_shape())
-            plot_container.add_regression_line_shape(pattern.part_pattern.get_f_regression_shape())
+            # plot_container.add_border_line_top_shape(pattern.part_main.get_f_upper_shape())
+            # plot_container.add_border_line_bottom_shape(pattern.part_main.get_f_lower_shape())
+            plot_container.add_regression_line_shape(pattern.part_main.get_f_regression_shape())
             self.pattern_plot_container_loop_list.append(plot_container)
 
     def __add_pattern_shapes_to_plot__(self, ax):
@@ -2364,25 +2366,8 @@ class PatternPlotter:
             pattern_plot_container.add_elements_as_patch_collection(ax)
             pattern_plot_container.add_annotation(ax)
 
-    def __add_fibonacci_waves__(self, ax):
-        color_dic = {'min': 'aqua', 'max': 'blue'}
-        offset_dic = {'min': (1, 1), 'max': (-1, -1)}
-        for key in color_dic:
-            if key == 'min':
-                xy_list = self.detector.wave_parser.get_xy_min_parameter()
-            else:
-                xy_list = self.detector.wave_parser.get_xy_max_parameter()
-            offset = offset_dic[key]
-            patches = []
-            for xy in xy_list:
-                patch = Arrow(xy[0]-offset[0], xy[1]-offset[1], offset[0], offset[1])
-                patches.append(patch)
-            p = PatchCollection(patches)
-            p.set_color(color_dic[key])
-            ax.add_collection(p)
 
-
-class FSC:  # Formation Statistics Columns
+class PSC:  # Pattern Statistics Columns
     C_BOUND_UPPER_VALUE = 'conf.bound_upper_value'  # eg. CN.HIGH
     C_BOUND_LOWER_VALUE = 'conf.bound_lower_value'  # eg. CN.LOW
     C_CHECK_PREVIOUS_PERIOD = 'conf.check_previous_period'
@@ -2435,54 +2420,54 @@ class PatternStatistics:
         self.list = []
         self.column_list = []
 
-        self.column_list.append(FSC.NUMBER)
-        self.column_list.append(FSC.TICKER)
-        self.column_list.append(FSC.NAME)
-        self.column_list.append(FSC.STATUS)
-        self.column_list.append(FSC.PATTERN)
-        self.column_list.append(FSC.BEGIN_PREVIOUS)
-        self.column_list.append(FSC.BEGIN)
-        self.column_list.append(FSC.END)
+        self.column_list.append(PSC.NUMBER)
+        self.column_list.append(PSC.TICKER)
+        self.column_list.append(PSC.NAME)
+        self.column_list.append(PSC.STATUS)
+        self.column_list.append(PSC.PATTERN)
+        self.column_list.append(PSC.BEGIN_PREVIOUS)
+        self.column_list.append(PSC.BEGIN)
+        self.column_list.append(PSC.END)
 
-        self.column_list.append(FSC.C_BOUND_UPPER_VALUE)
-        self.column_list.append(FSC.C_BOUND_LOWER_VALUE)
-        self.column_list.append(FSC.C_CHECK_PREVIOUS_PERIOD)
-        self.column_list.append(FSC.C_BREAKOUT_OVER_CONGESTION)
-        self.column_list.append(FSC.C_TOLERANCE_PCT)
-        self.column_list.append(FSC.C_BREAKOUT_RANGE_PCT)
-        self.column_list.append(FSC.C_AND_CLAUSE)
+        self.column_list.append(PSC.C_BOUND_UPPER_VALUE)
+        self.column_list.append(PSC.C_BOUND_LOWER_VALUE)
+        self.column_list.append(PSC.C_CHECK_PREVIOUS_PERIOD)
+        self.column_list.append(PSC.C_BREAKOUT_OVER_CONGESTION)
+        self.column_list.append(PSC.C_TOLERANCE_PCT)
+        self.column_list.append(PSC.C_BREAKOUT_RANGE_PCT)
+        self.column_list.append(PSC.C_AND_CLAUSE)
 
-        self.column_list.append(FSC.CON_PREVIOUS_PERIOD_CHECK_OK)
-        self.column_list.append(FSC.CON_COMBINED_PARTS_APPLICABLE)
-        self.column_list.append(FSC.CON_BREAKOUT_WITH_BUY_SIGNAL)
+        self.column_list.append(PSC.CON_PREVIOUS_PERIOD_CHECK_OK)
+        self.column_list.append(PSC.CON_COMBINED_PARTS_APPLICABLE)
+        self.column_list.append(PSC.CON_BREAKOUT_WITH_BUY_SIGNAL)
 
-        self.column_list.append(FSC.LOWER)
-        self.column_list.append(FSC.UPPER)
-        self.column_list.append(FSC.SLOPE_UPPER)
-        self.column_list.append(FSC.SLOPE_LOWER)
-        self.column_list.append(FSC.SLOPE_RELATION)
-        self.column_list.append(FSC.TICKS)
-        self.column_list.append(FSC.BREAKOUT_DATE)
-        self.column_list.append(FSC.BREAKOUT_DIRECTION)
-        self.column_list.append(FSC.VOLUME_CHANGE)
-        self.column_list.append(FSC.EXPECTED)
-        self.column_list.append(FSC.RESULT)
-        self.column_list.append(FSC.EXT)
-        self.column_list.append(FSC.VAL)
-        self.column_list.append(FSC.BOUGHT_AT)
-        self.column_list.append(FSC.SOLD_AT)
-        self.column_list.append(FSC.BOUGHT_ON)
-        self.column_list.append(FSC.SOLD_ON)
-        self.column_list.append(FSC.T_NEEDED)
+        self.column_list.append(PSC.LOWER)
+        self.column_list.append(PSC.UPPER)
+        self.column_list.append(PSC.SLOPE_UPPER)
+        self.column_list.append(PSC.SLOPE_LOWER)
+        self.column_list.append(PSC.SLOPE_RELATION)
+        self.column_list.append(PSC.TICKS)
+        self.column_list.append(PSC.BREAKOUT_DATE)
+        self.column_list.append(PSC.BREAKOUT_DIRECTION)
+        self.column_list.append(PSC.VOLUME_CHANGE)
+        self.column_list.append(PSC.EXPECTED)
+        self.column_list.append(PSC.RESULT)
+        self.column_list.append(PSC.EXT)
+        self.column_list.append(PSC.VAL)
+        self.column_list.append(PSC.BOUGHT_AT)
+        self.column_list.append(PSC.SOLD_AT)
+        self.column_list.append(PSC.BOUGHT_ON)
+        self.column_list.append(PSC.SOLD_ON)
+        self.column_list.append(PSC.T_NEEDED)
 
-        self.column_list.append(FSC.LIMIT)
-        self.column_list.append(FSC.STOP_LOSS_AT)
-        self.column_list.append(FSC.STOP_LOSS_TRIGGERED)
+        self.column_list.append(PSC.LIMIT)
+        self.column_list.append(PSC.STOP_LOSS_AT)
+        self.column_list.append(PSC.STOP_LOSS_TRIGGERED)
 
-        self.column_list.append(FSC.RESULT_DF_MAX)
-        self.column_list.append(FSC.RESULT_DF_MIN)
-        self.column_list.append(FSC.FIRST_LIMIT_REACHED)
-        self.column_list.append(FSC.STOP_LOSS_MAX_REACHED)
+        self.column_list.append(PSC.RESULT_DF_MAX)
+        self.column_list.append(PSC.RESULT_DF_MIN)
+        self.column_list.append(PSC.FIRST_LIMIT_REACHED)
+        self.column_list.append(PSC.STOP_LOSS_MAX_REACHED)
 
         self.dic = {}
 
@@ -2493,53 +2478,53 @@ class PatternStatistics:
     def add_entry(self, pattern: Pattern):
         self.__init_dic__()
 
-        self.dic[FSC.C_BOUND_UPPER_VALUE] = pattern.config.bound_upper_value
-        self.dic[FSC.C_BOUND_LOWER_VALUE] = pattern.config.bound_lower_value
-        self.dic[FSC.C_CHECK_PREVIOUS_PERIOD] = pattern.config.check_previous_period
-        self.dic[FSC.C_BREAKOUT_OVER_CONGESTION] = pattern.config.breakout_over_congestion_range
-        self.dic[FSC.C_TOLERANCE_PCT] = pattern.tolerance_pct
-        self.dic[FSC.C_BREAKOUT_RANGE_PCT] = pattern.config.breakout_range_pct
-        self.dic[FSC.C_AND_CLAUSE] = pattern.config.and_clause
+        self.dic[PSC.C_BOUND_UPPER_VALUE] = pattern.config.bound_upper_value
+        self.dic[PSC.C_BOUND_LOWER_VALUE] = pattern.config.bound_lower_value
+        self.dic[PSC.C_CHECK_PREVIOUS_PERIOD] = pattern.config.check_previous_period
+        self.dic[PSC.C_BREAKOUT_OVER_CONGESTION] = pattern.config.breakout_over_congestion_range
+        self.dic[PSC.C_TOLERANCE_PCT] = pattern.tolerance_pct
+        self.dic[PSC.C_BREAKOUT_RANGE_PCT] = pattern.config.breakout_range_pct
+        self.dic[PSC.C_AND_CLAUSE] = pattern.config.and_clause
 
-        self.dic[FSC.CON_PREVIOUS_PERIOD_CHECK_OK] = pattern.condition_handler.previous_period_check_ok
-        self.dic[FSC.CON_COMBINED_PARTS_APPLICABLE] = pattern.condition_handler.combined_parts_applicable
-        self.dic[FSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = pattern.condition_handler.breakout_with_buy_signal
+        self.dic[PSC.CON_PREVIOUS_PERIOD_CHECK_OK] = pattern.condition_handler.previous_period_check_ok
+        self.dic[PSC.CON_COMBINED_PARTS_APPLICABLE] = pattern.condition_handler.combined_parts_applicable
+        self.dic[PSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = pattern.condition_handler.breakout_with_buy_signal
 
-        self.dic[FSC.STATUS] = 'Finished' if pattern.was_breakout_done() else 'Open'
-        self.dic[FSC.NUMBER] = pattern.config.runtime.actual_number
-        self.dic[FSC.TICKER] = pattern.config.runtime.actual_ticker
-        self.dic[FSC.NAME] = pattern.config.runtime.actual_ticker_name
-        self.dic[FSC.PATTERN] = pattern.pattern_type
-        self.dic[FSC.BEGIN_PREVIOUS] = 'TODO'
-        self.dic[FSC.BEGIN] = MyPyDate.get_date_from_datetime(pattern.date_first)
-        self.dic[FSC.END] = MyPyDate.get_date_from_datetime(pattern.date_last)
-        self.dic[FSC.LOWER] = round(0, 2)
-        self.dic[FSC.UPPER] = round(0, 2)  # TODO Lower & Upper bound for statistics
-        self.dic[FSC.SLOPE_UPPER], self.dic[FSC.SLOPE_LOWER], self.dic[FSC.SLOPE_RELATION] \
-            = pattern.part_pattern.get_slope_values()
-        self.dic[FSC.TICKS] = pattern.part_pattern.ticks
+        self.dic[PSC.STATUS] = 'Finished' if pattern.was_breakout_done() else 'Open'
+        self.dic[PSC.NUMBER] = pattern.config.runtime.actual_number
+        self.dic[PSC.TICKER] = pattern.config.runtime.actual_ticker
+        self.dic[PSC.NAME] = pattern.config.runtime.actual_ticker_name
+        self.dic[PSC.PATTERN] = pattern.pattern_type
+        self.dic[PSC.BEGIN_PREVIOUS] = 'TODO'
+        self.dic[PSC.BEGIN] = MyPyDate.get_date_from_datetime(pattern.date_first)
+        self.dic[PSC.END] = MyPyDate.get_date_from_datetime(pattern.date_last)
+        self.dic[PSC.LOWER] = round(0, 2)
+        self.dic[PSC.UPPER] = round(0, 2)  # TODO Lower & Upper bound for statistics
+        self.dic[PSC.SLOPE_UPPER], self.dic[PSC.SLOPE_LOWER], self.dic[PSC.SLOPE_RELATION] \
+            = pattern.part_main.get_slope_values()
+        self.dic[PSC.TICKS] = pattern.part_main.ticks
         if pattern.was_breakout_done():
-            self.dic[FSC.BREAKOUT_DATE] = MyPyDate.get_date_from_datetime(pattern.breakout.breakout_date)
-            self.dic[FSC.BREAKOUT_DIRECTION] = pattern.breakout.breakout_direction
-            self.dic[FSC.VOLUME_CHANGE] = pattern.breakout.volume_change_pct
-            if pattern.is_part_control_available():
-                self.dic[FSC.EXPECTED] = pattern.trade_result.expected_win
-                self.dic[FSC.RESULT] = pattern.trade_result.actual_win
-                self.dic[FSC.VAL] = pattern.trade_result.formation_consistent
-                self.dic[FSC.EXT] = pattern.trade_result.limit_extended_counter
-                self.dic[FSC.BOUGHT_AT] = round(pattern.trade_result.bought_at, 2)
-                self.dic[FSC.SOLD_AT] = round(pattern.trade_result.sold_at, 2)
+            self.dic[PSC.BREAKOUT_DATE] = MyPyDate.get_date_from_datetime(pattern.breakout.breakout_date)
+            self.dic[PSC.BREAKOUT_DIRECTION] = pattern.breakout.breakout_direction
+            self.dic[PSC.VOLUME_CHANGE] = pattern.breakout.volume_change_pct
+            if pattern.is_part_trade_available():
+                self.dic[PSC.EXPECTED] = pattern.trade_result.expected_win
+                self.dic[PSC.RESULT] = pattern.trade_result.actual_win
+                self.dic[PSC.VAL] = pattern.trade_result.formation_consistent
+                self.dic[PSC.EXT] = pattern.trade_result.limit_extended_counter
+                self.dic[PSC.BOUGHT_AT] = round(pattern.trade_result.bought_at, 2)
+                self.dic[PSC.SOLD_AT] = round(pattern.trade_result.sold_at, 2)
                 # self.dic[FSC.BOUGHT_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.bought_on)
                 # self.dic[FSC.SOLD_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.sold_on)
-                self.dic[FSC.T_NEEDED] = pattern.trade_result.actual_ticks
-                self.dic[FSC.LIMIT] = round(pattern.trade_result.limit, 2)
-                self.dic[FSC.STOP_LOSS_AT] = round(pattern.trade_result.stop_loss_at, 2)
-                self.dic[FSC.STOP_LOSS_TRIGGERED] = pattern.trade_result.stop_loss_reached
-                # if pattern.part_control is not None:
-                    # self.dic[FSC.RESULT_DF_MAX] = pattern.part_control.max
-                    # self.dic[FSC.RESULT_DF_MIN] = pattern.part_control.min
-                self.dic[FSC.FIRST_LIMIT_REACHED] = False  # default
-                self.dic[FSC.STOP_LOSS_MAX_REACHED] = False  # default
+                self.dic[PSC.T_NEEDED] = pattern.trade_result.actual_ticks
+                self.dic[PSC.LIMIT] = round(pattern.trade_result.limit, 2)
+                self.dic[PSC.STOP_LOSS_AT] = round(pattern.trade_result.stop_loss_at, 2)
+                self.dic[PSC.STOP_LOSS_TRIGGERED] = pattern.trade_result.stop_loss_reached
+                # if pattern.part_trade is not None:
+                #     self.dic[FSC.RESULT_DF_MAX] = pattern.part_trade.max
+                #     self.dic[FSC.RESULT_DF_MIN] = pattern.part_trade.min
+                self.dic[PSC.FIRST_LIMIT_REACHED] = False  # default
+                self.dic[PSC.STOP_LOSS_MAX_REACHED] = False  # default
                 # if pattern.breakout_direction == FD.ASC \
                 #         and (pattern.bound_upper + pattern.breadth < self.dic[FSC.RESULT_DF_MAX]):
                 #     self.dic[FSC.FIRST_LIMIT_REACHED] = True
@@ -2592,7 +2577,7 @@ class PatternDetectorStatisticsApi:
 
     def __fill_parameter__(self):
         for pattern in self.pattern_list:
-            if pattern.was_breakout_done() and pattern.is_part_control_available():
+            if pattern.was_breakout_done() and pattern.is_part_trade_available():
                 result = pattern.trade_result
                 self.counter_actual_ticks += result.actual_ticks
                 self.counter_ticks += result.max_ticks
@@ -2712,11 +2697,11 @@ class PatternController:
         if self.config.get_data_from_db and self.__excel_file_with_test_data != '':
             for ind, rows in self.df_test_data.iterrows():
                 if self.loop_list_ticker.counter >= self.__start_row:
-                    self.config.ticker_dic[rows[FSC.TICKER]] = rows[FSC.NAME]
-                    start_date = MyPyDate.get_date_from_datetime(rows[FSC.BEGIN_PREVIOUS])
-                    date_end = MyPyDate.get_date_from_datetime(rows[FSC.END] + timedelta(days=rows[FSC.T_FINAL] + 20))
+                    self.config.ticker_dic[rows[PSC.TICKER]] = rows[PSC.NAME]
+                    start_date = MyPyDate.get_date_from_datetime(rows[PSC.BEGIN_PREVIOUS])
+                    date_end = MyPyDate.get_date_from_datetime(rows[PSC.END] + timedelta(days=rows[PSC.T_FINAL] + 20))
                     and_clause = "Date BETWEEN '{}' AND '{}'".format(start_date, date_end)
-                    self.loop_list_ticker.append({LL.TICKER: rows[FSC.TICKER], LL.AND_CLAUSE: and_clause})
+                    self.loop_list_ticker.append({LL.TICKER: rows[PSC.TICKER], LL.AND_CLAUSE: and_clause})
                 if self.loop_list_ticker.counter >= self.__end_row:
                     break
         else:
@@ -2734,7 +2719,7 @@ class PatternController:
 
 
 config = PatternConfiguration()
-config.get_data_from_db = False
+config.get_data_from_db = True
 config.api_period = ApiPeriod.DAILY
 config.pattern_type_list = FT.get_all()
 # config.pattern_type_list = [FT.TKE_DOWN]
@@ -2747,11 +2732,11 @@ config.breakout_over_congestion_range = False
 # config.show_final_statistics = True
 config.max_number_securities = 1000
 config.breakout_range_pct = 0.01  # default is 0.01
-config.use_index(Indices.DOW_JONES)
-# config.use_own_dic({"CVX": "American"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+config.use_index(Indices.MIXED)
+config.use_own_dic({"INTC": "American", "TSLA": "Teslat"})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", "AXP": "American", "WMT": "Wall mart",
 # config.and_clause = "Date BETWEEN '2017-10-25' AND '2018-04-18'"
-config.and_clause = "Date BETWEEN '2017-01-25' AND '2018-02-18'"
+config.and_clause = "Date BETWEEN '2017-01-25' AND '2019-02-18'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 
