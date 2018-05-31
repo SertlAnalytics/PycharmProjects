@@ -259,7 +259,7 @@ class PatternDetector:
     @staticmethod
     def __check_for_break__(function_cont, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
         if counter > number_of_positions:  # maximal number for the whole pattern after its building
-           return True
+            return True
         if not function_cont.is_regression_value_in_pattern_for_position(tick.position):
             return True
         if not function_cont.is_tick_inside_pattern_range(tick):
@@ -646,21 +646,21 @@ config = PatternConfiguration()
 config.get_data_from_db = False
 config.api_period = ApiPeriod.DAILY
 config.pattern_type_list = FT.get_all()
-# config.pattern_type_list = [FT.TKE_DOWN]
+config.pattern_type_list = [FT.TRIANGLE_BOTTOM]
 config.plot_data = True
-config.statistics_excel_file_name = 'statistics_pattern.xlsx'
+config.statistics_excel_file_name = 'statistics_pattern_05-31.xlsx'
 config.statistics_excel_file_name = ''
 config.bound_upper_value = CN.CLOSE
 config.bound_lower_value = CN.CLOSE
 config.breakout_over_congestion_range = False
 # config.show_final_statistics = True
 config.max_number_securities = 1000
-config.breakout_range_pct = 0.01  # default is 0.01
+config.breakout_range_pct = 0.05  # default is 0.05
 config.use_index(Indices.DOW_JONES)
 # config.use_own_dic({'CAT': 'Caterpillar'})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", "AXP": "American", "WMT": "Wall mart",
 # config.and_clause = "Date BETWEEN '2017-10-25' AND '2018-04-18'"
-config.and_clause = "Date BETWEEN '2017-02-22' AND '2019-02-18'"
+config.and_clause = "Date BETWEEN '2018-01-22' AND '2019-02-18'"
 # config.and_clause = ''
 config.api_output_size = ApiOutputsize.COMPACT
 

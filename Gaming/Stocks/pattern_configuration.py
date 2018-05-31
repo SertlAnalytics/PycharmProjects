@@ -38,7 +38,7 @@ class PatternConfiguration:
         self.range_detector_tolerance_pct = 0.01
         self.check_previous_period = False   # default
         self.breakout_over_congestion_range = False
-        self.breakout_range_pct = 0.01
+        self.breakout_range_pct = 0.05
         self.investment = 1000
         self.max_number_securities = 1000
         self.show_final_statistics = True

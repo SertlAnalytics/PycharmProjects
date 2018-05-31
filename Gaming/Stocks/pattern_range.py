@@ -98,7 +98,7 @@ class PatternRange:
         for i in range(0, len(tick_list) - 1):
             for m in range(i + 1, len(tick_list)):
                 f_param = self.__get_linear_f_params__(tick_list[i], tick_list[m])
-                self.__append_f_param_to_param_list__(f_param, tick_list)
+                self.__append_f_param_to_param_list__(f_param, tick_list, i, m)
 
     def __get_parallel_function__(self) -> np.poly1d:
         pass
@@ -192,9 +192,9 @@ class PatternRangeMax(PatternRange):
     def __get_linear_f_params__(tick_i: WaveTick, tick_m: WaveTick) -> np.poly1d:
         return tick_i.get_linear_f_params_for_low(tick_m)
 
-    def __append_f_param_to_param_list__(self, f_param: np.poly1d, tick_list):
-        for ticks in tick_list:
-            if ticks.low < f_param(ticks.position):
+    def __append_f_param_to_param_list__(self, f_param: np.poly1d, tick_list, i: int, m: int):
+        for ind, ticks in enumerate(tick_list):
+            if ticks.low < f_param(ticks.position) and ind not in [i, m]:
                 return
         self._f_param_list.append(f_param)
 
@@ -219,9 +219,9 @@ class PatternRangeMin(PatternRange):
     def __get_linear_f_params__(tick_i: WaveTick, tick_m: WaveTick) -> np.poly1d:
         return tick_i.get_linear_f_params_for_high(tick_m)
 
-    def __append_f_param_to_param_list__(self, f_param: np.poly1d, tick_list):
-        for ticks in tick_list:
-            if ticks.high > f_param(ticks.position):
+    def __append_f_param_to_param_list__(self, f_param: np.poly1d, tick_list, i: int, m: int):
+        for ind, ticks in enumerate(tick_list):
+            if ticks.high > f_param(ticks.position) and ind not in [i, m]:
                 return
         self._f_param_list.append(f_param)
 
