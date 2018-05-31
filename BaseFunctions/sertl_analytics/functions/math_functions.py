@@ -14,3 +14,19 @@ def get_function_parameters(ind_left, value_left, ind_right, value_right):
     z = np.polyfit(x, y, 1)
     p = np.poly1d(z)
     return p
+
+
+class ToleranceCalculator:
+    @staticmethod
+    def are_values_in_tolerance_range(val_1: float, val_2: float, tolerance_pct: float):
+        test = abs((val_1 - val_2)/np.mean([val_1, val_2]))
+        return True if 0 == val_1 == val_2 else abs((val_1 - val_2)/np.mean([val_1, val_2])) < tolerance_pct
+
+    @staticmethod
+    def are_values_in_function_tolerance_range(x: list, y: list, f, tolerance_pct: float):
+        for k in range(len(x)):
+            y_k = y[k]
+            f_k = f(x[k])
+            if not ToleranceCalculator.are_values_in_tolerance_range(y_k, f_k, tolerance_pct):
+                return False
+        return True

@@ -92,6 +92,7 @@ class StockDatabase(BaseDatabase):
         self.create_database_elements(metadata)
         print(repr(data))
 
+
 class StockDatabaseDataFrame(DatabaseDataFrame):
     def __init__(self, db: StockDatabase, symbol: str = '', and_clause: str = ''):
         self.symbol = symbol
@@ -133,6 +134,7 @@ dow_jones_dic = {"DWDP": "DowDuPont", "XOM": "Exxon", "GE": "General",
 "MSFT": "Microsoft", "NKE": "Nike", "PFE": "Pfizer", "PG": "Procter",
 "TRV": "Travelers", "UTX": "United", "UNH": "UnitedHealth", "VZ": "Verizon",
 "V": "Visa", "WMT": "Wal-Mart"}
+
 
 def get_nasdaq_dic():
     """
