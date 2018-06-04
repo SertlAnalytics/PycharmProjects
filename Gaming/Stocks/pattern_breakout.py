@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 from pattern_function_container import PatternFunctionContainer
 from pattern_configuration import PatternConfiguration
-from pattern_constants import FD
+from pattern_constants import FD, TT
 
 
 class PatternBreakoutApi:
@@ -40,12 +40,16 @@ class PatternBreakout:
         self.sign = 1 if self.breakout_direction == FD.ASC else -1
 
     def is_breakout_a_signal(self) -> bool:
+        counter = 0
         if self.__is_breakout_over_limit__():
-            if True or self.__is_breakout_in_allowed_range__():
-                if self.tick_breakout.is_volume_rising(self.tick_previous, 10):  # i.e. 10% more volume required
-                    if self.__is_breakout_powerful__():
-                        return True
-        return False
+            counter += 1
+        # if self.__is_breakout_in_allowed_range__():
+        #     counter += 1
+        if self.tick_breakout.is_volume_rising(self.tick_previous, 10):  # i.e. 10% more volume required
+            counter += 1
+        if self.__is_breakout_powerful__():
+            counter += 1
+        return counter >= 2
 
     def get_details_for_annotations(self):
         vol_change = round(((self.tick_breakout.volume/self.tick_previous.volume) - 1) * 100, 0)
@@ -55,7 +59,8 @@ class PatternBreakout:
         return FD.ASC if self.tick_breakout.close > self.bound_upper else FD.DESC
 
     def __is_breakout_powerful__(self) -> bool:
-        return self.tick_breakout.is_sustainable or self.tick_breakout.has_gap_to(self.tick_previous)
+        return self.tick_breakout.is_sustainable or (
+                self.tick_breakout.tick_type != TT.DOJI and self.tick_breakout.has_gap_to(self.tick_previous))
 
     def __is_breakout_over_limit__(self) -> bool:
         limit_range = self.pattern_breadth if self.config.breakout_over_congestion_range \
@@ -67,6 +72,6 @@ class PatternBreakout:
 
     def __is_breakout_in_allowed_range__(self) -> bool:
         if self.breakout_direction == FD.ASC:
-            return self.tick_breakout.close > self.bound_upper + self.pattern_breadth / 2
+            return self.tick_breakout.close < self.bound_upper + self.pattern_breadth / 2
         else:
-            return self.tick_breakout.close < self.bound_lower - self.pattern_breadth / 2
+            return self.tick_breakout.close > self.bound_lower - self.pattern_breadth / 2

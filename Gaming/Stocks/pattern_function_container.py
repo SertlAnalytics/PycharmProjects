@@ -33,6 +33,14 @@ class PatternFunctionContainer:
         return self.__tick_last.position - self.__tick_first.position
 
     @property
+    def position_first(self):
+        return self.__tick_first.position
+
+    @property
+    def position_last(self):
+        return self.__tick_last.position
+
+    @property
     def tick_first(self):
         return self.__tick_first
 
@@ -61,31 +69,8 @@ class PatternFunctionContainer:
         return self.__h_upper
 
     @property
-    def f_upper_trade(self):
-        if self.__breakout_direction == FD.DESC:
-            return self.__h_lower
-        else:
-            return np.poly1d([0, self.__h_upper[0] + self.pattern_breadth])
-
-    @property
-    def f_lower_trade(self):
-        if self.__breakout_direction == FD.DESC:
-            return np.poly1d([0, self.__h_lower[0] - self.pattern_breadth])
-        else:
-            return self.__h_upper
-
-    @property
     def f_regression(self):
         return self.__f_regression
-
-    @property
-    def pattern_breadth(self):
-        breadth_left = self.__f_upper(self.tick_first.position) - self.__f_lower(self.tick_first.position)
-        breadth_right = self.__f_upper(self.tick_for_helper.position) - self.__f_lower(self.tick_for_helper.position)
-        if self.pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
-            return round(breadth_right, 2)
-        else:
-            return round((breadth_left + breadth_right)/2, 2)
 
     def __set_breakout_direction__(self, breakout_direction: str):
         self.__breakout_direction = breakout_direction

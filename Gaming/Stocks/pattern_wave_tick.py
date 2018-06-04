@@ -5,8 +5,10 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from pattern_constants import CN
+import pandas as pd
+from pattern_constants import CN, TT
 from sertl_analytics.functions import math_functions
+from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
 class WaveTick:
@@ -65,6 +67,12 @@ class WaveTick:
     def volume(self):
         return self.tick[CN.VOL]
 
+    @property
+    def tick_type(self):
+        if abs((self.open - self.close) / (self.high - self.low)) < 0.2:
+            return TT.DOJI
+        return TT.NONE
+
     def print(self):
         print('Pos: {}, Date: {}, High: {}, Low: {}'.format(self.position, self.date, self.high, self.low))
 
@@ -82,3 +90,15 @@ class WaveTick:
 
     def has_gap_to(self, tick_comp):
         return self.low > tick_comp.high or self.high < tick_comp.low
+
+
+class ExtendedDictionary4WaveTicks(ExtendedDictionary):
+    def __init__(self, df: pd.DataFrame):
+        ExtendedDictionary.__init__(self)
+        self.df = df
+        self.__process_df__()
+
+    def __process_df__(self):
+        for ind, rows in self.df.iterrows():
+            tick = WaveTick(rows)
+            self.append(tick.date_num, tick)

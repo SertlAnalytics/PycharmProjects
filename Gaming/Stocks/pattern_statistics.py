@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from pattern_constants import PSC
+from pattern_constants import PSC, FD
 from pattern_configuration import PatternConfiguration
 from pattern import Pattern
 from sertl_analytics.pybase.date_time import MyPyDate
@@ -111,29 +111,29 @@ class PatternStatistics:
                 self.dic[PSC.EXT] = pattern.trade_result.limit_extended_counter
                 self.dic[PSC.BOUGHT_AT] = round(pattern.trade_result.bought_at, 2)
                 self.dic[PSC.SOLD_AT] = round(pattern.trade_result.sold_at, 2)
-                # self.dic[FSC.BOUGHT_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.bought_on)
-                # self.dic[FSC.SOLD_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.sold_on)
+                self.dic[PSC.BOUGHT_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.bought_on)
+                self.dic[PSC.SOLD_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.sold_on)
                 self.dic[PSC.T_NEEDED] = pattern.trade_result.actual_ticks
                 self.dic[PSC.LIMIT] = round(pattern.trade_result.limit, 2)
                 self.dic[PSC.STOP_LOSS_AT] = round(pattern.trade_result.stop_loss_at, 2)
                 self.dic[PSC.STOP_LOSS_TRIGGERED] = pattern.trade_result.stop_loss_reached
-                # if pattern.part_trade is not None:
-                #     self.dic[FSC.RESULT_DF_MAX] = pattern.part_trade.max
-                #     self.dic[FSC.RESULT_DF_MIN] = pattern.part_trade.min
+                if pattern.part_trade is not None:
+                    self.dic[PSC.RESULT_DF_MAX] = pattern.part_trade.max
+                    self.dic[PSC.RESULT_DF_MIN] = pattern.part_trade.min
                 self.dic[PSC.FIRST_LIMIT_REACHED] = False  # default
                 self.dic[PSC.STOP_LOSS_MAX_REACHED] = False  # default
-                # if pattern.breakout_direction == FD.ASC \
-                #         and (pattern.bound_upper + pattern.breadth < self.dic[FSC.RESULT_DF_MAX]):
-                #     self.dic[FSC.FIRST_LIMIT_REACHED] = True
-                # if pattern.breakout_direction == FD.DESC \
-                #         and (pattern.bound_lower - pattern.breadth > self.dic[FSC.RESULT_DF_MIN]):
-                #     self.dic[FSC.FIRST_LIMIT_REACHED] = True
-                # if pattern.breakout_direction == FD.ASC \
-                #         and (pattern.bound_lower > self.dic[FSC.RESULT_DF_MIN]):
-                #     self.dic[FSC.STOP_LOSS_MAX_REACHED] = True
-                # if pattern.breakout_direction == FD.DESC \
-                #         and (pattern.bound_upper < self.dic[FSC.RESULT_DF_MAX]):
-                #     self.dic[FSC.STOP_LOSS_MAX_REACHED] = True
+                if pattern.breakout_direction == FD.ASC \
+                        and (pattern.part_main.bound_upper + pattern.part_main.breadth < self.dic[PSC.RESULT_DF_MAX]):
+                    self.dic[PSC.FIRST_LIMIT_REACHED] = True
+                if pattern.breakout_direction == FD.DESC \
+                        and (pattern.part_main.bound_lower - pattern.part_main.breadth > self.dic[PSC.RESULT_DF_MIN]):
+                    self.dic[PSC.FIRST_LIMIT_REACHED] = True
+                if pattern.breakout_direction == FD.ASC \
+                        and (pattern.part_main.bound_lower > self.dic[PSC.RESULT_DF_MIN]):
+                    self.dic[PSC.STOP_LOSS_MAX_REACHED] = True
+                if pattern.breakout_direction == FD.DESC \
+                        and (pattern.part_main.bound_upper < self.dic[PSC.RESULT_DF_MAX]):
+                    self.dic[PSC.STOP_LOSS_MAX_REACHED] = True
 
         new_entry = [self.dic[column] for column in self.column_list]
         self.list.append(new_entry)
@@ -183,8 +183,7 @@ class PatternDetectorStatisticsApi:
                     else self.counter_formation_OK
                 self.counter_formation_NOK = self.counter_formation_NOK + 1 if not result.formation_consistent \
                     else self.counter_formation_NOK
-                # traded_entities = int(self.investment_working / result.bought_at)
-                traded_entities = 0
+                traded_entities = int(self.investment_working / result.bought_at)
                 self.investment_working = round(self.investment_working + (traded_entities * result.actual_win), 2)
 
 

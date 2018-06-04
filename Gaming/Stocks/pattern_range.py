@@ -24,7 +24,7 @@ class PatternRange:
         self.__min_length = min_length
         self.__f_param = None
         self.__f_param_parallel = None  # parallel function through low or high
-        self.__f_param_const = None # constant through low or high
+        self.__f_param_const = None  # constant through low or high
         self._f_param_list = []  # contains the possible f_params of the opposite side
 
     @property
@@ -106,7 +106,7 @@ class PatternRange:
     def __get_const_function__(self) -> np.poly1d:
         pass
 
-    def __append_f_param_to_param_list__(self, f_param: np.poly1d, tick_list):
+    def __append_f_param_to_param_list__(self, f_param: np.poly1d, tick_list, i: int, m: int):
         pass
 
     def __get_tick_list_for_param_list__(self) -> list:
@@ -316,7 +316,7 @@ class PatternRangeDetectorMax(PatternRangeDetector):
     def __is_new_tick_a_breakout__(self, pattern_range: PatternRange, f_value_new_last_position_right: float):
         return pattern_range.tick_last.high < f_value_new_last_position_right
 
-    def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRange:
+    def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRangeMax:
         return PatternRangeMax(self.df_min_max, tick, self._number_required_ticks)
 
 
@@ -330,5 +330,5 @@ class PatternRangeDetectorMin(PatternRangeDetector):
     def __is_new_tick_a_breakout__(self, pattern_range: PatternRange, f_value_new_last_position_right: float):
         return pattern_range.tick_last.low > f_value_new_last_position_right
 
-    def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRange:
+    def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRangeMin:
         return PatternRangeMin(self.df_min_max, tick, self._number_required_ticks)

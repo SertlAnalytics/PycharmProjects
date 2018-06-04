@@ -11,12 +11,13 @@ class FT:
     TKE_DOWN = 'TKE down'  # Trend correction extrema
     TKE_UP = 'TKE up'  # Trend correction extrema
     HEAD_SHOULDER = 'Head-Shoulder'
+    HEAD_SHOULDER_INVERSE = 'Inverse-Head-Shoulder'
     ALL = 'All'
 
     @staticmethod
     def get_all():
-        return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN
-                , FT.CHANNEL, FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN, FT.HEAD_SHOULDER]
+        return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN, FT.CHANNEL,
+                FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN, FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_INVERSE]
 
 
 class Indices:
@@ -31,6 +32,11 @@ class FD:
     HOR = 'horizontal'
     ASC = 'ascending'
     DESC = 'descending'
+
+
+class TT:  # Tick types
+    NONE = 'NONE'
+    DOJI = 'Doji'
 
 
 class FCC:  # Formation Condition Columns

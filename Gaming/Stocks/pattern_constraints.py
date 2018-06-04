@@ -164,7 +164,7 @@ class TKEDownConstraints(Constraints):
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
         self.global_all_in = [SVC.U_on, SVC.U_in, SVC.M_in, SVC.L_in, SVC.L_on]  # , SVC.H_M_in
-        self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 3)]
+        self.global_count = ['OR', CountConstraint(SVC.U_in, '>=', 3)]
         self.global_series = ['OR', [SVC.U_on, SVC.U_in, SVC.U_on], [SVC.U_on, SVC.U_on, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
@@ -182,7 +182,7 @@ class TKEUpConstraints(Constraints):
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_M_in]
-        self.global_count = ['AND', CountConstraint(SVC.L_in, '>=', 3)]
+        self.global_count = ['OR', CountConstraint(SVC.L_in, '>=', 3)]
         self.global_series = ['OR', [SVC.L_on, SVC.L_in, SVC.L_on], [SVC.L_on, SVC.L_on, SVC.L_on]]
 
     def __set_bounds_for_pattern_type__(self):
@@ -200,7 +200,7 @@ class ChannelConstraints(Constraints):
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
-        self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 3), CountConstraint(SVC.L_in, '>=', 2)]
+        self.global_count = ['OR', CountConstraint(SVC.U_in, '>=', 3), CountConstraint(SVC.L_in, '>=', 3)]
         self.global_series = ['OR', [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
                           [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
 
@@ -236,6 +236,29 @@ class HeadShoulderConstraints(Constraints):
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
+        self.global_count = ['AND', CountConstraint(SVC.L_in, '>=', 4), CountConstraint(SVC.U_in, '>=', 1)]
+        self.global_series = ['OR', [SVC.L_on, SVC.M_in, SVC.L_on, SVC.U_on, SVC.L_on, SVC.M_in, SVC.L_on],
+                              [SVC.L_on, SVC.M_in, SVC.L_in, SVC.U_on, SVC.M_in, SVC.M_in, SVC.L_on]]
+
+    def __set_bounds_for_pattern_type__(self):
+        self.f_upper_slope_bounds = [-0.01, 0.01]
+        self.f_lower_slope_bounds = self.f_upper_slope_bounds
+        self.f_upper_lower_slope_bounds = [0.8, 1.1]
+        self.f_regression_slope_bounds = [-0.03, 0.03]
+
+
+class InverseHeadShoulderConstraints(HeadShoulderConstraints):
+    @staticmethod
+    def __get_tolerance_pct__():
+        return 0.01
+
+    def __fill_global_constraints__(self):
+        """
+        1. All values have to be in a range (channel)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        """
+        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
         self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 4), CountConstraint(SVC.L_in, '>=', 1)]
         self.global_series = ['OR', [SVC.U_on, SVC.M_in, SVC.U_on, SVC.L_on, SVC.U_on, SVC.M_in, SVC.U_on],
                               [SVC.U_on, SVC.M_in, SVC.U_in, SVC.L_on, SVC.M_in, SVC.M_in, SVC.U_on]]
@@ -247,10 +270,22 @@ class HeadShoulderConstraints(Constraints):
         self.f_regression_slope_bounds = [-0.03, 0.03]
 
 
-class TriangleConstraints(ChannelConstraints):
+
+class TriangleConstraints(Constraints):
     @staticmethod
     def __get_tolerance_pct__():
         return 0.01
+
+    def __fill_global_constraints__(self):
+        """
+        1. All values have to be in a range (channel)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        """
+        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
+        self.global_count = ['OR', CountConstraint(SVC.U_in, '>=', 3), CountConstraint(SVC.L_in, '>=', 3)]
+        self.global_series = ['OR', [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
+                              [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
 
     def __set_bounds_for_pattern_type__(self):
         self.f_upper_slope_bounds = [-0.5, -0.1]

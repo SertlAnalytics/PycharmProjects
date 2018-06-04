@@ -40,10 +40,12 @@ class ExtendedDictionary:
         self.counter = 0
         self.min_index = None
         self.max_index = None
+        self.index = []
         self.dic = {}
 
     def append(self, key, value):
         self.counter += 1
+        self.index.append(key)
         self.dic[key] = value
         if self.min_index == None:
             self.min_index = key

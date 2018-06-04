@@ -17,6 +17,7 @@ from pattern_part import PatternPart
 import pattern_constraints as cstr
 from pattern_value_categorizer import ChannelValueCategorizer
 from sertl_analytics.pybase.exceptions import MyException
+from pattern_wave_tick import WaveTick
 
 
 class PatternConditionHandler:
@@ -79,6 +80,10 @@ class Pattern:
     def part_main(self) -> PatternPart:
         return self._part_main
 
+    @property
+    def part_trade(self) -> PatternPart:
+        return self._part_trade
+
     def add_part_main(self, part_main: PatternPart):
         self._part_main = part_main
         self.xy = self._part_main.xy
@@ -89,6 +94,18 @@ class Pattern:
     def add_part_trade(self, part_trade: PatternPart):
         self._part_trade = part_trade
         self.xy_trade = self._part_trade.xy
+
+    def get_f_upper_trade(self):
+        if self.breakout.breakout_direction == FD.DESC:
+            return self.function_cont.h_lower
+        else:
+            return np.poly1d([0, self.function_cont.h_upper[0] + self.__get_expected_win__()])
+
+    def get_f_lower_trade(self):
+        if self.breakout.breakout_direction == FD.DESC:
+            return np.poly1d([0, self.function_cont.h_lower[0] - self.__get_expected_win__()])
+        else:
+            return self.function_cont.h_upper
 
     def was_breakout_done(self):
         return True if self.breakout.__class__.__name__ == 'PatternBreakout' else False
@@ -144,10 +161,16 @@ class Pattern:
         return self._part_trade is not None
 
     def __get_pattern_function_container__(self) -> PatternFunctionContainer:
-        f_lower_list = self.pattern_range.get_complementary_functions(self.pattern_type)
+        f_complementary_list = self.pattern_range.get_complementary_functions(self.pattern_type)
         df_check = self.pattern_range.get_related_part_from_data_frame(self.df_min_max)
-        for f_lower in f_lower_list:
-            f_upper = self.pattern_range.f_param
+        for f_complementary in f_complementary_list:
+            f_main = self.pattern_range.f_param
+            if self.pattern_range.__class__.__name__ == 'PatternRangeMin':
+                f_upper = f_complementary
+                f_lower = f_main
+            else:
+                f_lower = f_complementary
+                f_upper = f_main
             if self.constraints.are_f_lower_f_upper_compliant(f_lower, f_upper):
                 function_container = PatternFunctionContainer(self.pattern_type, df_check, f_lower, f_upper)
                 value_categorizer = ChannelValueCategorizer(function_container, self.constraints.tolerance_pct)
@@ -157,60 +180,62 @@ class Pattern:
 
     def __fill_trade_result__(self):
         tolerance_range = self._part_main.breadth * self.constraints.tolerance_pct
-        self.trade_result.expected_win = round(self._part_main.breadth, 2)
+        self.trade_result.expected_win = self.__get_expected_win__()
         self.trade_result.bought_at = round(self.breakout.tick_breakout.close, 2)
         self.trade_result.bought_on = self.breakout.tick_breakout.date
         self.trade_result.max_ticks = self._part_trade.df.shape[0]
         if self.breakout_direction == FD.ASC:
-            self.trade_result.stop_loss_at = self._part_main.bound_upper - tolerance_range
+            self.trade_result.stop_loss_at = self._part_main.bound_lower
             self.trade_result.limit = self._part_main.bound_upper + self.trade_result.expected_win
         else:
-            self.trade_result.stop_loss_at = self._part_main.bound_lower + tolerance_range
+            self.trade_result.stop_loss_at = self._part_main.bound_upper
             self.trade_result.limit = self._part_main.bound_lower - self.trade_result.expected_win
 
-        for ind, rows in self._part_trade.df.iterrows():
+        for tick in self._part_trade.tick_list:
             self.trade_result.actual_ticks += 1
-            cont = self.__fill_trade_results_for_breakout_direction__(ind, rows)
-            if not cont:
+            if not self.__fill_trade_results_for_breakout_direction__(tick):
                 break
 
-    def __fill_trade_results_for_breakout_direction__(self, date, row):
+    def __get_expected_win__(self):
+        return round(self._part_main.breadth, 2)
+
+    def __fill_trade_results_for_breakout_direction__(self, tick: WaveTick):
         sig = 1 if self.breakout_direction == FD.ASC else -1
 
-        self.trade_result.sold_at = round(row.Close, 2)  # default
-        self.trade_result.sold_on = date  # default
-        self.trade_result.actual_win = sig * round(row.Close - self.trade_result.bought_at, 2)  # default
+        self.trade_result.sold_at = round(tick.close, 2)  # default
+        self.trade_result.sold_on = tick.date  # default
+        self.trade_result.actual_win = sig * round(tick.close - self.trade_result.bought_at, 2)  # default
 
-        if (self.breakout_direction == FD.ASC and row.Low < self.trade_result.stop_loss_at) \
-                or (self.breakout_direction == FD.DESC and row.High > self.trade_result.stop_loss_at):
+        if (self.breakout_direction == FD.ASC and tick.low < self.trade_result.stop_loss_at) \
+                or (self.breakout_direction == FD.DESC and tick.high > self.trade_result.stop_loss_at):
             self.trade_result.stop_loss_reached = True
             if self.breakout_direction == FD.ASC:
-                self.trade_result.sold_at = min(row.Open, self.trade_result.stop_loss_at)
+                self.trade_result.sold_at = min(tick.open, self.trade_result.stop_loss_at)
             else:
-                self.trade_result.sold_at = max(row.Open, self.trade_result.stop_loss_at)
+                self.trade_result.sold_at = max(tick.open, self.trade_result.stop_loss_at)
             self.trade_result.actual_win = sig * round(self.trade_result.sold_at - self.trade_result.bought_at, 2)
             return False
 
-        if (self.breakout_direction == FD.ASC and row.High > self.trade_result.limit) \
-                or (self.breakout_direction == FD.DESC and row.Low < self.trade_result.limit):
-            if self.__is_row_trigger_for_extension__(row):  # extend the limit (let the win run)
+        if (self.breakout_direction == FD.ASC and tick.high > self.trade_result.limit) \
+                or (self.breakout_direction == FD.DESC and tick.low < self.trade_result.limit):
+            if self.__is_row_trigger_for_extension__(tick):  # extend the limit (let the win run)
                 self.trade_result.stop_loss_at += sig * self.trade_result.expected_win
                 self.trade_result.limit += sig * self.trade_result.expected_win
                 self.trade_result.limit_extended_counter += 1
                 self.trade_result.formation_consistent = True
             else:
-                self.trade_result.sold_at = row.Close
+                self.trade_result.sold_at = tick.close
                 self.trade_result.actual_win = sig * round(self.trade_result.sold_at - self.trade_result.bought_at, 2)
                 self.trade_result.formation_consistent = True
                 return False
         return True
 
-    def __is_row_trigger_for_extension__(self, row):
+    def __is_row_trigger_for_extension__(self, tick: WaveTick):
         threshold = 0.005
         if self.breakout_direction == FD.ASC:
-            return row.Close > self.trade_result.limit or (row.Close - row.High)/row.Close < threshold
+            return tick.close > self.trade_result.limit and (tick.high - tick.close)/tick.close < threshold
         else:
-            return row.Close < self.trade_result.limit or (row.Close - row.Low)/row.Close < threshold
+            return tick.close < self.trade_result.limit and (tick.close - tick.low)/tick.close < threshold
 
 
 class ChannelPattern(Pattern):
@@ -237,11 +262,20 @@ class HeadShoulderPattern(Pattern):
         return cstr.HeadShoulderConstraints()
 
 
+class InverseHeadShoulderPattern(Pattern):
+    @staticmethod
+    def __get_constraint__():
+        return cstr.InverseHeadShoulderConstraints()
+
+
 class TrianglePattern(Pattern):
     @staticmethod
     def __get_constraint__():
         return cstr.TriangleConstraints()
     # TODO: Most triangles take their first tick (e.g. min) before the 3 ticks on the other side => enhance range
+
+    def __get_expected_win__(self):
+        return round(self._part_main.distance_min, 2)
 
 
 class TriangleBottomPattern(TrianglePattern):
@@ -249,11 +283,17 @@ class TriangleBottomPattern(TrianglePattern):
     def __get_constraint__():
         return cstr.TriangleBottomConstraints()
 
+    def __get_expected_win__(self):
+        return round(2 * self._part_main.distance_min, 2)
+
 
 class TriangleTopPattern(TrianglePattern):
     @staticmethod
     def __get_constraint__():
         return cstr.TriangleTopConstraints()
+
+    def __get_expected_win__(self):
+        return round(2 * self._part_main.distance_min, 2)
 
 
 class TriangleUpPattern(TrianglePattern):
@@ -297,6 +337,8 @@ class PatternHelper:
             return ChannelUpPattern(pattern_type, df, df_min_max, pattern_range, config)
         elif pattern_type == FT.HEAD_SHOULDER:
             return HeadShoulderPattern(pattern_type, df, df_min_max, pattern_range, config)
+        elif pattern_type == FT.HEAD_SHOULDER_INVERSE:
+            return InverseHeadShoulderPattern(pattern_type, df, df_min_max, pattern_range, config)
         elif pattern_type == FT.TRIANGLE:
             return TrianglePattern(pattern_type, df, df_min_max, pattern_range, config)
         elif pattern_type == FT.TRIANGLE_TOP:

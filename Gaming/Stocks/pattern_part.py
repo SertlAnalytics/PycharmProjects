@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 from pattern_constants import CN, FT
 from pattern_function_container import PatternFunctionContainer
+from pattern_data_container import PatternDataContainer
 from pattern_wave_tick import WaveTick
 from pattern_configuration import PatternConfiguration
 from stock_data_frame import StockDataFrame
@@ -29,9 +30,12 @@ class AnnotationParameter:
 
 
 class PatternPart:
-    def __init__(self, function_cont: PatternFunctionContainer, config: PatternConfiguration):
+    def __init__(self, data_container: PatternDataContainer, function_cont: PatternFunctionContainer,
+                 config: PatternConfiguration):
+        self.data_container = data_container
         self.function_cont = function_cont
-        self.df = self.function_cont.df
+        self.df = data_container.df.iloc[function_cont.position_first:function_cont.position_last]
+        self.tick_list = []
         self.config = config
         self.pattern_type = self.function_cont.pattern_type
         self.breakout = self.config.runtime.actual_breakout
@@ -43,8 +47,8 @@ class PatternPart:
         self.breadth_first = 0
         self.bound_upper = 0
         self.bound_lower = 0
-        self.__distance_min = 0
-        self.__distance_max = 0
+        self.distance_min = 0
+        self.distance_max = 0
         self.__xy = None
         self.__xy_center = ()
         if self.df.shape[0] > 0:
@@ -70,8 +74,10 @@ class PatternPart:
         return self.tick_last.position - self.tick_first.position
 
     def __calculate_values__(self):
-        self.tick_first = WaveTick(self.df.iloc[0])
-        self.tick_last = WaveTick(self.df.iloc[-1])
+        self.tick_list = [self.data_container.tick_list[k] for k in range(self.function_cont.position_first,
+                                                                        self.function_cont.position_last)]
+        self.tick_first = self.tick_list[0]
+        self.tick_last = self.tick_list[-1]
         self.tick_high = WaveTick(self.df.loc[self.df[CN.HIGH].idxmax(axis=0)])
         self.tick_low = WaveTick(self.df.loc[self.df[CN.LOW].idxmin(axis=0)])
         tick_helper = self.function_cont.tick_for_helper
@@ -89,9 +95,9 @@ class PatternPart:
         if self.pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
             self.breadth = round(self.bound_upper - self.bound_lower, 2)
         else:
-            self.__distance_min = round(min(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
-            self.__distance_max = round(max(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
-            self.breadth = round((self.__distance_min + self.__distance_max)/2, 2)
+            self.distance_min = round(min(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
+            self.distance_max = round(max(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
+            self.breadth = round((self.distance_min + self.distance_max) / 2, 2)
 
     def __set_xy_parameter__(self):
         self.__xy = self.stock_df.get_xy_parameter(self.function_cont)
@@ -145,6 +151,14 @@ class PatternPart:
         return self.df[CN.MEAN_HL].mean()
 
     @property
+    def max(self):
+        return self.df[CN.HIGH].max()
+
+    @property
+    def min(self):
+        return self.df[CN.LOW].min()
+
+    @property
     def std(self):  # we need the standard deviation from the mean_HL for Low and High
         return ((self.df[CN.HIGH]-self.mean).std() + (self.df[CN.LOW]-self.mean).std())/2
 
@@ -175,7 +189,7 @@ class PatternPart:
             slopes = 'Slopes: U={}, L={}, U/L={}, Reg={}'.format(
                 f_upper_slope, f_lower_slope, relation_u_l, reg_slope)
             breadth = 'Breadth={}, Max={}, Min={}, Std_dev={}'.format(
-                self.breadth, self.__distance_max, self.__distance_min, std_dev)
+                self.breadth, self.distance_max, self.distance_min, std_dev)
 
         if self.breakout is None:
             breakout_str = 'Breakout: not yet'
