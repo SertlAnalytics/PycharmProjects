@@ -8,6 +8,7 @@ Date: 2018-03-11
 import pandas as pd
 from sqlalchemy import create_engine, MetaData, Table, insert
 import os
+from sertl_analytics.pybase.exceptions import ErrorHandler
 
 
 class BaseDatabase:
@@ -15,6 +16,7 @@ class BaseDatabase:
         self.engine = self.__get_engine__()
         self.db_name = self.__get_db_name__()
         self.db_path = self.__get_db_path__()
+        self.error_handler = ErrorHandler()
 
     def __get_engine__(self):
         pass  # will be overwritten by sub classes
@@ -52,12 +54,12 @@ class BaseDatabase:
     def create_database_elements(self, metadata: MetaData):
         metadata.create_all(self.engine)
 
-    def insert_data_into_table(self, table_name: str, insert_data_dict: dict):
+    def insert_data_into_table(self, table_name: str, insert_data_dic_list: list):
         connection = self.engine.connect()
         metadata = MetaData()
         table_object = Table(table_name, metadata, autoload=True, autoload_with=self.engine)
         stmt = insert(table_object)
-        results = connection.execute(stmt, insert_data_dict)
+        results = connection.execute(stmt, insert_data_dic_list)
         connection.close()
         print('Loaded into {}: {}'.format(table_name, results.rowcount))
 
@@ -78,7 +80,8 @@ class DatabaseDataFrame:
         self.query_active = self.__get_query__()
         self.result_set = self.db.get_result_set_for_query(self.query_active)
         self.df = pd.DataFrame(self.result_set)
-        self.df.columns = self.result_set[0].keys()
+        if self.df.shape[0] > 0:
+            self.df.columns = self.result_set[0].keys()
 
     def __get_query__(self):
         return self.query  # will be overwritten by sub classes

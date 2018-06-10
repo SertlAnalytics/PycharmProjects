@@ -5,11 +5,11 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from pattern_constants import CN, FT
+from sertl_analytics.constants.pattern_constants import CN, FT
 from pattern_function_container import PatternFunctionContainer
 from pattern_data_container import PatternDataContainer
 from pattern_wave_tick import WaveTick
-from pattern_configuration import PatternConfiguration
+from pattern_configuration import config
 from stock_data_frame import StockDataFrame
 import numpy as np
 import math
@@ -30,15 +30,13 @@ class AnnotationParameter:
 
 
 class PatternPart:
-    def __init__(self, data_container: PatternDataContainer, function_cont: PatternFunctionContainer,
-                 config: PatternConfiguration):
+    def __init__(self, data_container: PatternDataContainer, function_cont: PatternFunctionContainer):
         self.data_container = data_container
         self.function_cont = function_cont
-        self.df = data_container.df.iloc[function_cont.position_first:function_cont.position_last]
+        self.df = data_container.df.iloc[function_cont.position_first:function_cont.position_last + 1]
         self.tick_list = []
-        self.config = config
         self.pattern_type = self.function_cont.pattern_type
-        self.breakout = self.config.runtime.actual_breakout
+        self.breakout = config.runtime.actual_breakout
         self.tick_first = None
         self.tick_last = None
         self.tick_high = None
@@ -59,8 +57,8 @@ class PatternPart:
 
     def get_annotation_parameter(self, for_max: bool, color: str = 'blue'):
         annotation_param = AnnotationParameter()
-        offset_x = -10
-        offset_y = 0.5
+        offset_x = -19
+        offset_y = self.__get_annotation_offset_y__()
         offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
         annotation_param.text = self.__get_text_for_annotation__(for_max)
         annotation_param.xy = self.__xy_center
@@ -73,6 +71,11 @@ class PatternPart:
     def length(self):
         return self.tick_last.position - self.tick_first.position
 
+    def __get_annotation_offset_y__(self):
+        width = self.breadth / 2
+        c_val = self.__xy_center[1]
+        return width if self.data_container.max_value - c_val > c_val - self.data_container.min_value else - width
+
     def __calculate_values__(self):
         self.tick_list = [self.data_container.tick_list[k] for k in range(self.function_cont.position_first,
                                                                         self.function_cont.position_last)]
@@ -81,15 +84,15 @@ class PatternPart:
         self.tick_high = WaveTick(self.df.loc[self.df[CN.HIGH].idxmax(axis=0)])
         self.tick_low = WaveTick(self.df.loc[self.df[CN.LOW].idxmin(axis=0)])
         tick_helper = self.function_cont.tick_for_helper
-        f_upper_first = self.function_cont.get_upper_value_for_position(self.tick_first.position)
-        f_lower_first = self.function_cont.get_lower_value_for_position(self.tick_first.position)
+        f_upper_first = self.function_cont.get_upper_value(self.tick_first.f_var)
+        f_lower_first = self.function_cont.get_lower_value(self.tick_first.f_var)
         self.breadth_first = f_upper_first - f_lower_first
         if tick_helper is None:
-            f_upper_last = self.function_cont.get_upper_value_for_position(self.tick_last.position)
-            f_lower_last = self.function_cont.get_lower_value_for_position(self.tick_last.position)
+            f_upper_last = self.function_cont.get_upper_value(self.tick_last.f_var)
+            f_lower_last = self.function_cont.get_lower_value(self.tick_last.f_var)
         else:
-            f_upper_last = self.function_cont.get_upper_value_for_position(tick_helper.position)
-            f_lower_last = self.function_cont.get_lower_value_for_position(tick_helper.position)
+            f_upper_last = self.function_cont.get_upper_value(tick_helper.f_var)
+            f_lower_last = self.function_cont.get_lower_value(tick_helper.f_var)
         self.bound_upper = f_upper_last
         self.bound_lower = f_lower_last
         if self.pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
@@ -176,18 +179,22 @@ class PatternPart:
         reg_slope = round(f_regression[1], 3)
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_slope, f_lower_slope, relation_u_l = self.get_slope_values()
+        f_upper_pct = round(self.function_cont.f_upper_pct * 100, 1)
+        f_lower_pct = round(self.function_cont.f_lower_pct * 100, 1)
+        f_reg_pct = round(self.function_cont.f_regression_pct * 100, 1)
 
-        type_date = 'Type={}: {} - {}'.format(self.pattern_type, self.tick_first.date_str, self.tick_last.date_str)
+        type_date = 'Type={}: {} - {} ({})'.format(self.pattern_type, self.tick_first.date_str,
+                                                   self.tick_last.date_str, len(self.tick_list))
 
         if self.pattern_type == FT.TKE_UP:
-            slopes = 'Slopes: L={}, Reg={}'.format(f_lower_slope, reg_slope)
+            slopes = 'Gradients: L={}%, Reg={}%'.format(f_upper_pct, f_reg_pct)
             breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
         elif self.pattern_type == FT.TKE_DOWN:
-            slopes = 'Slopes: U={}, Reg={}'.format(f_upper_slope, reg_slope)
+            slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_pct, f_reg_pct)
             breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
         else:
-            slopes = 'Slopes: U={}, L={}, U/L={}, Reg={}'.format(
-                f_upper_slope, f_lower_slope, relation_u_l, reg_slope)
+            slopes = 'Gradients: U={}%, L={}%, U/L={}, Reg={}%'.format(
+                f_upper_pct, f_lower_pct, relation_u_l, f_reg_pct)
             breadth = 'Breadth={}, Max={}, Min={}, Std_dev={}'.format(
                 self.breadth, self.distance_max, self.distance_min, std_dev)
 

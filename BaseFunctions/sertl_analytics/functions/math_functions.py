@@ -13,6 +13,8 @@ def get_function_parameters(ind_left, value_left, ind_right, value_right):
     y = np.array([value_left, value_right])
     z = np.polyfit(x, y, 1)
     p = np.poly1d(z)
+    # p[0] = round(p[0], 3)
+    # p[1] = round(p[1], 2)
     return p
 
 

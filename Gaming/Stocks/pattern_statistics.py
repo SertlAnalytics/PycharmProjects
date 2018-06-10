@@ -5,8 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from pattern_constants import PSC, FD
-from pattern_configuration import PatternConfiguration
+from sertl_analytics.constants.pattern_constants import PSC, FD
+from pattern_configuration import config
 from pattern import Pattern
 from sertl_analytics.pybase.date_time import MyPyDate
 import pandas as pd
@@ -75,22 +75,22 @@ class PatternStatistics:
     def add_entry(self, pattern: Pattern):
         self.__init_dic__()
 
-        self.dic[PSC.C_BOUND_UPPER_VALUE] = pattern.config.bound_upper_value
-        self.dic[PSC.C_BOUND_LOWER_VALUE] = pattern.config.bound_lower_value
-        self.dic[PSC.C_CHECK_PREVIOUS_PERIOD] = pattern.config.check_previous_period
-        self.dic[PSC.C_BREAKOUT_OVER_CONGESTION] = pattern.config.breakout_over_congestion_range
+        self.dic[PSC.C_BOUND_UPPER_VALUE] = config.bound_upper_value
+        self.dic[PSC.C_BOUND_LOWER_VALUE] = config.bound_lower_value
+        self.dic[PSC.C_CHECK_PREVIOUS_PERIOD] = config.check_previous_period
+        self.dic[PSC.C_BREAKOUT_OVER_CONGESTION] = config.breakout_over_congestion_range
         self.dic[PSC.C_TOLERANCE_PCT] = pattern.tolerance_pct
-        self.dic[PSC.C_BREAKOUT_RANGE_PCT] = pattern.config.breakout_range_pct
-        self.dic[PSC.C_AND_CLAUSE] = pattern.config.and_clause
+        self.dic[PSC.C_BREAKOUT_RANGE_PCT] = config.breakout_range_pct
+        self.dic[PSC.C_AND_CLAUSE] = config.and_clause
 
         self.dic[PSC.CON_PREVIOUS_PERIOD_CHECK_OK] = pattern.condition_handler.previous_period_check_ok
         self.dic[PSC.CON_COMBINED_PARTS_APPLICABLE] = pattern.condition_handler.combined_parts_applicable
         self.dic[PSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = pattern.condition_handler.breakout_with_buy_signal
 
         self.dic[PSC.STATUS] = 'Finished' if pattern.was_breakout_done() else 'Open'
-        self.dic[PSC.NUMBER] = pattern.config.runtime.actual_number
-        self.dic[PSC.TICKER] = pattern.config.runtime.actual_ticker
-        self.dic[PSC.NAME] = pattern.config.runtime.actual_ticker_name
+        self.dic[PSC.NUMBER] = config.runtime.actual_number
+        self.dic[PSC.TICKER] = config.runtime.actual_ticker
+        self.dic[PSC.NAME] = config.runtime.actual_ticker_name
         self.dic[PSC.PATTERN] = pattern.pattern_type
         self.dic[PSC.BEGIN_PREVIOUS] = 'TODO'
         self.dic[PSC.BEGIN] = MyPyDate.get_date_from_datetime(pattern.date_first)
@@ -192,7 +192,7 @@ class DetectorStatistics:
         self.list = []
         self.column_list = ['Number', 'Ticker', 'Name', 'Investment', 'Result', 'Change%', 'SL', 'F_OK', 'F_NOK', 'Ticks']
 
-    def add_entry(self, config: PatternConfiguration, api: PatternDetectorStatisticsApi):
+    def add_entry(self, api: PatternDetectorStatisticsApi):
         new_entry = [config.runtime.actual_number, config.runtime.actual_ticker, config.runtime.actual_ticker_name
             , api.investment_start, api.investment_working, api.diff_pct
             , api.counter_stop_loss, api.counter_formation_OK, api.counter_formation_NOK, api.counter_actual_ticks]

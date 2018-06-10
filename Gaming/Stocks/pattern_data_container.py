@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import itertools
 import matplotlib.dates as dt
-from pattern_constants import CN
+from sertl_analytics.constants.pattern_constants import CN
 from sertl_analytics.pybase.date_time import MyPyDate
 from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks
 
@@ -17,15 +17,17 @@ from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks
 class PatternDataContainer:
     """
     This class has two purposes:
-    1. Identify all extrema: global and local maxima and minima which are used as checkpoint for pattern detections.
+    1. Identify all extrema: global and local maximum and minimum which are used as checkpoint for pattern detections.
     2. Identify ranges which can be used for a thorough inspection in the further process
     """
     def __init__(self, df: pd.DataFrame):
         self.df = df
         self.df_length = self.df.shape[0]
+        self.max_value = self.df[CN.HIGH].max()
+        self.min_value = self.df[CN.HIGH].min()
         self.__add_columns__()
         self.__length_for_global = int(self.df_length / 2)
-        self.__length_for_local = 3
+        self.__length_for_local = 2
         self.__init_columns_for_ticks_distance__()
         self.df_min_max = self.df[np.logical_or(self.df[CN.IS_MIN], self.df[CN.IS_MAX])]
         self.tick_by_date_num_ext_dic = ExtendedDictionary4WaveTicks(self.df)
@@ -45,6 +47,7 @@ class PatternDataContainer:
         self.__add_min_max_columns__()
 
     def __add_distance_columns__(self):
+        self.tick_list = [WaveTick(rows) for ind, rows in self.df.iterrows()]
         for pos, high, before in itertools.product(range(0, self.df_length), (False, True), (False, True)):
             value = self.__get_distance__(pos, high, before)
             if high and before:
@@ -71,7 +74,7 @@ class PatternDataContainer:
     def __get_distance__(self, row_pos: int, for_high: bool, for_before: bool) -> int:
         signature = -1 if for_before else 1
         pos_compare = row_pos + signature
-        actual_value_pair = self.__get_value_pair_for_comparison__(self.df.iloc[row_pos], for_high)
+        actual_value_pair = self.__get_value_pair_for_comparison__(self.tick_list[row_pos], for_high)
         while 0 <= pos_compare < self.df_length:
             if self.__is_new_value_a_break__(actual_value_pair, pos_compare, for_high):
                 break
@@ -83,7 +86,7 @@ class PatternDataContainer:
         We need a separate script for handling when values are different to avoid min/max neighbors with the same value
         The idea behind this algorithm is that the extrema is mostly not the longest tick.
         """
-        value_pair_compare = self.__get_value_pair_for_comparison__(self.df.iloc[pos_compare], for_high)
+        value_pair_compare = self.__get_value_pair_for_comparison__(self.tick_list[pos_compare], for_high)
         if for_high:
             if value_pair_compare[0] > actual_value_pair[0]:
                 return True
@@ -97,7 +100,7 @@ class PatternDataContainer:
         return False
 
     @staticmethod
-    def __get_value_pair_for_comparison__(row, for_high: bool) -> list:
-        value_first = row[CN.HIGH] if for_high else row[CN.LOW]
-        value_second = row[CN.LOW] if for_high else row[CN.HIGH]
+    def __get_value_pair_for_comparison__(tick: WaveTick, for_high: bool) -> list:
+        value_first = tick.high if for_high else tick.low
+        value_second = tick.low if for_high else tick.high
         return [value_first, value_second]

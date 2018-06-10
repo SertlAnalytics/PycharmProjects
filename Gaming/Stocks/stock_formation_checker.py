@@ -8,20 +8,17 @@ Date: 2018-03-11
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import sertl_analytics.environment  # init some environment variables during load - for security reasons
-import seaborn as sns
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, ApiPeriod, ApiOutputsize
-import stock_database
-from stock_database import StockSymbols
+from stock_database.stock_database import stock_database
 from mpl_finance import candlestick_ohlc
 import matplotlib.dates as dt
-from matplotlib.patches import Circle, Wedge, Polygon, Rectangle, Arrow
+from matplotlib.patches import Polygon, Arrow
 from matplotlib.collections import PatchCollection
 from datetime import datetime, timedelta
 import ftplib
 import tempfile
-from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
-import stock_database as sdb
+from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
+from stock_database import stock_database as sdb
 
 
 class CN:

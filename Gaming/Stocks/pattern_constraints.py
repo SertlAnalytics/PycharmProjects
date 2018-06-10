@@ -7,8 +7,8 @@ Date: 2018-05-14
 
 import numpy as np
 import pandas as pd
-from pattern_constants import CT, SVC
-from pattern_value_categorizer import ValueCategorizer, ChannelValueCategorizer
+from sertl_analytics.constants.pattern_constants import CT, SVC
+from pattern_value_categorizer import ValueCategorizer
 
 
 class CountConstraint:
@@ -36,49 +36,51 @@ class Constraints:
         self.global_all_in = []
         self.global_count = []
         self.global_series = []
-        self.f_upper_slope_bounds = [-0.02, 0.02]
-        self.f_lower_slope_bounds = [-0.02, 0.02]
-        self.f_upper_lower_slope_bounds = [-5, 5]  # the relationship bounds for the linear functions increase
-        self.f_regression_slope_bounds = [-0.02, 0.02]  # this constraint checks the "direction" of the data
+        self.f_upper_pct_bounds = [-0.02, 0.02]
+        self.f_lower_pct_bounds = [-0.02, 0.02]
+        self.f_upper_lower_relation_bounds = [-5, 5]  # the relationship bounds for the linear functions increase
+        self.f_regression_pct_bounds = [-0.02, 0.02]  # this constraint checks the "direction" of the data
         # [0.8, 1.2] Channel,
         self.__fill_global_constraints__()
         self.__set_bounds_for_pattern_type__()
         self.__check_dic = {}
 
-    def are_f_lower_f_upper_compliant(self, f_lower: np.poly1d, f_upper: np.poly1d):
-        if self.__is_f_lower_compliant__(f_lower):
-            if self.__is_f_upper_compliant__(f_upper):
-                return self.__is_relation_f_upper_f_lower_compliant__(f_upper, f_lower)
+    def are_f_lower_f_upper_pct_compliant(self, f_lower_pct: float, f_upper_pct: float):
+        if self.__is_f_lower_pct_compliant__(f_lower_pct):
+            if self.__is_f_upper_pct_compliant__(f_upper_pct):
+                return self.__is_relation_f_upper_f_lower_compliant__(f_upper_pct, f_lower_pct)
         return False
 
-    def is_f_regression_compliant(self, f_regression: np.poly1d):
-        return self.f_regression_slope_bounds[0] <= f_regression[1] <= self.f_regression_slope_bounds[1]
+    def is_f_regression_pct_compliant(self, f_regression_pct: float):
+        if len(self.f_regression_pct_bounds) == 0:  # no bounds defined
+            return True
+        return self.f_regression_pct_bounds[0] <= f_regression_pct <= self.f_regression_pct_bounds[1]
 
-    def __is_f_lower_compliant__(self, f_lower: np.poly1d):
-        if len(self.f_lower_slope_bounds) == 0:  # no lower bounds defined
+    def __is_f_lower_pct_compliant__(self, f_lower_pct: float):
+        if len(self.f_lower_pct_bounds) == 0:  # no lower bounds defined
             return True
-        return self.f_lower_slope_bounds[0] <= f_lower[1] <= self.f_lower_slope_bounds[1]
+        return self.f_lower_pct_bounds[0] <= f_lower_pct <= self.f_lower_pct_bounds[1]
 
-    def __is_f_upper_compliant__(self, f_upper: np.poly1d):
-        if len(self.f_upper_slope_bounds) == 0:  # no upper bounds defined
+    def __is_f_upper_pct_compliant__(self, f_upper_pct: float):
+        if len(self.f_upper_pct_bounds) == 0:  # no upper bounds defined
             return True
-        return self.f_upper_slope_bounds[0] <= f_upper[1] <= self.f_upper_slope_bounds[1]
+        return self.f_upper_pct_bounds[0] <= f_upper_pct <= self.f_upper_pct_bounds[1]
 
-    def __is_relation_f_upper_f_lower_compliant__(self, f_upper: np.poly1d, f_lower: np.poly1d):
-        if len(self.f_upper_lower_slope_bounds) == 0:  # no relation defined for both slopes
+    def __is_relation_f_upper_f_lower_compliant__(self, f_upper_pct: float, f_lower_pct: float):
+        if len(self.f_upper_lower_relation_bounds) == 0:  # no relation defined for both slopes
             return True
-        if f_lower[1] == 0:
+        if f_lower_pct == 0:
             return True
-        return self.f_upper_lower_slope_bounds[0] <= (f_upper[1]/f_lower[1]) <= self.f_upper_lower_slope_bounds[1]
+        return self.f_upper_lower_relation_bounds[0] <= (f_upper_pct / f_lower_pct) <= self.f_upper_lower_relation_bounds[1]
 
     @staticmethod
     def __get_tolerance_pct__():
         return 0.01
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-100.0, 100]
-        self.f_lower_slope_bounds = self.f_upper_slope_bounds
-        self.f_upper_lower_slope_bounds = [-100, 100]
+        self.f_upper_pct_bounds = [-100.0, 100]
+        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_lower_relation_bounds = [-100, 100]
 
     def get_unary_constraints(self, df: pd.DataFrame):
         pass
@@ -90,23 +92,23 @@ class Constraints:
         pass
 
     @property
-    def f_upper_slope_bounds_complementary(self):
-        return [-1 * x for x in reversed(self.f_upper_slope_bounds)]
+    def f_upper_pct_bounds_complementary(self):
+        return [-1 * x for x in reversed(self.f_upper_pct_bounds)]
 
     @property
-    def f_lower_slope_bounds_complementary(self):
-        return [-1 * x for x in reversed(self.f_lower_slope_bounds)]
+    def f_lower_pct_bounds_complementary(self):
+        return [-1 * x for x in reversed(self.f_lower_pct_bounds)]
 
     @property
-    def f_upper_lower_slope_bounds_complementary(self):
-        if len(self.f_upper_lower_slope_bounds) == 0:
+    def f_upper_lower_relation_bounds_complementary(self):
+        if len(self.f_upper_lower_relation_bounds) == 0:
             return []
-        return [round(1/x, 3) for x in reversed(self.f_upper_lower_slope_bounds)]
+        return [round(1/x, 3) for x in reversed(self.f_upper_lower_relation_bounds)]
 
     def __set_bounds_by_complementary_constraints__(self, comp_constraints):
-        self.f_upper_slope_bounds = comp_constraints.f_lower_slope_bounds_complementary
-        self.f_lower_slope_bounds = comp_constraints.f_upper_slope_bounds_complementary
-        self.f_upper_lower_slope_bounds = comp_constraints.f_upper_lower_slope_bounds_complementary
+        self.f_upper_pct_bounds = comp_constraints.f_lower_pct_bounds_complementary
+        self.f_lower_pct_bounds = comp_constraints.f_upper_pct_bounds_complementary
+        self.f_upper_lower_relation_bounds = comp_constraints.f_upper_lower_relation_bounds_complementary
 
     def are_global_constraints_satisfied(self, value_categorizer: ValueCategorizer):
         self.__check_dic[CT.ALL_IN] = self.__is_global_constraint_all_in_satisfied__(value_categorizer)
@@ -168,10 +170,10 @@ class TKEDownConstraints(Constraints):
         self.global_series = ['OR', [SVC.U_on, SVC.U_in, SVC.U_on], [SVC.U_on, SVC.U_on, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.6, -0.3]
-        self.f_lower_slope_bounds = []  # not required
-        self.f_upper_lower_slope_bounds = []
-        self.f_regression_slope_bounds = self.f_upper_slope_bounds
+        self.f_upper_pct_bounds = [-0.10, -0.50]
+        self.f_lower_pct_bounds = []  # not required
+        self.f_upper_lower_relation_bounds = []
+        self.f_regression_pct_bounds = self.f_upper_pct_bounds
 
 
 class TKEUpConstraints(Constraints):
@@ -186,10 +188,10 @@ class TKEUpConstraints(Constraints):
         self.global_series = ['OR', [SVC.L_on, SVC.L_in, SVC.L_on], [SVC.L_on, SVC.L_on, SVC.L_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = []  # not required
-        self.f_lower_slope_bounds = [0.3, 0.6]
-        self.f_upper_lower_slope_bounds = []
-        self.f_regression_slope_bounds = self.f_lower_slope_bounds
+        self.f_upper_pct_bounds = []  # not required
+        self.f_lower_pct_bounds = [0.10, 0.50]
+        self.f_upper_lower_relation_bounds = []
+        self.f_regression_pct_bounds = self.f_lower_pct_bounds
 
 
 class ChannelConstraints(Constraints):
@@ -205,18 +207,18 @@ class ChannelConstraints(Constraints):
                           [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.03, 0.03]
-        self.f_lower_slope_bounds = self.f_upper_slope_bounds
-        self.f_upper_lower_slope_bounds = []
-        self.f_regression_slope_bounds = self.f_upper_slope_bounds
+        self.f_upper_pct_bounds = [-0.02, 0.02]
+        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_lower_relation_bounds = [-2, 2]
+        self.f_regression_pct_bounds = [-10, 10]
 
 
 class ChannelUpConstraints(ChannelConstraints):
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [0.03, 0.9]
-        self.f_lower_slope_bounds = self.f_upper_slope_bounds
-        self.f_upper_lower_slope_bounds = [0.8, 1.2]
-        self.f_regression_slope_bounds = self.f_upper_slope_bounds
+        self.f_upper_pct_bounds = [0.02, 0.50]
+        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_lower_relation_bounds = [0.8, 1.2]
+        self.f_regression_pct_bounds = self.f_upper_pct_bounds
 
 
 class ChannelDownConstraints(ChannelConstraints):
@@ -241,10 +243,10 @@ class HeadShoulderConstraints(Constraints):
                               [SVC.L_on, SVC.M_in, SVC.L_in, SVC.U_on, SVC.M_in, SVC.M_in, SVC.L_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.01, 0.01]
-        self.f_lower_slope_bounds = self.f_upper_slope_bounds
-        self.f_upper_lower_slope_bounds = [0.8, 1.1]
-        self.f_regression_slope_bounds = [-0.03, 0.03]
+        self.f_upper_pct_bounds = [-0.03, 0.03]
+        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_lower_relation_bounds = [0.8, 1.1]
+        self.f_regression_pct_bounds = [-0.05, 0.05]
 
 
 class InverseHeadShoulderConstraints(HeadShoulderConstraints):
@@ -264,11 +266,10 @@ class InverseHeadShoulderConstraints(HeadShoulderConstraints):
                               [SVC.U_on, SVC.M_in, SVC.U_in, SVC.L_on, SVC.M_in, SVC.M_in, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.01, 0.01]
-        self.f_lower_slope_bounds = self.f_upper_slope_bounds
-        self.f_upper_lower_slope_bounds = [0.8, 1.1]
-        self.f_regression_slope_bounds = [-0.03, 0.03]
-
+        self.f_upper_pct_bounds = [-0.03, 0.03]
+        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_lower_relation_bounds = [0.8, 1.1]
+        self.f_regression_pct_bounds = [-0.05, 0.05]
 
 
 class TriangleConstraints(Constraints):
@@ -288,10 +289,10 @@ class TriangleConstraints(Constraints):
                               [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.5, -0.1]
-        self.f_lower_slope_bounds = [0.1, 0.5]
-        self.f_upper_lower_slope_bounds = [-10, -0.2]
-        self.f_regression_slope_bounds = [-0.1, 0.1]
+        self.f_upper_pct_bounds = [-0.5, -0.02]
+        self.f_lower_pct_bounds = [0.02, 0.5]
+        self.f_upper_lower_relation_bounds = [-10, -0.2]
+        self.f_regression_pct_bounds = [-0.5, 0.5]
 
 
 class TriangleTopConstraints(TriangleConstraints):
@@ -300,10 +301,10 @@ class TriangleTopConstraints(TriangleConstraints):
         return 0.01
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [-0.03, 0.03]
-        self.f_lower_slope_bounds = [0.2, 1.0]
-        self.f_upper_lower_slope_bounds = []
-        self.f_regression_slope_bounds = self.f_lower_slope_bounds
+        self.f_upper_pct_bounds = [-0.01, 0.01]
+        self.f_lower_pct_bounds = [0.02, 1.0]
+        self.f_upper_lower_relation_bounds = []
+        self.f_regression_pct_bounds = self.f_lower_pct_bounds
 
 
 class TriangleBottomConstraints(TriangleConstraints):
@@ -313,7 +314,7 @@ class TriangleBottomConstraints(TriangleConstraints):
 
     def __set_bounds_for_pattern_type__(self):
         self.__set_bounds_by_complementary_constraints__(TriangleTopConstraints())
-        self.f_regression_slope_bounds = self.f_upper_slope_bounds
+        self.f_regression_pct_bounds = self.f_upper_pct_bounds
 
 
 class TriangleUpConstraints(TriangleConstraints):
@@ -322,10 +323,10 @@ class TriangleUpConstraints(TriangleConstraints):
         return 0.01
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_slope_bounds = [0.1, 1.0]
-        self.f_lower_slope_bounds = self.f_upper_slope_bounds
-        self.f_upper_lower_slope_bounds = [0.3, 0.65]
-        self.f_regression_slope_bounds = self.f_upper_slope_bounds
+        self.f_upper_pct_bounds = [0.03, 1.0]
+        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_lower_relation_bounds = [0.01, 0.65]
+        self.f_regression_pct_bounds = self.f_upper_pct_bounds
 
 
 class TriangleDownConstraints(TriangleConstraints):
@@ -335,4 +336,4 @@ class TriangleDownConstraints(TriangleConstraints):
 
     def __set_bounds_for_pattern_type__(self):
         self.__set_bounds_by_complementary_constraints__(TriangleUpConstraints())
-        self.f_regression_slope_bounds = self.f_upper_slope_bounds
+        self.f_regression_pct_bounds = self.f_upper_pct_bounds

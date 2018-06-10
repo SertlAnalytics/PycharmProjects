@@ -5,12 +5,12 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from pattern_constants import FT, FCC, FD
+from sertl_analytics.constants.pattern_constants import FT, FCC, FD
 from matplotlib.patches import Ellipse, Polygon
 import pandas as pd
 import numpy as np
 from pattern_range import PatternRange
-from pattern_configuration import PatternConfiguration
+from pattern_configuration import config
 from pattern_function_container import PatternFunctionContainer
 from pattern_trade_result import TradeResult
 from pattern_part import PatternPart
@@ -53,13 +53,12 @@ class PatternConditionHandler:
 
 class Pattern:
     def __init__(self, pattern_type: str, df: pd.DataFrame, df_min_max: pd.DataFrame,
-                 pattern_range: PatternRange, config: PatternConfiguration):
+                 pattern_range: PatternRange):
         self.pattern_type = pattern_type
         self.df = df
         self.df_min_max = df_min_max
         self.constraints = self.__get_constraint__()
         self.pattern_range = pattern_range
-        self.config = config
         self.ticks_initial = 0
         self.check_length = 0
         self.function_cont = self.__get_pattern_function_container__()
@@ -147,7 +146,8 @@ class Pattern:
         return Polygon(np.array(self.xy_trade), True)
 
     def get_center_shape(self):
-        return Ellipse(np.array(self.xy_center), 4, 1)
+        ellipse_breadth = self.part_main.breadth/6
+        return Ellipse(np.array(self.xy_center), 5, ellipse_breadth)
 
     def fill_result_set(self):
         if self.is_part_trade_available():
@@ -171,11 +171,12 @@ class Pattern:
             else:
                 f_lower = f_complementary
                 f_upper = f_main
-            if self.constraints.are_f_lower_f_upper_compliant(f_lower, f_upper):
-                function_container = PatternFunctionContainer(self.pattern_type, df_check, f_lower, f_upper)
-                value_categorizer = ChannelValueCategorizer(function_container, self.constraints.tolerance_pct)
-                if self.constraints.are_global_constraints_satisfied(value_categorizer):
-                    return function_container
+            f_container = PatternFunctionContainer(self.pattern_type, df_check, f_lower, f_upper)
+            if self.constraints.are_f_lower_f_upper_pct_compliant(f_container.f_lower_pct, f_container.f_upper_pct):
+                if self.constraints.is_f_regression_pct_compliant(f_container.f_regression_pct):
+                    value_categorizer = ChannelValueCategorizer(f_container, self.constraints.tolerance_pct)
+                    if self.constraints.are_global_constraints_satisfied(value_categorizer):
+                        return f_container
         return PatternFunctionContainer(self.pattern_type, df_check)
 
     def __fill_trade_result__(self):
@@ -283,17 +284,11 @@ class TriangleBottomPattern(TrianglePattern):
     def __get_constraint__():
         return cstr.TriangleBottomConstraints()
 
-    def __get_expected_win__(self):
-        return round(2 * self._part_main.distance_min, 2)
-
 
 class TriangleTopPattern(TrianglePattern):
     @staticmethod
     def __get_constraint__():
         return cstr.TriangleTopConstraints()
-
-    def __get_expected_win__(self):
-        return round(2 * self._part_main.distance_min, 2)
 
 
 class TriangleUpPattern(TrianglePattern):
@@ -328,30 +323,30 @@ class TKEUpPattern(TKEPattern):
 class PatternHelper:
     @staticmethod
     def get_pattern_for_pattern_type(pattern_type: str, df: pd.DataFrame, df_min_max: pd.DataFrame,
-                                     pattern_range: PatternRange, config: PatternConfiguration):
+                                     pattern_range: PatternRange):
         if pattern_type == FT.CHANNEL:
-            return ChannelPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return ChannelPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.CHANNEL_DOWN:
-            return ChannelDownPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return ChannelDownPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.CHANNEL_UP:
-            return ChannelUpPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return ChannelUpPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.HEAD_SHOULDER:
-            return HeadShoulderPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return HeadShoulderPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.HEAD_SHOULDER_INVERSE:
-            return InverseHeadShoulderPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return InverseHeadShoulderPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.TRIANGLE:
-            return TrianglePattern(pattern_type, df, df_min_max, pattern_range, config)
+            return TrianglePattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.TRIANGLE_TOP:
-            return TriangleTopPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return TriangleTopPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.TRIANGLE_BOTTOM:
-            return TriangleBottomPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return TriangleBottomPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.TRIANGLE_UP:
-            return TriangleUpPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return TriangleUpPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.TRIANGLE_DOWN:
-            return TriangleDownPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return TriangleDownPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.TKE_DOWN:
-            return TKEDownPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return TKEDownPattern(pattern_type, df, df_min_max, pattern_range)
         elif pattern_type == FT.TKE_UP:
-            return TKEUpPattern(pattern_type, df, df_min_max, pattern_range, config)
+            return TKEUpPattern(pattern_type, df, df_min_max, pattern_range)
         else:
             raise MyException('No pattern defined for pattern type "{}"'.format(pattern_type))

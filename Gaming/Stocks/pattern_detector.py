@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from pattern_configuration import PatternConfiguration
+from pattern_configuration import config
 from pattern_data_container import PatternDataContainer
 from pattern_wave_tick import WaveTick
 from pattern_function_container import PatternFunctionContainer
@@ -14,12 +14,12 @@ from pattern import Pattern, PatternHelper
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin
 from pattern_breakout import PatternBreakoutApi, PatternBreakout
 from pattern_statistics import PatternDetectorStatisticsApi
+from sertl_analytics.pybase.date_time import MyClock
 
 
 class PatternDetector:
-    def __init__(self, data_container: PatternDataContainer, config: PatternConfiguration):
+    def __init__(self, data_container: PatternDataContainer):
         self.data_container = data_container
-        self.config = config
         self.pattern_type_list = list(config.pattern_type_list)
         self.df = data_container.df
         self.df_length = self.df.shape[0]
@@ -40,13 +40,12 @@ class PatternDetector:
         """
         self.__fill_possible_pattern_ranges__()
         possible_pattern_range_list = self.__get_combined_possible_pattern_ranges__()
-
         for pattern_type in self.pattern_type_list:
-            self.config.runtime.actual_pattern_type = pattern_type
+            config.runtime.actual_pattern_type = pattern_type
             for pattern_range in possible_pattern_range_list:
                 # pattern_range.print_range_details()
                 pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, self.df, self.df_min_max,
-                                                                     pattern_range, self.config)
+                                                                     pattern_range)
                 if pattern.function_cont.is_valid():
                     self.__handle_single_pattern_when_parsing__(pattern)
 
@@ -54,8 +53,8 @@ class PatternDetector:
         can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)
         if pattern.breakout is None and not can_be_added:
             return
-        self.config.runtime.actual_breakout = pattern.breakout
-        pattern.add_part_main(PatternPart(self.data_container, pattern.function_cont, self.config))
+        config.runtime.actual_breakout = pattern.breakout
+        pattern.add_part_main(PatternPart(self.data_container, pattern.function_cont))
         if pattern.is_formation_established():
             if pattern.breakout is not None:
                 pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
@@ -69,15 +68,17 @@ class PatternDetector:
         f_upper_trade = pattern.get_f_upper_trade()
         f_lower_trade = pattern.get_f_lower_trade()
         function_cont = PatternFunctionContainer(pattern.pattern_type, df, f_lower_trade, f_upper_trade)
-        part = PatternPart(self.data_container, function_cont, self.config)
+        part = PatternPart(self.data_container, function_cont)
         pattern.add_part_trade(part)
         pattern.fill_result_set()
 
     def __get_trade_df__(self, pattern: Pattern):
         left_pos = pattern.function_cont.tick_for_helper.position
-        right_pos = left_pos + pattern.pattern_range.get_maximal_trade_size_for_pattern_type(pattern.pattern_type)
-        # right_pos += right_pos - left_pos  # double length
-        return self.df.loc[left_pos:min(right_pos, self.df_length)]
+        right_pos_max = left_pos + pattern.pattern_range.get_maximal_trade_size_for_pattern_type(pattern.pattern_type)
+        right_pos = min(right_pos_max, self.df_length)
+        if right_pos - left_pos==1:
+            left_pos += -1  # we need at least 2 ticks for the trade_df...
+        return self.df.loc[left_pos:right_pos]
 
     def __can_pattern_be_added_to_list_after_checking_next_ticks__(self, pattern: Pattern):
         tick_last = pattern.function_cont.tick_last
@@ -104,7 +105,7 @@ class PatternDetector:
     def __check_for_break__(function_cont, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
         if counter > number_of_positions:  # maximal number for the whole pattern after its building
             return True
-        if not function_cont.is_regression_value_in_pattern_for_position(tick.position):
+        if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var):
             return True
         if not function_cont.is_tick_inside_pattern_range(tick):
             return True
@@ -120,21 +121,43 @@ class PatternDetector:
 
     def __get_pattern_breakout__(self, pattern: Pattern, tick_previous: WaveTick, tick_breakout: WaveTick) \
             -> PatternBreakout:
-        breakout_api = PatternBreakoutApi(pattern.function_cont, self.config)
+        breakout_api = PatternBreakoutApi(pattern.function_cont)
         breakout_api.tick_previous = tick_previous
         breakout_api.tick_breakout = tick_breakout
         breakout_api.constraints = pattern.constraints
         return PatternBreakout(breakout_api)
 
     def __fill_possible_pattern_ranges__(self):
-        self.range_detector_max = PatternRangeDetectorMax(self.df_min_max, self.config.range_detector_tolerance_pct)
+        self.range_detector_max = PatternRangeDetectorMax(self.df_min_max, config.range_detector_tolerance_pct)
         # self.range_detector_max.print_list_of_possible_pattern_ranges()
-        self.range_detector_min = PatternRangeDetectorMin(self.df_min_max, self.config.range_detector_tolerance_pct)
+        self.range_detector_min = PatternRangeDetectorMin(self.df_min_max, config.range_detector_tolerance_pct)
         # self.range_detector_min.print_list_of_possible_pattern_ranges()
         # TODO get rid of print statements
 
     def __get_combined_possible_pattern_ranges__(self) -> list:
-        return self.range_detector_min.get_pattern_range_list()
+        # return self.range_detector_min.get_pattern_range_list()
+        list_max = self.range_detector_max.get_pattern_range_list()
+        list_min = self.range_detector_min.get_pattern_range_list()
+        list_max_without_covered = self.__remove_entries_covered_by_second_list__(list_max, list_min)
+        list_min_without_covered = self.__remove_entries_covered_by_second_list__(list_min, list_max)
+        result_list = list_max_without_covered + list_min_without_covered
+        return result_list
+
+    def __remove_entries_covered_by_second_list__(self, list_change: list, list_master: list) -> list:
+        result_list = []
+        for pattern_range_change in list_change:
+            covered = False
+            range_change = range(pattern_range_change.position_first, pattern_range_change.position_last)
+            for pattern_range_master in list_master:
+                range_master = range(pattern_range_master.position_first, pattern_range_master.position_last)
+                intersection = set(range_change).intersection(range_master)
+                if len(intersection) > max(len(range_change),len(range_master))/2 \
+                        and len(range_change) < len(range_master):
+                    covered = True
+                    break
+            if not covered:
+                result_list.append(pattern_range_change)
+        return result_list
 
     def print_statistics(self):
         api = self.get_statistics_api()
@@ -145,4 +168,4 @@ class PatternDetector:
         ))
 
     def get_statistics_api(self):
-        return PatternDetectorStatisticsApi(self.pattern_list, self.config.investment)
+        return PatternDetectorStatisticsApi(self.pattern_list, config.investment)

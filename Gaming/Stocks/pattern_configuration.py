@@ -5,13 +5,12 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-import sertl_analytics.environment  # init some environment variables during load - for security reasons
-from pattern_constants import FT, Indices, CN
-import stock_database as sdb
+from sertl_analytics.constants.pattern_constants import FT, Indices, CN
+from stock_database import StockDatabase as sdb
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiOutputsize, ApiPeriod
-from sertl_analytics.datafetcher.file_fetcher import NasdaqFtpFileFetcher
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
+from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 
 
 class RuntimeConfiguration:
@@ -77,38 +76,15 @@ class PatternConfiguration:
                     pattern_type, source, period, output_size, bound_upper_v, bound_lower_v, breakout_over_big_range))
 
     def use_index(self, index: Indices):
-        if index == Indices.DOW_JONES:
-            self.ticker_dic = self.get_dow_jones_dic()
-        elif index == Indices.NASDAQ:
-            self.ticker_dic = self.get_nasdaq_dic()
-        elif index == Indices.ALL_DATABASE:
+        if index == Indices.ALL_DATABASE:
             self.ticker_dic = self.get_all_in_database()
-        else:
+        elif index == Indices.MIXED:
             self.ticker_dic = self.get_mixed_dic()
+        else:
+            self.ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
 
     def use_own_dic(self, dic: dict):
         self.ticker_dic = dic
-
-    @staticmethod
-    def get_dow_jones_dic():
-        return {"MMM": "3M", "AXP": "American", "AAPL": "Apple", "BA": "Boing",
-                "CAT": "Caterpillar", "CVX": "Chevron", "CSCO": "Cisco", "KO": "Coca-Cola",
-                "DIS": "Disney", "DWDP": "DowDuPont", "XOM": "Exxon", "GE": "General",
-                "GS": "Goldman", "HD": "Home", "IBM": "IBM", "INTC": "Intel",
-                "JNJ": "Johnson", "JPM": "JPMorgan", "MCD": "McDonald's", "MRK": "Merck",
-                "MSFT": "Microsoft", "NKE": "Nike", "PFE": "Pfizer", "PG": "Procter",
-                "TRV": "Travelers", "UTX": "United", "UNH": "UnitedHealth", "VZ": "Verizon",
-                "V": "Visa", "WMT": "Wal-Mart"}
-
-    @staticmethod
-    def get_nasdaq_dic():
-        """
-        Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares
-        AABA|Altaba Inc. - Common Stock|Q|N|N|100|N|N
-        """
-        ftp_fetcher = NasdaqFtpFileFetcher()
-        df = ftp_fetcher.get_data_frame()
-        return PyBaseDataFrame.get_rows_as_dictionary(df, 'Symbol', ['Security Name'], {'Market Category': 'Q'})
 
     @staticmethod
     def get_mixed_dic():
@@ -120,3 +96,6 @@ class PatternConfiguration:
         db_data_frame = DatabaseDataFrame(
             stock_db, query='SELECT Symbol, count(*) FROM Stocks GROUP BY Symbol HAVING count(*) > 4000')
         return PyBaseDataFrame.get_rows_as_dictionary(db_data_frame.df, 'Symbol', ['Symbol'])
+
+
+config = PatternConfiguration()

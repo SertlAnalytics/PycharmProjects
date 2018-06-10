@@ -5,12 +5,12 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from pattern_constants import CN
+from sertl_analytics.constants.pattern_constants import CN
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from sertl_analytics.pybase.loop_list import LoopList
-from pattern_configuration import PatternConfiguration
+from pattern_configuration import config
 from pattern_data_container import PatternDataContainer
 from pattern_wave_tick import WaveTick
 from pattern_detector import PatternDetector
@@ -153,10 +153,9 @@ class PatternPlotContainerLoopList(LoopList):
 
 
 class PatternPlotter:
-    def __init__(self, data_container: PatternDataContainer, detector: PatternDetector, config: PatternConfiguration):
+    def __init__(self, data_container: PatternDataContainer, detector: PatternDetector):
         self.data_container = data_container
         self.detector = detector
-        self.config = config
         self.df = data_container.df
         self.symbol = config.runtime.actual_ticker
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
@@ -187,8 +186,8 @@ class PatternPlotter:
                 self.__plot_patterns__(axes)
 
         plt.title('{}. {} ({}) for {}'.format(
-            self.config.runtime.actual_number, self.config.runtime.actual_ticker,
-            self.config.runtime.actual_ticker_name, self.__get_date_range_for_title__()))
+            config.runtime.actual_number, config.runtime.actual_ticker,
+            config.runtime.actual_ticker_name, self.__get_date_range_for_title__()))
         plt.tight_layout()
         # plt.xticks(rotation=45)
         fig.canvas.mpl_connect('button_press_event', self.__on_click__)
