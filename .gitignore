@@ -103,3 +103,4 @@ BaseFunctions/sertl_analytics/environment/__init__.py
 *.zip
 *.sqlite
 Gaming/Stocks/MyStocks.sqlite
+Gaming/Stocks/MyStocks.sqlite
