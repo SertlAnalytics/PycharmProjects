@@ -100,7 +100,6 @@ ENV/
 BaseFunctions/sertl_analytics/environment/__init__.py
 
 # Databases and zip
-.sqlite
-.zip
-MyStocks.sqlite
+*.zip
+*.sqlite
 Gaming/Stocks/MyStocks.sqlite

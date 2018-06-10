@@ -246,6 +246,7 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
 
 if __name__ == '__main__':
     stock_db = StockDatabase()
+    # stock_db.create_tables()
     stock_db.update_stock_data_by_index(Indices.DOW_JONES, ApiPeriod.DAILY)
-    stock_db.update_stock_data_by_index(Indices.NASDAQ100, ApiPeriod.DAILY)
-    stock_db.update_stock_data_by_index(Indices.MIXED, ApiPeriod.DAILY)
+    # # stock_db.update_stock_data_by_index(Indices.NASDAQ100, ApiPeriod.DAILY)
+    # stock_db.update_stock_data_by_index(Indices.MIXED, ApiPeriod.DAILY)
