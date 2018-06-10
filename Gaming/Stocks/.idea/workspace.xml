@@ -1,30 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/functions/math_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/functions/math_functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/plotter/my_plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/plotter/my_plot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/date_time.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/date_time.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/exceptions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_breakout.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_constraints.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_constraints.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_data_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_data_container.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_detection.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_detection.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_detector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_function_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_function_container.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_part.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_part.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_plotter.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_plotter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_range.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_range.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_statistics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_value_categorizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_value_categorizer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_wave_tick.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_wave_tick.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stock_data_frame.py" beforeDir="false" afterPath="$PROJECT_DIR$/stock_data_frame.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stock_formation_checker.py" beforeDir="false" afterPath="$PROJECT_DIR$/stock_formation_checker.py" afterDir="false" />
-    </list>
+    <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -337,15 +314,14 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.38074714" visible="true" weight="0.2571656" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.38099042" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32747602" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.44408944" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.44408944" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.3290735" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32784313" />
-      <window_info id="Structure" order="1" sideWeight="0.61925286" side_tool="true" visible="true" weight="0.2571656" />
+      <window_info id="Structure" order="1" sideWeight="0.6190096" side_tool="true" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3262745" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.56078434" />
       <window_info id="Favorites" order="2" side_tool="true" />
