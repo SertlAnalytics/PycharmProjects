@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import FT, Indices, CN
-from stock_database import StockDatabase as sdb
+from stock_database import stock_database as sdb
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiOutputsize, ApiPeriod
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame

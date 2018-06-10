@@ -22,7 +22,7 @@ from pattern_statistics import PatternStatistics, DetectorStatistics
 from pattern_data_container import PatternDataContainer
 from pattern_detector import PatternDetector
 from pattern_plotter import PatternPlotter
-from stock_database import StockDatabase, StockDatabaseDataFrame
+from stock_database import stock_database
 
 
 """
@@ -86,7 +86,7 @@ class PatternController:
         if config.get_data_from_db:
             self.__handle_not_available_symbol__(ticker)
             and_clause = value_dic[LL.AND_CLAUSE]
-            stock_db_df_obj = StockDatabaseDataFrame(self.stock_db, ticker, and_clause)
+            stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.stock_db, ticker, and_clause)
             return stock_db_df_obj.df_data
         else:
             fetcher = AlphavantageStockFetcher(ticker, config.api_period, config.api_output_size)
@@ -124,8 +124,8 @@ class PatternController:
             writer.save()
 
     def __init_db_and_test_data__(self, excel_file_with_test_data: str, start_row: int, end_row: int):
+        self.stock_db = stock_database.StockDatabase()
         if config.get_data_from_db:
-            self.stock_db = StockDatabase()
             if excel_file_with_test_data != '':
                 self.__excel_file_with_test_data = excel_file_with_test_data
                 self.df_test_data = pd.ExcelFile(self.__excel_file_with_test_data).parse(0)
@@ -175,7 +175,7 @@ config.show_final_statistics = True
 config.max_number_securities = 1000
 config.breakout_range_pct = 0.05  # default is 0.05
 config.use_index(Indices.DOW_JONES)
-# config.use_own_dic({'BA': 'American'})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+config.use_own_dic({'CAT': 'American'})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", "AXP": "American", "WMT": "Wall mart",
 # config.and_clause = "Date BETWEEN '2017-10-25' AND '2018-04-18'"
 config.and_clause = "Date BETWEEN '2017-10-01' AND '2019-07-18'"

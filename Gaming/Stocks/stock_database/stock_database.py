@@ -16,6 +16,11 @@ from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.constants.pattern_constants import Indices
 
 
+class TestAA:
+    def __init__(self):
+        pass
+
+    
 class StockDatabase(BaseDatabase):
     def is_symbol_loaded(self, symbol: str):
         last_loaded_dic = self.__get_last_loaded_dic__(symbol)
@@ -49,9 +54,8 @@ class StockDatabase(BaseDatabase):
             print('\nUpdating {}...\n'.format(index))
             ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
             for ticker in ticker_dic:
-                name = self.__get_alternate_name__(ticker, ticker_dic[ticker])
-                self.__update_stock_data_for_single_value__(period, ticker, name, company_dic,
-                                                                last_loaded_date_dic, dt_now)
+                self.__update_stock_data_for_single_value__(period, ticker, ticker_dic[ticker], company_dic,
+                                                last_loaded_date_dic, dt_now)
         self.__handle_error_cases__()
 
     def __handle_error_cases__(self):
