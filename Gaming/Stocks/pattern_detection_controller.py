@@ -9,14 +9,13 @@ Date: 2018-05-14
 """
 
 import pandas as pd
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, ApiPeriod, ApiOutputsize
-from sertl_analytics.pybase.exceptions import MyProfiler
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher
 from sertl_analytics.pybase.date_time import MyClock
 from sertl_analytics.user_input.confirmation import UserInput
 from datetime import timedelta
 from sertl_analytics.pybase.date_time import MyPyDate
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
-from sertl_analytics.constants.pattern_constants import FT, Indices, CN, PSC
+from sertl_analytics.constants.pattern_constants import PSC
 from pattern_configuration import config
 from pattern_statistics import PatternStatistics, DetectorStatistics
 from pattern_data_container import PatternDataContainer
@@ -42,7 +41,7 @@ e) Factored representation: Each state has some attribute-value properties, e.g.
 """
 
 
-class PatternController:
+class PatternDetectionController:
     def __init__(self):
         self.detector_statistics = DetectorStatistics()
         self.pattern_statistics = PatternStatistics()
@@ -70,7 +69,7 @@ class PatternController:
             self.__handle_statistics__(detector)
 
             if config.plot_data:
-                if len(detector.pattern_list) == 0: # and not detector.possible_pattern_ranges_available:
+                if len(detector.pattern_list) == 0:  # and not detector.possible_pattern_ranges_available:
                     print('...no formations found.')
                 else:
                     plotter = PatternPlotter(data_container, detector)
@@ -156,40 +155,3 @@ class PatternController:
             self.detector_statistics.add_entry(detector.get_statistics_api())
         else:
             detector.print_statistics()
-
-
-my_profiler = MyProfiler()
-
-# config = PatternConfiguration()
-config.get_data_from_db = False
-config.api_period = ApiPeriod.DAILY
-config.pattern_type_list = FT.get_all()
-# config.pattern_type_list = [FT.CHANNEL]
-config.plot_data = True
-config.statistics_excel_file_name = 'statistics_pattern_06-04.xlsx'
-config.statistics_excel_file_name = ''
-config.bound_upper_value = CN.CLOSE
-config.bound_lower_value = CN.CLOSE
-config.breakout_over_congestion_range = False
-config.show_final_statistics = True
-config.max_number_securities = 1000
-config.breakout_range_pct = 0.05  # default is 0.05
-config.use_index(Indices.DOW_JONES)
-config.use_own_dic({'CAT': 'American'})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
-# "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", "AXP": "American", "WMT": "Wall mart",
-# config.and_clause = "Date BETWEEN '2017-10-25' AND '2018-04-18'"
-config.and_clause = "Date BETWEEN '2017-10-01' AND '2019-07-18'"
-# config.and_clause = ''
-config.api_output_size = ApiOutputsize.COMPACT
-
-pattern_controller = PatternController()
-pattern_controller.run_pattern_checker('')
-
-my_profiler.disable(False)
-
-# Head Shoulder: GE Date BETWEEN '2016-01-25' AND '2019-10-30'
-# Triangle: Processing KO (Coca Cola)...Date BETWEEN '2017-10-25' AND '2019-10-30'
-"""
-'CAT': 'Caterpillar'
-"""
-

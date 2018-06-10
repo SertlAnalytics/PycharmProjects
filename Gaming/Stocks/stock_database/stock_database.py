@@ -31,16 +31,16 @@ class StockDatabase(BaseDatabase):
         return '' if len(company_dic) == 0 else company_dic[symbol].Name
 
     def __get_engine__(self):
-            return create_engine('sqlite:///MyStocks.sqlite')
+            return create_engine('sqlite:///stock_database/MyStocks.sqlite')
 
     def __get_db_name__(self):
         return 'MyStocks'
 
     def __get_db_path__(self):
-        return 'C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks/MyStocks.sqlite'
+        return 'C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks/stock_database/MyStocks.sqlite'
 
-    def import_stock_data_by_deleting_existing_records(self, symbol: str, period: ApiPeriod = ApiPeriod.DAILY
-                                                       , output_size: ApiOutputsize = ApiOutputsize.COMPACT):
+    def import_stock_data_by_deleting_existing_records(self, symbol: str, period: ApiPeriod = ApiPeriod.DAILY,
+                                                       output_size: ApiOutputsize = ApiOutputsize.COMPACT):
         self.delete_records("DELETE from Stocks WHERE Symbol = '" + str(symbol) + "'")
         input_dic = self.get_input_values_for_stock_table(period, symbol, output_size)
         self.insert_data_into_table('Stocks', input_dic)
@@ -55,7 +55,7 @@ class StockDatabase(BaseDatabase):
             ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
             for ticker in ticker_dic:
                 self.__update_stock_data_for_single_value__(period, ticker, ticker_dic[ticker], company_dic,
-                                                last_loaded_date_dic, dt_now)
+                                                            last_loaded_date_dic, dt_now)
         self.__handle_error_cases__()
 
     def __handle_error_cases__(self):
@@ -110,7 +110,6 @@ class StockDatabase(BaseDatabase):
                 self.insert_data_into_table('Stocks', input_list)
                 print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
 
-
     @staticmethod
     def __get_alternate_name__(ticker: str, name: str):
         dic_alternate = {'GOOG': 'Alphbeth', 'LBTYK': 'Liberty', 'FOX': 'Twenty-First Century'}
@@ -163,12 +162,13 @@ class StockDatabase(BaseDatabase):
         df = stock_fetcher.get_data_frame()
         return self.__get_df_data_for_insert_statement__(df, period, symbol)
 
-    def __get_df_data_for_insert_statement__(self, df: pd.DataFrame, period: ApiPeriod, symbol: str):
+    @staticmethod
+    def __get_df_data_for_insert_statement__(df: pd.DataFrame, period: ApiPeriod, symbol: str):
         input_list = []
         close_previous = 0
         for dates, row in df.iterrows():
             date = datetime.strptime(dates, '%Y-%m-%d')
-            open = float(row["Open"])
+            v_open = float(row["Open"])
             high = float(row["High"])
             low = float(row["Low"])
             close = float(row["Close"])
@@ -183,7 +183,7 @@ class StockDatabase(BaseDatabase):
 
             if not math.isnan(high):
                 input_dic = {'Period': str(period), 'Symbol': symbol, 'Date': date,
-                             'Open': open, 'High': high, 'Low': low, 'Close': close,
+                             'Open': v_open, 'High': high, 'Low': low, 'Close': close,
                              'Volume': volume, 'BigMove': big_move, 'Direction': direction}
                 input_list.append(input_dic)
         return input_list
@@ -205,7 +205,8 @@ class StockDatabase(BaseDatabase):
         #              )
 
         # Define a new table with a name, count, amount, and valid column: data
-        data = Table('Company', metadata,
+        data = Table(
+                'Company', metadata,
                 Column('Symbol', String(10), unique=True),
                 Column('Name', String(100), unique=True),
                 Column('ToBeLoaded', Boolean(), default=False),
@@ -216,7 +217,7 @@ class StockDatabase(BaseDatabase):
                 Column('Employees', Float()),
                 Column('Savings', Float()),
                 Column('ForcastGrowth', Float())
-            )
+        )
 
         self.create_database_elements(metadata)
         print(repr(data))
@@ -246,11 +247,3 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
 
     def get_column_volume(self):
         return self.column_list[6]
-
-
-if __name__ == '__main__':
-    stock_db = StockDatabase()
-    # stock_db.create_tables()
-    stock_db.update_stock_data_by_index(Indices.DOW_JONES, ApiPeriod.DAILY)
-    # # stock_db.update_stock_data_by_index(Indices.NASDAQ100, ApiPeriod.DAILY)
-    # stock_db.update_stock_data_by_index(Indices.MIXED, ApiPeriod.DAILY)

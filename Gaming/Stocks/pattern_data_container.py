@@ -32,6 +32,7 @@ class PatternDataContainer:
         self.df_min_max = self.df[np.logical_or(self.df[CN.IS_MIN], self.df[CN.IS_MAX])]
         self.tick_by_date_num_ext_dic = ExtendedDictionary4WaveTicks(self.df)
         self.tick_list = [self.tick_by_date_num_ext_dic.dic[index] for index in self.tick_by_date_num_ext_dic.index]
+        self.tick_list_for_ranges = None  # TODO valleys and hidden ticks have to be removed
 
     def __add_columns__(self):
         self.df = self.df.assign(MeanHL=round((self.df.High + self.df.Low) / 2, 2))

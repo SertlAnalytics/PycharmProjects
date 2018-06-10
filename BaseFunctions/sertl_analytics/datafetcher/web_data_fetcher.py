@@ -14,7 +14,7 @@ from sertl_analytics.pybase.df_base import PyBaseDataFrame
 
 class IndicesComponentList:
     @staticmethod
-    def get_ticker_name_dic(index: Indices):
+    def get_ticker_name_dic(index: str):
         if index == Indices.DOW_JONES:
             parser = XMLParser4DowJones()
             return parser.get_result_dic()
