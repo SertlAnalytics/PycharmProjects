@@ -44,7 +44,10 @@ class PatternData:
         self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
 
     def get_tick_by_date_num(self, date_num: int):
-        return self.tick_by_date_num_ext_dic.dic[date_num]
+        k = date_num
+        while k not in self.tick_by_date_num_ext_dic.dic:
+            k += -1
+        return self.tick_by_date_num_ext_dic.dic[k]
 
     def get_tick_by_pos(self, pos: int):
         return self.tick_list[pos]

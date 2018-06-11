@@ -12,6 +12,7 @@ import numpy as np
 from matplotlib.patches import Polygon
 from sertl_analytics.constants.pattern_constants import FT, CN, FD
 from pattern_function_container import PatternFunctionContainer
+from pattern_data_container import pattern_data_handler as pdh
 
 
 class PatternDataFrame:
@@ -71,11 +72,12 @@ class PatternDataFrame:
                 tick_list = [tick_first, tick_helper, tick_last, tick_last, tick_first]
                 function_list = [f_upper, h_upper, h_upper, f_lower, f_lower]
             elif function_cont.f_var_cross_f_upper_f_lower > 0:
-                tick_list = [tick_first, tick_helper, tick_last, tick_last, tick_first]
+                tick_last = pdh.pattern_data.get_tick_by_date_num(function_cont.f_var_cross_f_upper_f_lower)
+                tick_list = [tick_first, tick_last, tick_first]
                 if function_cont.pattern_direction == FD.ASC:
-                    function_list = [f_upper_extended, f_upper_extended, f_upper_extended, f_lower, f_lower]
+                    function_list = [f_upper_extended, f_upper_extended, f_lower]
                 else:
-                    function_list = [f_lower_extended, f_lower_extended, f_lower_extended, f_upper, f_upper]
+                    function_list = [f_lower_extended, f_lower_extended, f_upper]
             else:
                 tick_list = [tick_first, tick_helper, tick_last, tick_last, tick_first]
                 if function_cont.pattern_direction == FD.ASC:
