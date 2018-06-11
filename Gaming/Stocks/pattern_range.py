@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import CN, FT
 from pattern_wave_tick import WaveTick, WaveTickList
-from stock_data_frame import StockDataFrame
+from pattern_data_frame import PatternDataFrame
 from sertl_analytics.functions.math_functions import ToleranceCalculator
 from pattern_configuration import config
 from pattern_data_container import pattern_data_handler as pdh
@@ -54,7 +54,7 @@ class PatternRange:
 
     @property
     def f_regression(self) -> np.poly1d:
-        stock_df = StockDataFrame(self.__get_actual_df_min_max__())
+        stock_df = PatternDataFrame(self.__get_actual_df_min_max__())
         return stock_df.get_f_regression()
 
     def __get_actual_df_min_max__(self):
@@ -131,12 +131,12 @@ class PatternRange:
 
     @property
     def f_param_shape(self):
-        stock_df = StockDataFrame(self.__get_actual_df_min_max__())
+        stock_df = PatternDataFrame(self.__get_actual_df_min_max__())
         return stock_df.get_f_param_shape(self.__f_param)
 
     @property
     def f_regression_shape(self):
-        stock_df = StockDataFrame(self.__get_actual_df_min_max__())
+        stock_df = PatternDataFrame(self.__get_actual_df_min_max__())
         return stock_df.get_f_regression_shape()
 
     def __get_position_list__(self) -> list:
@@ -170,7 +170,7 @@ class PatternRangeMax(PatternRange):
         self._f_param_list = wave_tick_list.get_boundary_f_param_list(self.f_param, False)
 
     def __get_parallel_function__(self) -> np.poly1d:
-        stock_df = StockDataFrame(self.df_min_max_final)
+        stock_df = PatternDataFrame(self.df_min_max_final)
         return stock_df.get_parallel_to_function_by_low(self.f_param)
 
     def __get_const_function__(self) -> np.poly1d:
@@ -187,7 +187,7 @@ class PatternRangeMin(PatternRange):
         self._f_param_list = wave_tick_list.get_boundary_f_param_list(self.f_param, True)
 
     def __get_parallel_function__(self) -> np.poly1d:
-        stock_df = StockDataFrame(self.df_min_max_final)
+        stock_df = PatternDataFrame(self.df_min_max_final)
         return stock_df.get_parallel_to_function_by_high(self.f_param)
 
     def __get_const_function__(self) -> np.poly1d:

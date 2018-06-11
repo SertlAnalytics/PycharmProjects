@@ -14,7 +14,7 @@ from sertl_analytics.constants.pattern_constants import FT, CN, FD
 from pattern_function_container import PatternFunctionContainer
 
 
-class StockDataFrame:
+class PatternDataFrame:
     def __init__(self, df: pd.DataFrame):
         self.df = df
         self.tick_first = WaveTick(self.df.iloc[0])

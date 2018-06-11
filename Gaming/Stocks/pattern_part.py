@@ -10,7 +10,7 @@ from pattern_function_container import PatternFunctionContainer
 from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
 from pattern_configuration import runtime
-from stock_data_frame import StockDataFrame
+from pattern_data_frame import PatternDataFrame
 import numpy as np
 import math
 
@@ -49,7 +49,7 @@ class PatternPart:
         self.__xy = None
         self.__xy_center = ()
         if self.df.shape[0] > 0:
-            self.stock_df = StockDataFrame(self.df)
+            self.stock_df = PatternDataFrame(self.df)
             self.__calculate_values__()
             self.__set_xy_parameter__()
             self.__set_xy_center__()
