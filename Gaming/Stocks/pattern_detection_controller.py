@@ -21,8 +21,7 @@ from pattern_statistics import PatternStatistics, DetectorStatistics
 from pattern_data_container import pattern_data_handler
 from pattern_detector import PatternDetector
 from pattern_plotter import PatternPlotter
-from stock_database import stock_database
-
+from pattern_database import stock_database
 
 """
 Implementation steps:

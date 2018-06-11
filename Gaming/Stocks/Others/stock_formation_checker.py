@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, ApiPeriod, ApiOutputsize
-from stock_database.stock_database import stock_database
+from pattern_database.stock_database import stock_database
 from mpl_finance import candlestick_ohlc
 import matplotlib.dates as dt
 from matplotlib.patches import Polygon, Arrow
@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 import ftplib
 import tempfile
 from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
-from stock_database import stock_database as sdb
+from pattern_database import stock_database as sdb
 
 
 class CN:

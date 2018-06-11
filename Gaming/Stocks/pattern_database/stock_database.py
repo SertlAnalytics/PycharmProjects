@@ -31,13 +31,13 @@ class StockDatabase(BaseDatabase):
         return '' if len(company_dic) == 0 else company_dic[symbol].Name
 
     def __get_engine__(self):
-            return create_engine('sqlite:///stock_database/MyStocks.sqlite')
+            return create_engine('sqlite:///pattern_database/MyStocks.sqlite')
 
     def __get_db_name__(self):
         return 'MyStocks'
 
     def __get_db_path__(self):
-        return 'C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks/stock_database/MyStocks.sqlite'
+        return 'C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks/pattern_database/MyStocks.sqlite'
 
     def import_stock_data_by_deleting_existing_records(self, symbol: str, period: ApiPeriod = ApiPeriod.DAILY,
                                                        output_size: ApiOutputsize = ApiOutputsize.COMPACT):
