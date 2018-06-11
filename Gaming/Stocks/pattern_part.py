@@ -7,9 +7,9 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import CN, FT
 from pattern_function_container import PatternFunctionContainer
-from pattern_data_container import PatternDataContainer
+from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
-from pattern_configuration import config
+from pattern_configuration import runtime
 from stock_data_frame import StockDataFrame
 import numpy as np
 import math
@@ -30,13 +30,12 @@ class AnnotationParameter:
 
 
 class PatternPart:
-    def __init__(self, data_container: PatternDataContainer, function_cont: PatternFunctionContainer):
-        self.data_container = data_container
+    def __init__(self, function_cont: PatternFunctionContainer):
         self.function_cont = function_cont
-        self.df = data_container.df.iloc[function_cont.position_first:function_cont.position_last + 1]
+        self.df = pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
         self.tick_list = []
         self.pattern_type = self.function_cont.pattern_type
-        self.breakout = config.runtime.actual_breakout
+        self.breakout = runtime.actual_breakout
         self.tick_first = None
         self.tick_last = None
         self.tick_high = None
@@ -55,12 +54,12 @@ class PatternPart:
             self.__set_xy_parameter__()
             self.__set_xy_center__()
 
-    def get_annotation_parameter(self, for_max: bool, color: str = 'blue'):
+    def get_annotation_parameter(self, color: str = 'blue'):
         annotation_param = AnnotationParameter()
-        offset_x = -19
+        offset_x = self.__get_annotation_offset_x__()
         offset_y = self.__get_annotation_offset_y__()
-        offset = [offset_x, offset_y] if for_max else [-offset_x, -offset_y]
-        annotation_param.text = self.__get_text_for_annotation__(for_max)
+        offset = [offset_x, offset_y]
+        annotation_param.text = self.__get_text_for_annotation__()
         annotation_param.xy = self.__xy_center
         annotation_param.xy_text = (self.__xy_center[0] + offset[0], self.__xy_center[1] + offset[1])
         annotation_param.visible = False
@@ -71,13 +70,22 @@ class PatternPart:
     def length(self):
         return self.tick_last.position - self.tick_first.position
 
+    def __get_annotation_offset_x__(self):
+        width = 25
+        if self.__xy_center[0] - pdh.pattern_data.tick_first.f_var <= width:
+            return -width
+        else:
+            return -2*width
+
     def __get_annotation_offset_y__(self):
-        width = self.breadth / 2
-        c_val = self.__xy_center[1]
-        return width if self.data_container.max_value - c_val > c_val - self.data_container.min_value else - width
+        c_value = self.__xy_center[1]
+        offset = min(self.tick_high.high - c_value, c_value - self.tick_low.low)
+        if pdh.pattern_data.max_value - c_value > c_value - pdh.pattern_data.min_value:
+            return offset
+        return - offset
 
     def __calculate_values__(self):
-        self.tick_list = [self.data_container.tick_list[k] for k in range(self.function_cont.position_first,
+        self.tick_list = [pdh.pattern_data.tick_list[k] for k in range(self.function_cont.position_first,
                                                                         self.function_cont.position_last)]
         self.tick_first = self.tick_list[0]
         self.tick_last = self.tick_list[-1]
@@ -174,9 +182,8 @@ class PatternPart:
     def get_f_regression(self) -> np.poly1d:
         return self.stock_df.get_f_regression()
 
-    def __get_text_for_annotation__(self, for_max: bool):
+    def __get_text_for_annotation__(self):
         f_regression = self.get_f_regression()
-        reg_slope = round(f_regression[1], 3)
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_slope, f_lower_slope, relation_u_l = self.get_slope_values()
         f_upper_pct = round(self.function_cont.f_upper_pct * 100, 1)

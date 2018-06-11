@@ -34,6 +34,8 @@ class PatternConfiguration:
         self.bound_upper_value = CN.HIGH
         self.bound_lower_value = CN.LOW
         self.plot_data = True
+        self.plot_min_max = False
+        self.length_for_local_min_max = 2  # a local minimum or maximum must have at least this number as distance
         self.range_detector_tolerance_pct = 0.01
         self.check_previous_period = False   # default
         self.breakout_over_congestion_range = False
@@ -42,7 +44,6 @@ class PatternConfiguration:
         self.max_number_securities = 1000
         self.show_final_statistics = True
         self.and_clause = "Date BETWEEN '2017-12-01' AND '2019-12-31'"
-        self.runtime = RuntimeConfiguration()
         self.statistics_excel_file_name = ''
         self.ticker_dic = {}
         self.__previous_period_length = 0
@@ -75,7 +76,7 @@ class PatternConfiguration:
                   ' \nBreakout big range: {}\n'.format(
                     pattern_type, source, period, output_size, bound_upper_v, bound_lower_v, breakout_over_big_range))
 
-    def use_index(self, index: Indices):
+    def use_index(self, index: str):
         if index == Indices.ALL_DATABASE:
             self.ticker_dic = self.get_all_in_database()
         elif index == Indices.MIXED:
@@ -99,3 +100,4 @@ class PatternConfiguration:
 
 
 config = PatternConfiguration()
+runtime = RuntimeConfiguration()

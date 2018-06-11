@@ -11,10 +11,11 @@ import itertools
 import matplotlib.dates as dt
 from sertl_analytics.constants.pattern_constants import CN
 from sertl_analytics.pybase.date_time import MyPyDate
-from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks
+from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks, WaveTickList
+from pattern_configuration import config
 
 
-class PatternDataContainer:
+class PatternData:
     """
     This class has two purposes:
     1. Identify all extrema: global and local maximum and minimum which are used as checkpoint for pattern detections.
@@ -25,14 +26,39 @@ class PatternDataContainer:
         self.df_length = self.df.shape[0]
         self.max_value = self.df[CN.HIGH].max()
         self.min_value = self.df[CN.HIGH].min()
+        self.height = self.max_value - self.min_value
         self.__add_columns__()
         self.__length_for_global = int(self.df_length / 2)
-        self.__length_for_local = 2
+        self.__length_for_local = config.length_for_local_min_max
         self.__init_columns_for_ticks_distance__()
         self.df_min_max = self.df[np.logical_or(self.df[CN.IS_MIN], self.df[CN.IS_MAX])]
         self.tick_by_date_num_ext_dic = ExtendedDictionary4WaveTicks(self.df)
         self.tick_list = [self.tick_by_date_num_ext_dic.dic[index] for index in self.tick_by_date_num_ext_dic.index]
-        self.tick_list_for_ranges = None  # TODO valleys and hidden ticks have to be removed
+        self.tick_first = self.tick_list[0]
+        self.tick_last = self.tick_list[-1]
+        self.wave_tick_list_min_max = WaveTickList(self.df_min_max)
+        self.tick_list_min = []
+        self.tick_list_max = []
+        self.__fill_tick_list_min_max__()
+        self.tick_list_min_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_min, False)
+        self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
+
+    def get_tick_by_date_num(self, date_num: int):
+        return self.tick_by_date_num_ext_dic.dic[date_num]
+
+    def get_tick_by_pos(self, pos: int):
+        return self.tick_list[pos]
+
+    def __fill_tick_list_min_max__(self):
+        for tick in self.wave_tick_list_min_max.tick_list:
+            if tick.is_max:
+                self.tick_list_max.append(tick)
+            else:
+                self.tick_list_min.append(tick)
+
+    def __get_hidden_tick_list__(self, input_list: list, for_high: bool):
+        wave_tick_list = WaveTickList(input_list)
+        return wave_tick_list.get_list_without_hidden_ticks(for_high, 0.03)
 
     def __add_columns__(self):
         self.df = self.df.assign(MeanHL=round((self.df.High + self.df.Low) / 2, 2))
@@ -105,3 +131,14 @@ class PatternDataContainer:
         value_first = tick.high if for_high else tick.low
         value_second = tick.low if for_high else tick.high
         return [value_first, value_second]
+
+
+class PatternDataHandler:
+    def __init__(self):
+        self.pattern_data = None
+
+    def init_by_df(self, df: pd.DataFrame):
+        self.pattern_data = PatternData(df)
+
+
+pattern_data_handler = PatternDataHandler()

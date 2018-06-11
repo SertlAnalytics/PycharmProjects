@@ -6,6 +6,7 @@ Date: 2018-05-14
 """
 
 import pandas as pd
+import numpy as np
 from sertl_analytics.constants.pattern_constants import CN, TT
 from sertl_analytics.functions import math_functions
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
@@ -97,31 +98,96 @@ class WaveTick:
 
 
 class WaveTickList:
-    def __init__(self, df: pd.DataFrame):
-        self.df = df
-        self.tick_list = [WaveTick(row) for ind, row in self.df.iterrows()]
+    def __init__(self, df_or_list):  # input = pd.DataFrame or tick_list[]
+        self.df = None
+        if df_or_list.__class__.__name__ == 'DataFrame':
+            self.__init_by_df__(df_or_list)
+        else:
+            self.__init_by_tick_list__(df_or_list)
+        self.elements = len(self.tick_list)
 
-    def get_boundary_f_param_list(self, for_high: bool):  # gets all functions which are boundaries for the ticks.
+    @property
+    def length(self):
+        return self.tick_list[-1].f_var - self.tick_list[0].f_var
+
+    def get_list_without_hidden_ticks(self, for_high: bool, tolerance_pct: float):
+        """
+        removes all ticks which ara hidden by their neighbors.
+        """
+        remove_index_list = []
+        for n in range(1, self.elements - 2):
+            if self.__is_tick_hidden_by_neighbors__(for_high, n, tolerance_pct):
+                remove_index_list.append(n)
+        for index in reversed(remove_index_list):
+            del self.tick_list[index]
+        return self.tick_list
+
+    def __is_tick_hidden_by_neighbors__(self, for_high: bool, n: int, tolerance_pct: float):
+        tick_left, tick, tick_right = self.tick_list[n - 1], self.tick_list[n], self.tick_list[n + 1]
+        if for_high:
+            f_param_left = tick_left.get_linear_f_params_for_high(tick)
+            f_param_right = tick.get_linear_f_params_for_high(tick_right)
+            for m in range(n - 1):
+                if self.tick_list[m].high > f_param_left(self.tick_list[m].f_var):
+                    return False
+            for m in range(n + 1, self.elements - 1):
+                if self.tick_list[m].high > f_param_right(self.tick_list[m].f_var):
+                    return False
+        else:
+            f_param_left = tick_left.get_linear_f_params_for_low(tick)
+            f_param_right = tick.get_linear_f_params_for_low(tick_right)
+            for m in range(n - 1):
+                if self.tick_list[m].low < f_param_left(self.tick_list[m].f_var):
+                    return False
+            for m in range(n + 1, self.elements - 1):
+                if self.tick_list[m].low < f_param_right(self.tick_list[m].f_var):
+                    return False
+        return True
+
+    def get_boundary_f_param_list(self, f_param: np.poly1d, for_high: bool):
+        """
+        gets all function parameters (np.poly1d) which are boundaries for the ticks.
+        """
         f_param_list = []
         tick_list_without_valleys = self.__get_tick_list_without_valleys__(self.tick_list, for_high)
         for n in range(len(tick_list_without_valleys) - 1):
             tick_left = tick_list_without_valleys[n]
             tick_right = tick_list_without_valleys[n + 1]
             if for_high:
-                f_param_list.append(tick_left.get_linear_f_params_for_high(tick_right))
+                f_param_boundary = tick_left.get_linear_f_params_for_high(tick_right)
             else:
-                f_param_list.append(tick_left.get_linear_f_params_for_low(tick_right))
+                f_param_boundary = tick_left.get_linear_f_params_for_low(tick_right)
+            if self.__is_f_param_boundary_compliant__(f_param, f_param_boundary):
+                f_param_list.append(f_param_boundary)
         return f_param_list
 
+    def __init_by_df__(self, df: pd.DataFrame):
+        self.df = df
+        self.tick_list = [WaveTick(row) for ind, row in self.df.iterrows()]
+
+    def __init_by_tick_list__(self, tick_list: list):
+        self.tick_list = list(tick_list)
+
+    def __is_f_param_boundary_compliant__(self, f_param: np.poly1d, f_param_boundary: np.poly1d) -> bool:
+        if f_param_boundary[1] == 0:
+            return True
+        offset = self.tick_list[0].f_var
+        slope_dec_main = math_functions.MyPoly1d.get_slope_in_decimal_percentage(f_param, self.length, offset)
+        slope_dec_bound = math_functions.MyPoly1d.get_slope_in_decimal_percentage(f_param_boundary, self.length, offset)
+        slope_main_bound = round(slope_dec_main - slope_dec_bound, 4)
+        return slope_main_bound < 0.04  # we don't accept wide opening patterns
+
     def __get_tick_list_without_valleys__(self, tick_list, for_high: bool):
+        """
+        get the tick list without any valley (i.e. the middle of three ticks is not smaller than the others for high)
+        recursive call !!!
+        """
         len_tick_list = len(tick_list)
         if len_tick_list <= 2:
             return tick_list
         remove_index_list = []
         for n in range(len_tick_list - 2):
-            tick_left = tick_list[n]
-            tick_middle = tick_list[n + 1]
-            tick_right = tick_list[n + 2]
+            tick_left, tick_middle, tick_right = tick_list[n], tick_list[n + 1], tick_list[n + 2]
             if for_high:
                 f_param = tick_left.get_linear_f_params_for_high(tick_right)
                 if tick_middle.high < f_param(tick_middle.f_var):
@@ -134,16 +200,41 @@ class WaveTickList:
             return tick_list
         for index in reversed(remove_index_list):
             del tick_list[index]
-        return self.__get_tick_list_without_valleys__(tick_list, for_high)
+        return self.__get_tick_list_without_valleys__(tick_list, for_high)  # recursive call !!!
+
+    def __get_tick_list_without_valleys__(self, tick_list, for_high: bool):
+        """
+        get the tick list without any valley (i.e. the middle of three ticks is not smaller than the others for high)
+        recursive call !!!
+        """
+        len_tick_list = len(tick_list)
+        if len_tick_list <= 2:
+            return tick_list
+        remove_index_list = []
+        for n in range(len_tick_list - 2):
+            tick_left, tick_middle, tick_right = tick_list[n], tick_list[n + 1], tick_list[n + 2]
+            if for_high:
+                f_param = tick_left.get_linear_f_params_for_high(tick_right)
+                if tick_middle.high < f_param(tick_middle.f_var):
+                    remove_index_list.append(n + 1)
+            else:
+                f_param = tick_left.get_linear_f_params_for_low(tick_right)
+                if tick_middle.low > f_param(tick_middle.f_var):
+                    remove_index_list.append(n + 1)
+        if len(remove_index_list) == 0:
+            return tick_list
+        for index in reversed(remove_index_list):
+            del tick_list[index]
+        return self.__get_tick_list_without_valleys__(tick_list, for_high)  # recursive call !!!
 
 
 class ExtendedDictionary4WaveTicks(ExtendedDictionary):
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df: pd.DataFrame, column: str = CN.DATEASNUM):
         ExtendedDictionary.__init__(self)
         self.df = df
-        self.__process_df__()
+        self.__process_df__(column)
 
-    def __process_df__(self):
+    def __process_df__(self, column: str):
         for ind, rows in self.df.iterrows():
             tick = WaveTick(rows)
-            self.append(tick.date_num, tick)
+            self.append(rows[column], tick)

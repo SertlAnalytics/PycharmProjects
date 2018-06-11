@@ -20,7 +20,7 @@ class UserInput:
             return False
 
     @staticmethod
-    def get_input(quote: str) -> bool:
+    def get_input(quote: str) -> str:
         request = quote.strip() + " (x=cancel): "
         answer = ''
         while answer.strip() == '':

@@ -7,12 +7,12 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import CN
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, Circle
 from matplotlib.collections import PatchCollection
 from sertl_analytics.pybase.loop_list import LoopList
-from pattern_configuration import config
-from pattern_data_container import PatternDataContainer
-from pattern_wave_tick import WaveTick
+from pattern_configuration import config, runtime
+from pattern_data_container import pattern_data_handler
+from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_detector import PatternDetector
 from pattern import Pattern
 from mpl_finance import candlestick_ohlc
@@ -153,11 +153,10 @@ class PatternPlotContainerLoopList(LoopList):
 
 
 class PatternPlotter:
-    def __init__(self, data_container: PatternDataContainer, detector: PatternDetector):
-        self.data_container = data_container
+    def __init__(self, detector: PatternDetector):
         self.detector = detector
-        self.df = data_container.df
-        self.symbol = config.runtime.actual_ticker
+        self.df = pattern_data_handler.pattern_data.df
+        self.symbol = runtime.actual_ticker
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
         self.axes = None
 
@@ -183,11 +182,12 @@ class PatternPlotter:
                 fig, axes = plt.subplots(figsize=(15, 7))
                 self.axes = axes
                 self.__plot_candlesticks__(axes)
+                self.__plot_min_max__(axes)
                 self.__plot_patterns__(axes)
 
         plt.title('{}. {} ({}) for {}'.format(
-            config.runtime.actual_number, config.runtime.actual_ticker,
-            config.runtime.actual_ticker_name, self.__get_date_range_for_title__()))
+            runtime.actual_number, runtime.actual_ticker,
+            runtime.actual_ticker_name, self.__get_date_range_for_title__()))
         plt.tight_layout()
         # plt.xticks(rotation=45)
         fig.canvas.mpl_connect('button_press_event', self.__on_click__)
@@ -203,7 +203,7 @@ class PatternPlotter:
         self.pattern_plot_container_loop_list.show_only_selected_containers(event)
 
     def __on_hover__(self, x, y):
-        tick = self.data_container.tick_by_date_num_ext_dic.get_value(int(x + 0.5))
+        tick = pattern_data_handler.pattern_data.tick_by_date_num_ext_dic.get_value(int(x + 0.5))
         return '{} ({:3.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
             tick.date_str, tick.position, tick.low, tick.high, tick.volume/1000, y)
 
@@ -213,7 +213,7 @@ class PatternPlotter:
         axis.legend(loc='upper left')
 
     def __plot_candlesticks__(self, axis):
-        ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in self.data_container.tick_list]
+        ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in pattern_data_handler.pattern_data.tick_list]
         candlestick_ohlc(axis, ohlc_list, width=0.4, colorup='g')
         axis.xaxis_date()
         axis.grid()
@@ -222,6 +222,20 @@ class PatternPlotter:
     def __plot_patterns__(self, axis):
         self.__fill_plot_container_list__()
         self.__add_pattern_shapes_to_plot__(axis)
+
+    def __plot_min_max__(self, axis):
+        if not config.plot_min_max:
+            return
+        wave_tick_list = WaveTickList(pattern_data_handler.pattern_data.df_min_max)
+        for ticks in wave_tick_list.tick_list:
+            if ticks.is_min:
+                axis.add_patch(Circle((ticks.f_var, ticks.low), 0.5, color='r'))
+            else:
+                axis.add_patch(Circle((ticks.f_var, ticks.high), 0.5, color='g'))
+        for ticks in pattern_data_handler.pattern_data.tick_list_min_without_hidden_ticks:
+            axis.add_patch(Circle((ticks.f_var, ticks.low), 0.3, color='w'))
+        for ticks in pattern_data_handler.pattern_data.tick_list_max_without_hidden_ticks:
+            axis.add_patch(Circle((ticks.f_var, ticks.high), 0.3, color='w'))
 
     def __plot_volume__(self, axis):
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.VOL])
@@ -236,7 +250,7 @@ class PatternPlotter:
             if pattern.was_breakout_done() and pattern.is_part_trade_available():
                 plot_container.add_trade_shape(pattern.get_shape_part_trade(), color_trade)
             plot_container.add_center_shape(pattern.get_center_shape())
-            plot_container.annotation_param = pattern.get_annotation_parameter(True, 'blue')
+            plot_container.annotation_param = pattern.get_annotation_parameter('blue')
             # plot_container.add_border_line_top_shape(pattern.part_main.get_f_upper_shape())
             # plot_container.add_border_line_bottom_shape(pattern.part_main.get_f_lower_shape())
             plot_container.add_regression_line_shape(pattern.part_main.get_f_regression_shape())

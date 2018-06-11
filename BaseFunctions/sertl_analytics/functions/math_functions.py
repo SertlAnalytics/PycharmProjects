@@ -18,6 +18,15 @@ def get_function_parameters(ind_left, value_left, ind_right, value_right):
     return p
 
 
+class MyPoly1d:
+    @staticmethod
+    def get_slope_in_decimal_percentage(func: np.poly1d, len: int, setoff: int):
+        """
+        Gets the changes of the values for the input function WITHIN the range
+        """
+        return round(func[1] * len / func(setoff), 3)
+
+
 class ToleranceCalculator:
     @staticmethod
     def are_values_in_tolerance_range(val_1: float, val_2: float, tolerance_pct: float):

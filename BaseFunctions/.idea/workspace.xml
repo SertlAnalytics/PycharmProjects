@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a9b7b1e9-a92d-4270-bcc9-9b843e8495d6" name="Default" comment="" />
+    <list default="true" id="a9b7b1e9-a92d-4270-bcc9-9b843e8495d6" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sertl_analytics/user_input/confirmation.py" beforeDir="false" afterPath="$PROJECT_DIR$/sertl_analytics/user_input/confirmation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_breakout.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -10,7 +16,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -18,6 +24,9 @@
         <option value="Python Script" />
       </list>
     </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -30,6 +39,8 @@
         <option value="$PROJECT_DIR$/sertl_analytics/pybase/exceptions.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/functions/math_functions.py" />
+        <option value="$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py" />
+        <option value="$PROJECT_DIR$/sertl_analytics/user_input/confirmation.py" />
       </list>
     </option>
   </component>
@@ -38,68 +49,17 @@
     <option name="width" value="1294" />
     <option name="height" value="1407" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
             <path>
               <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="data" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="datafetcher" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="environment" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="functions" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="plotter" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="pybase" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
-              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="searches" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
             </path>
             <path>
@@ -118,7 +78,7 @@
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
               <item name="&lt; Python 3.6 &gt;" type="70bed36:NamedLibraryElementNode" />
               <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="ClassifierBasedGermanTagger" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
@@ -126,13 +86,16 @@
               <item name="&lt; Python 3.6 &gt;" type="70bed36:NamedLibraryElementNode" />
               <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
               <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="pybase" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -171,7 +134,7 @@
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" />
@@ -189,7 +152,19 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$" />
+    </ignored-roots>
+  </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1615">
+          <caret line="95" column="21" lean-forward="true" selection-start-line="95" selection-start-column="21" selection-end-line="95" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sertl_analytics/pybase/exceptions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="153">
@@ -295,20 +270,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sertl_analytics/pybase/loop_list.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="21" selection-start-line="21" selection-end-line="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sertl_analytics/searches/smart_searches.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="629">
-          <caret line="37" column="12" selection-start-line="37" selection-start-column="12" selection-end-line="37" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sertl_analytics/functions/math_functions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="153">
@@ -323,15 +284,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sertl_analytics/plotter/my_plot.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sertl_analytics/pybase/df_base.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
@@ -339,10 +291,38 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/pybase/loop_list.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="21" selection-start-line="21" selection-end-line="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/searches/smart_searches.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="629">
+          <caret line="37" column="12" selection-start-line="37" selection-start-column="12" selection-end-line="37" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sertl_analytics/pybase/exceptions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="9" column="8" selection-start-line="9" selection-start-column="8" selection-end-line="9" selection-end-column="8" />
+        <state relative-caret-position="119">
+          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="901">
+          <caret line="92" column="22" lean-forward="true" selection-start-line="92" selection-start-column="22" selection-end-line="92" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/user_input/confirmation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="408">
+          <caret line="24" column="19" lean-forward="true" selection-start-line="24" selection-start-column="19" selection-end-line="24" selection-end-column="19" />
         </state>
       </provider>
     </entry>

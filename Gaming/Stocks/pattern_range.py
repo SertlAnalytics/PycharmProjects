@@ -9,13 +9,14 @@ from sertl_analytics.constants.pattern_constants import CN, FT
 from pattern_wave_tick import WaveTick, WaveTickList
 from stock_data_frame import StockDataFrame
 from sertl_analytics.functions.math_functions import ToleranceCalculator
+from pattern_configuration import config
+from pattern_data_container import pattern_data_handler as pdh
 import pandas as pd
 import numpy as np
 
 
 class PatternRange:
-    def __init__(self, df_min_max: pd.DataFrame, tick: WaveTick, min_length: int):
-        self.df_min_max = df_min_max
+    def __init__(self, tick: WaveTick, min_length: int):
         self.df_min_max_final = None
         self.tick_list = [tick]
         self.tick_first = tick
@@ -57,9 +58,9 @@ class PatternRange:
         return stock_df.get_f_regression()
 
     def __get_actual_df_min_max__(self):
-        df_range = self.df_min_max[np.logical_and(
-            self.df_min_max[CN.POSITION] >= self.tick_first.position,
-            self.df_min_max[CN.POSITION] <= self.tick_last.position)]
+        df_range = pdh.pattern_data.df_min_max[np.logical_and(
+            pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
+            pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_last.position)]
         return df_range
 
     @property
@@ -149,7 +150,7 @@ class PatternRange:
 
     def __get_breakout_details__(self):
         if self.tick_breakout_successor is None:  # extend the breakouts until the end....
-            pos = self.df_min_max.iloc[-1][CN.POSITION]
+            pos = pdh.pattern_data.df_min_max.iloc[-1][CN.POSITION]
         else:
             pos = self.tick_breakout_successor.position
         return [pos, round(self.__f_param(pos), 2)]
@@ -166,7 +167,7 @@ class PatternRangeMax(PatternRange):
 
     def __fill_f_param_list__(self):
         wave_tick_list = WaveTickList(self.df_min_max_final[self.df_min_max_final[CN.IS_MIN]])
-        self._f_param_list = wave_tick_list.get_boundary_f_param_list(False)
+        self._f_param_list = wave_tick_list.get_boundary_f_param_list(self.f_param, False)
 
     def __get_parallel_function__(self) -> np.poly1d:
         stock_df = StockDataFrame(self.df_min_max_final)
@@ -183,7 +184,7 @@ class PatternRangeMin(PatternRange):
 
     def __fill_f_param_list__(self):
         wave_tick_list = WaveTickList(self.df_min_max_final[self.df_min_max_final[CN.IS_MAX]])
-        self._f_param_list = wave_tick_list.get_boundary_f_param_list(True)
+        self._f_param_list = wave_tick_list.get_boundary_f_param_list(self.f_param, True)
 
     def __get_parallel_function__(self) -> np.poly1d:
         stock_df = StockDataFrame(self.df_min_max_final)
@@ -194,15 +195,13 @@ class PatternRangeMin(PatternRange):
 
 
 class PatternRangeDetector:
-    def __init__(self, df_min_max: pd.DataFrame, tolerance_pct: float):
-        self.df_min_max = df_min_max
-        self.df = self.__get_df_for_processing__(df_min_max)  # only min or max ticks
-        self.tick_list = [WaveTick(row) for index, row in self.df.iterrows()]
-        self.df_length = self.df.shape[0]
+    def __init__(self, tick_list: list):
+        self.tick_list = tick_list
+        self._elements = len(self.tick_list)
         self._number_required_ticks = 3
-        self._tolerance_pct = tolerance_pct
+        self._tolerance_pct = config.range_detector_tolerance_pct
         self.__pattern_range_list = []
-        self.__parse_data_frame__()
+        self.__parse_tick_list__()
 
     def get_pattern_range_list(self) -> list:
         return self.__pattern_range_list
@@ -221,9 +220,6 @@ class PatternRangeDetector:
     def are_pattern_ranges_available(self) -> bool:
         return len(self.__pattern_range_list) > 0
 
-    def __get_df_for_processing__(self, df_min_max: pd.DataFrame):
-        pass
-
     def __add_pattern_range_to_list_after_check__(self, pattern_range: PatternRange):
         if self.__are_conditions_fulfilled_for_adding_to_pattern_range_list__(pattern_range):
             pattern_range.finalize_pattern_range()
@@ -240,8 +236,8 @@ class PatternRangeDetector:
                 return False
         return True
 
-    def __parse_data_frame__(self):
-        for i in range(0, self.df_length - self._number_required_ticks):
+    def __parse_tick_list__(self):
+        for i in range(0, self._elements - self._number_required_ticks):
             tick_i = self.tick_list[i]
             pattern_range = self.__get_pattern_range_by_tick__(tick_i)
             next_list, next_linear_f_params, pos_list = self.__get_pattern_range_next_position_candidates__(i, tick_i)
@@ -264,7 +260,7 @@ class PatternRangeDetector:
         next_position_candidates_list = []
         next_position_list = []
         next_position_linear_f_params = []
-        for k in range(i + 1, self.df_length):
+        for k in range(i + 1, self._elements):
             tick_k = self.tick_list[k]
             f_param_i_k = self.__get_linear_f_params__(tick_i, tick_k)
             if f_param is None or self.__is_slope_correctly_changing__(f_param, tick_k, f_param_i_k):
@@ -309,9 +305,6 @@ class PatternRangeDetector:
 
 
 class PatternRangeDetectorMax(PatternRangeDetector):
-    def __get_df_for_processing__(self, df_min_max: pd.DataFrame):
-        return df_min_max[df_min_max[CN.IS_MAX]]
-
     def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick) -> np.poly1d:
         return tick_i.get_linear_f_params_for_high(tick_k)
 
@@ -319,7 +312,7 @@ class PatternRangeDetectorMax(PatternRangeDetector):
         return pattern_range.tick_last.high < f_value_new_last_position_right
 
     def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRangeMax:
-        return PatternRangeMax(self.df_min_max, tick, self._number_required_ticks)
+        return PatternRangeMax(tick, self._number_required_ticks)
 
     def __is_slope_correctly_changing__(self, f_param: np.poly1d, tick_new: WaveTick, f_param_new_tick: np.poly1d):
         return True if f_param_new_tick[1] > f_param[1] else False
@@ -331,9 +324,6 @@ class PatternRangeDetectorMax(PatternRangeDetector):
 
 
 class PatternRangeDetectorMin(PatternRangeDetector):
-    def __get_df_for_processing__(self, df_min_max: pd.DataFrame):
-        return df_min_max[df_min_max[CN.IS_MIN]]
-
     def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick) -> np.poly1d:
         return tick_i.get_linear_f_params_for_low(tick_k)
 
@@ -341,7 +331,7 @@ class PatternRangeDetectorMin(PatternRangeDetector):
         return pattern_range.tick_last.low > f_value_new_last_position_right
 
     def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRangeMin:
-        return PatternRangeMin(self.df_min_max, tick, self._number_required_ticks)
+        return PatternRangeMin(tick, self._number_required_ticks)
 
     def __is_slope_correctly_changing__(self, f_param: np.poly1d, tick_new: WaveTick, f_param_new_tick: np.poly1d):
         return True if f_param_new_tick[1] < f_param[1] else False

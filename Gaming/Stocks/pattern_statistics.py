@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import PSC, FD
-from pattern_configuration import config
+from pattern_configuration import config, runtime
 from pattern import Pattern
 from sertl_analytics.pybase.date_time import MyPyDate
 import pandas as pd
@@ -88,9 +88,9 @@ class PatternStatistics:
         self.dic[PSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = pattern.condition_handler.breakout_with_buy_signal
 
         self.dic[PSC.STATUS] = 'Finished' if pattern.was_breakout_done() else 'Open'
-        self.dic[PSC.NUMBER] = config.runtime.actual_number
-        self.dic[PSC.TICKER] = config.runtime.actual_ticker
-        self.dic[PSC.NAME] = config.runtime.actual_ticker_name
+        self.dic[PSC.NUMBER] = runtime.actual_number
+        self.dic[PSC.TICKER] = runtime.actual_ticker
+        self.dic[PSC.NAME] = runtime.actual_ticker_name
         self.dic[PSC.PATTERN] = pattern.pattern_type
         self.dic[PSC.BEGIN_PREVIOUS] = 'TODO'
         self.dic[PSC.BEGIN] = MyPyDate.get_date_from_datetime(pattern.date_first)
@@ -193,7 +193,7 @@ class DetectorStatistics:
         self.column_list = ['Number', 'Ticker', 'Name', 'Investment', 'Result', 'Change%', 'SL', 'F_OK', 'F_NOK', 'Ticks']
 
     def add_entry(self, api: PatternDetectorStatisticsApi):
-        new_entry = [config.runtime.actual_number, config.runtime.actual_ticker, config.runtime.actual_ticker_name
+        new_entry = [runtime.actual_number, runtime.actual_ticker, runtime.actual_ticker_name
             , api.investment_start, api.investment_working, api.diff_pct
             , api.counter_stop_loss, api.counter_formation_OK, api.counter_formation_NOK, api.counter_actual_ticks]
         self.list.append(new_entry)

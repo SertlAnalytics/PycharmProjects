@@ -16,9 +16,9 @@ from datetime import timedelta
 from sertl_analytics.pybase.date_time import MyPyDate
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
 from sertl_analytics.constants.pattern_constants import PSC
-from pattern_configuration import config
+from pattern_configuration import config, runtime
 from pattern_statistics import PatternStatistics, DetectorStatistics
-from pattern_data_container import PatternDataContainer
+from pattern_data_container import pattern_data_handler
 from pattern_detector import PatternDetector
 from pattern_plotter import PatternPlotter
 from stock_database import stock_database
@@ -58,12 +58,12 @@ class PatternDetectionController:
 
         for value_dic in self.__loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
-            self.__add_runtime_parameter_to_config__(value_dic)
-            print('\nProcessing {} ({})...\n'.format(ticker, config.runtime.actual_ticker_name))
+            self.__update_runtime_parameters__(value_dic)
+            print('\nProcessing {} ({})...\n'.format(ticker, runtime.actual_ticker_name))
             my_clock = MyClock('Parsing')
             df_data = self.__get_df_from_source__(ticker, value_dic)
-            data_container = PatternDataContainer(df_data)
-            detector = PatternDetector(data_container)
+            pattern_data_handler.init_by_df(df_data)
+            detector = PatternDetector()
             detector.parse_for_pattern()
             my_clock.stop(True)
             self.__handle_statistics__(detector)
@@ -72,7 +72,7 @@ class PatternDetectionController:
                 if len(detector.pattern_list) == 0:  # and not detector.possible_pattern_ranges_available:
                     print('...no formations found.')
                 else:
-                    plotter = PatternPlotter(data_container, detector)
+                    plotter = PatternPlotter(detector)
                     plotter.plot_data_frame()
 
             if value_dic[LL.NUMBER] >= config.max_number_securities:
@@ -101,14 +101,14 @@ class PatternDetectionController:
             else:
                 exit()
 
-    def __add_runtime_parameter_to_config__(self, entry_dic: dict):
-        config.runtime.actual_ticker = entry_dic[LL.TICKER]
-        config.runtime.actual_and_clause = entry_dic[LL.AND_CLAUSE]
-        config.runtime.actual_number = entry_dic[LL.NUMBER]
+    def __update_runtime_parameters__(self, entry_dic: dict):
+        runtime.actual_ticker = entry_dic[LL.TICKER]
+        runtime.actual_and_clause = entry_dic[LL.AND_CLAUSE]
+        runtime.actual_number = entry_dic[LL.NUMBER]
         if self.stock_db is not None:
-            config.runtime.actual_ticker_name = self.stock_db.get_name_for_symbol(entry_dic[LL.TICKER])
-        if config.runtime.actual_ticker_name == '':
-            config.runtime.actual_ticker_name = config.ticker_dic[entry_dic[LL.TICKER]]
+            runtime.actual_ticker_name = self.stock_db.get_name_for_symbol(entry_dic[LL.TICKER])
+        if runtime.actual_ticker_name == '':
+            runtime.actual_ticker_name = config.ticker_dic[entry_dic[LL.TICKER]]
 
     def __show_statistics__(self):
         config.print()

@@ -5,8 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from pattern_configuration import config
-from pattern_data_container import PatternDataContainer
+from pattern_configuration import config, runtime
+from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
 from pattern_function_container import PatternFunctionContainer
 from pattern_part import PatternPart
@@ -18,12 +18,11 @@ from sertl_analytics.pybase.date_time import MyClock
 
 
 class PatternDetector:
-    def __init__(self, data_container: PatternDataContainer):
-        self.data_container = data_container
+    def __init__(self):
         self.pattern_type_list = list(config.pattern_type_list)
-        self.df = data_container.df
+        self.df = pdh.pattern_data.df
         self.df_length = self.df.shape[0]
-        self.df_min_max = data_container.df_min_max
+        self.df_min_max = pdh.pattern_data.df_min_max
         self.df_min_max_length = self.df_min_max.shape[0]
         self.range_detector_max = None
         self.range_detector_min = None
@@ -41,7 +40,7 @@ class PatternDetector:
         self.__fill_possible_pattern_ranges__()
         possible_pattern_range_list = self.__get_combined_possible_pattern_ranges__()
         for pattern_type in self.pattern_type_list:
-            config.runtime.actual_pattern_type = pattern_type
+            runtime.actual_pattern_type = pattern_type
             for pattern_range in possible_pattern_range_list:
                 # pattern_range.print_range_details()
                 pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, self.df, self.df_min_max,
@@ -53,8 +52,8 @@ class PatternDetector:
         can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)
         if pattern.breakout is None and not can_be_added:
             return
-        config.runtime.actual_breakout = pattern.breakout
-        pattern.add_part_main(PatternPart(self.data_container, pattern.function_cont))
+        runtime.actual_breakout = pattern.breakout
+        pattern.add_part_main(PatternPart(pattern.function_cont))
         if pattern.is_formation_established():
             if pattern.breakout is not None:
                 pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
@@ -68,7 +67,7 @@ class PatternDetector:
         f_upper_trade = pattern.get_f_upper_trade()
         f_lower_trade = pattern.get_f_lower_trade()
         function_cont = PatternFunctionContainer(pattern.pattern_type, df, f_lower_trade, f_upper_trade)
-        part = PatternPart(self.data_container, function_cont)
+        part = PatternPart(function_cont)
         pattern.add_part_trade(part)
         pattern.fill_result_set()
 
@@ -128,11 +127,8 @@ class PatternDetector:
         return PatternBreakout(breakout_api)
 
     def __fill_possible_pattern_ranges__(self):
-        self.range_detector_max = PatternRangeDetectorMax(self.df_min_max, config.range_detector_tolerance_pct)
-        # self.range_detector_max.print_list_of_possible_pattern_ranges()
-        self.range_detector_min = PatternRangeDetectorMin(self.df_min_max, config.range_detector_tolerance_pct)
-        # self.range_detector_min.print_list_of_possible_pattern_ranges()
-        # TODO get rid of print statements
+        self.range_detector_max = PatternRangeDetectorMax(pdh.pattern_data.tick_list_max_without_hidden_ticks)
+        self.range_detector_min = PatternRangeDetectorMin(pdh.pattern_data.tick_list_min_without_hidden_ticks)
 
     def __get_combined_possible_pattern_ranges__(self) -> list:
         # return self.range_detector_min.get_pattern_range_list()

@@ -14,7 +14,7 @@ class PatternBreakoutApi:
     def __init__(self, function_cont: PatternFunctionContainer):
         self.function_cont = function_cont
         self.tick_previous = None
-        self.tick_breakout = None
+        self.tick_breakout = None   # test
         self.constraints = None
 
 

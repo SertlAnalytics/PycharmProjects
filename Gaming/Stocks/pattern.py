@@ -136,8 +136,8 @@ class Pattern:
     def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
         return True
 
-    def get_annotation_parameter(self, for_max: bool = True, color: str = 'blue'):
-        return self._part_main.get_annotation_parameter(for_max, color)
+    def get_annotation_parameter(self, color: str = 'blue'):
+        return self._part_main.get_annotation_parameter(color)
 
     def get_shape_part_main(self):
         return Polygon(np.array(self.xy), True)
