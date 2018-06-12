@@ -147,6 +147,8 @@ class PatternFunctionContainer:
     def __set_f_var_cross_f_upper_f_lower__(self):
         if self.__f_upper[1] < self.__f_lower[1]:
             for n in range(self.__tick_last.f_var, self.__tick_last.f_var + 2 * self.number_of_positions):
+                u = self.__f_upper(n)
+                l = self.__f_lower(n)
                 if self.__f_upper(n) < self.__f_lower(n):
                     self.__f_var_cross_f_upper_f_lower = n - 1
                     break
