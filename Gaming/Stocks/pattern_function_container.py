@@ -26,10 +26,16 @@ class PatternFunctionContainer:
         self.__f_regression = self.__get_f_regression__()
         self.__f_var_cross_f_upper_f_lower = 0
         self.__breakout_direction = None
-        self.__pattern_direction = FD.ASC if self.__f_regression[1] >= 0 else FD.DESC
+        self.__pattern_direction = self.__get_pattern_direction__()
         if self.is_valid():
             self.__init_tick_for_helper__()
             self.__set_f_var_cross_f_upper_f_lower__()
+
+    def __get_pattern_direction__(self):
+        if self.is_valid():
+            return FD.ASC if self.__f_upper[1] + self.__f_lower[1] > 0 else FD.DESC
+        else:
+            return FD.ASC if self.__f_regression[1] >= 0 else FD.DESC
 
     @property
     def number_of_positions(self):

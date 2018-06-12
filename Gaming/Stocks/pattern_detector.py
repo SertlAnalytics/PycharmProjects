@@ -43,10 +43,11 @@ class PatternDetector:
             runtime.actual_pattern_type = pattern_type
             for pattern_range in possible_pattern_range_list:
                 # pattern_range.print_range_details()
-                pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, self.df, self.df_min_max,
-                                                                     pattern_range)
-                if pattern.function_cont.is_valid():
-                    self.__handle_single_pattern_when_parsing__(pattern)
+                complementary_function_list = pattern_range.get_complementary_function_list(pattern_type)
+                for f_comp in complementary_function_list:
+                    pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, pattern_range, f_comp)
+                    if pattern.function_cont.is_valid():
+                        self.__handle_single_pattern_when_parsing__(pattern)
 
     def __handle_single_pattern_when_parsing__(self, pattern: Pattern):
         can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)
@@ -104,7 +105,8 @@ class PatternDetector:
     def __check_for_break__(function_cont, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
         if counter > number_of_positions:  # maximal number for the whole pattern after its building
             return True
-        if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var):
+        if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 3):
+            # check the last value !!! in some IMPORTANT cases is the breakout just on that day...
             return True
         if not function_cont.is_tick_inside_pattern_range(tick):
             return True
@@ -136,7 +138,7 @@ class PatternDetector:
         list_min = self.range_detector_min.get_pattern_range_list()
         list_max_without_covered = self.__remove_entries_covered_by_second_list__(list_max, list_min)
         list_min_without_covered = self.__remove_entries_covered_by_second_list__(list_min, list_max)
-        result_list = list_max_without_covered + list_min_without_covered
+        result_list = list_max + list_min
         return result_list
 
     def __remove_entries_covered_by_second_list__(self, list_change: list, list_master: list) -> list:

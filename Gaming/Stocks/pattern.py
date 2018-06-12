@@ -6,6 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import FT, FCC, FD
+from pattern_data_container import pattern_data_handler as pdh
 from matplotlib.patches import Ellipse, Polygon
 import pandas as pd
 import numpy as np
@@ -52,11 +53,11 @@ class PatternConditionHandler:
 
 
 class Pattern:
-    def __init__(self, pattern_type: str, df: pd.DataFrame, df_min_max: pd.DataFrame,
-                 pattern_range: PatternRange):
+    def __init__(self, pattern_type: str, pattern_range: PatternRange, complementary_function: np.poly1d):
         self.pattern_type = pattern_type
-        self.df = df
-        self.df_min_max = df_min_max
+        self.df = pdh.pattern_data.df
+        self.df_min_max = pdh.pattern_data.df_min_max
+        self.complementary_function = complementary_function
         self.constraints = self.__get_constraint__()
         self.pattern_range = pattern_range
         self.ticks_initial = 0
@@ -161,22 +162,19 @@ class Pattern:
         return self._part_trade is not None
 
     def __get_pattern_function_container__(self) -> PatternFunctionContainer:
-        f_complementary_list = self.pattern_range.get_complementary_functions(self.pattern_type)
         df_check = self.pattern_range.get_related_part_from_data_frame(self.df_min_max)
-        for f_complementary in f_complementary_list:
-            f_main = self.pattern_range.f_param
-            if self.pattern_range.__class__.__name__ == 'PatternRangeMin':
-                f_upper = f_complementary
-                f_lower = f_main
-            else:
-                f_lower = f_complementary
-                f_upper = f_main
-            f_container = PatternFunctionContainer(self.pattern_type, df_check, f_lower, f_upper)
-            if self.constraints.are_f_lower_f_upper_pct_compliant(f_container.f_lower_pct, f_container.f_upper_pct):
-                if self.constraints.is_f_regression_pct_compliant(f_container.f_regression_pct):
-                    value_categorizer = ChannelValueCategorizer(f_container, self.constraints.tolerance_pct)
-                    if self.constraints.are_global_constraints_satisfied(value_categorizer):
-                        return f_container
+        if self.pattern_range.__class__.__name__ == 'PatternRangeMin':
+            f_upper = self.complementary_function
+            f_lower = self.pattern_range.f_param
+        else:
+            f_lower = self.complementary_function
+            f_upper = self.pattern_range.f_param
+        f_container = PatternFunctionContainer(self.pattern_type, df_check, f_lower, f_upper)
+        if self.constraints.are_f_lower_f_upper_pct_compliant(f_container.f_lower_pct, f_container.f_upper_pct):
+            if self.constraints.is_f_regression_pct_compliant(f_container.f_regression_pct):
+                value_categorizer = ChannelValueCategorizer(f_container, self.constraints.tolerance_pct)
+                if self.constraints.are_global_constraints_satisfied(value_categorizer):
+                    return f_container
         return PatternFunctionContainer(self.pattern_type, df_check)
 
     def __fill_trade_result__(self):
@@ -322,31 +320,30 @@ class TKEUpPattern(TKEPattern):
 
 class PatternHelper:
     @staticmethod
-    def get_pattern_for_pattern_type(pattern_type: str, df: pd.DataFrame, df_min_max: pd.DataFrame,
-                                     pattern_range: PatternRange):
+    def get_pattern_for_pattern_type(pattern_type: str, pattern_range: PatternRange, complementary_function: np.poly1d):
         if pattern_type == FT.CHANNEL:
-            return ChannelPattern(pattern_type, df, df_min_max, pattern_range)
+            return ChannelPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.CHANNEL_DOWN:
-            return ChannelDownPattern(pattern_type, df, df_min_max, pattern_range)
+            return ChannelDownPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.CHANNEL_UP:
-            return ChannelUpPattern(pattern_type, df, df_min_max, pattern_range)
+            return ChannelUpPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.HEAD_SHOULDER:
-            return HeadShoulderPattern(pattern_type, df, df_min_max, pattern_range)
+            return HeadShoulderPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.HEAD_SHOULDER_INVERSE:
-            return InverseHeadShoulderPattern(pattern_type, df, df_min_max, pattern_range)
+            return InverseHeadShoulderPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.TRIANGLE:
-            return TrianglePattern(pattern_type, df, df_min_max, pattern_range)
+            return TrianglePattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.TRIANGLE_TOP:
-            return TriangleTopPattern(pattern_type, df, df_min_max, pattern_range)
+            return TriangleTopPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.TRIANGLE_BOTTOM:
-            return TriangleBottomPattern(pattern_type, df, df_min_max, pattern_range)
+            return TriangleBottomPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.TRIANGLE_UP:
-            return TriangleUpPattern(pattern_type, df, df_min_max, pattern_range)
+            return TriangleUpPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.TRIANGLE_DOWN:
-            return TriangleDownPattern(pattern_type, df, df_min_max, pattern_range)
+            return TriangleDownPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.TKE_DOWN:
-            return TKEDownPattern(pattern_type, df, df_min_max, pattern_range)
+            return TKEDownPattern(pattern_type, pattern_range, complementary_function)
         elif pattern_type == FT.TKE_UP:
-            return TKEUpPattern(pattern_type, df, df_min_max, pattern_range)
+            return TKEUpPattern(pattern_type, pattern_range, complementary_function)
         else:
             raise MyException('No pattern defined for pattern type "{}"'.format(pattern_type))

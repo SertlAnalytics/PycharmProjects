@@ -59,12 +59,10 @@ class PatternDetectionController:
             ticker = value_dic[LL.TICKER]
             self.__update_runtime_parameters__(value_dic)
             print('\nProcessing {} ({})...\n'.format(ticker, runtime.actual_ticker_name))
-            my_clock = MyClock('Parsing')
             df_data = self.__get_df_from_source__(ticker, value_dic)
             pattern_data_handler.init_by_df(df_data)
             detector = PatternDetector()
             detector.parse_for_pattern()
-            my_clock.stop(True)
             self.__handle_statistics__(detector)
 
             if config.plot_data:

@@ -275,7 +275,7 @@ class InverseHeadShoulderConstraints(HeadShoulderConstraints):
 class TriangleConstraints(Constraints):
     @staticmethod
     def __get_tolerance_pct__():
-        return 0.01
+        return 0.02
 
     def __fill_global_constraints__(self):
         """
@@ -286,11 +286,13 @@ class TriangleConstraints(Constraints):
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
         self.global_count = ['OR', CountConstraint(SVC.U_in, '>=', 3), CountConstraint(SVC.L_in, '>=', 3)]
         self.global_series = ['OR', [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
-                              [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
+                              [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in],
+                              [SVC.L_in, SVC.L_in, SVC.U_in, SVC.U_in, SVC.L_in],
+                              [SVC.U_in, SVC.U_in, SVC.L_in, SVC.L_in, SVC.U_in]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-0.5, -0.02]
-        self.f_lower_pct_bounds = [0.02, 0.5]
+        self.f_upper_pct_bounds = [-0.5, -0.01]
+        self.f_lower_pct_bounds = [0.01, 0.5]
         self.f_upper_lower_relation_bounds = [-10, -0.2]
         self.f_regression_pct_bounds = [-0.5, 0.5]
 
@@ -304,7 +306,7 @@ class TriangleTopConstraints(TriangleConstraints):
         self.f_upper_pct_bounds = [-0.01, 0.01]
         self.f_lower_pct_bounds = [0.02, 1.0]
         self.f_upper_lower_relation_bounds = []
-        self.f_regression_pct_bounds = self.f_lower_pct_bounds
+        self.f_regression_pct_bounds = []
 
 
 class TriangleBottomConstraints(TriangleConstraints):
@@ -314,7 +316,7 @@ class TriangleBottomConstraints(TriangleConstraints):
 
     def __set_bounds_for_pattern_type__(self):
         self.__set_bounds_by_complementary_constraints__(TriangleTopConstraints())
-        self.f_regression_pct_bounds = self.f_upper_pct_bounds
+        self.f_regression_pct_bounds = []
 
 
 class TriangleUpConstraints(TriangleConstraints):
@@ -323,7 +325,7 @@ class TriangleUpConstraints(TriangleConstraints):
         return 0.01
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [0.03, 1.0]
+        self.f_upper_pct_bounds = [0.02, 1.0]
         self.f_lower_pct_bounds = self.f_upper_pct_bounds
         self.f_upper_lower_relation_bounds = [0.01, 0.65]
         self.f_regression_pct_bounds = self.f_upper_pct_bounds

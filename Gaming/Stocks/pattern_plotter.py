@@ -6,7 +6,6 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN
-from sertl_analytics.plotter.my_plot import MyPlotHelper
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Circle
 from matplotlib.collections import PatchCollection
@@ -17,6 +16,7 @@ from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_detector import PatternDetector
 from pattern import Pattern
 from mpl_finance import candlestick_ohlc
+from pattern_range import PatternRange
 
 
 class FormationColorHandler:
@@ -160,6 +160,7 @@ class PatternPlotter:
         self.symbol = runtime.actual_ticker
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
         self.ranges_polygon_dic_list = {}
+        self.ranges_opposite_polygon_dic_list = {}
         self.__currently_visible_ranges_polygon_list = []
         self.axes_for_candlesticks = None
 
@@ -242,6 +243,10 @@ class PatternPlotter:
             for polygon in self.ranges_polygon_dic_list[tick.f_var]:
                 polygon.set_visible(True)
                 self.__currently_visible_ranges_polygon_list.append(polygon)
+            if tick.f_var in self.ranges_opposite_polygon_dic_list:
+                for polygon in self.ranges_opposite_polygon_dic_list[tick.f_var]:
+                    polygon.set_visible(True)
+                    self.__currently_visible_ranges_polygon_list.append(polygon)
             return True
         return False
 
@@ -285,15 +290,27 @@ class PatternPlotter:
         pattern_range_list_min = self.detector.range_detector_min.get_pattern_range_list()
         for ranges in pattern_range_list_max + pattern_range_list_min:
             polygon = ranges.f_param_shape
-            polygon.set_visible(False)
-            polygon.set_color('r')
-            polygon.set_linewidth(1)
-            self.axes_for_candlesticks.add_patch(polygon)
-            for ticks in ranges.tick_list:
+            self.__add_to_ranges_polygon_dic__(polygon, True, ranges)
+            opposite_polygon_list = ranges.get_f_param_list_shapes()
+            for polygon_opposite in opposite_polygon_list:
+                self.__add_to_ranges_polygon_dic__(polygon_opposite, False, ranges)
+
+    def __add_to_ranges_polygon_dic__(self, polygon: Polygon, for_main: bool, range: PatternRange):
+        polygon.set_visible(False)
+        polygon.set_color('r' if for_main else 'k')
+        polygon.set_linewidth(1)
+        self.axes_for_candlesticks.add_patch(polygon)
+        for ticks in range.tick_list:
+            if for_main:
                 if ticks.f_var not in self.ranges_polygon_dic_list:
                     self.ranges_polygon_dic_list[ticks.f_var] = [polygon]
                 else:
                     self.ranges_polygon_dic_list[ticks.f_var].append(polygon)
+            else:
+                if ticks.f_var not in self.ranges_opposite_polygon_dic_list:
+                    self.ranges_opposite_polygon_dic_list[ticks.f_var] = [polygon]
+                else:
+                    self.ranges_opposite_polygon_dic_list[ticks.f_var].append(polygon)
 
     def __get_circle_radius_for_plot_min_max__(self, mean_of_data: float):
         radius_out = 0.5 * mean_of_data/300

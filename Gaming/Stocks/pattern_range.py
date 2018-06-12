@@ -83,7 +83,7 @@ class PatternRange:
     def get_maximal_trade_size_for_pattern_type(self, pattern_type: str) -> int:
         return self.tick_last.position - self.tick_first.position
 
-    def get_complementary_functions(self, pattern_type: str) -> list:
+    def get_complementary_function_list(self, pattern_type: str) -> list:
         if pattern_type == FT.HEAD_SHOULDER:
             return [self.f_param_parallel]
         elif pattern_type == FT.TKE_DOWN:
@@ -135,6 +135,10 @@ class PatternRange:
     def f_param_shape(self) -> Polygon:
         tick_list = [self.tick_first, self.tick_last]
         return MyPlotHelper.get_polygon_for_tick_list(tick_list, self.__f_param)
+
+    def get_f_param_list_shapes(self) -> list:
+        tick_list = [self.tick_first, self.tick_last]
+        return [MyPlotHelper.get_polygon_for_tick_list(tick_list, f_param) for f_param in self._f_param_list]
 
     @property
     def f_regression_shape(self):
