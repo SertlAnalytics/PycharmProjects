@@ -14,13 +14,9 @@ import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.constants.pattern_constants import Indices
+import os
 
 
-class TestAA:
-    def __init__(self):
-        pass
-
-    
 class StockDatabase(BaseDatabase):
     def is_symbol_loaded(self, symbol: str):
         last_loaded_dic = self.__get_last_loaded_dic__(symbol)
@@ -31,13 +27,15 @@ class StockDatabase(BaseDatabase):
         return '' if len(company_dic) == 0 else company_dic[symbol].Name
 
     def __get_engine__(self):
-            return create_engine('sqlite:///pattern_database/MyStocks.sqlite')
+        db_path = self.__get_db_path__()
+        return create_engine('sqlite:///' + db_path)
 
     def __get_db_name__(self):
-        return 'MyStocks'
+        return 'MyStocks.sqlite'
 
     def __get_db_path__(self):
-        return 'C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks/pattern_database/MyStocks.sqlite'
+        package_dir = os.path.abspath(os.path.dirname(__file__))
+        return os.path.join(package_dir, self.__get_db_name__())
 
     def import_stock_data_by_deleting_existing_records(self, symbol: str, period: ApiPeriod = ApiPeriod.DAILY,
                                                        output_size: ApiOutputsize = ApiOutputsize.COMPACT):

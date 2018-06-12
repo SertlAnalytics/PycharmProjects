@@ -6,12 +6,13 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN
+from sertl_analytics.plotter.my_plot import MyPlotHelper
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Circle
 from matplotlib.collections import PatchCollection
 from sertl_analytics.pybase.loop_list import LoopList
 from pattern_configuration import config, runtime
-from pattern_data_container import pattern_data_handler
+from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_detector import PatternDetector
 from pattern import Pattern
@@ -155,10 +156,12 @@ class PatternPlotContainerLoopList(LoopList):
 class PatternPlotter:
     def __init__(self, detector: PatternDetector):
         self.detector = detector
-        self.df = pattern_data_handler.pattern_data.df
+        self.df = pdh.pattern_data.df
         self.symbol = runtime.actual_ticker
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
-        self.axes = None
+        self.ranges_polygon_dic_list = {}
+        self.__currently_visible_ranges_polygon_list = []
+        self.axes_for_candlesticks = None
 
     def plot_data_frame(self):
         with_close_plot = False
@@ -167,23 +170,22 @@ class PatternPlotter:
         if with_close_plot:
             fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(15, 10), sharex='all')
             self.__plot_close__(axes[0])
-            self.__plot_candlesticks__(axes[1])
-            self.__plot_patterns__(axes[1])
             self.__plot_volume__(axes[2])
-            self.axes = axes[1]
+            self.axes_for_candlesticks = axes[1]
         else:
             if with_volume_plot:
                 fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(15, 7), sharex='all')
-                self.__plot_candlesticks__(axes[0])
-                self.__plot_patterns__(axes[0])
                 self.__plot_volume__(axes[1])
-                self.axes = axes[0]
+                self.axes_for_candlesticks = axes[0]
             else:
                 fig, axes = plt.subplots(figsize=(15, 7))
-                self.axes = axes
-                self.__plot_candlesticks__(axes)
-                self.__plot_min_max__(axes)
-                self.__plot_patterns__(axes)
+                self.axes_for_candlesticks = axes
+
+        self.__plot_candlesticks__()
+        if config.plot_min_max:
+            self.__plot_min_max__()
+            self.__plot_ranges__()
+        self.__plot_patterns__()
 
         plt.title('{}. {} ({}) for {}'.format(
             runtime.actual_number, runtime.actual_ticker,
@@ -191,8 +193,21 @@ class PatternPlotter:
         plt.tight_layout()
         # plt.xticks(rotation=45)
         fig.canvas.mpl_connect('button_press_event', self.__on_click__)
-        self.axes.format_coord = self.__on_hover__
+        fig.canvas.mpl_connect('motion_notify_event', self.__on_motion_notify__)
+        self.axes_for_candlesticks.format_coord = self.__on_hover__
         plt.show()
+
+    @staticmethod
+    def motion(event):
+        print('motion')
+
+    @staticmethod
+    def button_1(event):
+        print('Single Click - Button-1')
+
+    @staticmethod
+    def double_1(event):
+        print('Double Click - so let us stop')
 
     def __get_date_range_for_title__(self):
         tick_first = WaveTick(self.df.iloc[0])
@@ -202,40 +217,88 @@ class PatternPlotter:
     def __on_click__(self, event):
         self.pattern_plot_container_loop_list.show_only_selected_containers(event)
 
-    def __on_hover__(self, x, y):
-        tick = pattern_data_handler.pattern_data.tick_by_date_num_ext_dic.get_value(int(x + 0.5))
-        return '{} ({:3.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
-            tick.date_str, tick.position, tick.low, tick.high, tick.volume/1000, y)
+    def __hide_range_polygons__(self, event):
+        if len(self.__currently_visible_ranges_polygon_list) == 0:
+            return
+        for polygon in self.__currently_visible_ranges_polygon_list:
+            polygon.set_visible(False)
+        event.canvas.draw()
+
+    def __on_motion_notify__(self, event):
+        draw_canvas = False
+        self.__hide_range_polygons__(event)
+        for patches in self.axes_for_candlesticks.patches:
+            if patches.__class__.__name__ == 'Circle':
+                cont, dic = patches.contains(event)
+                if cont:
+                    tick = pdh.pattern_data.get_tick_by_date_num(patches.center[0])
+                    if self.__show_ranges_polygons__(tick):
+                        draw_canvas = True
+        if draw_canvas:
+            event.canvas.draw()
+
+    def __show_ranges_polygons__(self, tick: WaveTick) -> bool:
+        if tick.f_var in self.ranges_polygon_dic_list:
+            for polygon in self.ranges_polygon_dic_list[tick.f_var]:
+                polygon.set_visible(True)
+                self.__currently_visible_ranges_polygon_list.append(polygon)
+            return True
+        return False
+
+    @staticmethod
+    def __on_hover__(x, y):
+        tick = pdh.pattern_data.tick_by_date_num_ext_dic.get_value(int(x + 0.5))
+        return '{} ({:3.0f} / {:6.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
+            tick.date_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume/1000, y)
 
     def __plot_close__(self, axis):
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.CLOSE])
         axis.grid()
         axis.legend(loc='upper left')
 
-    def __plot_candlesticks__(self, axis):
-        ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in pattern_data_handler.pattern_data.tick_list]
-        candlestick_ohlc(axis, ohlc_list, width=0.4, colorup='g')
-        axis.xaxis_date()
-        axis.grid()
+    def __plot_candlesticks__(self):
+        ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in pdh.pattern_data.tick_list]
+        candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=0.4, colorup='g')
+        self.axes_for_candlesticks.xaxis_date()
+        self.axes_for_candlesticks.grid()
         # self.__add_fibonacci_waves__(axis)
 
-    def __plot_patterns__(self, axis):
+    def __plot_patterns__(self):
         self.__fill_plot_container_list__()
-        self.__add_pattern_shapes_to_plot__(axis)
+        self.__add_pattern_shapes_to_plot__()
 
-    def __plot_min_max__(self, axis):
-        if not config.plot_min_max:
-            return
-        wave_tick_list = WaveTickList(pattern_data_handler.pattern_data.df_min_max)
+    def __plot_min_max__(self):
+        wave_tick_list = WaveTickList(pdh.pattern_data.df_min_max)
+        radius_out, radius_in = self.__get_circle_radius_for_plot_min_max__(wave_tick_list.mean)
         for ticks in wave_tick_list.tick_list:
             if ticks.is_min:
-                axis.add_patch(Circle((ticks.f_var, ticks.low), 0.5, color='r'))
+                self.axes_for_candlesticks.add_patch(Circle((ticks.f_var, ticks.low), radius_out, color='r'))
             else:
-                axis.add_patch(Circle((ticks.f_var, ticks.high), 0.5, color='g'))
-        for ticks in pattern_data_handler.pattern_data.tick_list_min_without_hidden_ticks:
-            axis.add_patch(Circle((ticks.f_var, ticks.low), 0.3, color='w'))
-        for ticks in pattern_data_handler.pattern_data.tick_list_max_without_hidden_ticks:
-            axis.add_patch(Circle((ticks.f_var, ticks.high), 0.3, color='w'))
+                self.axes_for_candlesticks.add_patch(Circle((ticks.f_var, ticks.high), radius_out, color='g'))
+        for ticks in pdh.pattern_data.tick_list_min_without_hidden_ticks:
+            self.axes_for_candlesticks.add_patch(Circle((ticks.f_var, ticks.low), radius_in, color='w'))
+        for ticks in pdh.pattern_data.tick_list_max_without_hidden_ticks:
+            self.axes_for_candlesticks.add_patch(Circle((ticks.f_var, ticks.high), radius_in, color='w'))
+
+    def __plot_ranges__(self):
+        pattern_range_list_max = self.detector.range_detector_max.get_pattern_range_list()
+        pattern_range_list_min = self.detector.range_detector_min.get_pattern_range_list()
+        for ranges in pattern_range_list_max + pattern_range_list_min:
+            polygon = ranges.f_param_shape
+            polygon.set_visible(False)
+            polygon.set_color('r')
+            polygon.set_linewidth(1)
+            self.axes_for_candlesticks.add_patch(polygon)
+            for ticks in ranges.tick_list:
+                if ticks.f_var not in self.ranges_polygon_dic_list:
+                    self.ranges_polygon_dic_list[ticks.f_var] = [polygon]
+                else:
+                    self.ranges_polygon_dic_list[ticks.f_var].append(polygon)
+
+    def __get_circle_radius_for_plot_min_max__(self, mean_of_data: float):
+        radius_out = 0.5 * mean_of_data/300
+        radius_in = 0.3 * mean_of_data/300
+        return radius_out, radius_in
 
     def __plot_volume__(self, axis):
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.VOL])
@@ -256,7 +319,7 @@ class PatternPlotter:
             plot_container.add_regression_line_shape(pattern.part_main.get_f_regression_shape())
             self.pattern_plot_container_loop_list.append(plot_container)
 
-    def __add_pattern_shapes_to_plot__(self, ax):
+    def __add_pattern_shapes_to_plot__(self):
         for pattern_plot_container in self.pattern_plot_container_loop_list.value_list:
-            pattern_plot_container.add_elements_as_patch_collection(ax)
-            pattern_plot_container.add_annotation(ax)
+            pattern_plot_container.add_elements_as_patch_collection(self.axes_for_candlesticks)
+            pattern_plot_container.add_annotation(self.axes_for_candlesticks)

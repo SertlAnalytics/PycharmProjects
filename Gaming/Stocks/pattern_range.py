@@ -6,11 +6,13 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FT
+from sertl_analytics.plotter.my_plot import MyPlotHelper
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.functions.math_functions import ToleranceCalculator
 from pattern_configuration import config
 from pattern_data_container import pattern_data_handler as pdh
+from matplotlib.patches import Polygon
 import pandas as pd
 import numpy as np
 
@@ -130,9 +132,9 @@ class PatternRange:
         return True
 
     @property
-    def f_param_shape(self):
-        stock_df = PatternDataFrame(self.__get_actual_df_min_max__())
-        return stock_df.get_f_param_shape(self.__f_param)
+    def f_param_shape(self) -> Polygon:
+        tick_list = [self.tick_first, self.tick_last]
+        return MyPlotHelper.get_polygon_for_tick_list(tick_list, self.__f_param)
 
     @property
     def f_regression_shape(self):

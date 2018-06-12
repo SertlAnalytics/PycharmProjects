@@ -110,6 +110,10 @@ class WaveTickList:
     def length(self):
         return self.tick_list[-1].f_var - self.tick_list[0].f_var
 
+    @property
+    def mean(self):
+        return round(np.mean([tick.close for tick in self.tick_list]),2)
+
     def get_list_without_hidden_ticks(self, for_high: bool, tolerance_pct: float):
         """
         removes all ticks which ara hidden by their neighbors.
