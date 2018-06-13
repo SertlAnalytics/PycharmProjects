@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7606fc5c-fb0c-4c55-828d-6a7e7df44d0f" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/../Courses/edX_AI/problem3_3.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Courses/edX_AI/problem3_3.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Gaming.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Gaming.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -14,8 +12,28 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file leaf-file-name="run_fifa_world_cup_2018_prediction.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="770">
+              <caret line="285" lean-forward="true" selection-start-line="285" selection-end-line="285" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py" />
+      </list>
+    </option>
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="1273" />
@@ -27,8 +45,23 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="ProjectPane" />
       <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="Gaming" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Gaming" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Gaming" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Gaming" type="462c0819:PsiDirectoryNode" />
+              <item name="World_Cup_2018" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -46,6 +79,31 @@
       </list>
     </option>
   </component>
+  <component name="RunManager">
+    <configuration name="run_fifa_world_cup_2018_prediction" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Gaming" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/World_Cup_2018" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.run_fifa_world_cup_2018_prediction" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -62,16 +120,16 @@
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3290735" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
-      <window_info anchor="bottom" id="Run" order="2" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.66134185" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -83,5 +141,19 @@
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <option name="time" value="9" />
+    </breakpoint-manager>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="770">
+          <caret line="285" lean-forward="true" selection-start-line="285" selection-end-line="285" />
+        </state>
+      </provider>
+    </entry>
   </component>
 </project>
