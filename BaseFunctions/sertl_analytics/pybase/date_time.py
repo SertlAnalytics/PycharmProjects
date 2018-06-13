@@ -18,7 +18,7 @@ class MyPyDate:
 
     @staticmethod
     def get_date_from_number(num: int):
-        return datetime(1, 1, 1) + timedelta(days=num)
+        return (datetime(1, 1, 1) + timedelta(days=num)).date()
 
 
 class MyClock:

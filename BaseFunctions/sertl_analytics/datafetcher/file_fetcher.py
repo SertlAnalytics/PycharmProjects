@@ -9,6 +9,7 @@ import pandas as pd
 import ftplib
 import tempfile
 
+
 class FileFetcher:
     def __init__(self, file_name: str, **args):
         self.file_name = file_name.lower()
@@ -31,8 +32,11 @@ class FileFetcher:
             return self.__get_file_by_ftp__(args)
         if self.file_type == 'csv':  # args = na_values='n/a' (np.nan NumPy not a Number), parse_dates=['col_1', 'col_2']
             return pd.read_csv(self.file_name, args)
-        elif self.file_type in ['xls', 'xlsx']:  # args = sheetname='Name' or index or sheetname=['sheet1', 'sheet2']
-            return pd.read_excel(self.file_name, args)
+        elif self.file_type in ['xls', 'xlsx']:  # args = sheet_name='Name' or index or sheet_name=['sheet1', 'sheet2']
+            if 'sheet_name' in args:
+                return pd.read_excel(self.file_name, sheet_name=args['sheet_name'])
+            else:
+                return pd.read_excel(self.file_name, args)
 
     def info(self):
         self.df.info()

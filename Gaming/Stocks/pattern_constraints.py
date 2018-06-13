@@ -210,7 +210,7 @@ class ChannelConstraints(Constraints):
         self.f_upper_pct_bounds = [-0.02, 0.02]
         self.f_lower_pct_bounds = self.f_upper_pct_bounds
         self.f_upper_lower_relation_bounds = [-2, 2]
-        self.f_regression_pct_bounds = [-10, 10]
+        self.f_regression_pct_bounds = [-0.10, 0.10]
 
 
 class ChannelUpConstraints(ChannelConstraints):
@@ -224,6 +224,7 @@ class ChannelUpConstraints(ChannelConstraints):
 class ChannelDownConstraints(ChannelConstraints):
     def __set_bounds_for_pattern_type__(self):
         self.__set_bounds_by_complementary_constraints__(ChannelUpConstraints())
+        self.f_regression_pct_bounds = self.f_upper_pct_bounds
 
 
 class HeadShoulderConstraints(Constraints):
