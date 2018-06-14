@@ -145,6 +145,7 @@ class WorldCupMatch:
         self.goal_team_2_penalty = 0 if df_row[FC.AWAY_PENALTIES] is None else df_row[FC.AWAY_PENALTIES]
         self.goal_team_1_simulation = 0
         self.goal_team_2_simulation = 0
+        self.probability_list = []
         self.is_simulation = False
 
     @property
@@ -153,11 +154,11 @@ class WorldCupMatch:
 
     @property
     def short(self):
-        return '{:2}. {:<30} {:10} {}:{}  Simulation: {}:{} - Ranking_adjusted: {:>4.1f} : {:>4.1f} {}'.format(
+        return '{:2}. {:<30} {:10} {}:{}  Simulation: {}:{} - Ranking_adjusted: {:>4.1f} : {:>4.1f} {} - {}'.format(
             self.number, self.team_names, self.status, self.goal_team_1, self.goal_team_2,
             self.goal_team_1_simulation, self.goal_team_2_simulation,
             self.team_1.ranking_adjusted, self.team_2.ranking_adjusted,
-            ' - SIMULATION' if self.is_simulation else ' - NO simulation')
+            ' - SIMULATION' if self.is_simulation else ' - NO simulation', self.probability_list)
 
     def print(self):
         print(self.short)
@@ -178,6 +179,31 @@ class WorldCupMatch:
         elif self.goal_team_1_penalty < self.goal_team_2_penalty:
             return 2
         return 0
+
+    def simulate_by_probabilities(self, probability_array):
+        self.probability_list = list(probability_array)
+        max_val = max(self.probability_list)
+        max_idx = self.probability_list.index(max_val)
+        max_idx = self.__get_corrected_max_idx__(max_idx, max_val)
+        factor = 3
+        self.is_simulation = True
+        if max_idx == 0:
+            self.goal_team_1_simulation = int(round(factor * max_val))
+            self.goal_team_2_simulation = int(round(factor * max_val))
+        elif max_idx == 1:
+            self.goal_team_1_simulation = int(round(factor * max_val))
+            self.goal_team_2_simulation = int(round(factor * self.probability_list[2]))
+        elif max_idx == 2:
+            self.goal_team_1_simulation = int(round(factor * self.probability_list[1]))
+            self.goal_team_2_simulation = int(round(factor * max_val))
+
+    def __get_corrected_max_idx__(self, max_idx: int, max_val: float):
+        if max_val > 0.5:
+            return max_idx
+        for idx, val in enumerate(self.probability_list):
+            if val == max_val and idx != max_idx:
+                return 1 if self.team_1.ranking_adjusted < self.team_2.ranking_adjusted else max_idx
+        return max_idx
 
     def simulate_with_winner_by_model(self, winner_by_model: int):
         self.goal_team_1_simulation = self.goal_team_1
@@ -298,8 +324,8 @@ class WorldCup:
                 self.df_match.loc[ind, FC.HOME_TEAM_RANKING] = round(team_1.ranking_adjusted, 1)
                 self.df_match.loc[ind, FC.AWAY_TEAM_RANKING] = round(team_2.ranking_adjusted, 1)
                 self.df_match.loc[ind, FC.HOME_TEAM_RANKING_SQU] = round(team_1.ranking_adjusted**2, 1)
-                self.df_match.loc[ind, FC.HOME_TEAM_RANKING_SQRT] = round(math.sqrt(team_1.ranking_adjusted), 1)
                 self.df_match.loc[ind, FC.AWAY_TEAM_RANKING_SQU] = round(team_2.ranking_adjusted**2, 1)
+                self.df_match.loc[ind, FC.HOME_TEAM_RANKING_SQRT] = round(math.sqrt(team_1.ranking_adjusted), 1)
                 self.df_match.loc[ind, FC.AWAY_TEAM_RANKING_SQRT] = round(math.sqrt(team_2.ranking_adjusted), 1)
                 self.df_match.loc[ind, FC.TEAM_RANKING_PRODUCT] = \
                     round(team_1.ranking_adjusted * team_2.ranking_adjusted, 1)
@@ -427,11 +453,11 @@ class WorldCupModel:
         self.df_train = self.world_cup_2014.df_4_ml
         self.df_test = self.world_cup_2018.df_4_ml
         self.__y_train = np.array(self.df_train.iloc[:, -1])
-        self.forest_clf = RandomForestClassifier(n_estimators=10)
+        self.forest_clf = RandomForestClassifier(n_estimators=10, random_state=42)
 
     def __get_column_start_end_with_best_score__(self) -> list:
         col_start_end_list = [[FC.HOME_TEAM_RANKING, FC.AWAY_TEAM_RANKING]]
-        col_start_end_list.append([FC.HOME_TEAM_RANKING_SQU, FC.HOME_TEAM_RANKING_SQU])
+        col_start_end_list.append([FC.HOME_TEAM_RANKING_SQU, FC.AWAY_TEAM_RANKING_SQU])
         col_start_end_list.append([FC.HOME_TEAM_RANKING_SQRT, FC.AWAY_TEAM_RANKING_SQRT])
         col_start_end_list.append([FC.HOME_TEAM_RANKING, FC.AWAY_TEAM_RANKING_SQU])
         col_start_end_list.append([FC.HOME_TEAM_RANKING_SQU, FC.AWAY_TEAM_RANKING_SQRT])
@@ -444,24 +470,28 @@ class WorldCupModel:
             if score.mean() > score_high:
                 score_high = score.mean()
                 col_start_end = cols
-        print('Best columns with score.mean={}: {}'.format(score_high, col_start_end))
+        print('Best columns with score.mean = {:3.2f}: {}'.format(score_high, col_start_end))
         return col_start_end
 
     def make_prediction_for_the_next_matches(self, matches: int = 5, over_train = False, overwrite_completed = False):
         cols = self.__get_column_start_end_with_best_score__()
         self.__train_on_old_data__(cols)
-        offset = 0 if (over_train or overwrite_completed) else self.world_cup_2018.first_open_match_number
+        offset_number = 1 if (over_train or overwrite_completed) else self.world_cup_2018.first_open_match_number
+        offset_index = offset_number - 1
         if over_train:
-            x_test = np.array(self.df_train.loc[offset:offset + matches, cols[0]:cols[1]])
+            print('Columns: {}'.format(self.df_train.columns))
+            df_test = self.df_train.loc[offset_index:offset_index + matches, cols[0]:cols[1]]
         else:
-            x_test = np.array(self.df_test.loc[offset:offset + matches, cols[0]:cols[1]])
-        predict_probability = self.forest_clf.predict_proba(x_test)
-        print('...predict_probability:\n{}'.format(predict_probability.round(2)))
-        for number in range(offset + 1, offset + 1 + matches + 1):
+            print('Columns: {}'.format(self.df_test.columns))
+            df_test = self.df_test.loc[offset_index:offset_index + matches, cols[0]:cols[1]]
+        predict_probability = self.forest_clf.predict_proba(np.array(df_test)).round(2)
+        print(df_test.head(matches))
+        for number in range(offset_number, offset_number + matches + 1):
             if over_train:
                 match = self.world_cup_2014.match_list.get_match(number)
             else:
                 match = self.world_cup_2018.match_list.get_match(number)
+            match.simulate_by_probabilities(predict_probability[number - offset_number])
             match.print()
 
     def __train_on_old_data__(self, cols: list):
@@ -470,6 +500,6 @@ class WorldCupModel:
 
 
 model = WorldCupModel()
-model.make_prediction_for_the_next_matches(10, True)
+model.make_prediction_for_the_next_matches(5, False)
 
 
