@@ -10,32 +10,31 @@ from world_cup_configuration import config
 from world_cup_api import WorldCupRankingAdjustmentApi
 from world_cup_team import WorldCupTeam, WorldCupTeamList
 from world_cup_match import WorldCupMatch, WorldCupMatchList
+from world_cup_excel import WorldCupExcel
 import matplotlib.pyplot as plt
 from sertl_analytics.datafetcher.file_fetcher import FileFetcher
 import pandas as pd
 import numpy as np
 import math
-import xlsxwriter
 
 
 class WorldCup:
     def __init__(self, year: int, host: str):
         self.year = year
         self.host = host
-        self.df_match = None
-        self.df_ranking = None
-        self.df_4_ml = None
-        self.__file_name_with_data = self.__get_file_name_for_data__()
-        self.__sheet_name_matches = self.__get_sheet_name_with_matches__()
-        self.__sheet_name_ranking = self.__get_sheet_name_with_ranking__()
-
+        self._file_name_with_data = self.__get_file_name_for_data__()
+        self._sheet_name_matches = self.__get_sheet_name_with_matches__()
+        self._sheet_name_ranking = self.__get_sheet_name_with_ranking__()
+        # self.__update_data_in_source__()
+        self.df_match = self.__get_df_match__()
+        self.df_ranking = self.__get_df_ranking__()
         self.team_list = WorldCupTeamList()
         self.match_list = WorldCupMatchList()
-        self.__update_data_in_source__()
         self.__init_lists__()
         self._api_for_ranking_adjustments = self.__get_ranking_adjustment_parameters__()
         self._api_for_ranking_adjustments.print()
         self.__add_team_ranking_to_df_match__()
+        self.df_4_ml = None
         self.__create_df_4_ml__()
         self.__print_statistics__()
 
@@ -94,9 +93,13 @@ class WorldCup:
     def __update_data_in_source__(self):
         pass
 
+    def __get_df_match__(self) -> pd.DataFrame:
+        return FileFetcher(self._file_name_with_data, sheet_name=self._sheet_name_matches).df
+
+    def __get_df_ranking__(self) -> pd.DataFrame:
+        return FileFetcher(self._file_name_with_data, sheet_name=self._sheet_name_ranking).df
+
     def __init_lists__(self):
-        self.df_match = FileFetcher(self.__file_name_with_data, sheet_name=self.__sheet_name_matches).df
-        self.df_ranking = FileFetcher(self.__file_name_with_data, sheet_name=self.__sheet_name_ranking).df
         self.__fill_team_list__()
         self.__fill_match_list__()
 
@@ -217,5 +220,5 @@ class WorldCup4Test(WorldCup):
         return self._api_for_ranking_adjustments
 
     def __update_data_in_source__(self):
-        workbook = xlsxwriter.Workbook('demo.xlsx')
-        worksheet = workbook.add_worksheet()
+        excel = WorldCupExcel(self._file_name_with_data, self._sheet_name_matches)
+        excel.update_match(2, 4, 1, 9, 7)
