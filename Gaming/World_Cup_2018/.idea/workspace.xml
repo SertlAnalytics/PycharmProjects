@@ -2,7 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e962516c-df08-4fbf-9286-4787df306f4f" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/../../Courses/edX_AI/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Courses/edX_AI/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/word_cup.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/world_cup_api.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/world_cup_configuration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/world_cup_constants.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/world_cup_match.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/world_cup_team.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -14,13 +21,22 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="run_fifa_world_cup_2018_prediction.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
+      <file leaf-file-name="world_cup_configuration.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/world_cup_configuration.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="709">
-              <caret line="505" selection-start-line="505" selection-end-line="505" />
+            <state relative-caret-position="391">
+              <caret line="23" column="39" lean-forward="true" selection-start-line="23" selection-start-column="39" selection-end-line="23" selection-end-column="39" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="word_cup.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/word_cup.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="726">
+              <caret line="208" lean-forward="true" selection-start-line="208" selection-end-line="208" />
               <folding>
-                <element signature="e#240#249#0" expanded="true" />
+                <element signature="e#194#228#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -42,14 +58,20 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/file_fetcher.py" />
+        <option value="$PROJECT_DIR$/world_cup_constants.py" />
+        <option value="$PROJECT_DIR$/world_cup_team.py" />
+        <option value="$PROJECT_DIR$/world_cup_api.py" />
         <option value="$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py" />
+        <option value="$PROJECT_DIR$/world_cup_match.py" />
+        <option value="$PROJECT_DIR$/word_cup.py" />
+        <option value="$PROJECT_DIR$/world_cup_configuration.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="849" />
-    <option name="width" value="1290" />
-    <option name="height" value="1167" />
+    <option name="x" value="1273" />
+    <option name="width" value="1294" />
+    <option name="height" value="1407" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -135,13 +157,14 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="849" y="0" width="1290" height="1167" extended-state="0" />
+    <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25079873" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" sideWeight="0.49920383" weight="0.32941177" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50159234" side_tool="true" weight="0.39137256" />
-      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49920383" weight="0.3290735" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49840763" weight="0.47134387" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49920383" weight="0.32784313" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49840763" visible="true" weight="0.47058824" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -186,10 +209,40 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8041">
+          <caret line="481" column="22" lean-forward="true" selection-start-line="481" selection-start-column="22" selection-end-line="481" selection-end-column="22" />
+          <folding>
+            <element signature="e#241#275#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7939">
+          <caret line="475" selection-start-line="475" selection-end-line="475" />
+          <folding>
+            <element signature="e#241#275#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8585">
+          <caret line="505" selection-start-line="505" selection-end-line="505" />
+          <folding>
+            <element signature="e#241#275#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="7803">
           <caret line="459" column="55" selection-start-line="459" selection-start-column="55" selection-end-line="459" selection-end-column="55" />
           <folding>
-            <element signature="e#240#249#0" expanded="true" />
+            <element signature="e#241#275#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -199,7 +252,7 @@
         <state relative-caret-position="5457">
           <caret line="321" column="34" selection-start-line="321" selection-start-column="34" selection-end-line="321" selection-end-column="34" />
           <folding>
-            <element signature="e#240#249#0" expanded="true" />
+            <element signature="e#241#275#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -209,7 +262,7 @@
         <state relative-caret-position="5406">
           <caret line="321" column="34" lean-forward="true" selection-start-line="321" selection-start-column="34" selection-end-line="321" selection-end-column="34" />
           <folding>
-            <element signature="e#240#249#0" expanded="true" />
+            <element signature="e#241#275#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -242,13 +295,61 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/world_cup_team.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="5" selection-end-column="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/world_cup_match.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="1" column="62" selection-start-line="1" selection-start-column="62" selection-end-line="1" selection-end-column="62" />
+          <folding>
+            <element signature="e#186#220#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/world_cup_api.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" lean-forward="true" selection-start-line="6" selection-end-line="6" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="709">
-          <caret line="505" selection-start-line="505" selection-end-line="505" />
+        <state relative-caret-position="272">
+          <caret line="24" lean-forward="true" selection-start-line="24" selection-end-line="24" />
           <folding>
-            <element signature="e#240#249#0" expanded="true" />
+            <element signature="e#241#275#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/world_cup_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="5" selection-end-column="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/word_cup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="726">
+          <caret line="208" lean-forward="true" selection-start-line="208" selection-end-line="208" />
+          <folding>
+            <element signature="e#194#228#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/world_cup_configuration.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="23" column="39" lean-forward="true" selection-start-line="23" selection-start-column="39" selection-end-line="23" selection-end-column="39" />
         </state>
       </provider>
     </entry>
