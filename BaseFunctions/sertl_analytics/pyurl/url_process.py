@@ -7,102 +7,43 @@ Date: 2018-06-15
 from splinter import Browser
 from sertl_analytics.pyurl.url_username_passwords import WebPasswords
 from selenium import webdriver
+import selenium.webdriver.support.ui as ui
+from selenium.webdriver.common.keys import Keys
+from time import sleep
 
 
 class MyUrlBrowser:
-    def __init__(self, url: str, user_name = '', password = ''):
+    def __init__(self, url: str, user_name='', password='', enforce_password_in_url = False):
         # self.browser = Browser('chrome')
         self.driver = webdriver.Chrome()
         self.driver.implicitly_wait(5)
-        self.__url = url
-        self.__user_name = user_name
-        self.__password = password
+        self._url = url
+        self._user_name = user_name
+        self._password = password
+        self._enforce_password_in_url = enforce_password_in_url
+        self.driver.get(self.__get_url__())
 
     def __get_url__(self):
-        if self.__user_name == '':
-            return self.__url
+        if self._user_name == '':
+            return self._url
         else:
-            return 'https://' + self.__user_name + ':' + self.__password + '@wm2018.rs-home.com/'
+            return 'https://' + self._user_name + ':' + self._password + '@wm2018.rs-home.com/'
 
-    def get_by_selenium(self):
-        self.driver.get(self.__get_url__())
-        self.driver.switch_to.frame('Fleft')
-        # abmelden = self.driver.find_element_by_link_text('Abmelden')
-        # if len(abmelden) > 0:
-        #     abmelden[0].click()
-        anmelden = self.driver.find_element_by_tag_name('link')
-
-        if len(anmelden) == 0:
-            anmelden = self.driver.find_element_by_link_text('Anmelden')
-        if len(anmelden) > 0:
-            print('anmelden...')
-            anmelden[0].click()
-
-    def send_email_to_sertl_analytics(self):
-        self.driver.get(self.__get_url__())
-        print(self.driver.title)
-        # self.__print_all_elements__()
-
-        dic = self.__get_field_value_dic__()
+    def __enter_and_submit_credentials__(self):
+        dic = self.__get_credential_values__()
         for fields in dic:
-            field_obj = self.driver.find_element_by_id(fields)
-            field_obj.send_keys()
+            field_obj = self.driver.find_element_by_name(fields)
             field_obj.send_keys(dic[fields])
-
         self.__click_submit__()
 
-    def loop_through_elements(self):
-        self.driver.get(self.__get_url__())
-        print(self.driver.title)
-        # self.__print_all_elements__()
+    def __get_credential_values__(self) -> dict:
+        pass
 
-        dic = self.__get_field_value_dic__()
-        for fields in dic:
-            field_obj = self.driver.find_element_by_id(fields)
-            field_obj.send_keys()
-            field_obj.send_keys(dic[fields])
+    def __print_cookies__(self):
+        cookies_list = self.driver.get_cookies()
+        print(cookies_list)
 
-        self.__click_submit__()
-
-        # title = self.driver.find_element_by_xpath('/html/head/title')
-        # print('xpath.title={}'.format(title.text))
-        # object = self.driver.find_element_by_name('Fmain')
-        # elements = self.driver.find_elements_by_xpath('//frame')
-        # self.driver.switch_to.frame('Fleft')
-        # elements = self.driver.find_elements_by_xpath("//*[not(*)]")
-        # for element in elements:
-        #     print(element.tag_name)
-        # print(self.driver.title)
-        # title = self.driver.find_element_by_xpath('/html/head/title')
-        # print('xpath.title={}'.format(title))
-        # table = self.driver.find_element_by_xpath('//table')
-        # print('xpath.table={}'.format(table))
-        # links = self.driver.find_elements_by_xpath('//tr')
-        # print('xpath.table.tr={}'.format(links))
-        # links = self.driver.find_elements_by_xpath('//th')
-        # print('xpath.table.th={}'.format(links))
-        # tr = self.driver.find_elements_by_tag_name('tr')
-        # print('find_elements_by_tag_name_tr={}'.format(tr))
-        # th = self.driver.find_elements_by_tag_name('th')
-        # print('find_elements_by_tag_name_th={}'.format(th))
-        # links = self.driver.find_elements_by_xpath('/html/body/table/tr/th/a')
-        # print('xpath/html/body/table/tr/th/a={}'.format(links))
-        # home_link = self.driver.find_element_by_link_text('Home')
-        # print('find_element_by_link_text_home'.format(home_link))
-        # link_home = table.find_element_by_xpath('/html/body/table/tr/th/a[@href="welcome.asp"]').text
-        # print(link_home)
-        # # title = object.find_element_by_xpath('.//div[@class="title"]/a').text
-
-    def __get_field_value_dic__(self):
-        dic = {}
-        dic['form_1509137867313_737065_value_firstname'] = 'Josef'
-        dic['form_1509137867313_737065_value_lastname'] = 'Sertl'
-        dic['form_1509137867313_737065_value_email'] = 'josef.sertl@web.de'
-        dic['form_1509137867313_737065_value_telephone'] = '041 78 890 2261'
-        dic['form_1509137867313_737065_value_message'] = 'My new message'
-        return dic
-
-    def __click_submit__(self):
+    def __wm2018_click_submit__(self):
         python_button = self.driver.find_elements_by_xpath("//input[@type='submit']")[0]
         python_button.click()
 
@@ -110,44 +51,106 @@ class MyUrlBrowser:
         elements = self.driver.find_elements_by_xpath("//*[not(*)]")
         for element in elements:
             print(element.tag_name)
-        print(elements)
+            if element.tag_name == 'a':
+                print(element.text)
 
-    def visit(self):
-        with self.browser as browser:
-            browser.visit(self.__get_url__())
-            object = browser.get_iframe('Fleft')
-            browser.switch_to_frame(0)
-            tag_list = browser.find_by_tag('frame')
-            for tags in tag_list:
-                print(tags.tag_name)
-            abmelden = browser.find_link_by_text('Abmelden')
-            if len(abmelden) > 0:
-                abmelden[0].click()
-            anmelden = browser.find_link_by_text('Anmelden')
-            if len(anmelden) == 0:
-                anmelden = browser.find_link_by_href('login.asp?info=logon')
-            if len(anmelden) > 0:
-                print('anmelden...')
-                anmelden[0].click()
-
-    def visit_old(self, url: str):
-        with self.brower as browser:
-            # Visit URL
-            url = "http://www.google.com"
-            browser.visit(url)
-            browser.fill('q', 'splinter - python acceptance testing for web applications')
-            # Find and click the 'search' button
-            button = browser.find_by_name('btnG')
-            # Interact with elements
-            button.click()
-            if browser.is_text_present('splinter.readthedocs.io'):
-                print("Yes, the official website was found!")
-            else:
-                print("No, it wasn't found... We need to improve our SEO techniques")
+    def __click_submit__(self):
+        python_button = self.driver.find_elements_by_xpath("//input[@type='submit']")[0]
+        python_button.click()
 
 
-wm2018_user = WebPasswords.WM2018_WATSON
-# my_browser = MyUrlBrowser('https://wm2018.rs-home.com/', wm2018_user[0], wm2018_user[1])
-# my_browser = MyUrlBrowser('https://wm2018.rs-home.com/')
-my_browser = MyUrlBrowser('https://sertl-analytics.com/Contact/')
-my_browser.send_email_to_sertl_analytics()
+class MyUrlBrowser4SertlAnalytics(MyUrlBrowser):
+    def __init__(self):
+        MyUrlBrowser.__init__(self, 'https://sertl-analytics.com')
+
+    def send_email_message(self, message: str):
+        link_contact = self.__get_link_for_contact__()
+        link_contact.click()
+        self.__add_message__(message)
+        self.__click_submit__()
+
+    def __get_link_for_contact__(self):
+        link_list = self.driver.find_elements_by_tag_name('a')
+        for link in link_list:
+            if link.text == 'Contact':
+                return link
+        return None
+
+    def __add_message__(self, message):
+        dic = self.__get_field_value_dic__(message)
+        for fields in dic:
+            field_obj = self.driver.find_element_by_id(fields)
+            field_obj.send_keys(dic[fields])
+
+    def __get_field_value_dic__(self, message: str):
+        dic = {}
+        dic['form_1509137867313_737065_value_firstname'] = 'Josef'
+        dic['form_1509137867313_737065_value_lastname'] = 'Sertl'
+        dic['form_1509137867313_737065_value_email'] = 'josef.sertl@web.de'
+        dic['form_1509137867313_737065_value_telephone'] = '041 78 890 2261'
+        dic['form_1509137867313_737065_value_message'] = message
+        return dic
+
+
+class MyUrlBrowser4WM2018(MyUrlBrowser):
+    def __init__(self, user_name: str, password: str):
+        MyUrlBrowser.__init__(self, 'https://wm2018.rs-home.com', user_name, password, False)
+
+    def add_results(self, result_list: list):
+        self.__switch_to_sub_frame__('Fnavigate')
+        self.__click_anmelden__()
+        self.__switch_to_sub_frame__('Fcontent')
+        self.__enter_and_submit_credentials__()
+        self.__switch_to_sub_frame__('Fnavigate')
+        self.__click_tippen__()
+        self.__switch_to_sub_frame__('Fcontent')
+        self.__add_and_submit_results__(result_list)
+
+    def __add_and_submit_results__(self, result_list):
+        for results in result_list:
+            self.__add_match_result__(results[0], results[1], results[2])
+        self.__click_submit__()
+
+    def __add_match_result__(self, match_id: int, goal_1: int, goal_2: int):
+        dic = {'USERA' + str(match_id): goal_1, 'USERB' + str(match_id): goal_2}
+        for fields in dic:
+            field_obj = self.driver.find_element_by_name(fields)
+            field_obj.clear()
+            field_obj.send_keys(dic[fields])
+
+    def __click_tippen__(self):
+        link_tippen = self.driver.find_element_by_xpath('//a[@href="results.asp"]')
+        link_tippen.click()
+
+    def __click_anmelden__(self):
+        link_anmelden = self.driver.find_element_by_xpath('//a[@href="login.asp?info=logon"]')
+        link_anmelden.click()
+
+    def __switch_to_sub_frame__(self, sub_frame_name: str):
+        self.driver.switch_to.default_content()
+        self.driver.switch_to.frame('Fmain')
+        self.driver.switch_to.frame(sub_frame_name)
+
+    def __get_credential_values__(self) -> dict:
+        return {'EBUserName': self._user_name, 'EBPassword': self._password}
+
+
+class MyUrlBrowser4WM2018Watson(MyUrlBrowser4WM2018):
+    def __init__(self):
+        MyUrlBrowser4WM2018.__init__(self,  WebPasswords.WM2018_WATSON[0],  WebPasswords.WM2018_WATSON[1])
+
+
+class MyUrlBrowser4WM2018Wladimir(MyUrlBrowser4WM2018):
+    def __init__(self):
+        MyUrlBrowser4WM2018.__init__(self, WebPasswords.WM2018_WLADIMIR[0], WebPasswords.WM2018_WLADIMIR[1])
+
+
+# browser = MyUrlBrowser4WM2018Watson()
+# browser.add_results([[15, 6, 2], [16, 7, 3], [18, 7, 4]])
+
+# browser = MyUrlBrowser4SertlAnalytics()
+# browser.send_email_message('Hallo world - 2018-06-18')
+# result_list = [[15, 1, 2], [16, 2, 3], [17, 3, 4]]
+# my_browser = MyUrlBrowser('https://wm2018.rs-home.com')  # https://Wladimir:E1wPlefv8V45N@wm2018.rs-home.com/results.asp
+# my_browser.add_results(result_list)
+

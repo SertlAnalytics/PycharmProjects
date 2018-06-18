@@ -7,20 +7,11 @@ Date: 2018-06-13
 """
 
 from world_cup_constants import FC
-from world_cup_configuration import config
-from world_cup_api import WorldCupRankingAdjustmentApi
-from world_cup_team import WorldCupTeam, WorldCupTeamList
-from world_cup_match import WorldCupMatch, WorldCupMatchList
-from word_cup import WorldCup, WorldCup4Test, WorldCup4Training
-import matplotlib.pyplot as plt
-from sertl_analytics.datafetcher.file_fetcher import FileFetcher
-import pandas as pd
+from word_cup import WorldCup4Test, WorldCup4Training
 import numpy as np
-import math
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score, cross_val_predict
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
-import xlsxwriter
+from sklearn.model_selection import cross_val_score
+from sertl_analytics.pyurl.url_process import MyUrlBrowser4WM2018Watson
 
 
 class WorldCupModel:
@@ -52,15 +43,14 @@ class WorldCupModel:
         return col_start_end
 
     def make_prediction_for_the_next_matches(self, matches: int = 5, over_train = False, overwrite_completed = False):
+        match_list = []
         cols = self.__get_column_start_end_with_best_score__()
         self.__train_on_old_and_new_data__(cols)
         offset_number = 1 if (over_train or overwrite_completed) else self.world_cup_2018.first_open_match_number
         offset_index = offset_number - 1
         if over_train:
-            print('Columns: {}'.format(self.df_train.columns))
             df_test = self.df_train.loc[offset_index:offset_index + matches, cols[0]:cols[1]]
         else:
-            print('Columns: {}'.format(self.df_test.columns))
             df_test = self.df_test.loc[offset_index:offset_index + matches, cols[0]:cols[1]]
         predict_probability = self.forest_clf.predict_proba(np.array(df_test)).round(2)
         print(df_test.head(matches))
@@ -71,6 +61,15 @@ class WorldCupModel:
                 match = self.world_cup_2018.match_list.get_match(number)
             match.simulate_by_probabilities(predict_probability[number - offset_number])
             match.print()
+            match_list.append(match)
+        if len(match_list) > 0:
+            self.__write_to_web_page__(match_list)
+
+    @staticmethod
+    def __write_to_web_page__(match_list: list):
+        result_list = [[match.number, match.goal_team_1_simulation, match.goal_team_2_simulation] for match in match_list]
+        browser = MyUrlBrowser4WM2018Watson()
+        browser.add_results(result_list)
 
     def __train_on_old_and_new_data__(self, cols: list):
         df_train = self.df_train.loc[:, cols[0]:cols[1]]
@@ -85,6 +84,6 @@ class WorldCupModel:
 
 
 model = WorldCupModel()
-model.make_prediction_for_the_next_matches(5, False)
+model.make_prediction_for_the_next_matches(3, False)
 
 
