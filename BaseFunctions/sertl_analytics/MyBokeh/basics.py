@@ -15,6 +15,7 @@ from bokeh.sampledata.iris import flowers
 from math import pi
 from bokeh.models import HoverTool, ResetTool, PanTool, WheelPanTool, WheelZoomTool, SaveTool, ColumnDataSource
 from bokeh.sampledata.periodic_table import elements
+from bokeh.models.annotations import Span, BoxAnnotation, Label, LabelSet
 
 
 class FT:  # figure types
@@ -129,7 +130,8 @@ class MyBokehClass:
 
         self.__show__()
 
-    def __get_hover_with_style__(self):
+    @staticmethod
+    def __get_hover_with_style__():
         return HoverTool(tooltips="""
              <div>
                     <div>
@@ -327,7 +329,72 @@ class MyBokehClass:
         # Save and show the figure
         show(f)
 
+    def ex_7_create_label_annotations_for_span(self):
+        # Remove rows with NaN values and then map standard states to colors
+        elements.dropna(inplace=True)  # if inplace is not set to True the changes are not written to the dataframe
+        colormap = {'gas': 'yellow', 'liquid': 'orange', 'solid': 'red'}
+        elements['color'] = [colormap[x] for x in elements['standard state']]
+        elements['size'] = elements['van der Waals radius'] / 10
+
+        # Create three ColumnDataSources for elements of unique standard states
+        gas = ColumnDataSource(elements[elements['standard state'] == 'gas'])
+        liquid = ColumnDataSource(elements[elements['standard state'] == 'liquid'])
+        solid = ColumnDataSource(elements[elements['standard state'] == 'solid'])
+
+        # Define the output file path
+        output_file("elements_annotations.html")
+
+        # Create the figure object
+        f = figure()
+
+        # adding glyphs
+        f.circle(x="atomic radius", y="boiling point", size='size',
+                 fill_alpha=0.2, color="color", legend='Gas', source=gas)
+        f.circle(x="atomic radius", y="boiling point", size='size',
+                 fill_alpha=0.2, color="color", legend='Liquid', source=liquid)
+        f.circle(x="atomic radius", y="boiling point", size='size',
+                 fill_alpha=0.2, color="color", legend='Solid', source=solid)
+
+        # Add axis labels
+        f.xaxis.axis_label = "Atomic radius"
+        f.yaxis.axis_label = "Boiling point"
+
+        # Calculate the average boiling point for all three groups by dividing the sum by the number of values
+        gas_average_boil = sum(gas.data['boiling point']) / len(gas.data['boiling point'])
+        liquid_average_boil = sum(liquid.data['boiling point']) / len(liquid.data['boiling point'])
+        solid_average_boil = sum(solid.data['boiling point']) / len(solid.data['boiling point'])
+
+        # Create three spans
+        span_gas_average_boil = Span(location=gas_average_boil, dimension='width', line_color='yellow', line_width=2)
+        span_liquid_average_boil = Span(location=liquid_average_boil, dimension='width', line_color='orange',
+                                        line_width=2)
+        span_solid_average_boil = Span(location=solid_average_boil, dimension='width', line_color='red', line_width=2)
+
+        # Add spans to the figure
+        f.add_layout(span_gas_average_boil)
+        f.add_layout(span_liquid_average_boil)
+        f.add_layout(span_solid_average_boil)
+
+        # Add labels to spans
+        label_span_gas_average_boil = Label(x=80, y=gas_average_boil, text="Gas average boiling point",
+                                            render_mode="css",
+                                            text_font_size="10px")
+        label_span_liquid_average_boil = Label(x=80, y=liquid_average_boil, text="Liquid average boiling point",
+                                               render_mode="css",
+                                               text_font_size="10px")
+        label_span_solid_average_boil = Label(x=80, y=solid_average_boil, text="Solid average boiling point",
+                                              render_mode="css",
+                                              text_font_size="10px")
+
+        # Add labels to figure
+        f.add_layout(label_span_gas_average_boil)
+        f.add_layout(label_span_liquid_average_boil)
+        f.add_layout(label_span_solid_average_boil)
+
+        # Save and show the figure
+        show(f)
+
 
 my_class = MyBokehClass()
 # my_class.create_simple_line_graph()
-my_class.show_grid_plot()
+my_class.ex_7_create_label_annotations_for_span()

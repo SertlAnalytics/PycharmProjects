@@ -40,6 +40,8 @@ class WorldCup:
 
     @property
     def api_for_ranking_adjustments(self):
+        self._api_for_ranking_adjustments.ranking_reduction_factor = 0.8
+        self._api_for_ranking_adjustments.ranking_enhancement_factor = 0.1
         return self._api_for_ranking_adjustments
 
     @property
@@ -85,7 +87,7 @@ class WorldCup:
                 self.df_match.loc[ind, FC.TEAM_RANKING_PRODUCT] = \
                     round(team_1.ranking_adjusted * team_2.ranking_adjusted, 1)
                 self.df_match.loc[ind, FC.WINNER] = match.get_winner()
-                match.adjust_ranking(self._api_for_ranking_adjustments)
+                match.adjust_ranking_by_api(self._api_for_ranking_adjustments)
 
     def __create_df_4_ml__(self):
         self.df_4_ml = self.df_match.loc[:, FC.HOME_TEAM_RANKING:FC.WINNER]
@@ -180,7 +182,7 @@ class WorldCup4Training(WorldCup):
             if match.status == 'completed':
                 winner = match.get_winner()
                 winner_by_model = match.get_projected_winner(api, False)
-                match.adjust_ranking(api)
+                match.adjust_ranking_by_api(api)
                 if winner != winner_by_model:
                     if winner == 0:
                         api.penalty += api.penalty_not_remis

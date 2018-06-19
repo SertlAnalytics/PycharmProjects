@@ -33,7 +33,7 @@ class ModelType:
     SEQUENTIAL_CLASSIFICATION = "Model: Sequential, Type: Classification"
     LINEAR_REGRESSION = "Model: Linear, Type: Regression"
     LINEAR_CLASSIFICATION = "Model: Linear, Type: Classification"
-    TREEE_CLASSIFICATION = "Model: DecisionTree, Type: Classification"
+    TREE_CLASSIFICATION = "Model: DecisionTree, Type: Classification"
 
 
 class LearningMachine:

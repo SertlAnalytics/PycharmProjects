@@ -9,8 +9,8 @@ import sys
 returns a number that indicates the player’s action. In particular, 0 stands for "Up", 1 stands for "Down", 2 stands for "Left", and 3 stands for "Right". You need to create this file and make it as intelligent as possible. You may include other files in your submission, but they will have to be included through this file.
 """
 
-class PlayerAI(BaseAI):
 
+class PlayerAI(BaseAI):
     def __init__(self):
         self.visited_grid_id_set = {''}  # set which contains the already explored nodes
         self.depth_level = 0  # will be set depending on the tree structure and the speed of the first branch

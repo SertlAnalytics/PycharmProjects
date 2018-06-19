@@ -17,6 +17,8 @@ class WorldCupMatch:
         self.status = df_row[FC.STATUS]
         self.team_1 = team_list.get_team(df_row[FC.HOME_TEAM])
         self.team_2 = team_list.get_team(df_row[FC.AWAY_TEAM])
+        self.team_1_ranking_adjusted = 0
+        self.team_2_ranking_adjusted = 0
         self.goal_team_1 = df_row[FC.GOALS_HOME]
         self.goal_team_2 = df_row[FC.GOALS_AWAY]
         self.goal_team_1_penalty = 0 if df_row[FC.HOME_PENALTIES] is None else df_row[FC.HOME_PENALTIES]
@@ -32,10 +34,12 @@ class WorldCupMatch:
 
     @property
     def short(self):
-        return '{:2}. {:<30} {:10} {}:{}  Simulation: {}:{} - Ranking_adjusted: {:>4.1f} : {:>4.1f} {} - {}'.format(
+        return '{:2}. {:<30} {:10} {}:{}  Simulation: {}:{} - Ranking_orig: {:>2.0f} : {:>2.0f}' \
+               ' - Ranking_adjusted: {:>4.1f} : {:>4.1f} {} - {}'.format(
             self.number, self.team_names, self.status, self.goal_team_1, self.goal_team_2,
             self.goal_team_1_simulation, self.goal_team_2_simulation,
-            self.team_1.ranking_adjusted, self.team_2.ranking_adjusted,
+            self.team_1.ranking, self.team_2.ranking,
+            self.team_1_ranking_adjusted, self.team_2_ranking_adjusted,
             ' - SIMULATION' if self.is_simulation else ' - NO simulation', self.probability_list)
 
     def print(self):
@@ -56,6 +60,17 @@ class WorldCupMatch:
             return 2
         elif self.goal_team_1_penalty < self.goal_team_2_penalty:
             return 2
+        return 0
+
+    def get_reward_after_simulation(self):
+        if self.goal_team_1 == self.goal_team_1_simulation and self.goal_team_2 == self.goal_team_2_simulation:
+            return 2
+        if self.goal_team_1 == self.goal_team_2 and self.goal_team_1_simulation == self.goal_team_2_simulation:
+            return 1
+        if self.goal_team_1 < self.goal_team_2 and self.goal_team_1_simulation < self.goal_team_2_simulation:
+            return 1
+        if self.goal_team_1 > self.goal_team_2 and self.goal_team_1_simulation > self.goal_team_2_simulation:
+            return 1
         return 0
 
     def simulate_by_probabilities(self, probability_array):
@@ -107,15 +122,23 @@ class WorldCupMatch:
             return 0
 
     def adjust_ranking_after_simulation(self, api: WorldCupRankingAdjustmentApi, winner_simulation: int):
-        self.__adjust_ranking_for_winner__(api, winner_simulation)
+        self.__adjust_ranking_by_api__(api, winner_simulation)
 
-    def adjust_ranking(self, api: WorldCupRankingAdjustmentApi):
-        winner = self.get_winner()
-        self.__adjust_ranking_for_winner__(api, winner)
+    def adjust_ranking_by_api(self, api: WorldCupRankingAdjustmentApi, winner_simulation=None):
+        self.__adjust_ranking_by_api__(api, winner_simulation)
 
-    def __adjust_ranking_for_winner__(self, api: WorldCupRankingAdjustmentApi, winner):
-        r_red = self.ranking_adjusted_difference * api.ranking_reduction_factor
-        r_enh = self.ranking_adjusted_difference * api.ranking_enhancement_factor
+    def adjust_ranking(self, red_factor: float, enh_factor: float):
+        self.__adjust_ranking__(red_factor, enh_factor)
+
+    def __adjust_ranking_by_api__(self, api: WorldCupRankingAdjustmentApi, winner_simulation=None):
+        self.__adjust_ranking__(api.ranking_reduction_factor, api.ranking_enhancement_factor, winner_simulation)
+
+    def __adjust_ranking__(self, red_factor: float, enh_factor: float, winner_simulation=None):
+        self.team_1_ranking_adjusted = self.team_1.ranking_adjusted
+        self.team_2_ranking_adjusted = self.team_2.ranking_adjusted
+        winner = self.get_winner() if winner_simulation is None else winner_simulation
+        r_red = self.ranking_adjusted_difference * red_factor
+        r_enh = self.ranking_adjusted_difference * enh_factor
         if winner == 0:
             if self.team_1.ranking_adjusted < self.team_2.ranking_adjusted:
                 self.team_1.ranking_adjusted += r_enh / 2
@@ -131,6 +154,11 @@ class WorldCupMatch:
             if self.team_1.ranking_adjusted < self.team_2.ranking_adjusted:
                 self.team_1.ranking_adjusted += r_enh
                 self.team_2.ranking_adjusted += - r_red
+
+        if self.team_1.ranking_adjusted < 1:
+            self.team_1.ranking_adjusted = 1
+        if self.team_2.ranking_adjusted < 1:
+            self.team_2.ranking_adjusted = 1
 
 
 class WorldCupMatchList:
