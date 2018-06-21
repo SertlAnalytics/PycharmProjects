@@ -6,12 +6,15 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-13
 """
 
-from world_cup_constants import FC
+from world_cup_constants import FC, PP
 from word_cup import WorldCup4Test, WorldCup4Training
-from world_cup_match import WorldCupMatch
+from world_cup_match import WorldCupMatch, WorldCupMatchPrediction, WorldCupMatchPredictionList
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import linear_model
+from scipy.optimize import basinhopping
+from sklearn.linear_model import LogisticRegression
 from sertl_analytics.pyurl.url_process import MyUrlBrowser4WM2018Watson
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import train_test_split
@@ -65,11 +68,11 @@ class RG:  # random generator
 
     @staticmethod
     def rand_red_factor():
-        return round(randrange(1, 20)/10,1)
+        return round(randrange(1, 10)/10,1)
 
     @staticmethod
     def rand_end_factor():
-        return round(randrange(1, 20)/10,1)
+        return round(randrange(1, 10)/10,1)
 
     @staticmethod
     def get_rand_values_for_policy():
@@ -141,6 +144,7 @@ class PolicyList:
         self.__init_policy_list__()
         self.max_reward = 0
         self.max_policy = None
+        self.policy_summary_list = []
 
     @property
     def best_policy(self) -> Policy:
@@ -163,6 +167,7 @@ class PolicyList:
         for k in range(0, number_loops):
             for index, policy in enumerate(self.policy_list):
                 self.model.check_policy(index + 1, policy)
+                self.__add_to_policy_summary_list__(policy)
                 if policy.reward > self.max_reward:
                     self.max_reward = policy.reward
                     self.max_policy = policy
@@ -171,6 +176,9 @@ class PolicyList:
             if k < number_loops -1:
                 self.__reset_best_policies__()
                 self.__prepare_policy_list_for_next_run__(offsprings)
+
+    def __add_to_policy_summary_list__(self, p: Policy):
+        self.policy_summary_list.append([p.col_id, p.n_estimators, p.red_factor, p.enh_factor, p.reward])
 
     def __prepare_policy_list_for_next_run__(self, offspring_number: int):
         self.policy_list = []
@@ -204,24 +212,39 @@ class PolicyList:
             policy.print()
         print('')
 
+    def print_best_estimated_policy(self, best_policy: Policy):
+        reg = linear_model.LinearRegression()
+        df_policy_summary = pd.DataFrame(self.policy_summary_list, columns=PP.get_pp_as_list())
+        df_data = df_policy_summary[PP.get_pp_as_list()[0:4]]
+        df_label = df_policy_summary[[PP.REWARD]]
+        reg.fit(df_data, df_label)
+        args = (reg.intercept_[0], reg.coef_[0][0], reg.coef_[0][1], reg.coef_[0][2], reg.coef_[0][3])
+        x_min = np.array([1, 1, 0.1, 0.1])
+        x_max = np.array([7, 110, 1, 1])
+        bounds =  [(low, high) for low, high in zip(x_min, x_max)]
+        minimizer_kwargs = {"args": args, "method": "L-BFGS-B", "bounds": bounds}
+        x0 = np.array([best_policy.col_id, best_policy.n_estimators, best_policy.enh_factor, best_policy.red_factor])
+        result = basinhopping(self.policy_function, x0, minimizer_kwargs=minimizer_kwargs, niter=200)
+        print('Optimizer: maximum = {:4.2f} for x={}'.format(-result.fun, [round(i, 1) for i in result.x]))
+
+    @staticmethod
+    def policy_function(x: tuple, *args):
+        return -(args[0] + args[1] * x[0] + args[2] * x[1] + args[3] * x[2] + args[4] * x[3])
+
 
 class WorldCupModel:
     def __init__(self):
-        self.policy = Policy
         self.world_cup_2014 = WorldCup4Training(2014, 'Brasil')
-        self.world_cup_2018 = WorldCup4Test(2018, 'Russia', self.world_cup_2014.api_for_ranking_adjustments)
-        self.red_factor = self.world_cup_2014.api_for_ranking_adjustments.ranking_reduction_factor
-        self.end_factor = self.world_cup_2014.api_for_ranking_adjustments.ranking_enhancement_factor
+        self.world_cup_2018 = WorldCup4Test(2018, 'Russia')
         self.first_open_match_number = self.world_cup_2018.first_open_match_number
         self.df_train = pd.DataFrame
-        self.__set_df_train__(self.first_open_match_number)
         self.df_test = pd.DataFrame
-        self.__set_df_test__(self.first_open_match_number)
-        self.forest_clf = RandomForestClassifier(n_estimators=88, random_state=42)
+        self.forest_clf = None
+        self.log_reg = None
+        self.knn_clf = None
         self.match_train_list = []
         self.match_test_list = []
-        self.__set_match_lists__(self.first_open_match_number, self.red_factor, self.end_factor)
-        # self.__print_match_lists__()
+        self.__match_prediction_list = WorldCupMatchPredictionList()
 
     def get_x_train(self, col_id: int) -> np.array:
         return np.array([self.__get_x_data_for_match__(match, col_id) for match in self.match_train_list])
@@ -237,7 +260,7 @@ class WorldCupModel:
 
     @property
     def y_train(self) -> np.array:
-        return np.array([match.get_winner() for match in self.match_train_list])
+        return np.array([match.winner for match in self.match_train_list])
 
     def __print_match_lists__(self):
         for match in self.match_train_list:
@@ -246,90 +269,79 @@ class WorldCupModel:
         for match in self.match_test_list:
             match.print()
 
-    def __set_match_lists__(self, first_open_match_number: int, red_factor: float, enh_factor: float):
-        self.__set_match_train_list__(first_open_match_number, red_factor, enh_factor)
-        self.__set_match_test_list__(first_open_match_number)
-
-    def __set_match_train_list__(self, first_open_match_number: int, red_factor: float, enh_factor: float):
+    def __fill_match_lists__(self, off_set: int):
         self.match_train_list = []
-        self.world_cup_2014.team_list.reset_ranking_adjusted()
-        for number in self.world_cup_2014.match_list.index_list:
-            match = self.world_cup_2014.match_list.get_match(number)
-            match.adjust_ranking(red_factor, enh_factor)
-            self.match_train_list.append(match)
-
-        self.world_cup_2018.team_list.reset_ranking_adjusted()
-        for number in range(1, first_open_match_number):
-            match = self.world_cup_2018.match_list.get_match(number)
-            match.adjust_ranking(red_factor, enh_factor)
-            self.match_train_list.append(match)
-
-    def __set_match_test_list__(self,  first_open_match_number: int):
         self.match_test_list = []
-        self.world_cup_2018.team_list.reset_ranking_adjusted()
-        for number in range(first_open_match_number, self.world_cup_2018.match_list.length):
-            match = self.world_cup_2018.match_list.get_match(number)
-            self.match_test_list.append(match)
+        self.__fill_match_train_list__(off_set)
+        self.__fill_match_test_list__(off_set)
 
-    def __set_df_train__(self, first_open_match_number: int):
-        self.df_train = self.world_cup_2014.df_4_ml
+    def __fill_match_train_list__(self, off_set: int):
+        for number in self.world_cup_2014.match_list.index_list:
+            self.match_train_list.append(self.world_cup_2014.match_list.get_match(number))
+        for number in range(1, off_set):
+            self.match_train_list.append(self.world_cup_2018.match_list.get_match(number))
 
-        if first_open_match_number > 1:
-            pos_right = first_open_match_number - 2
-            self.df_train = self.df_train.append(self.world_cup_2018.df_4_ml.loc[:pos_right,:])
+    def __fill_match_test_list__(self, off_set: int):
+        for number in range(off_set, self.world_cup_2018.match_list.length):
+            self.match_test_list.append(self.world_cup_2018.match_list.get_match(number))
 
-    def __set_df_test__(self, first_open_match_number: int):
-        if first_open_match_number > 1:
-            self.df_test = self.world_cup_2018.df_4_ml.loc[first_open_match_number-1:,:]
-        else:
-            self.df_test = self.world_cup_2018.df_4_ml
-
-    def __get_column_start_end_with_best_score__(self, cv=2) -> list:
-        col_start_end_list = [[FC.HOME_TEAM_RANKING, FC.AWAY_TEAM_RANKING]]
-        col_start_end_list.append([FC.HOME_TEAM_RANKING_SQU, FC.AWAY_TEAM_RANKING_SQU])
-        col_start_end_list.append([FC.HOME_TEAM_RANKING_SQRT, FC.AWAY_TEAM_RANKING_SQRT])
-        col_start_end_list.append([FC.HOME_TEAM_RANKING, FC.AWAY_TEAM_RANKING_SQU])
-        col_start_end_list.append([FC.HOME_TEAM_RANKING_SQU, FC.AWAY_TEAM_RANKING_SQRT])
-        col_start_end_list.append([FC.HOME_TEAM_RANKING, FC.AWAY_TEAM_RANKING_SQRT])
-        score_high = 0
-        col_start_end = None
-        for cols in col_start_end_list:
-            score = cross_val_score(self.forest_clf, self.get_x_train(cols), self.y_train, cv=cv, scoring="accuracy")
-            if score.mean() > score_high:
-                score_high = score.mean()
-                col_start_end = cols
-        # print('Best columns with score.mean = {:3.2f}: {}'.format(score_high, col_start_end))
-        return col_start_end
+    def __init_world_cups_by_red_enh_factor__(self, red_factor: float, enh_factor: float):
+        self.world_cup_2014.init_by_red_enh_factor(red_factor, enh_factor)
+        self.world_cup_2018.init_by_red_enh_factor(red_factor, enh_factor)
 
     def check_policy(self, policy_number: int, policy: Policy):
+        self.__init_models__(policy)
+        self.__init_world_cups_by_red_enh_factor__(policy.red_factor, policy.enh_factor)
         for k in range(1, self.first_open_match_number):
-            self.__set_df_train__(k)
-            self.__set_df_test__(k)
-            self.__set_match_lists__(k, policy.red_factor, policy.enh_factor)
-            self.forest_clf = RandomForestClassifier(n_estimators=policy.n_estimators, random_state=42)
+            self.__fill_match_lists__(k)
             self.__train_on_old_and_new_data__(policy.col_id)
             x_data = self.get_x_test(1, policy.col_id)
-            predict_probability = self.forest_clf.predict_proba(x_data).round(2)
+            predict_probability = self.__get_predict_probability__(x_data)
+            knn_neighbours = list(self.knn_clf.kneighbors(x_data, return_distance=False))
             match = self.world_cup_2018.match_list.get_match(k)
-            match.simulate_by_probabilities(predict_probability[0])
+            neighbours_match_list = self.get_neighbour_match_list(knn_neighbours[0])
+            match.simulate_by_probabilities(predict_probability[0], neighbours_match_list)
             policy.check_match_for_reward(match)
         print('Checked policy {:3}: {}'.format(policy_number, policy.details_with_reward))
 
+    def __get_predict_probability__(self, x_data):
+        predict_probability = self.forest_clf.predict_proba(x_data).round(2)
+        # predict_probability = self.log_reg.predict_proba(x_data).round(2)
+        # predict_probability = self.knn_clf.predict_proba(x_data).round(2)
+        return predict_probability
+
+    def __init_models__(self, policy: Policy):
+        self.forest_clf = RandomForestClassifier(n_estimators=policy.n_estimators, random_state=42)
+        self.log_reg = LogisticRegression()
+        self.knn_clf = KNeighborsClassifier(n_neighbors=7)
+
+    def get_neighbour_match_list(self, knn_neighbour_index_list) -> list:
+        return [self.match_train_list[index] for index in knn_neighbour_index_list]
+
     def make_prediction_for_the_next_matches(self, policy: Policy, matches: int = 5, write_to_page = False):
         print('\nPrediction of the next {} matches using {}...'.format(matches, policy.details_with_reward))
-        self.policy = policy
-        match_list = []
-        self.__train_on_old_and_new_data__(self.policy.col_id, True)
+        self.__init_models__(policy)
+        self.__init_world_cups_by_red_enh_factor__(policy.red_factor, policy.enh_factor)
+        self.__fill_match_lists__(self.first_open_match_number)
+        self.__train_on_old_and_new_data__(policy.col_id, False)
         offset_number = self.first_open_match_number
-        x_data = self.get_x_test(matches, self.policy.col_id)
-        predict_probability = self.forest_clf.predict_proba(x_data).round(2)
+        x_data = self.get_x_test(matches, policy.col_id)
+        predict_probability = self.__get_predict_probability__(x_data)
+        knn_neighbours = list(self.knn_clf.kneighbors(x_data, return_distance=False))
         for number in range(offset_number, offset_number + matches):
             match = self.world_cup_2018.match_list.get_match(number)
-            match.simulate_by_probabilities(predict_probability[number - offset_number])
+            index = offset_number - number
+            neighbours_match_list = self.get_neighbour_match_list(knn_neighbours[index])
+            match.simulate_by_probabilities(predict_probability[number - offset_number], neighbours_match_list)
             match.print()
-            match_list.append(match)
-        if len(match_list) > 0 and write_to_page:
-            self.__write_to_web_page__(match_list)
+            self.__match_prediction_list.add_match_prediction(WorldCupMatchPrediction(match))
+        if write_to_page:
+            self.__write_to_web_page__(self.__match_prediction_list.get_best_match_prediction_list())
+
+    def print_match_prediction_summary(self):
+        best_prediction_list = self.__match_prediction_list.get_best_match_prediction_list()
+        for best_prediction in best_prediction_list:
+            best_prediction.print()
 
     @staticmethod
     def __write_to_web_page__(match_list: list):
@@ -342,6 +354,8 @@ class WorldCupModel:
         if perform_test:
             self.__perform_test_on_training_data__(x_train, self.y_train)
         self.forest_clf.fit(x_train, self.y_train)
+        self.log_reg.fit(x_train, self.y_train)
+        self.knn_clf.fit(x_train, self.y_train)
         # self.__print_report__(x_train, self.__y_train)
 
     def __perform_test_on_training_data__(self, x_input, y_input):
@@ -362,16 +376,20 @@ with_policy_list = True
 over_best_policy_list = True
 
 if with_policy_list:
-    policy_list = PolicyList(model, 100)
-    policy_list.find_best_policy_with_genetic_algorithm(5, 20, 4)
+    policy_list = PolicyList(model, 10)
+    policy_list.find_best_policy_with_genetic_algorithm(1, 20, 4)
+    policy_list.print_best_estimated_policy(policy_list.best_policy)
     if over_best_policy_list:
         for policy in policy_list.best_policy_list:
             model.make_prediction_for_the_next_matches(policy, 6, False)
+        model.print_match_prediction_summary()
     else:
         model.make_prediction_for_the_next_matches(policy_list.best_policy, 6, False)
 else:
     best_policy = Policy(7, 35, 0.9, 0.6)
-    model.make_prediction_for_the_next_matches(best_policy, 6, True)
+    best_policy = Policy(7, 74, 0.9, 1.9)
+    # Policy: Columns = 7 (['N', 'SQUARED', 'SQRT']), Estimators = 74 / red_factor = 0.9, enh_factor = 1.9: Reward = 17
+    model.make_prediction_for_the_next_matches(best_policy, 6, False)
 
 
 

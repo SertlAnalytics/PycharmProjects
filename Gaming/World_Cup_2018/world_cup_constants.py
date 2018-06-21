@@ -21,9 +21,16 @@ class FC:
     AWAY_PENALTIES = 'away_team/penalties'
     HOME_TEAM_RANKING = 'home_team_ranking'
     AWAY_TEAM_RANKING = 'away_team_ranking'
-    HOME_TEAM_RANKING_SQU = 'home_team_ranking_squared'
-    HOME_TEAM_RANKING_SQRT = 'home_team_ranking_sqrt'
-    AWAY_TEAM_RANKING_SQU = 'away_team_ranking_squared'
-    AWAY_TEAM_RANKING_SQRT = 'away_team_ranking_sqrt'
-    TEAM_RANKING_PRODUCT = 'team_ranking_product'
     WINNER = 'winner_system'
+
+
+class PP:  # policy parameter
+    COL_KEY = 'column_key'
+    N_ESTIMATORS = 'n_estimators'
+    RED_FACTOR = 'reduction_factor'
+    ENH_FACTOR = 'enhancement_factor'
+    REWARD = 'reward'
+
+    @staticmethod
+    def get_pp_as_list():
+        return [PP.COL_KEY, PP.N_ESTIMATORS, PP.RED_FACTOR, PP.ENH_FACTOR, PP.REWARD]

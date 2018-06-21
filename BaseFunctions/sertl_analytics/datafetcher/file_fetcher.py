@@ -13,7 +13,7 @@ import tempfile
 class FileFetcher:
     def __init__(self, file_name: str, **args):
         self.file_name = file_name.lower()
-        print('FileFetcher: getting...{}'.format(self.file_name))
+        print('FileFetcher: getting...{} - {}'.format(self.file_name, args))
         self.__user = 'anonymous'
         self.__email = 'josef.sertl@sertl-analytics.com'
         self.protocol = args['protocol'].lower() if 'protocol' in args else ''

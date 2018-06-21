@@ -6,7 +6,7 @@ Date: 2018-06-15
 """
 from world_cup_constants import FC
 from world_cup_team import WorldCupTeamList
-from world_cup_api import WorldCupRankingAdjustmentApi
+import pandas as pd
 
 
 class WorldCupMatch:
@@ -27,6 +27,7 @@ class WorldCupMatch:
         self.goal_team_2_simulation = 0
         self.probability_list = []
         self.is_simulation = False
+        self.winner = self.__get_winner__()
 
     @property
     def team_names(self):
@@ -49,7 +50,7 @@ class WorldCupMatch:
     def ranking_adjusted_difference(self):
         return abs(self.team_1.ranking_adjusted - self.team_2.ranking_adjusted)
 
-    def get_winner(self):
+    def __get_winner__(self):
         if self.status == 'open':
             return None
         if self.goal_team_1 > self.goal_team_2:
@@ -73,22 +74,42 @@ class WorldCupMatch:
             return 1
         return 0
 
-    def simulate_by_probabilities(self, probability_array):
+    def simulate_by_probabilities(self, probability_array, knn_matches: list):
         self.probability_list = list(probability_array)
         max_val = max(self.probability_list)
         max_idx = self.probability_list.index(max_val)
         max_idx = self.__get_corrected_max_idx__(max_idx, max_val)
-        factor = 3
         self.is_simulation = True
+        simulation_goals = self.__get_goals_for_simulation_by_knn_matches__(max_idx, knn_matches)
+        if len(simulation_goals) == 0:
+            simulation_goals = self.__get_goals_for_simulation_by_assumption__(max_idx, max_val)
+        self.goal_team_1_simulation = simulation_goals[0]
+        self.goal_team_2_simulation = simulation_goals[1]
+        # sometimes we get the wrong values => correct them here
+        if max_idx == 1 and self.goal_team_1_simulation == self.goal_team_2_simulation:
+            self.goal_team_1_simulation += 1
+        elif max_idx == 1 and self.goal_team_1_simulation == self.goal_team_2_simulation:
+            self.goal_team_2_simulation += 1
+
+    @staticmethod
+    def __get_goals_for_simulation_by_knn_matches__(max_idx: int, knn_matches: list) -> list:
+        check_list = [0, 0, 0]
+        for match in knn_matches:
+            if match.winner == max_idx:
+                check_list[0] += 1
+                check_list[1] += match.goal_team_1
+                check_list[2] += match.goal_team_2
+        return [] if check_list[0] == 0 else [int(check_list[1]/check_list[0]), int(check_list[2]/check_list[0])]
+
+    def __get_goals_for_simulation_by_assumption__(self, max_idx: int, max_val: float) -> list:
+        factor = 3
         if max_idx == 0:
-            self.goal_team_1_simulation = int(round(factor * max_val))
-            self.goal_team_2_simulation = int(round(factor * max_val))
+            return [int(round(factor * max_val)), int(round(factor * max_val))]
         elif max_idx == 1:
-            self.goal_team_1_simulation = int(round(factor * max_val))
-            self.goal_team_2_simulation = int(round(factor * self.probability_list[2]))
+            return [int(round(factor * max_val)), int(round(factor * self.probability_list[2]))]
         elif max_idx == 2:
-            self.goal_team_1_simulation = int(round(factor * self.probability_list[1]))
-            self.goal_team_2_simulation = int(round(factor * max_val))
+            return [int(round(factor * self.probability_list[1])), int(round(factor * max_val))]
+        return []
 
     def __get_corrected_max_idx__(self, max_idx: int, max_val: float):
         if max_val > 0.5:
@@ -98,45 +119,13 @@ class WorldCupMatch:
                 return 1 if self.team_1.ranking_adjusted < self.team_2.ranking_adjusted else max_idx
         return max_idx
 
-    def simulate_with_winner_by_model(self, winner_by_model: int):
-        self.goal_team_1_simulation = self.goal_team_1
-        self.goal_team_2_simulation = self.goal_team_2
-        if self.status == 'open':
-            self.is_simulation = True
-            if winner_by_model == 0:
-                self.goal_team_1_simulation = 1
-                self.goal_team_2_simulation = 1
-            elif winner_by_model == 1:
-                self.goal_team_1_simulation = 2
-                self.goal_team_2_simulation = 1
-            elif winner_by_model == 2:
-                self.goal_team_1_simulation = 1
-                self.goal_team_2_simulation = 2
-
-    def get_projected_winner(self, api: WorldCupRankingAdjustmentApi, for_simulation: bool):
-        if self.status == 'completed' and for_simulation:
-            return self.get_winner()
-        if self.ranking_adjusted_difference >= api.ranking_difference:
-            return 1 if self.team_1.ranking_adjusted < self.team_2.ranking_adjusted else 2
-        else:
-            return 0
-
-    def adjust_ranking_after_simulation(self, api: WorldCupRankingAdjustmentApi, winner_simulation: int):
-        self.__adjust_ranking_by_api__(api, winner_simulation)
-
-    def adjust_ranking_by_api(self, api: WorldCupRankingAdjustmentApi, winner_simulation=None):
-        self.__adjust_ranking_by_api__(api, winner_simulation)
-
     def adjust_ranking(self, red_factor: float, enh_factor: float):
         self.__adjust_ranking__(red_factor, enh_factor)
-
-    def __adjust_ranking_by_api__(self, api: WorldCupRankingAdjustmentApi, winner_simulation=None):
-        self.__adjust_ranking__(api.ranking_reduction_factor, api.ranking_enhancement_factor, winner_simulation)
 
     def __adjust_ranking__(self, red_factor: float, enh_factor: float, winner_simulation=None):
         self.team_1_ranking_adjusted = self.team_1.ranking_adjusted
         self.team_2_ranking_adjusted = self.team_2.ranking_adjusted
-        winner = self.get_winner() if winner_simulation is None else winner_simulation
+        winner = self.winner if winner_simulation is None else winner_simulation
         r_red = self.ranking_adjusted_difference * red_factor
         r_enh = self.ranking_adjusted_difference * enh_factor
         if winner == 0:
@@ -180,3 +169,58 @@ class WorldCupMatchList:
     def print_list(self):
         for index in self.index_list:
             self.__match_dic[index].print()
+
+
+class WorldCupMatchPrediction:
+    def __init__(self, match: WorldCupMatch):
+        self.number = match.number
+        self.team_1_name = match.team_1.name
+        self.team_2_name = match.team_2.name
+        self.goal_team_1_simulation = match.goal_team_1_simulation
+        self.goal_team_2_simulation = match.goal_team_2_simulation
+        self.number_prediction = 1
+
+    def iterate(self, i: int = 1):
+        self.number_prediction += i
+
+    @property
+    def key(self):
+        return 'Match {:2}: {} - {}: {}:{}'.format(self.number, self.team_1_name, self.team_2_name,
+                                                  self.goal_team_1_simulation, self.goal_team_2_simulation)
+
+    def print(self):
+        print('{} -> {}'.format(self.key, self.number_prediction))
+
+
+class WorldCupMatchPredictionList:
+    def __init__(self):
+        self.__match_number_list = []
+        self.__match_prediction_dic = {}
+
+    def add_match_prediction(self, match_prediction: WorldCupMatchPrediction):
+        key = match_prediction.key
+        if match_prediction.number not in self.__match_number_list:
+            self.__match_number_list.append(match_prediction.number)
+
+        if key in self.__match_prediction_dic:
+            self.__match_prediction_dic[key].iterate()
+        else:
+            self.__match_prediction_dic[key] = match_prediction
+
+    def get_best_match_prediction_list(self) -> list:
+        df_data = self.__get_data_as_dataframe__()
+        return_list = []
+        for number in self.__match_number_list:
+            df_number = df_data[df_data['Number'] == number]
+            return_list.append(self.__match_prediction_dic[df_number.iloc[0].key])
+        return return_list
+
+    def __get_data_as_dataframe__(self):
+        value_list = []
+        for key, m_p in self.__match_prediction_dic.items():
+            value_list.append([m_p.number, m_p.key, m_p.team_1_name, m_p.team_2_name,
+                               m_p.goal_team_1_simulation, m_p.goal_team_2_simulation, m_p.number_prediction])
+        df = pd.DataFrame(value_list, columns=['Number', 'key', 'Team_1', 'Team_2', 'Goal_1', 'Goal_2', 'Total'])
+        df.sort_values(['Number', 'Total'], inplace=True, ascending=[True, False])
+        print(df[['Number', 'key', 'Total']].head(len(self.__match_prediction_dic)))
+        return df

@@ -2,10 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e962516c-df08-4fbf-9286-4787df306f4f" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/file_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/file_fetcher.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Fifa_world_cup_2018_matches.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/Fifa_world_cup_2018_matches.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/word_cup.py" beforeDir="false" afterPath="$PROJECT_DIR$/word_cup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/world_cup_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/world_cup_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/world_cup_match.py" beforeDir="false" afterPath="$PROJECT_DIR$/world_cup_match.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -16,41 +20,14 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="run_fifa_world_cup_2018_prediction.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="580">
-              <caret line="367" column="51" lean-forward="true" selection-start-line="367" selection-start-column="51" selection-end-line="367" selection-end-column="51" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="word_cup.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/word_cup.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="544">
-              <caret line="44" column="48" selection-start-line="44" selection-start-column="48" selection-end-line="44" selection-end-column="48" />
-              <folding>
-                <element signature="e#194#228#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="pydevd.py" pinned="false" current-in-tab="false">
-        <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="28271">
-              <caret line="1663" selection-start-line="1663" selection-end-line="1663" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="world_cup_match.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="world_cup_match.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/world_cup_match.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="497">
-              <caret line="157" selection-start-line="157" selection-end-line="157" />
+            <state relative-caret-position="349">
+              <caret line="221" column="29" selection-start-line="221" selection-start-column="29" selection-end-line="221" selection-end-column="29" />
+              <folding>
+                <element signature="e#186#220#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -70,21 +47,21 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/file_fetcher.py" />
-        <option value="$PROJECT_DIR$/world_cup_constants.py" />
         <option value="$PROJECT_DIR$/world_cup_team.py" />
         <option value="$PROJECT_DIR$/world_cup_api.py" />
         <option value="$PROJECT_DIR$/world_cup_configuration.py" />
         <option value="$PROJECT_DIR$/world_cup_excel.py" />
-        <option value="$PROJECT_DIR$/world_cup_match.py" />
+        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/file_fetcher.py" />
         <option value="$PROJECT_DIR$/word_cup.py" />
+        <option value="$PROJECT_DIR$/world_cup_constants.py" />
+        <option value="$PROJECT_DIR$/world_cup_match.py" />
         <option value="$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="1273" />
-    <option name="width" value="1294" />
+    <option name="width" value="1293" />
     <option name="height" value="1407" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -93,7 +70,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -105,6 +81,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -171,16 +148,16 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <frame x="1273" y="0" width="1293" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2501992" />
       <window_info anchor="bottom" id="TODO" order="6" sideWeight="0.49920383" weight="0.32941177" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50159234" side_tool="true" weight="0.39137256" />
       <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49920383" weight="0.3262745" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49840763" visible="true" weight="0.267451" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49840763" visible="true" weight="0.5396078" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3290735" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -224,7 +201,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="39" />
+      <option name="time" value="51" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -510,13 +487,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/file_fetcher.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="377">
-          <caret line="35" column="36" lean-forward="true" selection-start-line="35" selection-start-column="36" selection-end-line="35" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/ntpath.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="646">
@@ -539,7 +509,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/world_cup_excel.py" />
-    <entry file="file://$PROJECT_DIR$/world_cup_constants.py" />
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/random.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="129">
@@ -563,32 +532,52 @@
     </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="28271">
+        <state relative-caret-position="849">
           <caret line="1663" selection-start-line="1663" selection-end-line="1663" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/file_fetcher.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="16" column="33" lean-forward="true" selection-start-line="16" selection-start-column="33" selection-end-line="16" selection-end-column="33" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/word_cup.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="544">
-          <caret line="44" column="48" selection-start-line="44" selection-start-column="48" selection-end-line="44" selection-end-column="48" />
+        <state relative-caret-position="714">
+          <caret line="52" column="12" selection-start-line="52" selection-start-column="12" selection-end-line="52" selection-end-column="12" />
           <folding>
             <element signature="e#194#228#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/world_cup_match.py">
+    <entry file="file://$PROJECT_DIR$/world_cup_constants.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="497">
-          <caret line="157" selection-start-line="157" selection-end-line="157" />
+        <state relative-caret-position="527">
+          <caret line="31" column="21" lean-forward="true" selection-start-line="31" selection-start-column="21" selection-end-line="31" selection-end-column="21" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="580">
-          <caret line="367" column="51" lean-forward="true" selection-start-line="367" selection-start-column="51" selection-end-line="367" selection-end-column="51" />
+        <state relative-caret-position="83">
+          <caret line="222" column="40" lean-forward="true" selection-start-line="222" selection-start-column="40" selection-end-line="222" selection-end-column="40" />
+          <folding>
+            <element signature="e#240#278#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/world_cup_match.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="349">
+          <caret line="221" column="29" selection-start-line="221" selection-start-column="29" selection-end-line="221" selection-end-column="29" />
+          <folding>
+            <element signature="e#186#220#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
