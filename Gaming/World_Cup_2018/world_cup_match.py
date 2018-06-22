@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-15
 """
 from world_cup_constants import FC
-from world_cup_team import WorldCupTeamList
+from world_cup_team import WorldCupTeamList, WorldCupTeam
 import pandas as pd
 
 
@@ -34,14 +34,39 @@ class WorldCupMatch:
         return self.team_1.name + ' - ' + self.team_2.name
 
     @property
+    def points_team_1(self):
+        if self.goal_team_1 > self.goal_team_2:
+            return 3
+        elif self.goal_team_1 < self.goal_team_2:
+            return 0
+        return 1
+
+    @property
+    def team_2_points(self):
+        return 1 if self.points_team_1 == 1 else 3 - self.points_team_1
+
+    @property
+    def annotation(self):
+        return '{:2}. {}: {:>2.0f}:{:>2.0f} ({:>2.0f}:{:>2.0f})'.format(
+            self.number, self.team_names, self.team_1_ranking_adjusted, self.team_2_ranking_adjusted,
+            self.team_1.ranking, self.team_2.ranking)
+
+    @property
     def short(self):
-        return '{:2}. {:<30} {:10} {}:{}  Simulation: {}:{} - Ranking_orig: {:>2.0f} : {:>2.0f}' \
-               ' - Ranking_adjusted: {:>4.1f} : {:>4.1f} {} - {}'.format(
+        return '{:2}. {:<30} {:10} {}:{}  Simulation: {}:{} - Ranking_orig: {:>2.0f}:{:>2.0f}' \
+               ' - Ranking_adjusted: {:>2.0f}:{:>2.0f} {} - {}'.format(
             self.number, self.team_names, self.status, self.goal_team_1, self.goal_team_2,
             self.goal_team_1_simulation, self.goal_team_2_simulation,
             self.team_1.ranking, self.team_2.ranking,
             self.team_1_ranking_adjusted, self.team_2_ranking_adjusted,
             ' - SIMULATION' if self.is_simulation else ' - NO simulation', self.probability_list)
+
+    def get_points_and_goals_for_team(self, team: WorldCupTeam) -> list:
+        if self.team_1.name != team.name and self.team_2.name != team.name:
+            return [0, 0, 0]
+        if self.team_1.name == team.name:
+            return [self.points_team_1, self.goal_team_1, self.goal_team_2]
+        return [self.team_2_points, self.goal_team_2, self.goal_team_1]
 
     def print(self):
         print(self.short)
@@ -224,3 +249,94 @@ class WorldCupMatchPredictionList:
         df.sort_values(['Number', 'Total'], inplace=True, ascending=[True, False])
         print(df[['Number', 'key', 'Total']].head(len(self.__match_prediction_dic)))
         return df
+
+
+class TeamPosition:
+    def __init__(self, team: WorldCupTeam):
+        self.team = team
+        self.last_match = None
+        self.points_own = 0
+        self.points_foreign = 0
+        self.goals_own = 0
+        self.goals_foreign = 0
+
+
+class WorldCupTable:
+    def __init__(self, team_list: WorldCupTeamList, match_list: WorldCupMatchList):
+        self.__team_list = team_list
+        self.__match_list = match_list
+        self.__df_columns = ['Team', 'P_0', 'G_O_0', 'G_F_0']
+        self.__init_df_columns__()
+        self.__df_table = None
+        self.__init_df_table__()
+        self.__team_ranking_before_match_dic = {}
+        self.__init_team_ranking_dic__()
+        self.__print_team_ranking_dic__()
+
+    @property
+    def df_table(self):
+        return self.__df_table
+
+    def __init_df_table__(self):
+        table_list = []
+        for name in self.__team_list.index_list:
+            table_list.append(self.__get_table_row_for_team__(self.__team_list.get_team(name)))
+        self.__df_table = pd.DataFrame(table_list, columns=self.__df_columns)
+        self.__df_table.sort_values(['Team'], inplace=True, ascending=True)
+
+    def __init_df_columns__(self):
+        for number in self.__match_list.index_list:
+            column_list = self.__get_column_names_for_match_number(number)
+            for col in column_list:
+                self.__df_columns.append(col)
+
+    def __get_table_row_for_team__(self, team: WorldCupTeam):
+        value_list = [team.name, self.__team_list.length - team.ranking_in_list + 1, 0, 0]
+        points = value_list[1]
+        goals_own = value_list[2]
+        goals_foreign = value_list[3]
+        for number in self.__match_list.index_list:
+            match = self.__match_list.get_match(number)
+            p, own, foreign = match.get_points_and_goals_for_team(team)
+            points += p
+            goals_own += own
+            goals_foreign += foreign
+            value_list.append(points)
+            value_list.append(goals_own)
+            value_list.append(goals_foreign)
+        return value_list
+
+    @staticmethod
+    def __get_column_names_for_match_number(number: int):
+        return ['P_{}'.format(number), 'G_O_{}'.format(number), 'G_F_{}'.format(number)]
+
+    def __init_team_ranking_dic__(self):
+        for index in self.__team_list.index_list:
+            team = self.__team_list.get_team(index)
+            self.__team_ranking_before_match_dic[team.name] = [team.ranking_in_list]
+
+        for number in self.__match_list.index_list:
+            column = 'P_{}'.format(number-1)
+            self.df_table.sort_values(column, inplace=True, ascending=False)
+            position = 0
+            for index, row in self.df_table.iterrows():
+                team_name = row['Team']
+                position += 1
+                self.__team_ranking_before_match_dic[team_name].append(position)
+
+    def __print_team_ranking_dic__(self):
+        df = pd.DataFrame.from_dict(self.__team_ranking_before_match_dic, orient='index')
+        print(df.head())
+
+    def get_ranking_before_match(self, match: WorldCupMatch):
+        ranking_team_1_before_match = self.__get_ranking_for_team_before_match(match.team_1.name, match)
+        ranking_team_2_before_match = self.__get_ranking_for_team_before_match(match.team_2.name, match)
+        return ranking_team_1_before_match, ranking_team_2_before_match
+
+    def __get_ranking_for_team_before_match(self, team_name: str, match: WorldCupMatch):
+        return self.__team_ranking_before_match_dic[team_name][match.number-1]
+        # column_list = ['Team'] + self.__get_column_names_for_match_number(match.number-1)
+        # self.df_table.sort_values(column_list[1], inplace=True, ascending=False)
+        # self.df_table.reset_index(inplace=True, drop=True)
+        # team_row = self.df_table[self.df_table['Team'] == team_name]
+        # return team_row['P_0'].idxmax() + 1

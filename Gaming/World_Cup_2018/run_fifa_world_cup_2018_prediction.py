@@ -21,6 +21,9 @@ from sklearn.model_selection import train_test_split
 from random import randrange
 import pandas as pd
 import math
+from matplotlib.colors import ListedColormap
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 
 class ColumnHandler:
@@ -135,10 +138,11 @@ class PolicyList:
         self.n_estimators_list = [RG.rand_n_estimators() for k in range(1, self.number_start)]
         self.red_factor_list = [RG.rand_red_factor() for k in range(1, self.number_start)]
         self.enh_factor_list = [RG.rand_end_factor() for k in range(1, self.number_start)]
-        # self.cv_list = [3, 3, 4]
-        # self.n_estimators_list = [87, 39, 89]
-        # self.red_factor_list = [1.5, 1.6, 0.8]
-        # self.enh_factor_list = [0.5, 0.9, 0.1]
+        # self.col_list = [4]
+        # self.cv_list = [4]
+        # self.n_estimators_list = [87]
+        # self.red_factor_list = [0.5]
+        # self.enh_factor_list = [0.5]
         self.policy_list = []
         self.best_policy_list = []
         self.__init_policy_list__()
@@ -294,7 +298,7 @@ class WorldCupModel:
         self.__init_world_cups_by_red_enh_factor__(policy.red_factor, policy.enh_factor)
         for k in range(1, self.first_open_match_number):
             self.__fill_match_lists__(k)
-            self.__train_on_old_and_new_data__(policy.col_id)
+            self.__train_models__(policy.col_id)
             x_data = self.get_x_test(1, policy.col_id)
             predict_probability = self.__get_predict_probability__(x_data)
             knn_neighbours = list(self.knn_clf.kneighbors(x_data, return_distance=False))
@@ -305,15 +309,15 @@ class WorldCupModel:
         print('Checked policy {:3}: {}'.format(policy_number, policy.details_with_reward))
 
     def __get_predict_probability__(self, x_data):
-        predict_probability = self.forest_clf.predict_proba(x_data).round(2)
+        # predict_probability = self.forest_clf.predict_proba(x_data).round(2)
         # predict_probability = self.log_reg.predict_proba(x_data).round(2)
-        # predict_probability = self.knn_clf.predict_proba(x_data).round(2)
+        predict_probability = self.knn_clf.predict_proba(x_data).round(2)
         return predict_probability
 
     def __init_models__(self, policy: Policy):
         self.forest_clf = RandomForestClassifier(n_estimators=policy.n_estimators, random_state=42)
         self.log_reg = LogisticRegression()
-        self.knn_clf = KNeighborsClassifier(n_neighbors=7)
+        self.knn_clf = KNeighborsClassifier(n_neighbors=7, weights='distance')
 
     def get_neighbour_match_list(self, knn_neighbour_index_list) -> list:
         return [self.match_train_list[index] for index in knn_neighbour_index_list]
@@ -323,11 +327,11 @@ class WorldCupModel:
         self.__init_models__(policy)
         self.__init_world_cups_by_red_enh_factor__(policy.red_factor, policy.enh_factor)
         self.__fill_match_lists__(self.first_open_match_number)
-        self.__train_on_old_and_new_data__(policy.col_id, False)
+        self.__train_models__(policy.col_id, False)
         offset_number = self.first_open_match_number
-        x_data = self.get_x_test(matches, policy.col_id)
-        predict_probability = self.__get_predict_probability__(x_data)
-        knn_neighbours = list(self.knn_clf.kneighbors(x_data, return_distance=False))
+        x_test_data = self.get_x_test(matches, policy.col_id)
+        predict_probability = self.__get_predict_probability__(x_test_data)
+        knn_neighbours = list(self.knn_clf.kneighbors(x_test_data, return_distance=False))
         for number in range(offset_number, offset_number + matches):
             match = self.world_cup_2018.match_list.get_match(number)
             index = offset_number - number
@@ -335,6 +339,7 @@ class WorldCupModel:
             match.simulate_by_probabilities(predict_probability[number - offset_number], neighbours_match_list)
             match.print()
             self.__match_prediction_list.add_match_prediction(WorldCupMatchPrediction(match))
+        self.__plot_train_data__(matches)
         if write_to_page:
             self.__write_to_web_page__(self.__match_prediction_list.get_best_match_prediction_list())
 
@@ -349,7 +354,7 @@ class WorldCupModel:
         browser = MyUrlBrowser4WM2018Watson()
         browser.add_results(result_list)
 
-    def __train_on_old_and_new_data__(self, col_id: int, perform_test = False):
+    def __train_models__(self, col_id: int, perform_test = False):
         x_train = self.get_x_train(col_id)
         if perform_test:
             self.__perform_test_on_training_data__(x_train, self.y_train)
@@ -369,27 +374,65 @@ class WorldCupModel:
         print('\n')
         print(classification_report(y_input, rfc_pred))
 
+    def __plot_train_data__(self, number_matches: int):
+        classes = ['No winner', 'Team 1', 'Team 2', 'Test match']
+        c_light = ['#FFAAAA', '#AAFFAA', '#AAAAFF', 'k']
+        matches = []
+        for i in range(0, len(c_light)):
+            matches.append(mpatches.Rectangle((0, 0), 1, 1, fc=c_light[i]))
+        cmap_light = ListedColormap(c_light[:3])
+        cmap_bold = ListedColormap(['#FF0000', '#00FF00', '#0000FF'])
+        self.__train_models__(4)
+        x_train = self.get_x_train(4)  # normal ranking
+        x_test = self.get_x_test(number_matches, 4)
+        x_min, x_max = x_train[:, 0].min() - 1, x_train[:, 0].max() + 1
+        y_min, y_max = x_train[:, 1].min() - 1, x_train[:, 1].max() + 1
+        h = round((max(x_max, y_max) - min (x_min, y_min))/100,2) # step size in the mesh
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                             np.arange(y_min, y_max, h))
+        x = np.c_[xx.ravel(), yy.ravel()]
+
+        clf_list = [self.forest_clf, self.log_reg, self.knn_clf]
+        title_list = ['Random_Forest', 'Logistic_Regression', 'K-Nearest Neighbors: {}'.format(7)]
+
+        f, axes = plt.subplots(len(clf_list), 1, sharex='col', figsize=(7, 10))
+        plt.tight_layout()
+
+        for index, clfs in enumerate(clf_list):
+            ax = axes[index]
+            Z = clfs.predict(np.c_[xx.ravel(), yy.ravel()])
+            Z = Z.reshape(xx.shape)
+            ax.pcolormesh(xx, yy, Z, cmap=cmap_light)
+            ax.scatter(x_train[:, 0], x_train[:, 1], c=self.y_train, cmap=cmap_bold, label='Test')
+            ax.scatter(x_test[:, 0], x_test[:, 1], c=c_light[-1])
+            for i in range(0, x_test.shape[0]):
+                match = self.match_test_list[i]
+                ax.annotate(match.annotation, (x_test[i, 0], x_test[i, 1]))
+            ax.legend(matches, classes, loc='upper right')
+            ax.set_title(title_list[index])
+        plt.show()
+
 
 model = WorldCupModel()
 
-with_policy_list = True
+with_policy_list = False
 over_best_policy_list = True
+next_matches = 13
 
 if with_policy_list:
     policy_list = PolicyList(model, 10)
-    policy_list.find_best_policy_with_genetic_algorithm(1, 20, 4)
+    policy_list.find_best_policy_with_genetic_algorithm(5, 20, 4)
     policy_list.print_best_estimated_policy(policy_list.best_policy)
     if over_best_policy_list:
         for policy in policy_list.best_policy_list:
-            model.make_prediction_for_the_next_matches(policy, 6, False)
+            model.make_prediction_for_the_next_matches(policy, next_matches, False)
         model.print_match_prediction_summary()
     else:
-        model.make_prediction_for_the_next_matches(policy_list.best_policy, 6, False)
+        model.make_prediction_for_the_next_matches(policy_list.best_policy, next_matches, False)
 else:
-    best_policy = Policy(7, 35, 0.9, 0.6)
-    best_policy = Policy(7, 74, 0.9, 1.9)
+    best_policy = Policy(4, 74, 0.9, 1.9)
     # Policy: Columns = 7 (['N', 'SQUARED', 'SQRT']), Estimators = 74 / red_factor = 0.9, enh_factor = 1.9: Reward = 17
-    model.make_prediction_for_the_next_matches(best_policy, 6, False)
+    model.make_prediction_for_the_next_matches(best_policy, next_matches, False)
 
 
 

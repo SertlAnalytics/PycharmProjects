@@ -9,7 +9,7 @@ from world_cup_constants import FC
 from world_cup_configuration import config
 from world_cup_api import WorldCupRankingAdjustmentApi
 from world_cup_team import WorldCupTeam, WorldCupTeamList
-from world_cup_match import WorldCupMatch, WorldCupMatchList
+from world_cup_match import WorldCupMatch, WorldCupMatchList, WorldCupTable
 from world_cup_excel import WorldCupExcel
 import matplotlib.pyplot as plt
 from sertl_analytics.datafetcher.file_fetcher import FileFetcher
@@ -31,6 +31,7 @@ class WorldCup:
         self.match_list = WorldCupMatchList()
         self.__fill_match_list__()
         self.__print_statistics__()
+        self.table = WorldCupTable(self.team_list, self.match_list)
 
     def init_by_red_enh_factor(self, red_factor: float, enh_factor: float):
         self.team_list.reset_ranking_adjusted()
@@ -70,7 +71,10 @@ class WorldCup:
     def __adjust_ranking__(self, red_factor: float, enh_factor: float):
         for number in self.match_list.index_list:
             match = self.match_list.get_match(number)
-            match.adjust_ranking(red_factor, enh_factor)
+            # match.adjust_ranking(red_factor, enh_factor)
+            r_1, r_2 = self.table.get_ranking_before_match(match)
+            match.team_1_ranking_adjusted = r_1
+            match.team_2_ranking_adjusted = r_2
 
     def __update_data_in_source__(self):
         pass
@@ -86,6 +90,7 @@ class WorldCup:
             team = WorldCupTeam(row[0], row[1])
             self.__adjust_official_ranking__(team)
             self.team_list.add_team(team)
+        # self.team_list.print_list()
 
     def __adjust_official_ranking__(self, team: WorldCupTeam):
         if team.name == self.host:
