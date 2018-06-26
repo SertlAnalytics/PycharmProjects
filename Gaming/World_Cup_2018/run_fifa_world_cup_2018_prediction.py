@@ -417,7 +417,7 @@ model = WorldCupModel()
 
 with_policy_list = False
 over_best_policy_list = True
-next_matches = 13
+next_matches = 6
 
 if with_policy_list:
     policy_list = PolicyList(model, 10)
