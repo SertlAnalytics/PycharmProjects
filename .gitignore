@@ -107,3 +107,5 @@ Gaming/Stocks/stock_database/MyStocks.sqlite
 Gaming/Stocks/run_pattern_detection.py
 Gaming/Stocks/stock_database/run_import_stock_data.py
 BaseFunctions/sertl_analytics/pyurl/url_username_passwords.py
+*.html
+*.csv
