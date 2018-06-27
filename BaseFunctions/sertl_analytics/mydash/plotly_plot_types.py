@@ -21,7 +21,7 @@ import plotly.figure_factory as ff
 from plotly import tools
 
 
-class MyDash:
+class MyPlotly:
     def __init__(self):
         self.f = None
 
@@ -77,7 +77,7 @@ class MyDash:
         fig['layout'].update(  # access the layout directly!
             title='Hourly Temperatures, June 1-7, 2010'
         )
-        pyo.plot(fig, filename='AllThree.html')
+        pyo.plot(fig, filename='html_files/AllThree.html')
 
     def heatmap_exercise(self):
         df = pd.read_csv('data/flights.csv')
@@ -95,7 +95,7 @@ class MyDash:
         )
         # Create a fig from data and layout, and plot the fig
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution8.html')
+        pyo.plot(fig, filename='html_files/solution8.html')
 
         #######
         # Excellent! This shows two distinct trends - an increase in
@@ -111,7 +111,7 @@ class MyDash:
         group_labels = ['Snodgrass', 'Twain']
 
         fig = ff.create_distplot(hist_data, group_labels, bin_size=[.005, .005])
-        pyo.plot(fig, filename='SnodgrassTwainDistplot.html')
+        pyo.plot(fig, filename='html_files/SnodgrassTwainDistplot.html')
 
     def histograms(self):
         df = pd.read_csv('data/FremontBridgeBicycles.csv')
@@ -144,7 +144,7 @@ class MyDash:
             barmode='stack'
         )
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='fremont_bridge.html')
+        pyo.plot(fig, filename='html_files/fremont_bridge.html')
 
     def histogram_mpg(self):
         df = pd.read_csv('../data/mpg.csv')
@@ -158,7 +158,7 @@ class MyDash:
             1970's Era Vehicles"
         )
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='basic_histogram.html')
+        pyo.plot(fig, filename='html_files/basic_histogram.html')
 
     def histogram_gender(self):
         #######
@@ -182,7 +182,7 @@ class MyDash:
             title="Height comparison by gender"
         )
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='basic_histogram2.html')
+        pyo.plot(fig, filename='html_files/basic_histogram2.html')
 
     def box_plot(self):
         snodgrass = [.209, .205, .196, .210, .202, .207, .224, .223, .220, .201]
@@ -207,7 +207,7 @@ class MyDash:
             between Quintus Curtius Snodgrass and Mark Twain'
         )
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='box3.html')
+        pyo.plot(fig, filename='html_files/box3.html')
 
     def box_plot_exercise(self):
         df = pd.read_csv('data/abalone.csv')
@@ -235,7 +235,7 @@ class MyDash:
 
         # create a fig from data & layout, and plot the fig
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution5.html')
+        pyo.plot(fig, filename='html_files/solution5.html')
 
     def bubble_chart(self):
         file = 'data/mpg.csv'
@@ -258,7 +258,7 @@ class MyDash:
         # layout
         layout = go.Layout(title='Bubble Chart')
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='bubble.html')
+        pyo.plot(fig, filename='html_files/bubble.html')
 
     def bubble_chart_exercise(self):
         file = 'data/mpg.csv'
@@ -282,7 +282,7 @@ class MyDash:
 
         # create a fig from data & layout, and plot the fig
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution4.html')
+        pyo.plot(fig, filename='html_files/solution4.html')
 
 
     def bar_chart_with_csv_data(self):
@@ -323,7 +323,7 @@ class MyDash:
 
         # create a fig from data & layout, and plot the fig.
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution3b.html')
+        pyo.plot(fig, filename='html_files/solution3b.html')
 
     def lines_with_csv_data(self):
         file = 'data/nst-est2017-alldata.csv'
@@ -366,7 +366,7 @@ class MyDash:
 
         # Create a fig from data and layout, and plot the fig
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution2b.html')
+        pyo.plot(fig, filename='html/solution2b.html')
 
     def lines(self):
         np.random.seed(56)
@@ -391,7 +391,7 @@ class MyDash:
         # layout
         layout = go.Layout(title='Line Object')
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='lines.html')
+        pyo.plot(fig, filename='html/lines.html')
 
     def scatter(self):
         np.random.seed(42)
@@ -411,7 +411,7 @@ class MyDash:
         layout = go.Layout(title='Title', xaxis={'title': 'My X AXIS'}, yaxis={'title': 'My X AXIS'},
                            hovermode='closest')
         fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='scatter.html')
+        pyo.plot(fig, filename='html/scatter.html')
 
 
     def print(self):
@@ -445,5 +445,6 @@ class MyDash:
         print(mydata.info())
         print(mydata)
 
-my_dash = MyDash()
-my_dash.heatmap_exercise()
+
+my_plotly = MyPlotly()
+my_plotly.heatmap_exercise()

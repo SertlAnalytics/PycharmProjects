@@ -6,24 +6,42 @@ Date: 2018-06-17
 """
 
 
-import pandas as pd
 import sertl_analytics.environment  # init some environment variables during load - for security reasons
 from dash import Dash
+import matplotlib
 import matplotlib.pyplot as plt
-import pandas_datareader.data as web
-from datetime import datetime
-import quandl
-import os
-import numpy as np
 import plotly.offline as pyo
 import plotly.graph_objs as go
 import plotly.figure_factory as ff
-from plotly import tools
+import dash_core_components as dcc
+import dash_html_components as html
+import numpy as np
+from textwrap import dedent
+from dash.dependencies import Input, Output, State
+import base64
+import json
+from numpy import random
+import pandas_datareader.data as web  # requires v0.6.0 or later
+import dash_auth
+from datetime import datetime
+import pandas as pd
+import requests
+
+
+USERNAME_PASSWORD_PAIRS = [['JamesBond', '007'],['LouisArmstrong', 'satchmo']]
 
 
 class MyDash:
     def __init__(self):
-        self.f = None
+        self.app = Dash()
+        self.auth = dash_auth.BasicAuth(self.app, USERNAME_PASSWORD_PAIRS)
+        if __name__ != '__main__':
+            self.server = self.app.server
+        self.df = None
+
+    def run_on_server(self):
+        if __name__ == '__main__':
+            self.app.run_server()
 
     def read_csv(self):
         self.df = pd.read_csv('salaries.csv')
@@ -33,417 +51,911 @@ class MyDash:
         # Dash.config
         plt.show()
 
-    def heatmap(self):
-        #######
-        # Side-by-side heatmaps for Sitka, Alaska,
-        # Santa Barbara, California and Yuma, Arizona
-        # using a shared temperature scale.
-        ######
-
-        df1 = pd.read_csv('data/2010SitkaAK.csv')
-        df2 = pd.read_csv('data/2010SantaBarbaraCA.csv')
-        df3 = pd.read_csv('data/2010YumaAZ.csv')
-
-        trace1 = go.Heatmap(
-            x=df1['DAY'],
-            y=df1['LST_TIME'],
-            z=df1['T_HR_AVG'],
-            colorscale='Jet',
-            zmin=5, zmax=40  # add max/min color values to make each plot consistent
-        )
-        trace2 = go.Heatmap(
-            x=df2['DAY'],
-            y=df2['LST_TIME'],
-            z=df2['T_HR_AVG'],
-            colorscale='Jet',
-            zmin=5, zmax=40
-        )
-        trace3 = go.Heatmap(
-            x=df3['DAY'],
-            y=df3['LST_TIME'],
-            z=df3['T_HR_AVG'],
-            colorscale='Jet',
-            zmin=5, zmax=40
-        )
-
-        fig = tools.make_subplots(rows=1, cols=3,
-                                  subplot_titles=('Sitka, AK', 'Santa Barbara, CA', 'Yuma, AZ'),
-                                  shared_yaxes=True,  # this makes the hours appear only on the left
-                                  )
-        fig.append_trace(trace1, 1, 1)
-        fig.append_trace(trace2, 1, 2)
-        fig.append_trace(trace3, 1, 3)
-
-        fig['layout'].update(  # access the layout directly!
-            title='Hourly Temperatures, June 1-7, 2010'
-        )
-        pyo.plot(fig, filename='AllThree.html')
-
-    def heatmap_exercise(self):
-        df = pd.read_csv('data/flights.csv')
-
-        # Define a data variable
-        data = [go.Heatmap(
-            x=df['year'],
-            y=df['month'],
-            z=df['passengers']
-        )]
-
-        # Define the layout
-        layout = go.Layout(
-            title='Flights'
-        )
-        # Create a fig from data and layout, and plot the fig
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution8.html')
-
-        #######
-        # Excellent! This shows two distinct trends - an increase in
-        # passengers flying over the years, and a greater number of
-        # passengers flying in the summer months.
-        ######
-
-    def distribution_plot(self):
-        snodgrass = [.209, .205, .196, .210, .202, .207, .224, .223, .220, .201]
-        twain = [.225, .262, .217, .240, .230, .229, .235, .217]
-
-        hist_data = [snodgrass, twain]
-        group_labels = ['Snodgrass', 'Twain']
-
-        fig = ff.create_distplot(hist_data, group_labels, bin_size=[.005, .005])
-        pyo.plot(fig, filename='SnodgrassTwainDistplot.html')
-
-    def histograms(self):
-        df = pd.read_csv('data/FremontBridgeBicycles.csv')
-
-        # Convert the "Date" text column to a Datetime series:
-        df['Date'] = pd.to_datetime(df['Date'])
-
-        # Add a column to hold the hour:
-        df['Hour'] = df['Date'].dt.time
-
-        # Let pandas perform the aggregation
-        df2 = df.groupby('Hour').sum()
-
-        trace1 = go.Bar(
-            x=df2.index,
-            y=df2['Fremont Bridge West Sidewalk'],
-            name="Southbound",
-            width=1  # eliminates space between adjacent bars
-        )
-        trace2 = go.Bar(
-            x=df2.index,
-            y=df2['Fremont Bridge East Sidewalk'],
-            name="Northbound",
-            width=1
-        )
-        data = [trace1, trace2]
-
-        layout = go.Layout(
-            title='Fremont Bridge Bicycle Traffic by Hour',
-            barmode='stack'
-        )
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='fremont_bridge.html')
-
-    def histogram_mpg(self):
-        df = pd.read_csv('../data/mpg.csv')
-
-        data = [go.Histogram(
-            x=df['mpg']
-        )]
-
-        layout = go.Layout(
-            title="Miles per Gallon Frequencies of<br>\
-            1970's Era Vehicles"
-        )
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='basic_histogram.html')
-
-    def histogram_gender(self):
-        #######
-        # This histogram compares heights by gender
-        ######
-        df = pd.read_csv('data/arrhythmia.csv')
-
-        data = [go.Histogram(
-            x=df[df['Sex'] == 0]['Height'],
-            opacity=0.75,
-            name='Male'
-        ),
-            go.Histogram(
-                x=df[df['Sex'] == 1]['Height'],
-                opacity=0.75,
-                name='Female'
-            )]
-
-        layout = go.Layout(
-            barmode='overlay',
-            title="Height comparison by gender"
-        )
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='basic_histogram2.html')
-
-    def box_plot(self):
-        snodgrass = [.209, .205, .196, .210, .202, .207, .224, .223, .220, .201]
-        twain = [.225, .262, .217, .240, .230, .229, .235, .217]
-
-        data = [
-            go.Box(
-                y=snodgrass,
-                name='QCS',
-                boxpoints='all',
-                jitter=0.3,
-                pointpos=0
+    def app_with_http_basic_autentication(self):
+        self.app.layout = html.Div([
+            dcc.RangeSlider(
+                id='range-slider',
+                min=-5,
+                max=6,
+                marks={i: str(i) for i in range(-5, 7)},
+                value=[-3, 4]
             ),
-            go.Box(
-                y=twain,
-                name='MT',
-                boxpoints='outliers'
+            html.H1(id='product')  # this is the output
+        ], style={'width': '50%'})
+
+        @self.app.callback(
+            Output('product', 'children'),
+            [Input('range-slider', 'value')])
+        def update_value(value_list):
+            return value_list[0] * value_list[1]
+
+    def live_update_by_interval_web_data(self):
+        self.app.layout = html.Div([
+            html.Div([
+                html.Iframe(src='https://www.sertl-analytics.com', height=500, width=1200)
+            ]),
+
+            html.Div([
+                html.Pre(
+                    id='counter_text',
+                    children='Active flights worldwide:'
+                ),
+                dcc.Graph(id='live-update-graph', style={'width': 1200}),
+                dcc.Interval(
+                    id='interval-component',
+                    interval=6000,  # 6000 milliseconds = 6 seconds
+                    n_intervals=0
+                )])
+        ])
+        counter_list = []
+
+        @self.app.callback(Output('counter_text', 'children'),
+                      [Input('interval-component', 'n_intervals')])
+        def update_layout(n):
+            url = "https://data-live.flightradar24.com/zones/fcgi/feed.js?faa=1\
+                   &mlat=1&flarm=1&adsb=1&gnd=1&air=1&vehicles=1&estimated=1&stats=1"
+            # A fake header is necessary to access the site:
+            res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
+            data = res.json()
+            counter = 0
+            for element in data["stats"]["total"]:
+                counter += data["stats"]["total"][element]
+            counter_list.append(counter)
+            return 'Active flights worldwide: {}'.format(counter)
+
+        @self.app.callback(Output('live-update-graph', 'figure'),
+                      [Input('interval-component', 'n_intervals')])
+        def update_graph(n):
+            fig = go.Figure(
+                data=[go.Scatter(
+                    x=list(range(len(counter_list))),
+                    y=counter_list,
+                    mode='lines+markers'
+                )])
+            return fig
+
+    def live_update_by_interval(self):
+        self.app.layout = html.Div([
+            html.H1(id='live-update-text'),
+            dcc.Interval(
+                id='interval-component',
+                interval=2000,  # 2000 milliseconds = 2 seconds
+                n_intervals=0
             )
-        ]
-        layout = go.Layout(
-            title='Comparison of three-letter-word frequencies<br>\
-            between Quintus Curtius Snodgrass and Mark Twain'
-        )
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='box3.html')
+        ])
 
-    def box_plot_exercise(self):
-        df = pd.read_csv('data/abalone.csv')
+        @self.app.callback(Output('live-update-text', 'children'),
+                      [Input('interval-component', 'n_intervals')])
+        def update_layout(n):
+            return 'Crash free for {} refreshes'.format(n)
 
-        # take two random samples of different sizes:
-        a = np.random.choice(df['rings'], 30, replace=False)
-        b = np.random.choice(df['rings'], 100, replace=False)
-
-        # create a data variable with two Box plots:
-        data = [
-            go.Box(
-                y=a,
-                name='A'
-            ),
-            go.Box(
-                y=b,
-                name='B'
-            )
-        ]
-
-        # add a layout
-        layout = go.Layout(
-            title='Comparison of two samples taken from the same population'
-        )
-
-        # create a fig from data & layout, and plot the fig
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution5.html')
-
-    def bubble_chart(self):
-        file = 'data/mpg.csv'
-        df = pd.read_csv(file)
-        print(df.head())
-        print(df.info())
-        print(df.columns)
-        trace_0 = go.Scatter(x=df['horsepower'],
-                             y=df['mpg'],
-                             text=df['name'],
-                             mode='markers',
-                             marker=dict(
-                                 size=2*df['cylinders'],
-                                 color=df['cylinders'],
-                                 showscale=True
-                             )
-                        )
-
-        data = [trace_0]
-        # layout
-        layout = go.Layout(title='Bubble Chart')
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='bubble.html')
-
-    def bubble_chart_exercise(self):
-        file = 'data/mpg.csv'
-        df = pd.read_csv(file)
-        # create data by choosing fields for x, y and marker size attributes
-        data = [go.Scatter(
-            x=df['displacement'],
-            y=df['acceleration'],
-            text=df['name'],
-            mode='markers',
-            marker=dict(size=df['weight'] / 500)
-        )]
-
-        # create a layout with a title and axis labels
-        layout = go.Layout(
-            title='Vehicle acceleration vs. displacement',
-            xaxis=dict(title='displacement'),
-            yaxis=dict(title='acceleration = seconds to reach 60mph'),
-            hovermode='closest'
-        )
-
-        # create a fig from data & layout, and plot the fig
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution4.html')
-
-
-    def bar_chart_with_csv_data(self):
-        file = 'data/2018WinterOlympics.csv'
-        df = pd.read_csv(file)
-        # df_2 = df[df['DIVISION'] == '1']
-        # df_2.set_index('NAME', inplace=True)
-        # df_3 = df_2[[col for col in df_2.columns if col.startswith('POP')]]
-        print(df.head())
-        print(df.info())
-
-        trace_0 = go.Bar(x=df['NOC'], y=df['Gold'], name='Gold', marker={'color':'#FFD700'})
-        trace_1 = go.Bar(x=df['NOC'], y=df['Silver'], name='Silver', marker={'color':'#9EA0A1'})
-        trace_2 = go.Bar(x=df['NOC'], y=df['Bronze'], name='Bronze', marker={'color':'#CD7F32'})
-
-        data = [trace_0, trace_1, trace_2]
-        layout = go.Layout(title='Medals')
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig)
-
-    def bar_chart_exercise(self):
-        # create a DataFrame from the .csv file:
-        df = pd.read_csv('data/mocksurvey.csv', index_col=0)
-
-        # create traces using a list comprehension:
-        data = [go.Bar(
-            y=df.index,  # reverse your x- and y-axis assignments
-            x=df[response],
-            orientation='h',  # this line makes it horizontal!
-            name=response
-        ) for response in df.columns]
-
-        # create a layout, remember to set the barmode here
-        layout = go.Layout(
-            title='Mock Survey Results',
-            barmode='stack'
-        )
-
-        # create a fig from data & layout, and plot the fig.
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution3b.html')
-
-    def lines_with_csv_data(self):
-        file = 'data/nst-est2017-alldata.csv'
-        df = pd.read_csv(file)
-        df_2 = df[df['DIVISION'] == '1']
-        df_2.set_index('NAME', inplace=True)
-        df_3 = df_2[[col for col in df_2.columns if col.startswith('POP')]]
-        print(df_3.head())
-        print(df_3.info())
-
-        data = [go.Scatter(x=[col[-4:] for col in df_3.columns], y=df_3.loc[name], mode='lines', name=name) for name in df_3.index]
-        pyo.plot(data)
-
-    def line_chart_exercise(self):
-        ####################
-        ## NOTE: ADVANCED SOLUTION THAT USES ONLY PURE DF CALLS
-        ## THIS IS FOR MORE ADVANCED PANDAS USERS TO TAKE A LOOK AT! :)
-
+    def get_stock_prices(self):
         #######
-        # Objective: Using the file 2010YumaAZ.csv, develop a Line Chart
-        # that plots seven days worth of temperature data on one graph.
-        # You can use a for loop to assign each day to its own trace.
+        # First Milestone Project: Develop a Stock Ticker
+        # dashboard that either allows the user to enter
+        # a ticker symbol into an input box, or to select
+        # item(s) from a dropdown list, and uses pandas_datareader
+        # to look up and display stock data on a graph.
         ######
 
-        # Create a pandas DataFrame from 2010YumaAZ.csv
-        df = pd.read_csv('data/2010YumaAZ.csv')
+        # EXPAND STOCK SYMBOL INPUT TO PERMIT MULTIPLE STOCK SELECTION
+        nsdq = pd.read_csv('data/NASDAQcompanylist.csv')
+        nsdq.set_index('Symbol', inplace=True)
+        options = []
+        for tic in nsdq.index:
+            options.append({'label': '{} {}'.format(tic, nsdq.loc[tic]['Name']), 'value': tic})
 
-        # Define a data variable
-        data = [{
-            'x': df['LST_TIME'],
-            'y': df[df['DAY'] == day]['T_HR_AVG'],
-            'name': day
-        } for day in df['DAY'].unique()]
+            self.app.layout = html.Div([
+            html.H1('Stock Ticker Dashboard'),
+            html.Div([
+                html.H3('Select stock symbols:', style={'paddingRight': '30px'}),
+                dcc.Dropdown(
+                    id='my_ticker_symbol',
+                    options=options,
+                    value=['TSLA'],
+                    multi=True
+                )
+            ], style={'display': 'inline-block', 'verticalAlign': 'top', 'width': '30%'}),
+            html.Div([
+                html.H3('Select start and end dates:'),
+                dcc.DatePickerRange(
+                    id='my_date_picker',
+                    min_date_allowed=datetime(2015, 1, 1),
+                    max_date_allowed=datetime.today(),
+                    start_date=datetime(2018, 1, 1),
+                    end_date=datetime.today()
+                )
+            ], style={'display': 'inline-block'}),
+            html.Div([
+                html.Button(
+                    id='submit-button',
+                    n_clicks=0,
+                    children='Submit',
+                    style={'fontSize': 24, 'marginLeft': '30px'}
+                ),
+            ], style={'display': 'inline-block'}),
+            dcc.Graph(
+                id='my_graph',
+                figure={
+                    'data': [
+                        {'x': [1, 2], 'y': [3, 1]}
+                    ]
+                }
+            )
+        ])
 
-        # Define the layout
-        layout = go.Layout(
-            title='Daily temperatures from June 1-7, 2010 in Yuma, Arizona',
-            hovermode='closest'
+        @self.app.callback(
+            Output('my_graph', 'figure'),
+            [Input('submit-button', 'n_clicks')],
+            [State('my_ticker_symbol', 'value'),
+             State('my_date_picker', 'start_date'),
+             State('my_date_picker', 'end_date')])
+        def update_graph(n_clicks, stock_ticker, start_date, end_date):
+            start = datetime.strptime(start_date[:10], '%Y-%m-%d')
+            end = datetime.strptime(end_date[:10], '%Y-%m-%d')
+            traces = []
+            for tic in stock_ticker:
+                df = web.DataReader(tic, 'iex', start, end)
+                traces.append({'x': df.index, 'y': df.close, 'name': tic})
+            fig = {
+                'data': traces,
+                'layout': {'title': ', '.join(stock_ticker) + ' Closing Prices'}
+            }
+            return fig
+
+    def update_graph_on_interaction(self):
+        df = pd.read_csv('data/mpg.csv')
+
+        # Add a random "jitter" to model_year to spread out the plot
+        df['year'] = df['model_year'] + random.randint(-4, 5, len(df)) * 0.10
+
+        self.app.layout = html.Div([
+            html.Div([  # this Div contains our scatter plot
+                dcc.Graph(
+                    id='mpg_scatter',
+                    figure={
+                        'data': [go.Scatter(
+                            x=df['year'] + 1900,  # our "jittered" data
+                            y=df['mpg'],
+                            text=df['name'],
+                            hoverinfo='text',
+                            mode='markers'
+                        )],
+                        'layout': go.Layout(
+                            title='mpg.csv dataset',
+                            xaxis={'title': 'model year'},
+                            yaxis={'title': 'miles per gallon'},
+                            hovermode='closest'
+                        )
+                    }
+                )], style={'width': '50%', 'display': 'inline-block'}),
+            html.Div([  # this Div contains our output graph and vehicle stats
+                dcc.Graph(
+                    id='mpg_line',
+                    figure={
+                        'data': [go.Scatter(
+                            x=[0, 1],
+                            y=[0, 1],
+                            mode='lines'
+                        )],
+                        'layout': go.Layout(
+                            title='acceleration',
+                            margin={'l': 0}
+                        )
+                    }
+                ),
+                dcc.Markdown(
+                    id='mpg_stats'
+                )
+            ], style={'width': '20%', 'height': '50%', 'display': 'inline-block'})
+        ])
+
+        @self.app.callback(
+            Output('mpg_line', 'figure'),
+            [Input('mpg_scatter', 'hoverData')])
+        def callback_graph(hoverData):
+            v_index = hoverData['points'][0]['pointIndex']
+            fig = {
+                'data': [go.Scatter(
+                    x=[0, 1],
+                    y=[0, 60 / df.iloc[v_index]['acceleration']],
+                    mode='lines',
+                    line={'width': 2 * df.iloc[v_index]['cylinders']}
+                )],
+                'layout': go.Layout(
+                    title=df.iloc[v_index]['name'],
+                    xaxis={'visible': False},
+                    yaxis={'visible': False, 'range': [0, 60 / df['acceleration'].min()]},
+                    margin={'l': 0},
+                    height=300
+                )
+            }
+            return fig
+
+        @self.app.callback(
+            Output('mpg_stats', 'children'),
+            [Input('mpg_scatter', 'hoverData')])
+        def callback_stats(hoverData):
+            v_index = hoverData['points'][0]['pointIndex']
+            stats = """
+                {} cylinders
+                {}cc displacement
+                0 to 60mph in {} seconds
+                """.format(df.iloc[v_index]['cylinders'],
+                           df.iloc[v_index]['displacement'],
+                           df.iloc[v_index]['acceleration'])
+            return stats
+
+    def handle_select_with_density(self):
+        # create x and y arrays
+        np.random.seed(10)  # for reproducible results
+        x1 = np.linspace(0.1, 5, 50)  # left half
+        x2 = np.linspace(5.1, 10, 50)  # right half
+        y = np.random.randint(0, 50, 50)  # 50 random points
+
+        # create three "half DataFrames"
+        df1 = pd.DataFrame({'x': x1, 'y': y})
+        df2 = pd.DataFrame({'x': x1, 'y': y})
+        df3 = pd.DataFrame({'x': x2, 'y': y})
+
+        # combine them into one DataFrame (df1 and df2 points overlap!)
+        df = pd.concat([df1, df2, df3])
+
+        self.app.layout = html.Div([
+            html.Div([
+                dcc.Graph(
+                    id='plot',
+                    figure={
+                        'data': [
+                            go.Scatter(
+                                x=df['x'],
+                                y=df['y'],
+                                mode='markers'
+                            )
+                        ],
+                        'layout': go.Layout(
+                            title='Random Scatterplot',
+                            hovermode='closest'
+                        )
+                    }
+                )], style={'width': '30%', 'display': 'inline-block'}),
+
+            html.Div([
+                html.H1(id='density', style={'paddingTop': 25})
+            ], style={'width': '30%', 'display': 'inline-block', 'verticalAlign': 'top'})
+        ])
+
+        @self.app.callback(
+            Output('density', 'children'),
+            [Input('plot', 'selectedData')])
+        def find_density(selectedData):
+            pts = len(selectedData['points'])
+            rng_or_lp = list(selectedData.keys())
+            rng_or_lp.remove('points')
+            max_x = max(selectedData[rng_or_lp[0]]['x'])
+            min_x = min(selectedData[rng_or_lp[0]]['x'])
+            max_y = max(selectedData[rng_or_lp[0]]['y'])
+            min_y = min(selectedData[rng_or_lp[0]]['y'])
+            area = (max_x - min_x) * (max_y - min_y)
+            d = pts / area
+            return 'Density = {:.2f}'.format(d)
+
+    def handle_select_data_with_json(self):
+        df = pd.read_csv('data/wheels.csv')
+
+        self.app.layout = html.Div([
+            html.Div([
+                dcc.Graph(
+                    id='wheels-plot',
+                    figure={
+                        'data': [
+                            go.Scatter(
+                                x=df['color'],
+                                y=df['wheels'],
+                                dy=1,
+                                mode='markers',
+                                marker={
+                                    'size': 12,
+                                    'color': 'rgb(51,204,153)',
+                                    'line': {'width': 2}
+                                }
+                            )
+                        ],
+                        'layout': go.Layout(
+                            title='Wheels & Colors Scatterplot',
+                            xaxis={'title': 'Color'},
+                            yaxis={'title': '# of Wheels', 'nticks': 3},
+                            hovermode='closest'
+                        )
+                    }
+                )], style={'width': '30%', 'float': 'left'}),
+
+            html.Div([
+                html.Pre(id='selection', style={'paddingTop': 35})
+            ], style={'width': '30%', 'display':'inline-block', 'verticalAlign': 'top'})
+        ])
+
+        @self.app.callback(
+            Output('selection', 'children'),
+            [Input('wheels-plot', 'selectedData')])
+        def callback_image(selectedData):
+            return json.dumps(selectedData, indent=2)
+
+    def handle_hover_over_with_img(self):
+        df = pd.read_csv('data/wheels.csv')
+
+        self.app.layout = html.Div([
+            html.Div([
+                dcc.Graph(
+                    id='wheels-plot',
+                    figure={
+                        'data': [
+                            go.Scatter(
+                                x=df['color'],
+                                y=df['wheels'],
+                                dy=1,
+                                mode='markers',
+                                marker={
+                                    'size': 12,
+                                    'color': 'rgb(51,204,153)',
+                                    'line': {'width': 2}
+                                }
+                            )
+                        ],
+                        'layout': go.Layout(
+                            title='Wheels & Colors Scatterplot',
+                            xaxis={'title': 'Color'},
+                            yaxis={'title': '# of Wheels', 'nticks': 3},
+                            hovermode='closest'
+                        )
+                    }
+                )], style={'width': '30%', 'float': 'left'}),
+
+            html.Div([
+                html.Img(id='hover-image', src='children', height=300)
+            ], style={'paddingTop': 35})
+        ])
+
+        @self.app.callback(
+            Output('hover-image', 'src'),
+            [Input('wheels-plot', 'hoverData')])
+        def callback_image(hoverData):
+            wheel = hoverData['points'][0]['y']
+            color = hoverData['points'][0]['x']
+            path = 'images/'
+            return self.encode_image(path + df[(df['wheels'] == wheel) & \
+                                          (df['color'] == color)]['image'].values[0])
+
+    def handle_hover_over_with_json(self):
+        df = pd.read_csv('data/wheels.csv')
+
+        self.app.layout = html.Div([
+            html.Div([
+                dcc.Graph(
+                    id='wheels-plot',
+                    figure={
+                        'data': [
+                            go.Scatter(
+                                x=df['color'],
+                                y=df['wheels'],
+                                dy=1,
+                                mode='markers',
+                                marker={
+                                    'size': 12,
+                                    'color': 'rgb(51,204,153)',
+                                    'line': {'width': 2}
+                                }
+                            )
+                        ],
+                        'layout': go.Layout(
+                            title='Wheels & Colors Scatterplot',
+                            xaxis={'title': 'Color'},
+                            yaxis={'title': '# of Wheels', 'nticks': 3},
+                            hovermode='closest'
+                        )
+                    }
+                )], style={'width': '30%', 'float': 'left'}),
+
+            html.Div([
+                html.Pre(id='hover-data', style={'paddingTop': 35})
+            ], style={'width': '30%', 'display':'inline-block', 'verticalAlign': 'top'})
+        ])
+
+        @self.app.callback(
+            Output('hover-data', 'children'),
+            [Input('wheels-plot', 'hoverData')])
+        def callback_image(hoverData):
+            return json.dumps(hoverData, indent=2)
+
+    def handle_callback_states(self):
+        self.app.layout = html.Div([
+            dcc.Input(
+                id='number-in',
+                value=1,
+                style={'fontSize': 28}
+            ),
+            html.Button(
+                id='submit-button',
+                n_clicks=0,
+                children='Submit',
+                style={'fontSize': 28}
+            ),
+            html.H1(id='number-out')
+        ])
+
+        @self.app.callback(
+            Output('number-out', 'children'),
+            [Input('submit-button', 'n_clicks')],
+            [State('number-in', 'value')])
+        def output(n_clicks, number):
+            return '{} displayed after {} clicks'.format(number, n_clicks)
+
+    def handle_callbacks_exercise(self):
+        # Create a Dash layout that contains input components
+        # and at least one output. Assign IDs to each component:
+        self.app.layout = html.Div([
+            dcc.RangeSlider(  # this is the input
+                id='range-slider',
+                min=-5,
+                max=6,
+                marks={i: str(i) for i in range(-5, 7)},
+                value=[-3, 4]
+            ),
+            html.H1(id='product')  # this is the output
+        ], style={'width': '50%'})
+
+        # Create a Dash callback:
+        @self.app.callback(
+            Output('product', 'children'),
+            [Input('range-slider', 'value')])
+        def update_value(value_list):
+            return value_list[0] * value_list[1]
+
+    @staticmethod
+    def encode_image(image_file):
+        encoded = base64.b64encode(open(image_file, 'rb').read())
+        return 'data:image/png;base64,{}'.format(encoded.decode())
+
+    def handle_callbacks_for_several_outputs_with_img(self):
+        df = pd.read_csv('data/wheels.csv')
+
+        self.app.layout = html.Div([
+            dcc.RadioItems(
+                id='wheels',
+                options=[{'label': i, 'value': i} for i in df['wheels'].unique()],
+                value=1
+            ),
+            html.Div(id='wheels-output'),
+
+            html.Hr(),  # add a horizontal rule
+            dcc.RadioItems(
+                id='colors',
+                options=[{'label': i, 'value': i} for i in df['color'].unique()],
+                value='blue'
+            ),
+            html.Div(id='colors-output'),
+            html.Img(id='display-image', src='children', height=300)
+        ], style={'fontFamily': 'helvetica', 'fontSize': 18})
+
+        @self.app.callback(
+            Output('wheels-output', 'children'),
+            [Input('wheels', 'value')])
+        def callback_a(wheels_value):
+            return 'You\'ve selected "{}"'.format(wheels_value)
+
+        @self.app.callback(
+            Output('colors-output', 'children'),
+            [Input('colors', 'value')])
+        def callback_b(colors_value):
+            return 'You\'ve selected "{}"'.format(colors_value)
+
+        @self.app.callback(
+            Output('display-image', 'src'),
+            [Input('wheels', 'value'),
+             Input('colors', 'value')])
+        def callback_image(wheel, color):
+            path = 'images/'
+            return self.encode_image(path + df[(df['wheels'] == wheel) & \
+                                          (df['color'] == color)]['image'].values[0])
+
+    def handle_callbacks_for_several_outputs(self):
+        df = pd.read_csv('data/wheels.csv')
+
+        self.app.layout = html.Div([
+            dcc.RadioItems(
+                id='wheels',
+                options=[{'label': i, 'value': i} for i in df['wheels'].unique()],
+                value=1
+            ),
+            html.Div(id='wheels-output'),
+
+            html.Hr(),  # add a horizontal rule
+            dcc.RadioItems(
+                id='colors',
+                options=[{'label': i, 'value': i} for i in df['color'].unique()],
+                value='blue'
+            ),
+            html.Div(id='colors-output')
+        ], style={'fontFamily': 'helvetica', 'fontSize': 18})
+
+        @self.app.callback(
+            Output('wheels-output', 'children'),
+            [Input('wheels', 'value')])
+        def callback_a(wheels_value):
+            return 'You\'ve selected "{}"'.format(wheels_value)
+
+        @self.app.callback(
+            Output('colors-output', 'children'),
+            [Input('colors', 'value')])
+        def callback_b(colors_value):
+            return 'You\'ve selected "{}"'.format(colors_value)
+
+    def handle_callbacks_for_several_inputs_on_stock_market(self):
+        df = pd.read_csv(
+            'https://gist.githubusercontent.com/chriddyp/'
+            'cb5392c35661370d95f300086accea51/raw/'
+            '8e0768211f6b747c0db42a9ce9a0937dafcbd8b2/'
+            'indicators.csv')
+
+        available_indicators = df['Indicator Name'].unique()
+
+        self.app.layout = html.Div([
+            html.Div([
+                html.Div([
+                    dcc.Dropdown(
+                        id='xaxis-column',
+                        options=[{'label': i, 'value': i} for i in available_indicators],
+                        value='Fertility rate, total (births per woman)'
+                    ),
+                    dcc.RadioItems(
+                        id='xaxis-type',
+                        options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
+                        value='Linear',
+                        labelStyle={'display': 'inline-block'}
+                    )
+                ],
+                    style={'width': '48%', 'display': 'inline-block'}),
+
+                html.Div([
+                    dcc.Dropdown(
+                        id='yaxis-column',
+                        options=[{'label': i, 'value': i} for i in available_indicators],
+                        value='Life expectancy at birth, total (years)'
+                    ),
+                    dcc.RadioItems(
+                        id='yaxis-type',
+                        options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
+                        value='Linear',
+                        labelStyle={'display': 'inline-block'}
+                    )
+                ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
+            ]),
+
+            dcc.Graph(id='indicator-graphic'),
+
+            dcc.Slider(
+                id='year--slider',
+                min=df['Year'].min(),
+                max=df['Year'].max(),
+                value=df['Year'].max(),
+                step=None,
+                marks={str(year): str(year) for year in df['Year'].unique()}
+            )
+        ], style={'padding': 10})
+
+        @self.app.callback(
+            Output('indicator-graphic', 'figure'),
+            [Input('xaxis-column', 'value'),
+             Input('yaxis-column', 'value'),
+             Input('xaxis-type', 'value'),
+             Input('yaxis-type', 'value'),
+             Input('year--slider', 'value')])
+        def update_graph(xaxis_column_name, yaxis_column_name,
+                         xaxis_type, yaxis_type,
+                         year_value):
+            dff = df[df['Year'] == year_value]
+            return {
+                'data': [go.Scatter(
+                    x=dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
+                    y=dff[dff['Indicator Name'] == yaxis_column_name]['Value'],
+                    text=dff[dff['Indicator Name'] == yaxis_column_name]['Country Name'],
+                    mode='markers',
+                    marker={
+                        'size': 15,
+                        'opacity': 0.5,
+                        'line': {'width': 0.5, 'color': 'white'}
+                    }
+                )],
+                'layout': go.Layout(
+                    xaxis={
+                        'title': xaxis_column_name,
+                        'type': 'linear' if xaxis_type == 'Linear' else 'log'
+                    },
+                    yaxis={
+                        'title': yaxis_column_name,
+                        'type': 'linear' if yaxis_type == 'Linear' else 'log'
+                    },
+                    margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
+                    hovermode='closest'
+                )
+            }
+
+    def handle_callbacks_for_several_inputs(self):
+        df = pd.read_csv('data/mpg.csv')
+
+        features = df.columns
+
+        self.app.layout = html.Div([
+
+            html.Div([
+                dcc.Dropdown(
+                    id='xaxis',
+                    options=[{'label': i.title(), 'value': i} for i in features],
+                    value='displacement'
+                )
+            ],
+                style={'width': '48%', 'display': 'inline-block'}),
+
+            html.Div([
+                dcc.Dropdown(
+                    id='yaxis',
+                    options=[{'label': i.title(), 'value': i} for i in features],
+                    value='acceleration'
+                )
+            ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'}),
+
+            dcc.Graph(id='feature-graphic')
+        ], style={'padding': 10})
+
+        @self.app.callback(
+            Output('feature-graphic', 'figure'),
+            [Input('xaxis', 'value'),
+             Input('yaxis', 'value')])
+        def update_graph(xaxis_name, yaxis_name):
+            return {
+                'data': [go.Scatter(
+                    x=df[xaxis_name],
+                    y=df[yaxis_name],
+                    text=df['name'],
+                    mode='markers',
+                    marker={
+                        'size': 15,
+                        'opacity': 0.5,
+                        'line': {'width': 0.5, 'color': 'white'}
+                    }
+                )],
+                'layout': go.Layout(
+                    xaxis={'title': xaxis_name.title()},
+                    yaxis={'title': yaxis_name.title()},
+                    margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
+                    hovermode='closest'
+                )
+            }
+
+    def handle_callbacks_for_single_input_and_graph(self):
+        # https://dash.plot.ly/dash-core-components/dropdown
+        # We need to construct a dictionary of dropdown values for the years
+        df = pd.read_csv('data/gapminderDataFiveYear.csv')
+
+        year_options = []
+        for year in df['year'].unique():
+            year_options.append({'label': str(year), 'value': year})
+
+        self.app.layout = html.Div([
+            dcc.Graph(id='graph'),
+            dcc.Dropdown(id='year-picker', options=year_options, value=df['year'].min())
+        ])
+
+        @self.app.callback(Output('graph', 'figure'),
+                      [Input('year-picker', 'value')])
+        def update_figure(selected_year):
+            filtered_df = df[df['year'] == selected_year]
+            traces = []
+            for continent_name in filtered_df['continent'].unique():
+                df_by_continent = filtered_df[filtered_df['continent'] == continent_name]
+                traces.append(go.Scatter(
+                    x=df_by_continent['gdpPercap'],
+                    y=df_by_continent['lifeExp'],
+                    text=df_by_continent['country'],
+                    mode='markers',
+                    opacity=0.7,
+                    marker={'size': 15},
+                    name=continent_name
+                ))
+
+            return {
+                'data': traces,
+                'layout': go.Layout(
+                    xaxis={'type': 'log', 'title': 'GDP Per Capita'},
+                    yaxis={'title': 'Life Expectancy'},
+                    hovermode='closest'
+                )
+            }
+
+    def embed_callbacks_input_div(self):
+        self.app.layout = html.Div([
+            dcc.Input(id='my-id', value='initial value', type='text'),
+            html.Div(id='my-div', style={'border': '2px blue solid'}, children='Start')
+        ])
+
+        @self.app.callback(
+            Output(component_id='my-div', component_property='children'),
+            [Input(component_id='my-id', component_property='value')]
         )
+        def update_output_div(input_value):
+            return 'You\'ve entered "{}"'.format(input_value)
 
-        # Create a fig from data and layout, and plot the fig
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='solution2b.html')
+    def embed_markdowns(self):
+        markdown_text = dedent('''
+        ### Dash and Markdown
+        Dash apps can be written in Markdown.
+        Dash uses the [CommonMark](http://commonmark.org/) specification of Markdown.
+        Check out their [60 Second Markdown Tutorial](http://commonmark.org/help/)
+        if this is your first introduction to Markdown!
+        Markdown includes syntax for things like **bold text** and *italics*,
+        [Link](http://commonmark.org/help), inline `code` snippets, lists,
+        quotes, and more.
+        ''')
 
-    def lines(self):
-        np.random.seed(56)
-        x_values = np.linspace(0, 1, 100)
-        y_values = np.random.randn(100)
-        trace_0 = go.Scatter(x=x_values,
-                           y=y_values + 5,
-                           mode='markers', name='markers'
-                        )
+        self.app.layout = html.Div([
+            dcc.Markdown(children=markdown_text)
+        ])
 
-        trace_1 = go.Scatter(x=x_values,
-                           y=y_values,
-                           mode='lines', name='markers'
-                        )
+    def embed_core_components(self):
+        #######
+        # This provides examples of Dash Core Components.
+        # Feel free to add things to it that you find useful.
+        ######
+        self.app.layout = html.Div([
 
-        trace_2 = go.Scatter(x=x_values,
-                             y=y_values - 5,
-                             mode='lines+markers', name='lines_markers'
-                             )
+            # DROPDOWN https://dash.plot.ly/dash-core-components/dropdown
+            html.Label('Dropdown'),
+            dcc.Dropdown(
+                options=[
+                    {'label': 'New York City', 'value': 'NYC'},
+                    {'label': 'Montréal', 'value': 'MTL'},
+                    {'label': 'San Francisco', 'value': 'SF'}
+                ],
+                value='MTL'
+            ),
 
-        data = [trace_0, trace_1, trace_2]
-        # layout
-        layout = go.Layout(title='Line Object')
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='lines.html')
+            html.Label('Multi-Select Dropdown'),
+            dcc.Dropdown(
+                options=[
+                    {'label': 'New York City', 'value': 'NYC'},
+                    {'label': u'Montréal', 'value': 'MTL'},
+                    {'label': 'San Francisco', 'value': 'SF'}
+                ],
+                value=['MTL', 'SF'],
+                multi=True
+            ),
 
-    def scatter(self):
+            # SLIDER https://dash.plot.ly/dash-core-components/slider
+            html.Label('Slider'),
+            html.P(
+                dcc.Slider(
+                    min=-5,
+                    max=10,
+                    step=0.5,
+                    marks={i: i for i in range(-5, 11)},
+                    value=-3
+                )),
+
+            # RADIO ITEMS https://dash.plot.ly/dash-core-components/radioitems
+            html.Label('Radio Items'),
+            dcc.RadioItems(
+                options=[
+                    {'label': 'New York City', 'value': 'NYC'},
+                    {'label': 'Montréal', 'value': 'MTL'},
+                    {'label': 'San Francisco', 'value': 'SF'}
+                ],
+                value='MTL'
+            )
+        ], style={'width': '50%'})
+
+    def embed_html_components(self):
+        #######
+        # This provides examples of Dash HTML Components.
+        # Feel free to add things to it that you find useful.
+        ######
+        self.app.layout = html.Div([
+            'This is the outermost Div',
+            html.Div(
+                'This is an inner Div',
+                style={'color': 'blue', 'border': '2px blue solid', 'borderRadius': 5,
+                       'padding': 10, 'width': 220}
+            ),
+            html.Div(
+                'This is another inner Div',
+                style={'color': 'green', 'border': '2px green solid',
+                       'margin': 10, 'width': 220}
+            ),
+        ],
+            # this styles the outermost Div:
+            style={'width': 500, 'height': 200, 'color': 'red', 'border': '2px red dotted'})
+
+    def embed_plotly_scatter(self):
+        # Creating DATA
         np.random.seed(42)
         random_x = np.random.randint(1, 101, 100)
         random_y = np.random.randint(1, 101, 100)
-        data = [go.Scatter(x=random_x,
-                           y=random_y,
-                           mode='markers',
-                           marker=dict(
-                                size=12,
-                                color='rgb(51,204, 153)',
-                                symbol='pentagon',
-                                line={'width':2}
-                                )
-                           )]
-        # layout
-        layout = go.Layout(title='Title', xaxis={'title': 'My X AXIS'}, yaxis={'title': 'My X AXIS'},
-                           hovermode='closest')
-        fig = go.Figure(data=data, layout=layout)
-        pyo.plot(fig, filename='scatter.html')
 
+        self.app.layout = html.Div([dcc.Graph(id='scatterplot',
+                                         figure={'data': [
+                                             go.Scatter(
+                                                 x=random_x,
+                                                 y=random_y,
+                                                 mode='markers',
+                                                 marker={
+                                                     'size': 12,
+                                                     'color': 'rgb(51,204,153)',
+                                                     'symbol': 'pentagon',
+                                                     'line': {'width': 2}
+                                                 }
+                                             )],
+                                             'layout': go.Layout(title='My Scatterplot',
+                                                                 xaxis={'title': 'Some X title'})}
+                                         ),
+                               dcc.Graph(id='scatterplot2',
+                                         figure={'data': [
+                                             go.Scatter(
+                                                 x=random_x,
+                                                 y=random_y,
+                                                 mode='markers',
+                                                 marker={
+                                                     'size': 12,
+                                                     'color': 'rgb(200,204,53)',
+                                                     'symbol': 'pentagon',
+                                                     'line': {'width': 2}
+                                                 }
+                                             )],
+                                             'layout': go.Layout(title='Second Plot',
+                                                                 xaxis={'title': 'Some X title'})}
+                                         )])
 
-    def print(self):
-        if self.f is None:
-            print('a')
+    def embed_graph(self):
+        colors = {
+            'background': '#111111',
+            'text': '#7FDBFF'
+        }
 
-    def read_stock_data_from_morningstar(self):
-        start = datetime(2015, 2, 9)
-        end = datetime(2018, 5, 24)
-        f = web.DataReader('BB', 'morningstar', start, end)
-        print(f)
-        # print(f.head())
+        self.app.layout = html.Div(children=[
+            html.H1(
+                children='Hello Dash',
+                style={
+                    'textAlign': 'center',
+                    'color': colors['text']
+                }
+            ),
 
-    def read_stock_data_from_quandl(self):
-        symbol = 'WIKI/AAPL'  # or 'AAPL.US'
-        symbol = 'FRED/GDP'
-        start = datetime(2015, 2, 9)
-        end = datetime(2018, 5, 24)
-        # df = web.DataReader(symbol, 'quandl', '2017-01-01', '2018-06-22')
-        quandl.ApiConfig.api_key = os.environ["quandl_apikey"]
-        mydata = quandl.get(symbol, start_date="2001-12-31", end_date="2018-12-31")
-        mydata = quandl.get_table('MER/F1', compnumber="39102", paginate=True)
-        # mydata = quandl.get_table('ZACKS/FC', ticker='AAPL')
-        mydata = quandl.get_table('WIKI/PRICES', qopts={'columns': ['ticker', 'date', 'close', 'open', 'high', 'low']},
-                                ticker=['AAPL', 'MSFT','FSE/EON_X'],
-                                date={'gte': '2016-01-01', 'lte': '2019-12-31'})
-        # mydata = quandl.get('FSE/EON_X', start_date='2016-01-01', end_date='2019-12-31', collapse='daily',
-        #                     transformation='rdiff', rows=2000)
-        mydata = quandl.get('FSE/EON_X', start_date='2016-01-01', end_date='2019-12-31', collapse='daily')
+            html.Div(
+                children='Dash: A web application framework for Python.',
+                style={
+                    'textAlign': 'center',
+                    'color': colors['text']
+                }
+            ),
 
-        print(mydata.info())
-        print(mydata)
+            dcc.Graph(
+                id='example-graph',
+                figure={
+                    'data': [
+                        {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
+                        {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
+                    ],
+                    'layout': {
+                        'plot_bgcolor': colors['background'],
+                        'paper_bgcolor': colors['background'],
+                        'font': {
+                            'color': colors['text']
+                        },
+                        'title': 'Dash Data Visualization'
+                    }
+                }
+            )],
+            style={'backgroundColor': colors['background']}
+        )
 
 my_dash = MyDash()
-my_dash.heatmap_exercise()
+my_dash.app_with_http_basic_autentication()
+my_dash.run_on_server()

@@ -24,10 +24,10 @@ class MyUrlBrowser:
         self.driver.get(self.__get_url__())
 
     def __get_url__(self):
-        if self._user_name == '':
-            return self._url
-        else:
+        if self._enforce_password_in_url:
             return 'https://' + self._user_name + ':' + self._password + '@wm2018.rs-home.com/'
+        else:
+            return self._url
 
     def __enter_and_submit_credentials__(self):
         dic = self.__get_credential_values__()
@@ -144,6 +144,29 @@ class MyUrlBrowser4WM2018Wladimir(MyUrlBrowser4WM2018):
     def __init__(self):
         MyUrlBrowser4WM2018.__init__(self, WebPasswords.WM2018_WLADIMIR[0], WebPasswords.WM2018_WLADIMIR[1])
 
+
+class MyUrlBrowser4CB(MyUrlBrowser):
+    def __init__(self):
+        _url = 'https://www.consorsbank.de/home'
+        MyUrlBrowser.__init__(self, _url, WebPasswords.CB_JS[0], WebPasswords.CB_JS[1])
+
+    def order_item(self, ticker: str, number: int):
+        self.__click_anmelden__()
+        self.__find_credential_fields__()
+        # self.__enter_and_submit_credentials__()
+
+    def __find_credential_fields__(self):
+        self.driver.implicitly_wait(10)
+        tags = self.driver.find_elements_by_tag_name('input')
+        for tag in tags:
+            print(tag.tag_name)
+
+    def __click_anmelden__(self):
+        link_anmelden = self.driver.find_element_by_xpath('//a[@class="button primary mini login ev-link-modal "]')
+        link_anmelden.click()
+
+    def __get_credential_values__(self) -> dict:
+        return {'EBUserName': self._user_name, 'EBPassword': self._password}
 
 # browser = MyUrlBrowser4WM2018Watson()
 # browser.add_results([[15, 6, 2], [16, 7, 3], [18, 7, 4]])
