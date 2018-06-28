@@ -24,6 +24,7 @@ import math
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from world_cup_configuration import config
 
 
 class ColumnHandler:
@@ -286,7 +287,7 @@ class WorldCupModel:
             self.match_train_list.append(self.world_cup_2018.match_list.get_match(number))
 
     def __fill_match_test_list__(self, off_set: int):
-        for number in range(off_set, self.world_cup_2018.match_list.length):
+        for number in range(off_set, self.world_cup_2018.match_list.length + 1):
             self.match_test_list.append(self.world_cup_2018.match_list.get_match(number))
 
     def __init_world_cups_by_red_enh_factor__(self, red_factor: float, enh_factor: float):
@@ -303,7 +304,7 @@ class WorldCupModel:
             predict_probability = self.__get_predict_probability__(x_data)
             knn_neighbours = list(self.knn_clf.kneighbors(x_data, return_distance=False))
             match = self.world_cup_2018.match_list.get_match(k)
-            neighbours_match_list = self.get_neighbour_match_list(knn_neighbours[0])
+            neighbours_match_list = self.get_knn_neighbour_match_list(knn_neighbours[0])
             match.simulate_by_probabilities(predict_probability[0], neighbours_match_list)
             policy.check_match_for_reward(match)
         print('Checked policy {:3}: {}'.format(policy_number, policy.details_with_reward))
@@ -319,7 +320,7 @@ class WorldCupModel:
         self.log_reg = LogisticRegression()
         self.knn_clf = KNeighborsClassifier(n_neighbors=7, weights='distance')
 
-    def get_neighbour_match_list(self, knn_neighbour_index_list) -> list:
+    def get_knn_neighbour_match_list(self, knn_neighbour_index_list) -> list:
         return [self.match_train_list[index] for index in knn_neighbour_index_list]
 
     def make_prediction_for_the_next_matches(self, policy: Policy, matches: int = 5, write_to_page = False):
@@ -335,7 +336,7 @@ class WorldCupModel:
         for number in range(offset_number, offset_number + matches):
             match = self.world_cup_2018.match_list.get_match(number)
             index = offset_number - number
-            neighbours_match_list = self.get_neighbour_match_list(knn_neighbours[index])
+            neighbours_match_list = self.get_knn_neighbour_match_list(knn_neighbours[index])
             match.simulate_by_probabilities(predict_probability[number - offset_number], neighbours_match_list)
             match.print()
             self.__match_prediction_list.add_match_prediction(WorldCupMatchPrediction(match))
@@ -415,24 +416,27 @@ class WorldCupModel:
 
 model = WorldCupModel()
 
-with_policy_list = False
-over_best_policy_list = True
-next_matches = 6
+config.with_policy_list = False
+config.over_best_policy_list = True
+config.next_matches = 4
+config.write_predictions_to_web_page = False
 
-if with_policy_list:
+if config.with_policy_list:
     policy_list = PolicyList(model, 10)
     policy_list.find_best_policy_with_genetic_algorithm(5, 20, 4)
     policy_list.print_best_estimated_policy(policy_list.best_policy)
-    if over_best_policy_list:
+    if config.over_best_policy_list:
         for policy in policy_list.best_policy_list:
-            model.make_prediction_for_the_next_matches(policy, next_matches, False)
+            model.make_prediction_for_the_next_matches(policy,
+                                                       config.next_matches, config.write_predictions_to_web_page)
         model.print_match_prediction_summary()
     else:
-        model.make_prediction_for_the_next_matches(policy_list.best_policy, next_matches, False)
+        model.make_prediction_for_the_next_matches(policy_list.best_policy,
+                                                   config.next_matches, config.write_predictions_to_web_page)
 else:
     best_policy = Policy(4, 74, 0.9, 1.9)
     # Policy: Columns = 7 (['N', 'SQUARED', 'SQRT']), Estimators = 74 / red_factor = 0.9, enh_factor = 1.9: Reward = 17
-    model.make_prediction_for_the_next_matches(best_policy, next_matches, False)
+    model.make_prediction_for_the_next_matches(best_policy, config.next_matches, config.write_predictions_to_web_page)
 
 
 

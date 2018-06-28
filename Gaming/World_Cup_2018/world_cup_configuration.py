@@ -12,6 +12,10 @@ class WorldCupConfiguration:
         self.__excel_2014_tabs = ['Fifa_world_cup_2014_matches', 'Ranking']
         self.__excel_2018_file = 'Fifa_world_cup_2018_matches.xlsx'
         self.__excel_2018_tabs = ['Fifa_world_cup_2018_matches', 'Ranking']
+        self.with_policy_list = False
+        self.over_best_policy_list = True
+        self.next_matches = 4
+        self.write_predictions_to_web_page = False
 
     @property
     def excel_2014_tabs(self):

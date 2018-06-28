@@ -2,12 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8753b97e-911c-4bcc-83a6-303341bc550b" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/mydash.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/mydash.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dash_basics.py" beforeDir="false" afterPath="$PROJECT_DIR$/dash_basics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dash_plot_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/plotly_plot_types.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pyurl/url_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyurl/url_process.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../../Gaming/World_Cup_2018/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Gaming/World_Cup_2018/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../../Gaming/World_Cup_2018/Fifa_world_cup_2018_matches.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Gaming/World_Cup_2018/Fifa_world_cup_2018_matches.xlsx" afterDir="false" />
@@ -21,7 +16,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -69,7 +64,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -95,6 +89,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="RecentsManager">
@@ -165,7 +160,7 @@
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32941177" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.32941177" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.32941177" />
       <window_info id="Favorites" order="2" side_tool="true" />
