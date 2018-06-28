@@ -154,6 +154,12 @@ class Pattern:
         if self.is_part_trade_available():
             self.__fill_trade_result__()
 
+    def get_maximal_trade_size(self) -> int:
+        if self.pattern_type in [FT.TKE_UP, FT.TKE_DOWN] and self.function_cont.f_var_cross_f_upper_f_lower != 0:
+            return self.function_cont.f_var_cross_f_upper_f_lower - self.function_cont.tick_for_helper.f_var
+        else:
+            return self.pattern_range.position_last - self.pattern_range.position_first
+
     @staticmethod
     def __get_constraint__():
         return cstr.Constraints()

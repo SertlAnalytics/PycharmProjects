@@ -60,9 +60,14 @@ class PatternRange:
         return stock_df.get_f_regression()
 
     def __get_actual_df_min_max__(self):
-        df_range = pdh.pattern_data.df_min_max[np.logical_and(
-            pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
-            pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_last.position)]
+        if self.tick_breakout_successor is None:
+            df_range = pdh.pattern_data.df_min_max[np.logical_and(
+                pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
+                pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_last.position)]
+        else:
+            df_range = pdh.pattern_data.df_min_max[np.logical_and(
+                pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
+                pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_breakout_successor.position)]
         return df_range
 
     @property
@@ -80,13 +85,10 @@ class PatternRange:
         self.__f_param_parallel = self.__get_parallel_function__()
         self.__f_param_const = self.__get_const_function__()
 
-    def get_maximal_trade_size_for_pattern_type(self, pattern_type: str) -> int:
-        return self.tick_last.position - self.tick_first.position
-
     def get_complementary_function_list(self, pattern_type: str) -> list:
         if pattern_type == FT.HEAD_SHOULDER:
             return [self.f_param_parallel]
-        elif pattern_type == FT.TKE_DOWN:
+        elif pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
             return [self.f_param_const]
         else:
             return [] if self._f_param_list is None else self._f_param_list

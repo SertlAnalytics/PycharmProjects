@@ -74,7 +74,7 @@ class PatternDetector:
 
     def __get_trade_df__(self, pattern: Pattern):
         left_pos = pattern.function_cont.tick_for_helper.position
-        right_pos_max = left_pos + pattern.pattern_range.get_maximal_trade_size_for_pattern_type(pattern.pattern_type)
+        right_pos_max = left_pos + pattern.get_maximal_trade_size()
         right_pos = min(right_pos_max, self.df_length)
         if right_pos - left_pos==1:
             left_pos += -1  # we need at least 2 ticks for the trade_df...
@@ -94,8 +94,8 @@ class PatternDetector:
                 can_be_added = False
                 tick_last = next_tick
                 break
-            pattern.function_cont.adjust_functions_when_required(next_tick)
             if pattern.breakout is None:
+                pattern.function_cont.adjust_functions_when_required(next_tick)
                 pattern.breakout = self.__get_confirmed_breakout__(pattern, tick_last, next_tick)
             tick_last = next_tick
         pattern.function_cont.add_tick_from_main_df_to_df(self.df, tick_last)

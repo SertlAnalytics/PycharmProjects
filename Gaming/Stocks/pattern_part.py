@@ -195,7 +195,7 @@ class PatternPart:
                                                    self.tick_last.date_str, len(self.tick_list))
 
         if self.pattern_type == FT.TKE_UP:
-            slopes = 'Gradients: L={}%, Reg={}%'.format(f_upper_pct, f_reg_pct)
+            slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_pct, f_reg_pct)
             breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
         elif self.pattern_type == FT.TKE_DOWN:
             slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_pct, f_reg_pct)

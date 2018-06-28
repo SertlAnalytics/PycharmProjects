@@ -115,15 +115,19 @@ class PatternFunctionContainer:
         return not(self.__f_lower is None or self.__f_upper is None)
 
     def is_tick_breakout(self, tick: WaveTick):
-        f_upper_value = self.get_upper_value(tick.f_var)
-        f_lower_value = self.get_lower_value(tick.f_var)
+        upper_boundary_value = self.get_upper_value(tick.f_var)
+        lower_boundary_value = self.get_lower_value(tick.f_var)
 
-        if self.pattern_type in [FT.TKE_UP, FT.TRIANGLE_UP, FT.CHANNEL_UP]:
-            return tick.close < f_lower_value
-        elif self.pattern_type in [FT.TKE_DOWN, FT.TRIANGLE_DOWN, FT.CHANNEL_DOWN]:
-            return tick.close > f_upper_value
+        if self.pattern_type == FT.TKE_UP:
+            return tick.close < lower_boundary_value
+        elif self.pattern_type == FT.TKE_DOWN:
+            return tick.close < lower_boundary_value
+        elif self.pattern_type in [FT.TRIANGLE_UP, FT.CHANNEL_UP]:
+            return tick.close < lower_boundary_value
+        elif self.pattern_type in [FT.TRIANGLE_DOWN, FT.CHANNEL_DOWN]:
+            return tick.close > upper_boundary_value
         else:
-            return not (f_lower_value <= tick.close <= f_upper_value)
+            return not (lower_boundary_value <= tick.close <= upper_boundary_value)
 
     def is_tick_inside_pattern_range(self, tick: WaveTick):
         if self.__pattern_direction == FD.ASC:
@@ -146,7 +150,7 @@ class PatternFunctionContainer:
 
     def __set_f_var_cross_f_upper_f_lower__(self):
         if self.__f_upper[1] < self.__f_lower[1]:
-            for n in range(self.__tick_last.f_var, self.__tick_last.f_var + 2 * self.number_of_positions):
+            for n in range(self.__tick_last.f_var, self.__tick_last.f_var + 3 * self.number_of_positions):
                 u = self.__f_upper(n)
                 l = self.__f_lower(n)
                 if self.__f_upper(n) < self.__f_lower(n):
@@ -164,20 +168,30 @@ class PatternFunctionContainer:
     tick_for_helper = property(__get_tick_for_helper__, __set_tick_for_helper__)
 
     def set_tick_for_breakout(self, tick: WaveTick):
-        if self.pattern_type != FT.TKE_DOWN:
+        if self.pattern_type not in [FT.TKE_DOWN, FT.TKE_UP]:
             self.__set_tick_for_helper__(tick)
 
     def adjust_functions_when_required(self, tick: WaveTick):
         if self.pattern_type == FT.TKE_DOWN:
             if tick.low < self.__f_lower(tick.f_var):
                 self.__f_lower = np.poly1d([0, tick.low])
-                self.__set_tick_for_helper__(tick)
                 self.__set_f_var_cross_f_upper_f_lower__()
         elif self.pattern_type == FT.TKE_UP:
             if tick.high > self.__f_upper(tick.f_var):
                 self.__f_upper = np.poly1d([0, tick.high])
-                self.__set_tick_for_helper__(tick)
                 self.__set_f_var_cross_f_upper_f_lower__()
+        self.__adjust_tick_for_helper_when_required__(tick)
+
+    def __adjust_tick_for_helper_when_required__(self, tick: WaveTick):
+        if self.__tick_for_helper is None:
+            return
+
+        if self.pattern_type == FT.TKE_DOWN:
+            if tick.low < self.__tick_for_helper.low:
+                self.__set_tick_for_helper__(tick)
+        elif self.pattern_type == FT.TKE_UP:
+            if tick.high > self.__tick_for_helper.high:
+                self.__set_tick_for_helper__(tick)
 
     @property
     def is_pattern_type_configured_for_helper_functions(self) -> bool:
@@ -185,6 +199,8 @@ class PatternFunctionContainer:
 
     def get_upper_value(self, f_var: int):
         if self.tick_for_helper is None or self.tick_for_helper.f_var > f_var:
+            return round(self.__f_upper(f_var), 2)
+        if self.pattern_type not in [FT.TKE_UP, FT.TKE_DOWN]:
             return round(self.__f_upper(f_var), 2)
         if self.pattern_direction == FD.ASC:
             return round(min(self.__f_upper(f_var), self.__h_upper(f_var)), 2)
@@ -194,7 +210,9 @@ class PatternFunctionContainer:
     def get_lower_value(self, f_var: int):
         if self.tick_for_helper is None or self.tick_for_helper.f_var > f_var:
             return round(self.__f_lower(f_var), 2)
-        if self.pattern_direction == FD.ASC:
+        if self.pattern_type not in [FT.TKE_UP, FT.TKE_DOWN]:
+            return round(self.__f_lower(f_var), 2)
+        elif self.pattern_type == FT.TKE_UP:
             return round(min(self.__f_lower(f_var), self.__h_lower(f_var)), 2)
         else:
             return round(max(self.__f_lower(f_var), self.__h_lower(f_var)), 2)
