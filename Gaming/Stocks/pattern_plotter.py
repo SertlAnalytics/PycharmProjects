@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import CN
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.patches import Polygon, Circle
 from matplotlib.collections import PatchCollection
 from sertl_analytics.pybase.loop_list import LoopList
@@ -17,6 +18,7 @@ from pattern_detector import PatternDetector
 from pattern import Pattern
 from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
+
 
 
 class FormationColorHandler:
@@ -157,6 +159,7 @@ class PatternPlotter:
     def __init__(self, detector: PatternDetector):
         self.detector = detector
         self.df = pdh.pattern_data.df
+        self.tick_list = pdh.pattern_data.tick_list
         self.symbol = runtime.actual_ticker
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
         self.ranges_polygon_dic_list = {}
@@ -187,6 +190,7 @@ class PatternPlotter:
             self.__plot_min_max__()
             self.__plot_ranges__()
         self.__plot_patterns__()
+        self.__plot_fibonacci_relations__()
 
         plt.title('{}. {} ({}) for {}'.format(
             runtime.actual_number, runtime.actual_ticker,
@@ -311,6 +315,35 @@ class PatternPlotter:
                     self.ranges_opposite_polygon_dic_list[ticks.f_var] = [polygon]
                 else:
                     self.ranges_opposite_polygon_dic_list[ticks.f_var].append(polygon)
+
+    def __plot_fibonacci_relations__(self):
+        xy = self.__get_xy_parameters_for_fibonacci__()
+        fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
+        fib_polygon.set_visible(True)
+        fib_polygon.set_color('r')
+        fib_polygon.set_linewidth(1)
+        self.axes_for_candlesticks.add_patch(fib_polygon)
+
+    def __get_xy_parameters_for_fibonacci__(self):
+        xy = []
+        direction = 'down' if self.tick_list[0].low > self.tick_list[1].low else 'up'
+        for index in range(1, len(self.tick_list)):
+            tick_last = self.tick_list[index - 1]
+            tick_current = self.tick_list[index]
+            if direction == 'up':
+                if tick_last.high < tick_current.high and tick_last.open < tick_current.open:
+                    direction_new = 'up'
+                else:
+                    direction_new = 'down'
+            else:
+                if tick_last.low > tick_current.low and tick_last.open > tick_current.open:
+                    direction_new = 'down'
+                else:
+                    direction_new = 'up'
+            if direction_new != direction:
+                direction = direction_new
+                xy.append([tick_last.f_var, tick_last.high if direction_new == 'down' else tick_last.low])
+        return xy
 
     def __get_circle_radius_for_plot_min_max__(self, mean_of_data: float):
         radius_out = 0.5 * mean_of_data/300

@@ -6,6 +6,23 @@ Date: 2018-05-14
 """
 
 
+class FR:
+    R_100 = 1.000
+    R_618 = 0.618
+    R_500 = 0.500
+    R_382 = 0.382
+
+    @staticmethod
+    def get_retracement_list(threshold = 2):
+        r_list = FR.get_elements_as_list()
+        for i in range(1, threshold):
+            r_list = r_list + list(FR.get_elements_as_list() + i)
+
+    @staticmethod
+    def get_elements_as_list():
+        return [FR.R_382, FR.R_500, FR.R_618]
+
+
 class FT:
     NONE = 'NONE'
     TRIANGLE = 'Triangle'

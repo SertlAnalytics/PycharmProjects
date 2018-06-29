@@ -2,18 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a9b7b1e9-a92d-4270-bcc9-9b843e8495d6" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_constants.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_constraints.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_constraints.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_data_frame.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_data_frame.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/run_import_stock_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/run_import_stock_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_detector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_part.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_part.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/World_Cup_2018/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/World_Cup_2018/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/World_Cup_2018/Fifa_world_cup_2018_matches.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/World_Cup_2018/Fifa_world_cup_2018_matches.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/World_Cup_2018/run_fifa_world_cup_2018_prediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/World_Cup_2018/run_fifa_world_cup_2018_prediction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_plotter.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_plotter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_wave_tick.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_wave_tick.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -45,8 +39,8 @@
       <file leaf-file-name="pattern_constants.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="799">
-              <caret line="92" column="22" lean-forward="true" selection-start-line="92" selection-start-column="22" selection-end-line="92" selection-end-column="22" />
+            <state relative-caret-position="391">
+              <caret line="23" selection-start-line="23" selection-end-line="23" />
             </state>
           </provider>
         </entry>
@@ -74,10 +68,10 @@
         <option value="$PROJECT_DIR$/sertl_analytics/pybase/exceptions.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/functions/math_functions.py" />
-        <option value="$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/user_input/confirmation.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/datafetcher/file_fetcher.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/models/learning_machine.py" />
+        <option value="$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py" />
       </list>
     </option>
   </component>
@@ -190,18 +184,17 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
+      <window_info anchor="bottom" id="Run" order="2" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -231,6 +224,27 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/datafetcher/file_fetcher.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="29" column="11" selection-start-line="29" selection-start-column="11" selection-end-line="29" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/models/learning_machine.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="561">
+          <caret line="43" column="30" selection-start-line="43" selection-start-column="30" selection-end-line="43" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="23" lean-forward="true" selection-start-line="23" selection-end-line="23" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sertl_analytics/datafetcher/file_fetcher.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
@@ -429,8 +443,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="799">
-          <caret line="92" column="22" lean-forward="true" selection-start-line="92" selection-start-column="22" selection-end-line="92" selection-end-column="22" />
+        <state relative-caret-position="391">
+          <caret line="23" selection-start-line="23" selection-end-line="23" />
         </state>
       </provider>
     </entry>

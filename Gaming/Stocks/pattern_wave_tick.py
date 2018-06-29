@@ -100,6 +100,7 @@ class WaveTick:
 class WaveTickList:
     def __init__(self, df_or_list):  # input = pd.DataFrame or tick_list[]
         self.df = None
+        self.tick_list = []
         if df_or_list.__class__.__name__ == 'DataFrame':
             self.__init_by_df__(df_or_list)
         else:
