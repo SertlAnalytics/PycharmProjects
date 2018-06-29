@@ -10,7 +10,7 @@ from sertl_analytics.pybase.date_time import MyPyDate
 from pattern_function_container import PatternFunctionContainer
 from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
-from pattern_configuration import runtime
+from pattern_configuration import runtime, debugger
 from pattern_data_frame import PatternDataFrame
 import numpy as np
 import math
@@ -37,6 +37,7 @@ class PatternPart:
         self.tick_list = []
         self.pattern_type = self.function_cont.pattern_type
         self.breakout = runtime.actual_breakout
+        self.pattern_range = runtime.actual_pattern_range
         self.tick_first = None
         self.tick_last = None
         self.tick_high = None
@@ -214,6 +215,8 @@ class PatternPart:
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
             date = MyPyDate.get_date_from_number(self.function_cont.f_var_cross_f_upper_f_lower - 2)
             breakout_str += '\nExpected trading end: {}'.format(date)
+
+        breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)
 
         return '{}\n{}\n{}\n{}'.format(type_date, slopes, breadth, breakout_str)
 

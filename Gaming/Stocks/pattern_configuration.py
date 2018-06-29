@@ -13,6 +13,33 @@ from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 
 
+class PatternDebugger:
+    def __init__(self):
+        self.__process_dic = {}
+        self.pattern_range_position_list = []
+
+    @property
+    def is_active(self):
+        for process in self.__process_dic:
+            if self.__process_dic[process]:
+                return True
+        return False
+
+    def check_range_position_list(self, position_list: list):
+        process = 'position_list'
+        self.__init_process__(process)
+        min_len = min(len(position_list), len(self.pattern_range_position_list))
+        if min_len > 0:
+            if position_list[:min_len] == self.pattern_range_position_list[:min_len]:
+                self.__activate_process__(process)
+
+    def __init_process__(self, process: str):
+        self.__process_dic[process] = False
+
+    def __activate_process__(self, process: str):
+        self.__process_dic[process] = True
+
+
 class RuntimeConfiguration:
     actual_list = []
     actual_position = 0
@@ -23,6 +50,7 @@ class RuntimeConfiguration:
     actual_and_clause = ''
     actual_pattern_type = FT.NONE
     actual_breakout = None
+    actual_pattern_range = None
 
 
 class PatternConfiguration:
@@ -101,3 +129,4 @@ class PatternConfiguration:
 
 config = PatternConfiguration()
 runtime = RuntimeConfiguration()
+debugger = PatternDebugger()

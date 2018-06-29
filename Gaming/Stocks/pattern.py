@@ -11,7 +11,7 @@ from matplotlib.patches import Ellipse, Polygon
 import pandas as pd
 import numpy as np
 from pattern_range import PatternRange
-from pattern_configuration import config
+from pattern_configuration import debugger
 from pattern_function_container import PatternFunctionContainer
 from pattern_trade_result import TradeResult
 from pattern_part import PatternPart

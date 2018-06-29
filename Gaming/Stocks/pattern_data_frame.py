@@ -71,14 +71,21 @@ class PatternDataFrame:
             elif function_cont.pattern_type == FT.TKE_DOWN:
                 tick_list = [tick_first, tick_helper, tick_last, tick_last, tick_first]
                 function_list = [f_upper, h_upper, h_upper, f_lower, f_lower]
-            elif function_cont.f_var_cross_f_upper_f_lower > 0 \
-                    and function_cont.f_var_cross_f_upper_f_lower <= pdh.pattern_data.tick_last.f_var:
+            elif function_cont.f_var_cross_f_upper_f_lower > 0:
+                if function_cont.f_var_cross_f_upper_f_lower <= pdh.pattern_data.tick_last.f_var:
                     tick_last = pdh.pattern_data.get_tick_by_date_num(function_cont.f_var_cross_f_upper_f_lower)
                     tick_list = [tick_first, tick_last, tick_first]
                     if function_cont.pattern_direction == FD.ASC:
                         function_list = [f_upper, f_upper, f_lower]
                     else:
                         function_list = [f_lower, f_lower, f_upper]
+                else:
+                    tick_last = pdh.pattern_data.tick_last
+                    tick_list = [tick_first, tick_last, tick_last, tick_first]
+                    if function_cont.pattern_direction == FD.ASC:
+                        function_list = [f_upper, f_upper, f_lower, f_lower]
+                    else:
+                        function_list = [f_lower, f_lower, f_upper, f_upper]
             else:
                 tick_list = [tick_first, tick_helper, tick_last, tick_last, tick_first]
                 if function_cont.breakout_direction == FD.ASC:

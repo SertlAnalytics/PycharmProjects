@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from pattern_configuration import config, runtime
+from pattern_configuration import config, runtime, debugger
 from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
 from pattern_function_container import PatternFunctionContainer
@@ -42,12 +42,15 @@ class PatternDetector:
         for pattern_type in self.pattern_type_list:
             runtime.actual_pattern_type = pattern_type
             for pattern_range in possible_pattern_range_list:
+                runtime.actual_pattern_range = pattern_range
                 # pattern_range.print_range_details()
+                debugger.check_range_position_list(pattern_range.position_list)
                 complementary_function_list = pattern_range.get_complementary_function_list(pattern_type)
                 for f_comp in complementary_function_list:
                     pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, pattern_range, f_comp)
                     if pattern.function_cont.is_valid():
                         self.__handle_single_pattern_when_parsing__(pattern)
+
 
     def __handle_single_pattern_when_parsing__(self, pattern: Pattern):
         can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)
@@ -105,7 +108,7 @@ class PatternDetector:
     def __check_for_break__(function_cont, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
         if counter > number_of_positions:  # maximal number for the whole pattern after its building
             return True
-        if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 3):
+        if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 6):
             # check the last value !!! in some IMPORTANT cases is the breakout just on that day...
             return True
         if not function_cont.is_tick_inside_pattern_range(tick):

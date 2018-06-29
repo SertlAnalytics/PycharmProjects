@@ -71,7 +71,8 @@ class Constraints:
             return True
         if f_lower_pct == 0:
             return True
-        return self.f_upper_lower_relation_bounds[0] <= (f_upper_pct / f_lower_pct) <= self.f_upper_lower_relation_bounds[1]
+        u_l_relation = round((f_upper_pct / f_lower_pct), 2)
+        return self.f_upper_lower_relation_bounds[0] <= u_l_relation <= self.f_upper_lower_relation_bounds[1]
 
     @staticmethod
     def __get_tolerance_pct__():
@@ -167,7 +168,9 @@ class TKEDownConstraints(Constraints):
         """
         self.global_all_in = [SVC.U_on, SVC.U_in, SVC.M_in, SVC.L_in, SVC.L_on]  # , SVC.H_M_in
         self.global_count = ['OR', CountConstraint(SVC.U_in, '>=', 3)]
-        self.global_series = ['OR', [SVC.U_on, SVC.U_in, SVC.U_on], [SVC.U_on, SVC.U_on, SVC.U_on]]
+        self.global_series = ['OR',
+                              [SVC.U_on, SVC.U_in, SVC.U_on],
+                              [SVC.U_on, SVC.U_on, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
         self.f_upper_pct_bounds = [-0.02, -0.50]
@@ -185,7 +188,9 @@ class TKEUpConstraints(Constraints):
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_M_in]
         self.global_count = ['OR', CountConstraint(SVC.L_in, '>=', 3)]
-        self.global_series = ['OR', [SVC.L_on, SVC.L_in, SVC.L_on], [SVC.L_on, SVC.L_on, SVC.L_on]]
+        self.global_series = ['OR',
+                              [SVC.L_on, SVC.L_in, SVC.L_on],
+                              [SVC.L_on, SVC.L_on, SVC.L_on]]
 
     def __set_bounds_for_pattern_type__(self):
         self.f_upper_pct_bounds = []  # not required
@@ -202,9 +207,14 @@ class ChannelConstraints(Constraints):
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
-        self.global_count = ['OR', CountConstraint(SVC.U_in, '>=', 3), CountConstraint(SVC.L_in, '>=', 3)]
-        self.global_series = ['OR', [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
-                          [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]]
+        self.global_count = ['OR',
+                             CountConstraint(SVC.U_in, '>=', 3),
+                             CountConstraint(SVC.L_in, '>=', 3)]
+        self.global_series = ['OR',
+                              [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
+                              [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in],
+                              [SVC.U_in, SVC.L_in, SVC.L_in, SVC.U_in, SVC.U_in],
+                              [SVC.L_in, SVC.U_in, SVC.U_in, SVC.L_in, SVC.L_in]]
 
     def __set_bounds_for_pattern_type__(self):
         self.f_upper_pct_bounds = [-0.02, 0.02]
@@ -218,13 +228,13 @@ class ChannelUpConstraints(ChannelConstraints):
         self.f_upper_pct_bounds = [0.02, 0.50]
         self.f_lower_pct_bounds = self.f_upper_pct_bounds
         self.f_upper_lower_relation_bounds = [0.8, 1.2]
-        self.f_regression_pct_bounds = self.f_upper_pct_bounds
+        self.f_regression_pct_bounds = [0.00, 0.50]
 
 
 class ChannelDownConstraints(ChannelConstraints):
     def __set_bounds_for_pattern_type__(self):
         self.__set_bounds_by_complementary_constraints__(ChannelUpConstraints())
-        self.f_regression_pct_bounds = self.f_upper_pct_bounds
+        self.f_regression_pct_bounds = [-0.50, 0.00]
 
 
 class HeadShoulderConstraints(Constraints):
@@ -239,8 +249,11 @@ class HeadShoulderConstraints(Constraints):
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
-        self.global_count = ['AND', CountConstraint(SVC.L_in, '>=', 4), CountConstraint(SVC.U_in, '>=', 1)]
-        self.global_series = ['OR', [SVC.L_on, SVC.M_in, SVC.L_on, SVC.U_on, SVC.L_on, SVC.M_in, SVC.L_on],
+        self.global_count = ['AND',
+                             CountConstraint(SVC.L_in, '>=', 4),
+                             CountConstraint(SVC.U_in, '>=', 1)]
+        self.global_series = ['OR',
+                              [SVC.L_on, SVC.M_in, SVC.L_on, SVC.U_on, SVC.L_on, SVC.M_in, SVC.L_on],
                               [SVC.L_on, SVC.M_in, SVC.L_in, SVC.U_on, SVC.M_in, SVC.M_in, SVC.L_on]]
 
     def __set_bounds_for_pattern_type__(self):
@@ -262,8 +275,11 @@ class InverseHeadShoulderConstraints(HeadShoulderConstraints):
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
-        self.global_count = ['AND', CountConstraint(SVC.U_in, '>=', 4), CountConstraint(SVC.L_in, '>=', 1)]
-        self.global_series = ['OR', [SVC.U_on, SVC.M_in, SVC.U_on, SVC.L_on, SVC.U_on, SVC.M_in, SVC.U_on],
+        self.global_count = ['AND',
+                             CountConstraint(SVC.U_in, '>=', 4),
+                             CountConstraint(SVC.L_in, '>=', 1)]
+        self.global_series = ['OR',
+                              [SVC.U_on, SVC.M_in, SVC.U_on, SVC.L_on, SVC.U_on, SVC.M_in, SVC.U_on],
                               [SVC.U_on, SVC.M_in, SVC.U_in, SVC.L_on, SVC.M_in, SVC.M_in, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
@@ -285,8 +301,11 @@ class TriangleConstraints(Constraints):
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
-        self.global_count = ['OR', CountConstraint(SVC.U_in, '>=', 3), CountConstraint(SVC.L_in, '>=', 3)]
-        self.global_series = ['OR', [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
+        self.global_count = ['OR',
+                             CountConstraint(SVC.U_in, '>=', 3),
+                             CountConstraint(SVC.L_in, '>=', 3)]
+        self.global_series = ['OR',
+                              [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
                               [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in],
                               [SVC.L_in, SVC.L_in, SVC.U_in, SVC.U_in, SVC.L_in],
                               [SVC.U_in, SVC.U_in, SVC.L_in, SVC.L_in, SVC.U_in]]
