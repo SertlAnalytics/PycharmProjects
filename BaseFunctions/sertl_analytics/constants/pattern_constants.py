@@ -5,6 +5,10 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
+class DIR:
+    UP = 'UP'
+    DOWN = 'DOWN'
+
 
 class FR:
     R_100 = 1.000
@@ -21,6 +25,15 @@ class FR:
     @staticmethod
     def get_elements_as_list():
         return [FR.R_382, FR.R_500, FR.R_618]
+
+    @staticmethod
+    def is_retracement_value_compliant(retracement_value: float):
+        accuray_percentage = 0.1
+        retracements = FR.get_elements_as_list()
+        for values in retracements:
+            if abs(retracement_value - values) < values * accuray_percentage:
+                return True
+        return False
 
 
 class FT:
