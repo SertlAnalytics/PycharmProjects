@@ -28,7 +28,7 @@ class PatternData:
         self.min_value = self.df[CN.HIGH].min()
         self.height = self.max_value - self.min_value
         self.__add_columns__()
-        self.__length_for_global = int(self.df_length / 2)
+        self.__length_for_global = 20  # int(self.df_length / 4)
         self.__length_for_local = config.length_for_local_min_max
         self.__init_columns_for_ticks_distance__()
         self.df_min_max = self.df[np.logical_or(self.df[CN.IS_MIN], self.df[CN.IS_MAX])]
@@ -48,6 +48,22 @@ class PatternData:
         while k not in self.tick_by_date_num_ext_dic.dic:
             k += -1
         return self.tick_by_date_num_ext_dic.dic[k]
+
+    def get_global_min_max_range_tick_lists(self, for_ascending_wave: bool):
+        global_min_max_range_tick_list = []
+        min_max_range_tick_list = []
+        for tick in self.tick_list:
+            if (tick.is_global_min and for_ascending_wave) or (tick.is_global_max and not for_ascending_wave):
+                if len(min_max_range_tick_list) == 0:
+                    min_max_range_tick_list.append(tick)
+            else:
+                if len(min_max_range_tick_list) > 0:
+                    min_max_range_tick_list.append(tick)
+            if (tick.is_global_max and for_ascending_wave) or (tick.is_global_min and not for_ascending_wave):
+                if len(min_max_range_tick_list) > 0:
+                    global_min_max_range_tick_list.append(min_max_range_tick_list)
+                    min_max_range_tick_list = []
+        return global_min_max_range_tick_list
 
     def get_tick_by_pos(self, pos: int):
         return self.tick_list[pos]

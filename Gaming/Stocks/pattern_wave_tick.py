@@ -57,6 +57,14 @@ class WaveTick:
         return self.tick[CN.LOCAL_MIN]
 
     @property
+    def is_global_max(self):
+        return self.tick[CN.GLOBAL_MAX]
+
+    @property
+    def is_global_min(self):
+        return self.tick[CN.GLOBAL_MIN]
+
+    @property
     def open(self):
         return self.tick[CN.OPEN]
 

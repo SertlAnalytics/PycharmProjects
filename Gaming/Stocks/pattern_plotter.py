@@ -317,9 +317,9 @@ class PatternPlotter:
                     self.ranges_opposite_polygon_dic_list[ticks.f_var].append(polygon)
 
     def __plot_fibonacci_relations__(self):
-        fib_wave_controller = FibonacciWaveController(self.tick_list)
+        fib_wave_controller = FibonacciWaveController()
         fib_wave_controller.process_tick_list()
-        for fib_waves in fib_wave_controller.tree.success_wave_list:
+        for fib_waves in fib_wave_controller.success_wave_list:
             xy = fib_waves.get_xy_parameter()
             fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
             fib_polygon.set_visible(True)

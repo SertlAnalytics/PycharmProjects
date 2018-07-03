@@ -15,16 +15,18 @@ class FR:
     R_618 = 0.618
     R_500 = 0.500
     R_382 = 0.382
+    R_236 = 0.236
 
     @staticmethod
     def get_retracement_list(threshold = 2):
         r_list = FR.get_elements_as_list()
         for i in range(1, threshold):
-            r_list = r_list + list(FR.get_elements_as_list() + i)
+            r_list = r_list + [round(element + i, 3) for element in r_list]
+        return r_list
 
     @staticmethod
     def get_elements_as_list():
-        return [FR.R_382, FR.R_500, FR.R_618]
+        return [FR.R_236, FR.R_382, FR.R_500, FR.R_618]
 
     @staticmethod
     def is_retracement_value_compliant(retracement_value: float):
@@ -32,6 +34,15 @@ class FR:
         retracements = FR.get_elements_as_list()
         for values in retracements:
             if abs(retracement_value - values) < values * accuray_percentage:
+                return True
+        return False
+
+    @staticmethod
+    def is_regression_pct_compliant(regression_pct: float):
+        accuray_percentage = 0.1
+        retracements_pcts = FR.get_retracement_list(2)
+        for pct in retracements_pcts:
+            if abs(pct - regression_pct) < regression_pct * accuray_percentage:
                 return True
         return False
 
