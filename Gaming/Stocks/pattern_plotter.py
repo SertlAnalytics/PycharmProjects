@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN
+from sertl_analytics.constants.pattern_constants import CN, DIR
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon, Circle
@@ -18,7 +18,7 @@ from pattern_detector import PatternDetector
 from pattern import Pattern
 from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
-
+from fibonacci import FibonacciWaveController
 
 
 class FormationColorHandler:
@@ -258,7 +258,7 @@ class PatternPlotter:
     def __on_hover__(x, y):
         tick = pdh.pattern_data.tick_by_date_num_ext_dic.get_value(int(x + 0.5))
         return '{} ({:3.0f} / {:6.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
-            tick.date_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume/1000, y)
+            tick.date_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume / 1000, y)
 
     def __plot_close__(self, axis):
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.CLOSE])
@@ -317,33 +317,44 @@ class PatternPlotter:
                     self.ranges_opposite_polygon_dic_list[ticks.f_var].append(polygon)
 
     def __plot_fibonacci_relations__(self):
-        xy = self.__get_xy_parameters_for_fibonacci__()
-        fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
-        fib_polygon.set_visible(True)
-        fib_polygon.set_color('r')
-        fib_polygon.set_linewidth(1)
-        self.axes_for_candlesticks.add_patch(fib_polygon)
+        fib_wave_controller = FibonacciWaveController(self.tick_list)
+        fib_wave_controller.process_tick_list()
+        for fib_waves in fib_wave_controller.tree.success_wave_list:
+            xy = fib_waves.get_xy_parameter()
+            fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
+            fib_polygon.set_visible(True)
+            fib_polygon.set_color('r')
+            fib_polygon.set_linewidth(1)
+            self.axes_for_candlesticks.add_patch(fib_polygon)
 
     def __get_xy_parameters_for_fibonacci__(self):
         xy = []
-        direction = 'down' if self.tick_list[0].low > self.tick_list[1].low else 'up'
+        direction = DIR.DOWN if self.tick_list[0].low > self.tick_list[1].low else DIR.UP
+        self.__append_tick_for_fibonacci__(xy, self.tick_list[0], direction)
         for index in range(1, len(self.tick_list)):
             tick_last = self.tick_list[index - 1]
             tick_current = self.tick_list[index]
-            if direction == 'up':
-                if tick_last.high < tick_current.high and tick_last.open < tick_current.open:
-                    direction_new = 'up'
+            if direction == DIR.UP:
+                if tick_last.range > tick_current.range:
+                    direction_new = DIR.DOWN
                 else:
-                    direction_new = 'down'
+                    direction_new = DIR.UP
             else:
-                if tick_last.low > tick_current.low and tick_last.open > tick_current.open:
-                    direction_new = 'down'
+                if tick_last.range > tick_current.range:
+                    direction_new = DIR.DOWN
                 else:
-                    direction_new = 'up'
+                    direction_new = DIR.UP
             if direction_new != direction:
                 direction = direction_new
-                xy.append([tick_last.f_var, tick_last.high if direction_new == 'down' else tick_last.low])
+                self.__append_tick_for_fibonacci__(xy, tick_last, direction)
+            if direction != tick_current.direction:
+                direction = tick_current.direction
+                self.__append_tick_for_fibonacci__(xy, tick_current, direction)
         return xy
+
+    @staticmethod
+    def __append_tick_for_fibonacci__(xy: list, tick: WaveTick, direction: str):
+        xy.append([tick.f_var, tick.high if direction == DIR.DOWN else tick.low])
 
     def __get_circle_radius_for_plot_min_max__(self, mean_of_data: float):
         radius_out = 0.5 * mean_of_data/300

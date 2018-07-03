@@ -236,8 +236,8 @@ class PatternPart:
 
     def is_high_close_to_linear_function(self, f_lin: np.poly1d, tolerance_pct: float = 0.01):
         value_function = round(f_lin(self.tick_high.high), 2)
-        mean = (value_function + self.tick_high.high)/2
-        value = abs(self.tick_high.high - value_function)/mean
+        mean = (value_function + self.tick_high.high) / 2
+        value = abs(self.tick_high.high - value_function) / mean
         return value < tolerance_pct
 
     def is_high_before_low(self):

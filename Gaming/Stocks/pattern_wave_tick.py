@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 import pandas as pd
 import numpy as np
-from sertl_analytics.constants.pattern_constants import CN, TT
+from sertl_analytics.constants.pattern_constants import CN, TT, DIR
 from sertl_analytics.functions import math_functions
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
@@ -23,6 +23,10 @@ class WaveTick:
     @property
     def f_var(self):
         return self.tick[CN.DATEASNUM]
+
+    @property
+    def direction(self):
+        return DIR.UP if self.open < self.close else DIR.DOWN
 
     @property
     def date_num(self):

@@ -66,7 +66,7 @@ class PatternDetectionController:
             self.__handle_statistics__(detector)
 
             if config.plot_data:
-                if len(detector.pattern_list) == 0:  # and not detector.possible_pattern_ranges_available:
+                if len(detector.pattern_list) == 0 and False:  # and not detector.possible_pattern_ranges_available:
                     print('...no formations found.')
                 else:
                     plotter = PatternPlotter(detector)

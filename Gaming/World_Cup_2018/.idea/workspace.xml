@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e962516c-df08-4fbf-9286-4787df306f4f" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Fifa_world_cup_2018_matches.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/Fifa_world_cup_2018_matches.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Stocks/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -19,7 +17,7 @@
         <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="660">
-              <caret line="418" column="31" lean-forward="true" selection-start-line="418" selection-start-column="31" selection-end-line="418" selection-end-column="31" />
+              <caret line="418" column="31" selection-start-line="418" selection-start-column="31" selection-end-line="418" selection-end-column="31" />
             </state>
           </provider>
         </entry>
@@ -81,6 +79,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -92,7 +91,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -160,14 +158,15 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49121407" visible="true" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49041533" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" sideWeight="0.49920383" weight="0.32941177" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50159234" side_tool="true" weight="0.39137256" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49840763" weight="0.26357827" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.3290735" />
-      <window_info id="Structure" order="1" sideWeight="0.50878596" side_tool="true" visible="true" weight="0.25" />
+      <window_info id="Structure" order="1" sideWeight="0.50958467" side_tool="true" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3290735" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.53411764" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -183,22 +182,22 @@
     <layout-to-restore>
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" sideWeight="0.49920383" weight="0.32941177" />
+      <window_info anchor="bottom" id="Version Control" order="10" />
       <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49840763" visible="true" weight="0.534902" />
-      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49920383" weight="0.32784313" />
-      <window_info anchor="bottom" id="Python Console" order="7" />
+      <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.6447059" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.3290735" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.50159234" side_tool="true" weight="0.39137256" />
-      <window_info anchor="bottom" id="Version Control" order="10" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Messages" order="11" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49920383" weight="0.32784313" />
+      <window_info anchor="bottom" id="Messages" order="11" />
+      <window_info anchor="bottom" id="Python Console" order="7" />
     </layout-to-restore>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -569,7 +568,7 @@
     <entry file="file://$PROJECT_DIR$/run_fifa_world_cup_2018_prediction.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="660">
-          <caret line="418" column="31" lean-forward="true" selection-start-line="418" selection-start-column="31" selection-end-line="418" selection-end-column="31" />
+          <caret line="418" column="31" selection-start-line="418" selection-start-column="31" selection-end-line="418" selection-end-column="31" />
         </state>
       </provider>
     </entry>
