@@ -361,7 +361,7 @@ class FibonacciWaveController:
         self.success_wave_list = []
 
     def process_tick_list(self):
-        for for_ascending_wave in [False]:
+        for for_ascending_wave in [True]:
             global_min_max_range_tick_lists = \
                 pattern_data_handler.pattern_data.get_global_min_max_range_tick_lists(for_ascending_wave)
             for tick_list in global_min_max_range_tick_lists:
