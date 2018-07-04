@@ -319,13 +319,18 @@ class PatternPlotter:
     def __plot_fibonacci_relations__(self):
         fib_wave_tree = FibonacciWaveTree()
         fib_wave_tree.parse_tree()
-        for fib_waves in fib_wave_tree.fibonacci_wave_list:
-            xy = fib_waves.get_xy_parameter()
-            fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
-            fib_polygon.set_visible(True)
-            fib_polygon.set_color('r')
-            fib_polygon.set_linewidth(1)
-            self.axes_for_candlesticks.add_patch(fib_polygon)
+        for fib_waves in fib_wave_tree.fibonacci_descending_wave_list:
+            self.__plot_single_fibonacci_wave__(fib_waves, 'r')
+        for fib_waves in fib_wave_tree.fibonacci_ascending_wave_list:
+            self.__plot_single_fibonacci_wave__(fib_waves, 'g')
+
+    def __plot_single_fibonacci_wave__(self, fib_waves, color: str):
+        xy = fib_waves.get_xy_parameter()
+        fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
+        fib_polygon.set_visible(True)
+        fib_polygon.set_color(color)
+        fib_polygon.set_linewidth(1)
+        self.axes_for_candlesticks.add_patch(fib_polygon)
 
     def __get_xy_parameters_for_fibonacci__(self):
         xy = []

@@ -215,11 +215,19 @@ class FibonacciWave:
 
     @property
     def reg_comp_list(self):
-        return [self.comp_dic[comp_id] for comp_id in self.comp_id_list_reg]
+        comp_list = []
+        for comp_id in self.comp_id_list_reg:
+            if comp_id in self.comp_dic:
+                comp_list.append(self.comp_dic[comp_id])
+        return comp_list
 
     @property
     def ret_comp_list(self):
-        return [self.comp_dic[comp_id] for comp_id in self.comp_id_list_ret]
+        comp_list = []
+        for comp_id in self.comp_id_list_ret:
+            if comp_id in self.comp_dic:
+                comp_list.append(self.comp_dic[comp_id])
+        return comp_list
 
     def get_wave_component_by_index(self, index: int):
         return self.comp_dic[self.comp_id_list[index]]
@@ -282,7 +290,9 @@ class FibonacciAscendingWave(FibonacciWave):
         return tick.high > self.max
 
     def __is_tick_next_retracement__(self, tick: WaveTick) -> bool:
-        return tick.low > self.min
+        ret_min_list = [comp.min for comp in self.ret_comp_list]
+        max_ret_min_list = -math.inf if len(ret_min_list) == 0 else max(ret_min_list)
+        return tick.low > self.min and tick.low > max_ret_min_list
 
     def __calculate_regression_values_for_component__(self, reg_comp: FibonacciRegressionComponent, wave_id: str):
         index_wave_id = self.comp_id_list_reg.index(wave_id)
@@ -305,7 +315,9 @@ class FibonacciDescendingWave(FibonacciWave):
         return tick.low < self.min
 
     def __is_tick_next_retracement__(self, tick: WaveTick) -> bool:
-        return tick.high < self.max
+        ret_max_list = [comp.max for comp in self.ret_comp_list]
+        min_ret_mat_list = math.inf if len(ret_max_list) == 0 else min(ret_max_list)
+        return tick.high < self.max and tick.high < min_ret_mat_list
 
     def __calculate_regression_values_for_component__(self, reg_comp: FibonacciRegressionComponent, wave_id: str):
         index_wave_id = self.comp_id_list_reg.index(wave_id)
@@ -332,12 +344,13 @@ class FibonacciWaveTree:
         self.min_possible_max_tick_dic = {}
         self.max_possible_min_tick_dic = {}
         self.__fill_lists_and_dictionaries_dics__()
-        self.fibonacci_wave_list = []
+        self.fibonacci_ascending_wave_list = []
+        self.fibonacci_descending_wave_list = []
         self.min_list_length = len(self.min_tick_list)
         self.max_list_length = len(self.max_tick_list)
 
     def parse_tree(self):
-        # self.__parse_for_ascending_waves__()
+        self.__parse_for_ascending_waves__()
         self.__parse_for_descending_waves__()
 
     def __parse_for_descending_waves__(self):
@@ -404,19 +417,25 @@ class FibonacciWaveTree:
                 del wave.comp_dic[comp_id]
 
     def __get_possible_next_tick_dic__(self, tick_previous, wave, for_regression: bool):
-        if wave.__class__.__name__ == 'FibonacciDescendingWave':
-            if for_regression:
-                return self.max_possible_min_tick_dic[tick_previous.position]
+        try:
+            if wave.__class__.__name__ == 'FibonacciDescendingWave':
+                if for_regression:
+                    return self.max_possible_min_tick_dic[tick_previous.position]
+                else:
+                    return self.min_possible_max_tick_dic[tick_previous.position]
             else:
-                return self.min_possible_max_tick_dic[tick_previous.position]
-        else:
-            if for_regression:
-                return self.min_possible_max_tick_dic[tick_previous.position]
-            else:
-                return self.max_possible_min_tick_dic[tick_previous.position]
+                if for_regression:
+                    return self.min_possible_max_tick_dic[tick_previous.position]
+                else:
+                    return self.max_possible_min_tick_dic[tick_previous.position]
+        except:  # ToDo find error for 'DWDP': 'DuPont' - "Date BETWEEN '2017-09-01' AND '2019-01-01'"
+            return []
 
     def __process_completed_wave__(self, wave):
         if wave.is_wave_fibonacci_wave():
             wave_clone = wave.clone()
-            self.fibonacci_wave_list.append(wave_clone)
-            wave.print()
+            if wave.__class__.__name__ == 'FibonacciDescendingWave':
+                self.fibonacci_descending_wave_list.append(wave_clone)
+            else:
+                self.fibonacci_ascending_wave_list.append(wave_clone)
+            # wave.print()
