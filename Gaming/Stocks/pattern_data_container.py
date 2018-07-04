@@ -49,22 +49,6 @@ class PatternData:
             k += -1
         return self.tick_by_date_num_ext_dic.dic[k]
 
-    def get_global_min_max_range_tick_lists(self, for_ascending_wave: bool):
-        global_min_max_range_tick_list = []
-        min_max_range_tick_list = []
-        for tick in self.tick_list:
-            if (tick.is_global_min and for_ascending_wave) or (tick.is_global_max and not for_ascending_wave):
-                if len(min_max_range_tick_list) == 0:
-                    min_max_range_tick_list.append(tick)
-            else:
-                if len(min_max_range_tick_list) > 0:
-                    min_max_range_tick_list.append(tick)
-            if (tick.is_global_max and for_ascending_wave) or (tick.is_global_min and not for_ascending_wave):
-                if len(min_max_range_tick_list) > 0:
-                    global_min_max_range_tick_list.append(min_max_range_tick_list)
-                    min_max_range_tick_list = []
-        return global_min_max_range_tick_list
-
     def get_tick_by_pos(self, pos: int):
         return self.tick_list[pos]
 

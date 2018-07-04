@@ -65,6 +65,7 @@ class PatternConfiguration:
         self.plot_min_max = False
         self.length_for_local_min_max = 2  # a local minimum or maximum must have at least this number as distance
         self.range_detector_tolerance_pct = 0.01
+        self.fibonacci_tolerance_pct = 0.20  # it works great for 0.20 = 20% tolerance for retracement and regression
         self.check_previous_period = False   # default
         self.breakout_over_congestion_range = False
         self.breakout_range_pct = 0.05

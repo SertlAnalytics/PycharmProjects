@@ -18,7 +18,7 @@ from pattern_detector import PatternDetector
 from pattern import Pattern
 from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
-from fibonacci import FibonacciWaveController
+from fibonacci import FibonacciWaveTree
 
 
 class FormationColorHandler:
@@ -317,9 +317,9 @@ class PatternPlotter:
                     self.ranges_opposite_polygon_dic_list[ticks.f_var].append(polygon)
 
     def __plot_fibonacci_relations__(self):
-        fib_wave_controller = FibonacciWaveController()
-        fib_wave_controller.process_tick_list()
-        for fib_waves in fib_wave_controller.success_wave_list:
+        fib_wave_tree = FibonacciWaveTree()
+        fib_wave_tree.parse_tree()
+        for fib_waves in fib_wave_tree.fibonacci_wave_list:
             xy = fib_waves.get_xy_parameter()
             fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
             fib_polygon.set_visible(True)

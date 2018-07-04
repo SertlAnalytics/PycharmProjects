@@ -29,20 +29,18 @@ class FR:
         return [FR.R_236, FR.R_382, FR.R_500, FR.R_618]
 
     @staticmethod
-    def is_retracement_value_compliant(retracement_value: float):
-        accuray_percentage = 0.1
+    def is_retracement_value_compliant(retracement_value: float, tolerance_pct: float = 0.2):
         retracements = FR.get_elements_as_list()
         for values in retracements:
-            if abs(retracement_value - values) < values * accuray_percentage:
+            if abs(retracement_value - values) < values * tolerance_pct:
                 return True
         return False
 
     @staticmethod
-    def is_regression_pct_compliant(regression_pct: float):
-        accuray_percentage = 0.1
+    def is_regression_pct_compliant(regression_pct: float, tolerance_pct: float = 0.2):
         retracements_pcts = FR.get_retracement_list(2)
         for pct in retracements_pcts:
-            if abs(pct - regression_pct) < regression_pct * accuray_percentage:
+            if abs(pct - regression_pct) < regression_pct * tolerance_pct:
                 return True
         return False
 

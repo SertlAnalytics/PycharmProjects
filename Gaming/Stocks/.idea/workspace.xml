@@ -3,11 +3,12 @@
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fibonacci.py" beforeDir="false" afterPath="$PROJECT_DIR$/fibonacci.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_configuration.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_data_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_data_container.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_plotter.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_plotter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_wave_tick.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_wave_tick.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -23,11 +24,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="502">
-              <caret line="46" column="30" selection-start-line="46" selection-start-column="30" selection-end-line="46" selection-end-column="30" />
+            <state relative-caret-position="332">
+              <caret line="34" column="36" selection-start-line="34" selection-start-column="36" selection-end-line="34" selection-end-column="36" />
               <folding>
                 <element signature="e#198#285#0" expanded="true" />
               </folding>
@@ -35,20 +36,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="fibonacci.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="fibonacci.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fibonacci.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3647">
-              <caret line="359" column="23" lean-forward="true" selection-start-line="359" selection-start-column="23" selection-end-line="359" selection-end-column="23" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="pattern_detection_controller.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pattern_detection_controller.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="510">
-              <caret line="72" column="36" selection-start-line="72" selection-start-column="36" selection-end-line="72" selection-end-column="36" />
+            <state relative-caret-position="561">
+              <caret line="389" column="43" lean-forward="true" selection-start-line="389" selection-start-column="43" selection-end-line="389" selection-end-column="43" />
+              <folding>
+                <element signature="e#158#176#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -56,8 +51,11 @@
       <file leaf-file-name="pattern_plotter.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pattern_plotter.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="269">
-              <caret line="319" column="36" lean-forward="true" selection-start-line="319" selection-start-column="36" selection-end-line="319" selection-end-column="36" />
+            <state relative-caret-position="2">
+              <caret line="320" selection-start-line="320" selection-end-line="320" />
+              <folding>
+                <element signature="e#199#262#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -149,7 +147,6 @@
         <option value="$PROJECT_DIR$/pattern_constants.py" />
         <option value="$PROJECT_DIR$/pattern_database/run_import_stock_data.py" />
         <option value="$PROJECT_DIR$/pattern.py" />
-        <option value="$PROJECT_DIR$/pattern_configuration.py" />
         <option value="$PROJECT_DIR$/pattern_detector.py" />
         <option value="$PROJECT_DIR$/pattern_data_frame.py" />
         <option value="$PROJECT_DIR$/pattern_constraints.py" />
@@ -160,11 +157,12 @@
         <option value="$PROJECT_DIR$/pattern_function_container.py" />
         <option value="$PROJECT_DIR$/pattern_part.py" />
         <option value="$PROJECT_DIR$/pattern_wave_tick.py" />
+        <option value="$PROJECT_DIR$/pattern_data_container.py" />
         <option value="$PROJECT_DIR$/pattern_plotter.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" />
-        <option value="$PROJECT_DIR$/pattern_data_container.py" />
-        <option value="$PROJECT_DIR$/run_pattern_detection.py" />
+        <option value="$PROJECT_DIR$/pattern_configuration.py" />
         <option value="$PROJECT_DIR$/fibonacci.py" />
+        <option value="$PROJECT_DIR$/run_pattern_detection.py" />
       </list>
     </option>
   </component>
@@ -184,11 +182,6 @@
             <path>
               <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
               <item name="Stocks" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Stocks" type="462c0819:PsiDirectoryNode" />
-              <item name="Others" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
@@ -325,12 +318,13 @@
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.5358911" visible="true" weight="0.20780255" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32705882" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.31058824" />
       <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3662745" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.3290735" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32784313" />
       <window_info id="Structure" order="1" sideWeight="0.4641089" side_tool="true" visible="true" weight="0.20780255" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3262745" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39376998" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39372548" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -338,7 +332,6 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.31058824" />
     </layout>
     <layout-to-restore>
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -398,7 +391,7 @@
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="360" />
+      <option name="time" value="376" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -415,6 +408,11 @@
       </expression>
     </expressions>
     <expressions id="breakpointCondition">
+      <expression>
+        <expression-string>comp_id == 'w_5'</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
       <expression>
         <expression-string>position &gt; 54</expression-string>
         <language-id>Python</language-id>
@@ -452,11 +450,6 @@
       </expression>
       <expression>
         <expression-string>tick_i.position == 84</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>k in [60, 68, 71]</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -517,13 +510,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/pandas/core/reshape/concat.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="327">
-          <caret line="212" selection-start-line="212" selection-end-line="212" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/pandas/core/nanops.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-14">
@@ -706,13 +692,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_configuration.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="765">
-          <caret line="50" column="33" selection-start-line="50" selection-start-column="33" selection-end-line="50" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_constraints.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="852">
@@ -792,36 +771,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_wave_tick.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-44">
-          <caret line="129" column="46" lean-forward="true" selection-start-line="129" selection-start-column="46" selection-end-line="129" selection-end-column="46" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_data_container.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-323">
-          <caret line="65" column="45" lean-forward="true" selection-start-line="65" selection-start-column="45" selection-end-line="65" selection-end-column="45" />
+        <state relative-caret-position="252">
+          <caret line="51" selection-start-line="51" selection-end-line="51" />
           <folding>
             <element signature="e#207#226#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="308">
-          <caret line="62" selection-start-line="62" selection-end-line="62" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="502">
-          <caret line="46" column="30" selection-start-line="46" selection-start-column="30" selection-end-line="46" selection-end-column="30" />
-          <folding>
-            <element signature="e#198#285#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -833,17 +788,61 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_plotter.py">
+    <entry file="file://$PROJECT_DIR$/pattern_wave_tick.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1511">
+          <caret line="129" column="46" lean-forward="true" selection-start-line="129" selection-start-column="46" selection-end-line="129" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/pandas/core/generic.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="248">
+          <caret line="1120" selection-start-line="1120" selection-end-line="1120" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="269">
-          <caret line="319" column="36" lean-forward="true" selection-start-line="319" selection-start-column="36" selection-end-line="319" selection-end-column="36" />
+          <caret line="17" column="17" lean-forward="true" selection-start-line="17" selection-start-column="17" selection-end-line="17" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_configuration.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="287">
+          <caret line="63" column="29" lean-forward="true" selection-start-line="63" selection-start-column="29" selection-end-line="63" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_plotter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2">
+          <caret line="320" selection-start-line="320" selection-end-line="320" />
+          <folding>
+            <element signature="e#199#262#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fibonacci.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3647">
-          <caret line="359" column="23" lean-forward="true" selection-start-line="359" selection-start-column="23" selection-end-line="359" selection-end-column="23" />
+        <state relative-caret-position="561">
+          <caret line="389" column="43" lean-forward="true" selection-start-line="389" selection-start-column="43" selection-end-line="389" selection-end-column="43" />
+          <folding>
+            <element signature="e#158#176#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="332">
+          <caret line="34" column="36" selection-start-line="34" selection-start-column="36" selection-end-line="34" selection-end-column="36" />
+          <folding>
+            <element signature="e#198#285#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
