@@ -12,10 +12,12 @@ class DIR:
 
 class FR:
     R_100 = 1.000
+    R_764 = 0.764
     R_618 = 0.618
     R_500 = 0.500
     R_382 = 0.382
     R_236 = 0.236
+    R_000 = 0.000
 
     @staticmethod
     def get_retracement_list(threshold = 2):
@@ -26,7 +28,11 @@ class FR:
 
     @staticmethod
     def get_elements_as_list():
-        return [FR.R_236, FR.R_382, FR.R_500, FR.R_618]
+        return [FR.R_236, FR.R_382, FR.R_500, FR.R_618, FR.R_764]
+
+    @staticmethod
+    def get_elements_as_list_for_retracements():
+        return [FR.R_000, FR.R_236, FR.R_382, FR.R_618, FR.R_764, FR.R_100]
 
     @staticmethod
     def is_retracement_value_compliant(retracement_value: float, tolerance_pct: float = 0.2):

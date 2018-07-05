@@ -5,10 +5,11 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, DIR
+from sertl_analytics.constants.pattern_constants import CN, FR
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Polygon, Circle
+from matplotlib.patches import Polygon, Circle, Rectangle
+from matplotlib.offsetbox import AnchoredText, TextArea, AnnotationBbox
 from matplotlib.collections import PatchCollection
 from sertl_analytics.pybase.loop_list import LoopList
 from pattern_configuration import config, runtime
@@ -19,6 +20,101 @@ from pattern import Pattern
 from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
 from fibonacci import FibonacciWaveTree
+
+
+class FibonacciWavePatch:
+    color_01 = 'darkgrey'
+    color_02 = 'whitesmoke'
+    color_list = [color_01, color_02, color_01, color_02, color_01]
+
+    def __init__(self, polygon: Polygon):
+        self.polygon = polygon
+        self.xy = self.polygon.get_xy().round(2)
+        self.id = self.__get_id__()
+        self.selected = False
+        self.__fib_retracement_rectangle_dic = {}
+        self.__fill_fibonacci_retracement_rectangle_dic__()
+        self.__text_object_dic = {}
+
+    def add_retracement_patch_list_to_axis(self, axis):
+        for key, rectangle in self.__fib_retracement_rectangle_dic.items():
+            axis.add_patch(rectangle)
+            xy = rectangle.get_xy()
+            text_area = TextArea(key, minimumdescent=False)
+            annotation_box = AnnotationBbox(text_area, (xy[0], xy[1]))
+            annotation_box.set_visible(False)
+            axis.add_artist(annotation_box)
+            self.__text_object_dic[key] = annotation_box
+
+    def hide_retracement_patch_list(self):
+        for key, rectangle in self.__fib_retracement_rectangle_dic.items():
+            rectangle.set_visible(False)
+            self.__text_object_dic[key].set_visible(False)
+
+    def show_retracement_patch_list(self):
+        for key, rectangle in self.__fib_retracement_rectangle_dic.items():
+            rectangle.set_visible(True)
+            self.__text_object_dic[key].set_visible(True)
+
+    def __get_id__(self) -> str:
+        xy_reshaped = self.xy.reshape(self.xy.size)
+        return_string = ''
+        for elements in xy_reshaped:
+            return_string = return_string + ('' if return_string == '' else '-') + str(elements)
+        return return_string
+
+    def select(self):
+        self.polygon.set_linewidth(3)
+        self.show_retracement_patch_list()
+        self.selected = True
+
+    def reset(self):
+        self.polygon.set_linewidth(1)
+        self.hide_retracement_patch_list()
+        self.selected = False
+
+    def __fill_fibonacci_retracement_rectangle_dic__(self):
+        retracement_list = FR.get_elements_as_list_for_retracements()
+        index_left = self.xy[0, 0]
+        index_right = self.xy[self.xy.shape[0]-1, 0]
+        value_left = self.xy[0, 1]
+        value_right = self.xy[self.xy.shape[0]-1, 1]
+        value_range = value_right - value_left
+        width = index_right - index_left
+
+        for k in range(0, len(retracement_list)-1):
+            ret_01 = retracement_list[k]
+            ret_02 = retracement_list[k+1]
+            value_01 = round(value_left + ret_01 * value_range, 2)
+            value_02 = round(value_left + ret_02 * value_range, 2)
+            height = abs(value_02 - value_01)
+            rectangle = Rectangle(np.array([index_left, value_02]), width=width, height=height)
+            rectangle.set_linewidth(1)
+            rectangle.set_linestyle('dashed')
+            rectangle.set_color(self.color_list[k])
+            rectangle.set_edgecolor('k')
+            rectangle.set_alpha(0.2)
+            rectangle.set_visible(False)
+            self.__fib_retracement_rectangle_dic[retracement_list[k+1]] = rectangle
+
+
+class FibonacciWavePatchContainer:
+    def __init__(self):
+        self.fibonacci_wave_path_dic = {}
+
+    def add_patch(self, fib_patch: FibonacciWavePatch):
+        self.fibonacci_wave_path_dic[fib_patch.id] = fib_patch
+
+    def get_patch_by_id(self, id: str):
+        return self.fibonacci_wave_path_dic[id]
+
+    def reset_selected_patches(self) -> bool:
+        reset_flag = False
+        for fib_patch in self.fibonacci_wave_path_dic.values():
+            if fib_patch.selected:
+                fib_patch.reset()
+                reset_flag = True
+        return reset_flag
 
 
 class FormationColorHandler:
@@ -164,6 +260,7 @@ class PatternPlotter:
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
         self.ranges_polygon_dic_list = {}
         self.ranges_opposite_polygon_dic_list = {}
+        self.fibonacci_patch_container = None
         self.__currently_visible_ranges_polygon_list = []
         self.axes_for_candlesticks = None
 
@@ -190,7 +287,7 @@ class PatternPlotter:
             self.__plot_min_max__()
             self.__plot_ranges__()
         self.__plot_patterns__()
-        self.__plot_fibonacci_relations__()
+        self.__plot_fibonacci_waves__()
 
         plt.title('{}. {} ({}) for {}'.format(
             runtime.actual_number, runtime.actual_ticker,
@@ -222,16 +319,35 @@ class PatternPlotter:
     def __on_click__(self, event):
         self.pattern_plot_container_loop_list.show_only_selected_containers(event)
 
-    def __hide_range_polygons__(self, event):
-        if len(self.__currently_visible_ranges_polygon_list) == 0:
-            return
-        for polygon in self.__currently_visible_ranges_polygon_list:
-            polygon.set_visible(False)
-        event.canvas.draw()
-
     def __on_motion_notify__(self, event):
-        draw_canvas = False
+        self.__reset_patch_lists__(event)
+        self.__handle_visibility_for_range_polygons__(event)
+        self.__handle_visibility_for_fibonacci_waves__(event)
+
+    def __reset_patch_lists__(self, event):
         self.__hide_range_polygons__(event)
+        self.__reset_fibonacci_waves__(event)
+
+    def __handle_visibility_for_fibonacci_waves__(self, event):
+        draw_canvas = False
+        for patches in self.axes_for_candlesticks.patches:
+            if patches.__class__.__name__ == 'Polygon':
+                cont, dic = patches.contains(event)
+                if cont:
+                    fib_patch = FibonacciWavePatch(patches)
+                    fib_patch_from_container = self.fibonacci_patch_container.get_patch_by_id(fib_patch.id)
+                    fib_patch_from_container.select()
+                    draw_canvas = True
+                    break
+        if draw_canvas:
+            event.canvas.draw()
+
+    def __reset_fibonacci_waves__(self, event):
+        if self.fibonacci_patch_container.reset_selected_patches():
+            event.canvas.draw()
+
+    def __handle_visibility_for_range_polygons__(self, event):
+        draw_canvas = False
         for patches in self.axes_for_candlesticks.patches:
             if patches.__class__.__name__ == 'Circle':
                 cont, dic = patches.contains(event)
@@ -239,8 +355,16 @@ class PatternPlotter:
                     tick = pdh.pattern_data.get_tick_by_date_num(patches.center[0])
                     if self.__show_ranges_polygons__(tick):
                         draw_canvas = True
+                    break
         if draw_canvas:
             event.canvas.draw()
+
+    def __hide_range_polygons__(self, event):
+        if len(self.__currently_visible_ranges_polygon_list) == 0:
+            return
+        for polygon in self.__currently_visible_ranges_polygon_list:
+            polygon.set_visible(False)
+        event.canvas.draw()
 
     def __show_ranges_polygons__(self, tick: WaveTick) -> bool:
         if tick.f_var in self.ranges_polygon_dic_list:
@@ -316,7 +440,8 @@ class PatternPlotter:
                 else:
                     self.ranges_opposite_polygon_dic_list[ticks.f_var].append(polygon)
 
-    def __plot_fibonacci_relations__(self):
+    def __plot_fibonacci_waves__(self):
+        self.fibonacci_patch_container = FibonacciWavePatchContainer()
         pdh.pattern_data.adjust_min_max_for_fibonacci()
         fib_wave_tree = FibonacciWaveTree()
         fib_wave_tree.parse_tree()
@@ -332,37 +457,12 @@ class PatternPlotter:
         fib_polygon.set_color(color)
         fib_polygon.set_linewidth(1)
         self.axes_for_candlesticks.add_patch(fib_polygon)
-
-    def __get_xy_parameters_for_fibonacci__(self):
-        xy = []
-        direction = DIR.DOWN if self.tick_list[0].low > self.tick_list[1].low else DIR.UP
-        self.__append_tick_for_fibonacci__(xy, self.tick_list[0], direction)
-        for index in range(1, len(self.tick_list)):
-            tick_last = self.tick_list[index - 1]
-            tick_current = self.tick_list[index]
-            if direction == DIR.UP:
-                if tick_last.range > tick_current.range:
-                    direction_new = DIR.DOWN
-                else:
-                    direction_new = DIR.UP
-            else:
-                if tick_last.range > tick_current.range:
-                    direction_new = DIR.DOWN
-                else:
-                    direction_new = DIR.UP
-            if direction_new != direction:
-                direction = direction_new
-                self.__append_tick_for_fibonacci__(xy, tick_last, direction)
-            if direction != tick_current.direction:
-                direction = tick_current.direction
-                self.__append_tick_for_fibonacci__(xy, tick_current, direction)
-        return xy
+        fib_wave_patch = FibonacciWavePatch(fib_polygon)
+        self.fibonacci_patch_container.add_patch(fib_wave_patch)
+        fib_wave_patch.add_retracement_patch_list_to_axis(self.axes_for_candlesticks)
 
     @staticmethod
-    def __append_tick_for_fibonacci__(xy: list, tick: WaveTick, direction: str):
-        xy.append([tick.f_var, tick.high if direction == DIR.DOWN else tick.low])
-
-    def __get_circle_radius_for_plot_min_max__(self, mean_of_data: float):
+    def __get_circle_radius_for_plot_min_max__(mean_of_data: float):
         radius_out = 0.5 * mean_of_data/300
         radius_in = 0.3 * mean_of_data/300
         return radius_out, radius_in
