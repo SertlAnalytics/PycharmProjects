@@ -317,6 +317,7 @@ class PatternPlotter:
                     self.ranges_opposite_polygon_dic_list[ticks.f_var].append(polygon)
 
     def __plot_fibonacci_relations__(self):
+        pdh.pattern_data.adjust_min_max_for_fibonacci()
         fib_wave_tree = FibonacciWaveTree()
         fib_wave_tree.parse_tree()
         for fib_waves in fib_wave_tree.fibonacci_descending_wave_list:

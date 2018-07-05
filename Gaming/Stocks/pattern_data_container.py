@@ -43,6 +43,13 @@ class PatternData:
         self.tick_list_min_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_min, False)
         self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
 
+    def adjust_min_max_for_fibonacci(self):
+        if config.length_for_local_min_max != config.length_for_local_min_max_fibonacci:
+            self.__length_for_local = config.length_for_local_min_max_fibonacci
+            self.__init_columns_for_ticks_distance__()
+            self.df_min_max = self.df[np.logical_or(self.df[CN.IS_MIN], self.df[CN.IS_MAX])]
+            self.wave_tick_list_min_max = WaveTickList(self.df_min_max)
+
     def get_tick_by_date_num(self, date_num: int):
         k = date_num
         while k not in self.tick_by_date_num_ext_dic.dic:

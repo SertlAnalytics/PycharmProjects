@@ -14,7 +14,6 @@ from pattern import Pattern, PatternHelper
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin
 from pattern_breakout import PatternBreakoutApi, PatternBreakout
 from pattern_statistics import PatternDetectorStatisticsApi
-from sertl_analytics.pybase.date_time import MyClock
 
 
 class PatternDetector:
@@ -50,7 +49,6 @@ class PatternDetector:
                     pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, pattern_range, f_comp)
                     if pattern.function_cont.is_valid():
                         self.__handle_single_pattern_when_parsing__(pattern)
-
 
     def __handle_single_pattern_when_parsing__(self, pattern: Pattern):
         can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)

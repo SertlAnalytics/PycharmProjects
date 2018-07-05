@@ -418,8 +418,8 @@ model = WorldCupModel()
 
 config.with_policy_list = False
 config.over_best_policy_list = True
-config.next_matches = 8
-config.write_predictions_to_web_page = True
+config.next_matches = 4
+config.write_predictions_to_web_page = False
 
 if config.with_policy_list:
     policy_list = PolicyList(model, 10)
