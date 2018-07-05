@@ -9,8 +9,7 @@ from sertl_analytics.constants.pattern_constants import CN, FR
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon, Circle, Rectangle
-from matplotlib.offsetbox import AnchoredText, TextArea, AnnotationBbox
-from matplotlib.collections import PatchCollection
+from matplotlib.offsetbox import TextArea, AnnotationBbox
 from sertl_analytics.pybase.loop_list import LoopList
 from pattern_configuration import config, runtime
 from pattern_data_container import pattern_data_handler as pdh
@@ -93,36 +92,38 @@ class FibonacciWavePatch:
             rectangle.set_linestyle('dashed')
             rectangle.set_color(self.color_list[k])
             rectangle.set_edgecolor('k')
-            rectangle.set_alpha(0.2)
+            rectangle.set_alpha(0.1)
             rectangle.set_visible(False)
             self.__fib_retracement_rectangle_dic[retracement_list[k+1]] = rectangle
 
 
 class FibonacciWavePatchContainer:
     def __init__(self):
-        self.fibonacci_wave_path_dic = {}
+        self.fibonacci_wave_patch_dic = {}
 
     def add_patch(self, fib_patch: FibonacciWavePatch):
-        self.fibonacci_wave_path_dic[fib_patch.id] = fib_patch
+        self.fibonacci_wave_patch_dic[fib_patch.id] = fib_patch
 
     def get_patch_by_id(self, id: str):
-        return self.fibonacci_wave_path_dic[id]
+        if id in self.fibonacci_wave_patch_dic:
+            return self.fibonacci_wave_patch_dic[id]
+        return None
 
     def reset_selected_patches(self) -> bool:
         reset_flag = False
-        for fib_patch in self.fibonacci_wave_path_dic.values():
+        for fib_patch in self.fibonacci_wave_patch_dic.values():
             if fib_patch.selected:
                 fib_patch.reset()
                 reset_flag = True
         return reset_flag
 
 
-class FormationColorHandler:
-    def get_colors_for_formation(self, formation: Pattern):
-        return self.__get_formation_color__(formation), self.__get_trade_color__(formation)
+class PatternColorHandler:
+    def get_colors_for_pattern(self, formation: Pattern):
+        return self.__get_pattern_color__(formation), self.__get_trade_color__(formation)
 
     @staticmethod
-    def __get_formation_color__(formation: Pattern):
+    def __get_pattern_color__(formation: Pattern):
         if formation.was_breakout_done():
             return 'green'
         else:
@@ -150,7 +151,7 @@ class PatternPlotContainer:
     def __init__(self, polygon: Polygon, pattern_color: str):
         self.index_list = []
         self.shape_dic = {}
-        self.pc_dic = {}
+        self.patches_dic = {}
         self.color_dic = {}
         self.index_list.append('pattern')
         self.shape_dic['pattern'] = polygon
@@ -197,25 +198,26 @@ class PatternPlotContainer:
 
     def __set_visible__(self, visible: bool, with_annotation: bool):
         self.annotation.set_visible(visible and with_annotation)
-        for key in self.pc_dic:
+        for key in self.patches_dic:
             if key == 'center' and visible and with_annotation:
-                self.pc_dic[key].set_visible(False)
+                self.patches_dic[key].set_visible(False)
             else:
-                self.pc_dic[key].set_visible(visible)
+                self.patches_dic[key].set_visible(visible)
 
     def add_annotation(self, axes):
         self.annotation = self.annotation_param.get_annotation(axes)
 
-    def add_elements_as_patch_collection(self, axes):
+    def add_elements_as_patches(self, axes):
         for keys in self.index_list:
-            self.pc_dic[keys] = PatchCollection([self.shape_dic[keys]], alpha=0.4)
+            patch = self.shape_dic[keys]
+            self.patches_dic[keys] = patch
+            patch.set_alpha(0.2)
             if keys in ['top', 'bottom']:
-                self.pc_dic[keys].set_color('None')
-                self.pc_dic[keys].set_edgecolor(self.color_dic[keys])
+                patch.set_color('None')
+                patch.set_edgecolor(self.color_dic[keys])
             else:
-                self.pc_dic[keys].set_color(self.color_dic[keys])
-
-            axes.add_collection(self.pc_dic[keys])
+                patch.set_color(self.color_dic[keys])
+            axes.add_patch(patch)
 
 
 class PatternPlotContainerLoopList(LoopList):
@@ -236,16 +238,15 @@ class PatternPlotContainerLoopList(LoopList):
 
     def __add_selected_pattern_to_show_list__(self, event, show_list: list):
         for pattern_plot_container in self.value_list:
-            for collections_keys in pattern_plot_container.pc_dic:
-                collection = pattern_plot_container.pc_dic[collections_keys]
-                cont, dic = collection.contains(event)
+            for patch in pattern_plot_container.patches_dic.values():
+                cont, dic = patch.contains(event)
                 if cont:
                     show_list.append(pattern_plot_container)
 
     def __add_first_first_selected_center_pattern_to_show_list__(self, event, show_list: list):
         for pattern_plot_container in self.value_list:
-            collection = pattern_plot_container.pc_dic['center']
-            cont, dic = collection.contains(event)
+            patch = pattern_plot_container.patches_dic['center']
+            cont, dic = patch.contains(event)
             if cont:
                 show_list.append(pattern_plot_container)
                 break
@@ -336,9 +337,10 @@ class PatternPlotter:
                 if cont:
                     fib_patch = FibonacciWavePatch(patches)
                     fib_patch_from_container = self.fibonacci_patch_container.get_patch_by_id(fib_patch.id)
-                    fib_patch_from_container.select()
-                    draw_canvas = True
-                    break
+                    if fib_patch_from_container is not None:
+                        fib_patch_from_container.select()
+                        draw_canvas = True
+                        break
         if draw_canvas:
             event.canvas.draw()
 
@@ -473,9 +475,9 @@ class PatternPlotter:
         axis.legend(loc='upper left')
 
     def __fill_plot_container_list__(self):
-        color_handler = FormationColorHandler()
+        color_handler = PatternColorHandler()
         for pattern in self.detector.pattern_list:
-            color_pattern, color_trade = color_handler.get_colors_for_formation(pattern)
+            color_pattern, color_trade = color_handler.get_colors_for_pattern(pattern)
             plot_container = PatternPlotContainer(pattern.get_shape_part_main(), color_pattern)
             if pattern.was_breakout_done() and pattern.is_part_trade_available():
                 plot_container.add_trade_shape(pattern.get_shape_part_trade(), color_trade)
@@ -488,5 +490,5 @@ class PatternPlotter:
 
     def __add_pattern_shapes_to_plot__(self):
         for pattern_plot_container in self.pattern_plot_container_loop_list.value_list:
-            pattern_plot_container.add_elements_as_patch_collection(self.axes_for_candlesticks)
+            pattern_plot_container.add_elements_as_patches(self.axes_for_candlesticks)
             pattern_plot_container.add_annotation(self.axes_for_candlesticks)

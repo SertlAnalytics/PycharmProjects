@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 import numpy as np
-from sertl_analytics.constants.pattern_constants import TT, DIR, FR, CN
+from sertl_analytics.constants.pattern_constants import TT, DIR, FR, CN, FD
 from pattern_wave_tick import WaveTick
 from pattern_data_container import pattern_data_handler as pdh
 import math
@@ -137,6 +137,10 @@ class FibonacciWave:
 
     def __init__(self):
         self.comp_dic = {}
+
+    @property
+    def wave_type(self):
+        return FD.NONE
 
     @property
     def max(self):
@@ -313,6 +317,10 @@ class FibonacciWave:
 
 
 class FibonacciAscendingWave(FibonacciWave):
+    @property
+    def wave_type(self):
+        return FD.ASC
+
     def __is_tick_next_regression__(self, tick: WaveTick, reg_comp_id_next: str) -> bool:
         return tick.high > self.max and (reg_comp_id_next != 'w_5' or tick.is_global_max)
 
@@ -344,6 +352,10 @@ class FibonacciAscendingWave(FibonacciWave):
 
 
 class FibonacciDescendingWave(FibonacciWave):
+    @property
+    def wave_type(self):
+        return FD.DESC
+
     def __is_tick_next_regression__(self, tick: WaveTick, reg_comp_id_next: str) -> bool:
         return tick.low < self.min and (reg_comp_id_next != 'w_5' or tick.is_global_min)
 
@@ -412,7 +424,7 @@ class FibonacciWaveTree:
             if tick.is_local_max:
                 self.max_tick_list.append(tick)
                 self.__fill_max_possible_min_tick_dic__(index, tick)
-            elif tick.is_local_min:
+            if tick.is_local_min:
                 self.min_tick_list.append(tick)
                 self.__fill_min_possible_max_tick_dic__(index, tick)
 
@@ -460,24 +472,21 @@ class FibonacciWaveTree:
                     del wave.comp_dic[ret_comp_id_next]
 
     def __get_possible_next_tick_dic__(self, tick_previous, wave, for_regression: bool):
-        try:
-            if wave.__class__.__name__ == 'FibonacciDescendingWave':
-                if for_regression:
-                    return self.max_possible_min_tick_dic[tick_previous.position]
-                else:
-                    return self.min_possible_max_tick_dic[tick_previous.position]
+        if wave.wave_type == FD.DESC:
+            if for_regression:
+                return self.max_possible_min_tick_dic[tick_previous.position]
             else:
-                if for_regression:
-                    return self.min_possible_max_tick_dic[tick_previous.position]
-                else:
-                    return self.max_possible_min_tick_dic[tick_previous.position]
-        except:  # ToDo find error for 'DWDP': 'DuPont' - "Date BETWEEN '2017-09-01' AND '2019-01-01'"
-            return []
+                return self.min_possible_max_tick_dic[tick_previous.position]
+        else:
+            if for_regression:
+                return self.min_possible_max_tick_dic[tick_previous.position]
+            else:
+                return self.max_possible_min_tick_dic[tick_previous.position]
 
     def __process_completed_wave__(self, wave):
         if wave.is_wave_fibonacci_wave():
             wave_clone = wave.clone()
-            if wave.__class__.__name__ == 'FibonacciDescendingWave':
+            if wave.wave_type == FD.DESC:
                 self.fibonacci_descending_wave_list.append(wave_clone)
             else:
                 self.fibonacci_ascending_wave_list.append(wave_clone)
