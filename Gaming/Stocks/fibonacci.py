@@ -325,7 +325,7 @@ class FibonacciAscendingWave(FibonacciWave):
         return tick.high > self.max and (reg_comp_id_next != 'w_5' or tick.is_global_max)
 
     def can_regression_component_be_added(self, reg_comp: FibonacciRegressionComponent) -> bool:
-        return reg_comp.tick_start.low >= reg_comp.min
+        return reg_comp.tick_start.low <= reg_comp.min
 
     def __is_tick_next_retracement__(self, tick: WaveTick, ret_comp_id_next: str) -> bool:
         ret_min_list = [comp.min for comp in self.ret_comp_list]

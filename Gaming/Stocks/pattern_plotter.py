@@ -32,28 +32,23 @@ class FibonacciWavePatch:
         self.id = self.__get_id__()
         self.selected = False
         self.__fib_retracement_rectangle_dic = {}
+        self.__fib_retracement_rectangle_text_dic = {}
         self.__fill_fibonacci_retracement_rectangle_dic__()
-        self.__text_object_dic = {}
 
     def add_retracement_patch_list_to_axis(self, axis):
         for key, rectangle in self.__fib_retracement_rectangle_dic.items():
             axis.add_patch(rectangle)
-            xy = rectangle.get_xy()
-            text_area = TextArea(key, minimumdescent=False)
-            annotation_box = AnnotationBbox(text_area, (xy[0], xy[1]))
-            annotation_box.set_visible(False)
-            axis.add_artist(annotation_box)
-            self.__text_object_dic[key] = annotation_box
+            axis.add_artist(self.__fib_retracement_rectangle_text_dic[key])
 
     def hide_retracement_patch_list(self):
         for key, rectangle in self.__fib_retracement_rectangle_dic.items():
             rectangle.set_visible(False)
-            self.__text_object_dic[key].set_visible(False)
+            self.__fib_retracement_rectangle_text_dic[key].set_visible(False)
 
     def show_retracement_patch_list(self):
         for key, rectangle in self.__fib_retracement_rectangle_dic.items():
             rectangle.set_visible(True)
-            self.__text_object_dic[key].set_visible(True)
+            self.__fib_retracement_rectangle_text_dic[key].set_visible(True)
 
     def __get_id__(self) -> str:
         xy_reshaped = self.xy.reshape(self.xy.size)
@@ -86,15 +81,20 @@ class FibonacciWavePatch:
             ret_02 = retracement_list[k+1]
             value_01 = round(value_left + ret_01 * value_range, 2)
             value_02 = round(value_left + ret_02 * value_range, 2)
-            height = abs(value_02 - value_01)
-            rectangle = Rectangle(np.array([index_left, value_02]), width=width, height=height)
+            height = value_02 - value_01
+            rectangle = Rectangle(np.array([index_left, value_01]), width=width, height=height)
             rectangle.set_linewidth(1)
             rectangle.set_linestyle('dashed')
             rectangle.set_color(self.color_list[k])
             rectangle.set_edgecolor('k')
             rectangle.set_alpha(0.1)
             rectangle.set_visible(False)
-            self.__fib_retracement_rectangle_dic[retracement_list[k+1]] = rectangle
+            self.__fib_retracement_rectangle_dic[ret_02] = rectangle
+            # and the text box for that retracement
+            text_area = TextArea(ret_02, minimumdescent=False)
+            annotation_box = AnnotationBbox(text_area, (index_left, value_02))
+            annotation_box.set_visible(False)
+            self.__fib_retracement_rectangle_text_dic[ret_02] = annotation_box
 
 
 class FibonacciWavePatchContainer:
