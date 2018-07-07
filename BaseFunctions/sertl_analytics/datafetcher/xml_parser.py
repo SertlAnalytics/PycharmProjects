@@ -38,9 +38,14 @@ class XMLParser:
             for sub_tag in tag_object.findAll(self.__sub_tag)[1:]:
                 td_list = sub_tag.findAll('td')
                 element = [td_list[self.__sub_tag_dic[column]].text for column in self.__sub_tag_dic]
+                element = self.__remove_ending_line_break__(element)
                 self.__result_list.append(element)
         else:
             raise MyException('No XML parser defined for tag "{}"'.format(self.__tag))
+
+    def __remove_ending_line_break__(self, element_list: list):
+        return_list = [element[:-1] if  element[-1] == '\n' else element for element in element_list]
+        return return_list
 
 
 class XMLParser4SP500(XMLParser):
