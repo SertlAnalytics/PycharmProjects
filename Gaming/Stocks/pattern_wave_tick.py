@@ -66,19 +66,19 @@ class WaveTick:
 
     @property
     def open(self):
-        return self.tick[CN.OPEN]
+        return round(self.tick[CN.OPEN], 2)
 
     @property
     def high(self):
-        return self.tick[CN.HIGH]
+        return round(self.tick[CN.HIGH], 2)
 
     @property
     def low(self):
-        return self.tick[CN.LOW]
+        return round(self.tick[CN.LOW], 2)
 
     @property
     def close(self):
-        return self.tick[CN.CLOSE]
+        return round(self.tick[CN.CLOSE], 2)
 
     @property
     def volume(self):

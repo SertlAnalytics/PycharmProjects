@@ -18,51 +18,66 @@ from pattern_detector import PatternDetector
 from pattern import Pattern
 from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
-from fibonacci import FibonacciWaveTree
+from fibonacci import FibonacciWaveTree, FibonacciWave
+
+
+class PatchHelper:
+    @staticmethod
+    def get_id_for_polygon(patch) -> str:
+        return_string = ''
+        if PatchHelper.get_patch_type(patch) == 'Polygon':
+            xy = patch.get_xy().round(2)
+            xy_reshaped = xy.reshape(xy.size)
+            for elements in xy_reshaped:
+                return_string = return_string + ('' if return_string == '' else '-') + str(elements)
+        return return_string
+
+    @staticmethod
+    def get_patch_type(patch):
+        return patch.__class__.__name__
 
 
 class FibonacciWavePatch:
     color_01 = 'darkgrey'
     color_02 = 'whitesmoke'
+    color_bg = 'lightyellow'
     color_list = [color_01, color_02, color_01, color_02, color_01]
 
-    def __init__(self, polygon: Polygon):
+    def __init__(self, fib_wave: FibonacciWave, polygon: Polygon):
+        self.fib_wave = fib_wave
         self.polygon = polygon
         self.xy = self.polygon.get_xy().round(2)
-        self.id = self.__get_id__()
+        self.id = PatchHelper.get_id_for_polygon(self.polygon)
         self.selected = False
         self.__fib_retracement_rectangle_dic = {}
         self.__fib_retracement_rectangle_text_dic = {}
+        self.__fib_retracement_spikes_text_dic = {}
         self.__fill_fibonacci_retracement_rectangle_dic__()
 
     def add_retracement_patch_list_to_axis(self, axis):
         for key, rectangle in self.__fib_retracement_rectangle_dic.items():
             axis.add_patch(rectangle)
             axis.add_artist(self.__fib_retracement_rectangle_text_dic[key])
+            axis.add_artist(self.__fib_retracement_spikes_text_dic[key])
 
     def hide_retracement_patch_list(self):
         for key, rectangle in self.__fib_retracement_rectangle_dic.items():
             rectangle.set_visible(False)
             self.__fib_retracement_rectangle_text_dic[key].set_visible(False)
+            self.__fib_retracement_spikes_text_dic[key].set_visible(False)
 
     def show_retracement_patch_list(self):
         for key, rectangle in self.__fib_retracement_rectangle_dic.items():
             rectangle.set_visible(True)
             self.__fib_retracement_rectangle_text_dic[key].set_visible(True)
+            self.__fib_retracement_spikes_text_dic[key].set_visible(True)
 
-    def __get_id__(self) -> str:
-        xy_reshaped = self.xy.reshape(self.xy.size)
-        return_string = ''
-        for elements in xy_reshaped:
-            return_string = return_string + ('' if return_string == '' else '-') + str(elements)
-        return return_string
-
-    def select(self):
+    def select_fib_wave(self):
         self.polygon.set_linewidth(3)
         self.show_retracement_patch_list()
         self.selected = True
 
-    def reset(self):
+    def reset_selected_fib_wave(self):
         self.polygon.set_linewidth(1)
         self.hide_retracement_patch_list()
         self.selected = False
@@ -79,6 +94,7 @@ class FibonacciWavePatch:
         for k in range(0, len(retracement_list)-1):
             ret_01 = retracement_list[k]
             ret_02 = retracement_list[k+1]
+
             value_01 = round(value_left + ret_01 * value_range, 2)
             value_02 = round(value_left + ret_02 * value_range, 2)
             height = value_02 - value_01
@@ -90,16 +106,42 @@ class FibonacciWavePatch:
             rectangle.set_alpha(0.1)
             rectangle.set_visible(False)
             self.__fib_retracement_rectangle_dic[ret_02] = rectangle
-            # and the text box for that retracement
-            text_area = TextArea(ret_02, minimumdescent=False)
-            annotation_box = AnnotationBbox(text_area, (index_left, value_02))
-            annotation_box.set_visible(False)
-            self.__fib_retracement_rectangle_text_dic[ret_02] = annotation_box
+            self.__fill_retracement_text_annotations__(index_left, ret_02, value_02)
+            self.__fill_retracement_spikes_text_annotations__(ret_02, k + 1)
+
+    def __fill_retracement_text_annotations__(self, index: int, ret: float, value: float):
+        text = '{:=1.3f} - {:.2f}'.format(ret, value)
+        text_area = TextArea(text, minimumdescent=True, textprops=dict(size=7))
+        annotation_box = AnnotationBbox(text_area, (index, value))
+        annotation_box.set_visible(False)
+        self.__fib_retracement_rectangle_text_dic[ret] = annotation_box
+
+    def __fill_retracement_spikes_text_annotations__(self, ret: str, position_in_wave: int):
+        index = self.xy[position_in_wave, 0]
+        value = self.xy[position_in_wave, 1]
+        position = self.fib_wave.position_list[position_in_wave]
+        is_position_retracement = position_in_wave % 2 == 0
+        prefix = 'Retr.' if is_position_retracement else 'Reg.'
+        value_adjusted = value + (value * 0.01 if is_position_retracement else value * -0.01)
+        reg_ret_value = self.fib_wave.reg_ret_list[position_in_wave-1]
+        if position_in_wave == 1:
+            reg_ret_value = round(self.xy[position_in_wave, 1] - self.xy[position_in_wave - 1, 1], 2)
+            text = 'P_{}={:.2f}\n{}: {:.2f}'.format(position, value, prefix, reg_ret_value)
+        else:
+            text = 'P_{}={:.2f}\n{}: {:=3.1f}%'.format(position, value, prefix, reg_ret_value)
+        text_props = dict(color='crimson', backgroundcolor=self.color_bg, size=7)
+        text_area = TextArea(text, minimumdescent=True, textprops=text_props)
+        annotation_box = AnnotationBbox(text_area, (index, value_adjusted))
+        annotation_box.set_visible(False)
+        self.__fib_retracement_spikes_text_dic[ret] = annotation_box
 
 
 class FibonacciWavePatchContainer:
     def __init__(self):
         self.fibonacci_wave_patch_dic = {}
+
+    def contains_patch_id(self, patch_id: str):
+        return patch_id in self.fibonacci_wave_patch_dic
 
     def add_patch(self, fib_patch: FibonacciWavePatch):
         self.fibonacci_wave_patch_dic[fib_patch.id] = fib_patch
@@ -113,7 +155,7 @@ class FibonacciWavePatchContainer:
         reset_flag = False
         for fib_patch in self.fibonacci_wave_patch_dic.values():
             if fib_patch.selected:
-                fib_patch.reset()
+                fib_patch.reset_selected_fib_wave()
                 reset_flag = True
         return reset_flag
 
@@ -335,10 +377,10 @@ class PatternPlotter:
             if patches.__class__.__name__ == 'Polygon':
                 cont, dic = patches.contains(event)
                 if cont:
-                    fib_patch = FibonacciWavePatch(patches)
-                    fib_patch_from_container = self.fibonacci_patch_container.get_patch_by_id(fib_patch.id)
-                    if fib_patch_from_container is not None:
-                        fib_patch_from_container.select()
+                    polygon_id = PatchHelper.get_id_for_polygon(patches)
+                    if self.fibonacci_patch_container.contains_patch_id(polygon_id):
+                        fib_patch_from_container = self.fibonacci_patch_container.get_patch_by_id(polygon_id)
+                        fib_patch_from_container.select_fib_wave()
                         draw_canvas = True
                         break
         if draw_canvas:
@@ -452,14 +494,14 @@ class PatternPlotter:
         for fib_waves in fib_wave_tree.fibonacci_ascending_wave_list:
             self.__plot_single_fibonacci_wave__(fib_waves, 'g')
 
-    def __plot_single_fibonacci_wave__(self, fib_waves, color: str):
-        xy = fib_waves.get_xy_parameter()
+    def __plot_single_fibonacci_wave__(self, fib_wave: FibonacciWave, color: str):
+        xy = fib_wave.get_xy_parameter()
         fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
         fib_polygon.set_visible(True)
         fib_polygon.set_color(color)
         fib_polygon.set_linewidth(1)
         self.axes_for_candlesticks.add_patch(fib_polygon)
-        fib_wave_patch = FibonacciWavePatch(fib_polygon)
+        fib_wave_patch = FibonacciWavePatch(fib_wave, fib_polygon)
         self.fibonacci_patch_container.add_patch(fib_wave_patch)
         fib_wave_patch.add_retracement_patch_list_to_axis(self.axes_for_candlesticks)
 
