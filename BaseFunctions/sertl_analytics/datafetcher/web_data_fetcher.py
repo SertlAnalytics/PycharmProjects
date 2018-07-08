@@ -14,7 +14,7 @@ from sertl_analytics.pybase.df_base import PyBaseDataFrame
 
 class IndicesComponentList:
     @staticmethod
-    def get_ticker_name_dic(index: str):
+    def get_ticker_name_dic(index: str, currency: str = 'USD'):
         if index == Indices.DOW_JONES:
             parser = XMLParser4DowJones()
             return parser.get_result_dic()
@@ -28,7 +28,17 @@ class IndicesComponentList:
             ftp_fetcher = NasdaqFtpFileFetcher()
             df = ftp_fetcher.get_data_frame()
             return PyBaseDataFrame.get_rows_as_dictionary(df, 'Symbol', ['Security Name'], {'Market Category': 'Q'})
+        elif index == Indices.CRYPTO_CCY:
+            base_dic = IndicesComponentList.__get_crypto_currency_base_dic__()
+            return {key + '_' + currency: value + ' (' + currency + ')' for key, value in base_dic.items()}
         elif index == Indices.MIXED:
             return {"TSLA": "Tesla", "FCEL": "Full Cell", "ONVO": "Organovo", "MRAM": "MRAM"}
         else:
             raise MyException('No index fetcher defined for "{}"'.format(index))
+
+    @staticmethod
+    def __get_crypto_currency_base_dic__() -> dict:
+        return {'BCH': 'Bitcoin-Cash', 'BTC': 'Bitcoin', 'EOS': 'EOS',
+                'ETC': 'Ethereum-Classic',
+                'ETH': 'Ethereum (USD)', 'IOTA': 'IOTA', 'LCC': 'Litecoin-Cash',
+                'LTC': 'Litecoin (USD)', 'NEO': 'NEO', 'XRP': 'Ripple'}

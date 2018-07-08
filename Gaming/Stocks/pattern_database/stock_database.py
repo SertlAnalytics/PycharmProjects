@@ -6,18 +6,21 @@ Date: 2018-05-14
 """
 
 from sqlalchemy import create_engine, MetaData
-from sqlalchemy import Table, Column, String, Integer, Float, Boolean
+from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, ApiPeriod, ApiOutputsize
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod, ApiOutputsize
 import pandas as pd
 import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
-from sertl_analytics.constants.pattern_constants import Indices
+from sertl_analytics.constants.pattern_constants import Indices, CN
 import os
 
 
 class StockDatabase(BaseDatabase):
+    __crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+
     def is_symbol_loaded(self, symbol: str):
         last_loaded_dic = self.__get_last_loaded_dic__(symbol)
         return len(last_loaded_dic) == 1
@@ -56,6 +59,17 @@ class StockDatabase(BaseDatabase):
                                                             last_loaded_date_dic, dt_now)
         self.__handle_error_cases__()
 
+    def update_crypto_currencies(self, period: ApiPeriod = ApiPeriod.DAILY):
+        company_dic = self.__get_company_dic__(like_input='USD')
+        last_loaded_date_dic = self.__get_last_loaded_dic__(like_input='USD')
+        dt_now = datetime.strptime(str(datetime.now().date()), "%Y-%m-%d")
+        print('\nUpdating {}...\n'.format(Indices.CRYPTO_CCY))
+        ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+        for ticker in ticker_dic:
+            self.__update_stock_data_for_single_value__(period, ticker, ticker_dic[ticker], company_dic,
+                                                        last_loaded_date_dic, dt_now)
+        self.__handle_error_cases__()
+
     def __handle_error_cases__(self):
         while len(self.error_handler.retry_dic) > 0:
             retry_dic = dict(self.error_handler.retry_dic)
@@ -84,7 +98,10 @@ class StockDatabase(BaseDatabase):
         if ticker not in company_dic or company_dic[ticker].ToBeLoaded:
             output_size = ApiOutputsize.FULL if delta.days > 50 else ApiOutputsize.COMPACT
             try:
-                stock_fetcher = AlphavantageStockFetcher(ticker, period, output_size)
+                if ticker in self.__crypto_ccy_dic:
+                    stock_fetcher = AlphavantageCryptoFetcher(ticker, period)
+                else:
+                    stock_fetcher = AlphavantageStockFetcher(ticker, period, output_size)
             except KeyError:
                 self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
                 self.error_handler.add_to_retry_dic(ticker, [name, period])
@@ -95,7 +112,7 @@ class StockDatabase(BaseDatabase):
                 return
             df = stock_fetcher.get_data_frame()
             if ticker not in company_dic:
-                to_be_loaded = df['Volume'].mean() > 10000
+                to_be_loaded = df[CN.VOL].mean() > 10000
                 self.__insert_company_in_company_table__(ticker, name, to_be_loaded)
                 company_dic[ticker] = to_be_loaded
                 if not to_be_loaded:
@@ -113,22 +130,26 @@ class StockDatabase(BaseDatabase):
         dic_alternate = {'GOOG': 'Alphbeth', 'LBTYK': 'Liberty', 'FOX': 'Twenty-First Century'}
         return dic_alternate[ticker] if ticker in dic_alternate else name
 
-    def __get_company_dic__(self, symbol_input: str = ''):
+    def __get_company_dic__(self, symbol_input: str = '', like_input: str = ''):
         company_dic = {}
         query = 'SELECT * FROM Company'
         if symbol_input != '':
             query += ' WHERE Symbol = "' + symbol_input + '"'
+        elif like_input != '':
+            query += ' WHERE Symbol like "%' + like_input + '"'
         query += ' ORDER BY Symbol'
         db_df = DatabaseDataFrame(self, query)
         for index, rows in db_df.df.iterrows():
             company_dic[rows.Symbol] = rows
         return company_dic
 
-    def __get_last_loaded_dic__(self, symbol_input: str = ''):
+    def __get_last_loaded_dic__(self, symbol_input: str = '', like_input: str = ''):
         last_loaded_dic = {}
         query = 'SELECT DISTINCT Symbol from Stocks'
         if symbol_input != '':
             query += ' WHERE Symbol = "' + symbol_input + '"'
+        elif like_input != '':
+            query += ' WHERE Symbol like "%' + like_input + '"'
         query += ' ORDER BY Symbol'
         db_df = DatabaseDataFrame(self, query)
         loaded_symbol_list = [rows.Symbol for index, rows in db_df.df.iterrows()]
@@ -166,41 +187,41 @@ class StockDatabase(BaseDatabase):
         close_previous = 0
         for dates, row in df.iterrows():
             date = datetime.strptime(dates, '%Y-%m-%d')
-            v_open = float(row["Open"])
-            high = float(row["High"])
-            low = float(row["Low"])
-            close = float(row["Close"])
-            volume = float(row["Volume"])
+            v_open = float(row[CN.OPEN])
+            high = float(row[CN.HIGH])
+            low = float(row[CN.LOW])
+            close = float(row[CN.CLOSE])
+            volume = float(row[CN.VOL])
             big_move = False  # default
             direction = 0  # default
-            if close_previous != 0:
+            if close != 0:
                 if abs((close_previous - close) / close) > 0.03:
                     big_move = True
                     direction = math.copysign(1, close - close_previous)
             close_previous = close
 
             if not math.isnan(high):
-                input_dic = {'Period': str(period), 'Symbol': symbol, 'Date': date,
-                             'Open': v_open, 'High': high, 'Low': low, 'Close': close,
-                             'Volume': volume, 'BigMove': big_move, 'Direction': direction}
+                input_dic = {CN.PERIOD: str(period), CN.SYMBOL: symbol, CN.DATE: date,
+                             CN.OPEN: v_open, CN.HIGH: high, CN.LOW: low, CN.CLOSE: close,
+                             CN.VOL: volume, CN.BIG_MOVE: big_move, CN.DIRECTION: direction}
                 input_list.append(input_dic)
         return input_list
 
     def create_tables(self):
         metadata = MetaData()
         # Define a new table with a name, count, amount, and valid column: data
-        # data = Table('Stocks', metadata,
-        #              Column('Period', String(20)),  # MONTHLY, WEEKLY, DAILY, HOURLY, MINUTELY
-        #              Column('Symbol', String(20)),
-        #              Column('Date', Date()),
-        #              Column('Open', Float()),
-        #              Column('High', Float()),
-        #              Column('Low', Float()),
-        #              Column('Close', Float()),
-        #              Column('Volume', Float()),
-        #              Column('BigMove', Boolean(), default=False),
-        #              Column('Direction', Integer(), default=0)  # 1 = up, -1 = down, 0 = default (no big move)
-        #              )
+        data = Table('Stocks', metadata,
+                     Column('Period', String(20)),  # MONTHLY, WEEKLY, DAILY, HOURLY, MINUTELY
+                     Column('Symbol', String(20)),
+                     Column('Date', Date()),
+                     Column('Open', Float()),
+                     Column('High', Float()),
+                     Column('Low', Float()),
+                     Column('Close', Float()),
+                     Column('Volume', Float()),
+                     Column('BigMove', Boolean(), default=False),
+                     Column('Direction', Integer(), default=0)  # 1 = up, -1 = down, 0 = default (no big move)
+                     )
 
         # Define a new table with a name, count, amount, and valid column: data
         data = Table(
@@ -228,8 +249,8 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
         if and_clause != '':
             self.statement += ' and ' + and_clause
         DatabaseDataFrame.__init__(self, db, self.statement)
-        self.df['Date'] = self.df['Date'].apply(pd.to_datetime)
-        self.df = self.df.set_index('Date')
+        self.df[CN.DATE] = self.df[CN.DATE].apply(pd.to_datetime)
+        self.df = self.df.set_index(CN.DATE)
         self.column_list = list(self.df.columns.values)
         self.column_list_data = self.get_column_list_data()
         self.column_data = self.get_column_data()

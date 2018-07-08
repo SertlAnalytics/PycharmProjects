@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, FR
+from sertl_analytics.constants.pattern_constants import CN, fibonacci_helper
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon, Circle, Rectangle
@@ -83,7 +83,6 @@ class FibonacciWavePatch:
         self.selected = False
 
     def __fill_fibonacci_retracement_rectangle_dic__(self):
-        retracement_list = FR.get_elements_as_list_for_retracements()
         index_left = self.xy[0, 0]
         index_right = self.xy[self.xy.shape[0]-1, 0]
         value_left = self.xy[0, 1]
@@ -91,9 +90,9 @@ class FibonacciWavePatch:
         value_range = value_right - value_left
         width = index_right - index_left
 
-        for k in range(0, len(retracement_list)-1):
-            ret_01 = retracement_list[k]
-            ret_02 = retracement_list[k+1]
+        for k in range(0, len(fibonacci_helper.retracement_list_for_plotting)-1):
+            ret_01 = fibonacci_helper.retracement_list_for_plotting[k]
+            ret_02 = fibonacci_helper.retracement_list_for_plotting[k+1]
 
             value_01 = round(value_left + ret_01 * value_range, 2)
             value_02 = round(value_left + ret_02 * value_range, 2)

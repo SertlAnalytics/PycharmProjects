@@ -5,12 +5,18 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
+class CM:  # coverage mode
+    COVERING = 'covering'
+    COVERED_BY = 'covered_by'
+    NONE = 'NONE'
+
+
 class DIR:
     UP = 'UP'
     DOWN = 'DOWN'
 
 
-class FR:
+class FR:  # Fibonnaci Retracements
     R_100 = 1.000
     R_764 = 0.764
     R_618 = 0.618
@@ -20,35 +26,28 @@ class FR:
     R_000 = 0.000
 
     @staticmethod
-    def get_retracement_list(threshold = 2):
-        r_list = FR.get_elements_as_list()
-        for i in range(1, threshold):
-            r_list = r_list + [round(element + i, 3) for element in r_list]
-        return r_list
-
-    @staticmethod
     def get_elements_as_list():
-        return [FR.R_236, FR.R_382, FR.R_500, FR.R_618, FR.R_764]
+        return [FR.R_236, FR.R_382, FR.R_618, FR.R_764]
 
     @staticmethod
     def get_elements_as_list_for_retracements():
         return [FR.R_000, FR.R_236, FR.R_382, FR.R_618, FR.R_764, FR.R_100]
 
-    @staticmethod
-    def is_retracement_value_compliant(retracement_value: float, tolerance_pct: float = 0.2):
-        retracements = FR.get_elements_as_list()
-        for values in retracements:
-            if abs(retracement_value - values) < values * tolerance_pct:
+
+class FibonacciHelper:
+    def __init__(self):
+        self.base_retracement_list = FR.get_elements_as_list()
+        self.retracement_list_for_plotting = FR.get_elements_as_list_for_retracements()
+
+    def is_value_a_fibonacci_relation(self, value: float, tolerance_pct: float = 0.2):
+        decimal_part = value - int(value)
+        for fib_value in self.base_retracement_list:
+            if abs(decimal_part - fib_value) < fib_value * tolerance_pct:
                 return True
         return False
 
-    @staticmethod
-    def is_regression_pct_compliant(regression_pct: float, tolerance_pct: float = 0.2):
-        retracements_pcts = FR.get_retracement_list(2)
-        for pct in retracements_pcts:
-            if abs(pct - regression_pct) < regression_pct * tolerance_pct:
-                return True
-        return False
+
+fibonacci_helper = FibonacciHelper()
 
 
 class FT:
@@ -79,6 +78,7 @@ class Indices:
     NASDAQ = 'Nasdaq (all)'
     SP500 = 'S&P 500'
     MIXED = 'Mixed'
+    CRYPTO_CCY = 'Crypto Currencies'
     ALL_DATABASE = 'All in database'
     ALL = 'All'
 
@@ -102,6 +102,10 @@ class FCC:  # Formation Condition Columns
 
 
 class CN:  # Column Names
+    PERIOD = 'Period'
+    SYMBOL = 'Symbol'
+    DIRECTION = 'Direction'
+    BIG_MOVE = 'BigMove'
     OPEN = 'Open'
     HIGH = 'High'
     LOW = 'Low'

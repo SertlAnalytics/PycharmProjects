@@ -103,7 +103,6 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
 
 class AlphavantageStockFetcher (AlphavantageJSONFetcher):
     def get_column_list_data(self):
-        # return self.column_list[:-1]
         return self.column_list
 
     def get_column_data(self):
@@ -140,18 +139,17 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
 
 
 class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
-    def __init__(self, key: str, period: ApiPeriod = ApiPeriod.DAILY, market: str = 'USD'):
-        self.market = market
+    def __init__(self, key: str, period: ApiPeriod = ApiPeriod.DAILY):
         AlphavantageJSONFetcher.__init__(self, key, period)
 
     def get_column_list_data(self):
-        return self.column_list[:-2]
+        return self.column_list
 
     def get_column_data(self):
-        return self.column_list[-3]
+        return self.column_list[-2]
 
     def get_column_volume(self):
-        return self.column_list[-2]
+        return self.column_list[-1]
 
     def get_url_function(self):
         dict = {ApiPeriod.WEEKLY: 'DIGITAL_CURRENCY_WEEKLY',
@@ -170,12 +168,16 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
         self.api_symbol = meta_data["2. Digital Currency Code"]
         time_series = json_data[self.get_json_data_key()]
         df = pd.DataFrame.from_dict(time_series, orient="index")
+        df.drop(['1b. open (USD)', '2b. high (USD)', '3b. low (USD)', '4b. close (USD)', '6. market cap (USD)'], axis=1, inplace=True)
         df.columns = self.get_stardard_column_names()
+        df.apply(pd.to_numeric, errors='ignore')
         return df
 
-    def get_url(self):
-        url = 'https://www.alphavantage.co/query?function=' + self.get_url_function() + '&symbol=' + self.symbol
-        return url + '&market=' + self.market + '&apikey=' + self.api_key
+    def get_url(self):  # the symbol has the structure symbol_CCY like BTC_USD
+        symbol = self.symbol[:-4]
+        market = self.symbol[-3:]
+        url = 'https://www.alphavantage.co/query?function=' + self.get_url_function() + '&symbol=' + symbol
+        return url + '&market=' + market + '&apikey=' + self.api_key
 
 
 class AlphavantageCSVFetcher (APIBaseFetcher):

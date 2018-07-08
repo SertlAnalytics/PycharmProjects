@@ -9,13 +9,14 @@ Date: 2018-05-14
 """
 
 import pandas as pd
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
+from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.pybase.date_time import MyClock
 from sertl_analytics.user_input.confirmation import UserInput
 from datetime import timedelta
 from sertl_analytics.pybase.date_time import MyPyDate
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
-from sertl_analytics.constants.pattern_constants import PSC
+from sertl_analytics.constants.pattern_constants import PSC, Indices
 from pattern_configuration import config, runtime
 from pattern_statistics import PatternStatistics, DetectorStatistics
 from pattern_data_container import pattern_data_handler
@@ -50,6 +51,7 @@ class PatternDetectionController:
         self.__loop_list_ticker = None  # format of an entry (ticker, and_clause, number)
         self.__start_row = 0
         self.__end_row = 0
+        self.__crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
 
     def run_pattern_checker(self, excel_file_with_test_data: str = '', start_row: int = 1, end_row: int = 0):
         self.__init_db_and_test_data__(excel_file_with_test_data, start_row, end_row)
@@ -84,6 +86,9 @@ class PatternDetectionController:
             and_clause = value_dic[LL.AND_CLAUSE]
             stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.stock_db, ticker, and_clause)
             return stock_db_df_obj.df_data
+        elif ticker in self.__crypto_ccy_dic:
+            fetcher = AlphavantageCryptoFetcher(ticker, config.api_period)
+            return fetcher.df_data
         else:
             fetcher = AlphavantageStockFetcher(ticker, config.api_period, config.api_output_size)
             return fetcher.df_data
