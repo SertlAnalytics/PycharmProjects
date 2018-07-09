@@ -8,7 +8,7 @@ Date: 2018-05-14
 from sertl_analytics.constants.pattern_constants import CN, fibonacci_helper
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Polygon, Circle, Rectangle
+from matplotlib.patches import Polygon, Circle, Rectangle, Ellipse
 from matplotlib.offsetbox import TextArea, AnnotationBbox
 from sertl_analytics.pybase.loop_list import LoopList
 from pattern_configuration import config, runtime
@@ -18,7 +18,8 @@ from pattern_detector import PatternDetector
 from pattern import Pattern
 from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
-from fibonacci import FibonacciWaveTree, FibonacciWave
+from fibonacci.fibonacci_wave import FibonacciWave
+from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
 
 
 class PatchHelper:
@@ -31,6 +32,21 @@ class PatchHelper:
             for elements in xy_reshaped:
                 return_string = return_string + ('' if return_string == '' else '-') + str(elements)
         return return_string
+
+    @staticmethod
+    def is_xy_close_to_polygon(x: float, y: float, patch, tolerance_range) -> bool:
+        if PatchHelper.get_patch_type(patch) == 'Polygon':
+            xy = patch.get_xy().round(2)
+            for k in range(0, xy.shape[0] - 1):
+                x_01, x_02 = xy[k, 0], xy[k+1, 0]
+                if x_01 <= x <= x_02:
+                    y_01, y_02 = xy[k, 1], xy[k + 1, 1]
+                    np_array = np.polyfit(np.array([x_01, x_02]), np.array([y_01, y_02]), 1)
+                    linear_function = np.poly1d([np_array[0], np_array[1]])
+                    distance = abs(y - linear_function(x))
+                    if distance < tolerance_range:
+                        return True
+        return False
 
     @staticmethod
     def get_patch_type(patch):
@@ -303,6 +319,7 @@ class PatternPlotter:
         self.ranges_polygon_dic_list = {}
         self.ranges_opposite_polygon_dic_list = {}
         self.fibonacci_patch_container = None
+        self.__fib_wave_select_tolerance_range = pdh.pattern_data.height / 50
         self.__currently_visible_ranges_polygon_list = []
         self.axes_for_candlesticks = None
 
@@ -365,6 +382,13 @@ class PatternPlotter:
         self.__reset_patch_lists__(event)
         self.__handle_visibility_for_range_polygons__(event)
         self.__handle_visibility_for_fibonacci_waves__(event)
+        # self.__print_current_selected_patch__(event)
+
+    def __print_current_selected_patch__(self, event):
+        for patches in self.axes_for_candlesticks.patches:
+            cont, dic = patches.contains(event)
+            if cont:
+                print(patches)
 
     def __reset_patch_lists__(self, event):
         self.__hide_range_polygons__(event)
@@ -372,16 +396,19 @@ class PatternPlotter:
 
     def __handle_visibility_for_fibonacci_waves__(self, event):
         draw_canvas = False
+        tolerance_range = self.__fib_wave_select_tolerance_range
+        x, y = event.xdata, event.ydata
         for patches in self.axes_for_candlesticks.patches:
             if patches.__class__.__name__ == 'Polygon':
                 cont, dic = patches.contains(event)
                 if cont:
                     polygon_id = PatchHelper.get_id_for_polygon(patches)
                     if self.fibonacci_patch_container.contains_patch_id(polygon_id):
-                        fib_patch_from_container = self.fibonacci_patch_container.get_patch_by_id(polygon_id)
-                        fib_patch_from_container.select_fib_wave()
-                        draw_canvas = True
-                        break
+                        if PatchHelper.is_xy_close_to_polygon(x, y, patches, tolerance_range):
+                            fib_patch_from_container = self.fibonacci_patch_container.get_patch_by_id(polygon_id)
+                            fib_patch_from_container.select_fib_wave()
+                            draw_canvas = True
+                            break
         if draw_canvas:
             event.canvas.draw()
 
@@ -392,7 +419,7 @@ class PatternPlotter:
     def __handle_visibility_for_range_polygons__(self, event):
         draw_canvas = False
         for patches in self.axes_for_candlesticks.patches:
-            if patches.__class__.__name__ == 'Circle':
+            if patches.__class__.__name__ == 'Ellipse':
                 cont, dic = patches.contains(event)
                 if cont:
                     tick = pdh.pattern_data.get_tick_by_date_num(patches.center[0])
@@ -437,7 +464,6 @@ class PatternPlotter:
         candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=0.4, colorup='g')
         self.axes_for_candlesticks.xaxis_date()
         self.axes_for_candlesticks.grid()
-        # self.__add_fibonacci_waves__(axis)
 
     def __plot_patterns__(self):
         self.__fill_plot_container_list__()
@@ -445,16 +471,18 @@ class PatternPlotter:
 
     def __plot_min_max__(self):
         wave_tick_list = WaveTickList(pdh.pattern_data.df_min_max)
-        radius_out, radius_in = self.__get_circle_radius_for_plot_min_max__(wave_tick_list.mean)
+        width, height = self.__get_ellipse_width_height_for_plot_min_max__(wave_tick_list)
         for ticks in wave_tick_list.tick_list:
             if ticks.is_min:
-                self.axes_for_candlesticks.add_patch(Circle((ticks.f_var, ticks.low), radius_out, color='r'))
+                self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.low), width, height, color='r'))
             else:
-                self.axes_for_candlesticks.add_patch(Circle((ticks.f_var, ticks.high), radius_out, color='g'))
+                self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.high), width, height, color='g'))
+        # fill some ellipses with color white
+        width, height =  width/2, height/2
         for ticks in pdh.pattern_data.tick_list_min_without_hidden_ticks:
-            self.axes_for_candlesticks.add_patch(Circle((ticks.f_var, ticks.low), radius_in, color='w'))
+            self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.low), width, height, color='w'))
         for ticks in pdh.pattern_data.tick_list_max_without_hidden_ticks:
-            self.axes_for_candlesticks.add_patch(Circle((ticks.f_var, ticks.high), radius_in, color='w'))
+            self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.high), width, height, color='w'))
 
     def __plot_ranges__(self):
         pattern_range_list_max = self.detector.range_detector_max.get_pattern_range_list()
@@ -486,7 +514,7 @@ class PatternPlotter:
     def __plot_fibonacci_waves__(self):
         self.fibonacci_patch_container = FibonacciWavePatchContainer()
         pdh.pattern_data.adjust_min_max_for_fibonacci()
-        fib_wave_tree = FibonacciWaveTree()
+        fib_wave_tree = FibonacciWaveTree(pdh.pattern_data.df, pdh.pattern_data.tick_list, config.fibonacci_detail_print)
         fib_wave_tree.parse_tree()
         for fib_waves in fib_wave_tree.fibonacci_descending_wave_list:
             self.__plot_single_fibonacci_wave__(fib_waves, 'r')
@@ -505,10 +533,8 @@ class PatternPlotter:
         fib_wave_patch.add_retracement_patch_list_to_axis(self.axes_for_candlesticks)
 
     @staticmethod
-    def __get_circle_radius_for_plot_min_max__(mean_of_data: float):
-        radius_out = 0.5 * mean_of_data/300
-        radius_in = 0.3 * mean_of_data/300
-        return radius_out, radius_in
+    def __get_ellipse_width_height_for_plot_min_max__(wave_tick_list: WaveTickList):
+        return wave_tick_list.length / 200, wave_tick_list.value_range / 100
 
     def __plot_volume__(self, axis):
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.VOL])

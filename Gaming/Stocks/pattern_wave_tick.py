@@ -125,7 +125,19 @@ class WaveTickList:
 
     @property
     def mean(self):
-        return round(np.mean([tick.close for tick in self.tick_list]),2)
+        return round(self.min + self.value_range/2, 2)
+
+    @property
+    def max(self):
+        return round(np.max([tick.close for tick in self.tick_list]), 2)
+
+    @property
+    def min(self):
+        return round(np.min([tick.close for tick in self.tick_list]), 2)
+
+    @property
+    def value_range(self):
+        return round(self.max - self.min, 2)
 
     def get_list_without_hidden_ticks(self, for_high: bool, tolerance_pct: float):
         """

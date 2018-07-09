@@ -1,160 +1,17 @@
 """
-Description: This module contains the Fibonacci classes
+Description: This module contains the Fibonacci wave classes
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
 import numpy as np
-from sertl_analytics.constants.pattern_constants import CN, FD, FR, fibonacci_helper, CM
+from sertl_analytics.constants.pattern_constants import FD, FR, CM
+from fibonacci.fibonacci_wave_component import FibonacciWaveComponent
+from fibonacci.fibonacci_wave_component import FibonacciRegressionComponent, FibonacciRetracementComponent
 from pattern_wave_tick import WaveTick
-from pattern_data_container import pattern_data_handler as pdh
 import math
 from copy import deepcopy
-from pattern_configuration import config
-
-
-class FibonacciWaveComponent:
-    def __init__(self, tick_start: WaveTick, tick_end: WaveTick, comp_id: str):
-        self.comp_id = comp_id
-        self.position_in_wave = int(self.comp_id[-1])
-        self.tick_start = tick_start
-        self.tick_end = tick_end
-        self.df = self.__get_df_for_range__()
-        self._tick_list = []
-        self.__fill_tick_list__()
-        self.max = round(self.df[CN.HIGH].max(), 2)
-        self.min = round(self.df[CN.LOW].min(), 2)
-
-    @property
-    def position_start(self):
-        return self.tick_start.position
-
-    @property
-    def position_end(self):
-        return self.tick_end.position
-
-    def __get_df_for_range__(self):
-        df = pdh.pattern_data.df
-        return df[np.logical_and(df[CN.POSITION] >= self.tick_start.position, df[CN.POSITION] <= self.tick_end.position)]
-
-    def __fill_tick_list__(self):
-        for index, row in self.df.iterrows():
-            self._tick_list.append(WaveTick(row))
-
-    @property
-    def range_max(self):
-        return round(self.max - self.min, 2)
-
-    def get_end_to_end_range(self, direction: str) -> float:
-        pass
-
-    def is_component_consistent(self):
-        return self.is_component_internally_consistent() and self.is_component_wave_consistent()
-
-    def is_component_internally_consistent(self):
-        pass
-
-    def is_component_wave_consistent(self):
-        pass
-
-    def get_details(self):
-        pass
-
-    def get_xy_parameter(self, is_for_ascending_wave: bool):
-        pass
-
-
-class FibonacciRegressionComponent(FibonacciWaveComponent):
-    def __init__(self, tick_start: WaveTick, tick_end: WaveTick, comp_id: str):
-        FibonacciWaveComponent.__init__(self, tick_start, tick_end, comp_id)
-        self.regression_pct_against_last_regression = 0
-        self.regression_pct_against_last_retracement = 0
-
-    def get_end_to_end_range(self, direction: str) -> float:
-        if direction == FD.ASC:
-            return round(self.tick_end.high - self.tick_start.low, 2)
-        else:
-            return round(self.tick_start.high - self.tick_end.low, 2)
-
-    def get_regression_pct(self, comp: FibonacciWaveComponent, wave_type: str):
-        range_comp = comp.get_end_to_end_range(wave_type)
-        range_ret_comp = self.get_end_to_end_range(wave_type)
-        return round(range_ret_comp / range_comp, 3)
-
-    def is_component_internally_consistent(self):
-        return True
-
-    def is_component_wave_consistent(self):
-        return self.position_in_wave == 1 or self.regression_pct_against_last_regression >= FR.R_236
-
-    def is_a_regression_to(self, wave_compare: FibonacciWaveComponent):
-        return self.max > wave_compare.max
-
-    def is_regression_fibonacci_compliant(self):
-        return self.position_in_wave == 1 or \
-               fibonacci_helper.is_value_a_fibonacci_relation(
-                   self.regression_pct_against_last_regression, config.fibonacci_tolerance_pct)
-
-    def get_details(self):
-        return '{: <12}: {} - {}: Regression against reg: {:4.1f}% - against retracement: {:4.1f}%'.\
-            format('Regression', self.tick_start.date, self.tick_end.date,
-                   self.regression_pct_against_last_regression * 100,
-                   self.regression_pct_against_last_retracement)
-
-    def get_xy_parameter(self, is_for_ascending_wave: bool):
-        if self.position_in_wave == 1:
-            x = [self.tick_start.f_var, self.tick_end.f_var]
-            y = [self.tick_start.low, self.tick_end.high] if is_for_ascending_wave \
-                else [self.tick_start.high, self.tick_end.low]
-        else:
-            x = [self.tick_end.f_var]
-            y = [self.tick_end.high] if is_for_ascending_wave else [self.tick_end.low]
-        xy = list(zip(x, y))
-        return xy
-
-
-class FibonacciRetracementComponent(FibonacciWaveComponent):
-    def __init__(self, tick_start: WaveTick, tick_end: WaveTick, comp_id: str):
-        FibonacciWaveComponent.__init__(self, tick_start, tick_end, comp_id)
-        self.retracement_value = 0
-        self.retracement_pct = 0
-
-    def get_end_to_end_range(self, wave_type: str) -> float:
-        if wave_type == FD.ASC:
-            return round(self.tick_start.high - self.tick_end.low, 2)
-        else:
-            return round(self.tick_end.high - self.tick_start.low, 2)
-
-    def get_retracement_value(self, reg_comp: FibonacciRegressionComponent, wave_type: str):
-        if wave_type == FD.ASC:
-            return round(reg_comp.tick_end.high - self.tick_end.low, 2)
-        else:
-            return round(reg_comp.tick_end.low - self.tick_end.high, 2)
-
-    def get_retracement_pct(self, reg_comp: FibonacciRegressionComponent, wave_type: str):
-        range_reg_comp = reg_comp.get_end_to_end_range(wave_type)
-        range_ret_comp = self.get_end_to_end_range(wave_type)
-        return round(range_ret_comp/range_reg_comp, 3)
-
-    def is_component_internally_consistent(self):
-        return True
-
-    def is_component_wave_consistent(self):
-        return 0 < self.retracement_pct < 1
-
-    def is_retracement_fibonacci_compliant(self):
-        return fibonacci_helper.is_value_a_fibonacci_relation(self.retracement_pct, config.fibonacci_tolerance_pct)
-
-    def get_details(self):
-        return '{: <12}: {} - {}: Retracement: {} ({:4.1f}%)'.format(
-            'Retracement', self.tick_start.date, self.tick_end.date, self.retracement_value, self.retracement_pct * 100)
-
-    def get_xy_parameter(self, is_for_ascending_wave: bool):
-        x = [self.tick_end.f_var]
-        y = [self.tick_end.low] if is_for_ascending_wave else [self.tick_end.high]
-        xy = list(zip(x, y))
-        return xy
 
 
 class FibonacciWave:
@@ -343,14 +200,12 @@ class FibonacciWave:
                 return False
 
         # 3. check if the retracements are fibonacci retracements
-        # for ret_comp in self.ret_comp_list:
-        #     if not ret_comp.is_retracement_fibonacci_compliant():
-        #         return False
+        if self.__get_number_of_fibonacci_compliant_retracements__(0.1) < 1:
+                return False
 
         # 4. check if the regressions are fibonacci regressions
-        # for reg_comp in self.reg_comp_list:
-        #     if not reg_comp.is_regression_fibonacci_compliant():
-        #         return False
+        if self.__get_number_of_fibonacci_compliant_regressions__(0.1) < 1:
+                return False
 
         # 5. verify that the middle regression is not the smallest one
         reg_range_list = [comp.range_max for comp in self.reg_comp_list]
@@ -358,6 +213,20 @@ class FibonacciWave:
             return False
 
         return True
+
+    def __get_number_of_fibonacci_compliant_retracements__(self, tolerance_pct: float = 0.2) -> int:
+        counter = 0
+        for ret_comp in self.ret_comp_list:
+            if ret_comp.is_retracement_fibonacci_compliant(tolerance_pct):
+                counter += 1
+        return counter
+
+    def __get_number_of_fibonacci_compliant_regressions__(self, tolerance_pct: float = 0.2) -> int:
+        counter = 0
+        for reg_comp in self.reg_comp_list:
+            if reg_comp.is_regression_fibonacci_compliant(tolerance_pct):
+                counter += 1
+        return counter
 
     def calculate_regression_values_for_component(self, component: FibonacciWaveComponent):
         self.__calculate_regression_values_for_component__(component)
@@ -393,7 +262,7 @@ class FibonacciWave:
         positions = self.position_list
         ret_reg_list = self.reg_ret_list
         print('{}{}: {} - {} ({}): R_1={:=5.1f}%, P_1={:=5.1f}%, R_2={:=5.1f}%, P_2={:=5.1f}%'.format(
-            '' if suffix == '' else suffix + ': ', self.wave_type, dates[0], dates[1], positions,
+            '' if suffix == '' else suffix + ': ', self.wave_type, dates[0], dates[-1], positions,
             ret_reg_list[1], ret_reg_list[2], ret_reg_list[3], ret_reg_list[4]))
 
     def get_xy_parameter(self):
@@ -506,135 +375,4 @@ class FibonacciDescendingWave(FibonacciWave):
         reg_comp = self.comp_dic[self.comp_id_list_reg[index_wave_id]]
         ret_comp.retracement_value = ret_comp.get_retracement_value(reg_comp, self.wave_type)
         ret_comp.retracement_pct = ret_comp.get_retracement_pct(reg_comp, self.wave_type)
-
-
-class FibonacciWaveTree:
-    def __init__(self):
-        self.min_max_tick_list = pdh.pattern_data.wave_tick_list_min_max.tick_list
-        self.min_max_list_length = len(self.min_max_tick_list)
-        self.min_tick_list = []
-        self.max_tick_list = []
-        self.min_possible_max_tick_dic = {}
-        self.max_possible_min_tick_dic = {}
-        self.__fill_lists_and_dictionaries_dics__()
-        self.fibonacci_ascending_wave_list = []
-        self.fibonacci_descending_wave_list = []
-        self.min_list_length = len(self.min_tick_list)
-        self.max_list_length = len(self.max_tick_list)
-
-    def parse_tree(self):
-        self.__parse_for_ascending_waves__()
-        self.__parse_for_descending_waves__()
-
-    def __parse_for_descending_waves__(self):
-        for tick_max in self.max_tick_list:
-            if tick_max.is_global_max:
-                wave = FibonacciDescendingWave()
-                self.__add_next_reg_comp__(wave, wave.reg_comp_id_next, tick_max)
-
-    def __parse_for_ascending_waves__(self):
-        for tick_min in self.min_tick_list:
-            if tick_min.is_global_min:
-                wave = FibonacciAscendingWave()
-                self.__add_next_reg_comp__(wave, wave.reg_comp_id_next, tick_min)
-
-    def __fill_lists_and_dictionaries_dics__(self):
-        """
-        Fills two dictionaries which contain only the possible min/max ticks for the next fibonacci component
-        """
-        for index, tick in enumerate(self.min_max_tick_list):
-            if tick.is_local_max:
-                self.max_tick_list.append(tick)
-                self.__fill_max_possible_min_tick_dic__(index, tick)
-            if tick.is_local_min:
-                self.min_tick_list.append(tick)
-                self.__fill_min_possible_max_tick_dic__(index, tick)
-
-    def __fill_max_possible_min_tick_dic__(self, index: int, tick_max: WaveTick):
-        self.max_possible_min_tick_dic[tick_max.position] = []
-        min_array = np.array([tick_max.low])
-        for index_min in range(index + 1, self.min_max_list_length):
-            tick_min = self.min_max_tick_list[index_min]
-            if tick_min.is_local_min and tick_min.low <= min_array.mean():
-                min_array = np.append(min_array, np.array([tick_min.low]))
-                self.max_possible_min_tick_dic[tick_max.position].append(tick_min)
-
-    def __fill_min_possible_max_tick_dic__(self, index: int, tick_min: WaveTick):
-        self.min_possible_max_tick_dic[tick_min.position] = []
-        max_array = np.array([tick_min.high])
-        for index_max in range(index + 1, self.min_max_list_length):
-            tick_max = self.min_max_tick_list[index_max]
-            if tick_max.is_local_max and tick_max.high >= max_array.mean():
-                max_array = np.append(max_array, np.array([tick_max.high]))
-                self.min_possible_max_tick_dic[tick_min.position].append(tick_max)
-
-    def __add_next_reg_comp__(self, wave: FibonacciWave, reg_comp_id_next: str, tick_previous: WaveTick):
-        possible_next_tick_list = self.__get_possible_next_tick_dic__(tick_previous, wave, True)
-        for tick_next in possible_next_tick_list:
-            if wave.is_wave_ready_for_next_regression(tick_next, reg_comp_id_next):
-                reg_comp = FibonacciRegressionComponent(tick_previous, tick_next, reg_comp_id_next)
-                wave.calculate_regression_values_for_component(reg_comp)
-                if wave.can_regression_component_be_added(reg_comp):
-                    wave.add_regression(reg_comp)
-                    if wave.is_wave_complete():
-                        self.__process_completed_wave__(wave)
-                    else:
-                        if wave.ret_comp_id_next != '':
-                            self.__add_next_ret_comp__(wave, wave.ret_comp_id_next, tick_next)
-                    del wave.comp_dic[reg_comp_id_next]
-
-    def __add_next_ret_comp__(self, wave: FibonacciWave, ret_comp_id_next: str, tick_previous: WaveTick):
-        possible_next_tick_list = self.__get_possible_next_tick_dic__(tick_previous, wave, False)
-        for tick_next in possible_next_tick_list:
-            if wave.is_wave_ready_for_next_retracement(tick_next, ret_comp_id_next):
-                ret_comp = FibonacciRetracementComponent(tick_previous, tick_next, ret_comp_id_next)
-                wave.calculate_retracement_values_for_component(ret_comp)
-                if wave.can_retracement_component_be_added(ret_comp):
-                    wave.add_retracement(ret_comp)
-                    if wave.reg_comp_id_next != '':
-                        self.__add_next_reg_comp__(wave, wave.reg_comp_id_next, tick_next)
-                    del wave.comp_dic[ret_comp_id_next]
-
-    def __get_possible_next_tick_dic__(self, tick_previous, wave, for_regression: bool):
-        if wave.wave_type == FD.DESC:
-            if for_regression:
-                return self.max_possible_min_tick_dic[tick_previous.position]
-            else:
-                return self.min_possible_max_tick_dic[tick_previous.position]
-        else:
-            if for_regression:
-                return self.min_possible_max_tick_dic[tick_previous.position]
-            else:
-                return self.max_possible_min_tick_dic[tick_previous.position]
-
-    def __process_completed_wave__(self, wave: FibonacciWave):
-        if wave.is_wave_fibonacci_wave():
-            wave_clone = wave.clone()
-            if wave.wave_type == FD.DESC:
-                self.__add_wave_after_check_to_list__(self.fibonacci_descending_wave_list, wave_clone)
-            else:
-                self.__add_wave_after_check_to_list__(self.fibonacci_ascending_wave_list, wave_clone)
-
-    @staticmethod
-    def __add_wave_after_check_to_list__(wave_list: list, wave: FibonacciWave):
-        is_covered_by_list = False
-        replacing_index = -1
-        for index, wave_in_list in enumerate(wave_list):
-            coverage_mode = wave_in_list.get_coverage_mode(wave)
-            if coverage_mode == CM.COVERING:
-                is_covered_by_list = True
-                break
-            elif coverage_mode == CM.COVERED_BY:
-                replacing_index = index
-                break
-
-        if not is_covered_by_list:
-            if replacing_index == -1:
-                wave_list.append(wave)
-                if config.fibonacci_detail_print:
-                    wave.print('added...')
-            else:
-                wave_list[replacing_index] = wave
-                if config.fibonacci_detail_print:
-                    wave.print('replacing...')
 
