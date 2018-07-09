@@ -88,7 +88,7 @@ class FibonacciWaveTree:
                     else:
                         if wave.ret_comp_id_next != '':
                             self.__add_next_ret_comp__(wave, wave.ret_comp_id_next, tick_next)
-                    del wave.comp_dic[reg_comp_id_next]
+                    self.__delete_component_from_dic__(wave, reg_comp_id_next)
 
     def __add_next_ret_comp__(self, wave: FibonacciWave, ret_comp_id_next: str, tick_previous: WaveTick):
         possible_next_tick_list = self.__get_possible_next_tick_dic__(tick_previous, wave, False)
@@ -100,7 +100,21 @@ class FibonacciWaveTree:
                     wave.add_retracement(ret_comp)
                     if wave.reg_comp_id_next != '':
                         self.__add_next_reg_comp__(wave, wave.reg_comp_id_next, tick_next)
-                    del wave.comp_dic[ret_comp_id_next]
+                    self.__delete_component_from_dic__(wave, ret_comp_id_next)
+
+    @staticmethod
+    def __delete_component_from_dic__(wave: FibonacciWave, comp_id: str):
+        if comp_id == 'w_4':
+            FibonacciWaveTree.__handle_forecasts__(wave)
+        del wave.comp_dic[comp_id]
+
+    @staticmethod
+    def __handle_forecasts__(wave):
+        if len(wave.comp_forecast_parameter_list) > 0:
+            wave.print('Forecasts...')
+            for parameter in wave.comp_forecast_parameter_list:
+                print(parameter)
+            wave.comp_forecast_parameter_list = []
 
     def __get_possible_next_tick_dic__(self, tick_previous, wave, for_regression: bool):
         if wave.wave_type == FD.DESC:
@@ -115,6 +129,7 @@ class FibonacciWaveTree:
                 return self.max_possible_min_tick_dic[tick_previous.position]
 
     def __process_completed_wave__(self, wave: FibonacciWave):
+        wave.comp_forecast_parameter_list = []
         if wave.is_wave_fibonacci_wave():
             wave_clone = wave.clone()
             if wave.wave_type == FD.DESC:

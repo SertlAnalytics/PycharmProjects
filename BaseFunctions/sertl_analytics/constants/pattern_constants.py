@@ -25,30 +25,6 @@ class FR:  # Fibonnaci Retracements
     R_236 = 0.236
     R_000 = 0.000
 
-    @staticmethod
-    def get_elements_as_list():
-        return [FR.R_236, FR.R_382, FR.R_618, FR.R_764]
-
-    @staticmethod
-    def get_elements_as_list_for_retracements():
-        return [FR.R_000, FR.R_236, FR.R_382, FR.R_618, FR.R_764, FR.R_100]
-
-
-class FibonacciHelper:
-    def __init__(self):
-        self.base_retracement_list = FR.get_elements_as_list()
-        self.retracement_list_for_plotting = FR.get_elements_as_list_for_retracements()
-
-    def is_value_a_fibonacci_relation(self, value: float, tolerance_pct: float = 0.2):
-        decimal_part = value - int(value)
-        for fib_value in self.base_retracement_list:
-            if abs(decimal_part - fib_value) < fib_value * tolerance_pct:
-                return True
-        return False
-
-
-fibonacci_helper = FibonacciHelper()
-
 
 class FT:
     NONE = 'NONE'

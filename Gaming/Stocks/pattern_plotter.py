@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, fibonacci_helper
+from sertl_analytics.constants.pattern_constants import CN
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon, Circle, Rectangle, Ellipse
@@ -20,6 +20,7 @@ from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
 from fibonacci.fibonacci_wave import FibonacciWave
 from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
+from fibonacci.fibonacci_helper import fibonacci_helper
 
 
 class PatchHelper:
@@ -106,9 +107,9 @@ class FibonacciWavePatch:
         value_range = value_right - value_left
         width = index_right - index_left
 
-        for k in range(0, len(fibonacci_helper.retracement_list_for_plotting)-1):
-            ret_01 = fibonacci_helper.retracement_list_for_plotting[k]
-            ret_02 = fibonacci_helper.retracement_list_for_plotting[k+1]
+        for k in range(0, len(fibonacci_helper.retracement_array_for_plotting)-1):
+            ret_01 = fibonacci_helper.retracement_array_for_plotting[k]
+            ret_02 = fibonacci_helper.retracement_array_for_plotting[k+1]
 
             value_01 = round(value_left + ret_01 * value_range, 2)
             value_02 = round(value_left + ret_02 * value_range, 2)
@@ -134,11 +135,11 @@ class FibonacciWavePatch:
     def __fill_retracement_spikes_text_annotations__(self, ret: str, position_in_wave: int):
         index = self.xy[position_in_wave, 0]
         value = self.xy[position_in_wave, 1]
-        position = self.fib_wave.position_list[position_in_wave]
+        position = self.fib_wave.comp_position_list[position_in_wave]
         is_position_retracement = position_in_wave % 2 == 0
         prefix = 'Retr.' if is_position_retracement else 'Reg.'
         value_adjusted = value + (value * 0.01 if is_position_retracement else value * -0.01)
-        reg_ret_value = self.fib_wave.reg_ret_list[position_in_wave-1]
+        reg_ret_value = self.fib_wave.comp_reg_ret_percent_list[position_in_wave - 1]
         if position_in_wave == 1:
             reg_ret_value = round(self.xy[position_in_wave, 1] - self.xy[position_in_wave - 1, 1], 2)
             text = 'P_{}={:.2f}\n{}: {:.2f}'.format(position, value, prefix, reg_ret_value)
@@ -341,6 +342,7 @@ class PatternPlotter:
                 fig, axes = plt.subplots(figsize=(15, 7))
                 self.axes_for_candlesticks = axes
 
+        # self.axes_for_candlesticks.set_yscale('log')
         self.__plot_candlesticks__()
         if config.plot_min_max:
             self.__plot_min_max__()

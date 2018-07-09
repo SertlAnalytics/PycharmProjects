@@ -7,7 +7,8 @@ Date: 2018-05-14
 
 import numpy as np
 import pandas as pd
-from sertl_analytics.constants.pattern_constants import CN, FD, FR, fibonacci_helper
+from sertl_analytics.constants.pattern_constants import CN, FD, FR
+from fibonacci.fibonacci_helper import fibonacci_helper
 from pattern_wave_tick import WaveTick
 
 
@@ -22,6 +23,10 @@ class FibonacciWaveComponent:
         self.__fill_tick_list__()
         self.max = round(self.df[CN.HIGH].max(), 2)
         self.min = round(self.df[CN.LOW].min(), 2)
+
+    @property
+    def duration(self):
+        return self.tick_end.position - self.tick_start.position + 1
 
     @property
     def position_start(self):

@@ -9,6 +9,7 @@ import numpy as np
 from sertl_analytics.constants.pattern_constants import FD, FR, CM
 from fibonacci.fibonacci_wave_component import FibonacciWaveComponent
 from fibonacci.fibonacci_wave_component import FibonacciRegressionComponent, FibonacciRetracementComponent
+from fibonacci.fibonacci_helper import fibonacci_helper, FibonacciHelperApi
 from pattern_wave_tick import WaveTick
 import math
 from copy import deepcopy
@@ -21,6 +22,23 @@ class FibonacciWave:
 
     def __init__(self):
         self.comp_dic = {}
+        self.comp_forecast_parameter_list = []
+
+    @property
+    def reg_comp_list(self):
+        comp_list = []
+        for comp_id in self.comp_id_list_reg:
+            if comp_id in self.comp_dic:
+                comp_list.append(self.comp_dic[comp_id])
+        return comp_list
+
+    @property
+    def ret_comp_list(self):
+        comp_list = []
+        for comp_id in self.comp_id_list_ret:
+            if comp_id in self.comp_dic:
+                comp_list.append(self.comp_dic[comp_id])
+        return comp_list
 
     @property
     def wave_type(self):
@@ -49,56 +67,70 @@ class FibonacciWave:
         return ''
 
     @property
-    def position_list(self) -> list:
+    def comp_position_list(self) -> list:
+        return self.__get_values_for_components__('Position')
+
+    @property
+    def comp_date_list(self) -> list:
+        return self.__get_values_for_components__('Date')
+
+    @property
+    def comp_reg_ret_percent_list(self) -> list:
+        return [round(100 * value, 1) for value in self.comp_reg_ret_pct_list]
+
+    @property
+    def comp_reg_ret_pct_list(self) -> list:
+        return self.__get_values_for_components__('reg_ret_pct')
+
+    @property
+    def comp_reg_ret_value_list(self) -> list:
+        return self.__get_values_for_components__('reg_ret_value')
+
+    @property
+    def comp_duration_list(self) -> list:
+        return self.__get_values_for_components__('Duration')
+
+    def __get_values_for_components__(self, value_type: str) -> list:
         return_list = []
         for comp_id in self.comp_id_list:
             if comp_id in self.comp_dic:
                 comp = self.comp_dic[comp_id]
-                return_list.append(comp.tick_start.position)
-                if comp.position_in_wave == 5:
+                if value_type == 'Position':
+                    if comp.position_in_wave == 1:
+                        return_list.append(comp.tick_start.position)
                     return_list.append(comp.tick_end.position)
+                elif value_type == 'Date':
+                    if comp.position_in_wave == 1:
+                        return_list.append(comp.tick_start.date_str)
+                    return_list.append(comp.tick_end.date_str)
+                elif value_type == 'reg_ret_pct':
+                    if comp_id in self.comp_id_list_ret:
+                        return_list.append(comp.retracement_pct)
+                    elif comp_id in self.comp_id_list_reg:
+                        return_list.append(comp.regression_pct_against_last_regression)
+                elif value_type == 'reg_ret_value':
+                    return_list.append(abs(comp.get_end_to_end_range(self.wave_type)))
+                elif value_type == 'Duration':
+                    return_list.append(comp.duration)
             else:
-                return_list.append(0)
-        return return_list
-
-    @property
-    def date_list(self) -> list:
-        return_list = []
-        for comp_id in self.comp_id_list:
-            if comp_id in self.comp_dic:
-                comp = self.comp_dic[comp_id]
-                if comp.position_in_wave == 1:
-                    return_list.append(comp.tick_start.date_str)
-                return_list.append(comp.tick_end.date_str)
-            else:
-                return_list.append('')
-        return return_list
-
-    @property
-    def reg_ret_list(self) -> list:
-        return_list = []
-        for comp_id in self.comp_id_list:
-            if comp_id in self.comp_dic:
-                comp = self.comp_dic[comp_id]
-                if comp_id in self.comp_id_list_ret:
-                    return_list.append(comp.retracement_pct)
-                elif comp_id in self.comp_id_list_reg:
-                    return_list.append(comp.regression_pct_against_last_regression)
-            else:
-                return_list.append(0)
-        return [round(100 * value, 1) for value in return_list]
-
-    @property
-    def value_list(self) -> list:
-        return []
+                if value_type == 'Date':
+                    return_list.append('')
+                else:
+                    return_list.append(0)
+        if value_type == 'reg_ret_pct':
+            return [round(value, 3) for value in return_list]
+        elif value_type == 'reg_ret_value':
+            return [round(value, 2) for value in return_list]
+        else:
+            return return_list
 
     @property
     def position_start(self):
-        return self.position_list[0]
+        return self.comp_position_list[0]
 
     @property
     def position_end(self):
-        return self.position_list[-1]
+        return self.comp_position_list[-1]
 
     def clone(self):
         return deepcopy(self)
@@ -106,8 +138,8 @@ class FibonacciWave:
     def get_coverage_mode(self, wave_later) -> str:
         count_difference = 0
         difference_at_index = 0
-        position_list_later = wave_later.position_list
-        for index, position in enumerate(self.position_list):
+        position_list_later = wave_later.comp_position_list
+        for index, position in enumerate(self.comp_position_list):
             difference = position_list_later[index] - position
             if difference != 0:
                 difference_at_index = difference
@@ -153,31 +185,27 @@ class FibonacciWave:
 
     def add_regression(self, reg_comp: FibonacciRegressionComponent):
         self.comp_dic[reg_comp.comp_id] = reg_comp
-        self.__calculate_regression_values_for_component__(reg_comp)
 
     def add_retracement(self, ret_comp: FibonacciRetracementComponent):
         self.comp_dic[ret_comp.comp_id] = ret_comp
-        self.__calculate_retracement_values_for_component__(ret_comp)
+        if ret_comp.comp_id == self.comp_id_list_ret[-1]:  # TODO add retracement process continue
+            if self.is_wave_fibonacci_wave(True):
+                self.__fill_comp_forecast_parameter_list__()
 
-    @property
-    def arg_str(self):
-        return self.__get_arg_str__()
+    def __fill_comp_forecast_parameter_list__(self):
+        comp_previous = self.comp_dic['w_4']
+        api = FibonacciHelperApi(self.wave_type, comp_previous.tick_end)
+        api.comp_reg_ret_pct_list = self.comp_reg_ret_pct_list
+        api.comp_reg_ret_value_list = self.comp_reg_ret_value_list
+        api.comp_duration_list = self.comp_duration_list
 
-    @property
-    def reg_comp_list(self):
-        comp_list = []
-        for comp_id in self.comp_id_list_reg:
-            if comp_id in self.comp_dic:
-                comp_list.append(self.comp_dic[comp_id])
-        return comp_list
-
-    @property
-    def ret_comp_list(self):
-        comp_list = []
-        for comp_id in self.comp_id_list_ret:
-            if comp_id in self.comp_dic:
-                comp_list.append(self.comp_dic[comp_id])
-        return comp_list
+        forecast_parameter_list = fibonacci_helper.get_forecast_candidate_list(api)
+        for entry in forecast_parameter_list:
+            value = entry[1]
+            if self.wave_type == FD.ASC and value > comp_previous.max:
+                self.comp_forecast_parameter_list.append(entry)
+            elif self.wave_type == FD.DESC and value < comp_previous.min:
+                self.comp_forecast_parameter_list.append(entry)
 
     def get_wave_component_by_index(self, index: int):
         return self.comp_dic[self.comp_id_list[index]]
@@ -185,10 +213,7 @@ class FibonacciWave:
     def get_component_by_number(self, number: int):
         return self.comp_dic[self.comp_id_list[number - 1]]
 
-    def __get_arg_str__(self):
-        return 'Start_End: {} - {}'.format(self.position_start, self.position_end)
-
-    def is_wave_fibonacci_wave(self):
+    def is_wave_fibonacci_wave(self, for_forecast = False):
         # 1. check if the components are internally consistent
         internal_ok = self.__are_components_internally_consistent__()
         if not internal_ok:
@@ -207,10 +232,10 @@ class FibonacciWave:
         if self.__get_number_of_fibonacci_compliant_regressions__(0.1) < 1:
                 return False
 
-        # 5. verify that the middle regression is not the smallest one
-        reg_range_list = [comp.range_max for comp in self.reg_comp_list]
-        if np.argmin(reg_range_list) == 1:
-            return False
+        if not for_forecast:  # 5. verify that the middle regression is not the smallest one
+            reg_range_list = [comp.range_max for comp in self.reg_comp_list]
+            if np.argmin(reg_range_list) == 1:
+                return False
 
         return True
 
@@ -241,8 +266,8 @@ class FibonacciWave:
         pass
 
     def __are_components_internally_consistent__(self):
-        for wave_id in self.comp_id_list:
-            if not self.comp_dic[wave_id].is_component_internally_consistent():
+        for wave in self.comp_dic.values():
+            if not wave.is_component_internally_consistent():
                 return False
         return True
 
@@ -251,16 +276,16 @@ class FibonacciWave:
             print(self.comp_dic[wave_id].get_details())
 
     def get_annotation_details(self):
-        ret_reg_list = self.reg_ret_list
+        ret_reg_list = self.comp_reg_ret_pct_list
         return '{:<12}: {:=5.1f}% / {:=5.1f}%\n{:<12}: {:=5.1f}% / {:=5.1f}%\n{}: {}'.format(
             'Retracements', ret_reg_list[1], ret_reg_list[3],
             'Regressions', ret_reg_list[2], ret_reg_list[4],
-            'Positions', self.position_list)
+            'Positions', self.comp_position_list)
 
     def print(self, suffix: str = ''):
-        dates = self.date_list
-        positions = self.position_list
-        ret_reg_list = self.reg_ret_list
+        dates = self.comp_date_list
+        positions = self.comp_position_list
+        ret_reg_list = self.comp_reg_ret_pct_list
         print('{}{}: {} - {} ({}): R_1={:=5.1f}%, P_1={:=5.1f}%, R_2={:=5.1f}%, P_2={:=5.1f}%'.format(
             '' if suffix == '' else suffix + ': ', self.wave_type, dates[0], dates[-1], positions,
             ret_reg_list[1], ret_reg_list[2], ret_reg_list[3], ret_reg_list[4]))
