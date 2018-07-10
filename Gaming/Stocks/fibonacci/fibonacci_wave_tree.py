@@ -7,15 +7,17 @@ Date: 2018-05-14
 
 import numpy as np
 import pandas as pd
-from sertl_analytics.constants.pattern_constants import FD, CM
+from sertl_analytics.constants.pattern_constants import FD, CM, CN
 from fibonacci.fibonacci_wave_component import FibonacciRegressionComponent, FibonacciRetracementComponent
 from fibonacci.fibonacci_wave import FibonacciWave, FibonacciAscendingWave, FibonacciDescendingWave
 from pattern_wave_tick import WaveTick
+from copy import deepcopy
 
 
 class FibonacciWaveTree:
     def __init__(self, df_source: pd.DataFrame, min_max_tick_list: list, print_wave_details = False):
         self.df_source = df_source
+        self.position_last = self.df_source.iloc[-1].Position
         self.print_wave_details = print_wave_details
         self.min_max_tick_list = min_max_tick_list
         self.min_max_list_length = len(self.min_max_tick_list)
@@ -26,6 +28,8 @@ class FibonacciWaveTree:
         self.__fill_lists_and_dictionaries_dics__()
         self.fibonacci_ascending_wave_list = []
         self.fibonacci_descending_wave_list = []
+        self.fibonacci_ascending_forecast_wave_list = []
+        self.fibonacci_descending_forecast_wave_list = []
         self.min_list_length = len(self.min_tick_list)
         self.max_list_length = len(self.max_tick_list)
 
@@ -85,6 +89,8 @@ class FibonacciWaveTree:
                     wave.add_regression(reg_comp)
                     if wave.is_wave_complete():
                         self.__process_completed_wave__(wave)
+                        # to ensure that no forecasts are generated for a completed wave
+                        wave.comp_forecast_parameter_list = []
                     else:
                         if wave.ret_comp_id_next != '':
                             self.__add_next_ret_comp__(wave, wave.ret_comp_id_next, tick_next)
@@ -102,19 +108,32 @@ class FibonacciWaveTree:
                         self.__add_next_reg_comp__(wave, wave.reg_comp_id_next, tick_next)
                     self.__delete_component_from_dic__(wave, ret_comp_id_next)
 
-    @staticmethod
-    def __delete_component_from_dic__(wave: FibonacciWave, comp_id: str):
+    def __delete_component_from_dic__(self, wave: FibonacciWave, comp_id: str):
         if comp_id == 'w_4':
-            FibonacciWaveTree.__handle_forecasts__(wave)
+            self.__handle_forecasts__(wave)
         del wave.comp_dic[comp_id]
 
-    @staticmethod
-    def __handle_forecasts__(wave):
+    def __handle_forecasts__(self, wave: FibonacciWave):
         if len(wave.comp_forecast_parameter_list) > 0:
             wave.print('Forecasts...')
-            for parameter in wave.comp_forecast_parameter_list:
+            for parameter in wave.comp_forecast_parameter_list:  # [0.382, 207.46, 110] = fib, value, after_ticks
                 print(parameter)
+                value = parameter[1]
+                position = self.position_last if parameter[2] > self.position_last else parameter[2]
+                tick_forecast = self.__get_wave_tick_for_forecast__(wave, value, position)
+                tick_previous = wave.comp_dic['w_4'].tick_end
+                reg_comp = FibonacciRegressionComponent(self.df_source, tick_previous, tick_forecast, 'w_5')
+                wave.calculate_regression_values_for_component(reg_comp)
+                wave.add_regression(reg_comp)
+                self.__process_forecast_wave__(wave)
             wave.comp_forecast_parameter_list = []
+
+    def __get_wave_tick_for_forecast__(self, wave: FibonacciWave, value: float, position: int):
+        df = self.df_source[self.df_source[CN.POSITION] == position]
+        row = deepcopy(df.iloc[0])
+        row.High, row.Low, row.Open, row.Close = value, value, value, value
+        tick = WaveTick(row)
+        return tick
 
     def __get_possible_next_tick_dic__(self, tick_previous, wave, for_regression: bool):
         if wave.wave_type == FD.DESC:
@@ -129,13 +148,20 @@ class FibonacciWaveTree:
                 return self.max_possible_min_tick_dic[tick_previous.position]
 
     def __process_completed_wave__(self, wave: FibonacciWave):
-        wave.comp_forecast_parameter_list = []
         if wave.is_wave_fibonacci_wave():
             wave_clone = wave.clone()
             if wave.wave_type == FD.DESC:
                 self.__add_wave_after_check_to_list__(self.fibonacci_descending_wave_list, wave_clone)
             else:
                 self.__add_wave_after_check_to_list__(self.fibonacci_ascending_wave_list, wave_clone)
+
+    def __process_forecast_wave__(self, wave: FibonacciWave):
+        if wave.is_wave_fibonacci_wave():
+            wave_clone = wave.clone()
+            if wave.wave_type == FD.DESC:
+                self.__add_wave_after_check_to_list__(self.fibonacci_descending_forecast_wave_list, wave_clone)
+            else:
+                self.__add_wave_after_check_to_list__(self.fibonacci_ascending_forecast_wave_list, wave_clone)
 
     def __add_wave_after_check_to_list__(self, wave_list: list, wave: FibonacciWave):
         is_covered_by_list = False

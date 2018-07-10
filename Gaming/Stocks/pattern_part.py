@@ -176,34 +176,32 @@ class PatternPart:
         return ((self.df[CN.HIGH]-self.mean).std() + (self.df[CN.LOW]-self.mean).std())/2
 
     def get_slope_values(self):
-        f_upper_slope = round(self.function_cont.f_upper[1], 4)
-        f_lower_slope = round(self.function_cont.f_lower[1], 4)
+        f_upper_slope = self.function_cont.f_upper_pct
+        f_lower_slope = self.function_cont.f_lower_pct
         relation_u_l = math.inf if f_lower_slope == 0 else round(f_upper_slope / f_lower_slope, 4)
-        return f_upper_slope, f_lower_slope, relation_u_l
-
-    def get_f_regression(self) -> np.poly1d:
-        return self.stock_df.get_f_regression()
+        f_regression_slope = self.function_cont.f_regression_pct
+        # print('u={}, l={}, rel={}, reg={}'.format(f_upper_slope, f_lower_slope, relation_u_l, f_regression_slope))
+        return f_upper_slope, f_lower_slope, relation_u_l, f_regression_slope
 
     def __get_text_for_annotation__(self):
-        f_regression = self.get_f_regression()
         std_dev = round(self.df[CN.CLOSE].std(), 2)
-        f_upper_slope, f_lower_slope, relation_u_l = self.get_slope_values()
-        f_upper_pct = round(self.function_cont.f_upper_pct * 100, 1)
-        f_lower_pct = round(self.function_cont.f_lower_pct * 100, 1)
-        f_reg_pct = round(self.function_cont.f_regression_pct * 100, 1)
+        f_upper_slope, f_lower_slope, relation_u_l, f_regression_slope = self.get_slope_values()
+        f_upper_percent = round(f_upper_slope * 100, 1)
+        f_lower_percent = round(f_lower_slope * 100, 1)
+        f_reg_percent = round(f_regression_slope * 100, 1)
 
         type_date = 'Type={}: {} - {} ({})'.format(self.pattern_type, self.tick_first.date_str,
                                                    self.tick_last.date_str, len(self.tick_list))
 
         if self.pattern_type == FT.TKE_UP:
-            slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_pct, f_reg_pct)
+            slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_percent, f_reg_percent)
             breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
         elif self.pattern_type == FT.TKE_DOWN:
-            slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_pct, f_reg_pct)
+            slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_percent, f_reg_percent)
             breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
         else:
             slopes = 'Gradients: U={}%, L={}%, U/L={}, Reg={}%'.format(
-                f_upper_pct, f_lower_pct, relation_u_l, f_reg_pct)
+                f_upper_percent, f_lower_percent, relation_u_l, f_reg_percent)
             breadth = 'Breadth={}, Max={}, Min={}, Std_dev={}'.format(
                 self.breadth, self.distance_max, self.distance_min, std_dev)
 

@@ -447,4 +447,4 @@ class MyPlotly:
 
 
 my_plotly = MyPlotly()
-my_plotly.heatmap_exercise()
+my_plotly.box_plot()

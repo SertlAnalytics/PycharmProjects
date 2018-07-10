@@ -97,8 +97,10 @@ class PatternStatistics:
         self.dic[PSC.END] = MyPyDate.get_date_from_datetime(pattern.date_last)
         self.dic[PSC.LOWER] = round(0, 2)
         self.dic[PSC.UPPER] = round(0, 2)  # TODO Lower & Upper bound for statistics
-        self.dic[PSC.SLOPE_UPPER], self.dic[PSC.SLOPE_LOWER], self.dic[PSC.SLOPE_RELATION] \
-            = pattern.part_main.get_slope_values()
+        slope_upper, slope_lower, slope_relation, slow_regression = pattern.part_main.get_slope_values()
+        self.dic[PSC.SLOPE_UPPER] = slope_upper
+        self.dic[PSC.SLOPE_LOWER] = slope_lower
+        self.dic[PSC.SLOPE_RELATION] = slope_relation
         self.dic[PSC.TICKS] = pattern.part_main.ticks
         if pattern.was_breakout_done():
             self.dic[PSC.BREAKOUT_DATE] = MyPyDate.get_date_from_datetime(pattern.breakout.breakout_date)

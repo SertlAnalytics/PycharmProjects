@@ -199,8 +199,8 @@ class WaveTickList:
 
     def __is_f_param_boundary_compliant__(self, f_param: np.poly1d, f_param_boundary: np.poly1d) -> bool:
         offset = self.tick_list[0].f_var
-        slope_dec_main = math_functions.MyPoly1d.get_slope_in_decimal_percentage(f_param, self.length, offset)
-        slope_dec_bound = math_functions.MyPoly1d.get_slope_in_decimal_percentage(f_param_boundary, self.length, offset)
+        slope_dec_main = math_functions.MyPoly1d.get_slope_in_decimal_percentage(f_param, offset, self.length)
+        slope_dec_bound = math_functions.MyPoly1d.get_slope_in_decimal_percentage(f_param_boundary, offset, self.length)
         if f_param(offset) > f_param_boundary(offset):
             slope_main_bound = round(slope_dec_main - slope_dec_bound, 4)
         else:

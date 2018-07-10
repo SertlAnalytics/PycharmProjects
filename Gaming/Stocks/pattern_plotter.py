@@ -343,6 +343,7 @@ class PatternPlotter:
                 self.axes_for_candlesticks = axes
 
         # self.axes_for_candlesticks.set_yscale('log')
+        self.axes_for_candlesticks.set_ylim(self.__get_y_dlim_for_candlestick_plot__())
         self.__plot_candlesticks__()
         if config.plot_min_max:
             self.__plot_min_max__()
@@ -359,6 +360,11 @@ class PatternPlotter:
         fig.canvas.mpl_connect('motion_notify_event', self.__on_motion_notify__)
         self.axes_for_candlesticks.format_coord = self.__on_hover__
         plt.show()
+
+    @staticmethod
+    def __get_y_dlim_for_candlestick_plot__():
+        range_pct = [0.9, 1.1]
+        return pdh.pattern_data.min_value * range_pct[0], pdh.pattern_data.max_value * range_pct[1]
 
     @staticmethod
     def motion(event):
@@ -522,6 +528,11 @@ class PatternPlotter:
             self.__plot_single_fibonacci_wave__(fib_waves, 'r')
         for fib_waves in fib_wave_tree.fibonacci_ascending_wave_list:
             self.__plot_single_fibonacci_wave__(fib_waves, 'g')
+
+        for fib_waves in fib_wave_tree.fibonacci_descending_forecast_wave_list:
+            self.__plot_single_fibonacci_wave__(fib_waves, 'lightcoral')
+        for fib_waves in fib_wave_tree.fibonacci_ascending_forecast_wave_list:
+            self.__plot_single_fibonacci_wave__(fib_waves, 'yellowgreen')
 
     def __plot_single_fibonacci_wave__(self, fib_wave: FibonacciWave, color: str):
         xy = fib_wave.get_xy_parameter()

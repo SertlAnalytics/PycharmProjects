@@ -228,8 +228,8 @@ class FibonacciWave:
         if self.__get_number_of_fibonacci_compliant_retracements__(0.1) < 1:
                 return False
 
-        # 4. check if the regressions are fibonacci regressions
-        if self.__get_number_of_fibonacci_compliant_regressions__(0.1) < 1:
+        # 4. check if the regressions are fibonacci regressions - the FIRST regression is always compliant !!!
+        if self.__get_number_of_fibonacci_compliant_regressions__(0.05 if for_forecast else 0.1) < 2:
                 return False
 
         if not for_forecast:  # 5. verify that the middle regression is not the smallest one
@@ -285,7 +285,7 @@ class FibonacciWave:
     def print(self, suffix: str = ''):
         dates = self.comp_date_list
         positions = self.comp_position_list
-        ret_reg_list = self.comp_reg_ret_pct_list
+        ret_reg_list = [round(value * 100, 1) for value in self.comp_reg_ret_pct_list]
         print('{}{}: {} - {} ({}): R_1={:=5.1f}%, P_1={:=5.1f}%, R_2={:=5.1f}%, P_2={:=5.1f}%'.format(
             '' if suffix == '' else suffix + ': ', self.wave_type, dates[0], dates[-1], positions,
             ret_reg_list[1], ret_reg_list[2], ret_reg_list[3], ret_reg_list[4]))

@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FD, FT
-from sertl_analytics.functions.math_functions import MyPoly1d
+from sertl_analytics.functions import math_functions
 from pattern_wave_tick import WaveTick
 import numpy as np
 import pandas as pd
@@ -98,7 +98,9 @@ class PatternFunctionContainer:
         return self.__get_slope_in_decimal_percentage__(self.__f_regression)
 
     def __get_slope_in_decimal_percentage__(self, func: np.poly1d):
-        return MyPoly1d.get_slope_in_decimal_percentage(func, self.number_of_positions, self.__tick_first.f_var)
+        off_set = self.__tick_first.f_var
+        length = self.number_of_positions
+        return math_functions.MyPoly1d.get_slope_in_decimal_percentage(func, off_set, length)
 
     def __set_breakout_direction__(self, breakout_direction: str):
         self.__breakout_direction = breakout_direction

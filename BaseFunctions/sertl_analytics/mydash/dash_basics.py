@@ -957,5 +957,5 @@ class MyDash:
         )
 
 my_dash = MyDash()
-my_dash.app_with_http_basic_autentication()
+my_dash.live_update_by_interval_web_data()
 my_dash.run_on_server()
