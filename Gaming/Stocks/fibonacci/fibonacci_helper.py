@@ -29,21 +29,28 @@ class FibonacciHelper:
         return min_distance < fib_value * tolerance_pct
 
     def get_forecast_candidate_list(self, api: FibonacciHelperApi) -> list:
+        duration_previous_reg = api.comp_duration_list[2]
         return_list = []
+
         if api.comp_reg_ret_value_list[0] > api.comp_reg_ret_value_list[2]:  # first regression is biggest
-            possible_fib_relations = self.get_smaller_equal_fibonacci_relation_list(api.comp_reg_ret_pct_list[2])
-            for fib_relations in possible_fib_relations:
-                forecast_value = api.comp_reg_ret_value_list[2] * fib_relations
-                if api.wave_type == FD.ASC:
-                    forecast_value = api.tick_start.low + forecast_value
-                else:
-                    forecast_value = api.tick_start.high - forecast_value
-                forecast_pos = int(api.tick_start.position + api.comp_duration_list[2] * fib_relations)
+            possible_fib_relations = self.__get_smaller_equal_fibonacci_relation_list__(api.comp_reg_ret_pct_list[2])
+        else:
+            possible_fib_relations = self.__get_other_fibonacci_relation_list__(api)
+
+        for fib_relations in possible_fib_relations:
+            forecast_value = api.comp_reg_ret_value_list[2] * fib_relations
+            if api.wave_type == FD.ASC:
+                forecast_value = api.tick_start.low + forecast_value
+            else:
+                forecast_value = api.tick_start.high - forecast_value
+
+            if forecast_value > 0:
+                forecast_pos = int(api.tick_start.position + duration_previous_reg * fib_relations)
                 single_entry = [fib_relations, round(forecast_value, 2), forecast_pos]
                 return_list.append(single_entry)
         return return_list
 
-    def get_smaller_equal_fibonacci_relation_list(self, value):
+    def __get_smaller_equal_fibonacci_relation_list__(self, value):
         return_list = []
         integer_part = int(value)
         for k in range(integer_part, integer_part-1, -1):
@@ -51,6 +58,24 @@ class FibonacciHelper:
                 if fib_number + k <= value:
                     return_list.append(fib_number + k)
         return return_list
+
+    def __get_other_fibonacci_relation_list__(self, api: FibonacciHelperApi):
+        """
+        Handles the case where the second regression component is bigger than the first.
+        => the last one is either of the same length as the first or a fib_relation > 1
+        """
+        last_retracement_pct = api.comp_reg_ret_pct_list[3]
+        if last_retracement_pct > FR.R_618 + 0.1:
+            return []
+        fib_value = api.comp_reg_ret_pct_list[2]
+        integer_part = int(fib_value)
+        fib_decimal = fib_value - integer_part
+        # 1. Since by default the second regression is a fibonacci regression - we take the first the reciprocal value
+        return_list = [1/fib_value]
+        # 2. Append some other values
+        return_list.append(integer_part + 1 - fib_decimal)
+        return_list.append(fib_value + 1)
+        return [round(value, 3) for value in return_list]
 
     def get_closest_fibonacci_relation(self, value: float) -> float:
         min_distance, fib_value = self.get_distance_to_closest_fibonacci_relation(value)
