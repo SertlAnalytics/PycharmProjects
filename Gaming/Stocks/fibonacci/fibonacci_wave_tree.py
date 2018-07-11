@@ -62,8 +62,7 @@ class FibonacciWaveTree:
         self.min_possible_max_tick_dic = {}
         self.max_possible_min_tick_dic = {}
         self.__fill_lists_and_dictionaries_dics__()
-        self.fibonacci_ascending_wave_list = []
-        self.fibonacci_descending_wave_list = []
+        self.fibonacci_wave_list = []
         self.fibonacci_wave_forecast_collector = FibonacciWaveForecastCollector()
         self.min_list_length = len(self.min_tick_list)
         self.max_list_length = len(self.max_tick_list)
@@ -208,10 +207,7 @@ class FibonacciWaveTree:
     def __process_completed_wave__(self, wave: FibonacciWave):
         if wave.is_wave_fibonacci_wave():
             wave_clone = wave.clone()
-            if wave.wave_type == FD.DESC:
-                self.__add_wave_after_check_to_list__(self.fibonacci_descending_wave_list, wave_clone)
-            else:
-                self.__add_wave_after_check_to_list__(self.fibonacci_ascending_wave_list, wave_clone)
+            self.__add_wave_after_check_to_list__(self.fibonacci_wave_list, wave_clone)
 
     def __process_forecast_wave__(self, wave: FibonacciWave):
         if wave.is_wave_fibonacci_wave(True):

@@ -5,6 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
+import numpy as np
 from pattern_configuration import config, runtime, debugger
 from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
@@ -14,6 +15,7 @@ from pattern import Pattern, PatternHelper
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin
 from pattern_breakout import PatternBreakoutApi, PatternBreakout
 from pattern_statistics import PatternDetectorStatisticsApi
+from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
 
 
 class PatternDetector:
@@ -26,6 +28,7 @@ class PatternDetector:
         self.range_detector_max = None
         self.range_detector_min = None
         self.pattern_list = []
+        self.fib_wave_tree = None
 
     @property
     def possible_pattern_ranges_available(self):
@@ -49,6 +52,28 @@ class PatternDetector:
                     pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, pattern_range, f_comp)
                     if pattern.function_cont.is_valid():
                         self.__handle_single_pattern_when_parsing__(pattern)
+
+    def parse_for_fibonacci_waves(self):
+        pdh.pattern_data.adjust_min_max_for_fibonacci()
+        min_max_tick_list = pdh.pattern_data.wave_tick_list_min_max.tick_list
+        self.fib_wave_tree = FibonacciWaveTree(pdh.pattern_data.df, min_max_tick_list, config.max_pattern_range_length)
+        self.fib_wave_tree.parse_tree()
+
+    def check_for_intersections(self):
+        fib_wave_list = self.fib_wave_tree.fibonacci_wave_forecast_collector.get_forecast_wave_list()
+        fib_wave_list = list(fib_wave_list + self.fib_wave_tree.fibonacci_wave_list)
+        for pattern in self.pattern_list:
+            start_pos = pattern.part_main.tick_first.position
+            end_pos = pattern.part_main.tick_last.position
+            pattern_position_set = set(range(start_pos, end_pos + 1))
+            for fib_waves in fib_wave_list:
+                start_pos = fib_waves.comp_position_list[0]
+                end_pos = fib_waves.comp_position_list[-1]
+                fib_waves_position_set = set(range(start_pos, end_pos + 1))
+                intersection_set = pattern_position_set.intersection(fib_waves_position_set)
+                if len(intersection_set) > 0:
+                    pattern.intersects_with_fibonacci_wave = True
+                    break
 
     def __handle_single_pattern_when_parsing__(self, pattern: Pattern):
         can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)

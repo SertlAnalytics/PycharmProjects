@@ -63,6 +63,7 @@ class PatternConfiguration:
         self.bound_lower_value = CN.LOW
         self.plot_data = True
         self.plot_min_max = False
+        self.plot_only_pattern_with_fibonacci_waves = True
         self.length_for_global_min_max = 50  # a global minimum or maximum must have at least this number as distance
         self.length_for_global_min_max_fibonacci = 10  # ...for fibonacci
         self.length_for_local_min_max = 2  # a local minimum or maximum must have at least this number as distance

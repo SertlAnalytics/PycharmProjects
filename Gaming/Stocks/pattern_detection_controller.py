@@ -65,6 +65,9 @@ class PatternDetectionController:
             pattern_data_handler.init_by_df(df_data)
             detector = PatternDetector()
             detector.parse_for_pattern()
+            detector.parse_for_fibonacci_waves()
+            detector.check_for_intersections()
+
             self.__handle_statistics__(detector)
 
             if config.plot_data:

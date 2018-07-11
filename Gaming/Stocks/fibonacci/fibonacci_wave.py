@@ -215,9 +215,9 @@ class FibonacciWave:
         forecast_parameter_list = fibonacci_helper.get_forecast_candidate_list(api)
         for entry in forecast_parameter_list:
             value = entry[1]
-            if self.wave_type == FD.ASC and value > comp_previous.max:
+            if self.wave_type == FD.ASC and value > comp_previous.max * 0.98:
                 self.comp_forecast_parameter_list.append(entry)
-            elif self.wave_type == FD.DESC and value < comp_previous.min:
+            elif self.wave_type == FD.DESC and value < comp_previous.min * 1.02:
                 self.comp_forecast_parameter_list.append(entry)
 
     def get_wave_component_by_index(self, index: int):

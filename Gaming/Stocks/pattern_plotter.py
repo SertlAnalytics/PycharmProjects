@@ -523,16 +523,12 @@ class PatternPlotter:
 
     def __plot_fibonacci_waves__(self):
         self.fibonacci_patch_container = FibonacciWavePatchContainer()
-        pdh.pattern_data.adjust_min_max_for_fibonacci()
-        min_max_tick_list = pdh.pattern_data.wave_tick_list_min_max.tick_list
-        fib_wave_tree = FibonacciWaveTree(pdh.pattern_data.df, min_max_tick_list, config.max_pattern_range_length)
-        fib_wave_tree.parse_tree()
-        for fib_waves in fib_wave_tree.fibonacci_descending_wave_list:
-            self.__plot_single_fibonacci_wave__(fib_waves, 'r')
-        for fib_waves in fib_wave_tree.fibonacci_ascending_wave_list:
-            self.__plot_single_fibonacci_wave__(fib_waves, 'g')
-
-        for fib_waves in fib_wave_tree.fibonacci_wave_forecast_collector.get_forecast_wave_list():
+        for fib_waves in self.detector.fib_wave_tree.fibonacci_wave_list:
+            if fib_waves.wave_type == FD.ASC:
+                self.__plot_single_fibonacci_wave__(fib_waves, 'g')
+            else:
+                self.__plot_single_fibonacci_wave__(fib_waves, 'r')
+        for fib_waves in  self.detector.fib_wave_tree.fibonacci_wave_forecast_collector.get_forecast_wave_list():
             if fib_waves.wave_type == FD.ASC:
                 self.__plot_single_fibonacci_wave__(fib_waves, 'yellowgreen', 'Forecast')
             else:
@@ -563,16 +559,17 @@ class PatternPlotter:
     def __fill_plot_container_list__(self):
         color_handler = PatternColorHandler()
         for pattern in self.detector.pattern_list:
-            color_pattern, color_trade = color_handler.get_colors_for_pattern(pattern)
-            plot_container = PatternPlotContainer(pattern.get_shape_part_main(), color_pattern)
-            if pattern.was_breakout_done() and pattern.is_part_trade_available():
-                plot_container.add_trade_shape(pattern.get_shape_part_trade(), color_trade)
-            plot_container.add_center_shape(pattern.get_center_shape())
-            plot_container.annotation_param = pattern.get_annotation_parameter('blue')
-            # plot_container.add_border_line_top_shape(pattern.part_main.get_f_upper_shape())
-            # plot_container.add_border_line_bottom_shape(pattern.part_main.get_f_lower_shape())
-            plot_container.add_regression_line_shape(pattern.part_main.get_f_regression_shape())
-            self.pattern_plot_container_loop_list.append(plot_container)
+            if not config.plot_only_pattern_with_fibonacci_waves or pattern.intersects_with_fibonacci_wave:
+                color_pattern, color_trade = color_handler.get_colors_for_pattern(pattern)
+                plot_container = PatternPlotContainer(pattern.get_shape_part_main(), color_pattern)
+                if pattern.was_breakout_done() and pattern.is_part_trade_available():
+                    plot_container.add_trade_shape(pattern.get_shape_part_trade(), color_trade)
+                plot_container.add_center_shape(pattern.get_center_shape())
+                plot_container.annotation_param = pattern.get_annotation_parameter('blue')
+                # plot_container.add_border_line_top_shape(pattern.part_main.get_f_upper_shape())
+                # plot_container.add_border_line_bottom_shape(pattern.part_main.get_f_lower_shape())
+                plot_container.add_regression_line_shape(pattern.part_main.get_f_regression_shape())
+                self.pattern_plot_container_loop_list.append(plot_container)
 
     def __add_pattern_shapes_to_plot__(self):
         for pattern_plot_container in self.pattern_plot_container_loop_list.value_list:

@@ -75,6 +75,7 @@ class Pattern:
         self.date_last = None
         self.breakout = None
         self.trade_result = TradeResult()
+        self.intersects_with_fibonacci_wave = False
 
     @property
     def part_main(self) -> PatternPart:
