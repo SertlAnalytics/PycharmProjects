@@ -22,7 +22,9 @@ class FibonacciWaveComponent:
         self._tick_list = []
         self.__fill_tick_list__()
         self.max = round(self.df[CN.HIGH].max(), 2)
+        self.idx_max = self.df[CN.HIGH].idxmax()
         self.min = round(self.df[CN.LOW].min(), 2)
+        self.idx_min = self.df[CN.LOW].idxmin()
 
     @property
     def duration(self):

@@ -21,7 +21,7 @@ class FibonacciHelperApi:
 
 class FibonacciHelper:
     def __init__(self):
-        self.base_retracement_array = np.array([FR.R_236, FR.R_382, FR.R_618, FR.R_764])
+        self.base_retracement_array = np.array([FR.R_236, FR.R_382, FR.R_500, FR.R_618, FR.R_764])
         self.retracement_array_for_plotting = np.array([FR.R_000, FR.R_236, FR.R_382, FR.R_618, FR.R_764, FR.R_100])
 
     def is_value_a_fibonacci_relation(self, value: float, tolerance_pct: float = 0.1):
@@ -65,7 +65,7 @@ class FibonacciHelper:
         => the last one is either of the same length as the first or a fib_relation > 1
         """
         last_retracement_pct = api.comp_reg_ret_pct_list[3]
-        if last_retracement_pct > FR.R_618 + 0.1:
+        if last_retracement_pct > FR.R_764 + 0.1:
             return []
         fib_value = api.comp_reg_ret_pct_list[2]
         integer_part = int(fib_value)
@@ -73,15 +73,16 @@ class FibonacciHelper:
         # 1. Since by default the second regression is a fibonacci regression - we take the first the reciprocal value
         return_list = [1/fib_value]
         # 2. Append some other values
-        return_list.append(integer_part + 1 - fib_decimal)
-        return_list.append(fib_value + 1)
+        if integer_part <= 1:  # otherwise we get too huge regressions !!!
+            return_list.append(integer_part + 1 - fib_decimal)
+            return_list.append(fib_value + 1)
         return [round(value, 3) for value in return_list]
 
     def get_closest_fibonacci_relation(self, value: float) -> float:
         min_distance, fib_value = self.get_distance_to_closest_fibonacci_relation(value)
         return fib_value
 
-    def get_distance_to_closest_fibonacci_relation(self, value: float) -> float:
+    def get_distance_to_closest_fibonacci_relation(self, value: float):
         integer_part = int(value)
         decimal_part = value - integer_part
         modified_retracement_array = np.abs(self.base_retracement_array - decimal_part)

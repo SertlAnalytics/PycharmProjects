@@ -63,8 +63,10 @@ class PatternConfiguration:
         self.bound_lower_value = CN.LOW
         self.plot_data = True
         self.plot_min_max = False
+        self.length_for_global_min_max = 50  # a global minimum or maximum must have at least this number as distance
+        self.length_for_global_min_max_fibonacci = 10  # ...for fibonacci
         self.length_for_local_min_max = 2  # a local minimum or maximum must have at least this number as distance
-        self.length_for_local_min_max_fibonacci = self.length_for_local_min_max  # fibonacci - can be changed...
+        self.length_for_local_min_max_fibonacci = self.length_for_local_min_max  # fibonacci
         self.range_detector_tolerance_pct = 0.01
         self.fibonacci_tolerance_pct = 0.20  # it works great for 0.20 = 20% tolerance for retracement and regression
         self.fibonacci_detail_print = False
@@ -73,6 +75,7 @@ class PatternConfiguration:
         self.breakout_range_pct = 0.05
         self.investment = 1000
         self.max_number_securities = 1000
+        self.max_pattern_range_length = 50
         self.show_final_statistics = True
         self.and_clause = "Date BETWEEN '2017-12-01' AND '2019-12-31'"
         self.statistics_excel_file_name = ''

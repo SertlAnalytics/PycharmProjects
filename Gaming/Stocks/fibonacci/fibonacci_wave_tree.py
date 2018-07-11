@@ -14,11 +14,47 @@ from pattern_wave_tick import WaveTick
 from copy import deepcopy
 
 
+class FibonacciWaveForecastCollector:
+    def __init__(self):
+        self.__fibonacci_ascending_forecast_wave_list = []
+        self.__fibonacci_descending_forecast_wave_list = []
+        self.__idx_list = []
+        self.__forecast_value_list_dict = {}
+        self.__max_position_5_dict = {}
+        self.__max_position_5_wave_dict = {}
+
+    def add_forecast_wave(self, wave: FibonacciWave):
+        if wave.wave_type == FD.ASC:
+            self.__fibonacci_ascending_forecast_wave_list.append(wave)
+        else:
+            self.__fibonacci_descending_forecast_wave_list.append(wave)
+        self.__process_forecast_wave__(wave)
+
+    def __process_forecast_wave__(self, wave: FibonacciWave):
+        idx = wave.comp_position_key_4
+        value = wave.comp_dic['w_5'].tick_end.high if wave.wave_type == FD.ASC else wave.comp_dic['w_5'].tick_end.low
+        if idx not in self.__idx_list:
+            self.__idx_list.append(idx)
+            self.__forecast_value_list_dict[idx] = [value]
+            self.__max_position_5_dict[idx] = wave.comp_position_list[4]
+            self.__max_position_5_wave_dict[idx] = wave
+        else:
+            if value not in self.__forecast_value_list_dict[idx]:
+                self.__forecast_value_list_dict[idx].append(value)
+            if wave.comp_position_list[4] > self.__max_position_5_dict[idx]:
+                self.__max_position_5_dict[idx] = wave.comp_position_list[4]
+                self.__max_position_5_wave_dict[idx] = wave
+        self.__max_position_5_wave_dict[idx].forecast_value_list = self.__forecast_value_list_dict[idx]
+
+    def get_forecast_wave_list(self) -> list:
+        return [wave for wave in self.__max_position_5_wave_dict.values()]
+
+
 class FibonacciWaveTree:
-    def __init__(self, df_source: pd.DataFrame, min_max_tick_list: list, print_wave_details = False):
+    def __init__(self, df_source: pd.DataFrame, min_max_tick_list: list, max_wave_component_length: int):
         self.df_source = df_source
+        self._max_wave_component_length = max_wave_component_length
         self.position_last = self.df_source.iloc[-1].Position
-        self.print_wave_details = print_wave_details
         self.min_max_tick_list = min_max_tick_list
         self.min_max_list_length = len(self.min_max_tick_list)
         self.min_tick_list = []
@@ -28,8 +64,7 @@ class FibonacciWaveTree:
         self.__fill_lists_and_dictionaries_dics__()
         self.fibonacci_ascending_wave_list = []
         self.fibonacci_descending_wave_list = []
-        self.fibonacci_ascending_forecast_wave_list = []
-        self.fibonacci_descending_forecast_wave_list = []
+        self.fibonacci_wave_forecast_collector = FibonacciWaveForecastCollector()
         self.min_list_length = len(self.min_tick_list)
         self.max_list_length = len(self.max_tick_list)
 
@@ -66,6 +101,8 @@ class FibonacciWaveTree:
         min_array = np.array([tick_max.low])
         for index_min in range(index + 1, self.min_max_list_length):
             tick_min = self.min_max_tick_list[index_min]
+            if tick_min.position - tick_max.position > self._max_wave_component_length:
+                break
             if tick_min.is_local_min and tick_min.low <= min_array.mean():
                 min_array = np.append(min_array, np.array([tick_min.low]))
                 self.max_possible_min_tick_dic[tick_max.position].append(tick_min)
@@ -75,12 +112,14 @@ class FibonacciWaveTree:
         max_array = np.array([tick_min.high])
         for index_max in range(index + 1, self.min_max_list_length):
             tick_max = self.min_max_tick_list[index_max]
+            if tick_max.position - tick_min.position > self._max_wave_component_length:
+                break
             if tick_max.is_local_max and tick_max.high >= max_array.mean():
                 max_array = np.append(max_array, np.array([tick_max.high]))
                 self.min_possible_max_tick_dic[tick_min.position].append(tick_max)
 
     def __add_next_reg_comp__(self, wave: FibonacciWave, reg_comp_id_next: str, tick_previous: WaveTick):
-        possible_next_tick_list = self.__get_possible_next_tick_dic__(tick_previous, wave, True)
+        possible_next_tick_list = self.__get_possible_next_tick_list__(tick_previous, wave, True)
         for tick_next in possible_next_tick_list:
             if wave.is_wave_ready_for_next_regression(tick_next, reg_comp_id_next):
                 reg_comp = FibonacciRegressionComponent(self.df_source, tick_previous, tick_next, reg_comp_id_next)
@@ -89,15 +128,15 @@ class FibonacciWaveTree:
                     wave.add_regression(reg_comp)
                     if wave.is_wave_complete():
                         self.__process_completed_wave__(wave)
-                        # to ensure that no forecasts are generated for a completed wave
-                        wave.comp_forecast_parameter_list = []
+                        self.__delete_component_from_dic__(wave, reg_comp_id_next)
+                        self.__handle_forecasts__(wave)
                     else:
                         if wave.ret_comp_id_next != '':
                             self.__add_next_ret_comp__(wave, wave.ret_comp_id_next, tick_next)
-                    self.__delete_component_from_dic__(wave, reg_comp_id_next)
+                        self.__delete_component_from_dic__(wave, reg_comp_id_next)
 
     def __add_next_ret_comp__(self, wave: FibonacciWave, ret_comp_id_next: str, tick_previous: WaveTick):
-        possible_next_tick_list = self.__get_possible_next_tick_dic__(tick_previous, wave, False)
+        possible_next_tick_list = self.__get_possible_next_tick_list__(tick_previous, wave, False)
         for tick_next in possible_next_tick_list:
             if wave.is_wave_ready_for_next_retracement(tick_next, ret_comp_id_next):
                 ret_comp = FibonacciRetracementComponent(self.df_source, tick_previous, tick_next, ret_comp_id_next)
@@ -115,9 +154,7 @@ class FibonacciWaveTree:
 
     def __handle_forecasts__(self, wave: FibonacciWave):
         if len(wave.comp_forecast_parameter_list) > 0:
-            wave.print('Forecasts...')
             for parameter in wave.comp_forecast_parameter_list:  # [0.382, 207.46, 110] = fib, value, after_ticks
-                print(parameter)
                 value = parameter[1]
                 position = self.position_last if parameter[2] > self.position_last else parameter[2]
                 tick_forecast = self.__get_wave_tick_for_forecast__(wave, value, position)
@@ -126,6 +163,7 @@ class FibonacciWaveTree:
                 wave.calculate_regression_values_for_component(reg_comp)
                 wave.add_regression(reg_comp)
                 self.__process_forecast_wave__(wave)
+                del wave.comp_dic['w_5']
             wave.comp_forecast_parameter_list = []
 
     def __get_wave_tick_for_forecast__(self, wave: FibonacciWave, value: float, position: int):
@@ -135,7 +173,27 @@ class FibonacciWaveTree:
         tick = WaveTick(row)
         return tick
 
-    def __get_possible_next_tick_dic__(self, tick_previous, wave, for_regression: bool):
+    def __get_possible_next_tick_list__(self, tick_previous, wave, for_regression: bool):
+        base_possible_next_tick_list = self.__get_base_possible_next_tick_list__(tick_previous, wave, for_regression)
+        return_list = []
+        for tick in base_possible_next_tick_list:
+            if wave.wave_type == FD.DESC:
+                if for_regression:
+                    if tick.low < wave.min:
+                        return_list.append(tick)
+                else:
+                    if wave.min < tick.high < wave.max:
+                        return_list.append(tick)
+            else:
+                if for_regression:
+                    if tick.high > wave.max:
+                        return_list.append(tick)
+                else:
+                    if wave.min < tick.low < wave.max:
+                        return_list.append(tick)
+        return return_list
+
+    def __get_base_possible_next_tick_list__(self, tick_previous, wave, for_regression: bool):
         if wave.wave_type == FD.DESC:
             if for_regression:
                 return self.max_possible_min_tick_dic[tick_previous.position]
@@ -156,12 +214,8 @@ class FibonacciWaveTree:
                 self.__add_wave_after_check_to_list__(self.fibonacci_ascending_wave_list, wave_clone)
 
     def __process_forecast_wave__(self, wave: FibonacciWave):
-        if wave.is_wave_fibonacci_wave():
-            wave_clone = wave.clone()
-            if wave.wave_type == FD.DESC:
-                self.__add_wave_after_check_to_list__(self.fibonacci_descending_forecast_wave_list, wave_clone)
-            else:
-                self.__add_wave_after_check_to_list__(self.fibonacci_ascending_forecast_wave_list, wave_clone)
+        if wave.is_wave_fibonacci_wave(True):
+            self.fibonacci_wave_forecast_collector.add_forecast_wave(wave.clone())
 
     def __add_wave_after_check_to_list__(self, wave_list: list, wave: FibonacciWave):
         is_covered_by_list = False
@@ -178,9 +232,5 @@ class FibonacciWaveTree:
         if not is_covered_by_list:
             if replacing_index == -1:
                 wave_list.append(wave)
-                if self.print_wave_details:
-                    wave.print('added...')
             else:
                 wave_list[replacing_index] = wave
-                if self.print_wave_details:
-                    wave.print('replacing...')

@@ -208,6 +208,7 @@ class PatternRangeDetector:
         self._elements = len(self.tick_list)
         self._number_required_ticks = 3
         self._tolerance_pct = config.range_detector_tolerance_pct
+        self._max_pattern_range_length = config.max_pattern_range_length
         self.__pattern_range_list = []
         self.__parse_tick_list__()
 
@@ -270,6 +271,8 @@ class PatternRangeDetector:
         next_position_linear_f_params = []
         for k in range(i + 1, self._elements):
             tick_k = self.tick_list[k]
+            if tick_k.position - tick_i.position > self._max_pattern_range_length:
+                break
             f_param_i_k = self.__get_linear_f_params__(tick_i, tick_k)
             if f_param is None or self.__is_slope_correctly_changing__(f_param, tick_k, f_param_i_k):
                 f_param = f_param_i_k

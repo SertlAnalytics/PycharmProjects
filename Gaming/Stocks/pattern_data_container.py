@@ -28,7 +28,7 @@ class PatternData:
         self.min_value = self.df[CN.HIGH].min()
         self.height = self.max_value - self.min_value
         self.__add_columns__()
-        self.__length_for_global = 10  # int(self.df_length / 4)
+        self.__length_for_global = config.length_for_global_min_max
         self.__length_for_local = config.length_for_local_min_max
         self.__init_columns_for_ticks_distance__()
         self.df_min_max = self.df[np.logical_or(self.df[CN.IS_MIN], self.df[CN.IS_MAX])]
@@ -44,7 +44,10 @@ class PatternData:
         self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
 
     def adjust_min_max_for_fibonacci(self):
-        if config.length_for_local_min_max != config.length_for_local_min_max_fibonacci:
+        local_param_equal = config.length_for_local_min_max == config.length_for_local_min_max_fibonacci
+        global_param_equal = config.length_for_global_min_max == config.length_for_global_min_max_fibonacci
+        if not local_param_equal or not global_param_equal:
+            self.__length_for_global = config.length_for_global_min_max_fibonacci
             self.__length_for_local = config.length_for_local_min_max_fibonacci
             self.__init_columns_for_ticks_distance__()
             self.df_min_max = self.df[np.logical_or(self.df[CN.IS_MIN], self.df[CN.IS_MAX])]

@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN
+from sertl_analytics.constants.pattern_constants import CN, FD
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon, Circle, Rectangle, Ellipse
@@ -36,6 +36,8 @@ class PatchHelper:
 
     @staticmethod
     def is_xy_close_to_polygon(x: float, y: float, patch, tolerance_range) -> bool:
+        if x is None:
+            return False
         if PatchHelper.get_patch_type(patch) == 'Polygon':
             xy = patch.get_xy().round(2)
             for k in range(0, xy.shape[0] - 1):
@@ -522,19 +524,23 @@ class PatternPlotter:
     def __plot_fibonacci_waves__(self):
         self.fibonacci_patch_container = FibonacciWavePatchContainer()
         pdh.pattern_data.adjust_min_max_for_fibonacci()
-        fib_wave_tree = FibonacciWaveTree(pdh.pattern_data.df, pdh.pattern_data.tick_list, config.fibonacci_detail_print)
+        min_max_tick_list = pdh.pattern_data.wave_tick_list_min_max.tick_list
+        fib_wave_tree = FibonacciWaveTree(pdh.pattern_data.df, min_max_tick_list, config.max_pattern_range_length)
         fib_wave_tree.parse_tree()
         for fib_waves in fib_wave_tree.fibonacci_descending_wave_list:
             self.__plot_single_fibonacci_wave__(fib_waves, 'r')
         for fib_waves in fib_wave_tree.fibonacci_ascending_wave_list:
             self.__plot_single_fibonacci_wave__(fib_waves, 'g')
 
-        for fib_waves in fib_wave_tree.fibonacci_descending_forecast_wave_list:
-            self.__plot_single_fibonacci_wave__(fib_waves, 'lightcoral')
-        for fib_waves in fib_wave_tree.fibonacci_ascending_forecast_wave_list:
-            self.__plot_single_fibonacci_wave__(fib_waves, 'yellowgreen')
+        for fib_waves in fib_wave_tree.fibonacci_wave_forecast_collector.get_forecast_wave_list():
+            if fib_waves.wave_type == FD.ASC:
+                self.__plot_single_fibonacci_wave__(fib_waves, 'yellowgreen', 'Forecast')
+            else:
+                self.__plot_single_fibonacci_wave__(fib_waves, 'lightcoral', 'Forecast')
 
-    def __plot_single_fibonacci_wave__(self, fib_wave: FibonacciWave, color: str):
+    def __plot_single_fibonacci_wave__(self, fib_wave: FibonacciWave, color: str, suffix: str = ''):
+        if config.fibonacci_detail_print:
+            fib_wave.print(suffix)
         xy = fib_wave.get_xy_parameter()
         fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
         fib_polygon.set_visible(True)

@@ -23,6 +23,7 @@ class FibonacciWave:
     def __init__(self):
         self.comp_dic = {}
         self.comp_forecast_parameter_list = []
+        self.forecast_value_list = []
 
     @property
     def reg_comp_list(self):
@@ -89,6 +90,18 @@ class FibonacciWave:
     @property
     def comp_duration_list(self) -> list:
         return self.__get_values_for_components__('Duration')
+
+    @property
+    def comp_position_key_4(self):
+        return self.__get_comp_position_key__(4)
+
+    @property
+    def comp_position_key_5(self):
+        return self.__get_comp_position_key__(5)
+
+    def __get_comp_position_key__(self, elements: int):
+        part_list = self.comp_position_list[:elements]
+        return '-'.join(map(str, part_list))
 
     def __get_values_for_components__(self, value_type: str) -> list:
         return_list = []
@@ -188,7 +201,7 @@ class FibonacciWave:
 
     def add_retracement(self, ret_comp: FibonacciRetracementComponent):
         self.comp_dic[ret_comp.comp_id] = ret_comp
-        if ret_comp.comp_id == self.comp_id_list_ret[-1]:  # TODO add retracement process continue
+        if ret_comp.comp_id == 'w_4':
             if self.is_wave_fibonacci_wave(True):
                 self.__fill_comp_forecast_parameter_list__()
 
@@ -291,10 +304,27 @@ class FibonacciWave:
             ret_reg_list[1], ret_reg_list[2], ret_reg_list[3], ret_reg_list[4]))
 
     def get_xy_parameter(self):
+        if len(self.forecast_value_list) == 0:
+            return self.__get_xy_parameter_for_wave__(5)
+        else:
+            return self.__get_xy_parameter_for_forecast_wave__()
+
+    def __get_xy_parameter_for_wave__(self, components: int):
         xy = []
-        is_for_ascending_wave = self.wave_type == FD.ASC
-        for index in range(0, 5):
-            xy = xy + self.get_wave_component_by_index(index).get_xy_parameter(is_for_ascending_wave)
+        for index in range(0, components):
+            xy = xy + self.get_wave_component_by_index(index).get_xy_parameter(self.wave_type == FD.ASC)
+        return xy
+
+    def __get_xy_parameter_for_forecast_wave__(self):
+        xy = self.__get_xy_parameter_for_wave__(4)
+        forecast_values = np.array(sorted(self.forecast_value_list))
+        value_list = [forecast_values.min(), forecast_values.mean(), forecast_values.max()]
+        if self.wave_type == FD.DESC:
+            value_list = sorted(value_list, reverse=True)
+        for index, values in enumerate(value_list):
+            xy = xy + [(self.comp_dic['w_5'].tick_start.f_var, values)]
+            xy = xy + [(self.comp_dic['w_5'].tick_start.f_var + (2 if index == 1 else 3), values)]
+            xy = xy + [(self.comp_dic['w_5'].tick_start.f_var, values)]
         return xy
 
 
@@ -323,7 +353,7 @@ class FibonacciAscendingWave(FibonacciWave):
         return tick.high > self.max and (reg_comp_id_next != 'w_5' or tick.is_global_max)
 
     def can_regression_component_be_added(self, reg_comp: FibonacciRegressionComponent) -> bool:
-        return reg_comp.tick_start.low <= reg_comp.min and reg_comp.tick_end.high >= reg_comp.max
+        return reg_comp.tick_start.position == reg_comp.idx_min and reg_comp.tick_end.position == reg_comp.idx_max
 
     def __is_tick_next_retracement__(self, tick: WaveTick, ret_comp_id_next: str) -> bool:
         ret_min_list = [comp.min for comp in self.ret_comp_list]
@@ -331,8 +361,8 @@ class FibonacciAscendingWave(FibonacciWave):
         return tick.low > self.min and tick.low > max_ret_min_list
 
     def can_retracement_component_be_added(self, ret_comp: FibonacciRetracementComponent) -> bool:
-        return ret_comp.tick_start.high >= ret_comp.max and ret_comp.tick_end.low <= ret_comp.min \
-               and ret_comp.retracement_pct < FR.R_764
+        return ret_comp.tick_start.position == ret_comp.idx_max and ret_comp.tick_end.position == ret_comp.idx_min \
+               and ret_comp.retracement_pct < FR.R_764 + 0.1
 
     def __calculate_regression_values_for_component__(self, reg_comp: FibonacciRegressionComponent):
         index_comp_id = self.comp_id_list_reg.index(reg_comp.comp_id)
@@ -374,7 +404,7 @@ class FibonacciDescendingWave(FibonacciWave):
         return tick.low < self.min and (reg_comp_id_next != 'w_5' or tick.is_global_min)
 
     def can_regression_component_be_added(self, reg_comp: FibonacciRegressionComponent) -> bool:
-        return reg_comp.tick_start.high >= reg_comp.max and reg_comp.tick_end.low <= reg_comp.min
+        return reg_comp.tick_start.position == reg_comp.idx_max and reg_comp.tick_end.position == reg_comp.idx_min
 
     def __is_tick_next_retracement__(self, tick: WaveTick, ret_comp_id_next: str) -> bool:
         ret_max_list = [comp.max for comp in self.ret_comp_list]
@@ -382,7 +412,7 @@ class FibonacciDescendingWave(FibonacciWave):
         return tick.high < self.max and tick.high < min_ret_mat_list
 
     def can_retracement_component_be_added(self, ret_comp: FibonacciRetracementComponent) -> bool:
-        return ret_comp.tick_start.low <= ret_comp.min and ret_comp.retracement_pct < FR.R_764
+        return ret_comp.tick_start.position == ret_comp.idx_min and ret_comp.retracement_pct < FR.R_764 + 0.1
         # and ret_comp.tick_end.high >= ret_comp.max
 
     def __calculate_regression_values_for_component__(self, reg_comp: FibonacciRegressionComponent):
