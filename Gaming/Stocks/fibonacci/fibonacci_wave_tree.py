@@ -24,7 +24,7 @@ class FibonacciWaveForecastCollector:
         self.__max_position_5_wave_dict = {}
 
     def add_forecast_wave(self, wave: FibonacciWave):
-        idx = wave.comp_position_key_4
+        idx = str(wave.comp_position_list[0]) + '-' + str(wave.comp_position_list[4])
         value = wave.w_5.tick_end.high if wave.wave_type == FD.ASC else wave.w_5.tick_end.low
         if idx not in self.__idx_list:
             self.__idx_list.append(idx)
@@ -110,22 +110,23 @@ class FibonacciWaveTree:
                 max_array = np.append(max_array, np.array([tick_max.high]))
                 self.min_possible_max_tick_dic[tick_min.position].append(tick_max)
 
-    def __add_next_reg_comp__(self, wave: FibonacciWave, reg_comp_id_next: str, tick_previous: WaveTick):
+    def __add_next_reg_comp__(self, wave: FibonacciWave, reg_comp_id: str, tick_previous: WaveTick):
         possible_next_tick_list = self.__get_possible_next_tick_list__(tick_previous, wave, True)
         for tick_next in possible_next_tick_list:
-            if wave.is_wave_ready_for_next_regression(tick_next, reg_comp_id_next):
-                reg_comp = self.__get_regression_component__(wave, tick_previous, tick_next, reg_comp_id_next)
+            if wave.is_wave_ready_for_next_regression(tick_next, reg_comp_id):
+                reg_comp = self.__get_regression_component__(wave, tick_previous, tick_next, reg_comp_id)
                 wave.calculate_regression_values_for_component(reg_comp)
                 if wave.can_regression_component_be_added(reg_comp):
                     wave.add_regression(reg_comp)
                     if wave.is_wave_complete():
                         self.__process_completed_wave__(wave)
-                        self.__delete_component_from_dic__(wave, reg_comp_id_next)
+                        self.__delete_component_from_dic__(wave, reg_comp_id)
                         self.__handle_forecasts__(wave)
                     else:
-                        if wave.ret_comp_id_next != '':
-                            self.__add_next_ret_comp__(wave, wave.ret_comp_id_next, tick_next)
-                        self.__delete_component_from_dic__(wave, reg_comp_id_next)
+                        ret_comp_id_next = wave.ret_comp_id_next
+                        if ret_comp_id_next!= '':
+                            self.__add_next_ret_comp__(wave, ret_comp_id_next, tick_next)
+                        self.__delete_component_from_dic__(wave, reg_comp_id)
 
     def __get_regression_component__(self, wave: FibonacciWave, tick_start: WaveTick, tick_end: WaveTick, comp_id: str):
         if wave.wave_type == FD.ASC:
@@ -133,17 +134,18 @@ class FibonacciWaveTree:
         else:
             return FibonacciDescendingRegressionComponent(self.df_source, tick_start, tick_end, comp_id)
 
-    def __add_next_ret_comp__(self, wave: FibonacciWave, ret_comp_id_next: str, tick_previous: WaveTick):
+    def __add_next_ret_comp__(self, wave: FibonacciWave, ret_comp_id: str, tick_previous: WaveTick):
         possible_next_tick_list = self.__get_possible_next_tick_list__(tick_previous, wave, False)
         for tick_next in possible_next_tick_list:
-            if wave.is_wave_ready_for_next_retracement(tick_next, ret_comp_id_next):
-                ret_comp = self.__get_retracement_component__(wave, tick_previous, tick_next, ret_comp_id_next)
+            if wave.is_wave_ready_for_next_retracement(tick_next, ret_comp_id):
+                ret_comp = self.__get_retracement_component__(wave, tick_previous, tick_next, ret_comp_id)
                 wave.calculate_retracement_values_for_component(ret_comp)
                 if wave.can_retracement_component_be_added(ret_comp):
                     wave.add_retracement(ret_comp)
-                    if wave.reg_comp_id_next != '':
-                        self.__add_next_reg_comp__(wave, wave.reg_comp_id_next, tick_next)
-                    self.__delete_component_from_dic__(wave, ret_comp_id_next)
+                    ret_comp_id_next = wave.reg_comp_id_next
+                    if ret_comp_id_next != '':
+                        self.__add_next_reg_comp__(wave, ret_comp_id_next, tick_next)
+                    self.__delete_component_from_dic__(wave, ret_comp_id)
 
     def __get_retracement_component__(self, wave: FibonacciWave, tick_start: WaveTick, tick_end: WaveTick, comp_id: str):
         if wave.wave_type == FD.ASC:
@@ -164,9 +166,10 @@ class FibonacciWaveTree:
                 tick_forecast = self.__get_wave_tick_for_forecast__(wave, value, position)
                 reg_comp = self.__get_regression_component__(wave, wave.w_4.tick_end, tick_forecast, 'w_5')
                 wave.calculate_regression_values_for_component(reg_comp)
-                wave.add_regression(reg_comp)
-                self.__process_forecast_wave__(wave)
-                del wave.comp_dic['w_5']
+                if wave.can_regression_component_be_added(reg_comp):
+                    wave.add_regression(reg_comp)
+                    self.__process_forecast_wave__(wave)
+                    del wave.comp_dic['w_5']
             wave.comp_forecast_parameter_list = []
 
     def __get_wave_tick_for_forecast__(self, wave: FibonacciWave, value: float, position: int):

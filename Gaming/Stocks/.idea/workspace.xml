@@ -2,17 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fibonacci/fibonacci_wave.py" beforeDir="false" afterPath="$PROJECT_DIR$/fibonacci/fibonacci_wave.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fibonacci/fibonacci_wave_component.py" beforeDir="false" afterPath="$PROJECT_DIR$/fibonacci/fibonacci_wave_component.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py" beforeDir="false" afterPath="$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_breakout.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_constraints.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_constraints.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_data_frame.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_data_frame.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_detector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_function_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_function_container.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_part.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_part.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -28,41 +18,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="423">
-              <caret line="44" column="56" selection-start-line="44" selection-start-column="56" selection-end-line="44" selection-end-column="56" />
+            <state relative-caret-position="142">
+              <caret line="38" column="35" lean-forward="true" selection-start-line="38" selection-start-column="35" selection-end-line="38" selection-end-column="35" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="fibonacci_wave_tree.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="fibonacci_wave_tree.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="593">
-              <caret line="232" column="37" lean-forward="true" selection-start-line="232" selection-start-column="37" selection-end-line="232" selection-end-column="37" />
-              <folding>
-                <element signature="e#166#184#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="pattern_detector.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pattern_detector.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="338">
-              <caret line="137" selection-start-line="137" selection-end-line="137" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="fibonacci_wave_component.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/fibonacci/fibonacci_wave_component.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2635">
-              <caret line="159" lean-forward="true" selection-start-line="159" selection-end-line="159" />
+            <state relative-caret-position="184">
+              <caret line="115" selection-start-line="115" selection-end-line="115" />
             </state>
           </provider>
         </entry>
@@ -70,11 +39,20 @@
       <file leaf-file-name="fibonacci_wave.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fibonacci/fibonacci_wave.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="184">
-              <caret line="268" selection-start-line="268" selection-end-line="268" />
+            <state relative-caret-position="418">
+              <caret line="236" column="70" selection-start-line="236" selection-start-column="70" selection-end-line="236" selection-end-column="70" />
               <folding>
                 <element signature="e#163#181#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pattern_dash.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pattern_dash/pattern_dash.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1614">
+              <caret line="542" column="42" lean-forward="true" selection-start-line="542" selection-start-column="42" selection-end-line="542" selection-end-column="42" />
             </state>
           </provider>
         </entry>
@@ -114,12 +92,12 @@
       <find>forec</find>
       <find>forecast</find>
       <find>forecasts</find>
-      <find>comp_forecast_parameter_list</find>
       <find>print_wave_details</find>
       <find>w_4</find>
       <find>w_5</find>
       <find>debug</find>
       <find>idx</find>
+      <find>comp_forecast_parameter_list</find>
     </findStrings>
     <replaceStrings>
       <replace>MyPyDate</replace>
@@ -182,8 +160,8 @@
         <option value="$PROJECT_DIR$/pattern_function_container.py" />
         <option value="$PROJECT_DIR$/pattern.py" />
         <option value="$PROJECT_DIR$/fibonacci/fibonacci_wave.py" />
-        <option value="$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py" />
         <option value="$PROJECT_DIR$/run_pattern_detection.py" />
+        <option value="$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py" />
       </list>
     </option>
   </component>
@@ -209,6 +187,11 @@
               <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
               <item name="Stocks" type="462c0819:PsiDirectoryNode" />
               <item name="fibonacci" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Stocks" type="462c0819:PsiDirectoryNode" />
+              <item name="pattern_dash" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -357,19 +340,18 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.5135135" visible="true" weight="0.20780255" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.51338583" visible="true" weight="0.20780255" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.3258786" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.3082353" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.3290735" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32784313" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.36156863" />
-      <window_info id="Structure" order="1" sideWeight="0.4864865" side_tool="true" visible="true" weight="0.20780255" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.36156863" />
+      <window_info id="Structure" order="1" sideWeight="0.48661417" side_tool="true" visible="true" weight="0.20780255" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3262745" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.5019608" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.5019608" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -437,26 +419,27 @@
           <option name="timeStamp" value="477" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <condition expression="idx == '10-47'" language="Python" />
           <url>file://$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py</url>
-          <line>75</line>
-          <option name="timeStamp" value="488" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py</url>
-          <line>113</line>
-          <option name="timeStamp" value="489" />
+          <line>28</line>
+          <option name="timeStamp" value="492" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="tick_next.position == 31" language="Python" />
           <url>file://$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py</url>
-          <line>138</line>
-          <option name="timeStamp" value="491" />
+          <line>139</line>
+          <option name="timeStamp" value="495" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py</url>
+          <line>115</line>
+          <option name="timeStamp" value="496" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="492" />
+      <option name="time" value="497" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -470,6 +453,11 @@
     <expressions id="breakpointCondition">
       <expression>
         <expression-string>tick_next.position == 31</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>idx == '10-47'</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -505,16 +493,6 @@
       </expression>
       <expression>
         <expression-string>ret_comp.position_start == 27</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>reg_comp.position_start == 17</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>tick_previous.position == 6</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -796,13 +774,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/pattern_dash.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="305">
-          <caret line="540" column="34" lean-forward="true" selection-start-line="540" selection-start-column="34" selection-end-line="540" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_data_container.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="211">
@@ -899,10 +870,24 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/pattern_dash.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1614">
+          <caret line="542" column="42" lean-forward="true" selection-start-line="542" selection-start-column="42" selection-end-line="542" selection-end-column="42" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="142">
+          <caret line="38" column="35" lean-forward="true" selection-start-line="38" selection-start-column="35" selection-end-line="38" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/fibonacci/fibonacci_wave.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="184">
-          <caret line="268" selection-start-line="268" selection-end-line="268" />
+        <state relative-caret-position="418">
+          <caret line="236" column="70" selection-start-line="236" selection-start-column="70" selection-end-line="236" selection-end-column="70" />
           <folding>
             <element signature="e#163#181#0" expanded="true" />
           </folding>
@@ -911,18 +896,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="593">
-          <caret line="232" column="37" lean-forward="true" selection-start-line="232" selection-start-column="37" selection-end-line="232" selection-end-column="37" />
-          <folding>
-            <element signature="e#166#184#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="423">
-          <caret line="44" column="56" selection-start-line="44" selection-start-column="56" selection-end-line="44" selection-end-column="56" />
+        <state relative-caret-position="184">
+          <caret line="115" selection-start-line="115" selection-end-line="115" />
         </state>
       </provider>
     </entry>
