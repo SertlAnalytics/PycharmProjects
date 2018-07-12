@@ -93,7 +93,7 @@ class PatternDetector:
         df = self.__get_trade_df__(pattern)
         f_upper_trade = pattern.get_f_upper_trade()
         f_lower_trade = pattern.get_f_lower_trade()
-        function_cont = PatternFunctionContainer(pattern.pattern_type, df, f_lower_trade, f_upper_trade)
+        function_cont = pattern.get_function_container(df, f_lower_trade, f_upper_trade)
         part = PatternPart(function_cont)
         pattern.add_part_trade(part)
         pattern.fill_result_set()
@@ -115,7 +115,7 @@ class PatternDetector:
         for pos in range(pos_start, self.df_length):
             counter += 1
             next_tick = WaveTick(self.df.loc[pos])
-            break_loop = self.__check_for_break__(pattern.function_cont, counter, number_of_positions, next_tick)
+            break_loop = self.__check_for_loop_break__(pattern.function_cont, counter, number_of_positions, next_tick)
             if break_loop:
                 can_be_added = False
                 tick_last = next_tick
@@ -128,12 +128,12 @@ class PatternDetector:
         return can_be_added
 
     @staticmethod
-    def __check_for_break__(function_cont, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
+    def __check_for_loop_break__(function_cont, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
         if counter > number_of_positions:  # maximal number for the whole pattern after its building
             return True
-        if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 6):
-            # check the last value !!! in some IMPORTANT cases is the breakout just on that day...
-            return True
+        # if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 6):
+        #     # check the last value !!! in some IMPORTANT cases is the breakout just on that day...
+        #     return True
         if not function_cont.is_tick_inside_pattern_range(tick):
             return True
         return False

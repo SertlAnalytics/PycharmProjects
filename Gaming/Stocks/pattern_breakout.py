@@ -22,7 +22,6 @@ class PatternBreakout:
     def __init__(self, api: PatternBreakoutApi):
         self.function_cont = api.function_cont
         self.constraints = api.constraints
-        self.pattern_type = self.function_cont.pattern_type
         self.tick_previous = api.tick_previous
         self.tick_breakout = api.tick_breakout
         self.breakout_date = self.tick_breakout.date

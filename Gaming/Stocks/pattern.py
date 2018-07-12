@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 from pattern_range import PatternRange
 from pattern_configuration import debugger
-from pattern_function_container import PatternFunctionContainer
+import pattern_function_container as pfc
 from pattern_trade_result import TradeResult
 from pattern_part import PatternPart
 import pattern_constraints as cstr
@@ -168,7 +168,7 @@ class Pattern:
     def is_part_trade_available(self):
         return self._part_trade is not None
 
-    def __get_pattern_function_container__(self) -> PatternFunctionContainer:
+    def __get_pattern_function_container__(self) -> pfc.PatternFunctionContainer:
         df_check = self.pattern_range.get_related_part_from_data_frame(self.df_min_max)
         if self.pattern_range.__class__.__name__ == 'PatternRangeMin':
             f_upper = self.complementary_function
@@ -176,13 +176,16 @@ class Pattern:
         else:
             f_lower = self.complementary_function
             f_upper = self.pattern_range.f_param
-        f_container = PatternFunctionContainer(self.pattern_type, df_check, f_lower, f_upper)
+        f_container = self.get_function_container(df_check, f_lower, f_upper)
         if self.constraints.are_f_lower_f_upper_pct_compliant(f_container.f_lower_pct, f_container.f_upper_pct):
             if self.constraints.is_f_regression_pct_compliant(f_container.f_regression_pct):
                 value_categorizer = ChannelValueCategorizer(f_container, self.constraints.tolerance_pct)
                 if self.constraints.are_global_constraints_satisfied(value_categorizer):
                     return f_container
-        return PatternFunctionContainer(self.pattern_type, df_check)
+        return self.get_function_container(df_check)
+
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.PatternFunctionContainer(df, f_lower, f_upper)
 
     def __fill_trade_result__(self):
         tolerance_range = self._part_main.breadth * self.constraints.tolerance_pct
@@ -255,11 +258,17 @@ class ChannelUpPattern(ChannelPattern):
     def __get_constraint__():
         return cstr.ChannelUpConstraints()
 
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.ChannelUpPatternFunctionContainer(df, f_lower, f_upper)
+
 
 class ChannelDownPattern(ChannelPattern):
     @staticmethod
     def __get_constraint__():
         return cstr.ChannelDownConstraints()
+
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.ChannelDownPatternFunctionContainer(df, f_lower, f_upper)
 
 
 class HeadShoulderPattern(Pattern):
@@ -289,11 +298,17 @@ class TriangleBottomPattern(TrianglePattern):
     def __get_constraint__():
         return cstr.TriangleBottomConstraints()
 
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.TriangleBottomPatternFunctionContainer(df, f_lower, f_upper)
+
 
 class TriangleTopPattern(TrianglePattern):
     @staticmethod
     def __get_constraint__():
         return cstr.TriangleTopConstraints()
+
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.TriangleTopPatternFunctionContainer(df, f_lower, f_upper)
 
 
 class TriangleUpPattern(TrianglePattern):
@@ -301,11 +316,17 @@ class TriangleUpPattern(TrianglePattern):
     def __get_constraint__():
         return cstr.TriangleUpConstraints()
 
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.TriangleDownPatternFunctionContainer(df, f_lower, f_upper)
+
 
 class TriangleDownPattern(TrianglePattern):
     @staticmethod
     def __get_constraint__():
         return cstr.TriangleDownConstraints()
+
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.TriangleUpPatternFunctionContainer(df, f_lower, f_upper)
 
 
 class TKEPattern(Pattern):
@@ -318,11 +339,17 @@ class TKEDownPattern(TKEPattern):
     def __get_constraint__():
         return cstr.TKEDownConstraints()
 
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.TKEDownPatternFunctionContainer(df, f_lower, f_upper)
+
 
 class TKEUpPattern(TKEPattern):
     @staticmethod
     def __get_constraint__():
         return cstr.TKEUpConstraints()
+
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.TKEUpPatternFunctionContainer(df, f_lower, f_upper)
 
 
 class PatternHelper:

@@ -220,14 +220,14 @@ class FibonacciWaveTree:
     def __add_wave_after_check_to_list__(self, wave_list: list, wave: FibonacciWave):
         is_covered_by_list = False
         replacing_index = -1
-        for index, wave_in_list in enumerate(wave_list):
-            coverage_mode = wave_in_list.get_coverage_mode(wave)
-            if coverage_mode == CM.COVERING:
-                is_covered_by_list = True
-                break
-            elif coverage_mode == CM.COVERED_BY:
-                replacing_index = index
-                break
+        # for index, wave_in_list in enumerate(wave_list):
+        #     coverage_mode = wave_in_list.get_coverage_mode(wave)
+        #     if coverage_mode == CM.COVERING:
+        #         is_covered_by_list = True
+        #         break
+        #     elif coverage_mode == CM.COVERED_BY:
+        #         replacing_index = index
+        #         break
 
         if not is_covered_by_list:
             if replacing_index == -1:

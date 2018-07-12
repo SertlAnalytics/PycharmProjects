@@ -173,7 +173,7 @@ class TKEDownConstraints(Constraints):
                               [SVC.U_on, SVC.U_on, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-0.02, -0.50]
+        self.f_upper_pct_bounds = [-0.50, -0.02]
         self.f_lower_pct_bounds = []  # not required
         self.f_upper_lower_relation_bounds = []
         self.f_regression_pct_bounds = self.f_upper_pct_bounds

@@ -377,8 +377,7 @@ class FibonacciAscendingWave(FibonacciWave):
         return tick.low > self.min and tick.low > max_ret_min_list
 
     def can_retracement_component_be_added(self, ret_comp: FibonacciAscendingRetracementComponent) -> bool:
-        return ret_comp.tick_start.position == ret_comp.idx_max and ret_comp.tick_end.position == ret_comp.idx_min \
-               and ret_comp.retracement_pct < FR.R_764 + 0.1
+        return ret_comp.tick_end.position == ret_comp.idx_min and ret_comp.retracement_pct < FR.R_764 + 0.1
 
     def __calculate_regression_values_for_component__(self, reg_comp: FibonacciAscendingRegressionComponent):
         index_comp_id = self.comp_id_list_reg.index(reg_comp.comp_id)
@@ -428,8 +427,7 @@ class FibonacciDescendingWave(FibonacciWave):
         return tick.high < self.max and tick.high < min_ret_mat_list
 
     def can_retracement_component_be_added(self, ret_comp: FibonacciDescendingRetracementComponent) -> bool:
-        return ret_comp.tick_start.position == ret_comp.idx_min and ret_comp.retracement_pct < FR.R_764 + 0.1
-        # and ret_comp.tick_end.high >= ret_comp.max
+        return ret_comp.tick_end.position == ret_comp.idx_max and ret_comp.retracement_pct < FR.R_764 + 0.1
 
     def __calculate_regression_values_for_component__(self, reg_comp: FibonacciDescendingRegressionComponent):
         index_comp_id = self.comp_id_list_reg.index(reg_comp.comp_id)

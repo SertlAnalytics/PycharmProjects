@@ -35,7 +35,7 @@ class PatternPart:
         self.function_cont = function_cont
         self.df = pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
         self.tick_list = []
-        self.pattern_type = self.function_cont.pattern_type
+        self.pattern_type = runtime.actual_pattern_type
         self.breakout = runtime.actual_breakout
         self.pattern_range = runtime.actual_pattern_range
         self.tick_first = None

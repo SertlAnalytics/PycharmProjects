@@ -52,47 +52,7 @@ class PatternDataFrame:
         return MyPlotHelper.get_polygon_for_tick_list(tick_list, f_regression)
 
     def get_xy_parameter(self, function_cont: PatternFunctionContainer):
-        tick_first, tick_last, tick_helper = self.tick_first, self.tick_last, function_cont.tick_for_helper
-        f_upper = function_cont.f_upper
-        f_lower = function_cont.f_lower
-        h_upper = function_cont.h_upper
-        h_lower = function_cont.h_lower
-        f_upper_extended = function_cont.get_upper_value
-        f_lower_extended = function_cont.get_lower_value
-
-        if function_cont.tick_for_helper is None:
-            tick_list = [tick_first, tick_first, tick_last, tick_last]
-            function_list = [f_upper, f_lower, f_lower, f_upper]
-        else:
-            tick_helper = function_cont.tick_for_helper
-            if function_cont.pattern_type == FT.TKE_UP:
-                tick_list = [tick_first, tick_last, tick_last, tick_helper, tick_first]
-                function_list = [h_upper, h_upper, h_lower, h_lower, f_lower]
-            elif function_cont.pattern_type == FT.TKE_DOWN:
-                tick_list = [tick_first, tick_helper, tick_last, tick_last, tick_first]
-                function_list = [f_upper, h_upper, h_upper, f_lower, f_lower]
-            elif function_cont.f_var_cross_f_upper_f_lower > 0:
-                if function_cont.f_var_cross_f_upper_f_lower <= pdh.pattern_data.tick_last.f_var:
-                    tick_last = pdh.pattern_data.get_tick_by_date_num(function_cont.f_var_cross_f_upper_f_lower)
-                    tick_list = [tick_first, tick_last, tick_first]
-                    if function_cont.pattern_direction == FD.ASC:
-                        function_list = [f_upper, f_upper, f_lower]
-                    else:
-                        function_list = [f_lower, f_lower, f_upper]
-                else:
-                    tick_last = pdh.pattern_data.tick_last
-                    tick_list = [tick_first, tick_last, tick_last, tick_first]
-                    if function_cont.pattern_direction == FD.ASC:
-                        function_list = [f_upper, f_upper, f_lower, f_lower]
-                    else:
-                        function_list = [f_lower, f_lower, f_upper, f_upper]
-            else:
-                tick_list = [tick_first, tick_helper, tick_last, tick_last, tick_first]
-                if function_cont.breakout_direction == FD.ASC:
-                    function_list = [f_upper_extended, f_upper_extended, f_upper_extended, f_lower, f_lower]
-                else:
-                    function_list = [f_lower_extended, f_lower_extended, f_lower_extended, f_upper, f_upper]
-
+        tick_list, function_list = function_cont.get_tick_function_list_for_xy_parameter(self.tick_first, self.tick_last)
         return MyPlotHelper.get_xy_parameter_for_tick_function_list(tick_list, function_list)
 
     def get_xy_center(self, f_regression: np.poly1d = None):
