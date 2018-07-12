@@ -50,7 +50,7 @@ class FibonacciWaveComponent:
     def range_max(self):
         return round(self.max - self.min, 2)
 
-    def get_end_to_end_range(self, direction: str) -> float:
+    def get_end_to_end_range(self) -> float:
         pass
 
     def is_component_consistent(self):
@@ -65,7 +65,16 @@ class FibonacciWaveComponent:
     def get_details(self):
         pass
 
-    def get_xy_parameter(self, is_for_ascending_wave: bool):
+    def get_xy_parameter(self):
+        x = self.__get_x_parameter__()
+        y = self.__get_y_parameter__()
+        xy = list(zip(x, y))
+        return xy
+
+    def __get_x_parameter__(self) -> list:
+        pass
+
+    def __get_y_parameter__(self) -> list:
         pass
 
 
@@ -75,15 +84,9 @@ class FibonacciRegressionComponent(FibonacciWaveComponent):
         self.regression_pct_against_last_regression = 0
         self.regression_pct_against_last_retracement = 0
 
-    def get_end_to_end_range(self, direction: str) -> float:
-        if direction == FD.ASC:
-            return round(self.tick_end.high - self.tick_start.low, 2)
-        else:
-            return round(self.tick_start.high - self.tick_end.low, 2)
-
-    def get_regression_pct(self, comp: FibonacciWaveComponent, wave_type: str):
-        range_comp = comp.get_end_to_end_range(wave_type)
-        range_ret_comp = self.get_end_to_end_range(wave_type)
+    def get_regression_pct(self, comp: FibonacciWaveComponent):
+        range_comp = comp.get_end_to_end_range()
+        range_ret_comp = self.get_end_to_end_range()
         return round(range_ret_comp / range_comp, 3)
 
     def is_component_internally_consistent(self):
@@ -106,16 +109,24 @@ class FibonacciRegressionComponent(FibonacciWaveComponent):
                    self.regression_pct_against_last_regression * 100,
                    self.regression_pct_against_last_retracement)
 
-    def get_xy_parameter(self, is_for_ascending_wave: bool):
-        if self.position_in_wave == 1:
-            x = [self.tick_start.f_var, self.tick_end.f_var]
-            y = [self.tick_start.low, self.tick_end.high] if is_for_ascending_wave \
-                else [self.tick_start.high, self.tick_end.low]
-        else:
-            x = [self.tick_end.f_var]
-            y = [self.tick_end.high] if is_for_ascending_wave else [self.tick_end.low]
-        xy = list(zip(x, y))
-        return xy
+    def __get_x_parameter__(self) -> list:
+        return [self.tick_start.f_var, self.tick_end.f_var] if self.position_in_wave == 1 else [self.tick_end.f_var]
+
+
+class FibonacciAscendingRegressionComponent(FibonacciRegressionComponent):
+    def get_end_to_end_range(self) -> float:
+        return round(self.tick_end.high - self.tick_start.low, 2)
+
+    def __get_y_parameter__(self):
+        return [self.tick_start.low, self.tick_end.high] if self.position_in_wave == 1 else [self.tick_end.high]
+
+
+class FibonacciDescendingRegressionComponent(FibonacciRegressionComponent):
+    def get_end_to_end_range(self) -> float:
+        return round(self.tick_start.high - self.tick_end.low, 2)
+
+    def __get_y_parameter__(self):
+        return [self.tick_start.high, self.tick_end.low] if self.position_in_wave == 1 else [self.tick_end.low]
 
 
 class FibonacciRetracementComponent(FibonacciWaveComponent):
@@ -124,22 +135,13 @@ class FibonacciRetracementComponent(FibonacciWaveComponent):
         self.retracement_value = 0
         self.retracement_pct = 0
 
-    def get_end_to_end_range(self, wave_type: str) -> float:
-        if wave_type == FD.ASC:
-            return round(self.tick_start.high - self.tick_end.low, 2)
-        else:
-            return round(self.tick_end.high - self.tick_start.low, 2)
-
-    def get_retracement_value(self, reg_comp: FibonacciRegressionComponent, wave_type: str):
-        if wave_type == FD.ASC:
-            return round(reg_comp.tick_end.high - self.tick_end.low, 2)
-        else:
-            return round(reg_comp.tick_end.low - self.tick_end.high, 2)
-
-    def get_retracement_pct(self, reg_comp: FibonacciRegressionComponent, wave_type: str):
-        range_reg_comp = reg_comp.get_end_to_end_range(wave_type)
-        range_ret_comp = self.get_end_to_end_range(wave_type)
+    def get_retracement_pct(self, reg_comp: FibonacciRegressionComponent):
+        range_reg_comp = reg_comp.get_end_to_end_range()
+        range_ret_comp = self.get_end_to_end_range()
         return round(range_ret_comp/range_reg_comp, 3)
+
+    def get_retracement_value(self, reg_comp: FibonacciRegressionComponent):
+        pass
 
     def is_component_internally_consistent(self):
         return True
@@ -154,8 +156,27 @@ class FibonacciRetracementComponent(FibonacciWaveComponent):
         return '{: <12}: {} - {}: Retracement: {} ({:4.1f}%)'.format(
             'Retracement', self.tick_start.date, self.tick_end.date, self.retracement_value, self.retracement_pct * 100)
 
-    def get_xy_parameter(self, is_for_ascending_wave: bool):
-        x = [self.tick_end.f_var]
-        y = [self.tick_end.low] if is_for_ascending_wave else [self.tick_end.high]
-        xy = list(zip(x, y))
-        return xy
+    def __get_x_parameter__(self) -> list:
+        return [self.tick_end.f_var]
+
+
+class FibonacciAscendingRetracementComponent(FibonacciRetracementComponent):
+    def get_end_to_end_range(self) -> float:
+        return round(self.tick_start.high - self.tick_end.low, 2)
+
+    def get_retracement_value(self, reg_comp: FibonacciRegressionComponent):
+        return round(reg_comp.tick_end.high - self.tick_end.low, 2)
+
+    def __get_y_parameter__(self) -> list:
+        return [self.tick_end.low]
+
+
+class FibonacciDescendingRetracementComponent(FibonacciRetracementComponent):
+    def get_end_to_end_range(self) -> float:
+        return round(self.tick_end.high - self.tick_start.low, 2)
+
+    def get_retracement_value(self, reg_comp: FibonacciRegressionComponent):
+        return round(reg_comp.tick_end.low - self.tick_end.high, 2)
+
+    def __get_y_parameter__(self) -> list:
+        return [self.tick_end.high]
