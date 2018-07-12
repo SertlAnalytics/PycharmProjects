@@ -131,7 +131,7 @@ class FibonacciWaveTree:
         if wave.wave_type == FD.ASC:
             return FibonacciAscendingRegressionComponent(self.df_source, tick_start, tick_end, comp_id)
         else:
-            return FibonacciAscendingRegressionComponent(self.df_source, tick_start, tick_end, comp_id)
+            return FibonacciDescendingRegressionComponent(self.df_source, tick_start, tick_end, comp_id)
 
     def __add_next_ret_comp__(self, wave: FibonacciWave, ret_comp_id_next: str, tick_previous: WaveTick):
         possible_next_tick_list = self.__get_possible_next_tick_list__(tick_previous, wave, False)
@@ -149,7 +149,7 @@ class FibonacciWaveTree:
         if wave.wave_type == FD.ASC:
             return FibonacciAscendingRetracementComponent(self.df_source, tick_start, tick_end, comp_id)
         else:
-            return FibonacciAscendingRetracementComponent(self.df_source, tick_start, tick_end, comp_id)
+            return FibonacciDescendingRetracementComponent(self.df_source, tick_start, tick_end, comp_id)
 
     def __delete_component_from_dic__(self, wave: FibonacciWave, comp_id: str):
         if comp_id == 'w_4':
