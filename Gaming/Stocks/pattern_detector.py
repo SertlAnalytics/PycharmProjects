@@ -54,9 +54,9 @@ class PatternDetector:
                         self.__handle_single_pattern_when_parsing__(pattern)
 
     def parse_for_fibonacci_waves(self):
-        pdh.pattern_data.adjust_min_max_for_fibonacci()
-        min_max_tick_list = pdh.pattern_data.wave_tick_list_min_max.tick_list
-        self.fib_wave_tree = FibonacciWaveTree(pdh.pattern_data.df, min_max_tick_list, config.max_pattern_range_length)
+        df = pdh.pattern_data_fibonacci.df
+        min_max_tick_list = pdh.pattern_data_fibonacci.wave_tick_list_min_max.tick_list
+        self.fib_wave_tree = FibonacciWaveTree(df, min_max_tick_list, config.max_pattern_range_length)
         self.fib_wave_tree.parse_tree()
 
     def check_for_intersections(self):

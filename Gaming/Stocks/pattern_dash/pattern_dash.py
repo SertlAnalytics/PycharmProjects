@@ -535,8 +535,8 @@ class PatternDash:
                     self.ranges_opposite_polygon_dic_list[ticks.f_var].append(polygon)
 
     def __plot_fibonacci_waves__(self):
-        self.fibonacci_patch_container = FibonacciWavePatchContainer()
-        pdh.pattern_data.adjust_min_max_for_fibonacci()
+        # self.fibonacci_patch_container = FibonacciWavePatchContainer()
+        # pdh.pattern_data.adjust_min_max_for_fibonacci()
         fib_wave_tree = FibonacciWaveTree(pdh.pattern_data.df, pdh.pattern_data.tick_list, config.fibonacci_detail_print)
         fib_wave_tree.parse_tree()
         for fib_waves in fib_wave_tree.fibonacci_descending_wave_list:

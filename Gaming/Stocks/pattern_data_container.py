@@ -21,6 +21,9 @@ class PatternData:
     1. Identify all extrema: global and local maximum and minimum which are used as checkpoint for pattern detections.
     2. Identify ranges which can be used for a thorough inspection in the further process
     """
+    __length_for_global = config.length_for_global_min_max
+    __length_for_local = config.length_for_local_min_max
+
     def __init__(self, df: pd.DataFrame):
         self.df = df
         self.df_length = self.df.shape[0]
@@ -28,8 +31,6 @@ class PatternData:
         self.min_value = self.df[CN.HIGH].min()
         self.height = self.max_value - self.min_value
         self.__add_columns__()
-        self.__length_for_global = config.length_for_global_min_max
-        self.__length_for_local = config.length_for_local_min_max
         self.__init_columns_for_ticks_distance__()
         self.df_min_max = self.df[np.logical_or(self.df[CN.IS_MIN], self.df[CN.IS_MAX])]
         self.tick_by_date_num_ext_dic = ExtendedDictionary4WaveTicks(self.df)
@@ -42,16 +43,6 @@ class PatternData:
         self.__fill_tick_list_min_max__()
         self.tick_list_min_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_min, False)
         self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
-
-    def adjust_min_max_for_fibonacci(self):
-        local_param_equal = config.length_for_local_min_max == config.length_for_local_min_max_fibonacci
-        global_param_equal = config.length_for_global_min_max == config.length_for_global_min_max_fibonacci
-        if not local_param_equal or not global_param_equal:
-            self.__length_for_global = config.length_for_global_min_max_fibonacci
-            self.__length_for_local = config.length_for_local_min_max_fibonacci
-            self.__init_columns_for_ticks_distance__()
-            self.df_min_max = self.df[np.logical_or(self.df[CN.IS_MIN], self.df[CN.IS_MAX])]
-            self.wave_tick_list_min_max = WaveTickList(self.df_min_max)
 
     def get_tick_by_date_num(self, date_num: int):
         k = date_num
@@ -69,7 +60,8 @@ class PatternData:
             else:
                 self.tick_list_min.append(tick)
 
-    def __get_hidden_tick_list__(self, input_list: list, for_high: bool):
+    @staticmethod
+    def __get_hidden_tick_list__(input_list: list, for_high: bool):
         wave_tick_list = WaveTickList(input_list)
         return wave_tick_list.get_list_without_hidden_ticks(for_high, 0.03)
 
@@ -146,12 +138,19 @@ class PatternData:
         return [value_first, value_second]
 
 
+class PatternDataFibonacci(PatternData):
+    __length_for_global = config.length_for_global_min_max_fibonacci
+    __length_for_local = config.length_for_local_min_max_fibonacci
+
+
 class PatternDataHandler:
     def __init__(self):
         self.pattern_data = None
+        self.pattern_data_fibonacci = None
 
     def init_by_df(self, df: pd.DataFrame):
         self.pattern_data = PatternData(df)
+        self.pattern_data_fibonacci = PatternDataFibonacci(df)
 
 
 pattern_data_handler = PatternDataHandler()
