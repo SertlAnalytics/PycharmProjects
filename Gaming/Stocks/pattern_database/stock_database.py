@@ -16,6 +16,7 @@ from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.constants.pattern_constants import Indices, CN
 import os
+import time
 
 
 class StockDatabase(BaseDatabase):
@@ -75,6 +76,7 @@ class StockDatabase(BaseDatabase):
             retry_dic = dict(self.error_handler.retry_dic)
             self.error_handler.retry_dic = {}
             for ticker in retry_dic:
+                time.sleep(3)
                 print('Handle error case for {}'.format(ticker))
                 li = retry_dic[ticker]
                 self.update_stock_data_for_symbol(ticker, li[0], li[1])
