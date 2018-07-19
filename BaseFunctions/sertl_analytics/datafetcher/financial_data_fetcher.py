@@ -119,7 +119,8 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
 
     def get_json_data_key(self):
         dict = {ApiPeriod.DAILY: 'Time Series (Daily)',
-                ApiPeriod.WEEKLY: 'Time Series (Weekly)'}
+                ApiPeriod.WEEKLY: 'Time Series (Weekly)',
+                ApiPeriod.INTRADAY: 'Time Series (15min)'}
         return dict[self.period]
 
     def get_data_frame(self) -> pd.DataFrame:
@@ -135,6 +136,8 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         url = 'https://www.alphavantage.co/query?function=' + self.get_url_function() + '&symbol=' + self.symbol
         if self.output_size == ApiOutputsize.FULL:
             url = url + '&outputsize=full'
+        if self.period == ApiPeriod.INTRADAY:
+            url = url + '&interval=15min'
         return url + '&apikey=' + self.api_key
 
 
@@ -168,8 +171,15 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
         self.api_symbol = meta_data["2. Digital Currency Code"]
         time_series = json_data[self.get_json_data_key()]
         df = pd.DataFrame.from_dict(time_series, orient="index")
-        df.drop(['1b. open (USD)', '2b. high (USD)', '3b. low (USD)', '4b. close (USD)', '6. market cap (USD)'], axis=1, inplace=True)
-        df.columns = self.get_stardard_column_names()
+        if self.period == ApiPeriod.DAILY:
+            df.drop(['1b. open (USD)', '2b. high (USD)', '3b. low (USD)', '4b. close (USD)', '6. market cap (USD)'],
+                    axis=1, inplace=True)
+        else:
+            df.drop([df.columns[0],  '3. market cap (USD)'], axis=1, inplace=True)
+        df.columns = ['Open', 'Volume']
+        df.insert(loc=1, column='Close', value = df[df.columns[0]])
+        df.insert(loc=1, column='Low', value=df[df.columns[0]])
+        df.insert(loc=1, column='High', value=df[df.columns[0]])  # finally: ['Open', 'High', 'Low', 'Close', 'Volume']
         df.apply(pd.to_numeric, errors='ignore')
         return df
 
