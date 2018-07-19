@@ -17,6 +17,20 @@ class MyPyDate:
         return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').date()
 
     @staticmethod
+    def get_time_from_datetime(date_time):
+        if date_time is None:
+            return None
+        if date_time.__class__.__name__ == 'date':  # no change
+            return date_time
+        return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').time()
+
+    @staticmethod
+    def get_number_for_date_time(date_time):
+        time_difference = date_time - datetime(2010, 1, 1)
+        difference_in_seconds = (time_difference.days * 86400) + time_difference.seconds
+        return difference_in_seconds
+
+    @staticmethod
     def get_date_from_number(num: int):
         return (datetime(1, 1, 1) + timedelta(days=num)).date()
 
