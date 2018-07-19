@@ -24,7 +24,8 @@ class FibonacciWave:
     comp_id_list_ret = ['w_2', 'w_4']
     comp_id_list = ['w_1', 'w_2', 'w_3', 'w_4', 'w_5']
 
-    def __init__(self):
+    def __init__(self, tick_distance: float):
+        self.tick_distance = tick_distance
         self.comp_dic = {}
         self.comp_forecast_parameter_list = []
         self.forecast_value_list = []
@@ -339,7 +340,8 @@ class FibonacciWave:
             value_list = sorted(value_list, reverse=True)
         for index, values in enumerate(value_list):
             xy = xy + [(self.comp_dic['w_5'].tick_start.f_var, values)]
-            xy = xy + [(self.comp_dic['w_5'].tick_start.f_var + (2 if index == 1 else 3), values)]
+            len_horizontal_line =  2 * self.tick_distance if index == 1 else 3 * self.tick_distance
+            xy = xy + [(self.comp_dic['w_5'].tick_start.f_var + len_horizontal_line, values)]
             xy = xy + [(self.comp_dic['w_5'].tick_start.f_var, values)]
         return xy
 

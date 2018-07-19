@@ -57,7 +57,7 @@ class PatternDataFrame:
 
     def get_xy_center(self, f_regression: np.poly1d = None):
         diff_f_var = self.tick_last.f_var - self.tick_first.f_var
-        middle_f_var = self.tick_first.f_var + int(diff_f_var/2)
+        middle_f_var = self.tick_first.f_var + diff_f_var/2
         tick = self.get_nearest_tick_to_f_var(middle_f_var)
         if f_regression is None:
             f_regression = self.get_f_regression()

@@ -9,7 +9,8 @@ Date: 2018-05-14
 """
 
 import pandas as pd
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher\
+    , ApiPeriod, CryptoCompareCryptoFetcher
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.pybase.date_time import MyClock
 from sertl_analytics.user_input.confirmation import UserInput
@@ -90,7 +91,10 @@ class PatternDetectionController:
             stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.stock_db, ticker, and_clause)
             return stock_db_df_obj.df_data
         elif ticker in self.__crypto_ccy_dic:
-            fetcher = AlphavantageCryptoFetcher(ticker, config.api_period)
+            if config.api_period == ApiPeriod.INTRADAY:
+                fetcher = CryptoCompareCryptoFetcher(ticker, config.api_period)
+            else:
+                fetcher = AlphavantageCryptoFetcher(ticker, config.api_period)
             return fetcher.df_data
         else:
             fetcher = AlphavantageStockFetcher(ticker, config.api_period, config.api_output_size)

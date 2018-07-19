@@ -34,6 +34,7 @@ class PatternPart:
     def __init__(self, function_cont: PatternFunctionContainer):
         self.function_cont = function_cont
         self.df = pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
+        self.tick_distance = pdh.pattern_data.tick_f_var_distance
         self.tick_list = []
         self.pattern_type = runtime.actual_pattern_type
         self.breakout = runtime.actual_breakout
@@ -73,7 +74,7 @@ class PatternPart:
         return self.tick_last.position - self.tick_first.position
 
     def __get_annotation_offset_x__(self):
-        width = 25
+        width = 25 * self.tick_distance
         if self.__xy_center[0] - pdh.pattern_data.tick_first.f_var <= width:
             return -width
         else:
@@ -211,7 +212,7 @@ class PatternPart:
             breakout_str = 'Breakout: {}'.format(self.breakout.get_details_for_annotations())
 
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
-            date = MyPyDate.get_date_from_number(self.function_cont.f_var_cross_f_upper_f_lower - 2)
+            date = MyPyDate.get_date_from_number(int(self.function_cont.f_var_cross_f_upper_f_lower - 2))
             breakout_str += '\nExpected trading end: {}'.format(date)
 
         breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)

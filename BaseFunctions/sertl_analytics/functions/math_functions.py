@@ -25,7 +25,8 @@ class MyPoly1d:
         Gets the changes of the values for the input function WITHIN the range
         """
         mean_value = np.mean([func(set_off), func(set_off + length)])
-        return round(2 * (func(set_off + length) - func(set_off))/mean_value, 3)
+        return_value = round(2 * (func(set_off + length) - func(set_off))/mean_value, 3)
+        return return_value
 
 
 class ToleranceCalculator:

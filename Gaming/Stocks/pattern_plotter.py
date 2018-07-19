@@ -8,6 +8,7 @@ Date: 2018-05-14
 from sertl_analytics.constants.pattern_constants import CN, FD
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 from matplotlib.patches import Polygon, Circle, Rectangle, Ellipse
 from matplotlib.offsetbox import TextArea, AnnotationBbox
@@ -366,7 +367,7 @@ class PatternPlotter:
 
     @staticmethod
     def __get_y_dlim_for_candlestick_plot__():
-        range_pct = [0.9, 1.1]
+        range_pct = [0.97, 1.03] if config.api_period == ApiPeriod.INTRADAY else [0.9, 1.1]
         return pdh.pattern_data.min_value * range_pct[0], pdh.pattern_data.max_value * range_pct[1]
 
     @staticmethod
@@ -465,8 +466,13 @@ class PatternPlotter:
         if tick is None:
             return ''
         else:
+            if config.api_period == ApiPeriod.INTRADAY:
+                date_obj = mdates.num2date(tick.f_var)
+                date_time_str = '{} {}'.format(date_obj.date(), str(date_obj.time())[:5])
+            else:
+                date_time_str = tick.date
             return '{} ({:3.0f} / {:6.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
-                tick.date_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume / 1000, y)
+                date_time_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume / 1000, y)
 
     def __plot_close__(self, axis):
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.CLOSE])
@@ -478,6 +484,7 @@ class PatternPlotter:
             ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in pdh.pattern_data.tick_list]
             width = 0.4 * (ohlc_list[1][0] - ohlc_list[0][0])
             candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=width, colorup='g')
+            self.axes_for_candlesticks.xaxis_date()
         else:
             ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in pdh.pattern_data.tick_list]
             candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=0.4, colorup='g')

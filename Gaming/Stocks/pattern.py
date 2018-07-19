@@ -57,6 +57,7 @@ class Pattern:
         self.pattern_type = pattern_type
         self.df = pdh.pattern_data.df
         self.df_min_max = pdh.pattern_data.df_min_max
+        self.tick_distance = pdh.pattern_data.tick_f_var_distance
         self.complementary_function = complementary_function
         self.constraints = self.__get_constraint__()
         self.pattern_range = pattern_range
@@ -148,16 +149,17 @@ class Pattern:
         return Polygon(np.array(self.xy_trade), True)
 
     def get_center_shape(self):
-        ellipse_breadth = self.part_main.breadth/6
-        return Ellipse(np.array(self.xy_center), 5, ellipse_breadth)
+        ellipse_breadth = 5 * self.tick_distance
+        ellipse_height = self.part_main.breadth/6
+        return Ellipse(np.array(self.xy_center), ellipse_breadth, ellipse_height)
 
     def fill_result_set(self):
         if self.is_part_trade_available():
             self.__fill_trade_result__()
 
-    def get_maximal_trade_size(self) -> int:
+    def get_maximal_trade_position_size(self) -> int:
         if self.pattern_type in [FT.TKE_UP, FT.TKE_DOWN] and self.function_cont.f_var_cross_f_upper_f_lower != 0:
-            return self.function_cont.f_var_cross_f_upper_f_lower - self.function_cont.tick_for_helper.f_var
+            return self.function_cont.position_cross_f_upper_f_lower - self.function_cont.tick_for_helper.position
         else:
             return self.pattern_range.position_last - self.pattern_range.position_first
 
@@ -252,6 +254,9 @@ class ChannelPattern(Pattern):
     def __get_constraint__():
         return cstr.ChannelConstraints()
 
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.ChannelPatternFunctionContainer(df, f_lower, f_upper)
+
 
 class ChannelUpPattern(ChannelPattern):
     @staticmethod
@@ -331,7 +336,7 @@ class TriangleDownPattern(TrianglePattern):
 
 class TKEPattern(Pattern):
     def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
-        return self._part_main.breadth / self._part_main.breadth_first < 0.4
+        return self._part_main.breadth / self._part_main.breadth_first < 0.5
 
 
 class TKEDownPattern(TKEPattern):

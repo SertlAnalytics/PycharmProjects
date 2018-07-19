@@ -219,7 +219,7 @@ class ChannelConstraints(Constraints):
     def __set_bounds_for_pattern_type__(self):
         self.f_upper_pct_bounds = [-0.02, 0.02]
         self.f_lower_pct_bounds = self.f_upper_pct_bounds
-        self.f_upper_lower_relation_bounds = [-2, 2]
+        self.f_upper_lower_relation_bounds = [0.8, 1.2]
         self.f_regression_pct_bounds = [-0.10, 0.10]
 
 

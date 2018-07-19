@@ -9,10 +9,12 @@ import pandas as pd
 import numpy as np
 import itertools
 import matplotlib.dates as dt
+from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.constants.pattern_constants import CN
 from sertl_analytics.pybase.date_time import MyPyDate
 from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks, WaveTickList
 from pattern_configuration import config
+import matplotlib.dates as mdates
 
 
 class PatternData:
@@ -37,12 +39,16 @@ class PatternData:
         self.tick_list = [self.tick_by_date_num_ext_dic.dic[index] for index in self.tick_by_date_num_ext_dic.index]
         self.tick_first = self.tick_list[0]
         self.tick_last = self.tick_list[-1]
+        self.tick_f_var_distance = self.__get_tick_f_var_distance__()
         self.wave_tick_list_min_max = WaveTickList(self.df_min_max)
         self.tick_list_min = []
         self.tick_list_max = []
         self.__fill_tick_list_min_max__()
         self.tick_list_min_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_min, False)
         self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
+
+    def __get_tick_f_var_distance__(self):
+        return self.tick_list[1].f_var - self.tick_list[0].f_var
 
     def get_tick_by_date_num(self, date_num: int):
         k = date_num
@@ -68,8 +74,14 @@ class PatternData:
     def __add_columns__(self):
         self.df = self.df.assign(MeanHL=round((self.df.High + self.df.Low) / 2, 2))
         self.df = self.df.assign(Date=self.df.index.map(MyPyDate.get_date_from_datetime))
-        self.df = self.df.assign(DateAsNumber=self.df.index.map(dt.date2num))
-        self.df[CN.DATEASNUM] = self.df[CN.DATEASNUM].apply(int)
+        if config.api_period == ApiPeriod.INTRADAY:
+            dates = pd.to_datetime(self.df.index, format="%Y-%m-%dT%H:%M:%S.%fZ")
+            dates_to_num = mdates.date2num(dates)
+            self.df = self.df.assign(Time=self.df.index.map(MyPyDate.get_time_from_datetime))
+            self.df = self.df.assign(DateAsNumber=dates_to_num)
+        else:
+            self.df = self.df.assign(DateAsNumber=self.df.index.map(dt.date2num))
+            self.df[CN.DATEASNUM] = self.df[CN.DATEASNUM].apply(int)
         self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
         self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)
         self.df.reset_index(drop=True, inplace=True)  # get position index

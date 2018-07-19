@@ -44,9 +44,11 @@ class FibonacciWaveForecastCollector:
 
 
 class FibonacciWaveTree:
-    def __init__(self, df_source: pd.DataFrame, min_max_tick_list: list, max_wave_component_length: int):
+    def __init__(self, df_source: pd.DataFrame, min_max_tick_list: list,
+                 max_wave_component_length: int, tick_distance: float):
         self.df_source = df_source
         self._max_wave_component_length = max_wave_component_length
+        self.tick_distance = tick_distance
         self.position_last = self.df_source.iloc[-1].Position
         self.min_max_tick_list = min_max_tick_list
         self.min_max_list_length = len(self.min_max_tick_list)
@@ -67,13 +69,13 @@ class FibonacciWaveTree:
     def __parse_for_descending_waves__(self):
         for tick_max in self.max_tick_list:
             if tick_max.is_global_max:
-                wave = FibonacciDescendingWave()
+                wave = FibonacciDescendingWave(self.tick_distance)
                 self.__add_next_reg_comp__(wave, wave.reg_comp_id_next, tick_max)
 
     def __parse_for_ascending_waves__(self):
         for tick_min in self.min_tick_list:
             if tick_min.is_global_min:
-                wave = FibonacciAscendingWave()
+                wave = FibonacciAscendingWave(self.tick_distance)
                 self.__add_next_reg_comp__(wave, wave.reg_comp_id_next, tick_min)
 
     def __fill_lists_and_dictionaries_dics__(self):

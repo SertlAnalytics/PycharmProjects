@@ -56,10 +56,10 @@ class ExtendedDictionary:
             if key > self.max_index:
                 self.max_index = key
 
-    def get_value(self, key):
-        for x in range(key, self.min_index, -1):
-            if x in self.dic:
-                return self.dic[x]
-        for x in range(key, self.max_index):
-            if x in self.dic:
+    def get_value(self, key, key_tolerance: float):
+        if key in self.dic:
+            return self.dic[key]
+
+        for x in self.dic:
+            if abs(x - key) < key_tolerance:
                 return self.dic[x]

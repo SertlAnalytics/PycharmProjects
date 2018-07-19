@@ -22,6 +22,7 @@ class WaveTick:
 
     @property
     def f_var(self):
+        # return self.tick[CN.POSITION]
         return self.tick[CN.DATEASNUM]
 
     @property

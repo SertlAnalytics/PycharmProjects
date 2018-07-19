@@ -42,6 +42,7 @@ class PatternDetector:
         self.__fill_possible_pattern_ranges__()
         possible_pattern_range_list = self.__get_combined_possible_pattern_ranges__()
         for pattern_type in self.pattern_type_list:
+            # print('parsing for pattern: {}'.format(pattern_type))
             runtime.actual_pattern_type = pattern_type
             for pattern_range in possible_pattern_range_list:
                 runtime.actual_pattern_range = pattern_range
@@ -56,7 +57,8 @@ class PatternDetector:
     def parse_for_fibonacci_waves(self):
         df = pdh.pattern_data_fibonacci.df
         min_max_tick_list = pdh.pattern_data_fibonacci.wave_tick_list_min_max.tick_list
-        self.fib_wave_tree = FibonacciWaveTree(df, min_max_tick_list, config.max_pattern_range_length)
+        self.fib_wave_tree = FibonacciWaveTree(df, min_max_tick_list,
+                                               config.max_pattern_range_length, pdh.pattern_data.tick_f_var_distance)
         self.fib_wave_tree.parse_tree()
 
     def check_for_intersections(self):
@@ -100,7 +102,7 @@ class PatternDetector:
 
     def __get_trade_df__(self, pattern: Pattern):
         left_pos = pattern.function_cont.tick_for_helper.position
-        right_pos_max = left_pos + pattern.get_maximal_trade_size()
+        right_pos_max = left_pos + pattern.get_maximal_trade_position_size()
         right_pos = min(right_pos_max, self.df_length)
         if right_pos - left_pos==1:
             left_pos += -1  # we need at least 2 ticks for the trade_df...
@@ -130,6 +132,8 @@ class PatternDetector:
     @staticmethod
     def __check_for_loop_break__(function_cont, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
         if counter > number_of_positions:  # maximal number for the whole pattern after its building
+            return True
+        if tick.f_var > function_cont.f_var_cross_f_upper_f_lower > 0:
             return True
         # if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 6):
         #     # check the last value !!! in some IMPORTANT cases is the breakout just on that day...

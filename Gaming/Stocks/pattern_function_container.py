@@ -19,12 +19,14 @@ class PatternFunctionContainer:
         self._tick_for_helper = None
         self._tick_first = WaveTick(self.df.iloc[0])
         self._tick_last = WaveTick(self.df.iloc[-1])
+        self._tick_distance = pdh.pattern_data.tick_f_var_distance
         self._f_lower = f_lower
         self._f_upper = f_upper
         self._h_lower = f_lower
         self._h_upper = f_upper
         self._f_regression = self.__get_f_regression__()
         self._f_var_cross_f_upper_f_lower = 0
+        self._position_cross_f_upper_f_lower = 0
         self._breakout_direction = None
         self._pattern_direction = self.__get_pattern_direction__()
         if self.is_valid():
@@ -70,6 +72,10 @@ class PatternFunctionContainer:
         return self._f_var_cross_f_upper_f_lower
 
     @property
+    def position_cross_f_upper_f_lower(self):
+        return self._position_cross_f_upper_f_lower
+
+    @property
     def f_lower(self):
         return self._f_lower
 
@@ -103,7 +109,7 @@ class PatternFunctionContainer:
 
     def __get_slope_in_decimal_percentage__(self, func: np.poly1d):
         off_set = self._tick_first.f_var
-        length = self.number_of_positions
+        length = self.number_of_positions * self._tick_distance
         return math_functions.MyPoly1d.get_slope_in_decimal_percentage(func, off_set, length)
 
     def __set_breakout_direction__(self, breakout_direction: str):
@@ -139,11 +145,21 @@ class PatternFunctionContainer:
 
     def __set_f_var_cross_f_upper_f_lower__(self):
         if self._f_upper[1] < self._f_lower[1]:
-            for n in range(self._tick_last.f_var, self._tick_last.f_var + 3 * self.number_of_positions):
-                u = self._f_upper(n)
-                l = self._f_lower(n)
-                if self._f_upper(n) < self._f_lower(n):
-                    self._f_var_cross_f_upper_f_lower = n - 1
+            # for n in range(self._tick_last.f_var, self._tick_last.f_var + 3 * self.number_of_positions):
+            #     u = self._f_upper(n)
+            #     l = self._f_lower(n)
+            #     if self._f_upper(n) < self._f_lower(n):
+            #         self._f_var_cross_f_upper_f_lower = n - 1
+            #         print('OLD: self._f_var_cross_f_upper_f_lower = {}'.format(n - 1))
+            #         break
+
+            for n in range(self._tick_last.position, self._tick_last.position + 3 * self.number_of_positions):
+                f_var = self._tick_last.f_var + (n - self._tick_last.position) * pdh.pattern_data.tick_f_var_distance
+                u = self._f_upper(f_var)
+                l = self._f_lower(f_var)
+                if self._f_upper(f_var) < self._f_lower(f_var):
+                    self._f_var_cross_f_upper_f_lower = f_var - pdh.pattern_data.tick_f_var_distance
+                    self._position_cross_f_upper_f_lower = n - 1
                     break
 
     def __get_tick_for_helper__(self):
@@ -172,7 +188,7 @@ class PatternFunctionContainer:
         f_upper_extended = self.get_upper_value
         f_lower_extended = self.get_lower_value
 
-        if self.tick_for_helper is None:
+        if self.tick_for_helper is None or not self.is_pattern_type_configured_for_helper_functions:
             tick_list = [tick_first, tick_first, tick_last, tick_last]
             function_list = [self.f_upper, self.f_lower, self.f_lower, self.f_upper]
         else:
@@ -203,12 +219,19 @@ class PatternFunctionContainer:
         pass
 
 
-class ChannelUpPatternFunctionContainer(PatternFunctionContainer):
+class ChannelPatternFunctionContainer(PatternFunctionContainer):
+    def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
+        tick_list = [tick_first, tick_first, tick_last, tick_last]
+        function_list = [self.f_upper, self.f_lower, self.f_lower, self.f_upper]
+        return tick_list, function_list
+
+
+class ChannelUpPatternFunctionContainer(ChannelPatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close < self.get_lower_value(tick.f_var)
 
 
-class ChannelDownPatternFunctionContainer(PatternFunctionContainer):
+class ChannelDownPatternFunctionContainer(ChannelPatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close > self.get_upper_value(tick.f_var)
 
@@ -266,7 +289,7 @@ class TKEDownPatternFunctionContainer(PatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close > self.get_upper_value(tick.f_var)
 
-    def get_lower_value(self, f_var: int):
+    def get_upper_value(self, f_var: int):
         return round(max(self._f_upper(f_var), self._h_upper(f_var)), 2)
 
     def set_tick_for_breakout(self, tick: WaveTick):
