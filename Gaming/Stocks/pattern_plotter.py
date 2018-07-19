@@ -6,6 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FD
+from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon, Circle, Rectangle, Ellipse
@@ -460,9 +461,12 @@ class PatternPlotter:
 
     @staticmethod
     def __on_hover__(x, y):
-        tick = pdh.pattern_data.tick_by_date_num_ext_dic.get_value(int(x + 0.5))
-        return '{} ({:3.0f} / {:6.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
-            tick.date_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume / 1000, y)
+        tick = pdh.pattern_data.tick_by_date_num_ext_dic.get_value(x, pdh.pattern_data.tick_f_var_distance/2)
+        if tick is None:
+            return ''
+        else:
+            return '{} ({:3.0f} / {:6.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
+                tick.date_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume / 1000, y)
 
     def __plot_close__(self, axis):
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.CLOSE])
@@ -470,9 +474,14 @@ class PatternPlotter:
         axis.legend(loc='upper left')
 
     def __plot_candlesticks__(self):
-        ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in pdh.pattern_data.tick_list]
-        candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=0.4, colorup='g')
-        self.axes_for_candlesticks.xaxis_date()
+        if config.api_period == ApiPeriod.INTRADAY:
+            ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in pdh.pattern_data.tick_list]
+            width = 0.4 * (ohlc_list[1][0] - ohlc_list[0][0])
+            candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=width, colorup='g')
+        else:
+            ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in pdh.pattern_data.tick_list]
+            candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=0.4, colorup='g')
+            self.axes_for_candlesticks.xaxis_date()
         self.axes_for_candlesticks.grid()
 
     def __plot_patterns__(self):
