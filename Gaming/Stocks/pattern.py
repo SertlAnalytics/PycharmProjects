@@ -99,15 +99,15 @@ class Pattern:
 
     def get_f_upper_trade(self):
         if self.breakout.breakout_direction == FD.DESC:
-            return self.function_cont.h_lower
+            return self.function_cont.f_breakout
         else:
-            return np.poly1d([0, self.function_cont.h_upper[0] + self.__get_expected_win__()])
+            return np.poly1d([0, self.function_cont.f_breakout[0] + self.__get_expected_win__()])
 
     def get_f_lower_trade(self):
         if self.breakout.breakout_direction == FD.DESC:
-            return np.poly1d([0, self.function_cont.h_lower[0] - self.__get_expected_win__()])
+            return np.poly1d([0, self.function_cont.f_breakout[0] - self.__get_expected_win__()])
         else:
-            return self.function_cont.h_upper
+            return self.function_cont.f_breakout
 
     def was_breakout_done(self):
         return True if self.breakout.__class__.__name__ == 'PatternBreakout' else False
@@ -150,7 +150,7 @@ class Pattern:
 
     def get_center_shape(self):
         ellipse_breadth = 5 * self.tick_distance
-        ellipse_height = self.part_main.breadth/6
+        ellipse_height = self.part_main.height / 6
         return Ellipse(np.array(self.xy_center), ellipse_breadth, ellipse_height)
 
     def fill_result_set(self):
@@ -190,7 +190,7 @@ class Pattern:
         return pfc.PatternFunctionContainer(df, f_lower, f_upper)
 
     def __fill_trade_result__(self):
-        tolerance_range = self._part_main.breadth * self.constraints.tolerance_pct
+        tolerance_range = self._part_main.height * self.constraints.tolerance_pct
         self.trade_result.expected_win = self.__get_expected_win__()
         self.trade_result.bought_at = round(self.breakout.tick_breakout.close, 2)
         self.trade_result.bought_on = self.breakout.tick_breakout.date
@@ -208,7 +208,7 @@ class Pattern:
                 break
 
     def __get_expected_win__(self):
-        return round(self._part_main.breadth, 2)
+        return round(self._part_main.height, 2)
 
     def __fill_trade_results_for_breakout_direction__(self, tick: WaveTick):
         sig = 1 if self.breakout_direction == FD.ASC else -1
@@ -294,8 +294,11 @@ class TrianglePattern(Pattern):
         return cstr.TriangleConstraints()
     # TODO: Most triangles take their first tick (e.g. min) before the 3 ticks on the other side => enhance range
 
+    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+        return pfc.TrianglePatternFunctionContainer(df, f_lower, f_upper)
+
     def __get_expected_win__(self):
-        return round(self._part_main.distance_min, 2)
+        return round(self._part_main.height/2, 2)
 
 
 class TriangleBottomPattern(TrianglePattern):
@@ -322,7 +325,7 @@ class TriangleUpPattern(TrianglePattern):
         return cstr.TriangleUpConstraints()
 
     def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.TriangleDownPatternFunctionContainer(df, f_lower, f_upper)
+        return pfc.TriangleUpPatternFunctionContainer(df, f_lower, f_upper)
 
 
 class TriangleDownPattern(TrianglePattern):
@@ -331,12 +334,12 @@ class TriangleDownPattern(TrianglePattern):
         return cstr.TriangleDownConstraints()
 
     def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.TriangleUpPatternFunctionContainer(df, f_lower, f_upper)
+        return pfc.TriangleDownPatternFunctionContainer(df, f_lower, f_upper)
 
 
 class TKEPattern(Pattern):
     def is_formation_established(self):  # this is the main check whether a formation is ready for a breakout
-        return self._part_main.breadth / self._part_main.breadth_first < 0.5
+        return self._part_main.height / self._part_main.height_at_first_position < 0.5
 
 
 class TKEDownPattern(TKEPattern):

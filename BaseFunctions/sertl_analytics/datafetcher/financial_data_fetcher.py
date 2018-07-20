@@ -124,7 +124,7 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
     def get_json_data_key(self):
         dict = {ApiPeriod.DAILY: 'Time Series (Daily)',
                 ApiPeriod.WEEKLY: 'Time Series (Weekly)',
-                ApiPeriod.INTRADAY: 'Time Series (15min)'}
+                ApiPeriod.INTRADAY: 'Time Series (5min)'}
         return dict[self.period]
 
     def get_data_frame(self) -> pd.DataFrame:
@@ -137,11 +137,11 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         return df
 
     def get_url(self):
-        url = 'https://www.alphavantage.co/query?function=' + self.get_url_function() + '&symbol=' + self.symbol
+        url = 'https://www.alphavantage.co/query?function={}&symbol={}'.format(self.get_url_function(), self.symbol)
         if self.output_size == ApiOutputsize.FULL:
             url = url + '&outputsize=full'
         if self.period == ApiPeriod.INTRADAY:
-            url = url + '&interval=15min'
+            url = url + '&interval=5min'
         return url + '&apikey=' + self.api_key
 
 
@@ -191,8 +191,10 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
     def get_url(self):  # the symbol has the structure symbol_CCY like BTC_USD
         symbol = self.symbol[:-4]
         market = self.symbol[-3:]
-        url = 'https://www.alphavantage.co/query?function=' + self.get_url_function() + '&symbol=' + symbol
-        return url + '&market=' + market + '&apikey=' + self.api_key
+        url = 'https://www.alphavantage.co/query?function={}&symbol={}&market={}&apikey={}'.format(
+            self.get_url_function(), symbol, market, self.api_key
+        )
+        return url
 
 
 class AlphavantageCSVFetcher (APIBaseFetcher):

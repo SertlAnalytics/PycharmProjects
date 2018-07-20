@@ -101,10 +101,10 @@ class PatternDetector:
         pattern.fill_result_set()
 
     def __get_trade_df__(self, pattern: Pattern):
-        left_pos = pattern.function_cont.tick_for_helper.position
-        right_pos_max = left_pos + pattern.get_maximal_trade_position_size()
+        left_pos = pattern.function_cont.tick_for_breakout.position
+        right_pos_max = left_pos + int(pattern.get_maximal_trade_position_size()/2)
         right_pos = min(right_pos_max, self.df_length)
-        if right_pos - left_pos==1:
+        if right_pos - left_pos == 1:
             left_pos += -1  # we need at least 2 ticks for the trade_df...
         return self.df.loc[left_pos:right_pos]
 
@@ -117,7 +117,7 @@ class PatternDetector:
         for pos in range(pos_start, self.df_length):
             counter += 1
             next_tick = WaveTick(self.df.loc[pos])
-            break_loop = self.__check_for_loop_break__(pattern.function_cont, counter, number_of_positions, next_tick)
+            break_loop = self.__check_for_loop_break__(pattern, counter, number_of_positions, next_tick)
             if break_loop:
                 can_be_added = False
                 tick_last = next_tick
@@ -130,15 +130,17 @@ class PatternDetector:
         return can_be_added
 
     @staticmethod
-    def __check_for_loop_break__(function_cont, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
+    def __check_for_loop_break__(pattern: Pattern, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
         if counter > number_of_positions:  # maximal number for the whole pattern after its building
             return True
-        if tick.f_var > function_cont.f_var_cross_f_upper_f_lower > 0:
+        if counter > pattern.constraints.breakout_required_after_ticks > 0:
+            return True
+        if tick.f_var > pattern.function_cont.f_var_cross_f_upper_f_lower > 0:
             return True
         # if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 6):
         #     # check the last value !!! in some IMPORTANT cases is the breakout just on that day...
         #     return True
-        if not function_cont.is_tick_inside_pattern_range(tick):
+        if not pattern.function_cont.is_tick_inside_pattern_range(tick):
             return True
         return False
 
@@ -146,7 +148,7 @@ class PatternDetector:
         if pattern.function_cont.is_tick_breakout(next_tick):
             breakout = self.__get_pattern_breakout__(pattern, last_tick, next_tick)
             if breakout.is_breakout_a_signal():
-                pattern.function_cont.set_tick_for_breakout(next_tick)
+                pattern.function_cont.tick_for_breakout = next_tick
                 return breakout
         return None
 

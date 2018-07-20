@@ -40,6 +40,7 @@ class Constraints:
         self.f_lower_pct_bounds = [-0.02, 0.02]
         self.f_upper_lower_relation_bounds = [-5, 5]  # the relationship bounds for the linear functions increase
         self.f_regression_pct_bounds = [-0.02, 0.02]  # this constraint checks the "direction" of the data
+        self.breakout_required_after_ticks = self.__get_breakout_required_after_ticks__()
         # [0.8, 1.2] Channel,
         self.__fill_global_constraints__()
         self.__set_bounds_for_pattern_type__()
@@ -55,6 +56,10 @@ class Constraints:
         if len(self.f_regression_pct_bounds) == 0:  # no bounds defined
             return True
         return self.f_regression_pct_bounds[0] <= f_regression_pct <= self.f_regression_pct_bounds[1]
+
+    @staticmethod
+    def __get_breakout_required_after_ticks__():
+        return 0
 
     def __is_f_lower_pct_compliant__(self, f_lower_pct: float):
         if len(self.f_lower_pct_bounds) == 0:  # no lower bounds defined
@@ -239,6 +244,10 @@ class ChannelDownConstraints(ChannelConstraints):
 
 class HeadShoulderConstraints(Constraints):
     @staticmethod
+    def __get_breakout_required_after_ticks__():
+        return 5
+
+    @staticmethod
     def __get_tolerance_pct__():
         return 0.02
 
@@ -257,13 +266,17 @@ class HeadShoulderConstraints(Constraints):
                               [SVC.L_on, SVC.M_in, SVC.L_in, SVC.U_on, SVC.M_in, SVC.M_in, SVC.L_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-0.03, 0.03]
+        self.f_upper_pct_bounds = [-0.02, 0.02]
         self.f_lower_pct_bounds = self.f_upper_pct_bounds
         self.f_upper_lower_relation_bounds = [0.8, 1.1]
         self.f_regression_pct_bounds = [-0.05, 0.05]
 
 
 class InverseHeadShoulderConstraints(HeadShoulderConstraints):
+    @staticmethod
+    def __get_breakout_required_after_ticks__():
+        return 5
+
     @staticmethod
     def __get_tolerance_pct__():
         return 0.02
@@ -283,7 +296,7 @@ class InverseHeadShoulderConstraints(HeadShoulderConstraints):
                               [SVC.U_on, SVC.M_in, SVC.U_in, SVC.L_on, SVC.M_in, SVC.M_in, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-0.03, 0.03]
+        self.f_upper_pct_bounds = [-0.02, 0.02]
         self.f_lower_pct_bounds = self.f_upper_pct_bounds
         self.f_upper_lower_relation_bounds = [0.8, 1.1]
         self.f_regression_pct_bounds = [-0.05, 0.05]

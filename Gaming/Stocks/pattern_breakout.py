@@ -8,6 +8,7 @@ Date: 2018-05-14
 from pattern_function_container import PatternFunctionContainer
 from pattern_configuration import config
 from sertl_analytics.constants.pattern_constants import FD, TT
+from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 
 
 class PatternBreakoutApi:
@@ -49,8 +50,12 @@ class PatternBreakout:
         return counter >= 2
 
     def get_details_for_annotations(self):
+        if config.api_period == ApiPeriod.INTRADAY:
+            date_str = self.tick_breakout.time_str_for_f_var
+        else:
+            date_str = self.tick_breakout.date_str_for_f_var
         vol_change = round(((self.tick_breakout.volume/self.tick_previous.volume) - 1) * 100, 0)
-        return '{} - Volume change: {}%'.format(self.tick_breakout.date_str, vol_change)
+        return '{} - Volume change: {}%'.format(date_str, vol_change)
 
     def __get_breakout_direction__(self) -> str:
         return FD.ASC if self.tick_breakout.close > self.bound_upper else FD.DESC

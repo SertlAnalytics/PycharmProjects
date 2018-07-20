@@ -125,10 +125,10 @@ class PatternStatistics:
                 self.dic[PSC.FIRST_LIMIT_REACHED] = False  # default
                 self.dic[PSC.STOP_LOSS_MAX_REACHED] = False  # default
                 if pattern.breakout_direction == FD.ASC \
-                        and (pattern.part_main.bound_upper + pattern.part_main.breadth < self.dic[PSC.RESULT_DF_MAX]):
+                        and (pattern.part_main.bound_upper + pattern.part_main.height < self.dic[PSC.RESULT_DF_MAX]):
                     self.dic[PSC.FIRST_LIMIT_REACHED] = True
                 if pattern.breakout_direction == FD.DESC \
-                        and (pattern.part_main.bound_lower - pattern.part_main.breadth > self.dic[PSC.RESULT_DF_MIN]):
+                        and (pattern.part_main.bound_lower - pattern.part_main.height > self.dic[PSC.RESULT_DF_MIN]):
                     self.dic[PSC.FIRST_LIMIT_REACHED] = True
                 if pattern.breakout_direction == FD.ASC \
                         and (pattern.part_main.bound_lower > self.dic[PSC.RESULT_DF_MIN]):

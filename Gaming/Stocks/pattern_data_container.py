@@ -8,7 +8,7 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 import itertools
-import matplotlib.dates as dt
+import matplotlib.dates as mdt
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.constants.pattern_constants import CN
 from sertl_analytics.pybase.date_time import MyPyDate
@@ -50,14 +50,20 @@ class PatternData:
     def __get_tick_f_var_distance__(self):
         return self.tick_list[1].f_var - self.tick_list[0].f_var
 
-    def get_tick_by_date_num(self, date_num: int):
-        k = date_num
-        while k not in self.tick_by_date_num_ext_dic.dic:
-            k += -1
-        return self.tick_by_date_num_ext_dic.dic[k]
+    def get_tick_by_date_num(self, date_num: float):
+        wave_tick = self.tick_by_date_num_ext_dic.get_value(date_num)
+        if wave_tick is not None:
+            return wave_tick
+        for wave_tick in self.tick_list:
+            if wave_tick.date_num >= date_num:
+                return wave_tick
+        return self.tick_last
 
     def get_tick_by_pos(self, pos: int):
-        return self.tick_list[pos]
+        if pos < len(self.tick_list):
+            return self.tick_list[pos]
+        else:
+            return self.tick_last
 
     def __fill_tick_list_min_max__(self):
         for tick in self.wave_tick_list_min_max.tick_list:
@@ -80,7 +86,7 @@ class PatternData:
             self.df = self.df.assign(Time=self.df.index.map(MyPyDate.get_time_from_datetime))
             self.df = self.df.assign(DateAsNumber=dates_to_num)
         else:
-            self.df = self.df.assign(DateAsNumber=self.df.index.map(dt.date2num))
+            self.df = self.df.assign(DateAsNumber=self.df.index.map(mdt.date2num))
             self.df[CN.DATEASNUM] = self.df[CN.DATEASNUM].apply(int)
         self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
         self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)

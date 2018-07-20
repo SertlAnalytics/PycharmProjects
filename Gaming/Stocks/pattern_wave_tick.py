@@ -10,6 +10,7 @@ import numpy as np
 from sertl_analytics.constants.pattern_constants import CN, TT, DIR
 from sertl_analytics.functions import math_functions
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
+from sertl_analytics.pybase.date_time import MyPyDate
 
 
 class WaveTick:
@@ -91,8 +92,22 @@ class WaveTick:
             return TT.DOJI
         return TT.NONE
 
+    @property
+    def date_str_for_f_var(self):
+        return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).date())
+
+    @property
+    def time_str_for_f_var(self):
+        return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).time())[:5]
+
     def print(self):
         print('Pos: {}, Date: {}, High: {}, Low: {}'.format(self.position, self.date, self.high, self.low))
+
+    def get_date_or_time_for_f_var(self, for_time: False):
+        if for_time:
+            return MyPyDate.get_datetime_from_epoch_number(self.f_var).time()
+        else:
+            return MyPyDate.get_datetime_from_epoch_number(self.f_var).date()
 
     def get_linear_f_params_for_high(self, tick):
         return math_functions.get_function_parameters(self.f_var, self.high, tick.f_var, tick.high)
@@ -207,31 +222,6 @@ class WaveTickList:
         else:
             slope_main_bound = round(slope_dec_bound - slope_dec_main, 4)
         return slope_main_bound < 0.04  # we don't accept wide opening patterns
-
-    def __get_tick_list_without_valleys__(self, tick_list, for_high: bool):
-        """
-        get the tick list without any valley (i.e. the middle of three ticks is not smaller than the others for high)
-        recursive call !!!
-        """
-        len_tick_list = len(tick_list)
-        if len_tick_list <= 2:
-            return tick_list
-        remove_index_list = []
-        for n in range(len_tick_list - 2):
-            tick_left, tick_middle, tick_right = tick_list[n], tick_list[n + 1], tick_list[n + 2]
-            if for_high:
-                f_param = tick_left.get_linear_f_params_for_high(tick_right)
-                if tick_middle.high < f_param(tick_middle.f_var):
-                    remove_index_list.append(n + 1)
-            else:
-                f_param = tick_left.get_linear_f_params_for_low(tick_right)
-                if tick_middle.low > f_param(tick_middle.f_var):
-                    remove_index_list.append(n + 1)
-        if len(remove_index_list) == 0:
-            return tick_list
-        for index in reversed(remove_index_list):
-            del tick_list[index]
-        return self.__get_tick_list_without_valleys__(tick_list, for_high)  # recursive call !!!
 
     def __get_tick_list_without_valleys__(self, tick_list, for_high: bool):
         """

@@ -20,7 +20,8 @@ import time
 
 
 class StockDatabase(BaseDatabase):
-    __crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+    _crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+    _sleep_seconds = 20
 
     def is_symbol_loaded(self, symbol: str):
         last_loaded_dic = self.__get_last_loaded_dic__(symbol)
@@ -76,8 +77,8 @@ class StockDatabase(BaseDatabase):
             retry_dic = dict(self.error_handler.retry_dic)
             self.error_handler.retry_dic = {}
             for ticker in retry_dic:
-                time.sleep(3)
                 print('Handle error case for {}'.format(ticker))
+                time.sleep(self._sleep_seconds)
                 li = retry_dic[ticker]
                 self.update_stock_data_for_symbol(ticker, li[0], li[1])
 
@@ -100,17 +101,19 @@ class StockDatabase(BaseDatabase):
         if ticker not in company_dic or company_dic[ticker].ToBeLoaded:
             output_size = ApiOutputsize.FULL if delta.days > 50 else ApiOutputsize.COMPACT
             try:
-                if ticker in self.__crypto_ccy_dic:
+                if ticker in self._crypto_ccy_dic:
                     stock_fetcher = AlphavantageCryptoFetcher(ticker, period)
                 else:
                     stock_fetcher = AlphavantageStockFetcher(ticker, period, output_size)
             except KeyError:
                 self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
                 self.error_handler.add_to_retry_dic(ticker, [name, period])
+                time.sleep(self._sleep_seconds)
                 return
             except:
                 self.error_handler.catch_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
                 self.error_handler.add_to_retry_dic(ticker, [name, period])
+                time.sleep(self._sleep_seconds)
                 return
             df = stock_fetcher.get_data_frame()
             if ticker not in company_dic:
@@ -118,6 +121,7 @@ class StockDatabase(BaseDatabase):
                 self.__insert_company_in_company_table__(ticker, name, to_be_loaded)
                 company_dic[ticker] = to_be_loaded
                 if not to_be_loaded:
+                    time.sleep(self._sleep_seconds)
                     return
             if ticker in last_loaded_date_dic:
                 last_date = last_loaded_date_dic[ticker]
@@ -126,6 +130,7 @@ class StockDatabase(BaseDatabase):
                 input_list = self.__get_df_data_for_insert_statement__(df, period, ticker)
                 self.insert_data_into_table('Stocks', input_list)
                 print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
+            time.sleep(self._sleep_seconds)
 
     @staticmethod
     def __get_alternate_name__(ticker: str, name: str):

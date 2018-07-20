@@ -6,11 +6,12 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FT
+from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.pybase.date_time import MyPyDate
 from pattern_function_container import PatternFunctionContainer
 from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
-from pattern_configuration import runtime, debugger
+from pattern_configuration import runtime, config, debugger
 from pattern_data_frame import PatternDataFrame
 import numpy as np
 import math
@@ -43,8 +44,8 @@ class PatternPart:
         self.tick_last = None
         self.tick_high = None
         self.tick_low = None
-        self.breadth = 0
-        self.breadth_first = 0
+        self.height = 0
+        self.height_at_first_position = 0
         self.bound_upper = 0
         self.bound_lower = 0
         self.distance_min = 0
@@ -94,24 +95,24 @@ class PatternPart:
         self.tick_last = self.tick_list[-1]
         self.tick_high = WaveTick(self.df.loc[self.df[CN.HIGH].idxmax(axis=0)])
         self.tick_low = WaveTick(self.df.loc[self.df[CN.LOW].idxmin(axis=0)])
-        tick_helper = self.function_cont.tick_for_helper
+        tick_breakout = self.function_cont.tick_for_breakout
         f_upper_first = self.function_cont.get_upper_value(self.tick_first.f_var)
         f_lower_first = self.function_cont.get_lower_value(self.tick_first.f_var)
-        self.breadth_first = f_upper_first - f_lower_first
-        if tick_helper is None:
+        self.height_at_first_position = f_upper_first - f_lower_first
+        if tick_breakout is None:
             f_upper_last = self.function_cont.get_upper_value(self.tick_last.f_var)
             f_lower_last = self.function_cont.get_lower_value(self.tick_last.f_var)
         else:
-            f_upper_last = self.function_cont.get_upper_value(tick_helper.f_var)
-            f_lower_last = self.function_cont.get_lower_value(tick_helper.f_var)
+            f_upper_last = self.function_cont.get_upper_value(tick_breakout.f_var)
+            f_lower_last = self.function_cont.get_lower_value(tick_breakout.f_var)
         self.bound_upper = f_upper_last
         self.bound_lower = f_lower_last
         if self.pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
-            self.breadth = round(self.bound_upper - self.bound_lower, 2)
+            self.height = round(self.bound_upper - self.bound_lower, 2)
         else:
             self.distance_min = round(min(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
             self.distance_max = round(max(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
-            self.breadth = round((self.distance_min + self.distance_max) / 2, 2)
+            self.height = round((self.distance_min + self.distance_max) / 2, 2)
 
     def __set_xy_parameter__(self):
         self.__xy = self.stock_df.get_xy_parameter(self.function_cont)
@@ -190,21 +191,26 @@ class PatternPart:
         f_upper_percent = round(f_upper_slope * 100, 1)
         f_lower_percent = round(f_lower_slope * 100, 1)
         f_reg_percent = round(f_regression_slope * 100, 1)
+        if config.api_period == ApiPeriod.INTRADAY:
+            date_str_first = self.tick_first.time_str_for_f_var
+            date_str_last = self.tick_last.time_str_for_f_var
+        else:
+            date_str_first = self.tick_first.date_str_for_f_var
+            date_str_last = self.tick_last.date_str_for_f_var
 
-        type_date = 'Type={}: {} - {} ({})'.format(self.pattern_type, self.tick_first.date_str,
-                                                   self.tick_last.date_str, len(self.tick_list))
+        type_date = 'Type={}: {} - {} ({})'.format(self.pattern_type, date_str_first, date_str_last, len(self.tick_list))
 
         if self.pattern_type == FT.TKE_UP:
             slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_percent, f_reg_percent)
-            breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
+            breadth = 'Breadth={}, Std_dev={}'.format(self.height, std_dev)
         elif self.pattern_type == FT.TKE_DOWN:
             slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_percent, f_reg_percent)
-            breadth = 'Breadth={}, Std_dev={}'.format(self.breadth, std_dev)
+            breadth = 'Breadth={}, Std_dev={}'.format(self.height, std_dev)
         else:
             slopes = 'Gradients: U={}%, L={}%, U/L={}, Reg={}%'.format(
                 f_upper_percent, f_lower_percent, relation_u_l, f_reg_percent)
             breadth = 'Breadth={}, Max={}, Min={}, Std_dev={}'.format(
-                self.breadth, self.distance_max, self.distance_min, std_dev)
+                self.height, self.distance_max, self.distance_min, std_dev)
 
         if self.breakout is None:
             breakout_str = 'Breakout: not yet'
@@ -212,8 +218,9 @@ class PatternPart:
             breakout_str = 'Breakout: {}'.format(self.breakout.get_details_for_annotations())
 
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
-            date = MyPyDate.get_date_from_number(int(self.function_cont.f_var_cross_f_upper_f_lower - 2))
-            breakout_str += '\nExpected trading end: {}'.format(date)
+            date_forecast = MyPyDate.get_datetime_from_epoch_number(self.function_cont.f_var_cross_f_upper_f_lower)
+            breakout_str += '\nExpected trading end: {}'.format(
+                str(date_forecast.time())[:5] if config.api_period == ApiPeriod.INTRADAY else date_forecast.date())
 
         breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)
 

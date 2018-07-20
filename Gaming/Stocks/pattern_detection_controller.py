@@ -9,6 +9,7 @@ Date: 2018-05-14
 """
 
 import pandas as pd
+import numpy as np
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher\
     , ApiPeriod, CryptoCompareCryptoFetcher
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
@@ -24,6 +25,8 @@ from pattern_data_container import pattern_data_handler
 from pattern_detector import PatternDetector
 from pattern_plotter import PatternPlotter
 from pattern_database import stock_database
+import matplotlib.dates as mdt
+from datetime import datetime
 
 """
 Implementation steps:
@@ -98,7 +101,27 @@ class PatternDetectionController:
             return fetcher.df_data
         else:
             fetcher = AlphavantageStockFetcher(ticker, config.api_period, config.api_output_size)
-            return fetcher.df_data
+            if config.api_period == ApiPeriod.INTRADAY:
+                return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
+            else:
+                return fetcher.df_data
+
+    def __get_with_concatenated_intraday_data__(self, df: pd.DataFrame):
+        # df['time'] = df['time'].apply(datetime.fromtimestamp)
+        df = df.assign(EpochSeconds=df.index.map(datetime.timestamp))
+        df['time'] = df['EpochSeconds'].apply(datetime.fromtimestamp)
+        epoch_seconds_number = df.shape[0]
+        epoch_seconds_max = df['EpochSeconds'].max()
+        epoch_seconds_diff = df.iloc[-1]['EpochSeconds'] - df.iloc[-2]['EpochSeconds']
+        epoch_seconds_end = epoch_seconds_max
+        epoch_seconds_start = epoch_seconds_end - (epoch_seconds_number - 1) * epoch_seconds_diff
+        time_series = np.linspace(epoch_seconds_start, epoch_seconds_end, epoch_seconds_number)
+        df['EpochSeconds'] = time_series
+        df['time'] = df['EpochSeconds'].apply(datetime.fromtimestamp)
+        df.set_index('time', drop=True, inplace=True)
+        df.drop(['EpochSeconds'], axis=1, inplace=True)
+        return df
+
 
     def __handle_not_available_symbol__(self, ticker):
         if not self.stock_db.is_symbol_loaded(ticker):

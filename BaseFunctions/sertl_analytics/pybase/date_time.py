@@ -5,9 +5,53 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-21
 """
 from datetime import datetime, timedelta
+import matplotlib.dates as m_dates
 
 
 class MyPyDate:
+    @staticmethod
+    def get_datetime_object(date_time):
+        if date_time is None:
+            return None
+        if date_time.__class__.__name__ == 'datetime':  # no change
+            return date_time
+        return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S')
+
+    @staticmethod
+    def get_epoch_seconds_from_datetime(date_time) -> int:
+        if date_time is None:
+            return 0
+        date_time_object = MyPyDate.get_datetime_object(date_time)
+        return datetime.timestamp(date_time_object)
+
+    @staticmethod
+    def get_epoch_number_from_datetime(date_time) -> float:
+        if date_time is None:
+            return 0
+        date_time_object = MyPyDate.get_datetime_object(date_time)
+        return m_dates.date2num(date_time_object)
+
+    @staticmethod
+    def get_datetime_from_epoch_number(epoch_number: float) -> datetime:
+        return m_dates.num2date(epoch_number)
+
+    @staticmethod
+    def get_date_time_from_epoch_seconds(epoch_seconds: int) -> datetime:
+       return datetime.fromtimestamp(epoch_seconds)
+
+    @staticmethod
+    def get_date_from_epoch_seconds(epoch_seconds: int) -> datetime:
+        return datetime.fromtimestamp(epoch_seconds).date()
+
+    @staticmethod
+    def get_time_from_epoch_seconds(epoch_seconds: int) -> datetime:
+        return datetime.fromtimestamp(epoch_seconds).time()
+
+    @staticmethod
+    def get_date_as_string_from_date_time(date_time) -> str:  # '2018-07-18'
+        date_time_object = MyPyDate.get_datetime_object(date_time)
+        return date_time_object.strftime('%Y-%m-%d')
+
     @staticmethod
     def get_date_from_datetime(date_time):
         if date_time is None:
@@ -20,7 +64,7 @@ class MyPyDate:
     def get_time_from_datetime(date_time):
         if date_time is None:
             return None
-        if date_time.__class__.__name__ == 'date':  # no change
+        if date_time.__class__.__name__ == 'time':  # no change
             return date_time
         return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').time()
 
