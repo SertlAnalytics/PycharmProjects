@@ -152,20 +152,20 @@ class PatternFunctionContainer:
 
     def __set_tick_for_breakout__(self, tick):
         self._tick_for_breakout = tick
-        if tick.close > self._f_upper(tick.f_var):
-            self._f_breakout = np.poly1d([0, self._f_upper(tick.f_var)])
+        if tick.close > self.get_upper_value(tick.f_var):
+            self._f_breakout = np.poly1d([0, self.get_upper_value(tick.f_var)])
         else:
-            self._f_breakout = np.poly1d([0, self._f_lower(tick.f_var)])
+            self._f_breakout = np.poly1d([0, self.get_lower_value(tick.f_var)])
 
     tick_for_breakout = property(__get_tick_for_breakout__, __set_tick_for_breakout__)
 
     def adjust_functions_when_required(self, tick: WaveTick):
         pass
 
-    def get_upper_value(self, f_var: int):
+    def get_upper_value(self, f_var: float):
         return round(self._f_upper(f_var), 2)
 
-    def get_lower_value(self, f_var: int):
+    def get_lower_value(self, f_var: float):
         return round(self._f_lower(f_var), 2)
 
     def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
@@ -179,7 +179,8 @@ class PatternFunctionContainer:
 
 class ChannelPatternFunctionContainer(PatternFunctionContainer):
     def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
-        tick_list = [tick_first, tick_first, tick_last, tick_last]
+        tick_last_temp = tick_last if self.tick_for_breakout is None else self.tick_for_breakout
+        tick_list = [tick_first, tick_first, tick_last_temp, tick_last_temp]
         function_list = [self.f_upper, self.f_lower, self.f_lower, self.f_upper]
         return tick_list, function_list
 

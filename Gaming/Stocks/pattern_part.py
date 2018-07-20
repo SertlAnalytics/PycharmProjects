@@ -202,14 +202,14 @@ class PatternPart:
 
         if self.pattern_type == FT.TKE_UP:
             slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_percent, f_reg_percent)
-            breadth = 'Breadth={}, Std_dev={}'.format(self.height, std_dev)
+            breadth = 'Height={}, Std_dev={}'.format(self.height, std_dev)
         elif self.pattern_type == FT.TKE_DOWN:
             slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_percent, f_reg_percent)
-            breadth = 'Breadth={}, Std_dev={}'.format(self.height, std_dev)
+            breadth = 'Height={}, Std_dev={}'.format(self.height, std_dev)
         else:
             slopes = 'Gradients: U={}%, L={}%, U/L={}, Reg={}%'.format(
                 f_upper_percent, f_lower_percent, relation_u_l, f_reg_percent)
-            breadth = 'Breadth={}, Max={}, Min={}, Std_dev={}'.format(
+            breadth = 'Height={}, Max={}, Min={}, Std_dev={}'.format(
                 self.height, self.distance_max, self.distance_min, std_dev)
 
         if self.breakout is None:

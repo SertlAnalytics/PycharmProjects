@@ -2,24 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/.idea/dictionaries/josef.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/financial_data_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/financial_data_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/plotter/my_plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/plotter/my_plot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/date_time.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/date_time.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_breakout.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_constraints.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_constraints.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_data_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_data_container.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_database/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/stock_database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_detection_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_detection_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_detector.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_function_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_function_container.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_part.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_part.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_statistics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_wave_tick.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_wave_tick.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -38,8 +22,8 @@
       <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="374">
-              <caret line="22" column="44" selection-start-line="22" selection-start-column="44" selection-end-line="22" selection-end-column="44" />
+            <state relative-caret-position="391">
+              <caret line="32" column="35" lean-forward="true" selection-start-line="32" selection-start-column="35" selection-end-line="32" selection-end-column="35" />
               <folding>
                 <element signature="e#198#285#0" expanded="true" />
               </folding>
@@ -47,23 +31,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="pattern_constraints.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pattern_constraints.py">
+      <file leaf-file-name="pattern_function_container.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pattern_function_container.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="561">
-              <caret line="276" column="46" selection-start-line="276" selection-start-column="46" selection-end-line="276" selection-end-column="46" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="pattern_detector.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pattern_detector.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="456">
-              <caret line="139" column="35" lean-forward="true" selection-start-line="139" selection-start-column="35" selection-end-line="139" selection-end-column="35" />
-              <folding>
-                <element signature="e#199#217#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="443">
+              <caret line="156" column="13" lean-forward="true" selection-start-line="156" selection-start-column="13" selection-end-line="156" selection-end-column="13" />
             </state>
           </provider>
         </entry>
@@ -163,16 +135,16 @@
         <option value="$PROJECT_DIR$/pattern_database/stock_database.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/plotter/my_plot.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/date_time.py" />
-        <option value="$PROJECT_DIR$/pattern_part.py" />
         <option value="$PROJECT_DIR$/pattern_breakout.py" />
         <option value="$PROJECT_DIR$/pattern_wave_tick.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/loop_list.py" />
         <option value="$PROJECT_DIR$/pattern.py" />
-        <option value="$PROJECT_DIR$/pattern_function_container.py" />
         <option value="$PROJECT_DIR$/pattern_data_container.py" />
-        <option value="$PROJECT_DIR$/run_pattern_detection.py" />
         <option value="$PROJECT_DIR$/pattern_detector.py" />
         <option value="$PROJECT_DIR$/pattern_constraints.py" />
+        <option value="$PROJECT_DIR$/pattern_function_container.py" />
+        <option value="$PROJECT_DIR$/run_pattern_detection.py" />
+        <option value="$PROJECT_DIR$/pattern_part.py" />
       </list>
     </option>
   </component>
@@ -883,23 +855,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_part.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="58" selection-start-line="58" selection-end-line="58" />
-          <folding>
-            <element signature="e#188#250#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_function_container.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="986">
-          <caret line="228" column="73" selection-start-line="228" selection-start-column="73" selection-end-line="228" selection-end-column="73" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/numpy/lib/polynomial.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="373">
@@ -937,20 +892,37 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_constraints.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="561">
+          <caret line="276" column="46" selection-start-line="276" selection-start-column="46" selection-end-line="276" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="22" column="44" selection-start-line="22" selection-start-column="44" selection-end-line="22" selection-end-column="44" />
+        <state relative-caret-position="391">
+          <caret line="32" column="35" lean-forward="true" selection-start-line="32" selection-start-column="35" selection-end-line="32" selection-end-column="35" />
           <folding>
             <element signature="e#198#285#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_constraints.py">
+    <entry file="file://$PROJECT_DIR$/pattern_part.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="276" column="46" selection-start-line="276" selection-start-column="46" selection-end-line="276" selection-end-column="46" />
+        <state relative-caret-position="408">
+          <caret line="211" column="29" selection-start-line="211" selection-start-column="29" selection-end-line="211" selection-end-column="29" />
+          <folding>
+            <element signature="e#188#250#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_function_container.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="443">
+          <caret line="156" column="13" lean-forward="true" selection-start-line="156" selection-start-column="13" selection-end-line="156" selection-end-column="13" />
         </state>
       </provider>
     </entry>
