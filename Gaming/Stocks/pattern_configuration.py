@@ -58,6 +58,7 @@ class PatternConfiguration:
         self.get_data_from_db = True
         self.pattern_type_list = [FT.CHANNEL]
         self.api_period = ApiPeriod.DAILY
+        self.api_period_aggregation = 1  # 5 for intraday
         self.api_output_size = ApiOutputsize.COMPACT
         self.bound_upper_value = CN.HIGH
         self.bound_lower_value = CN.LOW

@@ -88,6 +88,10 @@ class PatternDetectionController:
             self.__show_statistics__()
 
     def __get_df_from_source__(self, ticker, value_dic):
+        period = config.api_period
+        aggregation = config.api_period_aggregation
+        output_size = config.api_output_size
+
         if config.get_data_from_db:
             self.__handle_not_available_symbol__(ticker)
             and_clause = value_dic[LL.AND_CLAUSE]
@@ -95,13 +99,13 @@ class PatternDetectionController:
             return stock_db_df_obj.df_data
         elif ticker in self.__crypto_ccy_dic:
             if config.api_period == ApiPeriod.INTRADAY:
-                fetcher = CryptoCompareCryptoFetcher(ticker, config.api_period)
+                fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation)
             else:
-                fetcher = AlphavantageCryptoFetcher(ticker, config.api_period)
+                fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
             return fetcher.df_data
         else:
             aggregation = 5 if config.api_period == ApiPeriod.INTRADAY else 1
-            fetcher = AlphavantageStockFetcher(ticker, config.api_period, aggregation, config.api_output_size)
+            fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
             if config.api_period == ApiPeriod.INTRADAY:
                 return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             else:

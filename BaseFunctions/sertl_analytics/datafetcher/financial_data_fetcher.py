@@ -215,10 +215,9 @@ class AlphavantageCSVFetcher (APIBaseFetcher):
 
 
 class CryptoCompareJSONFetcher (APIBaseFetcher):
-    def __init__(self, symbol: str, period: ApiPeriod = ApiPeriod.DAILY,
-                 output_size: ApiOutputsize = ApiOutputsize.COMPACT):
+    def __init__(self, symbol: str, period: str, aggregation: int):
         self.api_symbol = ''
-        APIBaseFetcher.__init__(self, symbol, period, output_size)
+        APIBaseFetcher.__init__(self, symbol, period, aggregation)
         self.column_list_data = self.get_column_list_data()
         self.df_data = self.df[self.column_list_data]
 
@@ -240,9 +239,6 @@ class CryptoCompareJSONFetcher (APIBaseFetcher):
 
 
 class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
-    def __init__(self, key: str, period: ApiPeriod = ApiPeriod.DAILY):
-        CryptoCompareJSONFetcher.__init__(self, key, period)
-
     def get_column_list_data(self):
         return self.column_list
 

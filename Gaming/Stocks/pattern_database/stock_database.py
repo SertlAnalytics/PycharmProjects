@@ -48,7 +48,7 @@ class StockDatabase(BaseDatabase):
                                                        output_size: ApiOutputsize = ApiOutputsize.COMPACT):
         self.delete_records("DELETE from Stocks WHERE Symbol = '" + str(symbol) + "'")
         input_dic = self.get_input_values_for_stock_table(period, symbol, output_size)
-        self.insert_data_into_table('Stocks', input_dic)
+        self.__insert_data_into_table__('Stocks', input_dic)
 
     def update_stock_data_by_index(self, index: str, period=ApiPeriod.DAILY, aggregation=1):
         company_dict = self.__get_company_dic__()
@@ -60,8 +60,8 @@ class StockDatabase(BaseDatabase):
             print('\nUpdating {}...\n'.format(index))
             ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
             for ticker in ticker_dic:
-                self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker], company_dict,
-                                                            last_loaded_date_dic, dt_now)
+                self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
+                                                            company_dict, last_loaded_date_dic, dt_now)
         self.__handle_error_cases__()
 
     def __check_company_dic_against_web__(self, index: str, company_dict: dict):
@@ -141,7 +141,7 @@ class StockDatabase(BaseDatabase):
                 df = df.loc[last_date:].iloc[1:]
             if df.shape[0] > 0:
                 input_list = self.__get_df_data_for_insert_statement__(df, period, ticker)
-                self.insert_data_into_table('Stocks', input_list)
+                self.__insert_data_into_table__('Stocks', input_list)
                 print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
             time.sleep(self._sleep_seconds)
 
@@ -187,7 +187,7 @@ class StockDatabase(BaseDatabase):
                      'Sector': '', 'Year': 2018, 'Revenues': 0, 'Expenses': 0,
                      'Employees': 0, 'Savings': 0, 'ForcastGrowth': 0}
         try:
-            self.insert_data_into_table('Company', [input_dic])
+            self.__insert_data_into_table__('Company', [input_dic])
         except Exception:
             self.error_handler.catch_exception(__name__)
             print('{} - {}: problem inserting into Company table.'.format(ticker, name))
@@ -274,8 +274,8 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
         if and_clause != '':
             self.statement += ' and ' + and_clause
         DatabaseDataFrame.__init__(self, db, self.statement)
-        self.df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
+        self.df.set_index(CN.TIMESTAMP, drop=False, inplace=True)
         self.column_data = [CN.CLOSE]
-        self.df_data = self.df[[CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL]]
+        self.df_data = self.df[[CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL, CN. TIMESTAMP, CN.BIG_MOVE, CN.DIRECTION]]
 
 

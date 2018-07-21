@@ -54,7 +54,7 @@ class BaseDatabase:
     def create_database_elements(self, metadata: MetaData):
         metadata.create_all(self.engine)
 
-    def insert_data_into_table(self, table_name: str, insert_data_dic_list: list):
+    def __insert_data_into_table__(self, table_name: str, insert_data_dic_list: list):
         connection = self.engine.connect()
         metadata = MetaData()
         table_object = Table(table_name, metadata, autoload=True, autoload_with=self.engine)

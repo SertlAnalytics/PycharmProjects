@@ -65,7 +65,10 @@ class MyPyDate:
             return None
         if date_time.__class__.__name__ == 'date':  # no change
             return date_time
-        return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').date()
+        if len(str(date_time)) == 10:
+            return datetime.strptime(str(date_time), '%Y-%m-%d').date()
+        else:
+            return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').date()
 
     @staticmethod
     def get_time_from_datetime(date_time):

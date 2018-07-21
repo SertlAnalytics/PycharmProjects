@@ -84,7 +84,8 @@ class PatternData:
         self.df = self.df.assign(DateAsNumber=self.df.index.map(MyPyDate.get_date_as_number_from_epoch_seconds))
         self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
         self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)
-        self.df[CN.TIMESTAMP] = self.df.index
+        if CN.TIMESTAMP not in self.df.columns:
+            self.df[CN.TIMESTAMP] = self.df.index
         self.df.reset_index(drop=True, inplace=True)  # get position index
 
     def __init_columns_for_ticks_distance__(self):

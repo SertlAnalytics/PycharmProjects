@@ -367,7 +367,7 @@ class PatternPlotter:
 
     @staticmethod
     def __get_y_dlim_for_candlestick_plot__():
-        range_pct = [0.99, 1.005] if config.api_period == ApiPeriod.INTRADAY else [0.9, 1.1]
+        range_pct = [0.99, 1.005] if config.api_period == ApiPeriod.INTRADAY else [0.95, 1.02]
         return pdh.pattern_data.min_value * range_pct[0], pdh.pattern_data.max_value * range_pct[1]
 
     @staticmethod
