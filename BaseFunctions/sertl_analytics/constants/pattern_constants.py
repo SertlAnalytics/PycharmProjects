@@ -79,6 +79,7 @@ class FCC:  # Formation Condition Columns
 
 class CN:  # Column Names
     PERIOD = 'Period'
+    AGGREGATION = 'Aggregation'
     SYMBOL = 'Symbol'
     DIRECTION = 'Direction'
     BIG_MOVE = 'BigMove'
@@ -89,6 +90,8 @@ class CN:  # Column Names
     MEAN_HL = 'MeanHL'
     VOL = 'Volume'
     DATE = 'Date'
+    TIME = 'Time'
+    TIMESTAMP = 'Timestamp'
     DATEASNUM = 'DateAsNumber'
     POSITION = 'Position'
     TICKS_BREAK_HIGH_BEFORE = 'BREAK_HIGH_BEFORE'

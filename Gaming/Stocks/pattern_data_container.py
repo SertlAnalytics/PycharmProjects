@@ -79,17 +79,12 @@ class PatternData:
 
     def __add_columns__(self):
         self.df = self.df.assign(MeanHL=round((self.df.High + self.df.Low) / 2, 2))
-        self.df = self.df.assign(Date=self.df.index.map(MyPyDate.get_date_from_datetime))
-        if config.api_period == ApiPeriod.INTRADAY:
-            dates = pd.to_datetime(self.df.index, format="%Y-%m-%dT%H:%M:%S.%fZ")
-            dates_to_num = mdates.date2num(dates)
-            self.df = self.df.assign(Time=self.df.index.map(MyPyDate.get_time_from_datetime))
-            self.df = self.df.assign(DateAsNumber=dates_to_num)
-        else:
-            self.df = self.df.assign(DateAsNumber=self.df.index.map(mdt.date2num))
-            self.df[CN.DATEASNUM] = self.df[CN.DATEASNUM].apply(int)
+        self.df = self.df.assign(Date=self.df.index.map(MyPyDate.get_date_from_epoch_seconds))
+        self.df = self.df.assign(Time=self.df.index.map(MyPyDate.get_time_from_epoch_seconds))
+        self.df = self.df.assign(DateAsNumber=self.df.index.map(MyPyDate.get_date_as_number_from_epoch_seconds))
         self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
         self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)
+        self.df[CN.TIMESTAMP] = self.df.index
         self.df.reset_index(drop=True, inplace=True)  # get position index
 
     def __init_columns_for_ticks_distance__(self):

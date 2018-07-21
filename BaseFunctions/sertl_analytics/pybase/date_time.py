@@ -15,7 +15,10 @@ class MyPyDate:
             return None
         if date_time.__class__.__name__ == 'datetime':  # no change
             return date_time
-        return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S')
+        if len(str(date_time)) == 10:
+            return datetime.strptime(str(date_time), '%Y-%m-%d')
+        else:
+            return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S')
 
     @staticmethod
     def get_epoch_seconds_from_datetime(date_time) -> int:
@@ -34,6 +37,10 @@ class MyPyDate:
     @staticmethod
     def get_datetime_from_epoch_number(epoch_number: float) -> datetime:
         return m_dates.num2date(epoch_number)
+
+    @staticmethod
+    def get_date_as_number_from_epoch_seconds(epoch_seconds: int) -> datetime:
+        return m_dates.date2num(MyPyDate.get_date_time_from_epoch_seconds(epoch_seconds))
 
     @staticmethod
     def get_date_time_from_epoch_seconds(epoch_seconds: int) -> datetime:

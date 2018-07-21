@@ -18,7 +18,7 @@ from sertl_analytics.user_input.confirmation import UserInput
 from datetime import timedelta
 from sertl_analytics.pybase.date_time import MyPyDate
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
-from sertl_analytics.constants.pattern_constants import PSC, Indices
+from sertl_analytics.constants.pattern_constants import PSC, Indices, CN
 from pattern_configuration import config, runtime
 from pattern_statistics import PatternStatistics, DetectorStatistics
 from pattern_data_container import pattern_data_handler
@@ -100,7 +100,8 @@ class PatternDetectionController:
                 fetcher = AlphavantageCryptoFetcher(ticker, config.api_period)
             return fetcher.df_data
         else:
-            fetcher = AlphavantageStockFetcher(ticker, config.api_period, config.api_output_size)
+            aggregation = 5 if config.api_period == ApiPeriod.INTRADAY else 1
+            fetcher = AlphavantageStockFetcher(ticker, config.api_period, aggregation, config.api_output_size)
             if config.api_period == ApiPeriod.INTRADAY:
                 return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             else:
@@ -108,18 +109,15 @@ class PatternDetectionController:
 
     def __get_with_concatenated_intraday_data__(self, df: pd.DataFrame):
         # df['time'] = df['time'].apply(datetime.fromtimestamp)
-        df = df.assign(EpochSeconds=df.index.map(datetime.timestamp))
-        df['time'] = df['EpochSeconds'].apply(datetime.fromtimestamp)
+        df[CN.TIMESTAMP] = df.index.map(int)
         epoch_seconds_number = df.shape[0]
-        epoch_seconds_max = df['EpochSeconds'].max()
-        epoch_seconds_diff = df.iloc[-1]['EpochSeconds'] - df.iloc[-2]['EpochSeconds']
+        epoch_seconds_max = df[CN.TIMESTAMP].max()
+        epoch_seconds_diff = df.iloc[-1][CN.TIMESTAMP] - df.iloc[-2][CN.TIMESTAMP]
         epoch_seconds_end = epoch_seconds_max
         epoch_seconds_start = epoch_seconds_end - (epoch_seconds_number - 1) * epoch_seconds_diff
         time_series = np.linspace(epoch_seconds_start, epoch_seconds_end, epoch_seconds_number)
-        df['EpochSeconds'] = time_series
-        df['time'] = df['EpochSeconds'].apply(datetime.fromtimestamp)
-        df.set_index('time', drop=True, inplace=True)
-        df.drop(['EpochSeconds'], axis=1, inplace=True)
+        df[CN.TIMESTAMP] = time_series
+        df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
         return df
 
 

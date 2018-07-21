@@ -38,8 +38,7 @@ class IndicesComponentList:
 
     @staticmethod
     def __get_crypto_currency_base_dic__() -> dict:
-        # not currently , 'XRP': 'Ripple',  'IOTA': 'IOTA',
+        # not currently , 'XRP': 'Ripple',  'IOTA': 'IOTA', 'ETC': 'Ethereum-Classic',
         return {'BCH': 'Bitcoin-Cash', 'BTC': 'Bitcoin', 'EOS': 'EOS',
-                'ETC': 'Ethereum-Classic',
                 'ETH': 'Ethereum (USD)',
                 'LTC': 'Litecoin (USD)', 'NEO': 'NEO'}

@@ -367,7 +367,7 @@ class PatternPlotter:
 
     @staticmethod
     def __get_y_dlim_for_candlestick_plot__():
-        range_pct = [0.97, 1.03] if config.api_period == ApiPeriod.INTRADAY else [0.9, 1.1]
+        range_pct = [0.99, 1.005] if config.api_period == ApiPeriod.INTRADAY else [0.9, 1.1]
         return pdh.pattern_data.min_value * range_pct[0], pdh.pattern_data.max_value * range_pct[1]
 
     @staticmethod
@@ -385,7 +385,13 @@ class PatternPlotter:
     def __get_date_range_for_title__(self):
         tick_first = WaveTick(self.df.iloc[0])
         tick_last = WaveTick(self.df.iloc[-1])
-        return 'Date between "{}" AND "{}"'.format(tick_first.date_str, tick_last.date_str)
+        if config.api_period == ApiPeriod.INTRADAY:
+            date_str_first = tick_first.time_str_for_f_var
+            date_str_last = tick_last.time_str_for_f_var
+        else:
+            date_str_first = tick_first.date_str
+            date_str_last = tick_last.date_str
+        return 'Date between "{}" AND "{}"'.format(date_str_first, date_str_last)
 
     def __on_click__(self, event):
         self.pattern_plot_container_loop_list.show_only_selected_containers(event)

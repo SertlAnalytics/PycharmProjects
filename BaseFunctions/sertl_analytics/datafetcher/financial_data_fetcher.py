@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import os
 import io
 import sertl_analytics.environment  # init some environment variables during load - for security reasons
+from sertl_analytics.pybase.date_time import MyPyDate
+from sertl_analytics.constants.pattern_constants import CN
 import seaborn as sns
 from datetime import time, datetime
 
@@ -26,24 +28,25 @@ class ApiOutputsize:
 
 
 class APIBaseFetcher:
-    def __init__(self, symbol: str, period: ApiPeriod = ApiPeriod.DAILY,
-                 output_size: ApiOutputsize = ApiOutputsize.COMPACT):
+    def __init__(self, symbol: str, period=ApiPeriod.DAILY, aggregation=1, output_size=ApiOutputsize.COMPACT):
         self.api_key = self.get_api_key()
         self.symbol = symbol  # like the symbol of a stock, e.g. MSFT
         self.period = period
+        self.aggregation = aggregation
         self.output_size = output_size
         self.url = self.get_url()
         print(self.url)
         self.request = requests.get(self.url)
-        self.df = self.get_data_frame()
+        self.df = self.__get_data_frame__()
         self.column_list = list(self.df.columns.values)
         self.__format_column__()
 
-    def get_data_frame(self):
+    def __get_data_frame__(self):
         pass
 
     def __format_column__(self):
-        pass
+        for col in self.column_list:
+            self.df[col] = pd.to_numeric(self.df[col])
 
     def get_api_key(self):
         pass
@@ -59,10 +62,9 @@ class APIBaseFetcher:
 
 
 class AlphavantageJSONFetcher (APIBaseFetcher):
-    def __init__(self, symbol: str, period: ApiPeriod = ApiPeriod.DAILY,
-                 output_size: ApiOutputsize = ApiOutputsize.COMPACT):
+    def __init__(self, symbol: str, period=ApiPeriod.DAILY, aggregation=1, output_size=ApiOutputsize.COMPACT):
         self.api_symbol = ''
-        APIBaseFetcher.__init__(self, symbol, period, output_size)
+        APIBaseFetcher.__init__(self, symbol, period, aggregation, output_size)
         self.column_list_data = self.get_column_list_data()
         self.column_data = self.get_column_data()
         self.column_volume = self.get_column_volume()
@@ -77,14 +79,6 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
 
     def get_column_volume(self):
         pass
-
-    def get_data_frame(self) -> pd.DataFrame:
-        pass
-
-    def __format_column__(self):
-        self.df.index = pd.to_datetime(self.df.index)
-        for col in self.column_list:
-            self.df[col] = pd.to_numeric(self.df[col])
 
     def get_json_data_key(self):
         pass
@@ -124,15 +118,18 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
     def get_json_data_key(self):
         dict = {ApiPeriod.DAILY: 'Time Series (Daily)',
                 ApiPeriod.WEEKLY: 'Time Series (Weekly)',
-                ApiPeriod.INTRADAY: 'Time Series (5min)'}
+                ApiPeriod.INTRADAY: 'Time Series ({}min)'.format(self.aggregation)}
         return dict[self.period]
 
-    def get_data_frame(self) -> pd.DataFrame:
+    def __get_data_frame__(self) -> pd.DataFrame:
         json_data = self.request.json()
         meta_data = json_data["Meta Data"]
         self.api_symbol = meta_data["2. Symbol"]
         time_series = json_data[self.get_json_data_key()]  # e.g. Time Series (Daily)
         df = pd.DataFrame.from_dict(time_series, orient="index")
+        df = df.assign(Timestamp=df.index.map(MyPyDate.get_epoch_seconds_from_datetime))
+        df[CN.TIMESTAMP] = df[CN.TIMESTAMP].apply(int)
+        df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
         df.columns = self.get_standard_column_names()
         return df
 
@@ -141,13 +138,13 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         if self.output_size == ApiOutputsize.FULL:
             url = url + '&outputsize=full'
         if self.period == ApiPeriod.INTRADAY:
-            url = url + '&interval=5min'
+            url = url + '&interval={}min'.format(self.aggregation)
         return url + '&apikey=' + self.api_key
 
 
 class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
-    def __init__(self, key: str, period: ApiPeriod = ApiPeriod.DAILY):
-        AlphavantageJSONFetcher.__init__(self, key, period)
+    def __init__(self, symbol: str, period=ApiPeriod.DAILY, aggregation=1):
+        AlphavantageJSONFetcher.__init__(self, symbol, period, aggregation)
 
     def get_column_list_data(self):
         return self.column_list
@@ -169,12 +166,15 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
                 ApiPeriod.INTRADAY: 'Time Series (Digital Currency Intraday)'}
         return dict[self.period]
 
-    def get_data_frame(self) -> pd.DataFrame:
+    def __get_data_frame__(self) -> pd.DataFrame:
         json_data = self.request.json()
         meta_data = json_data["Meta Data"]
         self.api_symbol = meta_data["2. Digital Currency Code"]
         time_series = json_data[self.get_json_data_key()]
         df = pd.DataFrame.from_dict(time_series, orient="index")
+        df = df.assign(Timestamp=df.index.map(MyPyDate.get_epoch_seconds_from_datetime))
+        df[CN.TIMESTAMP] = df[CN.TIMESTAMP].apply(int)
+        df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
         if self.period == ApiPeriod.INTRADAY:
             df.drop([df.columns[0],  '3. market cap (USD)'], axis=1, inplace=True)
             df.columns = ['Open', 'Volume']
@@ -185,7 +185,6 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
             df.drop(['1b. open (USD)', '2b. high (USD)', '3b. low (USD)', '4b. close (USD)', '6. market cap (USD)'],
                     axis=1, inplace=True)
             df.columns = self.get_standard_column_names()
-        df.apply(pd.to_numeric, errors='ignore')
         return df
 
     def get_url(self):  # the symbol has the structure symbol_CCY like BTC_USD
@@ -204,7 +203,7 @@ class AlphavantageCSVFetcher (APIBaseFetcher):
     def __init__(self, symbol: str='CRYPTO'):
         APIBaseFetcher.__init__(self, symbol)
 
-    def get_data_frame(self):
+    def __get_data_frame__(self):
         content = self.request.content
         return pd.read_csv(io.StringIO(content.decode('utf-8')))
 
@@ -250,16 +249,14 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
     def get_json_data_key(self):
         return 'Data'
 
-    def get_data_frame(self) -> pd.DataFrame:
+    def __get_data_frame__(self) -> pd.DataFrame:
         json_data = self.request.json()
         self.api_symbol = self.symbol
         time_series = json_data[self.get_json_data_key()]
         df = pd.DataFrame(time_series)
         df.drop(['volumefrom'], axis=1, inplace=True)
-        df['time'] = df['time'].apply(datetime.fromtimestamp)
         df.set_index('time', drop=True, inplace=True)
         df.columns = self.get_standard_column_names()
-        df.apply(pd.to_numeric, errors='ignore')
         return df
 
     def get_url(self):  # the symbol has the structure symbol_CCY like BTC_USD
