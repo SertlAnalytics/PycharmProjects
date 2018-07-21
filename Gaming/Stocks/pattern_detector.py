@@ -104,8 +104,8 @@ class PatternDetector:
         left_pos = pattern.function_cont.tick_for_breakout.position
         right_pos_max = left_pos + int(pattern.get_maximal_trade_position_size()/2)
         right_pos = min(right_pos_max, self.df_length)
-        if right_pos - left_pos == 1:
-            left_pos += -1  # we need at least 2 ticks for the trade_df...
+        if right_pos - left_pos <= 1:
+            left_pos += -2 + (right_pos - left_pos)  # we need at least 2 ticks for the trade_df...
         return self.df.loc[left_pos:right_pos]
 
     def __can_pattern_be_added_to_list_after_checking_next_ticks__(self, pattern: Pattern):
