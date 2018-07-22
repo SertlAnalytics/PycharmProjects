@@ -183,7 +183,7 @@ class MyDash:
             [Input('interval-component', 'n_intervals')])
         def callback_interval(n_intervals):
             if n_intervals % 10 == 0:
-                playsound('C:/Windows/media/alarm01.wav')
+                playsound('alarm01.wav')  # C:/Windows/media/...
             return 'Interval-updates: {} at {}'.format(n_intervals, dt.datetime.now())
 
     @staticmethod

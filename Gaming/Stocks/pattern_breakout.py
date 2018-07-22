@@ -9,6 +9,7 @@ from pattern_function_container import PatternFunctionContainer
 from pattern_configuration import config
 from sertl_analytics.constants.pattern_constants import FD, TT
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
+from sertl_analytics.functions.math_functions import MyMath
 
 
 class PatternBreakoutApi:
@@ -26,7 +27,7 @@ class PatternBreakout:
         self.tick_previous = api.tick_previous
         self.tick_breakout = api.tick_breakout
         self.breakout_date = self.tick_breakout.date
-        self.volume_change_pct = round(self.tick_breakout.volume/self.tick_previous.volume, 2)
+        self.volume_change_pct = MyMath.divide(self.tick_breakout.volume, self.tick_previous.volume, 2, 0)
         self.tolerance_pct = self.constraints.tolerance_pct
         self.bound_upper = round(self.function_cont.get_upper_value(self.tick_breakout.f_var), 2)
         self.bound_lower = round(self.function_cont.get_lower_value(self.tick_breakout.f_var), 2)
@@ -54,7 +55,7 @@ class PatternBreakout:
             date_str = self.tick_breakout.time_str_for_f_var
         else:
             date_str = self.tick_breakout.date_str_for_f_var
-        vol_change = round(((self.tick_breakout.volume/self.tick_previous.volume) - 1) * 100, 0)
+        vol_change = (MyMath.divide(self.tick_breakout.volume, self.tick_previous.volume, 0) - 1) * 100
         return '{} - Volume change: {}%'.format(date_str, vol_change)
 
     def __get_breakout_direction__(self) -> str:

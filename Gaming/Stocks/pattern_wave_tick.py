@@ -8,7 +8,7 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 from sertl_analytics.constants.pattern_constants import CN, TT, DIR
-from sertl_analytics.functions import math_functions
+from sertl_analytics.functions.math_functions import MyMath, MyPoly1d
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 from sertl_analytics.pybase.date_time import MyPyDate
 
@@ -110,16 +110,16 @@ class WaveTick:
             return MyPyDate.get_datetime_from_epoch_number(self.f_var).date()
 
     def get_linear_f_params_for_high(self, tick):
-        return math_functions.get_function_parameters(self.f_var, self.high, tick.f_var, tick.high)
+        return MyPoly1d.get_poly1d(self.f_var, self.high, tick.f_var, tick.high)
 
     def get_linear_f_params_for_low(self, tick):
-        return math_functions.get_function_parameters(self.f_var, self.low, tick.f_var, tick.low)
+        return MyPoly1d.get_poly1d(self.f_var, self.low, tick.f_var, tick.low)
 
     def is_sustainable(self):
         return abs((self.open - self.close) / (self.high - self.low)) > 0.6
 
     def is_volume_rising(self, tick_comp, min_percentage: int):
-        return self.volume / tick_comp.volume > (100 + min_percentage) / 100
+        return MyMath.divide(self.volume, tick_comp.volume) > (100 + min_percentage) / 100
 
     def has_gap_to(self, tick_comp):
         return self.low > tick_comp.high or self.high < tick_comp.low
@@ -215,8 +215,8 @@ class WaveTickList:
 
     def __is_f_param_boundary_compliant__(self, f_param: np.poly1d, f_param_boundary: np.poly1d) -> bool:
         offset = self.tick_list[0].f_var
-        slope_dec_main = math_functions.MyPoly1d.get_slope_in_decimal_percentage(f_param, offset, self.length)
-        slope_dec_bound = math_functions.MyPoly1d.get_slope_in_decimal_percentage(f_param_boundary, offset, self.length)
+        slope_dec_main = MyPoly1d.get_slope_in_decimal_percentage(f_param, offset, self.length)
+        slope_dec_bound = MyPoly1d.get_slope_in_decimal_percentage(f_param_boundary, offset, self.length)
         if f_param(offset) > f_param_boundary(offset):
             slope_main_bound = round(slope_dec_main - slope_dec_bound, 4)
         else:

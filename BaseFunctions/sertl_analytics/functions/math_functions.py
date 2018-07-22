@@ -1,32 +1,35 @@
 import numpy as np
 
-def get_function_parameters(ind_left, value_left, ind_right, value_right):
-    """
-    Gets the function parameter for the linear function which joins both points on the x-y-diagram
-    :param ind_left:
-    :param value_left:
-    :param ind_right:
-    :param value_right:
-    :return:
-    """
-    x = np.array([ind_left, ind_right])
-    y = np.array([value_left, value_right])
-    z = np.polyfit(x, y, 1)
-    p = np.poly1d(z)
-    # p[0] = round(p[0], 3)
-    # p[1] = round(p[1], 2)
-    return p
+
+class MyMath:
+    @staticmethod
+    def divide(dividend: float, divisor: float, round_decimals = 2, return_value_on_error = 0):
+        if divisor == 0:
+            return return_value_on_error
+        return round(dividend/divisor, round_decimals)
 
 
 class MyPoly1d:
     @staticmethod
-    def get_slope_in_decimal_percentage(func: np.poly1d, set_off: int, length: int):
+    def get_slope_in_decimal_percentage(func: np.poly1d, set_off: int, length: int) -> float:
         """
         Gets the changes of the values for the input function WITHIN the range
         """
         mean_value = np.mean([func(set_off), func(set_off + length)])
         return_value = round(2 * (func(set_off + length) - func(set_off))/mean_value, 3)
         return return_value
+
+    def get_poly1d(ind_left, value_left, ind_right, value_right) -> np.poly1d:
+        """
+        Gets the function parameter for the linear function which connects both points on the x-y-diagram
+        """
+        x = np.array([ind_left, ind_right])
+        y = np.array([value_left, value_right])
+        z = np.polyfit(x, y, 1)
+        p = np.poly1d(z)
+        # p[0] = round(p[0], 3)
+        # p[1] = round(p[1], 2)
+        return p
 
 
 class ToleranceCalculator:

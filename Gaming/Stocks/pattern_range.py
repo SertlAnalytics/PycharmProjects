@@ -274,19 +274,22 @@ class PatternRangeDetector:
             if tick_k.position - tick_i.position > self._max_pattern_range_length:
                 break
             f_param_i_k = self.__get_linear_f_params__(tick_i, tick_k)
-            if f_param is None or self.__is_slope_correctly_changing__(f_param, tick_k, f_param_i_k):
-                f_param = f_param_i_k
-                next_position_candidates_list.append(k)
-                next_position_linear_f_params.append(f_param)
-                next_position_list.append(tick_k.position)
-            else:
-                last_tick = self.tick_list[next_position_candidates_list[-1]]
-                if self.__is_last_tick_in_tolerance_range__(last_tick, f_param_i_k):
-                # keep the old slope !!!
-                #     f_param = f_param_i_k
+            # ToDo next position not too close - wyh is this possible? The max-min have some distance by construction...
+            last_added_position = next_position_list[-1] if len(next_position_list) > 0 else 0
+            next_tick_too_close = tick_k.position - last_added_position < 3
+            if not next_tick_too_close:
+                if f_param is None or self.__is_slope_correctly_changing__(f_param, tick_k, f_param_i_k):
+                    f_param = f_param_i_k
                     next_position_candidates_list.append(k)
                     next_position_linear_f_params.append(f_param)
                     next_position_list.append(tick_k.position)
+                else:
+                    last_tick = self.tick_list[next_position_candidates_list[-1]]
+                    next_tick_too_close = tick_k.position - last_tick.position < 3
+                    if not next_tick_too_close and self.__is_last_tick_in_tolerance_range__(last_tick, f_param_i_k):
+                        next_position_candidates_list.append(k)
+                        next_position_linear_f_params.append(f_param)
+                        next_position_list.append(tick_k.position)
         return next_position_candidates_list, next_position_linear_f_params, next_position_list
 
     def __is_slope_correctly_changing__(self, f_param: np.poly1d, tick_new: WaveTick, f_param_new_tick: np.poly1d):
