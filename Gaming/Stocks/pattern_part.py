@@ -6,6 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FT
+from sertl_analytics.functions.math_functions import MyMath
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.pybase.date_time import MyPyDate
 from pattern_function_container import PatternFunctionContainer
@@ -185,9 +186,24 @@ class PatternPart:
         # print('u={}, l={}, rel={}, reg={}'.format(f_upper_slope, f_lower_slope, relation_u_l, f_regression_slope))
         return f_upper_slope, f_lower_slope, relation_u_l, f_regression_slope
 
+    def __get_slope_values_as_change_in_percentage__(self):
+        # ToDo - slope as change in percentage
+        f_upper_slope = self.__get_slope_value_as_change_in_percentage__(self.function_cont.f_upper)
+        f_lower_slope = self.__get_slope_value_as_change_in_percentage__(self.function_cont.f_lower)
+        relation_u_l = MyMath.divide(f_upper_slope, f_lower_slope, 4, 0)
+        f_regression_slope = self.__get_slope_value_as_change_in_percentage__(self.function_cont.f_regression)
+        return f_upper_slope, f_lower_slope, relation_u_l, f_regression_slope
+
+    def __get_slope_value_as_change_in_percentage__(self, func: np.poly1d) -> float:
+        value_from = func(self.tick_first.f_var)
+        value_to = func(self.tick_last.f_var)
+        return MyMath.get_change_in_percentage(value_from, value_to, 1)
+
     def __get_text_for_annotation__(self):
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_slope, f_lower_slope, relation_u_l, f_regression_slope = self.get_slope_values()
+        f_upper_slope_2, f_lower_slope_2, relation_u_l_2, f_regression_slope_2 = \
+            self.__get_slope_values_as_change_in_percentage__()
         f_upper_percent = round(f_upper_slope * 100, 1)
         f_lower_percent = round(f_lower_slope * 100, 1)
         f_reg_percent = round(f_regression_slope * 100, 1)
@@ -200,6 +216,7 @@ class PatternPart:
 
         type_date = 'Type={}: {} - {} ({})'.format(self.pattern_type, date_str_first, date_str_last, len(self.tick_list))
 
+        slopes_NEW = ''
         if self.pattern_type == FT.TKE_UP:
             slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_percent, f_reg_percent)
             breadth = 'Height={}, Std_dev={}'.format(self.height, std_dev)
@@ -209,6 +226,8 @@ class PatternPart:
         else:
             slopes = 'Gradients: U={}%, L={}%, U/L={}, Reg={}%'.format(
                 f_upper_percent, f_lower_percent, relation_u_l, f_reg_percent)
+            slopes_NEW = 'Gradients_NEW: U={}%, L={}%, U/L={}, Reg={}%'.format(
+                f_upper_slope_2, f_lower_slope_2, relation_u_l_2, f_regression_slope_2)
             breadth = 'Height={}, Max={}, Min={}, Std_dev={}'.format(
                 self.height, self.distance_max, self.distance_min, std_dev)
 
@@ -224,7 +243,7 @@ class PatternPart:
 
         breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)
 
-        return '{}\n{}\n{}\n{}'.format(type_date, slopes, breadth, breakout_str)
+        return '{}\n{}\n{}\n{}\n{}'.format(type_date, slopes, slopes_NEW, breadth, breakout_str)
 
     def get_retracement_pct(self, comp_part):
         if self.tick_low.low > comp_part.tick_high.high:

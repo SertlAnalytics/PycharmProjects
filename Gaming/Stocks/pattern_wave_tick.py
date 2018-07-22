@@ -83,6 +83,10 @@ class WaveTick:
         return round(self.tick[CN.CLOSE], 2)
 
     @property
+    def mean(self):
+        return round((self.high + self.low)/2, 2)
+
+    @property
     def volume(self):
         return self.tick[CN.VOL]
 

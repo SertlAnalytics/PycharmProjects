@@ -329,8 +329,8 @@ class PatternPlotter:
         self.axes_for_candlesticks = None
 
     def plot_data_frame(self):
-        with_close_plot = False
-        with_volume_plot = False
+        with_close_plot = config.plot_close
+        with_volume_plot = config.plot_volume
 
         if with_close_plot:
             fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(15, 10), sharex='all')
