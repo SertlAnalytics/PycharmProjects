@@ -20,8 +20,9 @@ from sertl_analytics.pybase.date_time import MyPyDate
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
 from sertl_analytics.constants.pattern_constants import PSC, Indices, CN
 from pattern_configuration import config, runtime
-from pattern_statistics import PatternStatistics, DetectorStatistics
+from pattern_statistics import PatternStatistics, DetectorStatistics, ConstraintsStatistics
 from pattern_data_container import pattern_data_handler
+from pattern_constraints import ConstraintHelper
 from pattern_detector import PatternDetector
 from pattern_plotter import PatternPlotter
 from pattern_database import stock_database
@@ -49,6 +50,7 @@ class PatternDetectionController:
     def __init__(self):
         self.detector_statistics = DetectorStatistics()
         self.pattern_statistics = PatternStatistics()
+        self.constraints_statistics = ConstraintsStatistics()
         self.stock_db = None
         self.__excel_file_with_test_data = ''
         self.df_test_data = None
@@ -86,6 +88,7 @@ class PatternDetectionController:
 
         if config.show_final_statistics:
             self.__show_statistics__()
+        self.__write_constraints_statistics__()
 
     def __get_df_from_source__(self, ticker, value_dic):
         period = config.api_period
@@ -155,6 +158,17 @@ class PatternDetectionController:
             self.detector_statistics.write_to_excel(writer, 'Overview')
             print('Statistics were written to file: {}'.format(config.statistics_excel_file_name))
             writer.save()
+
+    def __write_constraints_statistics__(self):
+        if config.statistics_constraints_excel_file_name == '':
+            return
+        constraints_detail_dict = ConstraintHelper.get_constraints_details_as_dict()
+        for key, details_dict in constraints_detail_dict.items():
+            self.constraints_statistics.add_entry(key, details_dict)
+        writer = pd.ExcelWriter(config.statistics_constraints_excel_file_name)
+        self.constraints_statistics.write_to_excel(writer, 'Constraints_{}'.format(datetime.now().date()))
+        print('Constraints statistics were written to file: {}'.format(config.statistics_constraints_excel_file_name))
+        writer.save()
 
     def __init_db_and_test_data__(self, excel_file_with_test_data: str, start_row: int, end_row: int):
         self.stock_db = stock_database.StockDatabase()

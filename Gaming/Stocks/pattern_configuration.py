@@ -83,6 +83,7 @@ class PatternConfiguration:
         self.show_final_statistics = True
         self.and_clause = "Date BETWEEN '2017-12-01' AND '2019-12-31'"
         self.statistics_excel_file_name = ''
+        self.statistics_constraints_excel_file_name = 'pattern_statistics/constraints.xlsx'
         self.ticker_dic = {}
         self.__previous_period_length = 0
 

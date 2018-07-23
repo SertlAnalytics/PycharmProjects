@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FD, FT
-from sertl_analytics.functions import math_functions
+from sertl_analytics.functions.math_functions import MyMath
 from pattern_wave_tick import WaveTick
 import numpy as np
 import pandas as pd
@@ -20,19 +20,22 @@ class PatternFunctionContainer:
         self._tick_for_breakout = None
         self._tick_first = WaveTick(self.df.iloc[0])
         self._tick_last = WaveTick(self.df.iloc[-1])
-        self._tick_distance = pdh.pattern_data.tick_f_var_distance
         self._f_lower = f_lower
         self._f_upper = f_upper
         self._h_lower = f_lower
         self._h_upper = f_upper
         self._f_breakout = None
         self._f_regression = self.__get_f_regression__()
+        self._f_upper_percentage = 0
+        self._f_lower_percentage = 0
+        self._f_regression_percentage = 0
         self._f_var_cross_f_upper_f_lower = 0
         self._position_cross_f_upper_f_lower = 0
         self._breakout_direction = None
         if self.is_valid():
             self.__init_tick_for_helper__()
             self.__set_f_var_cross_f_upper_f_lower__()
+            self.__init_percentage_values__()
 
     @property
     def number_of_positions(self):
@@ -87,21 +90,24 @@ class PatternFunctionContainer:
         return self._f_breakout
 
     @property
-    def f_upper_pct(self):
-        return self.__get_slope_in_decimal_percentage__(self._f_upper)
+    def f_upper_percentage(self):
+        return self._f_upper_percentage
 
     @property
-    def f_lower_pct(self):
-        return self.__get_slope_in_decimal_percentage__(self._f_lower)
+    def f_lower_percentage(self):
+        return self._f_lower_percentage
 
     @property
-    def f_regression_pct(self):
-        return self.__get_slope_in_decimal_percentage__(self._f_regression)
+    def f_regression_percentage(self):
+        return self._f_regression_percentage
+
+    def __init_percentage_values__(self):
+        self._f_upper_percentage = self.__get_slope_in_decimal_percentage__(self._f_upper)
+        self._f_lower_percentage = self.__get_slope_in_decimal_percentage__(self._f_lower)
+        self._f_regression_percentage = self.__get_slope_in_decimal_percentage__(self._f_regression)
 
     def __get_slope_in_decimal_percentage__(self, func: np.poly1d):
-        off_set = self._tick_first.f_var
-        length = self.number_of_positions * self._tick_distance
-        return math_functions.MyPoly1d.get_slope_in_decimal_percentage(func, off_set, length)
+        return MyMath.get_change_in_percentage(func(self._tick_first.f_var), func(self.tick_last.f_var), 1)
 
     def is_regression_value_in_pattern_for_f_var(self, f_var: int):
         return self._f_lower(f_var) <= self._f_regression(f_var) <= self._f_upper(f_var)

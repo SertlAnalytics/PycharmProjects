@@ -179,8 +179,8 @@ class Pattern:
             f_lower = self.complementary_function
             f_upper = self.pattern_range.f_param
         f_container = self.get_function_container(df_check, f_lower, f_upper)
-        if self.constraints.are_f_lower_f_upper_pct_compliant(f_container.f_lower_pct, f_container.f_upper_pct):
-            if self.constraints.is_f_regression_pct_compliant(f_container.f_regression_pct):
+        if self.constraints.are_f_lower_f_upper_percentage_compliant(f_container.f_lower_percentage, f_container.f_upper_percentage):
+            if self.constraints.is_f_regression_percentage_compliant(f_container.f_regression_percentage):
                 value_categorizer = ChannelValueCategorizer(f_container, self.constraints.tolerance_pct)
                 if self.constraints.are_global_constraints_satisfied(value_categorizer):
                     return f_container

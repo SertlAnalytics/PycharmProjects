@@ -28,7 +28,7 @@ class MyPoly1d:
         Gets the changes of the values for the input function WITHIN the range
         """
         mean_value = np.mean([func(set_off), func(set_off + length)])
-        return_value = round(2 * (func(set_off + length) - func(set_off))/mean_value, 3)
+        return_value = round((func(set_off + length) - func(set_off))/mean_value, 3)
         return return_value
 
     def get_poly1d(ind_left, value_left, ind_right, value_right) -> np.poly1d:

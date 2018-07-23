@@ -7,8 +7,54 @@ Date: 2018-05-14
 
 import numpy as np
 import pandas as pd
-from sertl_analytics.constants.pattern_constants import CT, SVC
+from sertl_analytics.constants.pattern_constants import CT, SVC, FT
+from sertl_analytics.functions.math_functions import MyMath
 from pattern_value_categorizer import ValueCategorizer
+
+
+class ConstraintHelper:
+    @staticmethod
+    def get_constraints_details_as_dict():
+        return_dict = {}
+        constraints_dic = ConstraintHelper.get_constraints_as_dict()
+        for key, constraints in constraints_dic.items():
+            return_dict[key] = constraints.get_value_dict()
+        return return_dict
+
+    @staticmethod
+    def get_constraints_as_dict():
+        return_dict = {}
+        for pattern_type in FT.get_all():
+            return_dict[pattern_type] = ConstraintHelper.get_constraint_by_pattern_type(pattern_type)
+        return return_dict
+
+    @staticmethod
+    def get_constraint_by_pattern_type(pattern_type: str):
+        if pattern_type == FT.TRIANGLE:
+            return TriangleConstraints()
+        elif pattern_type == FT.TRIANGLE_TOP:
+            return TriangleTopConstraints()
+        elif pattern_type == FT.TRIANGLE_BOTTOM:
+            return TriangleBottomConstraints()
+        elif pattern_type == FT.TRIANGLE_UP:
+            return TriangleUpConstraints()
+        elif pattern_type == FT.TRIANGLE_DOWN:
+            return TriangleDownConstraints()
+        elif pattern_type == FT.CHANNEL:
+            return ChannelConstraints()
+        elif pattern_type == FT.CHANNEL_UP:
+            return ChannelUpConstraints()
+        elif pattern_type == FT.CHANNEL_DOWN:
+            return ChannelDownConstraints()
+        elif pattern_type == FT.TKE_UP:
+            return TKEUpConstraints()
+        elif pattern_type == FT.TKE_DOWN:
+            return TKEDownConstraints()
+        elif pattern_type == FT.HEAD_SHOULDER:
+            return HeadShoulderConstraints()
+        elif pattern_type == FT.HEAD_SHOULDER_INVERSE:
+            return InverseHeadShoulderConstraints()
+        return None
 
 
 class CountConstraint:
@@ -16,6 +62,9 @@ class CountConstraint:
         self.value_category = value_category
         self.comparison = comparison
         self.comparison_value = value
+
+    def get_count_constraints_details(self):
+        return '{} {} {}'.format(self.value_category, self.comparison, self.comparison_value)
 
     def is_value_satisfying_constraint(self, value: float):
         if self.comparison == '=':
@@ -36,47 +85,61 @@ class Constraints:
         self.global_all_in = []
         self.global_count = []
         self.global_series = []
-        self.f_upper_pct_bounds = [-0.02, 0.02]
-        self.f_lower_pct_bounds = [-0.02, 0.02]
-        self.f_upper_lower_relation_bounds = [-5, 5]  # the relationship bounds for the linear functions increase
-        self.f_regression_pct_bounds = [-0.02, 0.02]  # this constraint checks the "direction" of the data
+        self.f_upper_percentage_bounds = [-2.0, 2.0]
+        self.f_lower_percentage_bounds = [-2.0, 2.0]
+        self.f_upper_lower_relation_bounds = [-5.0, 5.0]  # the relationship bounds for the linear functions increase
+        self.f_regression_percentage_bounds = [-5.0, 5.0]  # this constraint checks the "direction" of the data
         self.breakout_required_after_ticks = self.__get_breakout_required_after_ticks__()
-        # [0.8, 1.2] Channel,
         self.__fill_global_constraints__()
         self.__set_bounds_for_pattern_type__()
         self.__check_dic = {}
 
-    def are_f_lower_f_upper_pct_compliant(self, f_lower_pct: float, f_upper_pct: float):
-        if self.__is_f_lower_pct_compliant__(f_lower_pct):
-            if self.__is_f_upper_pct_compliant__(f_upper_pct):
-                return self.__is_relation_f_upper_f_lower_compliant__(f_upper_pct, f_lower_pct)
+    def get_value_dict(self):
+        return dict(tolerance_pct = self.tolerance_pct,
+                    global_all_in = self.global_all_in,
+                    global_count = self.__get_global_count_details__(),
+                    global_series = self.global_series,
+                    f_upper_percentage_bounds = self.f_upper_percentage_bounds,
+                    f_lower_percentage_bounds = self.f_lower_percentage_bounds,
+                    f_upper_lower_relation_bounds = self.f_upper_lower_relation_bounds,
+                    f_regression_percentage_bounds = self.f_regression_percentage_bounds,
+                    breakout_required_after_ticks = self.breakout_required_after_ticks)
+
+    def __get_global_count_details__(self):
+        return [value if index == 0 else value.get_count_constraints_details()
+                for index, value in enumerate(self.global_count)]
+
+    def are_f_lower_f_upper_percentage_compliant(self, f_lower_percentage: float, f_upper_percentage: float):
+        if self.__is_f_lower_percentage_compliant__(f_lower_percentage):
+            if self.__is_f_upper_percentage_compliant__(f_upper_percentage):
+                return self.__is_relation_f_upper_f_lower_compliant__(f_upper_percentage, f_lower_percentage)
         return False
 
-    def is_f_regression_pct_compliant(self, f_regression_pct: float):
-        if len(self.f_regression_pct_bounds) == 0:  # no bounds defined
+    def is_f_regression_percentage_compliant(self, f_reg_percentage: float):
+        if len(self.f_regression_percentage_bounds) == 0:  # no bounds defined
             return True
-        return self.f_regression_pct_bounds[0] <= f_regression_pct <= self.f_regression_pct_bounds[1]
+        return self.f_regression_percentage_bounds[0] <= f_reg_percentage <= self.f_regression_percentage_bounds[1]
 
     @staticmethod
     def __get_breakout_required_after_ticks__():
         return 0
 
-    def __is_f_lower_pct_compliant__(self, f_lower_pct: float):
-        if len(self.f_lower_pct_bounds) == 0:  # no lower bounds defined
+    def __is_f_lower_percentage_compliant__(self, f_lower_percentage: float):
+        if len(self.f_lower_percentage_bounds) == 0:  # no lower bounds defined
             return True
-        return self.f_lower_pct_bounds[0] <= f_lower_pct <= self.f_lower_pct_bounds[1]
+        return self.f_lower_percentage_bounds[0] <= f_lower_percentage <= self.f_lower_percentage_bounds[1]
 
-    def __is_f_upper_pct_compliant__(self, f_upper_pct: float):
-        if len(self.f_upper_pct_bounds) == 0:  # no upper bounds defined
+    def __is_f_upper_percentage_compliant__(self, f_upper_pct: float):
+        if len(self.f_upper_percentage_bounds) == 0:  # no upper bounds defined
             return True
-        return self.f_upper_pct_bounds[0] <= f_upper_pct <= self.f_upper_pct_bounds[1]
+        return self.f_upper_percentage_bounds[0] <= f_upper_pct <= self.f_upper_percentage_bounds[1]
 
-    def __is_relation_f_upper_f_lower_compliant__(self, f_upper_pct: float, f_lower_pct: float):
+    def __is_relation_f_upper_f_lower_compliant__(self, f_upper_percentage: float, f_lower_percentage: float):
         if len(self.f_upper_lower_relation_bounds) == 0:  # no relation defined for both slopes
             return True
-        if f_lower_pct == 0:
+        if f_lower_percentage == 0:
             return True
-        u_l_relation = round((f_upper_pct / f_lower_pct), 2)
+        u_l_relation = MyMath.divide(f_upper_percentage, f_lower_percentage)
         return self.f_upper_lower_relation_bounds[0] <= u_l_relation <= self.f_upper_lower_relation_bounds[1]
 
     @staticmethod
@@ -84,8 +147,8 @@ class Constraints:
         return 0.02
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-100.0, 100]
-        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_percentage_bounds = [-100.0, 100]
+        self.f_lower_percentage_bounds = self.f_upper_percentage_bounds
         self.f_upper_lower_relation_bounds = [-100, 100]
 
     def get_unary_constraints(self, df: pd.DataFrame):
@@ -98,12 +161,12 @@ class Constraints:
         pass
 
     @property
-    def f_upper_pct_bounds_complementary(self):
-        return [-1 * x for x in reversed(self.f_upper_pct_bounds)]
+    def f_upper_percentage_bounds_complementary(self):
+        return [-1 * x for x in reversed(self.f_upper_percentage_bounds)]
 
     @property
-    def f_lower_pct_bounds_complementary(self):
-        return [-1 * x for x in reversed(self.f_lower_pct_bounds)]
+    def f_lower_percentage_bounds_complementary(self):
+        return [-1 * x for x in reversed(self.f_lower_percentage_bounds)]
 
     @property
     def f_upper_lower_relation_bounds_complementary(self):
@@ -112,8 +175,8 @@ class Constraints:
         return [round(1/x, 3) for x in reversed(self.f_upper_lower_relation_bounds)]
 
     def __set_bounds_by_complementary_constraints__(self, comp_constraints):
-        self.f_upper_pct_bounds = comp_constraints.f_lower_pct_bounds_complementary
-        self.f_lower_pct_bounds = comp_constraints.f_upper_pct_bounds_complementary
+        self.f_upper_percentage_bounds = comp_constraints.f_lower_percentage_bounds_complementary
+        self.f_lower_percentage_bounds = comp_constraints.f_upper_percentage_bounds_complementary
         self.f_upper_lower_relation_bounds = comp_constraints.f_upper_lower_relation_bounds_complementary
 
     def are_global_constraints_satisfied(self, value_categorizer: ValueCategorizer):
@@ -178,10 +241,10 @@ class TKEDownConstraints(Constraints):
                               [SVC.U_on, SVC.U_on, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-0.50, -0.02]
-        self.f_lower_pct_bounds = []  # not required
+        self.f_upper_percentage_bounds = [-50.0, -2.0]
+        self.f_lower_percentage_bounds = []  # not required
         self.f_upper_lower_relation_bounds = []
-        self.f_regression_pct_bounds = self.f_upper_pct_bounds
+        self.f_regression_percentage_bounds = self.f_upper_percentage_bounds
 
 
 class TKEUpConstraints(Constraints):
@@ -198,10 +261,10 @@ class TKEUpConstraints(Constraints):
                               [SVC.L_on, SVC.L_on, SVC.L_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = []  # not required
-        self.f_lower_pct_bounds = [0.02, 0.50]
+        self.f_upper_percentage_bounds = []  # not required
+        self.f_lower_percentage_bounds = [2.0, 50.0]
         self.f_upper_lower_relation_bounds = []
-        self.f_regression_pct_bounds = self.f_lower_pct_bounds
+        self.f_regression_percentage_bounds = self.f_lower_percentage_bounds
 
 
 class ChannelConstraints(Constraints):
@@ -222,24 +285,25 @@ class ChannelConstraints(Constraints):
                               [SVC.L_in, SVC.U_in, SVC.U_in, SVC.L_in, SVC.L_in]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-0.02, 0.02]
-        self.f_lower_pct_bounds = self.f_upper_pct_bounds
-        self.f_upper_lower_relation_bounds = [0.8, 1.2]
-        self.f_regression_pct_bounds = [-0.10, 0.10]
+        self.f_upper_percentage_bounds = [-2.0, 2.0]
+        self.f_lower_percentage_bounds = self.f_upper_percentage_bounds
+        self.f_upper_lower_relation_bounds = [0.9, 1.1]
+        self.f_regression_percentage_bounds = [-5.0, 5.0]
 
 
 class ChannelUpConstraints(ChannelConstraints):
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [0.02, 0.50]
-        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_percentage_bounds = [2.0, 50.0]
+        self.f_lower_percentage_bounds = self.f_upper_percentage_bounds
         self.f_upper_lower_relation_bounds = [0.8, 1.2]
-        self.f_regression_pct_bounds = [0.00, 0.50]
+        self.f_regression_percentage_bounds = [0.00, 50.0]
 
 
 class ChannelDownConstraints(ChannelConstraints):
     def __set_bounds_for_pattern_type__(self):
         self.__set_bounds_by_complementary_constraints__(ChannelUpConstraints())
-        self.f_regression_pct_bounds = [-0.50, 0.00]
+        self.f_upper_lower_relation_bounds = [0.8, 1.2]
+        self.f_regression_percentage_bounds = [-50.0, 0.00]
 
 
 class HeadShoulderConstraints(Constraints):
@@ -266,10 +330,10 @@ class HeadShoulderConstraints(Constraints):
                               [SVC.L_on, SVC.M_in, SVC.L_in, SVC.U_on, SVC.M_in, SVC.M_in, SVC.L_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-0.02, 0.02]
-        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_percentage_bounds = [-2.0, 2.0]
+        self.f_lower_percentage_bounds = self.f_upper_percentage_bounds
         self.f_upper_lower_relation_bounds = [0.8, 1.1]
-        self.f_regression_pct_bounds = [-0.05, 0.05]
+        self.f_regression_percentage_bounds = [-5.0, 5.0]
 
 
 class InverseHeadShoulderConstraints(HeadShoulderConstraints):
@@ -296,10 +360,10 @@ class InverseHeadShoulderConstraints(HeadShoulderConstraints):
                               [SVC.U_on, SVC.M_in, SVC.U_in, SVC.L_on, SVC.M_in, SVC.M_in, SVC.U_on]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-0.02, 0.02]
-        self.f_lower_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_percentage_bounds = [-2.0, 2.0]
+        self.f_lower_percentage_bounds = self.f_upper_percentage_bounds
         self.f_upper_lower_relation_bounds = [0.8, 1.1]
-        self.f_regression_pct_bounds = [-0.05, 0.05]
+        self.f_regression_percentage_bounds = [-5.0, 5.0]
 
 
 class TriangleConstraints(Constraints):
@@ -324,10 +388,10 @@ class TriangleConstraints(Constraints):
                               [SVC.U_in, SVC.U_in, SVC.L_in, SVC.L_in, SVC.U_in]]
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-1.5, -0.01]
-        self.f_lower_pct_bounds = [0.01, 1.5]
+        self.f_upper_percentage_bounds = [-50.0, -1.0]
+        self.f_lower_percentage_bounds = [2.0, 50.0]
         self.f_upper_lower_relation_bounds = [-10, -0.2]
-        self.f_regression_pct_bounds = [-0.5, 0.5]
+        self.f_regression_percentage_bounds = [-20.0, 20.0]
 
 
 class TriangleTopConstraints(TriangleConstraints):
@@ -336,10 +400,10 @@ class TriangleTopConstraints(TriangleConstraints):
         return 0.02
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [-0.01, 0.01]
-        self.f_lower_pct_bounds = [0.02, 1.0]
+        self.f_upper_percentage_bounds = [-1.0, 1.0]
+        self.f_lower_percentage_bounds = [2.0, 50.0]
         self.f_upper_lower_relation_bounds = []
-        self.f_regression_pct_bounds = []
+        self.f_regression_percentage_bounds = []
 
 
 class TriangleBottomConstraints(TriangleConstraints):
@@ -349,7 +413,7 @@ class TriangleBottomConstraints(TriangleConstraints):
 
     def __set_bounds_for_pattern_type__(self):
         self.__set_bounds_by_complementary_constraints__(TriangleTopConstraints())
-        self.f_regression_pct_bounds = []
+        self.f_regression_percentage_bounds = []
 
 
 class TriangleUpConstraints(TriangleConstraints):
@@ -358,10 +422,10 @@ class TriangleUpConstraints(TriangleConstraints):
         return 0.02
 
     def __set_bounds_for_pattern_type__(self):
-        self.f_upper_pct_bounds = [0.02, 5.00]
-        self.f_lower_pct_bounds = self.f_upper_pct_bounds
-        self.f_upper_lower_relation_bounds = [0.02, 0.65]
-        self.f_regression_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_percentage_bounds = [2.0, 50.00]
+        self.f_lower_percentage_bounds = self.f_upper_percentage_bounds
+        self.f_upper_lower_relation_bounds = [0.2, 0.8]
+        self.f_regression_percentage_bounds = self.f_upper_percentage_bounds
 
 
 class TriangleDownConstraints(TriangleConstraints):
@@ -371,4 +435,5 @@ class TriangleDownConstraints(TriangleConstraints):
 
     def __set_bounds_for_pattern_type__(self):
         self.__set_bounds_by_complementary_constraints__(TriangleUpConstraints())
-        self.f_regression_pct_bounds = self.f_upper_pct_bounds
+        self.f_upper_lower_relation_bounds = [1.2, 10]
+        self.f_regression_percentage_bounds = self.f_upper_percentage_bounds

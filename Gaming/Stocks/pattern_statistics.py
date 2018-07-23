@@ -212,3 +212,33 @@ class DetectorStatistics:
     def write_to_excel(self, excel_writer, sheet):
         df = self.get_frame_set()
         df.to_excel(excel_writer, sheet)
+
+
+class ConstraintsStatistics:
+    def __init__(self):
+        self.list = []
+        self.constraint_value_list = ['tolerance_pct',
+                                      'f_upper_percentage_bounds',
+                                      'f_lower_percentage_bounds', 'f_upper_lower_relation_bounds',
+                                      'f_regression_percentage_bounds', 'breakout_required_after_ticks',
+                                      'global_all_in', 'global_count', 'global_series'
+                                      ]
+        self.column_list = ['Constraint'] + [items for items in self.constraint_value_list]
+
+    def add_entry(self, patter_type: str, value_dict: dict):
+        new_entry = [patter_type] + [value_dict[key] for key in self.constraint_value_list]
+        self.list.append(new_entry)
+
+    def get_frame_set(self) -> pd.DataFrame:
+        df = pd.DataFrame(self.list)
+        df.columns = self.column_list
+        return df
+
+    def print_overview(self):
+        df = self.get_frame_set()
+        print(df.head(df.shape[0]))
+
+    def write_to_excel(self, excel_writer, sheet):
+        df = self.get_frame_set()
+        df.to_excel(excel_writer, sheet)
+
