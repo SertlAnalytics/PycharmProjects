@@ -16,6 +16,8 @@ from pattern_data_container import pattern_data_handler as pdh
 
 
 class PatternDataFrame:
+    __column_index = CN.TIMESTAMP
+
     def __init__(self, df: pd.DataFrame):
         self.df = df
         self.tick_first = WaveTick(self.df.iloc[0])
@@ -38,18 +40,19 @@ class PatternDataFrame:
     def get_f_regression(self, column: str = CN.CLOSE) -> np.poly1d:
         if self.df.shape[0] < 2:
             return np.poly1d([0, 0])
-        np_array = np.polyfit(self.df[CN.DATEASNUM], self.df[column], 1)
+        np_array = np.polyfit(self.df[self.__column_index], self.df[column], 1)
         return np.poly1d([np_array[0], np_array[1]])
 
     def get_f_param_shape(self, f_param: np.poly1d) -> Polygon:
         tick_list = [self.tick_first, self.tick_last]
         return MyPlotHelper.get_polygon_for_tick_list(tick_list, f_param)
 
-    def get_f_regression_shape(self, f_regression: np.poly1d = None) -> Polygon:
+    def get_xy_regression(self, f_regression: np.poly1d = None):
         if f_regression is None:
             f_regression = self.get_f_regression()
-        tick_list = [self.tick_first, self.tick_last]
-        return MyPlotHelper.get_polygon_for_tick_list(tick_list, f_regression)
+        x = [self.tick_first.f_var, self.tick_last.f_var]
+        y = [f_regression(self.tick_first.f_var), f_regression(self.tick_last.f_var)]
+        return list(zip(x, y))
 
     def get_xy_parameter(self, function_cont: PatternFunctionContainer):
         tick_list, function_list = function_cont.get_tick_function_list_for_xy_parameter(self.tick_first, self.tick_last)
@@ -64,7 +67,7 @@ class PatternDataFrame:
         return tick.f_var, f_regression(tick.f_var)
 
     def get_nearest_tick_to_f_var(self, f_var: int):
-        df = self.df.assign(Distance=(abs(self.df.DateAsNumber - f_var)))
+        df = self.df.assign(Distance=(abs(self.df.Timestamp - f_var)))
         df = df[df["Distance"] == df["Distance"].min()]
         return WaveTick(df.iloc[0])
 

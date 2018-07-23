@@ -12,6 +12,8 @@ import numpy as np
 
 
 class ValueCategorizer:
+    __index_column = CN.TIMESTAMP
+
     def __init__(self, function_cont: PatternFunctionContainer, tolerance_pct: float):
         self.function_cont = function_cont
         self.df = function_cont.df
@@ -60,18 +62,18 @@ class ValueCategorizer:
         return self.__h_lower is not None and self.__h_upper is not None
 
     def __set_f_upper_f_lower_values__(self):
-        self.df = self.df.assign(F_UPPER=(self.__f_upper(self.df[CN.DATEASNUM])))
-        self.df = self.df.assign(F_LOWER=(self.__f_lower(self.df[CN.DATEASNUM])))
+        self.df = self.df.assign(F_UPPER=(self.__f_upper(self.df[self.__index_column])))
+        self.df = self.df.assign(F_LOWER=(self.__f_lower(self.df[self.__index_column])))
 
     def __set_h_upper_h_lower_values__(self):
         if self.are_helper_functions_available():
-            self.df = self.df.assign(H_UPPER=(self.__h_upper(self.df[CN.DATEASNUM])))
-            self.df = self.df.assign(H_LOWER=(self.__h_lower(self.df[CN.DATEASNUM])))
+            self.df = self.df.assign(H_UPPER=(self.__h_upper(self.df[self.__index_column])))
+            self.df = self.df.assign(H_LOWER=(self.__h_lower(self.df[self.__index_column])))
 
     def __calculate_value_categories__(self):
         for ind, row in self.df.iterrows():
-            self.index_list.append(row[CN.DATEASNUM])
-            self.value_category_dic[row[CN.DATEASNUM]] = self.__get_value_categories_for_df_row__(row)
+            self.index_list.append(row[self.__index_column])
+            self.value_category_dic[row[self.__index_column]] = self.__get_value_categories_for_df_row__(row)
 
     def __get_value_categories_for_df_row__(self, row) -> list:
         pass

@@ -52,12 +52,14 @@ class PatternPart:
         self.distance_min = 0
         self.distance_max = 0
         self.__xy = None
+        self.__xy_regression = None
         self.__xy_center = ()
         if self.df.shape[0] > 0:
             self.stock_df = PatternDataFrame(self.df)
             self.__calculate_values__()
             self.__set_xy_parameter__()
             self.__set_xy_center__()
+            self.__set_xy_regression__()
 
     def get_annotation_parameter(self, color: str = 'blue'):
         annotation_param = AnnotationParameter()
@@ -118,17 +120,11 @@ class PatternPart:
     def __set_xy_parameter__(self):
         self.__xy = self.stock_df.get_xy_parameter(self.function_cont)
 
+    def __set_xy_regression__(self):
+        self.__xy_regression = self.stock_df.get_xy_regression(self.function_cont.f_regression)
+
     def __set_xy_center__(self):
         self.__xy_center = self.stock_df.get_xy_center(self.function_cont.f_regression)
-
-    def get_f_regression_shape(self):
-        return self.stock_df.get_f_regression_shape(self.function_cont.f_regression)
-
-    def get_f_upper_shape(self):
-        return self.stock_df.get_f_upper_shape(self.function_cont)
-
-    def get_f_lower_shape(self):
-        return self.stock_df.get_f_lower_shape(self.function_cont)
 
     @property
     def xy(self):
@@ -137,6 +133,10 @@ class PatternPart:
     @property
     def xy_center(self):
         return self.__xy_center
+
+    @property
+    def xy_regression(self):
+        return self.__xy_regression
 
     @property
     def movement(self):
@@ -216,7 +216,7 @@ class PatternPart:
             breakout_str = 'Breakout: {}'.format(self.breakout.get_details_for_annotations())
 
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
-            date_forecast = MyPyDate.get_datetime_from_epoch_number(self.function_cont.f_var_cross_f_upper_f_lower)
+            date_forecast = MyPyDate.get_date_time_from_epoch_seconds(self.function_cont.f_var_cross_f_upper_f_lower)
             breakout_str += '\nExpected trading end: {}'.format(
                 str(date_forecast.time())[:5] if config.api_period == ApiPeriod.INTRADAY else date_forecast.date())
 
@@ -232,7 +232,7 @@ class PatternPart:
 
     def are_values_below_linear_function(self, f_lin: np.poly1d, tolerance_pct: float = 0.01, column: CN = CN.HIGH):
         for ind, rows in self.df.iterrows():
-            value_function = round(f_lin(rows[CN.DATEASNUM]), 2)
+            value_function = round(f_lin(rows[CN.TIMESTAMP]), 2)
             tolerance_range = value_function * tolerance_pct
             if value_function + tolerance_range < rows[column]:
                 return False

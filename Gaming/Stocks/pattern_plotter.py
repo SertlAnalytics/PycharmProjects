@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import CN, FD
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
+from sertl_analytics.pybase.date_time import MyPyDate
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
@@ -18,6 +19,7 @@ from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_detector import PatternDetector
 from pattern import Pattern
+from pattern_part import PatternPart
 from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
 from fibonacci.fibonacci_wave import FibonacciWave
@@ -468,7 +470,7 @@ class PatternPlotter:
 
     @staticmethod
     def __on_hover__(x, y):
-        tick = pdh.pattern_data.tick_by_date_num_ext_dic.get_value(x, pdh.pattern_data.tick_f_var_distance/2)
+        tick = pdh.pattern_data.tick_by_date_num_ext_dic.get_value(x, 0.5)
         if tick is None:
             return ''
         else:
@@ -481,7 +483,7 @@ class PatternPlotter:
                 date_time_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume / 1000, y)
 
     def __plot_close__(self, axis):
-        axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.CLOSE])
+        axis.plot(self.df.loc[:, CN.TIMESTAMP], self.df.loc[:, CN.CLOSE])
         axis.grid()
         axis.legend(loc='upper left')
 
@@ -503,12 +505,13 @@ class PatternPlotter:
 
     def __plot_min_max__(self):
         wave_tick_list = WaveTickList(pdh.pattern_data.df_min_max)
-        width, height = self.__get_ellipse_width_height_for_plot_min_max__(wave_tick_list)
+        width, height = PlotterInterface.get_ellipse_width_height_for_plot_min_max(wave_tick_list)
         for ticks in wave_tick_list.tick_list:
+            x = MyPyDate.get_date_as_number_from_epoch_seconds(ticks.f_var)
             if ticks.is_min:
-                self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.low), width, height, color='r'))
+                self.axes_for_candlesticks.add_patch(Ellipse((x, ticks.low), width, height, color='r'))
             else:
-                self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.high), width, height, color='g'))
+                self.axes_for_candlesticks.add_patch(Ellipse((x, ticks.high), width, height, color='g'))
         # fill some ellipses with color white
         width, height =  width/2, height/2
         for ticks in pdh.pattern_data.tick_list_min_without_hidden_ticks:
@@ -520,9 +523,10 @@ class PatternPlotter:
         pattern_range_list_max = self.detector.range_detector_max.get_pattern_range_list()
         pattern_range_list_min = self.detector.range_detector_min.get_pattern_range_list()
         for ranges in pattern_range_list_max + pattern_range_list_min:
-            polygon = ranges.f_param_shape
+            polygon = PlotterInterface.get_range_f_param_shape(ranges)
             self.__add_to_ranges_polygon_dic__(polygon, True, ranges)
-            opposite_polygon_list = ranges.get_f_param_list_shapes()
+            # opposite_polygon_list = ranges.get_f_param_list_shapes()
+            opposite_polygon_list = PlotterInterface.get_range_f_param_shape_list(ranges)
             for polygon_opposite in opposite_polygon_list:
                 self.__add_to_ranges_polygon_dic__(polygon_opposite, False, ranges)
 
@@ -560,6 +564,7 @@ class PatternPlotter:
         if config.fibonacci_detail_print:
             fib_wave.print(suffix)
         xy = fib_wave.get_xy_parameter()
+        xy = PlotterInterface.get_xy_from_timestamp_to_date_number(xy)
         fib_polygon = Polygon(np.array(xy), closed=False, fill=False)
         fib_polygon.set_visible(True)
         fib_polygon.set_color(color)
@@ -568,10 +573,6 @@ class PatternPlotter:
         fib_wave_patch = FibonacciWavePatch(fib_wave, fib_polygon)
         self.fibonacci_patch_container.add_patch(fib_wave_patch)
         fib_wave_patch.add_retracement_patch_list_to_axis(self.axes_for_candlesticks)
-
-    @staticmethod
-    def __get_ellipse_width_height_for_plot_min_max__(wave_tick_list: WaveTickList):
-        return wave_tick_list.length / 200, wave_tick_list.value_range / 100
 
     def __plot_volume__(self, axis):
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.VOL])
@@ -583,17 +584,87 @@ class PatternPlotter:
         for pattern in self.detector.pattern_list:
             if not config.plot_only_pattern_with_fibonacci_waves or pattern.intersects_with_fibonacci_wave:
                 color_pattern, color_trade = color_handler.get_colors_for_pattern(pattern)
-                plot_container = PatternPlotContainer(pattern.get_shape_part_main(), color_pattern)
+                plot_container = PatternPlotContainer(PlotterInterface.get_pattern_shape_part_main(pattern), color_pattern)
                 if pattern.was_breakout_done() and pattern.is_part_trade_available():
-                    plot_container.add_trade_shape(pattern.get_shape_part_trade(), color_trade)
-                plot_container.add_center_shape(pattern.get_center_shape())
-                plot_container.annotation_param = pattern.get_annotation_parameter('blue')
+                    plot_container.add_trade_shape(PlotterInterface.get_pattern_shape_part_trade(pattern), color_trade)
+                plot_container.add_center_shape(PlotterInterface.get_pattern_center_shape(pattern))
+                plot_container.annotation_param = PlotterInterface.get_annotation_param(pattern)
                 # plot_container.add_border_line_top_shape(pattern.part_main.get_f_upper_shape())
                 # plot_container.add_border_line_bottom_shape(pattern.part_main.get_f_lower_shape())
-                plot_container.add_regression_line_shape(pattern.part_main.get_f_regression_shape())
+                plot_container.add_regression_line_shape(PlotterInterface.get_f_regression_shape(pattern.part_main))
                 self.pattern_plot_container_loop_list.append(plot_container)
 
     def __add_pattern_shapes_to_plot__(self):
         for pattern_plot_container in self.pattern_plot_container_loop_list.value_list:
             pattern_plot_container.add_elements_as_patches(self.axes_for_candlesticks)
             pattern_plot_container.add_annotation(self.axes_for_candlesticks)
+
+
+class PlotterInterface:
+    @staticmethod
+    def get_ellipse_width_height_for_plot_min_max(wave_tick_list: WaveTickList):
+        if config.api_period == ApiPeriod.DAILY:
+            width_value = 0.6
+        else:
+            width_value = 0.6 / (config.api_period_aggregation * 60)
+        height_value = wave_tick_list.value_range / 100
+        return width_value, height_value
+
+    @staticmethod
+    def get_xy_from_timestamp_to_date_number(xy):
+        if type(xy) == list:
+            return [(MyPyDate.get_date_as_number_from_epoch_seconds(t_val[0]), t_val[1]) for t_val in xy]
+        return MyPyDate.get_date_as_number_from_epoch_seconds(xy[0]), xy[1]
+
+    @staticmethod
+    def get_annotation_param(pattern: Pattern):
+        annotation_param = pattern.get_annotation_parameter('blue')
+        annotation_param.xy = PlotterInterface.get_xy_from_timestamp_to_date_number(annotation_param.xy)
+        annotation_param.xy_text = PlotterInterface.get_xy_from_timestamp_to_date_number(annotation_param.xy_text)
+        return annotation_param
+
+    @staticmethod
+    def get_pattern_shape_part_main(pattern: Pattern):
+        xy = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern.xy)
+        return Polygon(np.array(xy), True)
+
+    @staticmethod
+    def get_pattern_shape_part_trade(pattern: Pattern):
+        xy_trade = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern.xy_trade)
+        return Polygon(np.array(xy_trade), True)
+
+    @staticmethod
+    def get_pattern_center_shape(pattern: Pattern):
+        if config.api_period == ApiPeriod.DAILY:
+            ellipse_breadth = 10
+        else:
+            ellipse_breadth = 2 / (config.api_period_aggregation * 60)
+        ellipse_height = pattern.part_main.height / 6
+        xy_center = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern.xy_center)
+        return Ellipse(np.array(xy_center), ellipse_breadth, ellipse_height)
+
+    @staticmethod
+    def get_f_regression_shape(pattern_part: PatternPart):
+        xy_regression = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern_part.xy_regression)
+        return Polygon(np.array(xy_regression), False)
+
+    @staticmethod
+    def get_f_upper_shape(pattern_part: PatternPart):
+        return pattern_part.stock_df.get_f_upper_shape(pattern_part.function_cont)
+
+    @staticmethod
+    def get_f_lower_shape(pattern_part: PatternPart):
+        return pattern_part.stock_df.get_f_lower_shape(pattern_part.function_cont)
+
+    @staticmethod
+    def get_range_f_param_shape(pattern_range: PatternRange):
+        xy_f_param = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern_range.xy_f_param)
+        return Polygon(np.array(xy_f_param), True)
+
+    @staticmethod
+    def get_range_f_param_shape_list(pattern_range: PatternRange):
+        return_list = []
+        for xy_f_param in pattern_range.xy_f_param_list:
+            xy_f_param = PlotterInterface.get_xy_from_timestamp_to_date_number(xy_f_param)
+            return_list.append(Polygon(np.array(xy_f_param), True))
+        return return_list

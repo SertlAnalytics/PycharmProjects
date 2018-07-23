@@ -23,8 +23,8 @@ class WaveTick:
 
     @property
     def f_var(self):
-        # return self.tick[CN.POSITION]
-        return self.tick[CN.DATEASNUM]
+        return self.tick[CN.TIMESTAMP]
+        # return self.tick[CN.DATEASNUM]
 
     @property
     def direction(self):
@@ -98,11 +98,13 @@ class WaveTick:
 
     @property
     def date_str_for_f_var(self):
-        return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).date())
+        return str(MyPyDate.get_date_from_epoch_seconds(self.f_var))
+        # return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).date())
 
     @property
     def time_str_for_f_var(self):
-        return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).time())[:5]
+        return str(MyPyDate.get_time_from_epoch_seconds(self.f_var))[:5]
+        # return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).time())[:5]
 
     def print(self):
         print('Pos: {}, Date: {}, High: {}, Low: {}'.format(self.position, self.date, self.high, self.low))

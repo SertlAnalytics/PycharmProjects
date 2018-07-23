@@ -39,7 +39,7 @@ class MyPyDate:
         return m_dates.num2date(epoch_number)
 
     @staticmethod
-    def get_date_as_number_from_epoch_seconds(epoch_seconds: int) -> datetime:
+    def get_date_as_number_from_epoch_seconds(epoch_seconds: int) -> float:
         return m_dates.date2num(MyPyDate.get_date_time_from_epoch_seconds(epoch_seconds))
 
     @staticmethod

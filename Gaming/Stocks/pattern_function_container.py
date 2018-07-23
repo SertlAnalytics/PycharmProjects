@@ -129,7 +129,7 @@ class PatternFunctionContainer:
             self.df = pd.concat([self.df, df_main.loc[tick.position:tick.position]])
 
     def __get_f_regression__(self) -> np.poly1d:
-        np_array = np.polyfit(self.df[CN.DATEASNUM], self.df[CN.CLOSE], 1)
+        np_array = np.polyfit(self.df[CN.TIMESTAMP], self.df[CN.CLOSE], 1)
         return np.poly1d([np_array[0], np_array[1]])
 
     def __set_f_var_cross_f_upper_f_lower__(self):

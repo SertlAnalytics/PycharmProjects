@@ -142,17 +142,6 @@ class Pattern:
     def get_annotation_parameter(self, color: str = 'blue'):
         return self._part_main.get_annotation_parameter(color)
 
-    def get_shape_part_main(self):
-        return Polygon(np.array(self.xy), True)
-
-    def get_shape_part_trade(self):
-        return Polygon(np.array(self.xy_trade), True)
-
-    def get_center_shape(self):
-        ellipse_breadth = 5 * self.tick_distance
-        ellipse_height = self.part_main.height / 6
-        return Ellipse(np.array(self.xy_center), ellipse_breadth, ellipse_height)
-
     def fill_result_set(self):
         if self.is_part_trade_available():
             self.__fill_trade_result__()

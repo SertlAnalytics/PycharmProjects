@@ -114,7 +114,8 @@ class PatternDetectionController:
             else:
                 return fetcher.df_data
 
-    def __get_with_concatenated_intraday_data__(self, df: pd.DataFrame):
+    @staticmethod
+    def __get_with_concatenated_intraday_data__(df: pd.DataFrame):
         # df['time'] = df['time'].apply(datetime.fromtimestamp)
         df[CN.TIMESTAMP] = df.index.map(int)
         epoch_seconds_number = df.shape[0]
@@ -126,7 +127,6 @@ class PatternDetectionController:
         df[CN.TIMESTAMP] = time_series
         df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
         return df
-
 
     def __handle_not_available_symbol__(self, ticker):
         if not self.stock_db.is_symbol_loaded(ticker):

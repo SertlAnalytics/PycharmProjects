@@ -134,13 +134,14 @@ class PatternRange:
         return True
 
     @property
-    def f_param_shape(self) -> Polygon:
+    def xy_f_param(self) -> list:
         tick_list = [self.tick_first, self.tick_last]
-        return MyPlotHelper.get_polygon_for_tick_list(tick_list, self.__f_param)
+        return MyPlotHelper.get_xy_for_tick_list_and_function(tick_list, self.__f_param)
 
-    def get_f_param_list_shapes(self) -> list:
+    @property
+    def xy_f_param_list(self) -> list:
         tick_list = [self.tick_first, self.tick_last]
-        return [MyPlotHelper.get_polygon_for_tick_list(tick_list, f_param) for f_param in self._f_param_list]
+        return [MyPlotHelper.get_xy_for_tick_list_and_function(tick_list, f_param) for f_param in self._f_param_list]
 
     @property
     def f_regression_shape(self):
