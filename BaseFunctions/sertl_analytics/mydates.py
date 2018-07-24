@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import matplotlib.dates as m_dates
 
 
-class MyPyDate:
+class MyDate:
     @staticmethod
     def get_datetime_object(date_time):
         if date_time is None:
@@ -21,17 +21,17 @@ class MyPyDate:
             return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S')
 
     @staticmethod
-    def get_epoch_seconds_from_datetime(date_time) -> int:
+    def get_epoch_seconds_from_datetime(date_time) -> float:
         if date_time is None:
             return 0
-        date_time_object = MyPyDate.get_datetime_object(date_time)
+        date_time_object = MyDate.get_datetime_object(date_time)
         return datetime.timestamp(date_time_object)
 
     @staticmethod
     def get_epoch_number_from_datetime(date_time) -> float:
         if date_time is None:
             return 0
-        date_time_object = MyPyDate.get_datetime_object(date_time)
+        date_time_object = MyDate.get_datetime_object(date_time)
         return m_dates.date2num(date_time_object)
 
     @staticmethod
@@ -40,11 +40,18 @@ class MyPyDate:
 
     @staticmethod
     def get_date_as_number_from_epoch_seconds(epoch_seconds: int) -> float:
-        return m_dates.date2num(MyPyDate.get_date_time_from_epoch_seconds(epoch_seconds))
+        return m_dates.date2num(MyDate.get_date_time_from_epoch_seconds(epoch_seconds))
 
     @staticmethod
     def get_date_time_from_epoch_seconds(epoch_seconds: int) -> datetime:
        return datetime.fromtimestamp(epoch_seconds)
+
+    @staticmethod
+    def get_date_as_number_difference_from_epoch_seconds(epoch_seconds_1: int, epoch_seconds_2: int) -> float:
+        off_set = 1000000  # must be at least this number
+        date_as_number_1 = MyDate.get_date_as_number_from_epoch_seconds(off_set + epoch_seconds_1)
+        date_as_number_2 = MyDate.get_date_as_number_from_epoch_seconds(off_set + epoch_seconds_2)
+        return abs(date_as_number_1 - date_as_number_2)
 
     @staticmethod
     def get_date_from_epoch_seconds(epoch_seconds: int) -> datetime:
@@ -56,7 +63,7 @@ class MyPyDate:
 
     @staticmethod
     def get_date_as_string_from_date_time(date_time) -> str:  # '2018-07-18'
-        date_time_object = MyPyDate.get_datetime_object(date_time)
+        date_time_object = MyDate.get_datetime_object(date_time)
         return date_time_object.strftime('%Y-%m-%d')
 
     @staticmethod
