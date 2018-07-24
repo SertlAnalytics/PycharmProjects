@@ -6,9 +6,9 @@ Date: 2018-03-11
 """
 
 import pandas as pd
-from sqlalchemy import create_engine, MetaData, Table, insert
+from sqlalchemy import MetaData, Table, insert
 import os
-from sertl_analytics.pybase.exceptions import ErrorHandler
+from sertl_analytics.myexceptions import ErrorHandler
 
 
 class BaseDatabase:

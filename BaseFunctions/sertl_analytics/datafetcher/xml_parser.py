@@ -6,7 +6,7 @@ Date: 2018-06-05
 """
 import bs4 as bs
 import requests
-from sertl_analytics.pybase.exceptions import MyException
+from sertl_analytics.myexceptions import MyException
 
 
 class XMLParser:

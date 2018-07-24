@@ -9,11 +9,9 @@ import requests
 import matplotlib.pyplot as plt
 import os
 import io
-import sertl_analytics.environment  # init some environment variables during load - for security reasons
-from sertl_analytics.pybase.date_time import MyPyDate
+from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import CN
 import seaborn as sns
-from datetime import time, datetime
 
 
 class ApiPeriod:
@@ -127,7 +125,7 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         self.api_symbol = meta_data["2. Symbol"]
         time_series = json_data[self.get_json_data_key()]  # e.g. Time Series (Daily)
         df = pd.DataFrame.from_dict(time_series, orient="index")
-        df = df.assign(Timestamp=df.index.map(MyPyDate.get_epoch_seconds_from_datetime))
+        df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
         df[CN.TIMESTAMP] = df[CN.TIMESTAMP].apply(int)
         df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
         df.columns = self.get_standard_column_names()
@@ -172,7 +170,7 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
         self.api_symbol = meta_data["2. Digital Currency Code"]
         time_series = json_data[self.get_json_data_key()]
         df = pd.DataFrame.from_dict(time_series, orient="index")
-        df = df.assign(Timestamp=df.index.map(MyPyDate.get_epoch_seconds_from_datetime))
+        df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
         df[CN.TIMESTAMP] = df[CN.TIMESTAMP].apply(int)
         df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
         if self.period == ApiPeriod.INTRADAY:

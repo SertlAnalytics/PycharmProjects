@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import Indices
-from sertl_analytics.pybase.exceptions import MyException
+from sertl_analytics.myexceptions import MyException
 from sertl_analytics.datafetcher.xml_parser import XMLParser4DowJones, XMLParser4Nasdaq100, XMLParser4SP500
 from sertl_analytics.datafetcher.file_fetcher import NasdaqFtpFileFetcher
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
