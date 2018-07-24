@@ -110,3 +110,4 @@ BaseFunctions/sertl_analytics/pyurl/url_username_passwords.py
 *.html
 *.csv
 BaseFunctions/sertl_analytics/mydash/salaries.csv
+BaseFunctions/sertl_analytics/mypasswords.py
