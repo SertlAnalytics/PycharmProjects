@@ -7,12 +7,10 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import CN, FD
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
-from sertl_analytics.pybase.date_time import MyPyDate
+from sertl_analytics.mydates import MyDate
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import numpy as np
-from matplotlib.patches import Polygon, Circle, Rectangle, Ellipse
-from matplotlib.offsetbox import TextArea, AnnotationBbox
+from matplotlib.patches import Polygon, Rectangle, Ellipse
 from sertl_analytics.pybase.loop_list import LoopList
 from pattern_configuration import config, runtime
 from pattern_data_container import pattern_data_handler as pdh
@@ -23,297 +21,31 @@ from pattern_part import PatternPart
 from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
 from fibonacci.fibonacci_wave import FibonacciWave
-from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
-from fibonacci.fibonacci_helper import fibonacci_helper
-
-
-class PatchHelper:
-    @staticmethod
-    def get_id_for_polygon(patch) -> str:
-        return_string = ''
-        if PatchHelper.get_patch_type(patch) == 'Polygon':
-            xy = patch.get_xy().round(2)
-            xy_reshaped = xy.reshape(xy.size)
-            for elements in xy_reshaped:
-                return_string = return_string + ('' if return_string == '' else '-') + str(elements)
-        return return_string
-
-    @staticmethod
-    def is_xy_close_to_polygon(x: float, y: float, patch, tolerance_range) -> bool:
-        if x is None:
-            return False
-        if PatchHelper.get_patch_type(patch) == 'Polygon':
-            xy = patch.get_xy().round(2)
-            for k in range(0, xy.shape[0] - 1):
-                x_01, x_02 = xy[k, 0], xy[k+1, 0]
-                if x_01 <= x <= x_02:
-                    y_01, y_02 = xy[k, 1], xy[k + 1, 1]
-                    np_array = np.polyfit(np.array([x_01, x_02]), np.array([y_01, y_02]), 1)
-                    linear_function = np.poly1d([np_array[0], np_array[1]])
-                    distance = abs(y - linear_function(x))
-                    if distance < tolerance_range:
-                        return True
-        return False
-
-    @staticmethod
-    def get_patch_type(patch):
-        return patch.__class__.__name__
-
-
-class FibonacciWavePatch:
-    color_01 = 'darkgrey'
-    color_02 = 'whitesmoke'
-    color_bg = 'lightyellow'
-    color_list = [color_01, color_02, color_01, color_02, color_01]
-
-    def __init__(self, fib_wave: FibonacciWave, polygon: Polygon):
-        self.fib_wave = fib_wave
-        self.polygon = polygon
-        self.xy = self.polygon.get_xy().round(2)
-        self.id = PatchHelper.get_id_for_polygon(self.polygon)
-        self.selected = False
-        self.__fib_retracement_rectangle_dic = {}
-        self.__fib_retracement_rectangle_text_dic = {}
-        self.__fib_retracement_spikes_text_dic = {}
-        self.__fill_fibonacci_retracement_rectangle_dic__()
-
-    def add_retracement_patch_list_to_axis(self, axis):
-        for key, rectangle in self.__fib_retracement_rectangle_dic.items():
-            axis.add_patch(rectangle)
-            axis.add_artist(self.__fib_retracement_rectangle_text_dic[key])
-            axis.add_artist(self.__fib_retracement_spikes_text_dic[key])
-
-    def hide_retracement_patch_list(self):
-        for key, rectangle in self.__fib_retracement_rectangle_dic.items():
-            rectangle.set_visible(False)
-            self.__fib_retracement_rectangle_text_dic[key].set_visible(False)
-            self.__fib_retracement_spikes_text_dic[key].set_visible(False)
-
-    def show_retracement_patch_list(self):
-        for key, rectangle in self.__fib_retracement_rectangle_dic.items():
-            rectangle.set_visible(True)
-            self.__fib_retracement_rectangle_text_dic[key].set_visible(True)
-            self.__fib_retracement_spikes_text_dic[key].set_visible(True)
-
-    def select_fib_wave(self):
-        self.polygon.set_linewidth(3)
-        self.show_retracement_patch_list()
-        self.selected = True
-
-    def reset_selected_fib_wave(self):
-        self.polygon.set_linewidth(1)
-        self.hide_retracement_patch_list()
-        self.selected = False
-
-    def __fill_fibonacci_retracement_rectangle_dic__(self):
-        index_left = self.xy[0, 0]
-        index_right = self.xy[self.xy.shape[0]-1, 0]
-        value_left = self.xy[0, 1]
-        value_right = self.xy[self.xy.shape[0]-1, 1]
-        value_range = value_right - value_left
-        width = index_right - index_left
-
-        for k in range(0, len(fibonacci_helper.retracement_array_for_plotting)-1):
-            ret_01 = fibonacci_helper.retracement_array_for_plotting[k]
-            ret_02 = fibonacci_helper.retracement_array_for_plotting[k+1]
-
-            value_01 = round(value_left + ret_01 * value_range, 2)
-            value_02 = round(value_left + ret_02 * value_range, 2)
-            height = value_02 - value_01
-            rectangle = Rectangle(np.array([index_left, value_01]), width=width, height=height)
-            rectangle.set_linewidth(1)
-            rectangle.set_linestyle('dashed')
-            rectangle.set_color(self.color_list[k])
-            rectangle.set_edgecolor('k')
-            rectangle.set_alpha(0.1)
-            rectangle.set_visible(False)
-            self.__fib_retracement_rectangle_dic[ret_02] = rectangle
-            self.__fill_retracement_text_annotations__(index_left, ret_02, value_02)
-            self.__fill_retracement_spikes_text_annotations__(ret_02, k + 1)
-
-    def __fill_retracement_text_annotations__(self, index: int, ret: float, value: float):
-        text = '{:=1.3f} - {:.2f}'.format(ret, value)
-        text_area = TextArea(text, minimumdescent=True, textprops=dict(size=7))
-        annotation_box = AnnotationBbox(text_area, (index, value))
-        annotation_box.set_visible(False)
-        self.__fib_retracement_rectangle_text_dic[ret] = annotation_box
-
-    def __fill_retracement_spikes_text_annotations__(self, ret: str, position_in_wave: int):
-        index = self.xy[position_in_wave, 0]
-        value = self.xy[position_in_wave, 1]
-        position = self.fib_wave.comp_position_list[position_in_wave]
-        is_position_retracement = position_in_wave % 2 == 0
-        prefix = 'Retr.' if is_position_retracement else 'Reg.'
-        value_adjusted = value + (value * 0.01 if is_position_retracement else value * -0.01)
-        reg_ret_value = self.fib_wave.comp_reg_ret_percent_list[position_in_wave - 1]
-        if position_in_wave == 1:
-            reg_ret_value = round(self.xy[position_in_wave, 1] - self.xy[position_in_wave - 1, 1], 2)
-            text = 'P_{}={:.2f}\n{}: {:.2f}'.format(position, value, prefix, reg_ret_value)
-        else:
-            text = 'P_{}={:.2f}\n{}: {:=3.1f}%'.format(position, value, prefix, reg_ret_value)
-        text_props = dict(color='crimson', backgroundcolor=self.color_bg, size=7)
-        text_area = TextArea(text, minimumdescent=True, textprops=text_props)
-        annotation_box = AnnotationBbox(text_area, (index, value_adjusted))
-        annotation_box.set_visible(False)
-        self.__fib_retracement_spikes_text_dic[ret] = annotation_box
-
-
-class FibonacciWavePatchContainer:
-    def __init__(self):
-        self.fibonacci_wave_patch_dic = {}
-
-    def contains_patch_id(self, patch_id: str):
-        return patch_id in self.fibonacci_wave_patch_dic
-
-    def add_patch(self, fib_patch: FibonacciWavePatch):
-        self.fibonacci_wave_patch_dic[fib_patch.id] = fib_patch
-
-    def get_patch_by_id(self, id: str):
-        if id in self.fibonacci_wave_patch_dic:
-            return self.fibonacci_wave_patch_dic[id]
-        return None
-
-    def reset_selected_patches(self) -> bool:
-        reset_flag = False
-        for fib_patch in self.fibonacci_wave_patch_dic.values():
-            if fib_patch.selected:
-                fib_patch.reset_selected_fib_wave()
-                reset_flag = True
-        return reset_flag
+from pattern_plotting.patch_helper import PatchHelper
+from pattern_plotting.fibonacci_patches import FibonacciWavePatch, FibonacciWavePatchContainer
+from pattern_plotting.pattern_plot_container import PatternPlotContainer, PatternPlotContainerLoopList
 
 
 class PatternColorHandler:
-    def get_colors_for_pattern(self, formation: Pattern):
-        return self.__get_pattern_color__(formation), self.__get_trade_color__(formation)
+    def get_colors_for_pattern(self, pattern: Pattern):
+        return self.__get_pattern_color__(pattern), self.__get_trade_color__(pattern)
 
     @staticmethod
-    def __get_pattern_color__(formation: Pattern):
-        if formation.was_breakout_done():
+    def __get_pattern_color__(pattern: Pattern):
+        if pattern.was_breakout_done():
             return 'green'
         else:
             return 'yellow'
 
     @staticmethod
-    def __get_trade_color__(formation: Pattern):
-        if formation.was_breakout_done():
-            if formation.trade_result.actual_win > 0:
+    def __get_trade_color__(pattern: Pattern):
+        if pattern.was_breakout_done():
+            if pattern.trade_result.actual_win > 0:
                 return 'lime'
             else:
                 return 'orangered'
         else:
             return 'white'
-
-
-class PatternPlotContainer:
-    border_line_top_color = 'green'
-    border_line_bottom_color = 'red'
-    regression_line_color = 'blue'
-    center_color = 'blue'
-    """
-    Contains all plotting objects for one pattern
-    """
-    def __init__(self, polygon: Polygon, pattern_color: str):
-        self.index_list = []
-        self.shape_dic = {}
-        self.patches_dic = {}
-        self.color_dic = {}
-        self.index_list.append('pattern')
-        self.shape_dic['pattern'] = polygon
-        self.color_dic['pattern'] = pattern_color
-        self.annotation_param = None
-        self.annotation = None
-
-    def add_trade_shape(self, trade_shape, trade_color: str):
-        self.index_list.append('trade')
-        self.shape_dic['trade'] = trade_shape
-        self.color_dic['trade'] = trade_color
-
-    def add_border_line_top_shape(self, line_shape):
-        self.index_list.append('top')
-        self.shape_dic['top'] = line_shape
-        self.color_dic['top'] = self.border_line_top_color
-
-    def add_border_line_bottom_shape(self, line_shape):
-        self.index_list.append('bottom')
-        self.shape_dic['bottom'] = line_shape
-        self.color_dic['bottom'] = self.border_line_top_color
-
-    def add_regression_line_shape(self, line_shape):
-        self.index_list.append('regression')
-        self.shape_dic['regression'] = line_shape
-        self.color_dic['regression'] = self.regression_line_color
-
-    def add_center_shape(self, center_shape):
-        self.index_list.append('center')
-        self.shape_dic['center'] = center_shape
-        self.color_dic['center'] = self.center_color
-
-    def hide(self):
-        self.__set_visible__(False, True)
-
-    def show(self, with_annotation: bool):
-        self.__set_visible__(True, with_annotation)
-
-    def show_annotations(self):
-        self.annotation.set_visible(True)
-
-    def hide_annotations(self):
-        self.annotation.set_visible(False)
-
-    def __set_visible__(self, visible: bool, with_annotation: bool):
-        self.annotation.set_visible(visible and with_annotation)
-        for key in self.patches_dic:
-            if key == 'center' and visible and with_annotation:
-                self.patches_dic[key].set_visible(False)
-            else:
-                self.patches_dic[key].set_visible(visible)
-
-    def add_annotation(self, axes):
-        self.annotation = self.annotation_param.get_annotation(axes)
-
-    def add_elements_as_patches(self, axes):
-        for keys in self.index_list:
-            patch = self.shape_dic[keys]
-            self.patches_dic[keys] = patch
-            patch.set_alpha(0.2)
-            if keys in ['top', 'bottom']:
-                patch.set_color('None')
-                patch.set_edgecolor(self.color_dic[keys])
-            else:
-                patch.set_color(self.color_dic[keys])
-            axes.add_patch(patch)
-
-
-class PatternPlotContainerLoopList(LoopList):
-    def show_only_selected_containers(self, event):
-        show_list = []
-        self.__add_first_first_selected_center_pattern_to_show_list__(event, show_list)
-        if len(show_list) == 0:
-            self.__add_selected_pattern_to_show_list__(event, show_list)
-        if len(show_list) == 0:
-            for pattern_plot_container in self.value_list:
-                pattern_plot_container.show(False)
-        else:
-            for pattern_plot_container in self.value_list:
-                pattern_plot_container.hide()
-            for pattern_plot_container in show_list:
-                pattern_plot_container.show(True)
-        event.canvas.draw()
-
-    def __add_selected_pattern_to_show_list__(self, event, show_list: list):
-        for pattern_plot_container in self.value_list:
-            for patch in pattern_plot_container.patches_dic.values():
-                cont, dic = patch.contains(event)
-                if cont:
-                    show_list.append(pattern_plot_container)
-
-    def __add_first_first_selected_center_pattern_to_show_list__(self, event, show_list: list):
-        for pattern_plot_container in self.value_list:
-            patch = pattern_plot_container.patches_dic['center']
-            cont, dic = patch.contains(event)
-            if cont:
-                show_list.append(pattern_plot_container)
-                break
 
 
 class PatternPlotter:
@@ -384,16 +116,30 @@ class PatternPlotter:
     def double_1(event):
         print('Double Click - so let us stop')
 
-    def __get_date_range_for_title__(self):
-        tick_first = WaveTick(self.df.iloc[0])
-        tick_last = WaveTick(self.df.iloc[-1])
+    @staticmethod
+    def __get_date_range_for_title__():
+        tick_first = pdh.pattern_data.tick_list[0]
+        tick_last = pdh.pattern_data.tick_list[-1]
         if config.api_period == ApiPeriod.INTRADAY:
-            date_str_first = tick_first.time_str_for_f_var
-            date_str_last = tick_last.time_str_for_f_var
+            return 'Date between "{} {}" AND "{} {}"'.format(tick_first.date_str, tick_first.time_str_for_f_var,
+                                                             tick_last.date_str, tick_last.time_str_for_f_var)
         else:
-            date_str_first = tick_first.date_str
-            date_str_last = tick_last.date_str
-        return 'Date between "{}" AND "{}"'.format(date_str_first, date_str_last)
+            return 'Date between "{}" AND "{}"'.format(tick_first.date_str, tick_last.date_str)
+
+    @staticmethod
+    def __on_hover__(x, y):
+        tolerance = PlotterInterface.get_tolerance_range_for_extended_dict()
+        tick = pdh.pattern_data.tick_by_date_num_ext_dic.get_value_by_dict_key(x, tolerance)
+        if tick is None:
+            return ''
+        else:
+            if config.api_period == ApiPeriod.INTRADAY:
+                date_obj = MyDate.get_date_time_from_epoch_seconds(tick.f_var)
+                date_time_str = '{} {}'.format(date_obj.date(), str(date_obj.time())[:5])
+            else:
+                date_time_str = tick.date
+            return '{} ({:3.0f} / {:6.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
+                date_time_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume / 1000, y)
 
     def __on_click__(self, event):
         self.pattern_plot_container_loop_list.show_only_selected_containers(event)
@@ -468,20 +214,6 @@ class PatternPlotter:
             return True
         return False
 
-    @staticmethod
-    def __on_hover__(x, y):
-        tick = pdh.pattern_data.tick_by_date_num_ext_dic.get_value(x, 0.5)
-        if tick is None:
-            return ''
-        else:
-            if config.api_period == ApiPeriod.INTRADAY:
-                date_obj = mdates.num2date(tick.f_var)
-                date_time_str = '{} {}'.format(date_obj.date(), str(date_obj.time())[:5])
-            else:
-                date_time_str = tick.date
-            return '{} ({:3.0f} / {:6.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
-                date_time_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume / 1000, y)
-
     def __plot_close__(self, axis):
         axis.plot(self.df.loc[:, CN.TIMESTAMP], self.df.loc[:, CN.CLOSE])
         axis.grid()
@@ -507,7 +239,7 @@ class PatternPlotter:
         wave_tick_list = WaveTickList(pdh.pattern_data.df_min_max)
         width, height = PlotterInterface.get_ellipse_width_height_for_plot_min_max(wave_tick_list)
         for ticks in wave_tick_list.tick_list:
-            x = MyPyDate.get_date_as_number_from_epoch_seconds(ticks.f_var)
+            x = MyDate.get_date_as_number_from_epoch_seconds(ticks.f_var)
             if ticks.is_min:
                 self.axes_for_candlesticks.add_patch(Ellipse((x, ticks.low), width, height, color='r'))
             else:
@@ -602,6 +334,16 @@ class PatternPlotter:
 
 class PlotterInterface:
     @staticmethod
+    def get_tick_distance_in_date_as_number():
+        if config.api_period == ApiPeriod.INTRADAY:
+            return MyDate.get_date_as_number_difference_from_epoch_seconds(0, config.api_period_aggregation * 60)
+        return 1
+
+    @staticmethod
+    def get_tolerance_range_for_extended_dict():
+        return PlotterInterface.get_tick_distance_in_date_as_number()/2
+
+    @staticmethod
     def get_ellipse_width_height_for_plot_min_max(wave_tick_list: WaveTickList):
         if config.api_period == ApiPeriod.DAILY:
             width_value = 0.6
@@ -613,8 +355,8 @@ class PlotterInterface:
     @staticmethod
     def get_xy_from_timestamp_to_date_number(xy):
         if type(xy) == list:
-            return [(MyPyDate.get_date_as_number_from_epoch_seconds(t_val[0]), t_val[1]) for t_val in xy]
-        return MyPyDate.get_date_as_number_from_epoch_seconds(xy[0]), xy[1]
+            return [(MyDate.get_date_as_number_from_epoch_seconds(t_val[0]), t_val[1]) for t_val in xy]
+        return MyDate.get_date_as_number_from_epoch_seconds(xy[0]), xy[1]
 
     @staticmethod
     def get_annotation_param(pattern: Pattern):

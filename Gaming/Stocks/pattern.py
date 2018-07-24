@@ -7,7 +7,6 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import FT, FCC, FD
 from pattern_data_container import pattern_data_handler as pdh
-from matplotlib.patches import Ellipse, Polygon
 import pandas as pd
 import numpy as np
 from pattern_range import PatternRange
@@ -17,7 +16,7 @@ from pattern_trade_result import TradeResult
 from pattern_part import PatternPart
 import pattern_constraints as cstr
 from pattern_value_categorizer import ChannelValueCategorizer
-from sertl_analytics.pybase.exceptions import MyException
+from sertl_analytics.myexceptions import MyException
 from pattern_wave_tick import WaveTick
 
 

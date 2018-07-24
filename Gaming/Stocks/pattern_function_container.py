@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FD, FT
-from sertl_analytics.functions.math_functions import MyMath
+from sertl_analytics.mymath import MyMath
 from pattern_wave_tick import WaveTick
 import numpy as np
 import pandas as pd

@@ -13,10 +13,9 @@ import numpy as np
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher\
     , ApiPeriod, CryptoCompareCryptoFetcher
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
-from sertl_analytics.pybase.date_time import MyClock
+from sertl_analytics.mydates import MyDate
 from sertl_analytics.user_input.confirmation import UserInput
 from datetime import timedelta
-from sertl_analytics.pybase.date_time import MyPyDate
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
 from sertl_analytics.constants.pattern_constants import PSC, Indices, CN
 from pattern_configuration import config, runtime
@@ -24,9 +23,8 @@ from pattern_statistics import PatternStatistics, DetectorStatistics, Constraint
 from pattern_data_container import pattern_data_handler
 from pattern_constraints import ConstraintHelper
 from pattern_detector import PatternDetector
-from pattern_plotter import PatternPlotter
+from pattern_plotting.pattern_plotter import PatternPlotter
 from pattern_database import stock_database
-import matplotlib.dates as mdt
 from datetime import datetime
 
 """
@@ -89,6 +87,23 @@ class PatternDetectionController:
         if config.show_final_statistics:
             self.__show_statistics__()
         self.__write_constraints_statistics__()
+
+    def get_detector_for_dash(self, ticker: str, and_clause: str) -> PatternDetector:
+        self.stock_db = stock_database.StockDatabase()
+        value_dict = {LL.TICKER: ticker, LL.AND_CLAUSE: and_clause, LL.NUMBER: 1}
+        self.__update_runtime_parameters__(value_dict)
+        print('\nProcessing {} ({})...\n'.format(ticker, runtime.actual_ticker_name))
+        df_data = self.__get_df_from_source__(ticker, value_dict)
+        pattern_data_handler.init_by_df(df_data)
+        detector = PatternDetector()
+        detector.parse_for_pattern()
+        detector.parse_for_fibonacci_waves()
+        detector.check_for_intersections()
+        return detector
+
+    @property
+    def loop_list_ticker(self):
+        return self.__loop_list_ticker
 
     def __get_df_from_source__(self, ticker, value_dic):
         period = config.api_period
@@ -185,8 +200,8 @@ class PatternDetectionController:
             for ind, rows in self.df_test_data.iterrows():
                 if self.__loop_list_ticker.counter >= self.__start_row:
                     config.ticker_dic[rows[PSC.TICKER]] = rows[PSC.NAME]
-                    start_date = MyPyDate.get_date_from_datetime(rows[PSC.BEGIN_PREVIOUS])
-                    date_end = MyPyDate.get_date_from_datetime(rows[PSC.END] + timedelta(days=rows[PSC.T_NEEDED] + 20))
+                    start_date = MyDate.get_date_from_datetime(rows[PSC.BEGIN_PREVIOUS])
+                    date_end = MyDate.get_date_from_datetime(rows[PSC.END] + timedelta(days=rows[PSC.T_NEEDED] + 20))
                     and_clause = "Date BETWEEN '{}' AND '{}'".format(start_date, date_end)
                     self.__loop_list_ticker.append({LL.TICKER: rows[PSC.TICKER], LL.AND_CLAUSE: and_clause})
                 if self.__loop_list_ticker.counter >= self.__end_row:

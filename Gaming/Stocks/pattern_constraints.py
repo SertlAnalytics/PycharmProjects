@@ -8,7 +8,7 @@ Date: 2018-05-14
 import numpy as np
 import pandas as pd
 from sertl_analytics.constants.pattern_constants import CT, SVC, FT
-from sertl_analytics.functions.math_functions import MyMath
+from sertl_analytics.mymath import MyMath
 from pattern_value_categorizer import ValueCategorizer
 
 

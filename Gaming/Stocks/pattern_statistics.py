@@ -8,7 +8,7 @@ Date: 2018-05-14
 from sertl_analytics.constants.pattern_constants import PSC, FD
 from pattern_configuration import config, runtime
 from pattern import Pattern
-from sertl_analytics.pybase.date_time import MyPyDate
+from sertl_analytics.mydates import MyDate
 import pandas as pd
 
 
@@ -93,8 +93,8 @@ class PatternStatistics:
         self.dic[PSC.NAME] = runtime.actual_ticker_name
         self.dic[PSC.PATTERN] = pattern.pattern_type
         self.dic[PSC.BEGIN_PREVIOUS] = 'TODO'
-        self.dic[PSC.BEGIN] = MyPyDate.get_date_from_datetime(pattern.date_first)
-        self.dic[PSC.END] = MyPyDate.get_date_from_datetime(pattern.date_last)
+        self.dic[PSC.BEGIN] = MyDate.get_date_from_datetime(pattern.date_first)
+        self.dic[PSC.END] = MyDate.get_date_from_datetime(pattern.date_last)
         self.dic[PSC.LOWER] = round(0, 2)
         self.dic[PSC.UPPER] = round(0, 2)  # TODO Lower & Upper bound for statistics
         slope_upper, slope_lower, slope_relation, slow_regression = pattern.part_main.get_slope_values()
@@ -103,7 +103,7 @@ class PatternStatistics:
         self.dic[PSC.SLOPE_RELATION] = slope_relation
         self.dic[PSC.TICKS] = pattern.part_main.ticks
         if pattern.was_breakout_done():
-            self.dic[PSC.BREAKOUT_DATE] = MyPyDate.get_date_from_datetime(pattern.breakout.breakout_date)
+            self.dic[PSC.BREAKOUT_DATE] = MyDate.get_date_from_datetime(pattern.breakout.breakout_date)
             self.dic[PSC.BREAKOUT_DIRECTION] = pattern.breakout.breakout_direction
             self.dic[PSC.VOLUME_CHANGE] = pattern.breakout.volume_change_pct
             if pattern.is_part_trade_available():
@@ -113,8 +113,8 @@ class PatternStatistics:
                 self.dic[PSC.EXT] = pattern.trade_result.limit_extended_counter
                 self.dic[PSC.BOUGHT_AT] = round(pattern.trade_result.bought_at, 2)
                 self.dic[PSC.SOLD_AT] = round(pattern.trade_result.sold_at, 2)
-                self.dic[PSC.BOUGHT_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.bought_on)
-                self.dic[PSC.SOLD_ON] = MyPyDate.get_date_from_datetime(pattern.trade_result.sold_on)
+                self.dic[PSC.BOUGHT_ON] = MyDate.get_date_from_datetime(pattern.trade_result.bought_on)
+                self.dic[PSC.SOLD_ON] = MyDate.get_date_from_datetime(pattern.trade_result.sold_on)
                 self.dic[PSC.T_NEEDED] = pattern.trade_result.actual_ticks
                 self.dic[PSC.LIMIT] = round(pattern.trade_result.limit, 2)
                 self.dic[PSC.STOP_LOSS_AT] = round(pattern.trade_result.stop_loss_at, 2)

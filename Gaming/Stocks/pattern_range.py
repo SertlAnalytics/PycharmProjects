@@ -9,7 +9,7 @@ from sertl_analytics.constants.pattern_constants import CN, FT
 from sertl_analytics.plotter.my_plot import MyPlotHelper
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_data_frame import PatternDataFrame
-from sertl_analytics.functions.math_functions import ToleranceCalculator
+from sertl_analytics.mymath import ToleranceCalculator
 from pattern_configuration import config
 from pattern_data_container import pattern_data_handler as pdh
 from matplotlib.patches import Polygon

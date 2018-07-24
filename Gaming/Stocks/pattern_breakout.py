@@ -9,7 +9,7 @@ from pattern_function_container import PatternFunctionContainer
 from pattern_configuration import config
 from sertl_analytics.constants.pattern_constants import FD, TT
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
-from sertl_analytics.functions.math_functions import MyMath
+from sertl_analytics.mymath import MyMath
 
 
 class PatternBreakoutApi:

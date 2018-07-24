@@ -6,9 +6,9 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FT
-from sertl_analytics.functions.math_functions import MyMath
+from sertl_analytics.mymath import MyMath
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
-from sertl_analytics.pybase.date_time import MyPyDate
+from sertl_analytics.mydates import MyDate
 from pattern_function_container import PatternFunctionContainer
 from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
@@ -216,7 +216,7 @@ class PatternPart:
             breakout_str = 'Breakout: {}'.format(self.breakout.get_details_for_annotations())
 
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
-            date_forecast = MyPyDate.get_date_time_from_epoch_seconds(self.function_cont.f_var_cross_f_upper_f_lower)
+            date_forecast = MyDate.get_date_time_from_epoch_seconds(self.function_cont.f_var_cross_f_upper_f_lower)
             breakout_str += '\nExpected trading end: {}'.format(
                 str(date_forecast.time())[:5] if config.api_period == ApiPeriod.INTRADAY else date_forecast.date())
 

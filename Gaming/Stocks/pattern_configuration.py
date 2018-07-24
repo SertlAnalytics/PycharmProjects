@@ -55,6 +55,7 @@ class RuntimeConfiguration:
 
 class PatternConfiguration:
     def __init__(self):
+        self.run_on_dash_server = False
         self.get_data_from_db = True
         self.pattern_type_list = [FT.CHANNEL]
         self.api_period = ApiPeriod.DAILY
@@ -124,7 +125,12 @@ class PatternConfiguration:
             self.ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
 
     def use_own_dic(self, dic: dict):
+        stock_db = sdb.StockDatabase()
         self.ticker_dic = dic
+        for symbol in self.ticker_dic:
+            name_from_db = stock_db.get_name_for_symbol(symbol)
+            if name_from_db != '':
+                self.ticker_dic[symbol] = name_from_db
 
     @staticmethod
     def get_mixed_dic():

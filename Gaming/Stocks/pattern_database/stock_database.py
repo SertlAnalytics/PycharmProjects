@@ -11,7 +11,7 @@ from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseD
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod, ApiOutputsize
-from sertl_analytics.pybase.date_time import MyPyDate
+from sertl_analytics.mydates import MyDate
 import pandas as pd
 import math
 from datetime import datetime

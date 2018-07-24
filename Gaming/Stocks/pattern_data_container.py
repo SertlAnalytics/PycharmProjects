@@ -11,7 +11,7 @@ import itertools
 import matplotlib.dates as mdt
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.constants.pattern_constants import CN
-from sertl_analytics.pybase.date_time import MyPyDate
+from sertl_analytics.mydates import MyDate
 from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks, WaveTickList
 from pattern_configuration import config
 import matplotlib.dates as mdates
@@ -51,7 +51,7 @@ class PatternData:
         return self.tick_list[1].f_var - self.tick_list[0].f_var
 
     def get_tick_by_date_num(self, date_num: float):
-        wave_tick = self.tick_by_date_num_ext_dic.get_value(date_num)
+        wave_tick = self.tick_by_date_num_ext_dic.get_value_by_dict_key(date_num)
         if wave_tick is not None:
             return wave_tick
         for wave_tick in self.tick_list:
@@ -79,9 +79,9 @@ class PatternData:
 
     def __add_columns__(self):
         self.df = self.df.assign(MeanHL=round((self.df.High + self.df.Low) / 2, 2))
-        self.df = self.df.assign(Date=self.df.index.map(MyPyDate.get_date_from_epoch_seconds))
-        self.df = self.df.assign(Time=self.df.index.map(MyPyDate.get_time_from_epoch_seconds))
-        self.df = self.df.assign(DateAsNumber=self.df.index.map(MyPyDate.get_date_as_number_from_epoch_seconds))
+        self.df = self.df.assign(Date=self.df.index.map(MyDate.get_date_from_epoch_seconds))
+        self.df = self.df.assign(Time=self.df.index.map(MyDate.get_time_from_epoch_seconds))
+        self.df = self.df.assign(DateAsNumber=self.df.index.map(MyDate.get_date_as_number_from_epoch_seconds))
         self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
         self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)
         if CN.TIMESTAMP not in self.df.columns:

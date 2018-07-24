@@ -8,9 +8,9 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 from sertl_analytics.constants.pattern_constants import CN, TT, DIR
-from sertl_analytics.functions.math_functions import MyMath, MyPoly1d
+from sertl_analytics.mymath import MyMath, MyPoly1d
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
-from sertl_analytics.pybase.date_time import MyPyDate
+from sertl_analytics.mydates import MyDate
 
 
 class WaveTick:
@@ -98,12 +98,12 @@ class WaveTick:
 
     @property
     def date_str_for_f_var(self):
-        return str(MyPyDate.get_date_from_epoch_seconds(self.f_var))
+        return str(MyDate.get_date_from_epoch_seconds(self.f_var))
         # return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).date())
 
     @property
     def time_str_for_f_var(self):
-        return str(MyPyDate.get_time_from_epoch_seconds(self.f_var))[:5]
+        return str(MyDate.get_time_from_epoch_seconds(self.f_var))[:5]
         # return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).time())[:5]
 
     def print(self):
@@ -111,9 +111,9 @@ class WaveTick:
 
     def get_date_or_time_for_f_var(self, for_time: False):
         if for_time:
-            return MyPyDate.get_datetime_from_epoch_number(self.f_var).time()
+            return MyDate.get_datetime_from_epoch_number(self.f_var).time()
         else:
-            return MyPyDate.get_datetime_from_epoch_number(self.f_var).date()
+            return MyDate.get_datetime_from_epoch_number(self.f_var).date()
 
     def get_linear_f_params_for_high(self, tick):
         return MyPoly1d.get_poly1d(self.f_var, self.high, tick.f_var, tick.high)
