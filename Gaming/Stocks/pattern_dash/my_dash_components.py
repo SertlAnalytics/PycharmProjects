@@ -1,65 +1,101 @@
-from dash import Dash
-import matplotlib
-import matplotlib.pyplot as plt
-import plotly.offline as pyo
-import plotly.graph_objs as go
-import plotly.figure_factory as ff
+"""
+Description: This module contains wrapper classes for dash components.
+Author: Josef Sertl
+Copyright: SERTL Analytics, https://sertl-analytics.com
+Date: 2018-06-17
+"""
+
 import dash_core_components as dcc
 import dash_html_components as html
-import numpy as np
-from textwrap import dedent
-from dash.dependencies import Input, Output, State
-import base64
-import json
-from numpy import random
-import pandas_datareader.data as web  # requires v0.6.0 or later
-import dash_auth
 from datetime import datetime
-import pandas as pd
-import requests
 
 
 class MyHTML:
-    def __init__(self):
-        self.html = html
+    @staticmethod
+    def Button():
+        return html.Button
 
-    def Button(self):
-        return self.html.Button
+    @staticmethod
+    def get_submit_button():
+        return html.Button(id='submit-button', n_clicks=0, children='Submit',
+                style={'fontSize': 24, 'marginLeft': '30px'})
 
-    def Div(self):
-        return self.html.Div
+    @staticmethod
+    def Div():
+        return html.Div
 
-    def Iframe(self):
-        return self.html.Iframe
+    @staticmethod
+    def Iframe():
+        return html.Iframe
 
-    def H1(self):
-        return self.html.H1
+    @staticmethod
+    def H1():
+        return html.H1
 
-    def H2(self):
-        return self.html.H2
+    @staticmethod
+    def H2():
+        return html.H2
 
-    def H3(self):
-        return self.html.H3
+    @staticmethod
+    def H3():
+        return html.H3
 
-    def Pre(self):
-        return self.html.Pre
+    @staticmethod
+    def get_pre(element_id: str):
+        return html.Pre(id=element_id, style={'paddingTop': 35})
 
 
 class MyDCC:
-    def __init__(self):
-        self.dcc = dcc
+    @staticmethod
+    def get_drop_down(element_id, options: list, multi=False):
+        # {'label': '{} {}'.format(symbol, name), 'value': symbol}
+        return dcc.Dropdown(id=element_id, options=options, value=options[0]['value'], multi=multi)
 
-    def Dropdown(self):
-        return self.dcc.Dropdown
+    @staticmethod
+    def get_graph(element_id, data: list, shapes: list, annotations: list):
+        return dcc.Graph(
+            id=element_id,
+            figure={
+                'data': data,
+                'layout': {
+                    'height': 500,
+                    'margin': {'b': 0, 'r': 10, 'l': 60, 't': 0},
+                    'legend': {'x': 0},
+                    'hovermode': 'closest',
+                    'shapes': shapes,
+                    'annotations': annotations
+                }
+            })
 
-    def Graph(self):
-        return self.dcc.Graph
+    @staticmethod
+    def get_interval(element_id: str, seconds=10):
+        return dcc.Interval(id=element_id, interval=seconds * 1000, n_intervals=0)
 
-    def Interval(self):
-        return self.dcc.Interval
+    @staticmethod
+    def Markdown():
+        return dcc.Markdown
 
-    def Markdown(self):
-        return self.dcc.Markdown
+    @staticmethod
+    def RangeSlider():
+        return dcc.RangeSlider
 
-    def RangeSlider(self):
-        return self.dcc.RangeSlider
+    @staticmethod
+    def get_date_picker_range(element_id: str, start_date: datetime, end_date=datetime.today()):
+        return dcc.DatePickerRange(id=element_id,
+                                   min_date_allowed=datetime(2015, 1, 1), max_date_allowed=datetime.today(),
+                                   start_date=start_date, end_date=end_date)
+
+    @staticmethod
+    def get_ratio_items(element_id, options: list, inline=True):
+        # {'label': '{} {}'.format(symbol, name), 'value': symbol}
+        if inline:
+            return dcc.RadioItems(id=element_id, options=options, value=options[0]['value'],
+                                  labelStyle={'display': 'inline-block'})
+        else:
+            return dcc.RadioItems(id=element_id, options=options, value=options[0]['value'])
+
+    @staticmethod
+    def get_radio_items_inline(element_id, options: list, inline=True):
+        return html.Div(
+            [MyDCC.get_ratio_items(element_id, options, inline)],
+            style={'display': 'inline-block'})

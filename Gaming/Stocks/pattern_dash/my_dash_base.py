@@ -22,13 +22,14 @@ class MyDashBase:
         self.df = None
 
     def start_app(self):
-        print('get_stock_prices')
+        print('get_anything...')
         self.__set_app_layout__()
         self.__init_interval_callback__()
         self.__init_hover_over_callback__()
         self.__init_update_graph_callback__()
 
-    def __get_bollinger_band_values__(self, price_df: pd.DataFrame, window_size=10, num_of_std=5):
+    @staticmethod
+    def __get_bollinger_band_values__(price_df: pd.DataFrame, window_size=10, num_of_std=5):
         rolling_mean = price_df.rolling(window=window_size).mean()
         rolling_std = price_df.rolling(window=window_size).std()
         upper_band = rolling_mean + (rolling_std * num_of_std)

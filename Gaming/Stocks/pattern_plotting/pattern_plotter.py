@@ -10,8 +10,8 @@ from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mydates import MyDate
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Polygon, Rectangle, Ellipse
-from sertl_analytics.pybase.loop_list import LoopList
+from matplotlib.patches import Polygon, Ellipse
+from pattern_colors import PatternColorHandler
 from pattern_configuration import config, runtime
 from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick, WaveTickList
@@ -24,28 +24,6 @@ from fibonacci.fibonacci_wave import FibonacciWave
 from pattern_plotting.patch_helper import PatchHelper
 from pattern_plotting.fibonacci_patches import FibonacciWavePatch, FibonacciWavePatchContainer
 from pattern_plotting.pattern_plot_container import PatternPlotContainer, PatternPlotContainerLoopList
-
-
-class PatternColorHandler:
-    def get_colors_for_pattern(self, pattern: Pattern):
-        return self.__get_pattern_color__(pattern), self.__get_trade_color__(pattern)
-
-    @staticmethod
-    def __get_pattern_color__(pattern: Pattern):
-        if pattern.was_breakout_done():
-            return 'green'
-        else:
-            return 'yellow'
-
-    @staticmethod
-    def __get_trade_color__(pattern: Pattern):
-        if pattern.was_breakout_done():
-            if pattern.trade_result.actual_win > 0:
-                return 'lime'
-            else:
-                return 'orangered'
-        else:
-            return 'white'
 
 
 class PatternPlotter:

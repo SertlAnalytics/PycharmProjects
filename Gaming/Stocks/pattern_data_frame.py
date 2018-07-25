@@ -47,11 +47,13 @@ class PatternDataFrame:
         tick_list = [self.tick_first, self.tick_last]
         return MyPlotHelper.get_polygon_for_tick_list(tick_list, f_param)
 
-    def get_xy_regression(self, f_regression: np.poly1d = None):
+    def get_xy_regression(self, function_cont: PatternFunctionContainer):
+        f_regression = function_cont.f_regression
         if f_regression is None:
             f_regression = self.get_f_regression()
-        x = [self.tick_first.f_var, self.tick_last.f_var]
-        y = [f_regression(self.tick_first.f_var), f_regression(self.tick_last.f_var)]
+        tick_list = function_cont.get_tick_list_for_xy_regression_parameter(self.tick_first, self.tick_last)
+        x = [tick_list[0].f_var, tick_list[-1].f_var]
+        y = [f_regression(x_val) for x_val in x]
         return list(zip(x, y))
 
     def get_xy_parameter(self, function_cont: PatternFunctionContainer):

@@ -121,7 +121,7 @@ class PatternPart:
         self.__xy = self.stock_df.get_xy_parameter(self.function_cont)
 
     def __set_xy_regression__(self):
-        self.__xy_regression = self.stock_df.get_xy_regression(self.function_cont.f_regression)
+        self.__xy_regression = self.stock_df.get_xy_regression(self.function_cont)
 
     def __set_xy_center__(self):
         self.__xy_center = self.stock_df.get_xy_center(self.function_cont.f_regression)

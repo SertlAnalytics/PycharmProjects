@@ -174,6 +174,9 @@ class PatternFunctionContainer:
     def get_lower_value(self, f_var: float):
         return round(self._f_lower(f_var), 2)
 
+    def get_tick_list_for_xy_regression_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
+        return [tick_first, tick_last]
+
     def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
         tick_list = [tick_first, tick_first, tick_last, tick_last]
         function_list = [self.f_upper, self.f_lower, self.f_lower, self.f_upper]
@@ -189,6 +192,10 @@ class ChannelPatternFunctionContainer(PatternFunctionContainer):
         tick_list = [tick_first, tick_first, tick_last_temp, tick_last_temp]
         function_list = [self.f_upper, self.f_lower, self.f_lower, self.f_upper]
         return tick_list, function_list
+
+    def get_tick_list_for_xy_regression_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
+        tick_last_temp = tick_last if self.tick_for_breakout is None else self.tick_for_breakout
+        return [tick_first, tick_last_temp]
 
 
 class ChannelUpPatternFunctionContainer(ChannelPatternFunctionContainer):
@@ -207,6 +214,9 @@ class TKEUpPatternFunctionContainer(PatternFunctionContainer):
         tick_list = [tick_first, tick_last, tick_last, self.tick_for_helper, tick_first]
         function_list = [self.h_upper, self.h_upper, self.h_lower, self.h_lower, self.f_lower]
         return tick_list, function_list
+
+    def get_tick_list_for_xy_regression_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
+        return [tick_first, self.tick_for_helper]
 
     def __init_tick_for_helper__(self):
         pos = self.df[CN.HIGH].idxmax(axis=0)
@@ -236,6 +246,9 @@ class TKEDownPatternFunctionContainer(PatternFunctionContainer):
         tick_list = [tick_first, self.tick_for_helper, tick_last, tick_last, tick_first]
         function_list = [self.f_upper, self.h_upper, self.h_upper, self.f_lower, self.f_lower]
         return tick_list, function_list
+
+    def get_tick_list_for_xy_regression_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
+        return [tick_first, self.tick_for_helper]
 
     def __init_tick_for_helper__(self):
         pos = self.df[CN.LOW].idxmin(axis=0)
