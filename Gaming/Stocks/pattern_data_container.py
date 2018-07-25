@@ -81,6 +81,7 @@ class PatternData:
         self.df = self.df.assign(MeanHL=round((self.df.High + self.df.Low) / 2, 2))
         self.df = self.df.assign(Date=self.df.index.map(MyDate.get_date_from_epoch_seconds))
         self.df = self.df.assign(Time=self.df.index.map(MyDate.get_time_from_epoch_seconds))
+        self.df = self.df.assign(Datetime=self.df.index.map(MyDate.get_date_time_from_epoch_seconds))
         self.df = self.df.assign(DateAsNumber=self.df.index.map(MyDate.get_date_as_number_from_epoch_seconds))
         self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
         self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)

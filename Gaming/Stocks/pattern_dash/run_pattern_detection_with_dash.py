@@ -18,7 +18,7 @@ my_profiler = MyProfiler()
 # debugger.pattern_range_position_list = [217, 224, 242]
 
 config.get_data_from_db = False
-config.api_period = ApiPeriod.INTRADAY
+config.api_period = ApiPeriod.DAILY
 config.api_period_aggregation = 5 if config.api_period == ApiPeriod.INTRADAY else 1
 config.pattern_type_list = FT.get_all()
 # config.pattern_type_list = [FT.CHANNEL_DOWN]
@@ -43,8 +43,8 @@ config.fibonacci_tolerance_pct = 0.1  # default is 0.20
 config.fibonacci_detail_print = True
 # config.use_index(Indices.DOW_JONES)
 config.use_index(Indices.CRYPTO_CCY)
-# config.use_own_dic({'TSLA': 'T', 'DWDP': 'DuPont', 'MMM': 'M', 'CAT': 'c', 'FCEL': 'c', 'GS': 'Goldman'})
-# config.use_own_dic({'MMM': 'American'})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+config.use_own_dic({'TSLA': 'T', 'DWDP': 'DuPont', 'MMM': 'M', 'CAT': 'c', 'FCEL': 'c', 'GS': 'Goldman'})
+# config.use_own_dic({'LTC_USD': 'American'})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", "AXP": "American", "WMT": "Wall mart",
 # config.and_clause = "Date BETWEEN '2017-10-25' AND '2018-04-18'"
 config.and_clause = "Date BETWEEN '2017-11-01' AND '2019-09-21'"

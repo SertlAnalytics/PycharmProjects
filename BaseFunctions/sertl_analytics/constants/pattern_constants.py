@@ -91,6 +91,7 @@ class CN:  # Column Names
     VOL = 'Volume'
     DATE = 'Date'
     TIME = 'Time'
+    DATETIME = 'Datetime'
     TIMESTAMP = 'Timestamp'
     DATEASNUM = 'DateAsNumber'
     POSITION = 'Position'

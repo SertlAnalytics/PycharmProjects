@@ -141,7 +141,7 @@ class MyDash4Pattern(MyDashBase):
         for pattern in self.detector.pattern_list:
             colors = self._color_handler.get_colors_for_pattern(pattern)
             return_list.append(DashInterface.get_pattern_part_main_shape(pattern, colors[0]))
-            # print('Pattern: {}'.format(return_list[-1].shape_parameters))
+            print('Pattern: {}'.format(return_list[-1].shape_parameters))
             if pattern.was_breakout_done() and pattern.is_part_trade_available():
                 return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors[1]))
         return return_list
@@ -163,7 +163,7 @@ class MyDash4Pattern(MyDashBase):
     @staticmethod
     def __get_candlesticks_trace__(df: pd.DataFrame, ticker: str):
         candlestick = {
-            'x': df[CN.TIME] if config.api_period == ApiPeriod.INTRADAY else df[CN.DATE],
+            'x': df[CN.DATETIME] if config.api_period == ApiPeriod.INTRADAY else df[CN.DATE],
             'open': df[CN.OPEN],
             'high': df[CN.HIGH],
             'low': df[CN.LOW],
@@ -280,6 +280,12 @@ class DashInterface:
         return str(MyDate.get_date_from_epoch_seconds(xy[0])), xy[1]
 
     @staticmethod
+    def get_xy_from_timestamp_to_date_time_str(xy):
+        if type(xy) == list:
+            return [(str(MyDate.get_date_time_from_epoch_seconds(t_val[0])), t_val[1]) for t_val in xy]
+        return str(MyDate.get_date_time_from_epoch_seconds(xy[0])), xy[1]
+
+    @staticmethod
     def get_annotation_param(pattern: Pattern):
         annotation_param = pattern.get_annotation_parameter('blue')
         annotation_param.xy = DashInterface.get_xy_from_timestamp_to_date(annotation_param.xy)
@@ -288,22 +294,31 @@ class DashInterface:
 
     @staticmethod
     def get_pattern_part_main_shape(pattern: Pattern, color: str):
-        xy = DashInterface.get_xy_from_timestamp_to_date_str(pattern.xy)
-        x, y = DashInterface.get_x_y_separated_for_shape(xy)
+        x, y = DashInterface.get_xy_separated_from_timestamp(pattern.xy)
         return MyPolygonShape(x, y, color)
 
     @staticmethod
     def get_pattern_part_trade_shape(pattern: Pattern, color: str):
-        xy = DashInterface.get_xy_from_timestamp_to_date_str(pattern.xy_trade)
-        x, y = DashInterface.get_x_y_separated_for_shape(xy)
+        x, y = DashInterface.get_xy_separated_from_timestamp(pattern.xy_trade)
         return MyPolygonShape(x, y, color)
 
     @staticmethod
     def get_fibonacci_wave_shape(fib_wave: FibonacciWave, color: str):
-        xy = fib_wave.get_xy_parameter()
-        xy = DashInterface.get_xy_from_timestamp_to_date_str(xy)
-        x, y = DashInterface.get_x_y_separated_for_shape(xy)
+        x, y = DashInterface.get_xy_separated_from_timestamp(fib_wave.get_xy_parameter())
         return MyPolygonLineShape(x, y, color)
+
+    @staticmethod
+    def get_f_regression_shape(pattern_part: PatternPart, color: str):
+        x, y = DashInterface.get_xy_separated_from_timestamp(pattern_part.xy_regression)
+        return MyLineShape(x, y, color)
+
+    @staticmethod
+    def get_xy_separated_from_timestamp(xy):
+        if config.api_period == ApiPeriod.INTRADAY:
+            xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
+        else:
+            xy_new = DashInterface.get_xy_from_timestamp_to_date_str(xy)
+        return DashInterface.get_x_y_separated_for_shape(xy_new)
 
     @staticmethod
     def get_pattern_center_shape(pattern: Pattern):
@@ -314,12 +329,6 @@ class DashInterface:
         ellipse_height = pattern.part_main.height / 6
         xy_center = DashInterface.get_xy_from_timestamp_to_date(pattern.xy_center)
         return Ellipse(np.array(xy_center), ellipse_breadth, ellipse_height)
-
-    @staticmethod
-    def get_f_regression_shape(pattern_part: PatternPart, color: str):
-        xy_regression = DashInterface.get_xy_from_timestamp_to_date_str(pattern_part.xy_regression)
-        x, y = DashInterface.get_x_y_separated_for_shape(xy_regression)
-        return MyLineShape(x, y, color)
 
     @staticmethod
     def get_f_upper_shape(pattern_part: PatternPart):
