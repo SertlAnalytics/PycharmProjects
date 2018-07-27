@@ -59,7 +59,6 @@ class PatternConfiguration:
         self.get_data_from_db = True
         self.pattern_type_list = [FT.CHANNEL]
         self.api_period = ApiPeriod.DAILY
-        self.api_period_aggregation = 1  # 5 for intraday
         self.api_output_size = ApiOutputsize.COMPACT
         self.bound_upper_value = CN.HIGH
         self.bound_lower_value = CN.LOW
@@ -72,7 +71,6 @@ class PatternConfiguration:
         self.length_for_global_min_max_fibonacci = 10  # ...for fibonacci
         self.length_for_local_min_max = 2  # a local minimum or maximum must have at least this number as distance
         self.length_for_local_min_max_fibonacci = self.length_for_local_min_max  # fibonacci
-        self.range_detector_tolerance_pct = 0.01
         self.fibonacci_tolerance_pct = 0.20  # it works great for 0.20 = 20% tolerance for retracement and regression
         self.fibonacci_detail_print = False
         self.check_previous_period = False   # default
@@ -87,6 +85,14 @@ class PatternConfiguration:
         self.statistics_constraints_excel_file_name = 'pattern_statistics/constraints.xlsx'
         self.ticker_dic = {}
         self.__previous_period_length = 0
+
+    @property
+    def range_detector_tolerance_pct(self):
+        return 0.001 if self.api_period == ApiPeriod.INTRADAY else 0.01
+
+    @property
+    def api_period_aggregation(self):
+        return 5 if self.api_period == ApiPeriod.INTRADAY else 1
 
     def __get_previous_period_length__(self):
         return self.__previous_period_length

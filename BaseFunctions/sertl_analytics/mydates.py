@@ -43,7 +43,7 @@ class MyDate:
         return m_dates.date2num(MyDate.get_date_time_from_epoch_seconds(epoch_seconds))
 
     @staticmethod
-    def get_date_time_from_epoch_seconds(epoch_seconds: int) -> datetime:
+    def get_date_time_from_epoch_seconds(epoch_seconds: float) -> datetime:
        return datetime.fromtimestamp(epoch_seconds)
 
     @staticmethod
@@ -75,7 +75,7 @@ class MyDate:
         if len(str(date_time)) == 10:
             return datetime.strptime(str(date_time), '%Y-%m-%d').date()
         else:
-            return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').date()
+            return datetime.strptime(str(date_time)[:19], '%Y-%m-%d %H:%M:%S').date()
 
     @staticmethod
     def get_time_from_datetime(date_time):
@@ -83,7 +83,7 @@ class MyDate:
             return None
         if date_time.__class__.__name__ == 'time':  # no change
             return date_time
-        return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S').time()
+        return datetime.strptime(str(date_time)[:19], '%Y-%m-%d %H:%M:%S').time()
 
     @staticmethod
     def get_number_for_date_time(date_time):

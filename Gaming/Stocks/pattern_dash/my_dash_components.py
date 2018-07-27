@@ -10,6 +10,27 @@ import dash_html_components as html
 from datetime import datetime
 
 
+class DccGraphApi:
+    def __init__(self, graph_id: str, title: str):
+        self.id = graph_id
+        self.figure_data = None
+        self.figure_layout_height = 500
+        self.figure_layout_width = 1200
+        self.figure_layout_yaxis_title = title
+        self.figure_layout_margin = {'b': 0, 'r': 10, 'l': 60, 't': 0}
+        self.figure_layout_legend = {'x': 0}
+        self.figure_layout_hovermode = 'closest'
+        self.figure_layout_shapes = None
+        self.figure_layout_annotations = None
+
+
+class DccGraphChildApi(DccGraphApi):
+    def __init__(self, graph_id: str, title: str):
+        DccGraphApi.__init__(self, graph_id, title)
+        self.figure_layout_height = self.figure_layout_height / 2
+        self.figure_layout_width = self.figure_layout_width / 2
+
+
 class MyHTML:
     @staticmethod
     def Button():
@@ -44,6 +65,17 @@ class MyHTML:
     def get_pre(element_id: str):
         return html.Pre(id=element_id, style={'paddingTop': 35})
 
+    @staticmethod
+    def get_date_time(element_id: str):
+        return html.Div([
+                    html.H1(
+                        datetime.now().strftime('%Y-%m-%d'), style=
+                        {'opacity': '1', 'color': 'black', 'fontSize': 12}),
+                    html.H1(
+                        datetime.now().strftime('%H:%M:%S'), style=
+                        {'opacity': '1', 'color': 'black', 'fontSize': 12})
+                    ])
+
 
 class MyDCC:
     @staticmethod
@@ -52,23 +84,27 @@ class MyDCC:
         return dcc.Dropdown(id=element_id, options=options, value=options[0]['value'], multi=multi)
 
     @staticmethod
-    def get_graph(element_id, data: list, shapes: list, annotations: list):
+    def get_graph(graph_api: DccGraphApi):
         return dcc.Graph(
-            id=element_id,
+            id=graph_api.id,
             figure={
-                'data': data,
+                'data': graph_api.figure_data,
                 'layout': {
-                    'height': 500,
-                    'margin': {'b': 0, 'r': 10, 'l': 60, 't': 0},
-                    'legend': {'x': 0},
-                    'hovermode': 'closest',
-                    'shapes': shapes,
-                    'annotations': annotations
+                    # 'xaxis': {'title': 'ticker-x', 'type': 'date'},
+                    'yaxis': {'title': graph_api.figure_layout_yaxis_title},
+                    'height': graph_api.figure_layout_height,
+                    'width': graph_api.figure_layout_width,
+                    'margin': graph_api.figure_layout_margin,
+                    'legend': graph_api.figure_layout_legend,
+                    'hovermode': graph_api.figure_layout_hovermode,
+                    'shapes': graph_api.figure_layout_shapes,
+                    'annotations': graph_api.figure_layout_annotations
                 }
             })
 
     @staticmethod
     def get_interval(element_id: str, seconds=10):
+        print('get_interval: id={}, seconds={}'.format(element_id, seconds))
         return dcc.Interval(id=element_id, interval=seconds * 1000, n_intervals=0)
 
     @staticmethod

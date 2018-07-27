@@ -11,7 +11,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State, Event
 from pattern_data_container import pattern_data_handler as pdh
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import json
 from playsound import playsound
@@ -28,8 +28,9 @@ from pattern_part import PatternPart
 from pattern_range import PatternRange
 from pattern_wave_tick import WaveTickList
 from pattern_colors import PatternColorHandler
-from pattern_dash.my_dash_components import MyDCC, MyHTML
+from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphChildApi
 from fibonacci.fibonacci_wave import FibonacciWave
+from copy import deepcopy
 
 
 class MyDash4Pattern(MyDashBase):
@@ -43,12 +44,15 @@ class MyDash4Pattern(MyDashBase):
         self._current_symbol = ''
         self.__fill_ticker_options__()
         self.__fill_interval_options__()
+        self._time_stamp_last_refresh = datetime.now().timestamp()
+        self._graph_dict = {}
 
     def get_pattern(self):
         self.__set_app_layout__()
         self.__init_interval_setting_callback__()
         self.__init_interval_callback__()
         self.__init_interval_callback_for_text__()
+        self.__init_interval_callback_for_time__()
         self.__init_hover_over_callback__()
 
     def __fill_ticker_options__(self):
@@ -58,13 +62,25 @@ class MyDash4Pattern(MyDashBase):
             self._ticker_options.append({'label': '{} {}'.format(symbol, name), 'value': symbol})
 
     def __fill_interval_options__(self):
-        self._interval_options.append({'label': 'Refresh Chart', 'value': 'run'})
-        self._interval_options.append({'label': 'Keep Chart', 'value': 'stop'})
+        self._interval_options.append({'label': '10 min', 'value': 600}) # this one is the default
+        self._interval_options.append({'label': '5 min', 'value': 300})
+        self._interval_options.append({'label': '1 min', 'value': 60})
+        self._interval_options.append({'label': '30 sec.', 'value': 30})
+        self._interval_options.append({'label': '15 sec.', 'value': 15})
+        self._interval_options.append({'label': '10 sec.', 'value': 10})
 
     def __init_hover_over_callback__(self):
-        self.app.callback(
+        @self.app.callback(
             Output('my_hover_data', 'children'),
-            [Input(self._current_symbol, 'hoverData')])(self.__create_callback__())
+            [Input('my_graph_1', 'hoverData'), Input('my_graph_2', 'hoverData')])
+        def callback_hover_data(hover_data_graph_1, hover_data_graph_2):
+            return json.dumps(hover_data_graph_1, indent=2) + '\n' + json.dumps(hover_data_graph_2, indent=2)
+
+    @staticmethod
+    def __create_callback__():
+        def callback_hover_data(hoverData):
+            return json.dumps(hoverData, indent=2)
+        return callback_hover_data
 
     def __init_interval_setting_callback__(self):
         @self.app.callback(
@@ -72,7 +88,7 @@ class MyDash4Pattern(MyDashBase):
             [Input('my_interval_option', 'value')])
         def update_interval_period(value):
             print('__init_interval_setting_callback__: {}'.format(value))
-            return 10 * 1000 if value == 'run' else 100 * 1000
+            return value * 1000
 
     def __init_interval_callback__(self):
         if config.get_data_from_db:
@@ -82,66 +98,125 @@ class MyDash4Pattern(MyDashBase):
 
     def __init_interval_callback_with_date_picker__(self):
         @self.app.callback(
-            Output('graphs', 'children'),
+            Output('my_graph_main_div', 'children'),
             [Input('my_interval', 'n_intervals')],
             [State('my_ticker_symbol', 'value'),
              State('my_date_picker', 'start_date'),
              State('my_date_picker', 'end_date')])
-        def update_graph(n_intervals, ticker, start_date, end_date):
-            start_date = datetime.strptime(start_date[:10], '%Y-%m-%d')
-            date_end = datetime.strptime(end_date[:10], '%Y-%m-%d')
-            and_clause = "Date BETWEEN '{}' AND '{}'".format(start_date, date_end)
+        def update_graph_main(n_intervals, ticker, dt_start, dt_end):
             self.__play_sound__(n_intervals)
-            return self.__append_graphs__(ticker, and_clause)
+            return self.__get_graph_main__(ticker, self.__get_and_clause__(dt_start, dt_end))
+
+    @staticmethod
+    def __get_and_clause__(dt_start, dt_end):
+        date_start = MyDate.get_date_from_datetime(dt_start)
+        date_end = MyDate.get_date_from_datetime(dt_end)
+        return "Date BETWEEN '{}' AND '{}'".format(date_start, date_end)
 
     def __init_interval_callback_without_date_picker__(self):
         @self.app.callback(
-            Output('graphs', 'children'),
+            Output('my_graph_main_div', 'children'),
             [Input('my_interval', 'n_intervals')],
             [State('my_ticker_symbol', 'value')])
-        def update_graph(n_intervals, ticker):
-            return self.__append_graphs__(ticker)
+        def update_graph_main(n_intervals, ticker):
+            self.__play_sound__(n_intervals)
+            return self.__get_graph_main__(ticker)
+
+        @self.app.callback(
+            Output('my_graph_child_1_div', 'children'),
+            [Input('my_interval', 'n_intervals')],
+            [State('my_ticker_symbol', 'value')])
+        def update_graph_child_1(n_intervals, ticker):
+            return self.__get_child_graph__(1, ticker, 200)
+
+        # @self.app.callback(
+        #     Output('my_graph_child_2_div', 'children'),
+        #     [Input('my_interval', 'n_intervals')],
+        #     [State('my_ticker_symbol', 'value')])
+        # def update_graph_child_2(n_intervals, ticker):
+        #     return self.__get_child_graph__(2, ticker, 60)
 
     def __init_interval_callback_for_text__(self):
         @self.app.callback(
             Output('my_interval_data', 'children'),
-            [Input('my_interval', 'n_intervals')])
-        def write_interval_details(n_intervals):
-            return 'Last refresh: {} ({})'.format(datetime.now(), n_intervals)
+            [Input('my_interval', 'n_intervals'),
+             Input('my_interval', 'interval')
+             ])
+        def write_interval_details(n_intervals, interval_ms):
+            last_refresh_dt = MyDate.get_time_from_datetime(datetime.now())
+            dt_next = datetime.now() + timedelta(milliseconds=interval_ms)
+            next_refresh_time = MyDate.get_time_from_datetime(dt_next)
+            return 'Last refresh: {} ({}) - next refresh: {}'.format(last_refresh_dt, n_intervals, next_refresh_time)
+
+    def __init_interval_callback_for_time__(self):
+        @self.app.callback(
+            Output('my_interval_timer_data', 'children'),
+            [Input('my_interval_timer', 'n_intervals')])
+        def write_interval_time(n_intervals):
+            return '({})'.format(MyDate.get_time_from_datetime(datetime.now()))
 
     @staticmethod
     def __play_sound__(n_intervals):
-        if n_intervals % 5 == 0:
-            playsound('alarm01.wav')  # C:/Windows/media/...
+        if n_intervals % 10 == 0:
+            playsound('ring08.wav')  # C:/Windows/media/...
 
-    @staticmethod
-    def __create_callback__():
-        def callback_hover_data(hoverData):
-            return json.dumps(hoverData, indent=2)
-        return callback_hover_data
+    def __get_graph_main__(self, ticker: str, and_clause=''):
+        graph_title = '{} {}'.format(ticker, config.api_period)
+        graph_main = self.__get_dcc_graph_element__(True, 'my_graph_main', graph_title, ticker, and_clause)
+        self.__check_for_tick_breakout_alarm__()
+        self._time_stamp_last_refresh = datetime.now().timestamp()
+        return graph_main
 
-    def __append_graphs__(self, ticker: str, and_clause='', interval_option='run'):
-        graphs = []
-        if interval_option == 'run':
-            self.detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
-            self.df = pdh.pattern_data.df
+    def __get_child_graph__(self, child_number: int, ticker: str, days: int):
+        graph_id = 'my_graph_child_{}'.format(child_number)
+        graph_title = '{} {} days'.format(ticker, days)
+        dict_key = '{}_{}'.format(graph_id, ticker)
+        if dict_key in self._graph_dict:
+            print('return cached graph: {}'.format(dict_key))
+            return self._graph_dict[dict_key]
+
+        date_from = datetime.today() - timedelta(days=days)
+        date_to = datetime.today() + timedelta(days=5)
+        and_clause = self.__get_and_clause__(date_from, date_to)
+        config_old = deepcopy(config)
+        config.api_period = ApiPeriod.DAILY
+        config.get_data_from_db = True
+        graph = self.__get_dcc_graph_element__(False, graph_id, graph_title, ticker, and_clause)
+        self._graph_dict[dict_key] = graph
+        config.api_period = config_old.api_period
+        config.get_data_from_db = config_old.get_data_from_db
+        return graph
+
+    def __get_dcc_graph_element__(self, for_main: bool, graph_id: str, graph_title: str, ticker: str, and_clause=''):
+        graph_api = DccGraphApi(graph_id, graph_title) if for_main else DccGraphChildApi(graph_id, graph_title)
+        print('and_clause='.format(and_clause))
+        self.detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
+        self.df = pdh.pattern_data.df
         candlestick = self.__get_candlesticks_trace__(self.df, ticker)
         bollinger_traces = self.__get_boolinger_band_trace__(self.df, ticker)
-        shape_list = self.__get_pattern_shape_list__()
-        shape_list += self.__get_pattern_regression_shape_list__()
-        shape_list += self.__get_fibonacci_shape_list__()
-        shapes = [my_shapes.shape_parameters for my_shapes in shape_list]
-        annotations = [my_shapes.annotation_parameters for my_shapes in shape_list]
-        graph_data = [candlestick]
-        graphs.append(MyDCC.get_graph(ticker, graph_data, shapes, annotations))
-        return graphs
+        shapes = self.__get_pattern_shape_list__()
+        shapes += self.__get_pattern_regression_shape_list__()
+        shapes += self.__get_fibonacci_shape_list__()
+        graph_api.figure_layout_shapes = [my_shapes.shape_parameters for my_shapes in shapes]
+        # for my_shapes in shapes:
+        #     print('{}: {}'.format(my_shapes.__class__.__name__, my_shapes.shape_parameters))
+        graph_api.figure_layout_annotations = [my_shapes.annotation_parameters for my_shapes in shapes]
+        graph_api.figure_data = [candlestick]
+        return MyDCC.get_graph(graph_api)
+
+    def __check_for_tick_breakout_alarm__(self):
+        if config.api_period == ApiPeriod.INTRADAY:
+            for pattern in self.detector.pattern_list:
+                if pattern.was_breakout_done():
+                    if pattern.breakout.tick_breakout.timestamp > self._time_stamp_last_refresh:
+                        print('Breakout since last refresh !!!!')
+                        playsound('alarm01.wav')
 
     def __get_pattern_shape_list__(self):
         return_list = []
         for pattern in self.detector.pattern_list:
             colors = self._color_handler.get_colors_for_pattern(pattern)
             return_list.append(DashInterface.get_pattern_part_main_shape(pattern, colors[0]))
-            print('Pattern: {}'.format(return_list[-1].shape_parameters))
             if pattern.was_breakout_done() and pattern.is_part_trade_available():
                 return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors[1]))
         return return_list
@@ -163,7 +238,8 @@ class MyDash4Pattern(MyDashBase):
     @staticmethod
     def __get_candlesticks_trace__(df: pd.DataFrame, ticker: str):
         candlestick = {
-            'x': df[CN.DATETIME] if config.api_period == ApiPeriod.INTRADAY else df[CN.DATE],
+            'x': df[CN.TIME] if config.api_period == ApiPeriod.INTRADAY else df[CN.DATE],
+            # 'x': df[CN.TIMESTAMP],
             'open': df[CN.OPEN],
             'high': df[CN.HIGH],
             'low': df[CN.LOW],
@@ -196,14 +272,19 @@ class MyDash4Pattern(MyDashBase):
 
     def __set_app_layout__(self):
         html_element_list = [html.H1('Pattern Detection Dashboard')]
-        html_element_list.append(MyDCC.get_interval('my_interval', 10))
+        html_element_list.append(MyDCC.get_interval('my_interval', 100))
+        html_element_list.append(MyDCC.get_interval('my_interval_timer', 1))
         html_element_list.append(self.__get_html_div_with_ticker_drop_down__())
-        html_element_list.append(MyDCC.get_radio_items_inline('my_interval_option', self._interval_options))
+        html_element_list.append(self.__get_html_div_with_interval_drop_down__())
         if config.get_data_from_db:
             html_element_list.append(self.__get_html_div_with_date_picker_range__())
-        html_element_list.append(html.Div(id='graphs'))
+        html_element_list.append(html.Div(id='my_graph_main_div'))
+        html_element_list.append(html.Div(id='my_graph_child_1_div'))
+        html_element_list.append(html.Div(id='my_graph_child_2_div'))
+        # html_element_list.append((self.__get_html_div_with_graph__('my_graph_test')))
         html_element_list.append(self.__get_html_div_for_hover_data__())
-        html_element_list.append(self.__get_html_div_for_interval_data__())
+        html_element_list.append(self.__get_html_div_for_interval_data__('my_interval_data'))
+        html_element_list.append(self.__get_html_div_for_interval_data__('my_interval_timer_data'))
         self.app.layout = html.Div(html_element_list)
 
     def __get_html_div_with_ticker_drop_down__(self):
@@ -215,20 +296,37 @@ class MyDash4Pattern(MyDashBase):
             style={'display': 'inline-block', 'verticalAlign': 'top', 'width': '30%'}
         )
 
+    def __get_html_div_with_interval_drop_down__(self):
+        return html.Div(
+            [
+                html.H3('Select refresh interval:', style={'paddingRight': '30px'}),
+                MyDCC.get_drop_down('my_interval_option', self._interval_options, False)
+            ],
+            style={'display': 'inline-block', 'verticalAlign': 'top', 'width': '20%'}
+        )
+
     @staticmethod
     def __get_html_div_with_date_picker_range__():
         return html.Div(
             [
                 html.H3('Select start and end dates:'),
-                MyDCC.get_date_picker_range('my_date_picker', datetime(2018, 1, 1))
+                MyDCC.get_date_picker_range('my_date_picker', datetime.today() - timedelta(days=160))
             ],
-            style={'display': 'inline-block'}
+            style={'display': 'inline-block', 'verticalAlign': 'top', 'height': 20}
         )
 
     @staticmethod
     def __get_html_div_with_submit__():
         return html.Div(
             [MyHTML.get_submit_button()],
+            style={'display': 'inline-block'})
+
+    @staticmethod
+    def __get_html_div_with_graph__(element_id: str):
+        return html.Div(
+            [
+                MyDCC.get_empty_graph(element_id, 'Title')
+            ],
             style={'display': 'inline-block'})
 
     @staticmethod
@@ -239,9 +337,9 @@ class MyDash4Pattern(MyDashBase):
         )
 
     @staticmethod
-    def __get_html_div_for_interval_data__():
+    def __get_html_div_for_interval_data__(element_id: str):
         return html.Div(
-            [MyHTML.get_pre('my_interval_data')],
+            [MyHTML.get_pre(element_id)],
             style={'width': '30%', 'display': 'inline-block', 'verticalAlign': 'top'}
         )
 
@@ -280,6 +378,12 @@ class DashInterface:
         return str(MyDate.get_date_from_epoch_seconds(xy[0])), xy[1]
 
     @staticmethod
+    def get_xy_from_timestamp_to_time_str(xy):
+        if type(xy) == list:
+            return [(str(MyDate.get_time_from_epoch_seconds(t_val[0])), t_val[1]) for t_val in xy]
+        return str(MyDate.get_time_from_epoch_seconds(xy[0])), xy[1]
+
+    @staticmethod
     def get_xy_from_timestamp_to_date_time_str(xy):
         if type(xy) == list:
             return [(str(MyDate.get_date_time_from_epoch_seconds(t_val[0])), t_val[1]) for t_val in xy]
@@ -315,7 +419,7 @@ class DashInterface:
     @staticmethod
     def get_xy_separated_from_timestamp(xy):
         if config.api_period == ApiPeriod.INTRADAY:
-            xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
+            xy_new = DashInterface.get_xy_from_timestamp_to_time_str(xy)
         else:
             xy_new = DashInterface.get_xy_from_timestamp_to_date_str(xy)
         return DashInterface.get_x_y_separated_for_shape(xy_new)

@@ -22,6 +22,10 @@ class WaveTick:
         return self.tick[CN.DATE]
 
     @property
+    def timestamp(self):
+        return self.tick[CN.TIMESTAMP]
+
+    @property
     def f_var(self):
         return self.tick[CN.TIMESTAMP]
         # return self.tick[CN.DATEASNUM]

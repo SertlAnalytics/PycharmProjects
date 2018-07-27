@@ -33,7 +33,7 @@ class MyShape:
             else:
                 svg_path += ' L {},{}'.format(self.x[k], self.y[k])
         if close_path:
-            svg_path += ' Z'
+            svg_path += " Z"
         return svg_path
 
     def __get_shape_parameter_dict__(self) -> dict:

@@ -114,20 +114,29 @@ class PatternDetectionController:
             self.__handle_not_available_symbol__(ticker)
             and_clause = value_dic[LL.AND_CLAUSE]
             stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.stock_db, ticker, and_clause)
-            return stock_db_df_obj.df_data
+            df = stock_db_df_obj.df_data
         elif ticker in self.__crypto_ccy_dic:
             if config.api_period == ApiPeriod.INTRADAY:
                 fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation)
             else:
                 fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
-            return fetcher.df_data
+            df = fetcher.df_data
         else:
-            aggregation = 5 if config.api_period == ApiPeriod.INTRADAY else 1
             fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
             if config.api_period == ApiPeriod.INTRADAY:
-                return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
+                df = self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             else:
-                return fetcher.df_data
+                df = fetcher.df_data
+        return self.__cut_intraday_df_to_one_day__(df) if config.api_period == ApiPeriod.INTRADAY else df
+
+    @staticmethod
+    def __cut_intraday_df_to_one_day__(df: pd.DataFrame) -> pd.DataFrame:
+        index_first_row = df.index[0]
+        index_last_row = df.index[-1]
+        timestamp_one_day_before = index_last_row - (23 * 60 * 60)  # 23 = to avoid problems with the last trade shape
+        if index_first_row < timestamp_one_day_before:
+            return df.loc[timestamp_one_day_before:]
+        return df
 
     @staticmethod
     def __get_with_concatenated_intraday_data__(df: pd.DataFrame):
