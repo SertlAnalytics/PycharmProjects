@@ -34,9 +34,10 @@ from copy import deepcopy
 
 
 class MyDashStateHandler:
-    def __init__(self):
+    def __init__(self, ticker_list: list):
         self._my_refresh_button_clicks = 0
         self._my_interval_n_intervals = 0
+        self._ticker_dict = {dict_element['value']: 0 for dict_element in ticker_list}
 
     def change_for_my_refresh_button(self, n_clicks: int) -> bool:
         if n_clicks > self._my_refresh_button_clicks:
@@ -50,11 +51,23 @@ class MyDashStateHandler:
             return True
         return False
 
+    def add_selected_ticker(self, ticker: str):
+        if ticker in self._ticker_dict:
+            self._ticker_dict[ticker] += 1
+
+    def get_next_most_selected_ticker(self, ticker_selected: str):
+        max_count = 0
+        max_ticker = ''
+        for key, number in self._ticker_dict.items():
+            if key != ticker_selected and number > max_count:
+                max_ticker = key
+                max_count = number
+        return max_ticker
+
 
 class MyDash4Pattern(MyDashBase):
     def __init__(self):
         MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH)
-        self._state_handler = MyDashStateHandler()
         self._color_handler = PatternColorHandler()
         self._pattern_controller = PatternDetectionController()
         self.detector = None
@@ -67,6 +80,7 @@ class MyDash4Pattern(MyDashBase):
         self.__fill_graph_second_days_options__()
         self._time_stamp_last_refresh = datetime.now().timestamp()
         self._graph_dict = {}
+        self._state_handler = MyDashStateHandler(self._ticker_options)
 
     def get_pattern(self):
         self.__set_app_layout__()
@@ -141,6 +155,9 @@ class MyDash4Pattern(MyDashBase):
             Output('my_graph_second_days_selection', 'value'),
             [Input('my_ticker_selection', 'value')])
         def handle_ticker_selection_callback(ticker_selected):
+            self._state_handler.add_selected_ticker(ticker_selected)
+            ticker_next = self._state_handler.get_next_most_selected_ticker(ticker_selected)
+            print('Next ticker - preload = {}'.format(ticker_next))
             return 0
 
     def __init_interval_callback_with_date_picker__(self):

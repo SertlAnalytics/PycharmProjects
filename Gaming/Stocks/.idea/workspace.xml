@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_components.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_components.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_data_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_data_container.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -24,17 +21,17 @@
       <file leaf-file-name="run_pattern_detection_with_dash.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pattern_dash/run_pattern_detection_with_dash.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="462">
-              <caret line="52" column="15" selection-start-line="52" selection-start-column="15" selection-end-line="52" selection-end-column="15" />
+            <state relative-caret-position="502">
+              <caret line="52" column="14" lean-forward="true" selection-start-line="52" selection-start-column="14" selection-end-line="52" selection-end-column="14" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="my_dash_for_pattern.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py">
+      <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="141" column="52" lean-forward="true" selection-start-line="141" selection-start-column="52" selection-end-line="141" selection-end-column="52" />
+            <state relative-caret-position="680">
+              <caret line="44" column="22" lean-forward="true" selection-start-line="44" selection-start-column="22" selection-end-line="44" selection-end-column="22" />
             </state>
           </provider>
         </entry>
@@ -142,11 +139,11 @@
         <option value="$PROJECT_DIR$/pattern_range.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydates.py" />
         <option value="$PROJECT_DIR$/pattern_dash/run_pattern_detection_with_dash.py" />
-        <option value="$PROJECT_DIR$/run_pattern_detection.py" />
         <option value="$PROJECT_DIR$/pattern_data_container.py" />
         <option value="$PROJECT_DIR$/pattern_detection_controller.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_components.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py" />
+        <option value="$PROJECT_DIR$/run_pattern_detection.py" />
       </list>
     </option>
   </component>
@@ -215,7 +212,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run_pattern_detection_with_dash">
+  <component name="RunManager" selected="Python.run_pattern_detection">
     <configuration name="my_dash_for_nasdaq" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -348,14 +345,14 @@
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6300654" visible="true" weight="0.27388534" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6301917" visible="true" weight="0.27388534" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.3254902" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.30670926" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.38897765" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.38897765" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.32784313" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.3662745" />
-      <window_info id="Structure" order="1" sideWeight="0.36993465" side_tool="true" visible="true" weight="0.27388534" />
+      <window_info id="Structure" order="1" sideWeight="0.36980832" side_tool="true" visible="true" weight="0.27388534" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.32507986" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.3654902" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -823,13 +820,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="349">
-          <caret line="43" column="22" selection-start-line="43" selection-start-column="22" selection-end-line="43" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/dash/development/base_component.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="245">
@@ -868,13 +858,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/run_pattern_detection_with_dash.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="462">
-          <caret line="52" column="15" selection-start-line="52" selection-start-column="15" selection-end-line="52" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_components.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-34">
@@ -884,8 +867,22 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="141" column="52" lean-forward="true" selection-start-line="141" selection-start-column="52" selection-end-line="141" selection-end-column="52" />
+        <state relative-caret-position="442">
+          <caret line="54" column="39" lean-forward="true" selection-start-line="54" selection-start-column="39" selection-end-line="54" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/run_pattern_detection_with_dash.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="502">
+          <caret line="52" column="14" lean-forward="true" selection-start-line="52" selection-start-column="14" selection-end-line="52" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="680">
+          <caret line="44" column="22" lean-forward="true" selection-start-line="44" selection-start-column="22" selection-end-line="44" selection-end-column="22" />
         </state>
       </provider>
     </entry>
