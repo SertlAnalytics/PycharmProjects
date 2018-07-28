@@ -24,11 +24,11 @@ class DccGraphApi:
         self.figure_layout_annotations = None
 
 
-class DccGraphChildApi(DccGraphApi):
+class DccGraphSecondApi(DccGraphApi):
     def __init__(self, graph_id: str, title: str):
         DccGraphApi.__init__(self, graph_id, title)
         self.figure_layout_height = self.figure_layout_height / 2
-        self.figure_layout_width = self.figure_layout_width / 2
+        self.figure_layout_width = self.figure_layout_width  # / 2
 
 
 class MyHTML:
@@ -37,54 +37,75 @@ class MyHTML:
         return html.Button
 
     @staticmethod
-    def get_submit_button():
-        return html.Button(id='submit-button', n_clicks=0, children='Submit',
-                style={'fontSize': 24, 'marginLeft': '30px'})
+    def button_submit(element_id: str, children='Submit'):
+        return html.Button(id=element_id, n_clicks=0, children=children, hidden='hidden',
+                style={'fontSize': 24, 'margin-left': '30px'})
 
     @staticmethod
-    def Div():
-        return html.Div
+    def div_with_html_button_submit(element_id: str, children='Submit'):
+        return html.Div(
+            [MyHTML.button_submit(element_id, children)],
+            style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'bottom'
+                , 'padding-bottom': 20, 'padding-left': 10}
+        )
 
     @staticmethod
-    def Iframe():
-        return html.Iframe
+    def div(element_id: str, embedded_element_list: list = None):
+        if embedded_element_list is None:
+            return html.Div(id=element_id)
+        else:
+            return html.Div(embedded_element_list)
 
     @staticmethod
-    def H1():
-        return html.H1
+    def h1(element_text: str, color='black', font_size=12, opacity='1'):
+        style = {'opacity': opacity, 'color': color, 'fontSize': font_size}
+        return html.H1(element_text, style=style)
 
     @staticmethod
-    def H2():
-        return html.H2
+    def h2(element_text: str, color='black', font_size=12, opacity='1'):
+        style = {'opacity': opacity, 'color': color, 'fontSize': font_size}
+        return html.H2(element_text, style=style)
 
     @staticmethod
-    def H3():
-        return html.H3
+    def h3(element_text: str, color='black', font_size=12, opacity='1'):
+        style = {'opacity': opacity, 'color': color, 'fontSize': font_size}
+        return html.H3(element_text, style=style)
 
     @staticmethod
-    def get_pre(element_id: str):
-        return html.Pre(id=element_id, style={'paddingTop': 35})
+    def pre(element_id: str):
+        return html.Pre(id=element_id, style={'padding-top': 20})
 
     @staticmethod
-    def get_date_time(element_id: str):
-        return html.Div([
-                    html.H1(
-                        datetime.now().strftime('%Y-%m-%d'), style=
-                        {'opacity': '1', 'color': 'black', 'fontSize': 12}),
-                    html.H1(
-                        datetime.now().strftime('%H:%M:%S'), style=
-                        {'opacity': '1', 'color': 'black', 'fontSize': 12})
-                    ])
+    def div_with_html_pre(element_id: str):
+        return html.Div(
+            [MyHTML.pre(element_id)],
+            style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top', 'padding-bottom': 20}
+        )
+
+    @staticmethod
+    def get_div_with_actual_date_time(element_id: str, color='black', font_size=12, opacity='1'):
+        return html.Div([MyHTML.h1(datetime.now().strftime('%Y-%m-%d')),
+                         MyHTML.h1(datetime.now().strftime('%H:%M:%S'))])
+
+    @staticmethod
+    def div_with_dcc_drop_down(div_text: str, element_id: str, options: list, width=20, for_multi=False):
+        div_element_list = []
+        if div_text != '':
+            div_element_list.append(html.H3('{}:'.format(div_text), style={'padding-right': '30px'}))
+        div_element_list.append(MyDCC.drop_down(element_id, options, for_multi))
+        style = {'display': 'inline-block', 'verticalAlign': 'top', 'width': width,
+                 'padding-bottom': 20, 'padding-left': 10}
+        return html.Div(div_element_list, style=style)
 
 
 class MyDCC:
     @staticmethod
-    def get_drop_down(element_id, options: list, multi=False):
+    def drop_down(element_id, options: list, multi=False):
         # {'label': '{} {}'.format(symbol, name), 'value': symbol}
         return dcc.Dropdown(id=element_id, options=options, value=options[0]['value'], multi=multi)
 
     @staticmethod
-    def get_graph(graph_api: DccGraphApi):
+    def graph(graph_api: DccGraphApi):
         return dcc.Graph(
             id=graph_api.id,
             figure={
@@ -103,7 +124,7 @@ class MyDCC:
             })
 
     @staticmethod
-    def get_interval(element_id: str, seconds=10):
+    def interval(element_id: str, seconds=10):
         print('get_interval: id={}, seconds={}'.format(element_id, seconds))
         return dcc.Interval(id=element_id, interval=seconds * 1000, n_intervals=0)
 

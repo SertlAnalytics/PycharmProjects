@@ -48,6 +48,8 @@ class PatternData:
         self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
 
     def __get_tick_f_var_distance__(self):
+        if self.df_length == 1:
+            return 1
         return self.tick_list[1].f_var - self.tick_list[0].f_var
 
     def get_tick_by_date_num(self, date_num: float):
