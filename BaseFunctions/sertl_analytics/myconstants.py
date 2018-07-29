@@ -7,6 +7,14 @@ Date: 2018-05-22
 
 
 class MyAPPS:
-    PATTERN_DETECTOR = 'Pattern detectorh@SERTL_ANALYTICS'
-    PATTERN_DETECTOR_DASH = 'Pattern dectector with dash@SERTL_ANALYTICS'
-    NONE = 'NONE'
+    @staticmethod
+    def PATTERN_DETECTOR():
+        return {'key': 'PatDetect', 'name': 'Pattern detectorh@SERTL_ANALYTICS'}
+
+    @staticmethod
+    def PATTERN_DETECTOR_DASH():
+        return {'key': 'PD@Dash', 'name': 'Pattern dectector with dash@SERTL_ANALYTICS'}
+
+    @staticmethod
+    def NONE():
+        return {'key': 'NONE', 'name': 'NONE'}

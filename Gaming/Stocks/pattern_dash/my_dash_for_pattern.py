@@ -67,7 +67,7 @@ class MyDashStateHandler:
 
 class MyDash4Pattern(MyDashBase):
     def __init__(self):
-        MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH)
+        MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH())
         self._color_handler = PatternColorHandler()
         self._pattern_controller = PatternDetectionController()
         self.detector = None
@@ -91,7 +91,7 @@ class MyDash4Pattern(MyDashBase):
         self.__init_interval_callback_for_timer__()
         self.__init_hover_over_callback__()
         self.__init_selection_callback__()
-        self.__init_ticker_selection_callback__()
+        # self.__init_ticker_selection_callback__()
 
     def __init_selection_callback__(self):
         @self.app.callback(
@@ -158,6 +158,7 @@ class MyDash4Pattern(MyDashBase):
             self._state_handler.add_selected_ticker(ticker_selected)
             ticker_next = self._state_handler.get_next_most_selected_ticker(ticker_selected)
             print('Next ticker - preload = {}'.format(ticker_next))
+            pre_loaded_graph = self.__get_graph_first__(ticker_selected, '', True)
             return 0
 
     def __init_interval_callback_with_date_picker__(self):
@@ -191,9 +192,10 @@ class MyDash4Pattern(MyDashBase):
     def __init_callback_for_graph_second__(self):
         @self.app.callback(
             Output('my_graph_second_div', 'children'),
-            [Input('my_graph_second_days_selection', 'value')],
+            [Input('my_graph_second_days_selection', 'value'),
+             Input('my_graph_first_div', 'children')],
             [State('my_ticker_selection', 'value')])
-        def handle_callback_for_graph_second(days_selected, ticker_selected):
+        def handle_callback_for_graph_second(days_selected, graph_first_div, ticker_selected):
             if days_selected == 0:
                 return ''
             return self.__get_graph_second__(ticker_selected, days_selected)
@@ -222,20 +224,29 @@ class MyDash4Pattern(MyDashBase):
         if n_intervals % 10 == 0:
             playsound('ring08.wav')  # C:/Windows/media/...
 
-    def __get_graph_first__(self, ticker: str, and_clause=''):
+    def __get_graph_first__(self, ticker: str, and_clause='', for_preload = False):
+        graph_id = 'my_graph_first'
         graph_title = '{} {}'.format(ticker, config.api_period)
-        graph_main = self.__get_dcc_graph_element__(True, 'my_graph_first', graph_title, ticker, and_clause)
-        self.__check_for_tick_breakout_alarm__()
-        self._time_stamp_last_refresh = datetime.now().timestamp()
-        return graph_main
+        graph_key = self.__get_graph_key__(graph_id, ticker)
+        # if graph_key in self._graph_dict:
+        #     print('return cached graph_first: {}'.format(graph_key))
+        #     return self._graph_dict[graph_key]
+        graph = self.__get_dcc_graph_element__(True, graph_id, graph_title, ticker, and_clause)
+        self._graph_dict[graph_key] = graph
+        if for_preload:
+            print('Pre-loaded: {}'.format(graph_key))
+        else:
+            self.__check_for_tick_breakout_alarm__()
+            self._time_stamp_last_refresh = datetime.now().timestamp()
+        return graph
 
     def __get_graph_second__(self, ticker: str, days: int):
         graph_id = 'my_graph_second'
         graph_title = '{} {} days'.format(ticker, days)
-        dict_key = '{}_{}_{}'.format(graph_id, ticker, days)
-        if dict_key in self._graph_dict:
-            print('return cached graph: {}'.format(dict_key))
-            return self._graph_dict[dict_key]
+        graph_key = self.__get_graph_key__(graph_id, ticker, days)
+        if graph_key in self._graph_dict:
+            print('return cached graph_second: {}'.format(graph_key))
+            return self._graph_dict[graph_key]
 
         date_from = datetime.today() - timedelta(days=days)
         date_to = datetime.today() + timedelta(days=5)
@@ -244,14 +255,18 @@ class MyDash4Pattern(MyDashBase):
         config.api_period = ApiPeriod.DAILY
         config.get_data_from_db = True
         graph = self.__get_dcc_graph_element__(False, graph_id, graph_title, ticker, and_clause)
-        self._graph_dict[dict_key] = graph
+        self._graph_dict[graph_key] = graph
         config.api_period = config_old.api_period
         config.get_data_from_db = config_old.get_data_from_db
         return graph
 
+    @staticmethod
+    def __get_graph_key__(graph_id: str, ticker: str, days: int = 0):
+        return '{}_{}_{}'.format(graph_id, ticker, days)
+
     def __get_dcc_graph_element__(self, for_first: bool, graph_id: str, graph_title: str, ticker: str, and_clause=''):
         graph_api = DccGraphApi(graph_id, graph_title) if for_first else DccGraphSecondApi(graph_id, graph_title)
-        print('get_dcc_graph_element: for_first={}, and_clause={}'.format(for_first, and_clause))
+        # print('get_dcc_graph_element: for_first={}, and_clause={}'.format(for_first, and_clause))
         self.detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
         self.df = pdh.pattern_data.df
         candlestick = self.__get_candlesticks_trace__(self.df, ticker)
@@ -333,7 +348,7 @@ class MyDash4Pattern(MyDashBase):
         return bollinger_traces
 
     def __set_app_layout__(self):
-        li = [MyHTML.h1('Pattern Detection Dashboard')]
+        li = [MyHTML.h3('Pattern Detection Dashboard')]
         li.append(MyDCC.interval('my_interval', 100))
         li.append(MyDCC.interval('my_interval_timer', 1))
         li.append(MyHTML.div_with_dcc_drop_down(
@@ -347,7 +362,6 @@ class MyDash4Pattern(MyDashBase):
         li.append(MyHTML.div_with_html_button_submit('my_submit_button', 'Refresh'))
         li.append(MyHTML.div('my_graph_first_div'))
         li.append(MyHTML.div('my_graph_second_div'))
-        li.append(self.__get_html_div_for_hover_data__())
         li.append(MyHTML.div_with_html_pre('my_interval_data'))
         li.append(MyHTML.div_with_html_pre('my_interval_timer_data'))
         li.append(MyHTML.div_with_html_pre('my_hover_data'))
@@ -361,13 +375,6 @@ class MyDash4Pattern(MyDashBase):
                 MyDCC.get_date_picker_range('my_date_picker', datetime.today() - timedelta(days=160))
             ],
             style={'display': 'inline-block', 'vertical-align': 'bottom', 'height': 20}
-        )
-
-    @staticmethod
-    def __get_html_div_for_hover_data__():
-        return html.Div(
-            [MyHTML.pre('my_hover_data')],
-            style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top'}
         )
 
 

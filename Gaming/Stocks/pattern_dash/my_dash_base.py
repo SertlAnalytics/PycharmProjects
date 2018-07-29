@@ -12,9 +12,11 @@ from sertl_analytics.mypasswords import MyPasswordHandler
 
 
 class MyDashBase:
-    def __init__(self, app_name: str):
-        self.app_name = app_name
+    def __init__(self, app_dict: dict):
+        print(app_dict)
+        self.app_name = app_dict['name']
         self.app = Dash()
+        self.app.title = app_dict['key']
         self.app.config.suppress_callback_exceptions = True
         self.auth = dash_auth.BasicAuth(self.app, MyPasswordHandler.get_pw_list(self.app_name))
         if __name__ != '__main__':

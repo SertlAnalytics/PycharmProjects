@@ -67,7 +67,7 @@ class MyHTML:
         return html.H2(element_text, style=style)
 
     @staticmethod
-    def h3(element_text: str, color='black', font_size=12, opacity='1'):
+    def h3(element_text: str, color='black', font_size=24, opacity='1'):
         style = {'opacity': opacity, 'color': color, 'fontSize': font_size}
         return html.H3(element_text, style=style)
 
@@ -91,7 +91,7 @@ class MyHTML:
     def div_with_dcc_drop_down(div_text: str, element_id: str, options: list, width=20, for_multi=False):
         div_element_list = []
         if div_text != '':
-            div_element_list.append(html.H3('{}:'.format(div_text), style={'padding-right': '30px'}))
+            div_element_list.append(html.H3('{}:'.format(div_text), style={'padding-right': '10'}))
         div_element_list.append(MyDCC.drop_down(element_id, options, for_multi))
         style = {'display': 'inline-block', 'verticalAlign': 'top', 'width': width,
                  'padding-bottom': 20, 'padding-left': 10}
