@@ -58,6 +58,14 @@ class PatternFunctionContainer:
         return self._tick_last
 
     @property
+    def height_start(self):
+        return round(abs(self.get_upper_value(self._tick_first.f_var) - self.get_lower_value(self._tick_first.f_var)), 2)
+
+    @property
+    def height_end(self):
+        return round(abs(self.get_upper_value(self._tick_last.f_var) - self.get_lower_value(self._tick_last.f_var)), 2)
+
+    @property
     def f_var_cross_f_upper_f_lower(self):
         return self._f_var_cross_f_upper_f_lower
 

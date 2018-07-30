@@ -219,7 +219,7 @@ class ConstraintsStatistics:
         self.list = []
         self.constraint_value_list = ['tolerance_pct',
                                       'f_upper_percentage_bounds',
-                                      'f_lower_percentage_bounds', 'f_upper_lower_relation_bounds',
+                                      'f_lower_percentage_bounds', 'height_end_start_relation_bounds',
                                       'f_regression_percentage_bounds', 'breakout_required_after_ticks',
                                       'global_all_in', 'global_count', 'global_series'
                                       ]

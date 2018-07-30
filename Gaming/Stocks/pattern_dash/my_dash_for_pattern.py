@@ -19,6 +19,7 @@ from pattern_dash.pattern_shapes import MyPolygonShape, MyPolygonLineShape, MyLi
 from sertl_analytics.myconstants import MyAPPS
 from pattern_dash.my_dash_base import MyDashBase
 from pattern_detection_controller import PatternDetectionController
+from pattern_detector import PatternDetector
 from sertl_analytics.constants.pattern_constants import CN, FD
 from pattern_configuration import config
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
@@ -28,9 +29,10 @@ from pattern_part import PatternPart
 from pattern_range import PatternRange
 from pattern_wave_tick import WaveTickList
 from pattern_colors import PatternColorHandler
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi
+from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi, MyHTMLHeaderTable
 from fibonacci.fibonacci_wave import FibonacciWave
 from copy import deepcopy
+from textwrap import dedent
 
 
 class MyDashStateHandler:
@@ -81,17 +83,48 @@ class MyDash4Pattern(MyDashBase):
         self._time_stamp_last_refresh = datetime.now().timestamp()
         self._graph_dict = {}
         self._state_handler = MyDashStateHandler(self._ticker_options)
+        self._detector_dict = {}
+        self._pdh_pattern_data_dict = {}
 
     def get_pattern(self):
         self.__set_app_layout__()
-        self.__init_interval_setting_callback__()
-        self.__init_callback_for_graph_first__()
-        self.__init_callback_for_graph_second__()
+        self.__init_interval_callback_for_user_name__()
         self.__init_interval_callback_for_interval_details__()
         self.__init_interval_callback_for_timer__()
+        self.__init_interval_setting_callback__()
+        self.__init_callback_for_ticket_markdown__()
+        self.__init_callback_for_graph_first__()
+        self.__init_callback_for_graph_second__()
         self.__init_hover_over_callback__()
         self.__init_selection_callback__()
         # self.__init_ticker_selection_callback__()
+
+    def __get_ticker_label__(self, ticker_value: str):
+        for elements in self._ticker_options:
+            if elements['value'] == ticker_value:
+                return elements['label']
+        return ticker_value
+
+    def __init_callback_for_ticket_markdown__(self):
+        @self.app.callback(
+            Output('my_ticket_markdown', 'children'),
+            [Input('my_graph_first_div', 'children')])
+        def handle_callback_for_ticket_markdown(children):
+            annotation = ''
+            tick = self._pdh_pattern_data_dict[True].tick_last
+            for pattern in self._detector_dict[True].pattern_list:
+                if not pattern.was_breakout_done():
+                    annotation = pattern.get_annotation_parameter().text
+
+            if annotation == '':
+                text = '**Last tick:** open:{} - **close = {}**'.format(tick.open, tick.close)
+            else:
+                text = dedent('''
+                        **Last tick:** open:{} - **close = {}**
+
+                        **Annotations (next breakout)**: {}
+                        ''').format(tick.open, tick.close, annotation)
+            return text
 
     def __init_selection_callback__(self):
         @self.app.callback(
@@ -107,6 +140,12 @@ class MyDash4Pattern(MyDashBase):
             if self._state_handler.change_for_my_refresh_button(n_clicks):  # hide button after refresh button click
                 return 'hidden'
             return 'hidden' if n_intervals_sec == 0 else ''
+
+        @self.app.callback(
+            Output('my_ticker_div', 'children'),
+            [Input('my_ticker_selection', 'value')])
+        def handle_selection_callback(ticker_selected):
+            return self.__get_ticker_label__(ticker_selected)
 
     def __fill_ticker_options__(self):
         for symbol, name in config.ticker_dic.items():
@@ -200,24 +239,36 @@ class MyDash4Pattern(MyDashBase):
                 return ''
             return self.__get_graph_second__(ticker_selected, days_selected)
 
+    def __init_interval_callback_for_user_name__(self):
+        @self.app.callback(
+            Output('my_user_name_div', 'children'),
+            [Input('my_interval', 'n_intervals')])
+        def handle_interval_callback_for_last_refresh(n_intervals):
+            if self._user_name == '':
+                self._user_name = self._get_user_name_()
+            return self._user_name
+
     def __init_interval_callback_for_interval_details__(self):
         @self.app.callback(
-            Output('my_interval_data', 'children'),
-            [Input('my_interval', 'n_intervals'),
-             Input('my_interval', 'interval')
-             ])
-        def handle_interval_callback_for_interval_details(n_intervals, interval_ms):
+            Output('my_last_refresh_time_div', 'children'),
+            [Input('my_interval', 'n_intervals')])
+        def handle_interval_callback_for_last_refresh(n_intervals):
             last_refresh_dt = MyDate.get_time_from_datetime(datetime.now())
+            return '{} ({})'.format(last_refresh_dt, n_intervals)
+
+        @self.app.callback(
+            Output('my_next_refresh_time_div', 'children'),
+            [Input('my_interval', 'n_intervals'), Input('my_interval', 'interval')])
+        def handle_interval_callback_for_next_refresh(n_intervals, interval_ms):
             dt_next = datetime.now() + timedelta(milliseconds=interval_ms)
-            next_refresh_time = MyDate.get_time_from_datetime(dt_next)
-            return 'Last refresh: {} ({}) - next refresh: {}'.format(last_refresh_dt, n_intervals, next_refresh_time)
+            return '{}'.format(MyDate.get_time_from_datetime(dt_next))
 
     def __init_interval_callback_for_timer__(self):
         @self.app.callback(
-            Output('my_interval_timer_data', 'children'),
+            Output('my_time_div', 'children'),
             [Input('my_interval_timer', 'n_intervals')])
         def handle_interval_callback_for_timer(n_intervals):
-            return '({})'.format(MyDate.get_time_from_datetime(datetime.now()))
+            return '{}'.format(MyDate.get_time_from_datetime(datetime.now()))
 
     @staticmethod
     def __play_sound__(n_intervals):
@@ -236,7 +287,7 @@ class MyDash4Pattern(MyDashBase):
         if for_preload:
             print('Pre-loaded: {}'.format(graph_key))
         else:
-            self.__check_for_tick_breakout_alarm__()
+            self.__check_for_tick_breakout_alarm__(self._detector_dict[True])
             self._time_stamp_last_refresh = datetime.now().timestamp()
         return graph
 
@@ -267,13 +318,13 @@ class MyDash4Pattern(MyDashBase):
     def __get_dcc_graph_element__(self, for_first: bool, graph_id: str, graph_title: str, ticker: str, and_clause=''):
         graph_api = DccGraphApi(graph_id, graph_title) if for_first else DccGraphSecondApi(graph_id, graph_title)
         # print('get_dcc_graph_element: for_first={}, and_clause={}'.format(for_first, and_clause))
-        self.detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
-        self.df = pdh.pattern_data.df
-        candlestick = self.__get_candlesticks_trace__(self.df, ticker)
-        bollinger_traces = self.__get_boolinger_band_trace__(self.df, ticker)
-        shapes = self.__get_pattern_shape_list__()
-        shapes += self.__get_pattern_regression_shape_list__()
-        shapes += self.__get_fibonacci_shape_list__()
+        self._detector_dict[for_first] = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
+        self._pdh_pattern_data_dict[for_first] = pdh.pattern_data
+        candlestick = self.__get_candlesticks_trace__(pdh.pattern_data.df, ticker)
+        bollinger_traces = self.__get_boolinger_band_trace__(pdh.pattern_data.df, ticker)
+        shapes = self.__get_pattern_shape_list__(self._detector_dict[for_first])
+        shapes += self.__get_pattern_regression_shape_list__(self._detector_dict[for_first])
+        shapes += self.__get_fibonacci_shape_list__(self._detector_dict[for_first])
         graph_api.figure_layout_shapes = [my_shapes.shape_parameters for my_shapes in shapes]
         # for my_shapes in shapes:
         #     print('{}: {}'.format(my_shapes.__class__.__name__, my_shapes.shape_parameters))
@@ -281,32 +332,32 @@ class MyDash4Pattern(MyDashBase):
         graph_api.figure_data = [candlestick]
         return MyDCC.graph(graph_api)
 
-    def __check_for_tick_breakout_alarm__(self):
-        if config.api_period == ApiPeriod.INTRADAY:
-            for pattern in self.detector.pattern_list:
-                if pattern.was_breakout_done():
-                    if pattern.breakout.tick_breakout.timestamp > self._time_stamp_last_refresh:
-                        print('Breakout since last refresh !!!!')
-                        playsound('alarm01.wav')
+    def __check_for_tick_breakout_alarm__(self, detector: PatternDetector):
+        for pattern in detector.pattern_list:
+            if pattern.was_breakout_done():
+                if pattern.breakout.tick_breakout.timestamp > self._time_stamp_last_refresh:
+                    print('Breakout since last refresh !!!!')
+                    playsound('alarm01.wav')
 
-    def __get_pattern_shape_list__(self):
+    def __get_pattern_shape_list__(self, detector: PatternDetector):
         return_list = []
-        for pattern in self.detector.pattern_list:
+        for pattern in detector.pattern_list:
             colors = self._color_handler.get_colors_for_pattern(pattern)
             return_list.append(DashInterface.get_pattern_part_main_shape(pattern, colors[0]))
             if pattern.was_breakout_done() and pattern.is_part_trade_available():
                 return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors[1]))
         return return_list
 
-    def __get_pattern_regression_shape_list__(self):
+    def __get_pattern_regression_shape_list__(self, detector: PatternDetector):
         return_list = []
-        for pattern in self.detector.pattern_list:
+        for pattern in detector.pattern_list:
             return_list.append(DashInterface.get_f_regression_shape(pattern.part_main, 'skyblue'))
         return return_list
 
-    def __get_fibonacci_shape_list__(self):
+    @staticmethod
+    def __get_fibonacci_shape_list__(detector: PatternDetector):
         return_list = []
-        for fib_waves in self.detector.fib_wave_tree.fibonacci_wave_list:
+        for fib_waves in detector.fib_wave_tree.fibonacci_wave_list:
             color = 'green' if fib_waves.wave_type == FD.ASC else 'red'
             return_list.append(DashInterface.get_fibonacci_wave_shape(fib_waves, color))
             # print('Fibonacci: {}'.format(return_list[-1].shape_parameters))
@@ -348,7 +399,8 @@ class MyDash4Pattern(MyDashBase):
         return bollinger_traces
 
     def __set_app_layout__(self):
-        li = [MyHTML.h3('Pattern Detection Dashboard')]
+        # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
+        li = [MyHTMLHeaderTable().get_table()]
         li.append(MyDCC.interval('my_interval', 100))
         li.append(MyDCC.interval('my_interval_timer', 1))
         li.append(MyHTML.div_with_dcc_drop_down(
@@ -362,8 +414,6 @@ class MyDash4Pattern(MyDashBase):
         li.append(MyHTML.div_with_html_button_submit('my_submit_button', 'Refresh'))
         li.append(MyHTML.div('my_graph_first_div'))
         li.append(MyHTML.div('my_graph_second_div'))
-        li.append(MyHTML.div_with_html_pre('my_interval_data'))
-        li.append(MyHTML.div_with_html_pre('my_interval_timer_data'))
         li.append(MyHTML.div_with_html_pre('my_hover_data'))
         self.app.layout = MyHTML.div('', li)
 

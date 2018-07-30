@@ -61,7 +61,7 @@ class PatternPart:
             self.__set_xy_center__()
             self.__set_xy_regression__()
 
-    def get_annotation_parameter(self, color: str = 'blue'):
+    def get_annotation_parameter(self, color: str = 'blue') -> AnnotationParameter:
         annotation_param = AnnotationParameter()
         offset_x = self.__get_annotation_offset_x__()
         offset_y = self.__get_annotation_offset_y__()
