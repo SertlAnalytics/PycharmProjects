@@ -35,11 +35,106 @@ from copy import deepcopy
 from textwrap import dedent
 
 
+class MyCacheObject:
+    def __init__(self, cache_id: str, value, valid_until_ts: int = None):
+        self.id = cache_id
+        self.value = value
+        self.valid_until_ts = valid_until_ts
+
+    def is_valid(self):
+        if self.valid_until_ts is None:
+            return True
+        return MyDate.time_stamp_now() < self.valid_until_ts
+
+
+class MyCache:
+    def __init__(self):
+        self._cached_object_dict = {}
+
+    def add_cache_value(self, cache_key: str, value, valid_until_ts: int = None):
+        self._cached_object_dict[cache_key] = MyCacheObject(cache_key, value, valid_until_ts)
+        print('\nAdd to cache: key={}, timestamp={}, now={}'.format(cache_key, valid_until_ts, MyDate.time_stamp_now()))
+
+    def get_cached_value_by_cache_key(self, cache_key):
+        if cache_key in self._cached_object_dict:
+            if self._cached_object_dict[cache_key].is_valid():
+                return self._cached_object_dict[cache_key].value
+        return None
+
+    def clear(self):
+        self._cached_object_dict = {}
+
+
+class MyGraphCache(MyCache):
+    def __init__(self):
+        MyCache.__init__(self)
+        self._cached_detector_dict = {}
+        self._cached_pattern_data_dict = {}
+        self._cached_breakout_since_last_refresh_dict = {}
+        self._cached_before_breakout_dict = {}
+
+    @staticmethod
+    def get_cache_key(graph_id: str, ticker: str, days: int = 0):
+        return '{}_{}_{}'.format(graph_id, ticker, days)
+
+    def add_detector(self, cache_key: str, detector, time_stamp_last_refresh: int):
+        self._cached_detector_dict[cache_key] = detector
+        self._cached_breakout_since_last_refresh_dict[cache_key] = False
+        self._cached_before_breakout_dict[cache_key] = False
+        for pattern in detector.pattern_list:
+            if pattern.was_breakout_done():
+                if pattern.breakout.tick_breakout.time_stamp > time_stamp_last_refresh:
+                    self._cached_breakout_since_last_refresh_dict[cache_key] = False
+            else:
+                self._cached_before_breakout_dict[cache_key] = True
+
+    def add_pattern_data(self, cache_key: str, pattern_data):
+        self._cached_pattern_data_dict[cache_key] = pattern_data
+
+    def get_detector(self, cache_key: str):
+        return self._cached_detector_dict[cache_key]
+
+    def get_pattern_data(self, cache_key):
+        return self._cached_pattern_data_dict[cache_key]
+
+    def was_breakout_since_last_refresh(self, cache_key: str):
+        return self._cached_breakout_since_last_refresh_dict[cache_key]
+
+    def get_graph_list_before_breakout(self, key_not: str) -> list:
+        graphs = []
+        for key, cache_object in self._cached_object_dict.items():
+            if key != key_not and self._cached_before_breakout_dict[key]:
+                graphs.append(self.__change_to_breakout_graph__(cache_object.value, len(graphs)))
+        return graphs
+
+    @staticmethod
+    def __change_to_breakout_graph__(graph_old, number: int):
+        graph = deepcopy(graph_old)
+        graph.id = 'my_new_key_{}'.format(number)
+        graph.figure['layout']['height'] = graph.figure['layout']['height']/2
+        return graph
+
+    def clear(self):
+        print('\n..clearing cache')
+        MyCache.clear(self)
+        self._cached_detector_dict = {}
+        self._cached_pattern_data_dict = {}
+        self._cached_breakout_since_last_refresh_dict = {}
+        self._cached_before_breakout_dict = {}
+
+
 class MyDashStateHandler:
     def __init__(self, ticker_list: list):
         self._my_refresh_button_clicks = 0
         self._my_interval_n_intervals = 0
+        self._my_interval_selection = 0
         self._ticker_dict = {dict_element['value']: 0 for dict_element in ticker_list}
+
+    def change_for_my_interval_selection(self, interval_selection: int) -> bool:
+        if interval_selection != self._my_interval_selection:
+            self._my_interval_selection = interval_selection
+            return True
+        return False
 
     def change_for_my_refresh_button(self, n_clicks: int) -> bool:
         if n_clicks > self._my_refresh_button_clicks:
@@ -80,11 +175,14 @@ class MyDash4Pattern(MyDashBase):
         self.__fill_ticker_options__()
         self.__fill_interval_options__()
         self.__fill_graph_second_days_options__()
-        self._time_stamp_last_refresh = datetime.now().timestamp()
-        self._graph_dict = {}
+        self._time_stamp_last_refresh = MyDate.time_stamp_now()
+        self._time_stamp_next_refresh = None
+        self._graph_first_cache = MyGraphCache()
+        self._graph_second_cache = MyGraphCache()
         self._state_handler = MyDashStateHandler(self._ticker_options)
-        self._detector_dict = {}
-        self._pdh_pattern_data_dict = {}
+        self._graph_key_first = ''
+        self._detector_first = None
+        self._pattern_data_first = None
 
     def get_pattern(self):
         self.__set_app_layout__()
@@ -95,9 +193,10 @@ class MyDash4Pattern(MyDashBase):
         self.__init_callback_for_ticket_markdown__()
         self.__init_callback_for_graph_first__()
         self.__init_callback_for_graph_second__()
+        self.__init_callback_for_graphs_before_breakout__()
         self.__init_hover_over_callback__()
         self.__init_selection_callback__()
-        # self.__init_ticker_selection_callback__()
+        self.__init_ticker_selection_callback__()
 
     def __get_ticker_label__(self, ticker_value: str):
         for elements in self._ticker_options:
@@ -111,8 +210,8 @@ class MyDash4Pattern(MyDashBase):
             [Input('my_graph_first_div', 'children')])
         def handle_callback_for_ticket_markdown(children):
             annotation = ''
-            tick = self._pdh_pattern_data_dict[True].tick_last
-            for pattern in self._detector_dict[True].pattern_list:
+            tick = self._pattern_data_first.tick_last
+            for pattern in self._detector_first.pattern_list:
                 if not pattern.was_breakout_done():
                     annotation = pattern.get_annotation_parameter().text
 
@@ -134,8 +233,10 @@ class MyDash4Pattern(MyDashBase):
              Input('my_interval', 'n_intervals'),
              Input('my_submit_button', 'n_clicks')],
             [State('my_interval_timer', 'n_intervals')])
-        def handle_selection_callback(ticker_selected, interval_selected, n_intervals, n_clicks, n_intervals_sec):
-            if self._state_handler.change_for_my_interval(n_intervals):  # hide button after inverval refresh
+        def handle_selection_callback(ticker_selected, interval_selected: int, n_intervals, n_clicks, n_intervals_sec):
+            if self._state_handler.change_for_my_interval_selection(interval_selected):
+                self._graph_first_cache.clear()
+            if self._state_handler.change_for_my_interval(n_intervals):  # hide button after interval refresh
                 return 'hidden'
             if self._state_handler.change_for_my_refresh_button(n_clicks):  # hide button after refresh button click
                 return 'hidden'
@@ -144,7 +245,7 @@ class MyDash4Pattern(MyDashBase):
         @self.app.callback(
             Output('my_ticker_div', 'children'),
             [Input('my_ticker_selection', 'value')])
-        def handle_selection_callback(ticker_selected):
+        def handle_ticker_selection_callback_for_ticker_label(ticker_selected):
             return self.__get_ticker_label__(ticker_selected)
 
     def __fill_ticker_options__(self):
@@ -193,11 +294,7 @@ class MyDash4Pattern(MyDashBase):
         @self.app.callback(
             Output('my_graph_second_days_selection', 'value'),
             [Input('my_ticker_selection', 'value')])
-        def handle_ticker_selection_callback(ticker_selected):
-            self._state_handler.add_selected_ticker(ticker_selected)
-            ticker_next = self._state_handler.get_next_most_selected_ticker(ticker_selected)
-            print('Next ticker - preload = {}'.format(ticker_next))
-            pre_loaded_graph = self.__get_graph_first__(ticker_selected, '', True)
+        def handle_ticker_selection_callback_for_days_selection(ticker_selected):
             return 0
 
     def __init_interval_callback_with_date_picker__(self):
@@ -225,8 +322,13 @@ class MyDash4Pattern(MyDashBase):
              Input('my_submit_button', 'n_clicks')],
             [State('my_ticker_selection', 'value')])
         def handle_callback_for_graph_first(n_intervals, n_clicks, ticker):
-            # self.__play_sound__(n_intervals)
-            return self.__get_graph_first__(ticker)
+            graph, graph_key = self.__get_graph_first__(ticker)
+            self._graph_key_first = graph_key
+            self.__cache_others_ticker_values__(n_intervals, ticker)
+            if self._graph_first_cache.was_breakout_since_last_refresh(graph_key):
+                print('Breakout since last refresh !!!!')
+                playsound('alarm01.wav')
+            return graph
 
     def __init_callback_for_graph_second__(self):
         @self.app.callback(
@@ -237,7 +339,16 @@ class MyDash4Pattern(MyDashBase):
         def handle_callback_for_graph_second(days_selected, graph_first_div, ticker_selected):
             if days_selected == 0:
                 return ''
-            return self.__get_graph_second__(ticker_selected, days_selected)
+            return '{}'.format(self.__get_graph_second__(ticker_selected, days_selected)[0])
+
+    def __init_callback_for_graphs_before_breakout__(self):
+        @self.app.callback(
+            Output('my_graphs_before_breakout_div', 'children'),
+            [Input('my_graph_first_div', 'children')])
+        def handle_callback_for_graphs_before_breakout(graph_first_div):
+            graphs = self._graph_first_cache.get_graph_list_before_breakout(self._graph_key_first)
+            print('\n...handle_callback_for_graphs_before_breakout: {}'.format(len(graphs)))
+            return graphs
 
     def __init_interval_callback_for_user_name__(self):
         @self.app.callback(
@@ -253,6 +364,7 @@ class MyDash4Pattern(MyDashBase):
             Output('my_last_refresh_time_div', 'children'),
             [Input('my_interval', 'n_intervals')])
         def handle_interval_callback_for_last_refresh(n_intervals):
+            self._time_stamp_last_refresh = MyDate.time_stamp_now()
             last_refresh_dt = MyDate.get_time_from_datetime(datetime.now())
             return '{} ({})'.format(last_refresh_dt, n_intervals)
 
@@ -261,6 +373,7 @@ class MyDash4Pattern(MyDashBase):
             [Input('my_interval', 'n_intervals'), Input('my_interval', 'interval')])
         def handle_interval_callback_for_next_refresh(n_intervals, interval_ms):
             dt_next = datetime.now() + timedelta(milliseconds=interval_ms)
+            self._time_stamp_next_refresh = int(dt_next.timestamp())
             return '{}'.format(MyDate.get_time_from_datetime(dt_next))
 
     def __init_interval_callback_for_timer__(self):
@@ -275,69 +388,65 @@ class MyDash4Pattern(MyDashBase):
         if n_intervals % 10 == 0:
             playsound('ring08.wav')  # C:/Windows/media/...
 
-    def __get_graph_first__(self, ticker: str, and_clause='', for_preload = False):
+    def __cache_others_ticker_values__(self, n_intervals: int, ticker_selected: str):
+        if n_intervals > 0:
+            for element_dict in self._ticker_options:
+                ticker = element_dict['value']
+                if ticker != ticker_selected:
+                    self.__get_graph_first__(ticker)
+
+    def __get_graph_first__(self, ticker: str, and_clause=''):
         graph_id = 'my_graph_first'
         graph_title = '{} {}'.format(ticker, config.api_period)
-        graph_key = self.__get_graph_key__(graph_id, ticker)
-        # if graph_key in self._graph_dict:
-        #     print('return cached graph_first: {}'.format(graph_key))
-        #     return self._graph_dict[graph_key]
-        graph = self.__get_dcc_graph_element__(True, graph_id, graph_title, ticker, and_clause)
-        self._graph_dict[graph_key] = graph
-        if for_preload:
-            print('Pre-loaded: {}'.format(graph_key))
-        else:
-            self.__check_for_tick_breakout_alarm__(self._detector_dict[True])
-            self._time_stamp_last_refresh = datetime.now().timestamp()
-        return graph
+        graph_key = MyGraphCache.get_cache_key(graph_id, ticker, 0)
+        cached_graph = self._graph_first_cache.get_cached_value_by_cache_key(graph_key)
+        if cached_graph is not None:
+            self._detector_first = self._graph_first_cache.get_detector(graph_key)
+            self._pattern_data_first = self._graph_first_cache.get_pattern_data(graph_key)
+            print('...return cached graph_first: {}'.format(graph_key))
+            return cached_graph, graph_key
+        self._detector_first = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
+        self._pattern_data_first = pdh.pattern_data
+        graph_api = DccGraphApi(graph_id, graph_title)
+        graph = self.__get_dcc_graph_element__(self._detector_first, graph_api, ticker)
+        self._graph_first_cache.add_cache_value(graph_key, graph, self._time_stamp_next_refresh)
+        self._graph_first_cache.add_detector(graph_key, self._detector_first, self._time_stamp_last_refresh)
+        self._graph_first_cache.add_pattern_data(graph_key, self._pattern_data_first)
+        return graph, graph_key
 
     def __get_graph_second__(self, ticker: str, days: int):
         graph_id = 'my_graph_second'
         graph_title = '{} {} days'.format(ticker, days)
-        graph_key = self.__get_graph_key__(graph_id, ticker, days)
-        if graph_key in self._graph_dict:
-            print('return cached graph_second: {}'.format(graph_key))
-            return self._graph_dict[graph_key]
-
+        graph_key = MyGraphCache.get_cache_key(graph_id, ticker, days)
+        cached_graph = self._graph_second_cache.get_cached_value_by_cache_key(graph_key)
+        if cached_graph is not None:
+            print('...return cached graph_second: {}'.format(graph_key))
+            return cached_graph, graph_key
         date_from = datetime.today() - timedelta(days=days)
         date_to = datetime.today() + timedelta(days=5)
         and_clause = self.__get_and_clause__(date_from, date_to)
         config_old = deepcopy(config)
         config.api_period = ApiPeriod.DAILY
         config.get_data_from_db = True
-        graph = self.__get_dcc_graph_element__(False, graph_id, graph_title, ticker, and_clause)
-        self._graph_dict[graph_key] = graph
+        detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
+        graph_api = DccGraphSecondApi(graph_id, graph_title)
+        graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
+        self._graph_second_cache.add_cache_value(graph_key, graph)
         config.api_period = config_old.api_period
         config.get_data_from_db = config_old.get_data_from_db
-        return graph
+        return graph, graph_key
 
-    @staticmethod
-    def __get_graph_key__(graph_id: str, ticker: str, days: int = 0):
-        return '{}_{}_{}'.format(graph_id, ticker, days)
-
-    def __get_dcc_graph_element__(self, for_first: bool, graph_id: str, graph_title: str, ticker: str, and_clause=''):
-        graph_api = DccGraphApi(graph_id, graph_title) if for_first else DccGraphSecondApi(graph_id, graph_title)
-        # print('get_dcc_graph_element: for_first={}, and_clause={}'.format(for_first, and_clause))
-        self._detector_dict[for_first] = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
-        self._pdh_pattern_data_dict[for_first] = pdh.pattern_data
-        candlestick = self.__get_candlesticks_trace__(pdh.pattern_data.df, ticker)
-        bollinger_traces = self.__get_boolinger_band_trace__(pdh.pattern_data.df, ticker)
-        shapes = self.__get_pattern_shape_list__(self._detector_dict[for_first])
-        shapes += self.__get_pattern_regression_shape_list__(self._detector_dict[for_first])
-        shapes += self.__get_fibonacci_shape_list__(self._detector_dict[for_first])
+    def __get_dcc_graph_element__(self, detector, graph_api, ticker: str):
+        pattern_df = pdh.pattern_data.df
+        candlestick = self.__get_candlesticks_trace__(pattern_df, ticker)
+        bollinger_traces = self.__get_boolinger_band_trace__(pattern_df, ticker)
+        shapes = self.__get_pattern_shape_list__(detector)
+        shapes += self.__get_pattern_regression_shape_list__(detector)
+        shapes += self.__get_fibonacci_shape_list__(detector)
         graph_api.figure_layout_shapes = [my_shapes.shape_parameters for my_shapes in shapes]
-        # for my_shapes in shapes:
-        #     print('{}: {}'.format(my_shapes.__class__.__name__, my_shapes.shape_parameters))
         graph_api.figure_layout_annotations = [my_shapes.annotation_parameters for my_shapes in shapes]
         graph_api.figure_data = [candlestick]
         return MyDCC.graph(graph_api)
-
-    def __check_for_tick_breakout_alarm__(self, detector: PatternDetector):
-        for pattern in detector.pattern_list:
-            if pattern.was_breakout_done():
-                if pattern.breakout.tick_breakout.timestamp > self._time_stamp_last_refresh:
-                    print('Breakout since last refresh !!!!')
-                    playsound('alarm01.wav')
 
     def __get_pattern_shape_list__(self, detector: PatternDetector):
         return_list = []
@@ -414,6 +523,8 @@ class MyDash4Pattern(MyDashBase):
         li.append(MyHTML.div_with_html_button_submit('my_submit_button', 'Refresh'))
         li.append(MyHTML.div('my_graph_first_div'))
         li.append(MyHTML.div('my_graph_second_div'))
+        li.append(html.Div(id='my_graphs_before_breakout_div'))
+        # li.append(MyHTML.div_embedded('my_graphs_before_breakout_div'))
         li.append(MyHTML.div_with_html_pre('my_hover_data'))
         self.app.layout = MyHTML.div('', li)
 

@@ -10,6 +10,10 @@ import matplotlib.dates as m_dates
 
 class MyDate:
     @staticmethod
+    def time_stamp_now() -> int:
+        return int(datetime.now().timestamp())
+
+    @staticmethod
     def get_datetime_object(date_time):
         if date_time is None:
             return None
