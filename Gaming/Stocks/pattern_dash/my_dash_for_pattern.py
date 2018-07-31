@@ -35,11 +35,26 @@ from copy import deepcopy
 from textwrap import dedent
 
 
+class MyCacheObjectApi:
+    def __init__(self):
+        self.key = None
+        self.value = None
+        self.valid_until_ts = None
+
+
+class MyGraphCacheObjectApi(MyCacheObjectApi):
+    def __init__(self):
+        MyCacheObjectApi.__init__(self)
+        self.detector = None
+        self.pattern_data = None
+        self.last_refresh_ts = None
+
+
 class MyCacheObject:
-    def __init__(self, cache_id: str, value, valid_until_ts: int = None):
-        self.id = cache_id
-        self.value = value
-        self.valid_until_ts = valid_until_ts
+    def __init__(self, cache_api: MyCacheObjectApi):
+        self.id = cache_api.key
+        self.value = cache_api.value
+        self.valid_until_ts = cache_api.valid_until_ts
 
     def is_valid(self):
         if self.valid_until_ts is None:
@@ -47,12 +62,39 @@ class MyCacheObject:
         return MyDate.time_stamp_now() < self.valid_until_ts
 
 
+class MyGraphCacheObject(MyCacheObject):
+    def __init__(self, cache_api: MyGraphCacheObjectApi):
+        MyCacheObject.__init__(self, cache_api)
+        self.detector = cache_api.detector
+        self.pattern_data = cache_api.pattern_data
+        self.last_refresh_ts = cache_api.last_refresh_ts
+        self.was_cached_before_breakout = self.__was_cached_before_breakout__()
+        self.was_breakout_since_last_refresh = self.__was_breakout_since_last_refresh__(self.last_refresh_ts)
+
+    def __was_breakout_since_last_refresh__(self, time_stamp_last_refresh: int):
+        for pattern in self.detector.pattern_list:
+            if pattern.was_breakout_done():
+                if pattern.breakout.tick_breakout.time_stamp > time_stamp_last_refresh:
+                    return True
+        return False
+
+    def __was_cached_before_breakout__(self) -> bool:
+        for pattern in self.detector.pattern_list:
+            if not pattern.was_breakout_done():
+                return True
+        return False
+
+
 class MyCache:
     def __init__(self):
         self._cached_object_dict = {}
 
-    def add_cache_value(self, cache_key: str, value, valid_until_ts: int = None):
-        self._cached_object_dict[cache_key] = MyCacheObject(cache_key, value, valid_until_ts)
+    def add_cache_value(self, cache_api: MyCacheObjectApi):
+        self._cached_object_dict[cache_api.key] = MyCacheObject(cache_api)
+        self._print_add_to_cache_(cache_api.key, cache_api.valid_until_ts)
+
+    @staticmethod
+    def _print_add_to_cache_(cache_key, valid_until_ts):
         print('\nAdd to cache: key={}, timestamp={}, now={}'.format(cache_key, valid_until_ts, MyDate.time_stamp_now()))
 
     def get_cached_value_by_cache_key(self, cache_key):
@@ -68,43 +110,39 @@ class MyCache:
 class MyGraphCache(MyCache):
     def __init__(self):
         MyCache.__init__(self)
-        self._cached_detector_dict = {}
-        self._cached_pattern_data_dict = {}
-        self._cached_breakout_since_last_refresh_dict = {}
-        self._cached_before_breakout_dict = {}
+        self.was_cached_before_breakout_play_sound_list = []
 
     @staticmethod
     def get_cache_key(graph_id: str, ticker: str, days: int = 0):
         return '{}_{}_{}'.format(graph_id, ticker, days)
 
-    def add_detector(self, cache_key: str, detector, time_stamp_last_refresh: int):
-        self._cached_detector_dict[cache_key] = detector
-        self._cached_breakout_since_last_refresh_dict[cache_key] = False
-        self._cached_before_breakout_dict[cache_key] = False
-        for pattern in detector.pattern_list:
-            if pattern.was_breakout_done():
-                if pattern.breakout.tick_breakout.time_stamp > time_stamp_last_refresh:
-                    self._cached_breakout_since_last_refresh_dict[cache_key] = False
-            else:
-                self._cached_before_breakout_dict[cache_key] = True
-
-    def add_pattern_data(self, cache_key: str, pattern_data):
-        self._cached_pattern_data_dict[cache_key] = pattern_data
+    def add_cache_value(self, cache_api: MyGraphCacheObjectApi):
+        self._cached_object_dict[cache_api.key] = MyGraphCacheObject(cache_api)
+        self._print_add_to_cache_(cache_api.key, cache_api.valid_until_ts)
 
     def get_detector(self, cache_key: str):
-        return self._cached_detector_dict[cache_key]
+        return self._cached_object_dict[cache_key].detector
 
     def get_pattern_data(self, cache_key):
-        return self._cached_pattern_data_dict[cache_key]
+        return self._cached_object_dict[cache_key].pattern_data
 
     def was_breakout_since_last_refresh(self, cache_key: str):
-        return self._cached_breakout_since_last_refresh_dict[cache_key]
+        return self._cached_object_dict[cache_key].was_breakout_since_last_refresh
 
     def get_graph_list_before_breakout(self, key_not: str) -> list:
+        play_sound = False
         graphs = []
         for key, cache_object in self._cached_object_dict.items():
-            if key != key_not and self._cached_before_breakout_dict[key]:
+            if key != key_not and cache_object.was_cached_before_breakout:
+                if key not in self.was_cached_before_breakout_play_sound_list:
+                    self.was_cached_before_breakout_play_sound_list.append(key)
+                    play_sound = True
                 graphs.append(self.__change_to_breakout_graph__(cache_object.value, len(graphs)))
+            elif not cache_object.was_cached_before_breakout:
+                if key in self.was_cached_before_breakout_play_sound_list:
+                    self.was_cached_before_breakout_play_sound_list.remove(key)
+        if play_sound:
+            playsound('ring08.wav')  # C:/Windows/media/...
         return graphs
 
     @staticmethod
@@ -113,14 +151,6 @@ class MyGraphCache(MyCache):
         graph.id = 'my_new_key_{}'.format(number)
         graph.figure['layout']['height'] = graph.figure['layout']['height']/2
         return graph
-
-    def clear(self):
-        print('\n..clearing cache')
-        MyCache.clear(self)
-        self._cached_detector_dict = {}
-        self._cached_pattern_data_dict = {}
-        self._cached_breakout_since_last_refresh_dict = {}
-        self._cached_before_breakout_dict = {}
 
 
 class MyDashStateHandler:
@@ -347,7 +377,8 @@ class MyDash4Pattern(MyDashBase):
             [Input('my_graph_first_div', 'children')])
         def handle_callback_for_graphs_before_breakout(graph_first_div):
             graphs = self._graph_first_cache.get_graph_list_before_breakout(self._graph_key_first)
-            print('\n...handle_callback_for_graphs_before_breakout: {}'.format(len(graphs)))
+            if len(graphs) > 0:
+                print('\n...handle_callback_for_graphs_before_breakout: {}'.format(len(graphs)))
             return graphs
 
     def __init_interval_callback_for_user_name__(self):
@@ -393,25 +424,29 @@ class MyDash4Pattern(MyDashBase):
             for element_dict in self._ticker_options:
                 ticker = element_dict['value']
                 if ticker != ticker_selected:
-                    self.__get_graph_first__(ticker)
+                    self.__get_graph_first__(ticker, '', True)
 
-    def __get_graph_first__(self, ticker: str, and_clause=''):
+    def __get_graph_first__(self, ticker: str, and_clause='', for_caching=False):
         graph_id = 'my_graph_first'
         graph_title = '{} {}'.format(ticker, config.api_period)
         graph_key = MyGraphCache.get_cache_key(graph_id, ticker, 0)
         cached_graph = self._graph_first_cache.get_cached_value_by_cache_key(graph_key)
         if cached_graph is not None:
-            self._detector_first = self._graph_first_cache.get_detector(graph_key)
-            self._pattern_data_first = self._graph_first_cache.get_pattern_data(graph_key)
+            if not for_caching:
+                self._detector_first = self._graph_first_cache.get_detector(graph_key)
+                self._pattern_data_first = self._graph_first_cache.get_pattern_data(graph_key)
             print('...return cached graph_first: {}'.format(graph_key))
             return cached_graph, graph_key
-        self._detector_first = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
-        self._pattern_data_first = pdh.pattern_data
+
+        detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
+        pattern_data = pdh.pattern_data
+        if not for_caching:
+            self._detector_first = detector
+            self._pattern_data_first = pdh.pattern_data
         graph_api = DccGraphApi(graph_id, graph_title)
-        graph = self.__get_dcc_graph_element__(self._detector_first, graph_api, ticker)
-        self._graph_first_cache.add_cache_value(graph_key, graph, self._time_stamp_next_refresh)
-        self._graph_first_cache.add_detector(graph_key, self._detector_first, self._time_stamp_last_refresh)
-        self._graph_first_cache.add_pattern_data(graph_key, self._pattern_data_first)
+        graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
+        cache_api = self.__get_cache_api__(graph_key, graph, detector, pattern_data)
+        self._graph_first_cache.add_cache_value(cache_api)
         return graph, graph_key
 
     def __get_graph_second__(self, ticker: str, days: int):
@@ -431,10 +466,21 @@ class MyDash4Pattern(MyDashBase):
         detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
         graph_api = DccGraphSecondApi(graph_id, graph_title)
         graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
-        self._graph_second_cache.add_cache_value(graph_key, graph)
+        cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
+        self._graph_second_cache.add_cache_value(cache_api)
         config.api_period = config_old.api_period
         config.get_data_from_db = config_old.get_data_from_db
         return graph, graph_key
+
+    def __get_cache_api__(self, graph_key, graph, detector, pattern_data):
+        cache_api = MyGraphCacheObjectApi()
+        cache_api.key = graph_key
+        cache_api.value = graph
+        cache_api.detector = detector
+        cache_api.pattern_data = pattern_data
+        cache_api.valid_until_ts = self._time_stamp_next_refresh
+        cache_api.last_refresh_ts = self._time_stamp_last_refresh
+        return cache_api
 
     def __get_dcc_graph_element__(self, detector, graph_api, ticker: str):
         pattern_df = pdh.pattern_data.df
