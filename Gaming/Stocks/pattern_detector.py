@@ -5,14 +5,14 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-import numpy as np
+from sertl_analytics.constants.pattern_constants import FT
 from pattern_configuration import config, runtime, debugger
 from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
-from pattern_function_container import PatternFunctionContainer
 from pattern_part import PatternPart
 from pattern import Pattern, PatternHelper
-from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin
+from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
+    , PatternRangeDetectorHeadShoulderInverse
 from pattern_breakout import PatternBreakoutApi, PatternBreakout
 from pattern_statistics import PatternDetectorStatisticsApi
 from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
@@ -27,6 +27,8 @@ class PatternDetector:
         self.df_min_max_length = self.df_min_max.shape[0]
         self.range_detector_max = None
         self.range_detector_min = None
+        self.range_detector_h_s = None  # Head_Shoulder
+        self.range_detector_h_s_i = None  # Head_Shoulder_inverted
         self.pattern_list = []
         self.fib_wave_tree = None
 
@@ -40,7 +42,7 @@ class PatternDetector:
         We parse only over the actual known min-max-dataframe
         """
         self.__fill_possible_pattern_ranges__()
-        possible_pattern_range_list = self.__get_combined_possible_pattern_ranges__()
+        possible_pattern_range_list = self.get_combined_possible_pattern_ranges()
         for pattern_type in self.pattern_type_list:
             # print('parsing for pattern: {}'.format(pattern_type))
             runtime.actual_pattern_type = pattern_type
@@ -152,8 +154,8 @@ class PatternDetector:
                 return breakout
         return None
 
-    def __get_pattern_breakout__(self, pattern: Pattern, tick_previous: WaveTick, tick_breakout: WaveTick) \
-            -> PatternBreakout:
+    @staticmethod
+    def __get_pattern_breakout__(pattern: Pattern, tick_previous: WaveTick, tick_breakout: WaveTick) -> PatternBreakout:
         breakout_api = PatternBreakoutApi(pattern.function_cont)
         breakout_api.tick_previous = tick_previous
         breakout_api.tick_breakout = tick_breakout
@@ -161,19 +163,33 @@ class PatternDetector:
         return PatternBreakout(breakout_api)
 
     def __fill_possible_pattern_ranges__(self):
-        self.range_detector_max = PatternRangeDetectorMax(pdh.pattern_data.tick_list_max_without_hidden_ticks)
-        self.range_detector_min = PatternRangeDetectorMin(pdh.pattern_data.tick_list_min_without_hidden_ticks)
+        if self.__is_any_non_head_shoulder_pattern_type_selected__():
+            self.range_detector_max = PatternRangeDetectorMax(pdh.pattern_data.tick_list_max_without_hidden_ticks)
+            self.range_detector_min = PatternRangeDetectorMin(pdh.pattern_data.tick_list_min_without_hidden_ticks)
+        tick_list_head_shoulder = pdh.pattern_data.tick_list_min_max_without_hidden_ticks
+        if FT.HEAD_SHOULDER in self.pattern_type_list:
+            self.range_detector_h_s = PatternRangeDetectorHeadShoulder(tick_list_head_shoulder)
+        if FT.HEAD_SHOULDER_INVERSE in self.pattern_type_list:
+            self.range_detector_h_s = PatternRangeDetectorHeadShoulderInverse(tick_list_head_shoulder)
 
-    def __get_combined_possible_pattern_ranges__(self) -> list:
-        # return self.range_detector_min.get_pattern_range_list()
-        list_max = self.range_detector_max.get_pattern_range_list()
-        list_min = self.range_detector_min.get_pattern_range_list()
+    def __is_any_non_head_shoulder_pattern_type_selected__(self):
+        head_shoulder_set = {FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_INVERSE}
+        pattern_type_set = set(self.pattern_type_list)
+        intersection_pt_head_shoulder = pattern_type_set.intersection(head_shoulder_set)
+        return False if len(intersection_pt_head_shoulder) == len(pattern_type_set) else True
+
+    def get_combined_possible_pattern_ranges(self) -> list:
+        list_max = [] if self.range_detector_max is None else self.range_detector_max.get_pattern_range_list()
+        list_min = [] if self.range_detector_min is None else self.range_detector_min.get_pattern_range_list()
+        list_h_s = [] if self.range_detector_h_s is None else self.range_detector_h_s.get_pattern_range_list()
+        list_h_s_i = [] if self.range_detector_h_s_i is None else self.range_detector_h_s_i.get_pattern_range_list()
         list_max_without_covered = self.__remove_entries_covered_by_second_list__(list_max, list_min)
         list_min_without_covered = self.__remove_entries_covered_by_second_list__(list_min, list_max)
-        result_list = list_max + list_min
+        result_list = list_max + list_min + list_h_s + list_h_s_i
         return result_list
 
-    def __remove_entries_covered_by_second_list__(self, list_change: list, list_master: list) -> list:
+    @staticmethod
+    def __remove_entries_covered_by_second_list__(list_change: list, list_master: list) -> list:
         result_list = []
         for pattern_range_change in list_change:
             covered = False

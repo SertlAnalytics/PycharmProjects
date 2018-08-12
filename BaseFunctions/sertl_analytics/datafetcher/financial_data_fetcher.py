@@ -256,7 +256,7 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
     def get_url(self):  # the symbol has the structure symbol_CCY like BTC_USD
         url_function = 'histominute' if self.period == ApiPeriod.INTRADAY else 'histoday'
         url_limit = 300 if self.period == ApiPeriod.INTRADAY else 400
-        url_aggregate = 5 if self.period == ApiPeriod.INTRADAY else 1
+        url_aggregate = self.aggregation if self.period == ApiPeriod.INTRADAY else 1
         symbol = self.symbol[:-4]
         market = self.symbol[-3:]
         url = 'https://min-api.cryptocompare.com/data/{}?fsym={}&tsym={}&limit={}&aggregate={}'.\

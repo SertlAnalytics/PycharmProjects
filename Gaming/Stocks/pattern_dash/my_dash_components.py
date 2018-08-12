@@ -121,7 +121,7 @@ class MyHTMLHeaderTable(MyHTMLTable):
         self.set_value(2, 3, MyHTML.div_embedded([time_label_div, MyHTML.span(' '), time_div]))
 
     def _get_cell_style_(self, row: int, col: int):
-        padding = 10
+        padding = 5
         if row == 1:
             width = ['20%', '60%', '20%'][col-1]
             bg_color = COLORS[0]['background']
@@ -129,7 +129,7 @@ class MyHTMLHeaderTable(MyHTMLTable):
             text_align = ['left', 'center', 'left'][col-1]
             v_align = ['top', 'top', 'top'][col - 1]
             font_weight = ['normal', 'bold', 'normal'][col - 1]
-            font_size = [18, 48, 18][col - 1]
+            font_size = [16, 32, 16][col - 1]
 
             return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
                     'vertical-align': v_align, 'font-weight': font_weight, 'padding': padding, 'font-size': font_size}

@@ -46,6 +46,19 @@ class PatternData:
         self.__fill_tick_list_min_max__()
         self.tick_list_min_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_min, False)
         self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
+        self.tick_list_min_max_without_hidden_ticks = self.__get_tick_list_min_max_without_hidden_ticks__()
+
+    def __get_tick_list_min_max_without_hidden_ticks__(self):
+        position_tick_dict = {}
+        return_list = []
+        for tick_min in self.tick_list_min_without_hidden_ticks:
+            position_tick_dict[tick_min.position] = tick_min
+        for tick_max in self.tick_list_max_without_hidden_ticks:
+            position_tick_dict[tick_max.position] = tick_max
+        for position in range(self.tick_first.position, self.tick_last.position + 1):
+            if position in position_tick_dict:
+                return_list.append(position_tick_dict[position])
+        return return_list
 
     def __get_tick_f_var_distance__(self):
         if self.df_length == 1:

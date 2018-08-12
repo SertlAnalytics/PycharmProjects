@@ -12,35 +12,36 @@ from pattern_data_frame import PatternDataFrame
 from sertl_analytics.mymath import ToleranceCalculator
 from pattern_configuration import config
 from pattern_data_container import pattern_data_handler as pdh
-from matplotlib.patches import Polygon
+import math
 import pandas as pd
 import numpy as np
 
 
 class PatternRange:
-    def __init__(self, tick: WaveTick, min_length: int):
+    def __init__(self, tick: WaveTick, min_length: int, dedicated_pattern_type = FT.ALL):
         self.df_min_max_final = None
         self.tick_list = [tick]
         self.tick_first = tick
-        self.tick_last = None  # default
+        self.tick_last = None
         self.tick_breakout_successor = None
-        self.__min_length = min_length
-        self.__f_param = None
-        self.__f_param_parallel = None  # parallel function through low or high
-        self.__f_param_const = None  # constant through low or high
+        self._dedicated_pattern_type = dedicated_pattern_type
+        self._min_length = min_length
+        self._f_param = None
+        self._f_param_parallel = None  # parallel function through low or high
+        self._f_param_const = None  # constant through low or high
         self._f_param_list = []  # contains the possible f_params of the opposite side
 
     @property
     def f_param(self) -> np.poly1d:
-        return self.__f_param
+        return self._f_param
 
     @property
     def f_param_const(self) -> np.poly1d:
-        return self.__f_param_const
+        return self._f_param_const
 
     @property
     def f_param_parallel(self) -> np.poly1d:
-        return self.__f_param_parallel
+        return self._f_param_parallel
 
     @property
     def range_elements(self) -> int:
@@ -77,17 +78,17 @@ class PatternRange:
     def add_tick(self, tick: WaveTick, f_param):
         self.tick_list.append(tick)
         self.tick_last = tick
-        self.__f_param = f_param
+        self._f_param = f_param
 
     def finalize_pattern_range(self):
         self.df_min_max_final = self.__get_actual_df_min_max__()
         self.__fill_f_param_list__()
-        self.__f_param_parallel = self.__get_parallel_function__()
-        self.__f_param_const = self.__get_const_function__()
+        self._f_param_parallel = self.__get_parallel_function__()
+        self._f_param_const = self.__get_const_function__()
 
     def get_complementary_function_list(self, pattern_type: str) -> list:
-        if pattern_type == FT.HEAD_SHOULDER:
-            return [self.f_param_parallel]
+        if pattern_type in [FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_INVERSE]:
+            return [self.f_param_parallel] if self._dedicated_pattern_type == pattern_type else []
         elif pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
             return [self.f_param_const]
         else:
@@ -110,7 +111,7 @@ class PatternRange:
 
     @property
     def is_min_length_reached(self) -> bool:
-        return self.range_elements >= self.__min_length
+        return self.range_elements >= self._min_length
 
     def is_covering_all_positions(self, pos_list_input: list) -> bool:
         return len(set(pos_list_input) & set(self.__get_position_list__())) == len(pos_list_input)
@@ -136,17 +137,12 @@ class PatternRange:
     @property
     def xy_f_param(self) -> list:
         tick_list = [self.tick_first, self.tick_last]
-        return MyPlotHelper.get_xy_for_tick_list_and_function(tick_list, self.__f_param)
+        return MyPlotHelper.get_xy_for_tick_list_and_function(tick_list, self._f_param)
 
     @property
     def xy_f_param_list(self) -> list:
         tick_list = [self.tick_first, self.tick_last]
         return [MyPlotHelper.get_xy_for_tick_list_and_function(tick_list, f_param) for f_param in self._f_param_list]
-
-    @property
-    def f_regression_shape(self):
-        stock_df = PatternDataFrame(self.__get_actual_df_min_max__())
-        return stock_df.get_f_regression_shape()
 
     def __get_position_list__(self) -> list:
         return [tick.position for tick in self.tick_list]
@@ -162,7 +158,7 @@ class PatternRange:
             pos = pdh.pattern_data.df_min_max.iloc[-1][CN.POSITION]
         else:
             pos = self.tick_breakout_successor.position
-        return [pos, round(self.__f_param(pos), 2)]
+        return [pos, round(self._f_param(pos), 2)]
 
     @staticmethod
     def __get_value__(tick: WaveTick):
@@ -207,33 +203,33 @@ class PatternRangeDetector:
     def __init__(self, tick_list: list):
         self.tick_list = tick_list
         self._elements = len(self.tick_list)
-        self._number_required_ticks = 3
         self._tolerance_pct = config.range_detector_tolerance_pct
         self._max_pattern_range_length = config.max_pattern_range_length
-        self.__pattern_range_list = []
+        self._pattern_range_list = []
         self.__parse_tick_list__()
 
+    @property
+    def number_required_ticks(self) -> int:
+        return 3
+
     def get_pattern_range_list(self) -> list:
-        return self.__pattern_range_list
+        return self._pattern_range_list
 
     def get_pattern_range_shape_list(self) -> list:
-        return [p.f_param_shape for p in self.__pattern_range_list]
-
-    def get_pattern_range_regression_shape_list(self) -> list:
-        return [p.f_regression_shape for p in self.__pattern_range_list]
+        return [p.f_param_shape for p in self._pattern_range_list]
 
     def print_list_of_possible_pattern_ranges(self):
         print('List for {}:'.format(self.__class__.__name__))
-        for pattern_range in self.__pattern_range_list:
+        for pattern_range in self._pattern_range_list:
             pattern_range.print_range_details()
 
     def are_pattern_ranges_available(self) -> bool:
-        return len(self.__pattern_range_list) > 0
+        return len(self._pattern_range_list) > 0
 
     def __add_pattern_range_to_list_after_check__(self, pattern_range: PatternRange):
         if self.__are_conditions_fulfilled_for_adding_to_pattern_range_list__(pattern_range):
             pattern_range.finalize_pattern_range()
-            self.__pattern_range_list.append(pattern_range)
+            self._pattern_range_list.append(pattern_range)
 
     def __are_conditions_fulfilled_for_adding_to_pattern_range_list__(self, pattern_range: PatternRange) -> bool:
         if pattern_range is None:
@@ -241,13 +237,13 @@ class PatternRangeDetector:
         if not pattern_range.is_min_length_reached:
             return False
         # check if this list is already a sublist of an earlier list
-        for pattern_range_old in self.__pattern_range_list:
+        for pattern_range_old in self._pattern_range_list:
             if pattern_range_old.is_covering_all_positions(pattern_range.position_list):
                 return False
         return True
 
     def __parse_tick_list__(self):
-        for i in range(0, self._elements - self._number_required_ticks):
+        for i in range(0, self._elements - self.number_required_ticks):
             tick_i = self.tick_list[i]
             pattern_range = self.__get_pattern_range_by_tick__(tick_i)
             next_list, next_linear_f_params, pos_list = self.__get_pattern_range_next_position_candidates__(i, tick_i)
@@ -286,8 +282,7 @@ class PatternRangeDetector:
                     next_position_list.append(tick_k.position)
                 else:
                     last_tick = self.tick_list[next_position_candidates_list[-1]]
-                    next_tick_too_close = tick_k.position - last_tick.position < 3
-                    if not next_tick_too_close and self.__is_last_tick_in_tolerance_range__(last_tick, f_param_i_k):
+                    if self.__is_last_tick_in_tolerance_range__(last_tick, f_param_i_k):
                         next_position_candidates_list.append(k)
                         next_position_linear_f_params.append(f_param)
                         next_position_list.append(tick_k.position)
@@ -307,7 +302,7 @@ class PatternRangeDetector:
         if pattern_range.are_values_in_function_tolerance_range(f_param_new, self._tolerance_pct):
             pattern_range.add_tick(tick_k, f_param_new)
         else:
-            f_value_new_last_position_right = f_param_new(pattern_range.tick_last.position)
+            f_value_new_last_position_right = f_param_new(pattern_range.tick_last.f_var)
             if self.__is_new_tick_a_breakout__(pattern_range, f_value_new_last_position_right):
                 return True
         return False
@@ -327,7 +322,7 @@ class PatternRangeDetectorMax(PatternRangeDetector):
         return pattern_range.tick_last.high < f_value_new_last_position_right
 
     def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRangeMax:
-        return PatternRangeMax(tick, self._number_required_ticks)
+        return PatternRangeMax(tick, self.number_required_ticks)
 
     def __is_slope_correctly_changing__(self, f_param: np.poly1d, tick_new: WaveTick, f_param_new_tick: np.poly1d):
         return True if f_param_new_tick[1] > f_param[1] else False
@@ -346,7 +341,7 @@ class PatternRangeDetectorMin(PatternRangeDetector):
         return pattern_range.tick_last.low > f_value_new_last_position_right
 
     def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRangeMin:
-        return PatternRangeMin(tick, self._number_required_ticks)
+        return PatternRangeMin(tick, self.number_required_ticks)
 
     def __is_slope_correctly_changing__(self, f_param: np.poly1d, tick_new: WaveTick, f_param_new_tick: np.poly1d):
         return True if f_param_new_tick[1] < f_param[1] else False
@@ -355,3 +350,70 @@ class PatternRangeDetectorMin(PatternRangeDetector):
         v_1 = tick_last.low
         v_2 = f_param_new_tick(tick_last.f_var)
         return ToleranceCalculator.are_values_in_tolerance_range(v_1, v_2, self._tolerance_pct)
+
+
+class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin):
+    @property
+    def number_required_ticks(self) -> int:
+        return 2
+
+    def __parse_tick_list__(self):
+        for i in range(1, self._elements - 1):
+            tick_i = self.tick_list[i]
+            if tick_i.is_global_max:
+                tick_list_left = self.__get_min_tick_list__(i, True)
+                tick_list_right = self.__get_min_tick_list__(i, False)
+                for tick_left in tick_list_left:
+                    for tick_right in tick_list_right:
+                        pattern_range = PatternRangeMin(tick_left, 2, FT.HEAD_SHOULDER)
+                        f_param_left_right = self.__get_linear_f_params__(tick_left, tick_right)
+                        pattern_range.add_tick(tick_right, f_param_left_right)
+                        self.__add_pattern_range_to_list_after_check__(pattern_range)
+
+    def __get_min_tick_list__(self, set_off: int, for_left: bool):
+        min_value = math.inf
+        list_return = []
+        tick_range = range(1, set_off, -1) if for_left else range(set_off, self._elements - 1)
+        for k in tick_range:
+            tick_k = self.tick_list[k]
+            if tick_k.is_min:
+                if tick_k.low < min_value:
+                    list_return.append(tick_k)
+                    min_value = tick_k.low
+            elif tick_k.is_global_min:
+                break
+        return list_return
+
+
+class PatternRangeDetectorHeadShoulderInverse(PatternRangeDetectorMax):
+    @property
+    def number_required_ticks(self) -> int:
+        return 2
+
+    def __parse_tick_list__(self):
+        for i in range(1, self._elements - 1):
+            tick_i = self.tick_list[i]
+            if tick_i.is_global_min:
+                tick_list_left = self.__get_max_tick_list__(i, True)
+                tick_list_right = self.__get_max_tick_list__(i, False)
+                for tick_left in tick_list_left:
+                    for tick_right in tick_list_right:
+                        pattern_range = PatternRangeMax(tick_left, 2, FT.HEAD_SHOULDER_INVERSE)
+                        f_param_left_right = self.__get_linear_f_params__(tick_left, tick_right)
+                        pattern_range.add_tick(tick_right, f_param_left_right)
+                        self.__add_pattern_range_to_list_after_check__(pattern_range)
+
+    def __get_max_tick_list__(self, set_off: int, for_left: bool):
+        max_value = -math.inf
+        list_return = []
+        tick_range = range(set_off - 1, 0, -1) if for_left else range(set_off + 1, self._elements - 1)
+        for k in tick_range:
+            tick_k = self.tick_list[k]
+            if tick_k.is_max:
+                if tick_k.high > max_value:
+                    list_return.append(tick_k)
+                    max_value = tick_k.high
+            elif tick_k.is_global_max:
+                break
+        return list_return
+

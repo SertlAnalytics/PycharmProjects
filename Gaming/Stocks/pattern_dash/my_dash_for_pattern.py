@@ -298,6 +298,7 @@ class MyDash4Pattern(MyDashBase):
         self._graph_second_days_options.append({'label': '200 days', 'value': 200})
         self._graph_second_days_options.append({'label': '100 days', 'value': 100})
         self._graph_second_days_options.append({'label': '60 days', 'value': 60})
+        self._graph_second_days_options.append({'label': 'Intraday', 'value': 1})
 
     def __init_hover_over_callback__(self):
         @self.app.callback(
@@ -369,7 +370,7 @@ class MyDash4Pattern(MyDashBase):
         def handle_callback_for_graph_second(days_selected, graph_first_div, ticker_selected):
             if days_selected == 0:
                 return ''
-            return '{}'.format(self.__get_graph_second__(ticker_selected, days_selected)[0])
+            return self.__get_graph_second__(ticker_selected, days_selected)[0]
 
     def __init_callback_for_graphs_before_breakout__(self):
         @self.app.callback(
@@ -451,25 +452,34 @@ class MyDash4Pattern(MyDashBase):
 
     def __get_graph_second__(self, ticker: str, days: int):
         graph_id = 'my_graph_second'
-        graph_title = '{} {} days'.format(ticker, days)
+        graph_title = '{} {} days'.format(ticker, days if days > 1 else 'Intraday')
         graph_key = MyGraphCache.get_cache_key(graph_id, ticker, days)
         cached_graph = self._graph_second_cache.get_cached_value_by_cache_key(graph_key)
         if cached_graph is not None:
             print('...return cached graph_second: {}'.format(graph_key))
             return cached_graph, graph_key
-        date_from = datetime.today() - timedelta(days=days)
-        date_to = datetime.today() + timedelta(days=5)
-        and_clause = self.__get_and_clause__(date_from, date_to)
         config_old = deepcopy(config)
-        config.api_period = ApiPeriod.DAILY
-        config.get_data_from_db = True
-        detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
-        graph_api = DccGraphSecondApi(graph_id, graph_title)
-        graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
-        cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
-        self._graph_second_cache.add_cache_value(cache_api)
-        config.api_period = config_old.api_period
-        config.get_data_from_db = config_old.get_data_from_db
+        if days == 1:
+            config.api_period_aggregation = 15
+            detector = self._pattern_controller.get_detector_for_dash(ticker, '')
+            graph_api = DccGraphSecondApi(graph_id, graph_title)
+            graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
+            cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
+            self._graph_second_cache.add_cache_value(cache_api)
+            config.api_period_aggregation = config_old.api_period_aggregation
+        else:
+            date_from = datetime.today() - timedelta(days=days)
+            date_to = datetime.today() + timedelta(days=5)
+            and_clause = self.__get_and_clause__(date_from, date_to)
+            config.api_period = ApiPeriod.DAILY
+            config.get_data_from_db = True
+            detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
+            graph_api = DccGraphSecondApi(graph_id, graph_title)
+            graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
+            cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
+            self._graph_second_cache.add_cache_value(cache_api)
+            config.api_period = config_old.api_period
+            config.get_data_from_db = config_old.get_data_from_db
         return graph, graph_key
 
     def __get_cache_api__(self, graph_key, graph, detector, pattern_data):

@@ -365,7 +365,7 @@ class HeadShoulderConstraints(Constraints):
         return [-1.0, 1.0]
 
     def _get_f_regression_percentage_bounds_(self):
-        return self.f_upper_percentage_bounds
+        return []
 
 
 class InverseHeadShoulderConstraints(HeadShoulderConstraints):
@@ -389,14 +389,15 @@ class InverseHeadShoulderConstraints(HeadShoulderConstraints):
                              CountConstraint(SVC.L_in, '>=', 1)]
         self.global_series = ['OR',
                               [SVC.U_on, SVC.M_in, SVC.U_on, SVC.L_on, SVC.U_on, SVC.M_in, SVC.U_on],
-                              [SVC.U_on, SVC.M_in, SVC.U_in, SVC.L_on, SVC.M_in, SVC.M_in, SVC.U_on]]
+                              [SVC.U_on, SVC.M_in, SVC.U_in, SVC.L_on, SVC.M_in, SVC.M_in, SVC.U_on],
+                              [SVC.U_on, SVC.M_in, SVC.U_in, SVC.L_on, SVC.M_in, SVC.M_in, SVC.U_in]]
 
     @staticmethod
     def _get_f_lower_percentage_bounds_():
         return [-1.0, 1.0]
 
     def _get_f_regression_percentage_bounds_(self):
-        return self.f_lower_percentage_bounds
+        return []
 
 
 class TriangleConstraints(Constraints):

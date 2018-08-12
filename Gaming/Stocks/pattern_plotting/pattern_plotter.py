@@ -230,9 +230,8 @@ class PatternPlotter:
             self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.high), width, height, color='w'))
 
     def __plot_ranges__(self):
-        pattern_range_list_max = self.detector.range_detector_max.get_pattern_range_list()
-        pattern_range_list_min = self.detector.range_detector_min.get_pattern_range_list()
-        for ranges in pattern_range_list_max + pattern_range_list_min:
+        pattern_range_list = self.detector.get_combined_possible_pattern_ranges()
+        for ranges in pattern_range_list:
             polygon = PlotterInterface.get_range_f_param_shape(ranges)
             self.__add_to_ranges_polygon_dic__(polygon, True, ranges)
             # opposite_polygon_list = ranges.get_f_param_list_shapes()

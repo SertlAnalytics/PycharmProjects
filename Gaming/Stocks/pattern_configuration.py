@@ -59,6 +59,7 @@ class PatternConfiguration:
         self.get_data_from_db = True
         self.pattern_type_list = [FT.CHANNEL]
         self.api_period = ApiPeriod.DAILY
+        self.api_period_aggregation = 5
         self.api_output_size = ApiOutputsize.COMPACT
         self.bound_upper_value = CN.HIGH
         self.bound_lower_value = CN.LOW
@@ -88,11 +89,7 @@ class PatternConfiguration:
 
     @property
     def range_detector_tolerance_pct(self):
-        return 0.001 if self.api_period == ApiPeriod.INTRADAY else 0.01
-
-    @property
-    def api_period_aggregation(self):
-        return 5 if self.api_period == ApiPeriod.INTRADAY else 1
+        return 0.001 if self.api_period == ApiPeriod.INTRADAY else 0.005
 
     def __get_previous_period_length__(self):
         return self.__previous_period_length
