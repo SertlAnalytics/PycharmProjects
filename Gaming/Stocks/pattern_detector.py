@@ -47,14 +47,15 @@ class PatternDetector:
             # print('parsing for pattern: {}'.format(pattern_type))
             runtime.actual_pattern_type = pattern_type
             for pattern_range in possible_pattern_range_list:
-                runtime.actual_pattern_range = pattern_range
-                # pattern_range.print_range_details()
-                debugger.check_range_position_list(pattern_range.position_list)
-                complementary_function_list = pattern_range.get_complementary_function_list(pattern_type)
-                for f_comp in complementary_function_list:
-                    pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, pattern_range, f_comp)
-                    if pattern.function_cont.is_valid():
-                        self.__handle_single_pattern_when_parsing__(pattern)
+                if pattern_range.dedicated_pattern_type in [FT.ALL, pattern_type]:
+                    runtime.actual_pattern_range = pattern_range
+                    # pattern_range.print_range_details()
+                    debugger.check_range_position_list(pattern_range.position_list)
+                    complementary_function_list = pattern_range.get_complementary_function_list(pattern_type)
+                    for f_comp in complementary_function_list:
+                        pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, pattern_range, f_comp)
+                        if pattern.function_cont.is_valid():
+                            self.__handle_single_pattern_when_parsing__(pattern)
 
     def parse_for_fibonacci_waves(self):
         df = pdh.pattern_data_fibonacci.df

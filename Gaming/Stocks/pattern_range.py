@@ -18,7 +18,7 @@ import numpy as np
 
 
 class PatternRange:
-    def __init__(self, tick: WaveTick, min_length: int, dedicated_pattern_type = FT.ALL):
+    def __init__(self, tick: WaveTick, min_length: int, dedicated_pattern_type=FT.ALL):
         self.df_min_max_final = None
         self.tick_list = [tick]
         self.tick_first = tick
@@ -59,6 +59,10 @@ class PatternRange:
     def f_regression(self) -> np.poly1d:
         stock_df = PatternDataFrame(self.__get_actual_df_min_max__())
         return stock_df.get_f_regression()
+
+    @property
+    def dedicated_pattern_type(self) -> str:
+        return self._dedicated_pattern_type
 
     def __get_actual_df_min_max__(self):
         if self.tick_breakout_successor is None:
