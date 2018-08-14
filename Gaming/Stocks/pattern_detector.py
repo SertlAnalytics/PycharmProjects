@@ -10,12 +10,14 @@ from pattern_configuration import config, runtime, debugger
 from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
 from pattern_part import PatternPart
-from pattern import Pattern, PatternHelper
+from pattern import Pattern, PatternFactory
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
     , PatternRangeDetectorHeadShoulderInverse
 from pattern_breakout import PatternBreakoutApi, PatternBreakout
 from pattern_statistics import PatternDetectorStatisticsApi
 from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
+from pattern_constraints import ConstraintsFactory
+from pattern_function_container import PatternFunctionContainerFactoryApi, PatternFunctionContainerFactory
 
 
 class PatternDetector:
@@ -45,16 +47,21 @@ class PatternDetector:
         possible_pattern_range_list = self.get_combined_possible_pattern_ranges()
         for pattern_type in self.pattern_type_list:
             # print('parsing for pattern: {}'.format(pattern_type))
+            pfcf_api = PatternFunctionContainerFactoryApi(pattern_type)
+            pfcf_api.constraints = ConstraintsFactory.get_constraints_by_pattern_type(pattern_type)
             runtime.actual_pattern_type = pattern_type
             for pattern_range in possible_pattern_range_list:
                 if pattern_range.dedicated_pattern_type in [FT.ALL, pattern_type]:
+                    pfcf_api.pattern_range = pattern_range
                     runtime.actual_pattern_range = pattern_range
                     # pattern_range.print_range_details()
                     debugger.check_range_position_list(pattern_range.position_list)
                     complementary_function_list = pattern_range.get_complementary_function_list(pattern_type)
-                    for f_comp in complementary_function_list:
-                        pattern = PatternHelper.get_pattern_for_pattern_type(pattern_type, pattern_range, f_comp)
-                        if pattern.function_cont.is_valid():
+                    for f_complementary in complementary_function_list:
+                        pfcf_api.complementary_function = f_complementary
+                        pfcf_api.function_container = PatternFunctionContainerFactory.get_function_container_by_api(pfcf_api)
+                        if pfcf_api.constraints.are_constraints_fulfilled(pfcf_api.function_container):
+                            pattern = PatternFactory.get_pattern(pfcf_api)
                             self.__handle_single_pattern_when_parsing__(pattern)
 
     def parse_for_fibonacci_waves(self):
@@ -86,7 +93,7 @@ class PatternDetector:
             return
         runtime.actual_breakout = pattern.breakout
         pattern.add_part_main(PatternPart(pattern.function_cont))
-        if pattern.is_formation_established():
+        if pattern.is_formation_established() and pattern.is_expected_win_sufficient(runtime.actual_expected_win_pct):
             if pattern.breakout is not None:
                 pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
                 self.__add_part_trade__(pattern)
@@ -98,7 +105,8 @@ class PatternDetector:
         df = self.__get_trade_df__(pattern)
         f_upper_trade = pattern.get_f_upper_trade()
         f_lower_trade = pattern.get_f_lower_trade()
-        function_cont = pattern.get_function_container(df, f_lower_trade, f_upper_trade)
+        function_cont = PatternFunctionContainerFactory.get_function_container(pattern.pattern_type, df,
+                                                                               f_lower_trade, f_upper_trade)
         part = PatternPart(function_cont)
         pattern.add_part_trade(part)
         pattern.fill_result_set()
@@ -116,13 +124,13 @@ class PatternDetector:
         pos_start = tick_last.position + 1
         number_of_positions = pattern.function_cont.number_of_positions
         counter = 0
-        can_be_added = True
+        can_pattern_be_added = True
         for pos in range(pos_start, self.df_length):
             counter += 1
             next_tick = WaveTick(self.df.loc[pos])
             break_loop = self.__check_for_loop_break__(pattern, counter, number_of_positions, next_tick)
             if break_loop:
-                can_be_added = False
+                can_pattern_be_added = False
                 tick_last = next_tick
                 break
             if pattern.breakout is None:
@@ -130,14 +138,17 @@ class PatternDetector:
                 pattern.breakout = self.__get_confirmed_breakout__(pattern, tick_last, next_tick)
             tick_last = next_tick
         pattern.function_cont.add_tick_from_main_df_to_df(self.df, tick_last)
-        return can_be_added
+        return can_pattern_be_added
 
     @staticmethod
     def __check_for_loop_break__(pattern: Pattern, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
         if counter > number_of_positions:  # maximal number for the whole pattern after its building
             return True
-        if counter > pattern.constraints.breakout_required_after_ticks > 0:
+        if pattern.function_cont.is_tick_breakout_on_wrong_side(tick):
             return True
+        if pattern.constraints.is_breakout_required_after_certain_ticks:
+            if counter > pattern.breakout_required_after_ticks:
+                return True
         if tick.f_var > pattern.function_cont.f_var_cross_f_upper_f_lower > 0:
             return True
         # if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 6):
@@ -150,7 +161,7 @@ class PatternDetector:
     def __get_confirmed_breakout__(self, pattern: Pattern, last_tick: WaveTick, next_tick: WaveTick):
         if pattern.function_cont.is_tick_breakout(next_tick):
             breakout = self.__get_pattern_breakout__(pattern, last_tick, next_tick)
-            if breakout.is_breakout_a_signal():
+            if breakout.is_breakout_a_signal() or True:  # ToDo is_breakout a signal by ML algorithm
                 pattern.function_cont.tick_for_breakout = next_tick
                 return breakout
         return None

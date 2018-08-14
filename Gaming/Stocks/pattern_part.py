@@ -181,14 +181,13 @@ class PatternPart:
     def get_slope_values(self):
         f_upper_slope = self.function_cont.f_upper_percentage
         f_lower_slope = self.function_cont.f_lower_percentage
-        relation_u_l = MyMath.divide(f_upper_slope, f_lower_slope, 1, math.inf)
         f_regression_slope = self.function_cont.f_regression_percentage
-        # print('u={}, l={}, rel={}, reg={}'.format(f_upper_slope, f_lower_slope, relation_u_l, f_regression_slope))
-        return f_upper_slope, f_lower_slope, relation_u_l, f_regression_slope
+        # print('u={}, l={}, reg={}'.format(f_upper_slope, f_lower_slope, f_regression_slope))
+        return f_upper_slope, f_lower_slope, f_regression_slope
 
     def __get_text_for_annotation__(self):
         std_dev = round(self.df[CN.CLOSE].std(), 2)
-        f_upper_percent, f_lower_percent, relation_u_l, f_reg_percent = self.get_slope_values()
+        f_upper_percent, f_lower_percent, f_reg_percent = self.get_slope_values()
         if config.api_period == ApiPeriod.INTRADAY:
             date_str_first = self.tick_first.time_str_for_f_var
             date_str_last = self.tick_last.time_str_for_f_var
@@ -198,17 +197,19 @@ class PatternPart:
 
         type_date = 'Type={}: {} - {} ({})'.format(self.pattern_type, date_str_first, date_str_last, len(self.tick_list))
 
-        if self.pattern_type == FT.TKE_UP:
+        if self.pattern_type in [FT.TKE_UP, FT.HEAD_SHOULDER]:
             slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_percent, f_reg_percent)
-            breadth = 'Height={}, Std_dev={}'.format(self.height, std_dev)
-        elif self.pattern_type == FT.TKE_DOWN:
+            slopes_2 = 'f_param: L={}%, Reg={}%'.format(self.function_cont.f_lower[1], f_reg_percent)
+            height = 'Height={}, Std_dev={}'.format(self.height, std_dev)
+        elif self.pattern_type in [FT.TKE_DOWN, FT.HEAD_SHOULDER_INVERSE]:
             slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_percent, f_reg_percent)
-            breadth = 'Height={}, Std_dev={}'.format(self.height, std_dev)
+            height = 'Height={}, Std_dev={}'.format(self.height, std_dev)
         else:
-            slopes = 'Gradients: U={}%, L={}%, U/L={}, Reg={}%'.format(
-                f_upper_percent, f_lower_percent, relation_u_l, f_reg_percent)
-            breadth = 'Height={}, Max={}, Min={}, Std_dev={}'.format(
+            slopes = 'Gradients: U={}%, L={}%, Reg={}%'.format(f_upper_percent, f_lower_percent, f_reg_percent)
+            height = 'Height={}, Max={}, Min={}, Std_dev={}'.format(
                 self.height, self.distance_max, self.distance_min, std_dev)
+
+        # slopes_by_param = self.__get_slopes_by_f_param__()
 
         if self.breakout is None:
             breakout_str = 'Breakout: not yet'
@@ -222,7 +223,19 @@ class PatternPart:
 
         breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)
 
-        return '{}\n{}\n{}\n{}'.format(type_date, slopes, breadth, breakout_str)
+        return '{}\n{}\n{}\n{}'.format(type_date, slopes, height, breakout_str)
+
+    def __get_slopes_by_f_param__(self) -> str:
+        multiplier = 1000000
+        f_upper_slope = round(self.function_cont.f_upper[1] * multiplier, 1)
+        f_lower_slope = round(self.function_cont.f_lower[1] * multiplier, 1)
+        f_reg_slope = round(self.function_cont.f_regression[1] * multiplier, 1)
+        if self.pattern_type in [FT.TKE_UP, FT.HEAD_SHOULDER]:
+            return 'f_param: L={}%, Reg={}%'.format(f_lower_slope, f_reg_slope)
+        elif self.pattern_type in [FT.TKE_DOWN, FT.HEAD_SHOULDER_INVERSE]:
+            return 'f_param: U={}%, Reg={}%'.format(f_upper_slope, f_reg_slope)
+        else:
+            return 'f_param: U={}%, L={}%, Reg={}%'.format(f_upper_slope, f_lower_slope, f_reg_slope)
 
     def get_retracement_pct(self, comp_part):
         if self.tick_low.low > comp_part.tick_high.high:

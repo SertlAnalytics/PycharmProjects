@@ -7,17 +7,23 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import FT, FCC, FD
 from pattern_data_container import pattern_data_handler as pdh
-import pandas as pd
 import numpy as np
-from pattern_range import PatternRange
 from pattern_configuration import debugger
-import pattern_function_container as pfc
 from pattern_trade_result import TradeResult
 from pattern_part import PatternPart
 import pattern_constraints as cstr
-from pattern_value_categorizer import ChannelValueCategorizer
 from sertl_analytics.myexceptions import MyException
 from pattern_wave_tick import WaveTick
+from pattern_function_container import PatternFunctionContainerFactoryApi
+
+
+class PatternApi:
+    def __init__(self, pattern_type: str):
+        self.pattern_type = pattern_type
+        self.df_min_max = pdh.pattern_data.df_min_max
+        self.pattern_range = None
+        self.constraints = None
+        self.function_container = None
 
 
 class PatternConditionHandler:
@@ -52,17 +58,16 @@ class PatternConditionHandler:
 
 
 class Pattern:
-    def __init__(self, pattern_type: str, pattern_range: PatternRange, complementary_function: np.poly1d):
-        self.pattern_type = pattern_type
+    def __init__(self, api: PatternApi):
+        self.pattern_type = api.pattern_type
         self.df = pdh.pattern_data.df
         self.df_min_max = pdh.pattern_data.df_min_max
         self.tick_distance = pdh.pattern_data.tick_f_var_distance
-        self.complementary_function = complementary_function
-        self.constraints = self.__get_constraint__()
-        self.pattern_range = pattern_range
+        self.constraints = api.constraints
+        self.pattern_range = api.pattern_range
         self.ticks_initial = 0
         self.check_length = 0
-        self.function_cont = self.__get_pattern_function_container__()
+        self.function_cont = api.function_container
         self._part_predecessor = None
         self._part_main = None
         self._part_trade = None
@@ -76,6 +81,7 @@ class Pattern:
         self.breakout = None
         self.trade_result = TradeResult()
         self.intersects_with_fibonacci_wave = False
+        self.breakout_required_after_ticks = self.__breakout_required_after_ticks__()
 
     @property
     def part_main(self) -> PatternPart:
@@ -155,28 +161,11 @@ class Pattern:
     def __get_constraint__():
         return cstr.Constraints()
 
+    def __breakout_required_after_ticks__(self):
+        return 0
+
     def is_part_trade_available(self):
         return self._part_trade is not None
-
-    def __get_pattern_function_container__(self) -> pfc.PatternFunctionContainer:
-        df_check = self.pattern_range.get_related_part_from_data_frame(self.df_min_max)
-        if self.pattern_range.__class__.__name__ == 'PatternRangeMin':
-            f_upper = self.complementary_function
-            f_lower = self.pattern_range.f_param
-        else:
-            f_lower = self.complementary_function
-            f_upper = self.pattern_range.f_param
-        f_container = self.get_function_container(df_check, f_lower, f_upper)
-        if self.constraints.are_f_lower_f_upper_percentage_compliant(f_container.f_lower_percentage, f_container.f_upper_percentage):
-            if self.constraints.is_relation_height_end_start_compliant(f_container.height_end, f_container.height_start):
-                if self.constraints.is_f_regression_percentage_compliant(f_container.f_regression_percentage):
-                    value_categorizer = ChannelValueCategorizer(f_container, self.constraints.tolerance_pct)
-                    if self.constraints.are_global_constraints_satisfied(value_categorizer):
-                        return f_container
-        return self.get_function_container(df_check)
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.PatternFunctionContainer(df, f_lower, f_upper)
 
     def __fill_trade_result__(self):
         tolerance_range = self._part_main.height * self.constraints.tolerance_pct
@@ -195,6 +184,12 @@ class Pattern:
             self.trade_result.actual_ticks += 1
             if not self.__fill_trade_results_for_breakout_direction__(tick):
                 break
+
+    def is_expected_win_sufficient(self, min_expected_win_pct: float) -> bool:
+        expected_win_pct = round(abs(self.__get_expected_win__()/self._part_main.tick_last.close), 4)
+        # print('min_expected_win_pct = {}, expected_win_pct = {}: {}'.format(
+        #     min_expected_win_pct, expected_win_pct, expected_win_pct >= min_expected_win_pct))
+        return expected_win_pct >= min_expected_win_pct
 
     def __get_expected_win__(self):
         return round(self._part_main.height, 2)
@@ -239,91 +234,46 @@ class Pattern:
 
 
 class ChannelPattern(Pattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.ChannelConstraints()
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.ChannelPatternFunctionContainer(df, f_lower, f_upper)
+    pass
 
 
 class ChannelUpPattern(ChannelPattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.ChannelUpConstraints()
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.ChannelUpPatternFunctionContainer(df, f_lower, f_upper)
+    pass
 
 
 class ChannelDownPattern(ChannelPattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.ChannelDownConstraints()
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.ChannelDownPatternFunctionContainer(df, f_lower, f_upper)
+    pass
 
 
 class HeadShoulderPattern(Pattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.HeadShoulderConstraints()
+    def __breakout_required_after_ticks__(self):
+        return int((self.pattern_range.tick_list[2].position - self.pattern_range.tick_list[1].position)/2)
 
 
 class InverseHeadShoulderPattern(Pattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.InverseHeadShoulderConstraints()
+    def __breakout_required_after_ticks__(self):
+        return int((self.pattern_range.tick_list[2].position - self.pattern_range.tick_list[1].position) / 2)
 
 
 class TrianglePattern(Pattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.TriangleConstraints()
-    # TODO: Most triangles take their first tick (e.g. min) before the 3 ticks on the other side => enhance range
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.TrianglePatternFunctionContainer(df, f_lower, f_upper)
-
     def __get_expected_win__(self):
         return round(self._part_main.height/2, 2)
 
 
 class TriangleBottomPattern(TrianglePattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.TriangleBottomConstraints()
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.TriangleBottomPatternFunctionContainer(df, f_lower, f_upper)
+    pass
 
 
 class TriangleTopPattern(TrianglePattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.TriangleTopConstraints()
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.TriangleTopPatternFunctionContainer(df, f_lower, f_upper)
+    pass
 
 
 class TriangleUpPattern(TrianglePattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.TriangleUpConstraints()
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.TriangleUpPatternFunctionContainer(df, f_lower, f_upper)
+    pass
 
 
 class TriangleDownPattern(TrianglePattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.TriangleDownConstraints()
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.TriangleDownPatternFunctionContainer(df, f_lower, f_upper)
+    pass
 
 
 class TKEPattern(Pattern):
@@ -332,49 +282,45 @@ class TKEPattern(Pattern):
 
 
 class TKEDownPattern(TKEPattern):
-    @staticmethod
-    def __get_constraint__():
-        return cstr.TKEDownConstraints()
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.TKEDownPatternFunctionContainer(df, f_lower, f_upper)
+    pass
 
 
 class TKEUpPattern(TKEPattern):
+    pass
+
+
+class PatternFactory:
     @staticmethod
-    def __get_constraint__():
-        return cstr.TKEUpConstraints()
-
-    def get_function_container(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
-        return pfc.TKEUpPatternFunctionContainer(df, f_lower, f_upper)
-
-
-class PatternHelper:
-    @staticmethod
-    def get_pattern_for_pattern_type(pattern_type: str, pattern_range: PatternRange, complementary_function: np.poly1d):
+    def get_pattern(api: PatternFunctionContainerFactoryApi):
+        pattern_type = api.pattern_type
+        pattern_api = PatternApi(pattern_type)
+        pattern_api.df_min_max = api.df_min_max
+        pattern_api.pattern_range = api.pattern_range
+        pattern_api.constraints = api.constraints
+        pattern_api.function_container = api.function_container
         if pattern_type == FT.CHANNEL:
-            return ChannelPattern(pattern_type, pattern_range, complementary_function)
+            return ChannelPattern(pattern_api)
         elif pattern_type == FT.CHANNEL_DOWN:
-            return ChannelDownPattern(pattern_type, pattern_range, complementary_function)
+            return ChannelDownPattern(pattern_api)
         elif pattern_type == FT.CHANNEL_UP:
-            return ChannelUpPattern(pattern_type, pattern_range, complementary_function)
+            return ChannelUpPattern(pattern_api)
         elif pattern_type == FT.HEAD_SHOULDER:
-            return HeadShoulderPattern(pattern_type, pattern_range, complementary_function)
+            return HeadShoulderPattern(pattern_api)
         elif pattern_type == FT.HEAD_SHOULDER_INVERSE:
-            return InverseHeadShoulderPattern(pattern_type, pattern_range, complementary_function)
+            return InverseHeadShoulderPattern(pattern_api)
         elif pattern_type == FT.TRIANGLE:
-            return TrianglePattern(pattern_type, pattern_range, complementary_function)
+            return TrianglePattern(pattern_api)
         elif pattern_type == FT.TRIANGLE_TOP:
-            return TriangleTopPattern(pattern_type, pattern_range, complementary_function)
+            return TriangleTopPattern(pattern_api)
         elif pattern_type == FT.TRIANGLE_BOTTOM:
-            return TriangleBottomPattern(pattern_type, pattern_range, complementary_function)
+            return TriangleBottomPattern(pattern_api)
         elif pattern_type == FT.TRIANGLE_UP:
-            return TriangleUpPattern(pattern_type, pattern_range, complementary_function)
+            return TriangleUpPattern(pattern_api)
         elif pattern_type == FT.TRIANGLE_DOWN:
-            return TriangleDownPattern(pattern_type, pattern_range, complementary_function)
+            return TriangleDownPattern(pattern_api)
         elif pattern_type == FT.TKE_DOWN:
-            return TKEDownPattern(pattern_type, pattern_range, complementary_function)
+            return TKEDownPattern(pattern_api)
         elif pattern_type == FT.TKE_UP:
-            return TKEUpPattern(pattern_type, pattern_range, complementary_function)
+            return TKEUpPattern(pattern_api)
         else:
             raise MyException('No pattern defined for pattern type "{}"'.format(pattern_type))

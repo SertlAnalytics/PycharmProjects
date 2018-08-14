@@ -5,8 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
+import pandas as pd
 from sertl_analytics.constants.pattern_constants import CN, SVC
-from pattern_function_container import PatternFunctionContainer
 from pattern_wave_tick import WaveTick
 import numpy as np
 
@@ -14,14 +14,13 @@ import numpy as np
 class ValueCategorizer:
     __index_column = CN.TIMESTAMP
 
-    def __init__(self, function_cont: PatternFunctionContainer, tolerance_pct: float):
-        self.function_cont = function_cont
-        self.df = function_cont.df
+    def __init__(self, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower, tolerance_pct: float):
+        self.df = df
         self.df_length = self.df.shape[0]
-        self.__f_upper = function_cont.f_upper
-        self.__f_lower = function_cont.f_lower
-        self.__h_upper = function_cont.h_upper
-        self.__h_lower = function_cont.h_lower
+        self.__f_upper = f_upper
+        self.__f_lower = f_lower
+        self.__h_upper = h_upper
+        self.__h_lower = h_lower
         self.index_list = []
         self.value_category_dic = {}  # list of value categories by position of each entry
         self.__tolerance_pct = tolerance_pct
@@ -75,8 +74,27 @@ class ValueCategorizer:
             self.index_list.append(row[self.__index_column])
             self.value_category_dic[row[self.__index_column]] = self.__get_value_categories_for_df_row__(row)
 
-    def __get_value_categories_for_df_row__(self, row) -> list:
-        pass
+    def __get_value_categories_for_df_row__(self, row) -> list:  # the series is important
+        return_list = []
+        if self.__is_row_value_equal_f_upper__(row):
+            return_list.append(SVC.U_on)
+        if self.__is_row_value_in_f_upper_range__(row):
+            return_list.append(SVC.U_in)
+        if self.__is_row_value_larger_f_upper__(row):
+            return_list.append(SVC.U_out)
+        if self.__is_row_value_equal_f_lower__(row):
+            return_list.append(SVC.L_on)
+        if self.__is_row_value_in_f_lower_range__(row):
+            return_list.append(SVC.L_in)
+        if self.__is_row_value_between_f_lower_f_upper__(row):
+            return_list.append(SVC.M_in)
+        if self.__is_row_value_smaller_f_lower__(row):
+            return_list.append(SVC.L_out)
+
+        if self.are_helper_functions_available():
+            if self.__is_row_value_between_h_lower_h_upper__(row):
+                return_list.append(SVC.H_M_in)
+        return return_list
 
     def __is_row_value_in_f_upper_range__(self, row):
         return abs(row[CN.HIGH] - row[CN.F_UPPER])/np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self.__tolerance_pct
@@ -114,27 +132,3 @@ class ValueCategorizer:
 
     def __is_row_value_smaller_f_lower__(self, row):
         return row[CN.LOW] < row[CN.F_LOWER] and not self.__is_row_value_in_f_lower_range__(row)
-
-
-class ChannelValueCategorizer(ValueCategorizer):
-    def __get_value_categories_for_df_row__(self, row):  # the series is important
-        return_list = []
-        if self.__is_row_value_equal_f_upper__(row):
-            return_list.append(SVC.U_on)
-        if self.__is_row_value_in_f_upper_range__(row):
-            return_list.append(SVC.U_in)
-        if self.__is_row_value_larger_f_upper__(row):
-            return_list.append(SVC.U_out)
-        if self.__is_row_value_equal_f_lower__(row):
-            return_list.append(SVC.L_on)
-        if self.__is_row_value_in_f_lower_range__(row):
-            return_list.append(SVC.L_in)
-        if self.__is_row_value_between_f_lower_f_upper__(row):
-            return_list.append(SVC.M_in)
-        if self.__is_row_value_smaller_f_lower__(row):
-            return_list.append(SVC.L_out)
-
-        if self.are_helper_functions_available():
-            if self.__is_row_value_between_h_lower_h_upper__(row):
-                return_list.append(SVC.H_M_in)
-        return return_list

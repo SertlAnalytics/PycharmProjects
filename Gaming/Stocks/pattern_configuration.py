@@ -46,11 +46,13 @@ class RuntimeConfiguration:
     actual_tick_position = 0
     actual_number = 0
     actual_ticker = ''
+    actual_ticker_crypto = False
     actual_ticker_name = ''
     actual_and_clause = ''
     actual_pattern_type = FT.NONE
     actual_breakout = None
     actual_pattern_range = None
+    actual_expected_win_pct = 0
 
 
 class PatternConfiguration:
@@ -90,6 +92,10 @@ class PatternConfiguration:
     @property
     def range_detector_tolerance_pct(self):
         return 0.001 if self.api_period == ApiPeriod.INTRADAY else 0.005
+
+    @property
+    def expected_win_pct(self):
+        return 0.002 if self.api_period == ApiPeriod.INTRADAY else 0.01  # will be changed in the program for Cryptos
 
     def __get_previous_period_length__(self):
         return self.__previous_period_length

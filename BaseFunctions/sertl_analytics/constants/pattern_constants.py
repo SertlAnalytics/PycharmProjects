@@ -45,7 +45,7 @@ class FT:
     @staticmethod
     def get_all():
         return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN, FT.CHANNEL,
-                FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN]  #, FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_INVERSE]
+                FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN, FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_INVERSE]
 
 
 class Indices:
@@ -135,6 +135,10 @@ class SVC(ValueCategories):  # Stock value categories:
 
 
 class CT:  # Constraint types
+    F_UPPER = 'f_upper_percentage'
+    F_LOWER = 'f_lower_percentage'
+    F_REGRESSION = 'f_regression_percentage'
+    REL_HEIGHTS = 'relation_height_end_start'
     ALL_IN = 'All_In'
     COUNT = 'Count'
     SERIES = 'Series'

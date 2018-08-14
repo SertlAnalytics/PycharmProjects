@@ -11,10 +11,11 @@ from pattern_wave_tick import WaveTick
 import numpy as np
 import pandas as pd
 from pattern_data_container import pattern_data_handler as pdh
+from sertl_analytics.myexceptions import MyException
 
 
 class PatternFunctionContainer:
-    def __init__(self, df: pd.DataFrame, f_lower: np.poly1d = None, f_upper: np.poly1d = None):
+    def __init__(self, df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
         self.df = df
         self._tick_for_helper = None
         self._tick_for_breakout = None
@@ -123,12 +124,18 @@ class PatternFunctionContainer:
     def is_valid(self):
         return not(self._f_lower is None or self._f_upper is None)
 
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return False
+
     def is_tick_breakout(self, tick: WaveTick):
         upper_boundary_value = self.get_upper_value(tick.f_var)
         lower_boundary_value = self.get_lower_value(tick.f_var)
         return not (lower_boundary_value <= tick.close <= upper_boundary_value)
 
     def is_tick_inside_pattern_range(self, tick: WaveTick):
+        """
+        tick is in the pattern range <=> upper_value >= lower_value, i.e. before crossing point
+        """
         return self.get_upper_value(tick.f_var) >= self.get_lower_value(tick.f_var)
 
     def add_tick_from_main_df_to_df(self, df_main: pd.DataFrame, tick: WaveTick):
@@ -210,10 +217,16 @@ class ChannelUpPatternFunctionContainer(ChannelPatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close < self.get_lower_value(tick.f_var)
 
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close > self.get_upper_value(tick.f_var)
+
 
 class ChannelDownPatternFunctionContainer(ChannelPatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close > self.get_upper_value(tick.f_var)
+
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close < self.get_lower_value(tick.f_var)
 
 
 class TKEUpPatternFunctionContainer(PatternFunctionContainer):
@@ -233,6 +246,9 @@ class TKEUpPatternFunctionContainer(PatternFunctionContainer):
 
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close < self.get_lower_value(tick.f_var)
+
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close > self.get_upper_value(tick.f_var)
 
     def get_lower_value(self, f_var: int):
         return round(min(self._f_lower(f_var), self._h_lower(f_var)), 2)
@@ -265,6 +281,9 @@ class TKEDownPatternFunctionContainer(PatternFunctionContainer):
 
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close > self.get_upper_value(tick.f_var)
+
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close < self.get_lower_value(tick.f_var)
 
     def get_upper_value(self, f_var: int):
         return round(max(self._f_upper(f_var), self._h_upper(f_var)), 2)
@@ -301,20 +320,94 @@ class TriangleUpPatternFunctionContainer(TrianglePatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close < self.get_lower_value(tick.f_var)
 
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close > self.get_upper_value(tick.f_var)
+
 
 class TriangleDownPatternFunctionContainer(TrianglePatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close > self.get_upper_value(tick.f_var)
+
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close < self.get_lower_value(tick.f_var)
 
 
 class TriangleTopPatternFunctionContainer(TrianglePatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close < self.get_lower_value(tick.f_var)
 
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close > self.get_upper_value(tick.f_var)
+
 
 class TriangleBottomPatternFunctionContainer(TrianglePatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close > self.get_upper_value(tick.f_var)
 
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close < self.get_lower_value(tick.f_var)
 
+
+class HeadShoulderPatternFunctionContainer(PatternFunctionContainer):
+    def is_tick_breakout(self, tick: WaveTick):
+        return tick.close < self.get_lower_value(tick.f_var)
+
+
+class HeadShoulderInversePatternFunctionContainer(PatternFunctionContainer):
+    def is_tick_breakout(self, tick: WaveTick):
+        return tick.close > self.get_upper_value(tick.f_var)
+
+
+class PatternFunctionContainerFactoryApi:
+    def __init__(self, pattern_type: str):
+        self.pattern_type = pattern_type
+        self.df_min_max = pdh.pattern_data.df_min_max
+        self.pattern_range = None
+        self.constraints = None
+        self.complementary_function = None
+        self.function_container = None
+
+
+class PatternFunctionContainerFactory:
+    @staticmethod
+    def get_function_container_by_api(api: PatternFunctionContainerFactoryApi):
+        df_check = api.pattern_range.get_related_part_from_data_frame(api.df_min_max)
+        if api.pattern_range.__class__.__name__ in ('PatternRangeMin', 'PatternRangeDetectorHeadShoulder'):
+            # TODO more general - Head_Shoulder....
+            f_upper = api.complementary_function
+            f_lower = api.pattern_range.f_param
+        else:
+            f_lower = api.complementary_function
+            f_upper = api.pattern_range.f_param
+
+        return PatternFunctionContainerFactory.get_function_container(api.pattern_type, df_check, f_lower, f_upper)
+
+    @staticmethod
+    def get_function_container(pattern_type: str, df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
+        if pattern_type == FT.CHANNEL:
+            return ChannelPatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.CHANNEL_DOWN:
+            return ChannelDownPatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.CHANNEL_UP:
+            return ChannelUpPatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.HEAD_SHOULDER:
+            return HeadShoulderPatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.HEAD_SHOULDER_INVERSE:
+            return HeadShoulderInversePatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.TRIANGLE:
+            return TrianglePatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.TRIANGLE_TOP:
+            return TriangleTopPatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.TRIANGLE_BOTTOM:
+            return TriangleBottomPatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.TRIANGLE_UP:
+            return TriangleUpPatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.TRIANGLE_DOWN:
+            return TriangleDownPatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.TKE_DOWN:
+            return TKEDownPatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.TKE_UP:
+            return TKEUpPatternFunctionContainer(df, f_lower, f_upper)
+        else:
+            raise MyException('No pattern function container defined for pattern type "{}"'.format(pattern_type))
 

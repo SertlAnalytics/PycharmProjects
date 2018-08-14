@@ -21,7 +21,7 @@ from sertl_analytics.constants.pattern_constants import PSC, Indices, CN
 from pattern_configuration import config, runtime
 from pattern_statistics import PatternStatistics, DetectorStatistics, ConstraintsStatistics
 from pattern_data_container import pattern_data_handler
-from pattern_constraints import ConstraintHelper
+from pattern_constraints import ConstraintsFactory
 from pattern_detector import PatternDetector
 from pattern_plotting.pattern_plotter import PatternPlotter
 from pattern_database import stock_database
@@ -57,7 +57,7 @@ class PatternDetectionController:
         self.__end_row = 0
         self.__crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
 
-    def run_pattern_checker(self, excel_file_with_test_data: str = '', start_row: int = 1, end_row: int = 0):
+    def run_pattern_detector(self, excel_file_with_test_data: str = '', start_row: int = 1, end_row: int = 0):
         self.__init_db_and_test_data__(excel_file_with_test_data, start_row, end_row)
         self.__init_loop_list_for_ticker__()
 
@@ -164,6 +164,8 @@ class PatternDetectionController:
 
     def __update_runtime_parameters__(self, entry_dic: dict):
         runtime.actual_ticker = entry_dic[LL.TICKER]
+        runtime.actual_ticker_crypto = runtime.actual_ticker in self.__crypto_ccy_dic
+        runtime.actual_expected_win_pct = config.expected_win_pct * (5 if runtime.actual_ticker_crypto else 1)
         runtime.actual_and_clause = entry_dic[LL.AND_CLAUSE]
         runtime.actual_number = entry_dic[LL.NUMBER]
         if self.stock_db is not None:
@@ -186,7 +188,7 @@ class PatternDetectionController:
     def __write_constraints_statistics__(self):
         if config.statistics_constraints_excel_file_name == '':
             return
-        constraints_detail_dict = ConstraintHelper.get_constraints_details_as_dict()
+        constraints_detail_dict = ConstraintsFactory.get_constraints_details_as_dict()
         for key, details_dict in constraints_detail_dict.items():
             self.constraints_statistics.add_entry(key, details_dict)
         writer = pd.ExcelWriter(config.statistics_constraints_excel_file_name)

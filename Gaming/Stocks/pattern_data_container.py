@@ -10,7 +10,7 @@ import numpy as np
 import itertools
 import matplotlib.dates as mdt
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
-from sertl_analytics.constants.pattern_constants import CN
+from sertl_analytics.constants.pattern_constants import CN, DIR, FT
 from sertl_analytics.mydates import MyDate
 from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks, WaveTickList
 from pattern_configuration import config
@@ -73,6 +73,45 @@ class PatternData:
             if wave_tick.date_num >= date_num:
                 return wave_tick
         return self.tick_last
+
+    def get_previous_breakout_for_pattern_type(self, f_param: np.poly1d, tick_left, tick_right, pattern_type: str):
+        """
+        This function is made only for HEAD_SHOULDER patterns to get the breakout before the two shoulders.
+        :param f_param: function between both shoulders (neckline)
+        :param tick_left: Left shoulder tick
+        :param tick_right: Right shoulder tick
+        :param pattern_type: HEAD_SHOULDER or HEAT_SHOULDER_INVERSE
+        :return: None if no appropriate breakout is found. This breakout must be in a certain distance.
+        """
+        pos_length = tick_right.position - tick_left.position
+        pos_start = tick_left.position - 1
+        pos_allowed_for_breakout_start = tick_left.position - int(pos_length/4) # we check only from a specific distance
+        direction = DIR.UP if pattern_type == FT.HEAD_SHOULDER_INVERSE else DIR.DOWN
+        position_range = range(pos_start, max(pos_start - pos_length, 0), -1)
+        for position in position_range:
+            tick = self.get_tick_by_pos(position)
+            f_value = f_param(tick.f_var)
+            if direction == DIR.UP and tick.high > f_value and tick.is_max:
+                return tick if position < pos_allowed_for_breakout_start else None
+            elif direction == DIR.DOWN and tick.low < f_value and tick.is_min:
+                return tick if position < pos_allowed_for_breakout_start else None
+        return None
+
+    def get_next_min_max_for_pattern_type(self, tick_right, pattern_type: str):
+        """
+        This function is made only for HEAD_SHOULDER patterns to get the next min/max tick after the right shoulder.
+        :param tick_right: Right shoulder tick
+        :param pattern_type: HEAD_SHOULDER or HEAT_SHOULDER_INVERSE
+        :return: None if no appropriate next min/max is found.
+        """
+        position_range = range(tick_right.position + 1, self.df_length)
+        for position in position_range:
+            tick = self.get_tick_by_pos(position)
+            if pattern_type == FT.HEAD_SHOULDER_INVERSE and tick.is_min:
+                return tick
+            elif pattern_type == FT.HEAD_SHOULDER and tick.is_max:
+                return tick
+        return None
 
     def get_tick_by_pos(self, pos: int):
         if pos < len(self.tick_list):

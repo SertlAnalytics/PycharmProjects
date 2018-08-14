@@ -97,10 +97,10 @@ class PatternStatistics:
         self.dic[PSC.END] = MyDate.get_date_from_datetime(pattern.date_last)
         self.dic[PSC.LOWER] = round(0, 2)
         self.dic[PSC.UPPER] = round(0, 2)  # TODO Lower & Upper bound for statistics
-        slope_upper, slope_lower, slope_relation, slow_regression = pattern.part_main.get_slope_values()
+        slope_upper, slope_lower, slow_regression = pattern.part_main.get_slope_values()
         self.dic[PSC.SLOPE_UPPER] = slope_upper
         self.dic[PSC.SLOPE_LOWER] = slope_lower
-        self.dic[PSC.SLOPE_RELATION] = slope_relation
+        self.dic[PSC.SLOPE_RELATION] = 0
         self.dic[PSC.TICKS] = pattern.part_main.ticks
         if pattern.was_breakout_done():
             self.dic[PSC.BREAKOUT_DATE] = MyDate.get_date_from_datetime(pattern.breakout.breakout_date)
@@ -220,13 +220,13 @@ class ConstraintsStatistics:
         self.constraint_value_list = ['tolerance_pct',
                                       'f_upper_percentage_bounds',
                                       'f_lower_percentage_bounds', 'height_end_start_relation_bounds',
-                                      'f_regression_percentage_bounds', 'breakout_required_after_ticks',
+                                      'f_regression_percentage_bounds', 'is_breakout_required_after_certain_ticks',
                                       'global_all_in', 'global_count', 'global_series'
                                       ]
         self.column_list = ['Constraint'] + [items for items in self.constraint_value_list]
 
-    def add_entry(self, patter_type: str, value_dict: dict):
-        new_entry = [patter_type] + [value_dict[key] for key in self.constraint_value_list]
+    def add_entry(self, pattern_type: str, value_dict: dict):
+        new_entry = [pattern_type] + [value_dict[key] for key in self.constraint_value_list]
         self.list.append(new_entry)
 
     def get_frame_set(self) -> pd.DataFrame:

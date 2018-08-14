@@ -357,27 +357,29 @@ class PatternRangeDetectorMin(PatternRangeDetector):
 
 
 class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin):
-    @property
-    def number_required_ticks(self) -> int:
-        return 2
-
     def __parse_tick_list__(self):
-        for i in range(1, self._elements - 1):
-            tick_i = self.tick_list[i]
-            if tick_i.is_global_max:
-                tick_list_left = self.__get_min_tick_list__(i, True)
-                tick_list_right = self.__get_min_tick_list__(i, False)
-                for tick_left in tick_list_left:
-                    for tick_right in tick_list_right:
-                        pattern_range = PatternRangeMin(tick_left, 2, FT.HEAD_SHOULDER)
-                        f_param_left_right = self.__get_linear_f_params__(tick_left, tick_right)
+        index_global_max_list = [i for i, tick in enumerate(self.tick_list) if tick.is_global_max]
+        for i in index_global_max_list:
+            tick_list_left = self.__get_min_tick_list__(i, True)
+            tick_list_right = self.__get_min_tick_list__(i, False)
+            for tick_left in tick_list_left:
+                for tick_right in tick_list_right:
+                    f_param_left_right = self.__get_linear_f_params__(tick_left, tick_right)
+                    breakout_tick = pdh.pattern_data.get_previous_breakout_for_pattern_type(
+                        f_param_left_right, tick_left, tick_right, FT.HEAD_SHOULDER)
+                    if breakout_tick is not None:
+                        pattern_range = PatternRangeMax(breakout_tick, self.number_required_ticks, FT.HEAD_SHOULDER)
+                        pattern_range.add_tick(tick_left, f_param_left_right)
                         pattern_range.add_tick(tick_right, f_param_left_right)
+                        next_max_tick = pdh.pattern_data.get_next_min_max_for_pattern_type(tick_right, FT.HEAD_SHOULDER)
+                        if next_max_tick is not None:
+                            pattern_range.add_tick(next_max_tick, f_param_left_right)
                         self.__add_pattern_range_to_list_after_check__(pattern_range)
 
     def __get_min_tick_list__(self, set_off: int, for_left: bool):
         min_value = math.inf
         list_return = []
-        tick_range = range(1, set_off, -1) if for_left else range(set_off, self._elements - 1)
+        tick_range = range(set_off - 1, 0, -1) if for_left else range(set_off + 1, self._elements - 1)
         for k in tick_range:
             tick_k = self.tick_list[k]
             if tick_k.is_min:
@@ -390,21 +392,25 @@ class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin):
 
 
 class PatternRangeDetectorHeadShoulderInverse(PatternRangeDetectorMax):
-    @property
-    def number_required_ticks(self) -> int:
-        return 2
-
     def __parse_tick_list__(self):
-        for i in range(1, self._elements - 1):
-            tick_i = self.tick_list[i]
-            if tick_i.is_global_min:
-                tick_list_left = self.__get_max_tick_list__(i, True)
-                tick_list_right = self.__get_max_tick_list__(i, False)
-                for tick_left in tick_list_left:
-                    for tick_right in tick_list_right:
-                        pattern_range = PatternRangeMax(tick_left, 2, FT.HEAD_SHOULDER_INVERSE)
-                        f_param_left_right = self.__get_linear_f_params__(tick_left, tick_right)
+        index_global_min_list = [i for i, tick in enumerate(self.tick_list) if tick.is_global_min]
+        for i in index_global_min_list:
+            tick_list_left = self.__get_max_tick_list__(i, True)
+            tick_list_right = self.__get_max_tick_list__(i, False)
+            for tick_left in tick_list_left:
+                for tick_right in tick_list_right:
+                    f_param_left_right = self.__get_linear_f_params__(tick_left, tick_right)
+                    breakout_tick = pdh.pattern_data.get_previous_breakout_for_pattern_type(
+                        f_param_left_right, tick_left, tick_right, FT.HEAD_SHOULDER_INVERSE)
+                    if breakout_tick is not None:
+                        pattern_range = PatternRangeMax(breakout_tick, self.number_required_ticks
+                                                        , FT.HEAD_SHOULDER_INVERSE)
+                        pattern_range.add_tick(tick_left, f_param_left_right)
                         pattern_range.add_tick(tick_right, f_param_left_right)
+                        next_min_tick = pdh.pattern_data.get_next_min_max_for_pattern_type(
+                            tick_right, FT.HEAD_SHOULDER_INVERSE)
+                        if next_min_tick is not None:
+                            pattern_range.add_tick(next_min_tick, f_param_left_right)
                         self.__add_pattern_range_to_list_after_check__(pattern_range)
 
     def __get_max_tick_list__(self, set_off: int, for_left: bool):
