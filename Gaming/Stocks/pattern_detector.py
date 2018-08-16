@@ -12,7 +12,7 @@ from pattern_wave_tick import WaveTick
 from pattern_part import PatternPart
 from pattern import Pattern, PatternFactory
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
-    , PatternRangeDetectorHeadShoulderInverse
+    , PatternRangeDetectorHeadShoulderBottom
 from pattern_breakout import PatternBreakoutApi, PatternBreakout
 from pattern_statistics import PatternDetectorStatisticsApi
 from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
@@ -181,11 +181,11 @@ class PatternDetector:
         tick_list_head_shoulder = pdh.pattern_data.tick_list_min_max_without_hidden_ticks
         if FT.HEAD_SHOULDER in self.pattern_type_list:
             self.range_detector_h_s = PatternRangeDetectorHeadShoulder(tick_list_head_shoulder)
-        if FT.HEAD_SHOULDER_INVERSE in self.pattern_type_list:
-            self.range_detector_h_s = PatternRangeDetectorHeadShoulderInverse(tick_list_head_shoulder)
+        if FT.HEAD_SHOULDER_BOTTOM in self.pattern_type_list:
+            self.range_detector_h_s = PatternRangeDetectorHeadShoulderBottom(tick_list_head_shoulder)
 
     def __is_any_non_head_shoulder_pattern_type_selected__(self):
-        head_shoulder_set = {FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_INVERSE}
+        head_shoulder_set = {FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM}
         pattern_type_set = set(self.pattern_type_list)
         intersection_pt_head_shoulder = pattern_type_set.intersection(head_shoulder_set)
         return False if len(intersection_pt_head_shoulder) == len(pattern_type_set) else True

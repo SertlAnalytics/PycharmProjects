@@ -201,7 +201,7 @@ class PatternPart:
             slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_percent, f_reg_percent)
             slopes_2 = 'f_param: L={}%, Reg={}%'.format(self.function_cont.f_lower[1], f_reg_percent)
             height = 'Height={}, Std_dev={}'.format(self.height, std_dev)
-        elif self.pattern_type in [FT.TKE_DOWN, FT.HEAD_SHOULDER_INVERSE]:
+        elif self.pattern_type in [FT.TKE_DOWN, FT.HEAD_SHOULDER_BOTTOM]:
             slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_percent, f_reg_percent)
             height = 'Height={}, Std_dev={}'.format(self.height, std_dev)
         else:
@@ -232,7 +232,7 @@ class PatternPart:
         f_reg_slope = round(self.function_cont.f_regression[1] * multiplier, 1)
         if self.pattern_type in [FT.TKE_UP, FT.HEAD_SHOULDER]:
             return 'f_param: L={}%, Reg={}%'.format(f_lower_slope, f_reg_slope)
-        elif self.pattern_type in [FT.TKE_DOWN, FT.HEAD_SHOULDER_INVERSE]:
+        elif self.pattern_type in [FT.TKE_DOWN, FT.HEAD_SHOULDER_BOTTOM]:
             return 'f_param: U={}%, Reg={}%'.format(f_upper_slope, f_reg_slope)
         else:
             return 'f_param: U={}%, L={}%, Reg={}%'.format(f_upper_slope, f_lower_slope, f_reg_slope)

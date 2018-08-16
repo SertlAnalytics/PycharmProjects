@@ -189,7 +189,7 @@ class Pattern:
         expected_win_pct = round(abs(self.__get_expected_win__()/self._part_main.tick_last.close), 4)
         # print('min_expected_win_pct = {}, expected_win_pct = {}: {}'.format(
         #     min_expected_win_pct, expected_win_pct, expected_win_pct >= min_expected_win_pct))
-        return expected_win_pct >= min_expected_win_pct
+        return expected_win_pct >= min_expected_win_pct or True
 
     def __get_expected_win__(self):
         return round(self._part_main.height, 2)
@@ -247,12 +247,18 @@ class ChannelDownPattern(ChannelPattern):
 
 class HeadShoulderPattern(Pattern):
     def __breakout_required_after_ticks__(self):
-        return int((self.pattern_range.tick_list[2].position - self.pattern_range.tick_list[1].position)/2)
+        return int(self.pattern_range.hsf.distance_neckline/2)
+
+    def __get_expected_win__(self):
+        return 4
 
 
-class InverseHeadShoulderPattern(Pattern):
+class HeadShoulderBottomPattern(Pattern):
     def __breakout_required_after_ticks__(self):
-        return int((self.pattern_range.tick_list[2].position - self.pattern_range.tick_list[1].position) / 2)
+        return int(self.pattern_range.hsf.distance_neckline/2)
+
+    def __get_expected_win__(self):
+        return self.pattern_range.hsf.expected_win
 
 
 class TrianglePattern(Pattern):
@@ -306,8 +312,8 @@ class PatternFactory:
             return ChannelUpPattern(pattern_api)
         elif pattern_type == FT.HEAD_SHOULDER:
             return HeadShoulderPattern(pattern_api)
-        elif pattern_type == FT.HEAD_SHOULDER_INVERSE:
-            return InverseHeadShoulderPattern(pattern_api)
+        elif pattern_type == FT.HEAD_SHOULDER_BOTTOM:
+            return HeadShoulderBottomPattern(pattern_api)
         elif pattern_type == FT.TRIANGLE:
             return TrianglePattern(pattern_api)
         elif pattern_type == FT.TRIANGLE_TOP:

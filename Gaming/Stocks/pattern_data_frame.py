@@ -10,9 +10,8 @@ from sertl_analytics.plotter.my_plot import MyPlotHelper
 import pandas as pd
 import numpy as np
 from matplotlib.patches import Polygon
-from sertl_analytics.constants.pattern_constants import FT, CN, FD
+from sertl_analytics.constants.pattern_constants import CN
 from pattern_function_container import PatternFunctionContainer
-from pattern_data_container import pattern_data_handler as pdh
 
 
 class PatternDataFrame:

@@ -38,6 +38,7 @@ class MyPoly1d:
         return_value = round((func(set_off + length) - func(set_off))/mean_value, 3)
         return return_value
 
+    @staticmethod
     def get_poly1d(ind_left, value_left, ind_right, value_right) -> np.poly1d:
         """
         Gets the function parameter for the linear function which connects both points on the x-y-diagram
@@ -49,6 +50,11 @@ class MyPoly1d:
         # p[0] = round(p[0], 3)
         # p[1] = round(p[1], 2)
         return p
+
+    @staticmethod
+    def get_parallel_through_point(func: np.poly1d, x: float, y: float):
+        diff = func(x) - y
+        return np.poly1d([func[1], func[0] - diff])
 
 
 class ToleranceCalculator:

@@ -513,7 +513,8 @@ class MyDash4Pattern(MyDashBase):
                 return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors[1]))
         return return_list
 
-    def __get_pattern_regression_shape_list__(self, detector: PatternDetector):
+    @staticmethod
+    def __get_pattern_regression_shape_list__(detector: PatternDetector):
         return_list = []
         for pattern in detector.pattern_list:
             return_list.append(DashInterface.get_f_regression_shape(pattern.part_main, 'skyblue'))
@@ -530,9 +531,12 @@ class MyDash4Pattern(MyDashBase):
 
     @staticmethod
     def __get_candlesticks_trace__(df: pd.DataFrame, ticker: str):
+        if config.api_period == ApiPeriod.INTRADAY:
+            x_value = df[CN.DATETIME] if config.dash_use_date_time_for_intraday else df[CN.TIME]
+        else:
+            x_value = df[CN.DATE]
         candlestick = {
-            'x': df[CN.TIME] if config.api_period == ApiPeriod.INTRADAY else df[CN.DATE],
-            # 'x': df[CN.TIMESTAMP],
+            'x': x_value,
             'open': df[CN.OPEN],
             'high': df[CN.HIGH],
             'low': df[CN.LOW],
@@ -601,6 +605,8 @@ class DashInterface:
         xy_array = np.array(xy)
         x = xy_array[:, 0]
         y = xy_array[:, 1]
+        # print('get_x_y_separated_for_shape:')
+        # print(x)
         return x, y
 
     @staticmethod
@@ -637,7 +643,7 @@ class DashInterface:
     @staticmethod
     def get_xy_from_timestamp_to_date_time_str(xy):
         if type(xy) == list:
-            return [(str(MyDate.get_date_time_from_epoch_seconds(t_val[0])), t_val[1]) for t_val in xy]
+            return [(MyDate.get_date_time_from_epoch_seconds(t_val[0]), t_val[1]) for t_val in xy]
         return str(MyDate.get_date_time_from_epoch_seconds(xy[0])), xy[1]
 
     @staticmethod
@@ -650,6 +656,8 @@ class DashInterface:
     @staticmethod
     def get_pattern_part_main_shape(pattern: Pattern, color: str):
         x, y = DashInterface.get_xy_separated_from_timestamp(pattern.xy)
+        # print('get_pattern_part_main_shape: {}'.format(x))
+        # Todo: format for values in x have to be changed to dtype: datetime64[ns]
         return MyPolygonShape(x, y, color)
 
     @staticmethod
@@ -665,12 +673,17 @@ class DashInterface:
     @staticmethod
     def get_f_regression_shape(pattern_part: PatternPart, color: str):
         x, y = DashInterface.get_xy_separated_from_timestamp(pattern_part.xy_regression)
+        # print('get_f_regression_shape: x = {}'.format(x))
         return MyLineShape(x, y, color)
 
     @staticmethod
     def get_xy_separated_from_timestamp(xy):
         if config.api_period == ApiPeriod.INTRADAY:
-            xy_new = DashInterface.get_xy_from_timestamp_to_time_str(xy)
+            if config.dash_use_date_time_for_intraday:
+                xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
+            else:
+                xy_new = DashInterface.get_xy_from_timestamp_to_time_str(xy)
+            # xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
         else:
             xy_new = DashInterface.get_xy_from_timestamp_to_date_str(xy)
         return DashInterface.get_x_y_separated_for_shape(xy_new)
@@ -695,7 +708,7 @@ class DashInterface:
 
     @staticmethod
     def get_range_f_param_shape(pattern_range: PatternRange):
-        xy_f_param = DashInterface.get_xy_from_timestamp_to_date(pattern_range.xy_f_param)
+        xy_f_param = DashInterface.get_xy_from_timestamp_to_date_str(pattern_range.xy_f_param)
         return MyPolygonShape(np.array(xy_f_param), True)
 
     @staticmethod

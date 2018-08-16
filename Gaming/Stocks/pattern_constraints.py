@@ -122,7 +122,7 @@ class Constraints:
 
     @staticmethod
     def __get_tolerance_pct__():
-        return 0.02
+        return 0.01
 
     def get_unary_constraints(self, df: pd.DataFrame):
         pass
@@ -199,7 +199,7 @@ class TKEDownConstraints(Constraints):
         2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
-        self.global_all_in = [SVC.U_on, SVC.U_in, SVC.M_in, SVC.L_in, SVC.L_on]  # , SVC.H_M_in
+        self.global_all_in = [SVC.U_on, SVC.U_in, SVC.M_in, SVC.L_in, SVC.L_on, SVC.H_on, SVC.H_in]  # , SVC.H_M_in
         self.global_count = ['OR', CountConstraint(SVC.U_in, '>=', 3)]
         self.global_series = ['OR',
                               [SVC.U_on, SVC.U_in, SVC.U_on],
@@ -224,7 +224,7 @@ class TKEUpConstraints(Constraints):
         2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
-        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_M_in]
+        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_M_in, SVC.H_on, SVC.H_in]
         self.global_count = ['OR', CountConstraint(SVC.L_in, '>=', 3)]
         self.global_series = ['OR',
                               [SVC.L_on, SVC.L_in, SVC.L_on],
@@ -249,7 +249,7 @@ class ChannelConstraints(Constraints):
         2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
-        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
+        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_on, SVC.H_in]
         self.global_count = ['OR',
                              CountConstraint(SVC.U_in, '>=', 3),
                              CountConstraint(SVC.L_in, '>=', 3)]
@@ -313,8 +313,7 @@ class HeadShoulderConstraints(Constraints):
         self.global_all_in = []
         self.global_count = []
         self.global_series = ['OR',
-                              [SVC.L_in, SVC.M_in, SVC.L_on, SVC.U_on, SVC.L_on, SVC.M_in],
-                              [SVC.L_out, SVC.M_in, SVC.L_on, SVC.U_on, SVC.L_on, SVC.M_in]]
+                              [SVC.H_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.H_in]]
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():
@@ -328,7 +327,7 @@ class HeadShoulderConstraints(Constraints):
         return []
 
 
-class InverseHeadShoulderConstraints(HeadShoulderConstraints):
+class HeadShoulderBottomConstraints(HeadShoulderConstraints):
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
@@ -338,8 +337,7 @@ class InverseHeadShoulderConstraints(HeadShoulderConstraints):
         self.global_all_in = []
         self.global_count = []
         self.global_series = ['OR',
-                              [SVC.U_in, SVC.M_in, SVC.U_on, SVC.L_on, SVC.U_on, SVC.M_in],
-                              [SVC.U_out, SVC.M_in, SVC.U_on, SVC.L_on, SVC.U_on, SVC.M_in]]
+                              [SVC.H_on, SVC.U_on, SVC.L_on, SVC.U_on, SVC.H_in]]
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():
@@ -352,18 +350,13 @@ class InverseHeadShoulderConstraints(HeadShoulderConstraints):
 
 class TriangleConstraints(Constraints):
     # TODO: Most triangles take their first tick (e.g. min) before the 3 ticks on the other side => enhance range
-
-    @staticmethod
-    def __get_tolerance_pct__():
-        return 0.02
-
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
         2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
-        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on]
+        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_on, SVC.H_in]
         self.global_count = ['OR',
                              CountConstraint(SVC.U_in, '>=', 3),
                              CountConstraint(SVC.L_in, '>=', 3)]
@@ -461,8 +454,8 @@ class ConstraintsFactory:
             return TKEDownConstraints()
         elif pattern_type == FT.HEAD_SHOULDER:
             return HeadShoulderConstraints()
-        elif pattern_type == FT.HEAD_SHOULDER_INVERSE:
-            return InverseHeadShoulderConstraints()
+        elif pattern_type == FT.HEAD_SHOULDER_BOTTOM:
+            return HeadShoulderBottomConstraints()
         else:
             raise MyException('No constraints defined for pattern type "{}"'.format(pattern_type))
 

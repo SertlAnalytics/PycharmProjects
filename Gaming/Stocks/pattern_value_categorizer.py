@@ -94,7 +94,21 @@ class ValueCategorizer:
         if self.are_helper_functions_available():
             if self.__is_row_value_between_h_lower_h_upper__(row):
                 return_list.append(SVC.H_M_in)
+            if self.__is_row_value_equal_h__(row):  # used for HEAD_SHOULDER
+                return_list.append(SVC.H_on)
+            if self.__is_row_value_in_h_range__(row):  # used for HEAD_SHOULDER
+                return_list.append(SVC.H_in)
         return return_list
+
+    def __is_row_value_equal_h__(self, row): # used for HEAD_SHOULDER - both helper are identical
+        value_01 = abs(row[CN.LOW] - row[CN.H_LOWER]) / np.mean([row[CN.LOW], row[CN.H_LOWER]])
+        value_02 = abs(row[CN.HIGH] - row[CN.H_LOWER]) / np.mean([row[CN.HIGH], row[CN.H_LOWER]])
+        return value_01 <= self.__tolerance_pct_equal or value_02 <= self.__tolerance_pct_equal
+
+    def __is_row_value_in_h_range__(self, row): # used for HEAD_SHOULDER - both helper are identical
+        value_01 = abs(row[CN.LOW] - row[CN.H_LOWER]) / np.mean([row[CN.LOW], row[CN.H_LOWER]])
+        value_02 = abs(row[CN.HIGH] - row[CN.H_LOWER]) / np.mean([row[CN.HIGH], row[CN.H_LOWER]])
+        return value_01 <= self.__tolerance_pct or value_02 <= self.__tolerance_pct
 
     def __is_row_value_in_f_upper_range__(self, row):
         return abs(row[CN.HIGH] - row[CN.F_UPPER])/np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self.__tolerance_pct

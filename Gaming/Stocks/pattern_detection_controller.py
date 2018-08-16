@@ -65,7 +65,7 @@ class PatternDetectionController:
             ticker = value_dic[LL.TICKER]
             self.__update_runtime_parameters__(value_dic)
             print('\nProcessing {} ({})...\n'.format(ticker, runtime.actual_ticker_name))
-            df_data = self.__get_df_from_source__(ticker, value_dic)
+            df_data = self.__get_df_from_source__(ticker, value_dic, False)
             pattern_data_handler.init_by_df(df_data)
             detector = PatternDetector()
             detector.parse_for_pattern()
@@ -93,7 +93,7 @@ class PatternDetectionController:
         value_dict = {LL.TICKER: ticker, LL.AND_CLAUSE: and_clause, LL.NUMBER: 1}
         self.__update_runtime_parameters__(value_dict)
         print('\nProcessing {} ({})...\n'.format(ticker, runtime.actual_ticker_name))
-        df_data = self.__get_df_from_source__(ticker, value_dict)
+        df_data = self.__get_df_from_source__(ticker, value_dict, True)
         pattern_data_handler.init_by_df(df_data)
         detector = PatternDetector()
         detector.parse_for_pattern()
@@ -105,7 +105,7 @@ class PatternDetectionController:
     def loop_list_ticker(self):
         return self.__loop_list_ticker
 
-    def __get_df_from_source__(self, ticker, value_dic):
+    def __get_df_from_source__(self, ticker, value_dic, for_dash: bool):
         period = config.api_period
         aggregation = config.api_period_aggregation
         output_size = config.api_output_size
@@ -127,7 +127,10 @@ class PatternDetectionController:
                 df = self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             else:
                 df = fetcher.df_data
-        return self.__cut_intraday_df_to_one_day__(df) if config.api_period == ApiPeriod.INTRADAY else df
+        if config.api_period == ApiPeriod.INTRADAY and for_dash and not config.dash_use_date_time_for_intraday:
+            return self.__cut_intraday_df_to_one_day__(df)
+        else:
+            return df
 
     @staticmethod
     def __cut_intraday_df_to_one_day__(df: pd.DataFrame) -> pd.DataFrame:

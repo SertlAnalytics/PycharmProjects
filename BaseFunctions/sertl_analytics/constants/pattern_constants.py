@@ -39,13 +39,13 @@ class FT:
     TKE_DOWN = 'TKE down'  # Trend correction extrema
     TKE_UP = 'TKE up'  # Trend correction extrema
     HEAD_SHOULDER = 'Head-Shoulder'
-    HEAD_SHOULDER_INVERSE = 'Inverse-Head-Shoulder'
+    HEAD_SHOULDER_BOTTOM = 'Head-Shoulder-Bottom'
     ALL = 'All'
 
     @staticmethod
     def get_all():
         return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN, FT.CHANNEL,
-                FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN, FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_INVERSE]
+                FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN, FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]
 
 
 class Indices:
@@ -123,6 +123,8 @@ class SVC(ValueCategories):  # Stock value categories:
     L_in = 'Low_in'
     L_on = 'Low_on'
     L_out = 'Low_out'
+    H_in = 'Helper_in'
+    H_on = 'Helper_on'
     H_U_out = 'Helper_Upper_out'
     H_U_in = 'Helper_Upper_in'
     H_U_on = 'Helper_Upper_on'

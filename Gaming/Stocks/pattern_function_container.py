@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FD, FT
-from sertl_analytics.mymath import MyMath
+from sertl_analytics.mymath import MyMath, MyPoly1d
 from pattern_wave_tick import WaveTick
 import numpy as np
 import pandas as pd
@@ -352,10 +352,26 @@ class HeadShoulderPatternFunctionContainer(PatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close < self.get_lower_value(tick.f_var)
 
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close > self.get_upper_value(tick.f_var)
 
-class HeadShoulderInversePatternFunctionContainer(PatternFunctionContainer):
+    def set_tick_for_helper(self, tick: WaveTick):  # parallel to neckline = f_lower through left shoulder
+        self._tick_for_helper = tick
+        self._h_upper = MyPoly1d.get_parallel_through_point(self._f_lower, tick.f_var, tick.low)
+        self._h_lower = self._h_upper
+
+
+class HeadShoulderBottomPatternFunctionContainer(PatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close > self.get_upper_value(tick.f_var)
+
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close < self.get_lower_value(tick.f_var)
+
+    def set_tick_for_helper(self, tick: WaveTick):  # parallel to neckline = f_upper through left shoulder
+        self._tick_for_helper = tick
+        self._h_upper = MyPoly1d.get_parallel_through_point(self._f_upper, tick.f_var, tick.high)
+        self._h_lower = self._h_upper
 
 
 class PatternFunctionContainerFactoryApi:
@@ -372,15 +388,17 @@ class PatternFunctionContainerFactory:
     @staticmethod
     def get_function_container_by_api(api: PatternFunctionContainerFactoryApi):
         df_check = api.pattern_range.get_related_part_from_data_frame(api.df_min_max)
-        if api.pattern_range.__class__.__name__ in ('PatternRangeMin', 'PatternRangeDetectorHeadShoulder'):
-            # TODO more general - Head_Shoulder....
+        if api.pattern_range.is_minimum_pattern_range:
             f_upper = api.complementary_function
             f_lower = api.pattern_range.f_param
         else:
             f_lower = api.complementary_function
             f_upper = api.pattern_range.f_param
 
-        return PatternFunctionContainerFactory.get_function_container(api.pattern_type, df_check, f_lower, f_upper)
+        f_cont = PatternFunctionContainerFactory.get_function_container(api.pattern_type, df_check, f_lower, f_upper)
+        if api.pattern_type in [FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]:
+            f_cont.set_tick_for_helper(api.pattern_range.hsf.tick_shoulder_left)
+        return f_cont
 
     @staticmethod
     def get_function_container(pattern_type: str, df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
@@ -392,8 +410,8 @@ class PatternFunctionContainerFactory:
             return ChannelUpPatternFunctionContainer(df, f_lower, f_upper)
         elif pattern_type == FT.HEAD_SHOULDER:
             return HeadShoulderPatternFunctionContainer(df, f_lower, f_upper)
-        elif pattern_type == FT.HEAD_SHOULDER_INVERSE:
-            return HeadShoulderInversePatternFunctionContainer(df, f_lower, f_upper)
+        elif pattern_type == FT.HEAD_SHOULDER_BOTTOM:
+            return HeadShoulderBottomPatternFunctionContainer(df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE:
             return TrianglePatternFunctionContainer(df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE_TOP:

@@ -8,6 +8,7 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 import itertools
+from datetime import datetime
 import matplotlib.dates as mdt
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.constants.pattern_constants import CN, DIR, FT
@@ -86,7 +87,7 @@ class PatternData:
         pos_length = tick_right.position - tick_left.position
         pos_start = tick_left.position - 1
         pos_allowed_for_breakout_start = tick_left.position - int(pos_length/4) # we check only from a specific distance
-        direction = DIR.UP if pattern_type == FT.HEAD_SHOULDER_INVERSE else DIR.DOWN
+        direction = DIR.UP if pattern_type == FT.HEAD_SHOULDER_BOTTOM else DIR.DOWN
         position_range = range(pos_start, max(pos_start - pos_length, 0), -1)
         for position in position_range:
             tick = self.get_tick_by_pos(position)
@@ -95,22 +96,6 @@ class PatternData:
                 return tick if position < pos_allowed_for_breakout_start else None
             elif direction == DIR.DOWN and tick.low < f_value and tick.is_min:
                 return tick if position < pos_allowed_for_breakout_start else None
-        return None
-
-    def get_next_min_max_for_pattern_type(self, tick_right, pattern_type: str):
-        """
-        This function is made only for HEAD_SHOULDER patterns to get the next min/max tick after the right shoulder.
-        :param tick_right: Right shoulder tick
-        :param pattern_type: HEAD_SHOULDER or HEAT_SHOULDER_INVERSE
-        :return: None if no appropriate next min/max is found.
-        """
-        position_range = range(tick_right.position + 1, self.df_length)
-        for position in position_range:
-            tick = self.get_tick_by_pos(position)
-            if pattern_type == FT.HEAD_SHOULDER_INVERSE and tick.is_min:
-                return tick
-            elif pattern_type == FT.HEAD_SHOULDER and tick.is_max:
-                return tick
         return None
 
     def get_tick_by_pos(self, pos: int):

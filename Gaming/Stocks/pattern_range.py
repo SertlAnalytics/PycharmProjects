@@ -18,13 +18,12 @@ import numpy as np
 
 
 class PatternRange:
-    def __init__(self, tick: WaveTick, min_length: int, dedicated_pattern_type=FT.ALL):
+    def __init__(self, tick: WaveTick, min_length: int):
         self.df_min_max_final = None
         self.tick_list = [tick]
         self.tick_first = tick
         self.tick_last = None
         self.tick_breakout_successor = None
-        self._dedicated_pattern_type = dedicated_pattern_type
         self._min_length = min_length
         self._f_param = None
         self._f_param_parallel = None  # parallel function through low or high
@@ -62,7 +61,11 @@ class PatternRange:
 
     @property
     def dedicated_pattern_type(self) -> str:
-        return self._dedicated_pattern_type
+        return FT.ALL
+
+    @property
+    def is_minimum_pattern_range(self) -> bool:
+        return False  # is overwritten
 
     def __get_actual_df_min_max__(self):
         if self.tick_breakout_successor is None:
@@ -91,8 +94,8 @@ class PatternRange:
         self._f_param_const = self.__get_const_function__()
 
     def get_complementary_function_list(self, pattern_type: str) -> list:
-        if pattern_type in [FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_INVERSE]:
-            return [self.f_param_parallel] if self._dedicated_pattern_type == pattern_type else []
+        if pattern_type in [FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]:
+            return [self.f_param_parallel] if self.dedicated_pattern_type == pattern_type else []
         elif pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
             return [self.f_param_const]
         else:
@@ -170,6 +173,10 @@ class PatternRange:
 
 
 class PatternRangeMax(PatternRange):
+    @property
+    def is_minimum_pattern_range(self) -> bool:
+        return False
+
     @staticmethod
     def __get_value__(tick: WaveTick):
         return tick.high
@@ -187,6 +194,10 @@ class PatternRangeMax(PatternRange):
 
 
 class PatternRangeMin(PatternRange):
+    @property
+    def is_minimum_pattern_range(self) -> bool:
+        return True
+
     @staticmethod
     def __get_value__(tick: WaveTick):
         return tick.low
@@ -201,6 +212,64 @@ class PatternRangeMin(PatternRange):
 
     def __get_const_function__(self) -> np.poly1d:
         return np.poly1d([0, self.df_min_max_final[CN.HIGH].max()])
+
+
+class HeadShoulderFormation:
+    def __init__(self, pattern_type: str, tick_neckline_left: WaveTick, tick_head: WaveTick,
+                 tick_neckline_right: WaveTick):
+        self.pattern_type = pattern_type
+        self.tick_previous_breakout = None
+        self.tick_shoulder_left = None
+        self.tick_neckline_left = tick_neckline_left
+        self.tick_head = tick_head
+        self.tick_neckline_right = tick_neckline_right
+        self.tick_shoulder_right = None
+        self.f_neckline_param = None
+
+    @property
+    def distance_neckline(self):
+        return self.tick_neckline_right.position - self.tick_neckline_left.position
+
+    @property
+    def expected_win(self):  # distance from neckline to first shoulder
+        if self.pattern_type == FT.HEAD_SHOULDER:
+            return self.tick_shoulder_left.high - self.tick_neckline_left.low
+        else:
+            return self.tick_neckline_left.high - self.tick_shoulder_left.low
+
+    def is_neckline_distance_compliant(self) -> bool:
+        allowed_relation = 2.5
+        distance_left = self.tick_head.position - self.tick_neckline_left.position
+        distance_right = self.tick_neckline_right.position - self.tick_head.position
+        relation = round(distance_left/distance_right, 2)
+        return_value = 1/allowed_relation < relation < allowed_relation
+        return return_value
+
+    def is_previous_breakout_distance_compliant(self) -> bool:
+        allowed_relation = 1
+        distance_to_previous_breakout =  self.tick_neckline_left.position - self.tick_head.position
+        relation = round(distance_to_previous_breakout/self.distance_neckline, 2)
+        return relation < allowed_relation
+
+
+class PatternRangeHeadShoulder(PatternRangeMin):
+    def __init__(self, hsf: HeadShoulderFormation, min_length: int):
+        self.hsf = hsf
+        PatternRangeMin.__init__(self, hsf.tick_previous_breakout, min_length)
+
+    @property
+    def dedicated_pattern_type(self) -> str:
+        return FT.HEAD_SHOULDER
+
+
+class PatternRangeHeadShoulderBottom(PatternRangeMax):
+    def __init__(self, hsf: HeadShoulderFormation, min_length: int):
+        self.hsf = hsf
+        PatternRangeMax.__init__(self, hsf.tick_previous_breakout, min_length)
+
+    @property
+    def dedicated_pattern_type(self) -> str:
+        return FT.HEAD_SHOULDER_BOTTOM
 
 
 class PatternRangeDetector:
@@ -356,31 +425,83 @@ class PatternRangeDetectorMin(PatternRangeDetector):
         return ToleranceCalculator.are_values_in_tolerance_range(v_1, v_2, self._tolerance_pct)
 
 
-class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin):
-    def __parse_tick_list__(self):
-        index_global_max_list = [i for i, tick in enumerate(self.tick_list) if tick.is_global_max]
-        for i in index_global_max_list:
-            tick_list_left = self.__get_min_tick_list__(i, True)
-            tick_list_right = self.__get_min_tick_list__(i, False)
-            for tick_left in tick_list_left:
-                for tick_right in tick_list_right:
-                    f_param_left_right = self.__get_linear_f_params__(tick_left, tick_right)
-                    breakout_tick = pdh.pattern_data.get_previous_breakout_for_pattern_type(
-                        f_param_left_right, tick_left, tick_right, FT.HEAD_SHOULDER)
-                    if breakout_tick is not None:
-                        pattern_range = PatternRangeMax(breakout_tick, self.number_required_ticks, FT.HEAD_SHOULDER)
-                        pattern_range.add_tick(tick_left, f_param_left_right)
-                        pattern_range.add_tick(tick_right, f_param_left_right)
-                        next_max_tick = pdh.pattern_data.get_next_min_max_for_pattern_type(tick_right, FT.HEAD_SHOULDER)
-                        if next_max_tick is not None:
-                            pattern_range.add_tick(next_max_tick, f_param_left_right)
-                        self.__add_pattern_range_to_list_after_check__(pattern_range)
+class PatternRangeDetectorHeadShoulderBase:
+    def __init__(self, tick_list: list):
+        self.tick_list = tick_list
+        self.global_max_tuple_list = [(i, tick) for i, tick in enumerate(self.tick_list) if tick.is_global_max]
+        self.global_min_tuple_list = [(i, tick) for i, tick in enumerate(self.tick_list) if tick.is_global_min]
 
-    def __get_min_tick_list__(self, set_off: int, for_left: bool):
+    def get_pattern_range(self, number_required_ticks: int, hsf: HeadShoulderFormation):
+        hsf.tick_previous_breakout = pdh.pattern_data.get_previous_breakout_for_pattern_type(
+            hsf.f_neckline_param, hsf.tick_neckline_left, hsf.tick_neckline_right, hsf.pattern_type)
+        if hsf.tick_previous_breakout is None:
+            return None
+        if not hsf.is_previous_breakout_distance_compliant():
+            return None
+
+        hsf.tick_shoulder_left = self._get_shoulder_tick_(hsf, True)
+        if hsf.tick_shoulder_left is None:
+            return None
+
+        if hsf.pattern_type == FT.HEAD_SHOULDER:
+            pattern_range = PatternRangeHeadShoulder(hsf, number_required_ticks)
+        else:
+            pattern_range = PatternRangeHeadShoulderBottom(hsf, number_required_ticks)
+
+        pattern_range.add_tick(hsf.tick_shoulder_left, hsf.f_neckline_param)
+        pattern_range.add_tick(hsf.tick_neckline_left, hsf.f_neckline_param)
+        pattern_range.add_tick(hsf.tick_head, hsf.f_neckline_param)
+        pattern_range.add_tick(hsf.tick_neckline_right, hsf.f_neckline_param)
+        hsf.tick_shoulder_right = self._get_shoulder_tick_(hsf, False)
+        if hsf.tick_shoulder_right is not None:
+            pattern_range.add_tick(hsf.tick_shoulder_right, hsf.f_neckline_param)
+        return pattern_range
+
+    def get_tick_range(self, set_off: int, for_left: bool):
+        return range(set_off - 1, 0, -1) if for_left else range(set_off + 1, len(self.tick_list)-1)
+
+    def _get_shoulder_tick_(self, hsf: HeadShoulderFormation, for_left: bool):
+        compare_value = - math.inf if hsf.pattern_type == FT.HEAD_SHOULDER else math.inf
+        tick_return = None
+
+        if for_left:
+            tick_position_start = hsf.tick_previous_breakout.position
+            tick_position_end = hsf.tick_neckline_left.position
+        else:
+            tick_position_start = hsf.tick_neckline_right.position
+            tick_position_end = hsf.tick_neckline_right.position + hsf.distance_neckline
+
+        for tick in self.tick_list:
+            if tick.position > tick_position_start:
+                if tick.position < tick_position_end:
+                    # check for exit if a tick is outside the pattern
+                    if hsf.pattern_type == FT.HEAD_SHOULDER:
+                        if tick.high > hsf.tick_head.high:
+                            return None
+                        elif not for_left and tick.low < hsf.tick_neckline_left.low:
+                            return tick_return
+                    elif hsf.pattern_type == FT.HEAD_SHOULDER_BOTTOM:
+                        if tick.low < hsf.tick_head.low:
+                            return None
+                        elif not for_left and tick.high > hsf.tick_neckline_left.high:
+                            return tick_return
+
+                    if hsf.pattern_type == FT.HEAD_SHOULDER:
+                        if tick.is_max and tick.high > compare_value:
+                            tick_return = tick
+                            compare_value = tick.high
+                    else:
+                        if tick.is_min and tick.low < compare_value:
+                            tick_return = tick
+                            compare_value = tick.low
+                else:
+                    return tick_return
+        return tick_return
+
+    def _get_min_tick_list_for_neckline_(self, set_off: int, for_left: bool):
         min_value = math.inf
         list_return = []
-        tick_range = range(set_off - 1, 0, -1) if for_left else range(set_off + 1, self._elements - 1)
-        for k in tick_range:
+        for k in self.get_tick_range(set_off, for_left):
             tick_k = self.tick_list[k]
             if tick_k.is_min:
                 if tick_k.low < min_value:
@@ -390,34 +511,10 @@ class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin):
                 break
         return list_return
 
-
-class PatternRangeDetectorHeadShoulderInverse(PatternRangeDetectorMax):
-    def __parse_tick_list__(self):
-        index_global_min_list = [i for i, tick in enumerate(self.tick_list) if tick.is_global_min]
-        for i in index_global_min_list:
-            tick_list_left = self.__get_max_tick_list__(i, True)
-            tick_list_right = self.__get_max_tick_list__(i, False)
-            for tick_left in tick_list_left:
-                for tick_right in tick_list_right:
-                    f_param_left_right = self.__get_linear_f_params__(tick_left, tick_right)
-                    breakout_tick = pdh.pattern_data.get_previous_breakout_for_pattern_type(
-                        f_param_left_right, tick_left, tick_right, FT.HEAD_SHOULDER_INVERSE)
-                    if breakout_tick is not None:
-                        pattern_range = PatternRangeMax(breakout_tick, self.number_required_ticks
-                                                        , FT.HEAD_SHOULDER_INVERSE)
-                        pattern_range.add_tick(tick_left, f_param_left_right)
-                        pattern_range.add_tick(tick_right, f_param_left_right)
-                        next_min_tick = pdh.pattern_data.get_next_min_max_for_pattern_type(
-                            tick_right, FT.HEAD_SHOULDER_INVERSE)
-                        if next_min_tick is not None:
-                            pattern_range.add_tick(next_min_tick, f_param_left_right)
-                        self.__add_pattern_range_to_list_after_check__(pattern_range)
-
-    def __get_max_tick_list__(self, set_off: int, for_left: bool):
+    def _get_max_tick_list_for_neckline_(self, set_off: int, for_left: bool):
         max_value = -math.inf
         list_return = []
-        tick_range = range(set_off - 1, 0, -1) if for_left else range(set_off + 1, self._elements - 1)
-        for k in tick_range:
+        for k in self.get_tick_range(set_off, for_left):
             tick_k = self.tick_list[k]
             if tick_k.is_max:
                 if tick_k.high > max_value:
@@ -427,3 +524,52 @@ class PatternRangeDetectorHeadShoulderInverse(PatternRangeDetectorMax):
                 break
         return list_return
 
+
+class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin, PatternRangeDetectorHeadShoulderBase):
+    def __init__(self, tick_list: list):
+        PatternRangeDetectorHeadShoulderBase.__init__(self, tick_list)
+        PatternRangeDetectorMin.__init__(self, tick_list)
+
+    @property
+    def pattern_type(self):
+        return FT.HEAD_SHOULDER
+
+    def __parse_tick_list__(self):
+        for entries in self.global_max_tuple_list:
+            index = entries[0]
+            tick_head = entries[1]
+            tick_list_left = self._get_min_tick_list_for_neckline_(index, True)
+            tick_list_right = self._get_min_tick_list_for_neckline_(index, False)
+            for tick_left in tick_list_left:
+                for tick_right in tick_list_right:
+                    hsf = HeadShoulderFormation(self.pattern_type, tick_left, tick_head, tick_right)
+                    if hsf.is_neckline_distance_compliant():
+                        hsf.f_neckline_param = self.__get_linear_f_params__(tick_left, tick_right)
+                        pattern_range = self.get_pattern_range(self.number_required_ticks, hsf)
+                        if pattern_range is not None:
+                            self.__add_pattern_range_to_list_after_check__(pattern_range)
+
+
+class PatternRangeDetectorHeadShoulderBottom(PatternRangeDetectorMax, PatternRangeDetectorHeadShoulderBase):
+    def __init__(self, tick_list: list):
+        PatternRangeDetectorHeadShoulderBase.__init__(self, tick_list)
+        PatternRangeDetectorMax.__init__(self, tick_list)
+
+    @property
+    def pattern_type(self):
+        return FT.HEAD_SHOULDER_BOTTOM
+
+    def __parse_tick_list__(self):
+        for entries in self.global_min_tuple_list:
+            index = entries[0]
+            tick_head = entries[1]
+            tick_list_left = self._get_max_tick_list_for_neckline_(index, True)
+            tick_list_right = self._get_max_tick_list_for_neckline_(index, False)
+            for tick_left in tick_list_left:
+                for tick_right in tick_list_right:
+                    hsf = HeadShoulderFormation(self.pattern_type, tick_left, tick_head, tick_right)
+                    if hsf.is_neckline_distance_compliant():
+                        hsf.f_neckline_param = self.__get_linear_f_params__(tick_left, tick_right)
+                        pattern_range = self.get_pattern_range(self.number_required_ticks, hsf)
+                        if pattern_range is not None:
+                            self.__add_pattern_range_to_list_after_check__(pattern_range)
