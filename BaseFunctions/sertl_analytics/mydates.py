@@ -51,6 +51,11 @@ class MyDate:
        return datetime.fromtimestamp(epoch_seconds)
 
     @staticmethod
+    def get_date_time_t_from_epoch_seconds(epoch_seconds: float) -> datetime:
+        dt = datetime.fromtimestamp(epoch_seconds)
+        return str(dt.date()) + 'T' + str(dt.time())[:8]
+
+    @staticmethod
     def get_date_as_number_difference_from_epoch_seconds(epoch_seconds_1: int, epoch_seconds_2: int) -> float:
         off_set = 1000000  # must be at least this number
         date_as_number_1 = MyDate.get_date_as_number_from_epoch_seconds(off_set + epoch_seconds_1)

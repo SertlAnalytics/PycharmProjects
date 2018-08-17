@@ -29,17 +29,11 @@ class MyShape:
         svg_path = ''
         for k in range(0, length):
             if k == 0:
-                svg_path = 'M {},{}'.format(self.x[k], self.y[k])
+                svg_path = 'M {},{}'.format(self.x[k].replace(' ', '_'), self.y[k])
             else:
-                svg_path += ' L {},{}'.format(self.x[k], self.y[k])
+                svg_path += ' L {},{}'.format(self.x[k].replace(' ', '_'), self.y[k])
         if close_path:
             svg_path += " Z"
-        # ToDo DateTime for intraday charts, date and time are working - but there is a problem with spaces between D T.
-        # print('svg_path={}'.format(svg_path))
-        # svg_path = 'M 2018-08-15 16:55:00,548 L 2018-08-15 20:20:00,534 L 2018-08-15 16:55:00,517 Z'
-        # svg_path = 'M [2018-08-15 16:55:00],548.51 L [2018-08-15 20:20:00],534.42 L [2018-08-15 16:55:00],517.22 Z'
-        # svg_path = 'M 16:55:00,548.51 L 20:20:00,534.42 L 16:55:00,517.22 Z'
-        # svg_path = 'M 2018-08-15T16:55:00,548 L 2018-08-15T20:20:00,534 L 2018-08-15T16:55:00,517 Z'
         return svg_path
 
     def __get_shape_parameter_dict__(self) -> dict:

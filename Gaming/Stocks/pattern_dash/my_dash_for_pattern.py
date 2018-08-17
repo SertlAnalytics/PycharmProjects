@@ -342,9 +342,10 @@ class MyDash4Pattern(MyDashBase):
     def __init_ticker_selection_callback__(self):
         @self.app.callback(
             Output('my_graph_second_days_selection', 'value'),
-            [Input('my_ticker_selection', 'value')])
-        def handle_ticker_selection_callback_for_days_selection(ticker_selected):
-            return 0
+            [Input('my_ticker_selection', 'value')],
+            [State('my_graph_second_days_selection', 'value')])
+        def handle_ticker_selection_callback_for_days_selection(ticker_selected, second_days_selection):
+            return second_days_selection if second_days_selection == 1 else 0  # we want to keep Intraday
 
     def __init_interval_callback_with_date_picker__(self):
         @self.app.callback(
@@ -550,6 +551,7 @@ class MyDash4Pattern(MyDashBase):
     @staticmethod
     def __get_candlesticks_trace__(df: pd.DataFrame, ticker: str):
         if config.api_period == ApiPeriod.INTRADAY:
+            # x_value = df[CN.DATETIME] if config.dash_use_date_time_for_intraday else df[CN.TIME]
             x_value = df[CN.DATETIME] if config.dash_use_date_time_for_intraday else df[CN.TIME]
         else:
             x_value = df[CN.DATE]
@@ -661,7 +663,7 @@ class DashInterface:
     @staticmethod
     def get_xy_from_timestamp_to_date_time_str(xy):
         if type(xy) == list:
-            return [(MyDate.get_date_time_from_epoch_seconds(t_val[0]), t_val[1]) for t_val in xy]
+            return [(str(MyDate.get_date_time_from_epoch_seconds(t_val[0])), t_val[1]) for t_val in xy]
         return str(MyDate.get_date_time_from_epoch_seconds(xy[0])), xy[1]
 
     @staticmethod
@@ -691,7 +693,6 @@ class DashInterface:
     @staticmethod
     def get_f_regression_shape(pattern_part: PatternPart, color: str):
         x, y = DashInterface.get_xy_separated_from_timestamp(pattern_part.xy_regression)
-        # print('get_f_regression_shape: x = {}'.format(x))
         return MyLineShape(x, y, color)
 
     @staticmethod
