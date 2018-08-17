@@ -8,7 +8,8 @@ Date: 2018-05-14
 import pandas as pd
 from sertl_analytics.constants.pattern_constants import CT, SVC, FT
 from sertl_analytics.mymath import MyMath
-from pattern_value_categorizer import ValueCategorizer
+from pattern_value_categorizer import ValueCategorizer, ValueCategorizerHeadShoulder
+from pattern_range import PatternRange
 from sertl_analytics.myexceptions import MyException
 
 
@@ -58,7 +59,7 @@ class Constraints:
                     f_regression_percentage_bounds = self.f_regression_percentage_bounds,
                     is_breakout_required_after_certain_ticks = self.is_breakout_required_after_certain_ticks)
 
-    def are_constraints_fulfilled(self, f_cont) -> bool:
+    def are_constraints_fulfilled(self, pattern_range: PatternRange, f_cont) -> bool:
         check_dic = {}
         check_dic[CT.F_UPPER] = self.__is_f_upper_percentage_compliant__(f_cont.f_upper_percentage)
         check_dic[CT.F_LOWER] = self.__is_f_lower_percentage_compliant__(f_cont.f_lower_percentage)
@@ -66,12 +67,15 @@ class Constraints:
         check_dic[CT.REL_HEIGHTS] = self.__is_relation_heights_compliant__(f_cont.height_end, f_cont.height_start)
         if False in [check_dic[key] for key in check_dic]:  # first check - next step has calculations
             return False
-        value_categorizer = ValueCategorizer(f_cont.df, f_cont.f_upper, f_cont.f_lower,
-                                             f_cont.h_upper, f_cont.h_lower, self.tolerance_pct)
+        value_categorizer = self.__get_value_categorizer__(pattern_range, f_cont)
         check_dic[CT.ALL_IN] = self.__is_global_constraint_all_in_satisfied__(value_categorizer)
         check_dic[CT.COUNT] = self.__is_global_constraint_count_satisfied__(value_categorizer)
         check_dic[CT.SERIES] = self.__is_global_constraint_series_satisfied__(value_categorizer)
         return False if False in [check_dic[key] for key in check_dic] else True
+
+    def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
+        return ValueCategorizer(f_cont.df, f_cont.f_upper, f_cont.f_lower,
+                                             f_cont.h_upper, f_cont.h_lower, self.tolerance_pct)
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():
@@ -315,6 +319,10 @@ class HeadShoulderConstraints(Constraints):
         self.global_series = ['OR',
                               [SVC.H_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.H_in]]
 
+    def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
+        return ValueCategorizerHeadShoulder(pattern_range, f_cont.df, f_cont.f_upper, f_cont.f_lower,
+                                            f_cont.h_upper, f_cont.h_lower, self.tolerance_pct)
+
     @staticmethod
     def _get_f_upper_percentage_bounds_():
         return [-2.0, 2.0]
@@ -338,6 +346,10 @@ class HeadShoulderBottomConstraints(HeadShoulderConstraints):
         self.global_count = []
         self.global_series = ['OR',
                               [SVC.H_on, SVC.U_on, SVC.L_on, SVC.U_on, SVC.H_in]]
+
+    def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
+        return ValueCategorizerHeadShoulder(pattern_range, f_cont.df, f_cont.f_upper, f_cont.f_lower,
+                                            f_cont.h_upper, f_cont.h_lower, self.tolerance_pct)
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():

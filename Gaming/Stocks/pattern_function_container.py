@@ -357,7 +357,7 @@ class HeadShoulderPatternFunctionContainer(PatternFunctionContainer):
 
     def set_tick_for_helper(self, tick: WaveTick):  # parallel to neckline = f_lower through left shoulder
         self._tick_for_helper = tick
-        self._h_upper = MyPoly1d.get_parallel_through_point(self._f_lower, tick.f_var, tick.low)
+        self._h_upper = MyPoly1d.get_parallel_through_point(self._f_lower, tick.f_var, tick.high)
         self._h_lower = self._h_upper
 
 
@@ -370,7 +370,7 @@ class HeadShoulderBottomPatternFunctionContainer(PatternFunctionContainer):
 
     def set_tick_for_helper(self, tick: WaveTick):  # parallel to neckline = f_upper through left shoulder
         self._tick_for_helper = tick
-        self._h_upper = MyPoly1d.get_parallel_through_point(self._f_upper, tick.f_var, tick.high)
+        self._h_upper = MyPoly1d.get_parallel_through_point(self._f_upper, tick.f_var, tick.low)
         self._h_lower = self._h_upper
 
 

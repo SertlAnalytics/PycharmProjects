@@ -40,6 +40,7 @@ class MyCacheObjectApi:
         self.key = None
         self.value = None
         self.valid_until_ts = None
+        self.period_aggregation_ts = config.api_period_aggregation * 60
 
 
 class MyGraphCacheObjectApi(MyCacheObjectApi):
@@ -55,6 +56,7 @@ class MyCacheObject:
         self.id = cache_api.key
         self.value = cache_api.value
         self.valid_until_ts = cache_api.valid_until_ts
+        self.valid_until_time = MyDate.get_time_from_epoch_seconds(self.valid_until_ts)
 
     def is_valid(self):
         if self.valid_until_ts is None:
@@ -68,15 +70,29 @@ class MyGraphCacheObject(MyCacheObject):
         self.detector = cache_api.detector
         self.pattern_data = cache_api.pattern_data
         self.last_refresh_ts = cache_api.last_refresh_ts
-        self.was_cached_before_breakout = self.__was_cached_before_breakout__()
-        self.was_breakout_since_last_refresh = self.__was_breakout_since_last_refresh__(self.last_refresh_ts)
+        self.last_refresh_time = MyDate.get_time_from_epoch_seconds(self.last_refresh_ts)
+        self.period_aggregation_ts = config.api_period_aggregation * 60
+        self.cached_before_breakout = self.__was_cached_before_breakout__()
+        self.breakout_since_last_refresh = self.__was_breakout_since_last_refresh__(self.last_refresh_ts)
+
+    @property
+    def is_under_observation(self):
+        return self.cached_before_breakout or self.breakout_since_last_refresh
 
     def __was_breakout_since_last_refresh__(self, time_stamp_last_refresh: int):
         for pattern in self.detector.pattern_list:
             if pattern.was_breakout_done():
-                if pattern.breakout.tick_breakout.time_stamp > time_stamp_last_refresh:
+                adjusted_breakout_ts = pattern.breakout.tick_breakout.time_stamp + config.api_period_aggregation * 60
+                if adjusted_breakout_ts > time_stamp_last_refresh:
+                    self.__print_breakout_details__(adjusted_breakout_ts, time_stamp_last_refresh)
                     return True
         return False
+
+    def __print_breakout_details__(self, breakout_ts, last_refresh_ts):
+        breakout_t = MyDate.get_time_from_epoch_seconds(breakout_ts)
+        last_refresh_t = MyDate.get_time_from_epoch_seconds(last_refresh_ts)
+        print('{}: __was_breakout_since_last_refresh__: adjusted_breakout={}/{}=last_refresh'.format(
+            self.id, breakout_t, last_refresh_t))
 
     def __was_cached_before_breakout__(self) -> bool:
         for pattern in self.detector.pattern_list:
@@ -95,7 +111,9 @@ class MyCache:
 
     @staticmethod
     def _print_add_to_cache_(cache_key, valid_until_ts):
-        print('\nAdd to cache: key={}, timestamp={}, now={}'.format(cache_key, valid_until_ts, MyDate.time_stamp_now()))
+        valid_until_t = MyDate.get_time_from_epoch_seconds(valid_until_ts)
+        now_t = MyDate.get_time_from_epoch_seconds(MyDate.time_stamp_now())
+        print('\nAdd to cache: key={}, valid_until={}, now={}'.format(cache_key, valid_until_t, now_t))
 
     def get_cached_value_by_cache_key(self, cache_key):
         if cache_key in self._cached_object_dict:
@@ -110,7 +128,7 @@ class MyCache:
 class MyGraphCache(MyCache):
     def __init__(self):
         MyCache.__init__(self)
-        self.was_cached_before_breakout_play_sound_list = []
+        self.__cached_and_under_observation_play_sound_list = []
 
     @staticmethod
     def get_cache_key(graph_id: str, ticker: str, days: int = 0):
@@ -127,20 +145,20 @@ class MyGraphCache(MyCache):
         return self._cached_object_dict[cache_key].pattern_data
 
     def was_breakout_since_last_refresh(self, cache_key: str):
-        return self._cached_object_dict[cache_key].was_breakout_since_last_refresh
+        return self._cached_object_dict[cache_key].breakout_since_last_refresh
 
-    def get_graph_list_before_breakout(self, key_not: str) -> list:
+    def get_graph_list_before_and_short_after_breakout(self, key_not: str) -> list:
         play_sound = False
         graphs = []
         for key, cache_object in self._cached_object_dict.items():
-            if key != key_not and cache_object.was_cached_before_breakout:
-                if key not in self.was_cached_before_breakout_play_sound_list:
-                    self.was_cached_before_breakout_play_sound_list.append(key)
+            if key != key_not and cache_object.is_under_observation:
+                if key not in self.__cached_and_under_observation_play_sound_list:
+                    self.__cached_and_under_observation_play_sound_list.append(key)
                     play_sound = True
                 graphs.append(self.__change_to_breakout_graph__(cache_object.value, len(graphs)))
-            elif not cache_object.was_cached_before_breakout:
-                if key in self.was_cached_before_breakout_play_sound_list:
-                    self.was_cached_before_breakout_play_sound_list.remove(key)
+            elif not cache_object.is_under_observation:
+                if key in self.__cached_and_under_observation_play_sound_list:
+                    self.__cached_and_under_observation_play_sound_list.remove(key)
         if play_sound:
             playsound('ring08.wav')  # C:/Windows/media/...
         return graphs
@@ -377,7 +395,7 @@ class MyDash4Pattern(MyDashBase):
             Output('my_graphs_before_breakout_div', 'children'),
             [Input('my_graph_first_div', 'children')])
         def handle_callback_for_graphs_before_breakout(graph_first_div):
-            graphs = self._graph_first_cache.get_graph_list_before_breakout(self._graph_key_first)
+            graphs = self._graph_first_cache.get_graph_list_before_and_short_after_breakout(self._graph_key_first)
             if len(graphs) > 0:
                 print('\n...handle_callback_for_graphs_before_breakout: {}'.format(len(graphs)))
             return graphs

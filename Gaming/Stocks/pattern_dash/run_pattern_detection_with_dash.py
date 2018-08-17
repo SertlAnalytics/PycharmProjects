@@ -41,7 +41,7 @@ config.fibonacci_tolerance_pct = 0.1  # default is 0.20
 config.fibonacci_detail_print = True
 # config.use_index(Indices.DOW_JONES)
 config.use_index(Indices.CRYPTO_CCY)
-# config.use_own_dic({'TSLA': 'T', 'DWDP': 'DuPont', 'MMM': 'M', 'CAT': 'c', 'FCEL': 'c', 'GS': 'Goldman'})
+# config.use_own_dic({'TSLA': 'T', 'DWDP': 'DuPont', 'MMM': 'M', 'CAT': 'c', 'GS': 'Goldman'})
 # config.use_own_dic({'MMM': 'American'})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", "AXP": "American", "WMT": "Wall mart",
 # config.and_clause = "Date BETWEEN '2017-10-25' AND '2018-04-18'"

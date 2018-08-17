@@ -247,7 +247,7 @@ class HeadShoulderFormation:
 
     def is_previous_breakout_distance_compliant(self) -> bool:
         allowed_relation = 1
-        distance_to_previous_breakout =  self.tick_neckline_left.position - self.tick_head.position
+        distance_to_previous_breakout = self.tick_neckline_left.position - self.tick_previous_breakout.position
         relation = round(distance_to_previous_breakout/self.distance_neckline, 2)
         return relation < allowed_relation
 
@@ -440,7 +440,8 @@ class PatternRangeDetectorHeadShoulderBase:
             return None
 
         hsf.tick_shoulder_left = self._get_shoulder_tick_(hsf, True)
-        if hsf.tick_shoulder_left is None:
+        hsf.tick_shoulder_right = self._get_shoulder_tick_(hsf, False)
+        if hsf.tick_shoulder_left is None or hsf.tick_shoulder_right is None:
             return None
 
         if hsf.pattern_type == FT.HEAD_SHOULDER:
@@ -452,9 +453,7 @@ class PatternRangeDetectorHeadShoulderBase:
         pattern_range.add_tick(hsf.tick_neckline_left, hsf.f_neckline_param)
         pattern_range.add_tick(hsf.tick_head, hsf.f_neckline_param)
         pattern_range.add_tick(hsf.tick_neckline_right, hsf.f_neckline_param)
-        hsf.tick_shoulder_right = self._get_shoulder_tick_(hsf, False)
-        if hsf.tick_shoulder_right is not None:
-            pattern_range.add_tick(hsf.tick_shoulder_right, hsf.f_neckline_param)
+        pattern_range.add_tick(hsf.tick_shoulder_right, hsf.f_neckline_param)
         return pattern_range
 
     def get_tick_range(self, set_off: int, for_left: bool):

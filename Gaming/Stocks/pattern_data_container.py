@@ -86,7 +86,7 @@ class PatternData:
         """
         pos_length = tick_right.position - tick_left.position
         pos_start = tick_left.position - 1
-        pos_allowed_for_breakout_start = tick_left.position - int(pos_length/4) # we check only from a specific distance
+        pos_allowed_for_breakout_start = tick_left.position - 6 # we check only from a specific distance
         direction = DIR.UP if pattern_type == FT.HEAD_SHOULDER_BOTTOM else DIR.DOWN
         position_range = range(pos_start, max(pos_start - pos_length, 0), -1)
         for position in position_range:

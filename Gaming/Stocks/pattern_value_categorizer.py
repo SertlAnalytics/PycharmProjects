@@ -17,20 +17,20 @@ class ValueCategorizer:
     def __init__(self, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower, tolerance_pct: float):
         self.df = df
         self.df_length = self.df.shape[0]
-        self.__f_upper = f_upper
-        self.__f_lower = f_lower
-        self.__h_upper = h_upper
-        self.__h_lower = h_lower
+        self._f_upper = f_upper
+        self._f_lower = f_lower
+        self._h_upper = h_upper
+        self._h_lower = h_lower
         self.index_list = []
         self.value_category_dic = {}  # list of value categories by position of each entry
-        self.__tolerance_pct = tolerance_pct
-        self.__tolerance_pct_equal = 0.001
+        self._tolerance_pct = tolerance_pct
+        self._tolerance_pct_equal = 0.001
         self.__set_f_upper_f_lower_values__()
         self.__set_h_upper_h_lower_values__()
         self.__calculate_value_categories__()
 
     def are_all_values_above_f_lower(self, with_tolerance: bool = False) -> bool:  # TODO with_tolerance
-        tolerance = self.df[CN.LOW].mean() * self.__tolerance_pct
+        tolerance = self.df[CN.LOW].mean() * self._tolerance_pct
         df_local = self.df[self.df[CN.LOW] < self.df[CN.F_LOWER] - tolerance]
         return df_local.shape[0] == 0
 
@@ -51,23 +51,23 @@ class ValueCategorizer:
         return counter
 
     def print_data(self):
-        print('\nValue categories for u=({}) and l=({}):'.format(self.__f_upper, self.__f_lower), end='\n')
+        print('\nValue categories for u=({}) and l=({}):'.format(self._f_upper, self._f_lower), end='\n')
         for ind, row in self.df.iterrows():
             tick = WaveTick(row)
             print('Pos: {}, Date: {}, H/L:{}/{}, Cat={}'.format(
                 tick.position, tick.date_str, tick.high, tick.low, self.value_category_dic[tick.position]))
 
     def are_helper_functions_available(self):
-        return self.__h_lower is not None and self.__h_upper is not None
+        return self._h_lower is not None and self._h_upper is not None
 
     def __set_f_upper_f_lower_values__(self):
-        self.df = self.df.assign(F_UPPER=(self.__f_upper(self.df[self.__index_column])))
-        self.df = self.df.assign(F_LOWER=(self.__f_lower(self.df[self.__index_column])))
+        self.df = self.df.assign(F_UPPER=(self._f_upper(self.df[self.__index_column])))
+        self.df = self.df.assign(F_LOWER=(self._f_lower(self.df[self.__index_column])))
 
     def __set_h_upper_h_lower_values__(self):
         if self.are_helper_functions_available():
-            self.df = self.df.assign(H_UPPER=(self.__h_upper(self.df[self.__index_column])))
-            self.df = self.df.assign(H_LOWER=(self.__h_lower(self.df[self.__index_column])))
+            self.df = self.df.assign(H_UPPER=(self._h_upper(self.df[self.__index_column])))
+            self.df = self.df.assign(H_LOWER=(self._h_lower(self.df[self.__index_column])))
 
     def __calculate_value_categories__(self):
         for ind, row in self.df.iterrows():
@@ -92,29 +92,18 @@ class ValueCategorizer:
             return_list.append(SVC.L_out)
 
         if self.are_helper_functions_available():
-            if self.__is_row_value_between_h_lower_h_upper__(row):
-                return_list.append(SVC.H_M_in)
-            if self.__is_row_value_equal_h__(row):  # used for HEAD_SHOULDER
-                return_list.append(SVC.H_on)
-            if self.__is_row_value_in_h_range__(row):  # used for HEAD_SHOULDER
-                return_list.append(SVC.H_in)
+            self.__get_helper_values_categories_for_df_row__(return_list, row)
         return return_list
 
-    def __is_row_value_equal_h__(self, row): # used for HEAD_SHOULDER - both helper are identical
-        value_01 = abs(row[CN.LOW] - row[CN.H_LOWER]) / np.mean([row[CN.LOW], row[CN.H_LOWER]])
-        value_02 = abs(row[CN.HIGH] - row[CN.H_LOWER]) / np.mean([row[CN.HIGH], row[CN.H_LOWER]])
-        return value_01 <= self.__tolerance_pct_equal or value_02 <= self.__tolerance_pct_equal
-
-    def __is_row_value_in_h_range__(self, row): # used for HEAD_SHOULDER - both helper are identical
-        value_01 = abs(row[CN.LOW] - row[CN.H_LOWER]) / np.mean([row[CN.LOW], row[CN.H_LOWER]])
-        value_02 = abs(row[CN.HIGH] - row[CN.H_LOWER]) / np.mean([row[CN.HIGH], row[CN.H_LOWER]])
-        return value_01 <= self.__tolerance_pct or value_02 <= self.__tolerance_pct
+    def __get_helper_values_categories_for_df_row__(self, return_list, row):
+        if self.__is_row_value_between_h_lower_h_upper__(row):
+            return_list.append(SVC.H_M_in)
 
     def __is_row_value_in_f_upper_range__(self, row):
-        return abs(row[CN.HIGH] - row[CN.F_UPPER])/np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self.__tolerance_pct
+        return abs(row[CN.HIGH] - row[CN.F_UPPER])/np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self._tolerance_pct
 
     def __is_row_value_in_f_lower_range__(self, row):
-        return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) <= self.__tolerance_pct
+        return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) <= self._tolerance_pct
 
     @staticmethod
     def __is_row_value_between_f_lower_f_upper__(row):
@@ -127,7 +116,7 @@ class ValueCategorizer:
 
     def __is_row_value_equal_f_upper__(self, row):
         return abs(row[CN.HIGH] - row[CN.F_UPPER]) / np.mean([row[CN.HIGH], row[CN.F_UPPER]]) \
-               <= self.__tolerance_pct_equal
+               <= self._tolerance_pct_equal
 
     def __is_row_value_larger_f_upper__(self, row):
         return row[CN.HIGH] > row[CN.F_UPPER] and not self.__is_row_value_in_f_upper_range__(row)
@@ -138,7 +127,7 @@ class ValueCategorizer:
 
     def __is_row_value_equal_f_lower__(self, row):
         return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) \
-               <= self.__tolerance_pct_equal
+               <= self._tolerance_pct_equal
 
     @staticmethod
     def __is_row_value_larger_f_lower__(row):
@@ -146,3 +135,36 @@ class ValueCategorizer:
 
     def __is_row_value_smaller_f_lower__(self, row):
         return row[CN.LOW] < row[CN.F_LOWER] and not self.__is_row_value_in_f_lower_range__(row)
+
+
+class ValueCategorizerHeadShoulder(ValueCategorizer):  # currently we don't need a separate for ...Bottom
+    def __init__(self, pattern_range, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower, tolerance_pct: float):
+        self._pattern_range = pattern_range
+        self._shoulder_timestamps = [self._pattern_range.hsf.tick_shoulder_left.time_stamp,
+                                     self._pattern_range.hsf.tick_shoulder_right.time_stamp]
+        ValueCategorizer.__init__(self, df, f_upper, f_lower, h_upper, h_lower, tolerance_pct)
+
+    def __get_helper_values_categories_for_df_row__(self, return_list, row):
+        if row[CN.TIMESTAMP] in self._shoulder_timestamps:
+            if self.__is_row_value_equal_h__(row):
+                return_list.append(SVC.H_on)
+            if self.__is_row_value_in_h_range__(row):
+                return_list.append(SVC.H_in)
+
+    def __is_row_value_equal_h__(self, row): # used for HEAD_SHOULDER - both helper are identical
+        return self.__are_distance_values_in_tolerance_range__(row, self._tolerance_pct_equal)
+
+    def __is_row_value_in_h_range__(self, row): # used for HEAD_SHOULDER - both helper are identical
+        return self.__are_distance_values_in_tolerance_range__(row, self._tolerance_pct * 2.5)
+
+    def __are_distance_values_in_tolerance_range__(self, row, tolerance_pct):
+        distance_to_low, distance_to_high = self.__get_distance_values__(row)
+        return distance_to_low <= tolerance_pct or distance_to_high <= tolerance_pct
+
+    @staticmethod
+    def __get_distance_values__(row):
+        distance_to_low = round(abs(row[CN.LOW] - row[CN.H_LOWER]) / np.mean([row[CN.LOW], row[CN.H_LOWER]]), 4)
+        distance_to_high = round(abs(row[CN.HIGH] - row[CN.H_LOWER]) / np.mean([row[CN.HIGH], row[CN.H_LOWER]]), 4)
+        return distance_to_low, distance_to_high
+
+

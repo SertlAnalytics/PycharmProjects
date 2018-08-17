@@ -30,7 +30,7 @@ class PatternDetector:
         self.range_detector_max = None
         self.range_detector_min = None
         self.range_detector_h_s = None  # Head_Shoulder
-        self.range_detector_h_s_i = None  # Head_Shoulder_inverted
+        self.range_detector_h_s_b = None  # Head_Shoulder_Bottom
         self.pattern_list = []
         self.fib_wave_tree = None
 
@@ -60,7 +60,7 @@ class PatternDetector:
                     for f_complementary in complementary_function_list:
                         pfcf_api.complementary_function = f_complementary
                         pfcf_api.function_container = PatternFunctionContainerFactory.get_function_container_by_api(pfcf_api)
-                        if pfcf_api.constraints.are_constraints_fulfilled(pfcf_api.function_container):
+                        if pfcf_api.constraints.are_constraints_fulfilled(pattern_range, pfcf_api.function_container):
                             pattern = PatternFactory.get_pattern(pfcf_api)
                             self.__handle_single_pattern_when_parsing__(pattern)
 
@@ -194,7 +194,7 @@ class PatternDetector:
         list_max = [] if self.range_detector_max is None else self.range_detector_max.get_pattern_range_list()
         list_min = [] if self.range_detector_min is None else self.range_detector_min.get_pattern_range_list()
         list_h_s = [] if self.range_detector_h_s is None else self.range_detector_h_s.get_pattern_range_list()
-        list_h_s_i = [] if self.range_detector_h_s_i is None else self.range_detector_h_s_i.get_pattern_range_list()
+        list_h_s_i = [] if self.range_detector_h_s_b is None else self.range_detector_h_s_b.get_pattern_range_list()
         list_max_without_covered = self.__remove_entries_covered_by_second_list__(list_max, list_min)
         list_min_without_covered = self.__remove_entries_covered_by_second_list__(list_min, list_max)
         result_list = list_max + list_min + list_h_s + list_h_s_i
