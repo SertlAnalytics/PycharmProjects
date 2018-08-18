@@ -28,4 +28,6 @@ a) Signals - later: With support from KI
 - Breakout (differ between false breakout and real breakout
 - pullback: within a range (opposite from "expected" breakout) and Fibonacci compliant, i.e. 5th wave completed
 b) Expected win for all these case
+c) Channel Pattern: sometimes (???) there are only 2 hits on the entrance side and 3 or more on the opposite (breakout)
+side - so I think we have to go back with the f_params to the left side as well...
 """
