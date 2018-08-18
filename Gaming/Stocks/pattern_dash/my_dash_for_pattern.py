@@ -482,17 +482,19 @@ class MyDash4Pattern(MyDashBase):
             return cached_graph, graph_key
         if days == 1:
             self.sys_config_second.config.api_period_aggregation = 15
+            self.sys_config_second.config.api_period = ApiPeriod.INTRADAY
+            self.sys_config_second.config.get_data_from_db = False
             detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker, '')
             graph_api = DccGraphSecondApi(graph_id, graph_title)
             graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
             self._graph_second_cache.add_cache_value(cache_api)
         else:
+            self.sys_config_second.config.api_period = ApiPeriod.DAILY
+            self.sys_config_second.config.get_data_from_db = True
             date_from = datetime.today() - timedelta(days=days)
             date_to = datetime.today() + timedelta(days=5)
             and_clause = self.__get_and_clause__(date_from, date_to)
-            self.sys_config_second.config.api_period = ApiPeriod.DAILY
-            self.sys_config_second.config.get_data_from_db = True
             detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker, and_clause)
             graph_api = DccGraphSecondApi(graph_id, graph_title)
             graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
