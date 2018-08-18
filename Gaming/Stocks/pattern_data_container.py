@@ -8,14 +8,10 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 import itertools
-from datetime import datetime
-import matplotlib.dates as mdt
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.constants.pattern_constants import CN, DIR, FT
 from sertl_analytics.mydates import MyDate
 from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks, WaveTickList
-from pattern_configuration import config
-import matplotlib.dates as mdates
+from pattern_configuration import PatternConfiguration
 
 
 class PatternData:
@@ -24,10 +20,10 @@ class PatternData:
     1. Identify all extrema: global and local maximum and minimum which are used as checkpoint for pattern detections.
     2. Identify ranges which can be used for a thorough inspection in the further process
     """
-    __length_for_global = config.length_for_global_min_max
-    __length_for_local = config.length_for_local_min_max
-
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, config: PatternConfiguration, df: pd.DataFrame):
+        self.config = config
+        self.__length_for_global = self.config.length_for_global_min_max
+        self.__length_for_local = self.config.length_for_local_min_max
         self.df = df
         self.df_length = self.df.shape[0]
         self.max_value = self.df[CN.HIGH].max()
@@ -193,18 +189,18 @@ class PatternData:
 
 
 class PatternDataFibonacci(PatternData):
-    __length_for_global = config.length_for_global_min_max_fibonacci
-    __length_for_local = config.length_for_local_min_max_fibonacci
+    def __init__(self, config: PatternConfiguration, df: pd.DataFrame):
+        PatternData.__init__(self, config, df)
+        self.__length_for_global = self.config.length_for_global_min_max_fibonacci
+        self.__length_for_local = self.config.length_for_local_min_max_fibonacci
 
 
 class PatternDataHandler:
-    def __init__(self):
+    def __init__(self, config: PatternConfiguration):
+        self.config = config
         self.pattern_data = None
         self.pattern_data_fibonacci = None
 
     def init_by_df(self, df: pd.DataFrame):
-        self.pattern_data = PatternData(df)
-        self.pattern_data_fibonacci = PatternDataFibonacci(df)
-
-
-pattern_data_handler = PatternDataHandler()
+        self.pattern_data = PatternData(self.config, df)
+        self.pattern_data_fibonacci = PatternDataFibonacci(self.config, df)

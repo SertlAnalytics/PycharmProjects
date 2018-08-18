@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 from pattern_function_container import PatternFunctionContainer
-from pattern_configuration import config
+from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.constants.pattern_constants import FD, TT
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mymath import MyMath
@@ -14,6 +14,7 @@ from sertl_analytics.mymath import MyMath
 
 class PatternBreakoutApi:
     def __init__(self, function_cont: PatternFunctionContainer):
+        self.sys_config = function_cont.sys_config
         self.function_cont = function_cont
         self.tick_previous = None
         self.tick_breakout = None   # test
@@ -22,6 +23,7 @@ class PatternBreakoutApi:
 
 class PatternBreakout:
     def __init__(self, api: PatternBreakoutApi):
+        self.sys_config = api.sys_config
         self.function_cont = api.function_cont
         self.constraints = api.constraints
         self.tick_previous = api.tick_previous
@@ -51,7 +53,7 @@ class PatternBreakout:
         return counter >= 2
 
     def get_details_for_annotations(self):
-        if config.api_period == ApiPeriod.INTRADAY:
+        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
             date_str = self.tick_breakout.time_str_for_f_var
         else:
             date_str = self.tick_breakout.date_str_for_f_var
@@ -66,8 +68,8 @@ class PatternBreakout:
                 self.tick_breakout.tick_type != TT.DOJI and self.tick_breakout.has_gap_to(self.tick_previous))
 
     def __is_breakout_over_limit__(self) -> bool:
-        limit_range = self.pattern_breadth if config.breakout_over_congestion_range \
-            else self.pattern_breadth * config.breakout_range_pct
+        limit_range = self.pattern_breadth if self.sys_config.config.breakout_over_congestion_range \
+            else self.pattern_breadth * self.sys_config.config.breakout_range_pct
         if self.breakout_direction == FD.ASC:
             return self.tick_breakout.close >= (self.bound_upper + limit_range)
         else:

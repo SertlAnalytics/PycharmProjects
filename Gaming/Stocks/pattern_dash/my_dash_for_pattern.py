@@ -10,7 +10,6 @@ import colorlover as cl
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State, Event
-from pattern_data_container import pattern_data_handler as pdh
 from datetime import datetime, timedelta
 import pandas as pd
 import json
@@ -21,7 +20,7 @@ from pattern_dash.my_dash_base import MyDashBase
 from pattern_detection_controller import PatternDetectionController
 from pattern_detector import PatternDetector
 from sertl_analytics.constants.pattern_constants import CN, FD
-from pattern_configuration import config
+from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mydates import MyDate
 from pattern import Pattern
@@ -36,16 +35,17 @@ from textwrap import dedent
 
 
 class MyCacheObjectApi:
-    def __init__(self):
+    def __init__(self, sys_config: SystemConfiguration):
+        self.sys_config = sys_config
         self.key = None
         self.value = None
         self.valid_until_ts = None
-        self.period_aggregation_ts = config.api_period_aggregation * 60
+        self.period_aggregation_ts = self.sys_config.config.api_period_aggregation * 60
 
 
 class MyGraphCacheObjectApi(MyCacheObjectApi):
-    def __init__(self):
-        MyCacheObjectApi.__init__(self)
+    def __init__(self, sys_config: SystemConfiguration):
+        MyCacheObjectApi.__init__(self, sys_config)
         self.detector = None
         self.pattern_data = None
         self.last_refresh_ts = None
@@ -53,6 +53,7 @@ class MyGraphCacheObjectApi(MyCacheObjectApi):
 
 class MyCacheObject:
     def __init__(self, cache_api: MyCacheObjectApi):
+        self.sys_config = cache_api.sys_config
         self.id = cache_api.key
         self.value = cache_api.value
         self.valid_until_ts = cache_api.valid_until_ts
@@ -71,7 +72,7 @@ class MyGraphCacheObject(MyCacheObject):
         self.pattern_data = cache_api.pattern_data
         self.last_refresh_ts = cache_api.last_refresh_ts
         self.last_refresh_time = MyDate.get_time_from_epoch_seconds(self.last_refresh_ts)
-        self.period_aggregation_ts = config.api_period_aggregation * 60
+        self.period_aggregation_ts = self.sys_config.config.api_period_aggregation * 60
         self.cached_before_breakout = self.__was_cached_before_breakout__()
         self.breakout_since_last_refresh = self.__was_breakout_since_last_refresh__(self.last_refresh_ts)
 
@@ -82,7 +83,7 @@ class MyGraphCacheObject(MyCacheObject):
     def __was_breakout_since_last_refresh__(self, time_stamp_last_refresh: int):
         for pattern in self.detector.pattern_list:
             if pattern.was_breakout_done():
-                adjusted_breakout_ts = pattern.breakout.tick_breakout.time_stamp + config.api_period_aggregation * 60
+                adjusted_breakout_ts = pattern.breakout.tick_breakout.time_stamp + self.sys_config.config.api_period_aggregation * 60
                 if adjusted_breakout_ts > time_stamp_last_refresh:
                     self.__print_breakout_details__(adjusted_breakout_ts, time_stamp_last_refresh)
                     return True
@@ -211,10 +212,12 @@ class MyDashStateHandler:
 
 
 class MyDash4Pattern(MyDashBase):
-    def __init__(self):
+    def __init__(self, sys_config: SystemConfiguration):
         MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH())
+        self.sys_config = sys_config
+        self.sys_config_second = deepcopy(self.sys_config)
         self._color_handler = PatternColorHandler()
-        self._pattern_controller = PatternDetectionController()
+        self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None
         self._ticker_options = []
         self._interval_options = []
@@ -297,7 +300,7 @@ class MyDash4Pattern(MyDashBase):
             return self.__get_ticker_label__(ticker_selected)
 
     def __fill_ticker_options__(self):
-        for symbol, name in config.ticker_dic.items():
+        for symbol, name in self.sys_config.config.ticker_dic.items():
             if self._current_symbol == '':
                 self._current_symbol = symbol
             self._ticker_options.append({'label': '{}'.format(name), 'value': symbol})
@@ -448,7 +451,7 @@ class MyDash4Pattern(MyDashBase):
 
     def __get_graph_first__(self, ticker: str, and_clause='', for_caching=False):
         graph_id = 'my_graph_first'
-        graph_title = '{} {}'.format(ticker, config.api_period)
+        graph_title = '{} {}'.format(ticker, self.sys_config.config.api_period)
         graph_key = MyGraphCache.get_cache_key(graph_id, ticker, 0)
         cached_graph = self._graph_first_cache.get_cached_value_by_cache_key(graph_key)
         if cached_graph is not None:
@@ -458,11 +461,11 @@ class MyDash4Pattern(MyDashBase):
             print('...return cached graph_first: {}'.format(graph_key))
             return cached_graph, graph_key
 
-        detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
-        pattern_data = pdh.pattern_data
+        detector = self._pattern_controller.get_detector_for_dash(self.sys_config, ticker, and_clause)
+        pattern_data = self.sys_config.pdh.pattern_data
         if not for_caching:
             self._detector_first = detector
-            self._pattern_data_first = pdh.pattern_data
+            self._pattern_data_first = self.sys_config.pdh.pattern_data
         graph_api = DccGraphApi(graph_id, graph_title)
         graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
         cache_api = self.__get_cache_api__(graph_key, graph, detector, pattern_data)
@@ -477,32 +480,28 @@ class MyDash4Pattern(MyDashBase):
         if cached_graph is not None:
             print('...return cached graph_second: {}'.format(graph_key))
             return cached_graph, graph_key
-        config_old = deepcopy(config)
         if days == 1:
-            config.api_period_aggregation = 15
-            detector = self._pattern_controller.get_detector_for_dash(ticker, '')
+            self.sys_config_second.config.api_period_aggregation = 15
+            detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker, '')
             graph_api = DccGraphSecondApi(graph_id, graph_title)
             graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
             self._graph_second_cache.add_cache_value(cache_api)
-            config.api_period_aggregation = config_old.api_period_aggregation
         else:
             date_from = datetime.today() - timedelta(days=days)
             date_to = datetime.today() + timedelta(days=5)
             and_clause = self.__get_and_clause__(date_from, date_to)
-            config.api_period = ApiPeriod.DAILY
-            config.get_data_from_db = True
-            detector = self._pattern_controller.get_detector_for_dash(ticker, and_clause)
+            self.sys_config_second.config.api_period = ApiPeriod.DAILY
+            self.sys_config_second.config.get_data_from_db = True
+            detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker, and_clause)
             graph_api = DccGraphSecondApi(graph_id, graph_title)
             graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
             self._graph_second_cache.add_cache_value(cache_api)
-            config.api_period = config_old.api_period
-            config.get_data_from_db = config_old.get_data_from_db
         return graph, graph_key
 
     def __get_cache_api__(self, graph_key, graph, detector, pattern_data):
-        cache_api = MyGraphCacheObjectApi()
+        cache_api = MyGraphCacheObjectApi(self.sys_config)
         cache_api.key = graph_key
         cache_api.value = graph
         cache_api.detector = detector
@@ -512,7 +511,7 @@ class MyDash4Pattern(MyDashBase):
         return cache_api
 
     def __get_dcc_graph_element__(self, detector, graph_api, ticker: str):
-        pattern_df = pdh.pattern_data.df
+        pattern_df = detector.sys_config.pdh.pattern_data.df
         candlestick = self.__get_candlesticks_trace__(pattern_df, ticker)
         bollinger_traces = self.__get_boolinger_band_trace__(pattern_df, ticker)
         shapes = self.__get_pattern_shape_list__(detector)
@@ -544,15 +543,14 @@ class MyDash4Pattern(MyDashBase):
         return_list = []
         for fib_waves in detector.fib_wave_tree.fibonacci_wave_list:
             color = 'green' if fib_waves.wave_type == FD.ASC else 'red'
-            return_list.append(DashInterface.get_fibonacci_wave_shape(fib_waves, color))
+            return_list.append(DashInterface.get_fibonacci_wave_shape(detector.sys_config, fib_waves, color))
             # print('Fibonacci: {}'.format(return_list[-1].shape_parameters))
         return return_list
 
-    @staticmethod
-    def __get_candlesticks_trace__(df: pd.DataFrame, ticker: str):
-        if config.api_period == ApiPeriod.INTRADAY:
+    def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str):
+        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
             # x_value = df[CN.DATETIME] if config.dash_use_date_time_for_intraday else df[CN.TIME]
-            x_value = df[CN.DATETIME] if config.dash_use_date_time_for_intraday else df[CN.TIME]
+            x_value = df[CN.DATETIME] if self.sys_config.config.dash_use_date_time_for_intraday else df[CN.TIME]
         else:
             x_value = df[CN.DATE]
         candlestick = {
@@ -575,7 +573,7 @@ class MyDash4Pattern(MyDashBase):
         bb_bands = self.__get_bollinger_band_values__(df[CN.CLOSE])
 
         bollinger_traces = [{
-            'x': df[CN.TIME] if config.api_period == ApiPeriod.INTRADAY else df[CN.DATE],
+            'x': df[CN.TIME] if self.sys_config.config.api_period == ApiPeriod.INTRADAY else df[CN.DATE],
             'y': y,
             'type': 'scatter', 'mode': 'lines',
             'line': {'width': 1, 'color': color_scale[(i * 2) % len(color_scale)]},
@@ -598,7 +596,7 @@ class MyDash4Pattern(MyDashBase):
             'Refresh interval', 'my_interval_selection', self._interval_options, 200))
         li.append(MyHTML.div_with_dcc_drop_down(
             'Second graph', 'my_graph_second_days_selection', self._graph_second_days_options, 200))
-        if config.get_data_from_db:
+        if self.sys_config.config.get_data_from_db:
             li.append(self.__get_html_div_with_date_picker_range__())
         li.append(MyHTML.div_with_html_button_submit('my_submit_button', 'Refresh'))
         li.append(MyHTML.div('my_graph_first_div'))
@@ -630,21 +628,21 @@ class DashInterface:
         return x, y
 
     @staticmethod
-    def get_tick_distance_in_date_as_number():
-        if config.api_period == ApiPeriod.INTRADAY:
-            return MyDate.get_date_as_number_difference_from_epoch_seconds(0, config.api_period_aggregation * 60)
+    def get_tick_distance_in_date_as_number(sys_config: SystemConfiguration):
+        if sys_config.config.api_period == ApiPeriod.INTRADAY:
+            return MyDate.get_date_as_number_difference_from_epoch_seconds(0, sys_config.config.api_period_aggregation * 60)
         return 1
 
     @staticmethod
-    def get_tolerance_range_for_extended_dict():
-        return DashInterface.get_tick_distance_in_date_as_number()/2
+    def get_tolerance_range_for_extended_dict(sys_config: SystemConfiguration):
+        return DashInterface.get_tick_distance_in_date_as_number(sys_config)/2
 
     @staticmethod
-    def get_ellipse_width_height_for_plot_min_max(wave_tick_list: WaveTickList):
-        if config.api_period == ApiPeriod.DAILY:
+    def get_ellipse_width_height_for_plot_min_max(sys_config: SystemConfiguration, wave_tick_list: WaveTickList):
+        if sys_config.config.api_period == ApiPeriod.DAILY:
             width_value = 0.6
         else:
-            width_value = 0.6 / (config.api_period_aggregation * 60)
+            width_value = 0.6 / (sys_config.config.api_period_aggregation * 60)
         height_value = wave_tick_list.value_range / 100
         return width_value, height_value
 
@@ -675,30 +673,30 @@ class DashInterface:
 
     @staticmethod
     def get_pattern_part_main_shape(pattern: Pattern, color: str):
-        x, y = DashInterface.get_xy_separated_from_timestamp(pattern.xy)
+        x, y = DashInterface.get_xy_separated_from_timestamp(pattern.sys_config, pattern.xy)
         # print('get_pattern_part_main_shape: {}'.format(x))
         # Todo: format for values in x have to be changed to dtype: datetime64[ns]
         return MyPolygonShape(x, y, color)
 
     @staticmethod
     def get_pattern_part_trade_shape(pattern: Pattern, color: str):
-        x, y = DashInterface.get_xy_separated_from_timestamp(pattern.xy_trade)
+        x, y = DashInterface.get_xy_separated_from_timestamp(pattern.sys_config, pattern.xy_trade)
         return MyPolygonShape(x, y, color)
 
     @staticmethod
-    def get_fibonacci_wave_shape(fib_wave: FibonacciWave, color: str):
-        x, y = DashInterface.get_xy_separated_from_timestamp(fib_wave.get_xy_parameter())
+    def get_fibonacci_wave_shape(sys_config: SystemConfiguration, fib_wave: FibonacciWave, color: str):
+        x, y = DashInterface.get_xy_separated_from_timestamp(sys_config, fib_wave.get_xy_parameter())
         return MyPolygonLineShape(x, y, color)
 
     @staticmethod
     def get_f_regression_shape(pattern_part: PatternPart, color: str):
-        x, y = DashInterface.get_xy_separated_from_timestamp(pattern_part.xy_regression)
+        x, y = DashInterface.get_xy_separated_from_timestamp(pattern_part.sys_config, pattern_part.xy_regression)
         return MyLineShape(x, y, color)
 
     @staticmethod
-    def get_xy_separated_from_timestamp(xy):
-        if config.api_period == ApiPeriod.INTRADAY:
-            if config.dash_use_date_time_for_intraday:
+    def get_xy_separated_from_timestamp(sys_config: SystemConfiguration, xy):
+        if sys_config.config.api_period == ApiPeriod.INTRADAY:
+            if sys_config.config.dash_use_date_time_for_intraday:
                 xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
             else:
                 xy_new = DashInterface.get_xy_from_timestamp_to_time_str(xy)
@@ -708,11 +706,11 @@ class DashInterface:
         return DashInterface.get_x_y_separated_for_shape(xy_new)
 
     @staticmethod
-    def get_pattern_center_shape(pattern: Pattern):
-        if config.api_period == ApiPeriod.DAILY:
+    def get_pattern_center_shape(sys_config: SystemConfiguration, pattern: Pattern):
+        if sys_config.config.api_period == ApiPeriod.DAILY:
             ellipse_breadth = 10
         else:
-            ellipse_breadth = 2 / (config.api_period_aggregation * 60)
+            ellipse_breadth = 2 / (sys_config.config.api_period_aggregation * 60)
         ellipse_height = pattern.part_main.height / 6
         xy_center = DashInterface.get_xy_from_timestamp_to_date(pattern.xy_center)
         return Ellipse(np.array(xy_center), ellipse_breadth, ellipse_height)

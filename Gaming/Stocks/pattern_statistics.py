@@ -6,14 +6,15 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import PSC, FD
-from pattern_configuration import config, runtime
+from pattern_system_configuration import SystemConfiguration
 from pattern import Pattern
 from sertl_analytics.mydates import MyDate
 import pandas as pd
 
 
 class PatternStatistics:
-    def __init__(self):
+    def __init__(self, sys_config: SystemConfiguration):
+        self.sys_config = sys_config
         self.list = []
         self.column_list = []
 
@@ -75,22 +76,22 @@ class PatternStatistics:
     def add_entry(self, pattern: Pattern):
         self.__init_dic__()
 
-        self.dic[PSC.C_BOUND_UPPER_VALUE] = config.bound_upper_value
-        self.dic[PSC.C_BOUND_LOWER_VALUE] = config.bound_lower_value
-        self.dic[PSC.C_CHECK_PREVIOUS_PERIOD] = config.check_previous_period
-        self.dic[PSC.C_BREAKOUT_OVER_CONGESTION] = config.breakout_over_congestion_range
+        self.dic[PSC.C_BOUND_UPPER_VALUE] = self.sys_config.config.bound_upper_value
+        self.dic[PSC.C_BOUND_LOWER_VALUE] = self.sys_config.config.bound_lower_value
+        self.dic[PSC.C_CHECK_PREVIOUS_PERIOD] = self.sys_config.config.check_previous_period
+        self.dic[PSC.C_BREAKOUT_OVER_CONGESTION] = self.sys_config.config.breakout_over_congestion_range
         self.dic[PSC.C_TOLERANCE_PCT] = pattern.tolerance_pct
-        self.dic[PSC.C_BREAKOUT_RANGE_PCT] = config.breakout_range_pct
-        self.dic[PSC.C_AND_CLAUSE] = config.and_clause
+        self.dic[PSC.C_BREAKOUT_RANGE_PCT] = self.sys_config.config.breakout_range_pct
+        self.dic[PSC.C_AND_CLAUSE] = self.sys_config.config.and_clause
 
         self.dic[PSC.CON_PREVIOUS_PERIOD_CHECK_OK] = pattern.condition_handler.previous_period_check_ok
         self.dic[PSC.CON_COMBINED_PARTS_APPLICABLE] = pattern.condition_handler.combined_parts_applicable
         self.dic[PSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = pattern.condition_handler.breakout_with_buy_signal
 
         self.dic[PSC.STATUS] = 'Finished' if pattern.was_breakout_done() else 'Open'
-        self.dic[PSC.NUMBER] = runtime.actual_number
-        self.dic[PSC.TICKER] = runtime.actual_ticker
-        self.dic[PSC.NAME] = runtime.actual_ticker_name
+        self.dic[PSC.NUMBER] = self.sys_config.runtime.actual_number
+        self.dic[PSC.TICKER] = self.sys_config.runtime.actual_ticker
+        self.dic[PSC.NAME] = self.sys_config.runtime.actual_ticker_name
         self.dic[PSC.PATTERN] = pattern.pattern_type
         self.dic[PSC.BEGIN_PREVIOUS] = 'TODO'
         self.dic[PSC.BEGIN] = MyDate.get_date_from_datetime(pattern.date_first)
@@ -190,12 +191,14 @@ class PatternDetectorStatisticsApi:
 
 
 class DetectorStatistics:
-    def __init__(self):
+    def __init__(self, sys_config: SystemConfiguration):
+        self.sys_config = sys_config
         self.list = []
         self.column_list = ['Number', 'Ticker', 'Name', 'Investment', 'Result', 'Change%', 'SL', 'F_OK', 'F_NOK', 'Ticks']
 
     def add_entry(self, api: PatternDetectorStatisticsApi):
-        new_entry = [runtime.actual_number, runtime.actual_ticker, runtime.actual_ticker_name
+        new_entry = [self.sys_config.runtime.actual_number, self.sys_config.runtime.actual_ticker,
+                     self.sys_config.runtime.actual_ticker_name
             , api.investment_start, api.investment_working, api.diff_pct
             , api.counter_stop_loss, api.counter_formation_OK, api.counter_formation_NOK, api.counter_actual_ticks]
         self.list.append(new_entry)

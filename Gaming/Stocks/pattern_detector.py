@@ -6,8 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import FT
-from pattern_configuration import config, runtime, debugger
-from pattern_data_container import pattern_data_handler as pdh
+from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
 from pattern_part import PatternPart
 from pattern import Pattern, PatternFactory
@@ -21,11 +20,12 @@ from pattern_function_container import PatternFunctionContainerFactoryApi, Patte
 
 
 class PatternDetector:
-    def __init__(self):
-        self.pattern_type_list = list(config.pattern_type_list)
-        self.df = pdh.pattern_data.df
+    def __init__(self, sys_config: SystemConfiguration):
+        self.sys_config = sys_config
+        self.pattern_type_list = list(self.sys_config.config.pattern_type_list)
+        self.df = self.sys_config.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
-        self.df_min_max = pdh.pattern_data.df_min_max
+        self.df_min_max = self.sys_config.pdh.pattern_data.df_min_max
         self.df_min_max_length = self.df_min_max.shape[0]
         self.range_detector_max = None
         self.range_detector_min = None
@@ -47,13 +47,13 @@ class PatternDetector:
         possible_pattern_range_list = self.get_combined_possible_pattern_ranges()
         for pattern_type in self.pattern_type_list:
             # print('parsing for pattern: {}'.format(pattern_type))
-            pfcf_api = PatternFunctionContainerFactoryApi(pattern_type)
+            pfcf_api = PatternFunctionContainerFactoryApi(self.sys_config, pattern_type)
             pfcf_api.constraints = ConstraintsFactory.get_constraints_by_pattern_type(pattern_type)
-            runtime.actual_pattern_type = pattern_type
+            self.sys_config.runtime.actual_pattern_type = pattern_type
             for pattern_range in possible_pattern_range_list:
                 if pattern_range.dedicated_pattern_type in [FT.ALL, pattern_type]:
                     pfcf_api.pattern_range = pattern_range
-                    runtime.actual_pattern_range = pattern_range
+                    self.sys_config.runtime.actual_pattern_range = pattern_range
                     # pattern_range.print_range_details()
                     debugger.check_range_position_list(pattern_range.position_list)
                     complementary_function_list = pattern_range.get_complementary_function_list(pattern_type)
@@ -61,14 +61,15 @@ class PatternDetector:
                         pfcf_api.complementary_function = f_complementary
                         pfcf_api.function_container = PatternFunctionContainerFactory.get_function_container_by_api(pfcf_api)
                         if pfcf_api.constraints.are_constraints_fulfilled(pattern_range, pfcf_api.function_container):
-                            pattern = PatternFactory.get_pattern(pfcf_api)
+                            pattern = PatternFactory.get_pattern(self.sys_config, pfcf_api)
                             self.__handle_single_pattern_when_parsing__(pattern)
 
     def parse_for_fibonacci_waves(self):
-        df = pdh.pattern_data_fibonacci.df
-        min_max_tick_list = pdh.pattern_data_fibonacci.wave_tick_list_min_max.tick_list
+        df = self.sys_config.pdh.pattern_data_fibonacci.df
+        min_max_tick_list = self.sys_config.pdh.pattern_data_fibonacci.wave_tick_list_min_max.tick_list
         self.fib_wave_tree = FibonacciWaveTree(df, min_max_tick_list,
-                                               config.max_pattern_range_length, pdh.pattern_data.tick_f_var_distance)
+                                               self.sys_config.config.max_pattern_range_length,
+                                               self.sys_config.pdh.pattern_data.tick_f_var_distance)
         self.fib_wave_tree.parse_tree()
 
     def check_for_intersections(self):
@@ -91,9 +92,10 @@ class PatternDetector:
         can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)
         if pattern.breakout is None and not can_be_added:
             return
-        runtime.actual_breakout = pattern.breakout
-        pattern.add_part_main(PatternPart(pattern.function_cont))
-        if pattern.is_formation_established() and pattern.is_expected_win_sufficient(runtime.actual_expected_win_pct):
+        self.sys_config.runtime.actual_breakout = pattern.breakout
+        pattern.add_part_main(PatternPart(self.sys_config, pattern.function_cont))
+        if pattern.is_formation_established() and pattern.is_expected_win_sufficient(
+                self.sys_config.runtime.actual_expected_win_pct):
             if pattern.breakout is not None:
                 pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
                 self.__add_part_trade__(pattern)
@@ -105,9 +107,9 @@ class PatternDetector:
         df = self.__get_trade_df__(pattern)
         f_upper_trade = pattern.get_f_upper_trade()
         f_lower_trade = pattern.get_f_lower_trade()
-        function_cont = PatternFunctionContainerFactory.get_function_container(pattern.pattern_type, df,
-                                                                               f_lower_trade, f_upper_trade)
-        part = PatternPart(function_cont)
+        function_cont = PatternFunctionContainerFactory.get_function_container(self.sys_config, pattern.pattern_type,
+                                                                               df, f_lower_trade, f_upper_trade)
+        part = PatternPart(self.sys_config, function_cont)
         pattern.add_part_trade(part)
         pattern.fill_result_set()
 
@@ -176,13 +178,13 @@ class PatternDetector:
 
     def __fill_possible_pattern_ranges__(self):
         if self.__is_any_non_head_shoulder_pattern_type_selected__():
-            self.range_detector_max = PatternRangeDetectorMax(pdh.pattern_data.tick_list_max_without_hidden_ticks)
-            self.range_detector_min = PatternRangeDetectorMin(pdh.pattern_data.tick_list_min_without_hidden_ticks)
-        tick_list_head_shoulder = pdh.pattern_data.tick_list_min_max_without_hidden_ticks
+            self.range_detector_max = PatternRangeDetectorMax(self.sys_config, self.sys_config.pdh.pattern_data.tick_list_max_without_hidden_ticks)
+            self.range_detector_min = PatternRangeDetectorMin(self.sys_config, self.sys_config.pdh.pattern_data.tick_list_min_without_hidden_ticks)
+        tick_list_head_shoulder = self.sys_config.pdh.pattern_data.tick_list_min_max_without_hidden_ticks
         if FT.HEAD_SHOULDER in self.pattern_type_list:
-            self.range_detector_h_s = PatternRangeDetectorHeadShoulder(tick_list_head_shoulder)
+            self.range_detector_h_s = PatternRangeDetectorHeadShoulder(self.sys_config, tick_list_head_shoulder)
         if FT.HEAD_SHOULDER_BOTTOM in self.pattern_type_list:
-            self.range_detector_h_s = PatternRangeDetectorHeadShoulderBottom(tick_list_head_shoulder)
+            self.range_detector_h_s = PatternRangeDetectorHeadShoulderBottom(self.sys_config, tick_list_head_shoulder)
 
     def __is_any_non_head_shoulder_pattern_type_selected__(self):
         head_shoulder_set = {FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM}
@@ -226,4 +228,4 @@ class PatternDetector:
         ))
 
     def get_statistics_api(self):
-        return PatternDetectorStatisticsApi(self.pattern_list, config.investment)
+        return PatternDetectorStatisticsApi(self.pattern_list, self.sys_config.config.investment)

@@ -11,10 +11,10 @@ from sertl_analytics.constants.pattern_constants import Indices
 from pattern_database.stock_database import StockDatabase
 
 stock_db = StockDatabase()
-# stock_db.create_tables()
-# stock_db.update_stock_data_by_index(Indices.DOW_JONES, ApiPeriod.DAILY)
-# stock_db.update_stock_data_by_index(Indices.NASDAQ100, ApiPeriod.DAILY)
-# stock_db.update_stock_data_for_symbol('MMM')
+# _stock_db.create_tables()
+# _stock_db.update_stock_data_by_index(Indices.DOW_JONES, ApiPeriod.DAILY)
+# _stock_db.update_stock_data_by_index(Indices.NASDAQ100, ApiPeriod.DAILY)
+# _stock_db.update_stock_data_for_symbol('MMM')
 stock_db.update_stock_data_by_index(Indices.DOW_JONES, ApiPeriod.DAILY)
 stock_db.update_stock_data_for_symbol('FCEL')
 stock_db.update_stock_data_for_symbol('TSLA')

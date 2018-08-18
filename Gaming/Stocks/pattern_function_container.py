@@ -10,12 +10,13 @@ from sertl_analytics.mymath import MyMath, MyPoly1d
 from pattern_wave_tick import WaveTick
 import numpy as np
 import pandas as pd
-from pattern_data_container import pattern_data_handler as pdh
 from sertl_analytics.myexceptions import MyException
+from pattern_system_configuration import SystemConfiguration
 
 
 class PatternFunctionContainer:
-    def __init__(self, df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
+    def __init__(self, sys_config: SystemConfiguration, df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
+        self.sys_config = sys_config
         self.df = df
         self._tick_for_helper = None
         self._tick_for_breakout = None
@@ -150,11 +151,11 @@ class PatternFunctionContainer:
     def __set_f_var_cross_f_upper_f_lower__(self):
         if self._f_upper[1] < self._f_lower[1]:
             for n in range(self._tick_last.position, self._tick_last.position + 3 * self.number_of_positions):
-                f_var = self._tick_last.f_var + (n - self._tick_last.position) * pdh.pattern_data.tick_f_var_distance
+                f_var = self._tick_last.f_var + (n - self._tick_last.position) * self.sys_config.pdh.pattern_data.tick_f_var_distance
                 u = self._f_upper(f_var)
                 l = self._f_lower(f_var)
                 if self._f_upper(f_var) < self._f_lower(f_var):
-                    self._f_var_cross_f_upper_f_lower = f_var - pdh.pattern_data.tick_f_var_distance
+                    self._f_var_cross_f_upper_f_lower = f_var - self.sys_config.pdh.pattern_data.tick_f_var_distance
                     self._position_cross_f_upper_f_lower = n - 1
                     break
 
@@ -302,12 +303,12 @@ class TKEDownPatternFunctionContainer(PatternFunctionContainer):
 class TrianglePatternFunctionContainer(PatternFunctionContainer):
     def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
         if self.f_var_cross_f_upper_f_lower > 0:
-            if self.f_var_cross_f_upper_f_lower <= pdh.pattern_data.tick_last.f_var:
-                tick_last = pdh.pattern_data.get_tick_by_pos(self.position_cross_f_upper_f_lower)
+            if self.f_var_cross_f_upper_f_lower <= self.sys_config.pdh.pattern_data.tick_last.f_var:
+                tick_last = self.sys_config.pdh.pattern_data.get_tick_by_pos(self.position_cross_f_upper_f_lower)
                 tick_list = [tick_first, tick_last, tick_first]
                 function_list = [self.f_upper, self.f_upper, self.f_lower]
             else:
-                tick_last = pdh.pattern_data.tick_last
+                tick_last = self.sys_config.pdh.pattern_data.tick_last
                 tick_list = [tick_first, tick_last, tick_last, tick_first]
                 function_list = [self.f_upper, self.f_upper, self.f_lower, self.f_lower]
         else:
@@ -375,9 +376,10 @@ class HeadShoulderBottomPatternFunctionContainer(PatternFunctionContainer):
 
 
 class PatternFunctionContainerFactoryApi:
-    def __init__(self, pattern_type: str):
+    def __init__(self, sys_config: SystemConfiguration, pattern_type: str):
+        self.sys_config = sys_config
         self.pattern_type = pattern_type
-        self.df_min_max = pdh.pattern_data.df_min_max
+        self.df_min_max = sys_config.pdh.pattern_data.df_min_max
         self.pattern_range = None
         self.constraints = None
         self.complementary_function = None
@@ -395,37 +397,37 @@ class PatternFunctionContainerFactory:
             f_lower = api.complementary_function
             f_upper = api.pattern_range.f_param
 
-        f_cont = PatternFunctionContainerFactory.get_function_container(api.pattern_type, df_check, f_lower, f_upper)
+        f_cont = PatternFunctionContainerFactory.get_function_container(api.sys_config, api.pattern_type, df_check, f_lower, f_upper)
         if api.pattern_type in [FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]:
             f_cont.set_tick_for_helper(api.pattern_range.hsf.tick_shoulder_left)
         return f_cont
 
     @staticmethod
-    def get_function_container(pattern_type: str, df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
+    def get_function_container(sys_config: SystemConfiguration, pattern_type: str, df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
         if pattern_type == FT.CHANNEL:
-            return ChannelPatternFunctionContainer(df, f_lower, f_upper)
+            return ChannelPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.CHANNEL_DOWN:
-            return ChannelDownPatternFunctionContainer(df, f_lower, f_upper)
+            return ChannelDownPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.CHANNEL_UP:
-            return ChannelUpPatternFunctionContainer(df, f_lower, f_upper)
+            return ChannelUpPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.HEAD_SHOULDER:
-            return HeadShoulderPatternFunctionContainer(df, f_lower, f_upper)
+            return HeadShoulderPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.HEAD_SHOULDER_BOTTOM:
-            return HeadShoulderBottomPatternFunctionContainer(df, f_lower, f_upper)
+            return HeadShoulderBottomPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE:
-            return TrianglePatternFunctionContainer(df, f_lower, f_upper)
+            return TrianglePatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE_TOP:
-            return TriangleTopPatternFunctionContainer(df, f_lower, f_upper)
+            return TriangleTopPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE_BOTTOM:
-            return TriangleBottomPatternFunctionContainer(df, f_lower, f_upper)
+            return TriangleBottomPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE_UP:
-            return TriangleUpPatternFunctionContainer(df, f_lower, f_upper)
+            return TriangleUpPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE_DOWN:
-            return TriangleDownPatternFunctionContainer(df, f_lower, f_upper)
+            return TriangleDownPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TKE_DOWN:
-            return TKEDownPatternFunctionContainer(df, f_lower, f_upper)
+            return TKEDownPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TKE_UP:
-            return TKEUpPatternFunctionContainer(df, f_lower, f_upper)
+            return TKEUpPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         else:
             raise MyException('No pattern function container defined for pattern type "{}"'.format(pattern_type))
 

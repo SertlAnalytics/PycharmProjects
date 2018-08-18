@@ -152,8 +152,3 @@ class PatternConfiguration:
         db_data_frame = DatabaseDataFrame(
             stock_db, query='SELECT Symbol, count(*) FROM Stocks GROUP BY Symbol HAVING count(*) > 4000')
         return PyBaseDataFrame.get_rows_as_dictionary(db_data_frame.df, 'Symbol', ['Symbol'])
-
-
-config = PatternConfiguration()
-runtime = RuntimeConfiguration()
-debugger = PatternDebugger()

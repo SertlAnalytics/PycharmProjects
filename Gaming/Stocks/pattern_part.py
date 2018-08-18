@@ -10,9 +10,8 @@ from sertl_analytics.mymath import MyMath
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mydates import MyDate
 from pattern_function_container import PatternFunctionContainer
-from pattern_data_container import pattern_data_handler as pdh
 from pattern_wave_tick import WaveTick
-from pattern_configuration import runtime, config, debugger
+from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_data_frame import PatternDataFrame
 import numpy as np
 import math
@@ -33,14 +32,16 @@ class AnnotationParameter:
 
 
 class PatternPart:
-    def __init__(self, function_cont: PatternFunctionContainer):
+    def __init__(self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer):
+        self.sys_config = sys_config
+        self.pdh = self.sys_config.pdh
         self.function_cont = function_cont
-        self.df = pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
-        self.tick_distance = pdh.pattern_data.tick_f_var_distance
+        self.df = self.pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
+        self.tick_distance = self.pdh.pattern_data.tick_f_var_distance
         self.tick_list = []
-        self.pattern_type = runtime.actual_pattern_type
-        self.breakout = runtime.actual_breakout
-        self.pattern_range = runtime.actual_pattern_range
+        self.pattern_type = self.sys_config.runtime.actual_pattern_type
+        self.breakout = self.sys_config.runtime.actual_breakout
+        self.pattern_range = self.sys_config.runtime.actual_pattern_range
         self.tick_first = None
         self.tick_last = None
         self.tick_high = None
@@ -79,7 +80,7 @@ class PatternPart:
 
     def __get_annotation_offset_x__(self):
         width = 25 * self.tick_distance
-        if self.__xy_center[0] - pdh.pattern_data.tick_first.f_var <= width:
+        if self.__xy_center[0] - self.pdh.pattern_data.tick_first.f_var <= width:
             return -width
         else:
             return -2*width
@@ -87,13 +88,13 @@ class PatternPart:
     def __get_annotation_offset_y__(self):
         c_value = self.__xy_center[1]
         offset = min(self.tick_high.high - c_value, c_value - self.tick_low.low)
-        if pdh.pattern_data.max_value - c_value > c_value - pdh.pattern_data.min_value:
+        if self.pdh.pattern_data.max_value - c_value > c_value - self.pdh.pattern_data.min_value:
             return offset
         return - offset
 
     def __calculate_values__(self):
-        self.tick_list = [pdh.pattern_data.tick_list[k] for k in range(self.function_cont.position_first,
-                                                                        self.function_cont.position_last)]
+        self.tick_list = [self.pdh.pattern_data.tick_list[k] for k in range(self.function_cont.position_first,
+                                                                            self.function_cont.position_last)]
         self.tick_first = self.tick_list[0]
         self.tick_last = self.tick_list[-1]
         self.tick_high = WaveTick(self.df.loc[self.df[CN.HIGH].idxmax(axis=0)])
@@ -188,7 +189,7 @@ class PatternPart:
     def __get_text_for_annotation__(self):
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_percent, f_lower_percent, f_reg_percent = self.get_slope_values()
-        if config.api_period == ApiPeriod.INTRADAY:
+        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
             date_str_first = self.tick_first.time_str_for_f_var
             date_str_last = self.tick_last.time_str_for_f_var
         else:
@@ -219,7 +220,8 @@ class PatternPart:
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
             date_forecast = MyDate.get_date_time_from_epoch_seconds(self.function_cont.f_var_cross_f_upper_f_lower)
             breakout_str += '\nExpected trading end: {}'.format(
-                str(date_forecast.time())[:5] if config.api_period == ApiPeriod.INTRADAY else date_forecast.date())
+                str(date_forecast.time())[:5] if self.sys_config.config.api_period == ApiPeriod.INTRADAY
+                else date_forecast.date())
 
         breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)
 

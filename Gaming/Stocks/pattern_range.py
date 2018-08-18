@@ -10,15 +10,15 @@ from sertl_analytics.plotter.my_plot import MyPlotHelper
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.mymath import ToleranceCalculator
-from pattern_configuration import config
-from pattern_data_container import pattern_data_handler as pdh
+from pattern_system_configuration import SystemConfiguration
 import math
 import pandas as pd
 import numpy as np
 
 
 class PatternRange:
-    def __init__(self, tick: WaveTick, min_length: int):
+    def __init__(self, sys_config: SystemConfiguration, tick: WaveTick, min_length: int):
+        self.sys_config = sys_config
         self.df_min_max_final = None
         self.tick_list = [tick]
         self.tick_first = tick
@@ -69,13 +69,13 @@ class PatternRange:
 
     def __get_actual_df_min_max__(self):
         if self.tick_breakout_successor is None:
-            df_range = pdh.pattern_data.df_min_max[np.logical_and(
-                pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
-                pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_last.position)]
+            df_range = self.sys_config.pdh.pattern_data.df_min_max[np.logical_and(
+                self.sys_config.pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
+                self.sys_config.pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_last.position)]
         else:
-            df_range = pdh.pattern_data.df_min_max[np.logical_and(
-                pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
-                pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_breakout_successor.position)]
+            df_range = self.sys_config.pdh.pattern_data.df_min_max[np.logical_and(
+                self.sys_config.pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
+                self.sys_config.pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_breakout_successor.position)]
         return df_range
 
     @property
@@ -162,7 +162,7 @@ class PatternRange:
 
     def __get_breakout_details__(self):
         if self.tick_breakout_successor is None:  # extend the breakouts until the end....
-            pos = pdh.pattern_data.df_min_max.iloc[-1][CN.POSITION]
+            pos = self.sys_config.pdh.pattern_data.df_min_max.iloc[-1][CN.POSITION]
         else:
             pos = self.tick_breakout_successor.position
         return [pos, round(self._f_param(pos), 2)]
@@ -253,9 +253,9 @@ class HeadShoulderFormation:
 
 
 class PatternRangeHeadShoulder(PatternRangeMin):
-    def __init__(self, hsf: HeadShoulderFormation, min_length: int):
+    def __init__(self, sys_config: SystemConfiguration, hsf: HeadShoulderFormation, min_length: int):
         self.hsf = hsf
-        PatternRangeMin.__init__(self, hsf.tick_previous_breakout, min_length)
+        PatternRangeMin.__init__(self, sys_config, hsf.tick_previous_breakout, min_length)
 
     @property
     def dedicated_pattern_type(self) -> str:
@@ -263,9 +263,9 @@ class PatternRangeHeadShoulder(PatternRangeMin):
 
 
 class PatternRangeHeadShoulderBottom(PatternRangeMax):
-    def __init__(self, hsf: HeadShoulderFormation, min_length: int):
+    def __init__(self, sys_config: SystemConfiguration, hsf: HeadShoulderFormation, min_length: int):
         self.hsf = hsf
-        PatternRangeMax.__init__(self, hsf.tick_previous_breakout, min_length)
+        PatternRangeMax.__init__(self, sys_config, hsf.tick_previous_breakout, min_length)
 
     @property
     def dedicated_pattern_type(self) -> str:
@@ -273,11 +273,12 @@ class PatternRangeHeadShoulderBottom(PatternRangeMax):
 
 
 class PatternRangeDetector:
-    def __init__(self, tick_list: list):
+    def __init__(self, sys_config: SystemConfiguration, tick_list: list):
+        self.sys_config = sys_config
         self.tick_list = tick_list
         self._elements = len(self.tick_list)
-        self._tolerance_pct = config.range_detector_tolerance_pct
-        self._max_pattern_range_length = config.max_pattern_range_length
+        self._tolerance_pct = self.sys_config.config.range_detector_tolerance_pct
+        self._max_pattern_range_length = self.sys_config.config.max_pattern_range_length
         self._pattern_range_list = []
         self.__parse_tick_list__()
 
@@ -395,7 +396,7 @@ class PatternRangeDetectorMax(PatternRangeDetector):
         return pattern_range.tick_last.high < f_value_new_last_position_right
 
     def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRangeMax:
-        return PatternRangeMax(tick, self.number_required_ticks)
+        return PatternRangeMax(self.sys_config, tick, self.number_required_ticks)
 
     def __is_slope_correctly_changing__(self, f_param: np.poly1d, tick_new: WaveTick, f_param_new_tick: np.poly1d):
         return True if f_param_new_tick[1] > f_param[1] else False
@@ -414,7 +415,7 @@ class PatternRangeDetectorMin(PatternRangeDetector):
         return pattern_range.tick_last.low > f_value_new_last_position_right
 
     def __get_pattern_range_by_tick__(self, tick: WaveTick) -> PatternRangeMin:
-        return PatternRangeMin(tick, self.number_required_ticks)
+        return PatternRangeMin(self.sys_config, tick, self.number_required_ticks)
 
     def __is_slope_correctly_changing__(self, f_param: np.poly1d, tick_new: WaveTick, f_param_new_tick: np.poly1d):
         return True if f_param_new_tick[1] < f_param[1] else False
@@ -426,13 +427,15 @@ class PatternRangeDetectorMin(PatternRangeDetector):
 
 
 class PatternRangeDetectorHeadShoulderBase:
-    def __init__(self, tick_list: list):
+    def __init__(self, sys_config: SystemConfiguration, tick_list: list):
+        self.sys_config = sys_config
+        self.pdh = self.sys_config.pdh
         self.tick_list = tick_list
         self.global_max_tuple_list = [(i, tick) for i, tick in enumerate(self.tick_list) if tick.is_global_max]
         self.global_min_tuple_list = [(i, tick) for i, tick in enumerate(self.tick_list) if tick.is_global_min]
 
     def get_pattern_range(self, number_required_ticks: int, hsf: HeadShoulderFormation):
-        hsf.tick_previous_breakout = pdh.pattern_data.get_previous_breakout_for_pattern_type(
+        hsf.tick_previous_breakout = self.pdh.pattern_data.get_previous_breakout_for_pattern_type(
             hsf.f_neckline_param, hsf.tick_neckline_left, hsf.tick_neckline_right, hsf.pattern_type)
         if hsf.tick_previous_breakout is None:
             return None
@@ -445,9 +448,9 @@ class PatternRangeDetectorHeadShoulderBase:
             return None
 
         if hsf.pattern_type == FT.HEAD_SHOULDER:
-            pattern_range = PatternRangeHeadShoulder(hsf, number_required_ticks)
+            pattern_range = PatternRangeHeadShoulder(self.sys_config, hsf, number_required_ticks)
         else:
-            pattern_range = PatternRangeHeadShoulderBottom(hsf, number_required_ticks)
+            pattern_range = PatternRangeHeadShoulderBottom(self.sys_config, hsf, number_required_ticks)
 
         pattern_range.add_tick(hsf.tick_shoulder_left, hsf.f_neckline_param)
         pattern_range.add_tick(hsf.tick_neckline_left, hsf.f_neckline_param)
@@ -525,9 +528,9 @@ class PatternRangeDetectorHeadShoulderBase:
 
 
 class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin, PatternRangeDetectorHeadShoulderBase):
-    def __init__(self, tick_list: list):
-        PatternRangeDetectorHeadShoulderBase.__init__(self, tick_list)
-        PatternRangeDetectorMin.__init__(self, tick_list)
+    def __init__(self, sys_config: SystemConfiguration, tick_list: list):
+        PatternRangeDetectorHeadShoulderBase.__init__(self, sys_config, tick_list)
+        PatternRangeDetectorMin.__init__(self, sys_config, tick_list)
 
     @property
     def pattern_type(self):
@@ -550,9 +553,9 @@ class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin, PatternRangeDete
 
 
 class PatternRangeDetectorHeadShoulderBottom(PatternRangeDetectorMax, PatternRangeDetectorHeadShoulderBase):
-    def __init__(self, tick_list: list):
-        PatternRangeDetectorHeadShoulderBase.__init__(self, tick_list)
-        PatternRangeDetectorMax.__init__(self, tick_list)
+    def __init__(self, sys_config: SystemConfiguration, tick_list: list):
+        PatternRangeDetectorHeadShoulderBase.__init__(self, sys_config, tick_list)
+        PatternRangeDetectorMax.__init__(self, sys_config, tick_list)
 
     @property
     def pattern_type(self):

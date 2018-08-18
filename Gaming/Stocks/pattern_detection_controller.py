@@ -12,15 +12,13 @@ import pandas as pd
 import numpy as np
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher\
     , ApiPeriod, CryptoCompareCryptoFetcher
-from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.user_input.confirmation import UserInput
 from datetime import timedelta
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
 from sertl_analytics.constants.pattern_constants import PSC, Indices, CN
-from pattern_configuration import config, runtime
+from pattern_system_configuration import SystemConfiguration
 from pattern_statistics import PatternStatistics, DetectorStatistics, ConstraintsStatistics
-from pattern_data_container import pattern_data_handler
 from pattern_constraints import ConstraintsFactory
 from pattern_detector import PatternDetector
 from pattern_plotting.pattern_plotter import PatternPlotter
@@ -44,58 +42,65 @@ e) Factored representation: Each state has some attribute-value properties, e.g.
 """
 
 
-class PatternDetectionController:
-    def __init__(self):
-        self.detector_statistics = DetectorStatistics()
-        self.pattern_statistics = PatternStatistics()
-        self.constraints_statistics = ConstraintsStatistics()
-        self.stock_db = None
-        self.__excel_file_with_test_data = ''
-        self.df_test_data = None
-        self.__loop_list_ticker = None  # format of an entry (ticker, and_clause, number)
-        self.__start_row = 0
-        self.__end_row = 0
-        self.__crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+class PatternExcelFile:
+    def __init__(self, file_name: str, row_start: int = 1, row_end: int = 0):
+        self.file_name = file_name
+        self.row_start = row_start
+        self.row_end = row_end
 
-    def run_pattern_detector(self, excel_file_with_test_data: str = '', start_row: int = 1, end_row: int = 0):
-        self.__init_db_and_test_data__(excel_file_with_test_data, start_row, end_row)
+
+class PatternDetectionController:
+    def __init__(self, sys_config: SystemConfiguration):
+        self.sys_config = sys_config
+        self.detector_statistics = DetectorStatistics(self.sys_config)
+        self.pattern_statistics = PatternStatistics(self.sys_config)
+        self.constraints_statistics = ConstraintsStatistics()
+        self._stock_db = None
+        self._excel_file_with_test_data = None
+        self._df_test_data = None
+        self._loop_list_ticker = None  # format of an entry (ticker, and_clause, number)
+
+    def run_pattern_detector(self, excel_file_test_data: PatternExcelFile = None):
+        self._excel_file_with_test_data = excel_file_test_data
+        self.__init_db_and_test_data__()
         self.__init_loop_list_for_ticker__()
 
-        for value_dic in self.__loop_list_ticker.value_list:
+        for value_dic in self._loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
             self.__update_runtime_parameters__(value_dic)
-            print('\nProcessing {} ({})...\n'.format(ticker, runtime.actual_ticker_name))
+            print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
             df_data = self.__get_df_from_source__(ticker, value_dic, False)
-            pattern_data_handler.init_by_df(df_data)
-            detector = PatternDetector()
+            self.sys_config.pdh.init_by_df(df_data)
+            detector = PatternDetector(self.sys_config)
             detector.parse_for_pattern()
             detector.parse_for_fibonacci_waves()
             detector.check_for_intersections()
 
             self.__handle_statistics__(detector)
 
-            if config.plot_data:
+            if self.sys_config.config.plot_data:
                 if len(detector.pattern_list) == 0 and False:  # and not detector.possible_pattern_ranges_available:
                     print('...no formations found.')
                 else:
-                    plotter = PatternPlotter(detector)
+                    plotter = PatternPlotter(self.sys_config, detector)
                     plotter.plot_data_frame()
 
-            if value_dic[LL.NUMBER] >= config.max_number_securities:
+            if value_dic[LL.NUMBER] >= self.sys_config.config.max_number_securities:
                 break
 
-        if config.show_final_statistics:
+        if self.sys_config.config.show_final_statistics:
             self.__show_statistics__()
         self.__write_constraints_statistics__()
 
-    def get_detector_for_dash(self, ticker: str, and_clause: str) -> PatternDetector:
-        self.stock_db = stock_database.StockDatabase()
+    def get_detector_for_dash(self, sys_config: SystemConfiguration, ticker: str, and_clause: str) -> PatternDetector:
+        self.sys_config = sys_config
+        self._stock_db = stock_database.StockDatabase()
         value_dict = {LL.TICKER: ticker, LL.AND_CLAUSE: and_clause, LL.NUMBER: 1}
         self.__update_runtime_parameters__(value_dict)
-        print('\nProcessing {} ({})...\n'.format(ticker, runtime.actual_ticker_name))
+        print('\nProcessing {} ({})...\n'.format(ticker, sys_config.runtime.actual_ticker_name))
         df_data = self.__get_df_from_source__(ticker, value_dict, True)
-        pattern_data_handler.init_by_df(df_data)
-        detector = PatternDetector()
+        self.sys_config.pdh.init_by_df(df_data)
+        detector = PatternDetector(self.sys_config)
         detector.parse_for_pattern()
         detector.parse_for_fibonacci_waves()
         detector.check_for_intersections()
@@ -103,31 +108,31 @@ class PatternDetectionController:
 
     @property
     def loop_list_ticker(self):
-        return self.__loop_list_ticker
+        return self._loop_list_ticker
 
     def __get_df_from_source__(self, ticker, value_dic, for_dash: bool):
-        period = config.api_period
-        aggregation = config.api_period_aggregation
-        output_size = config.api_output_size
+        period = self.sys_config.config.api_period
+        aggregation = self.sys_config.config.api_period_aggregation
+        output_size = self.sys_config.config.api_output_size
 
-        if config.get_data_from_db:
+        if self.sys_config.config.get_data_from_db:
             self.__handle_not_available_symbol__(ticker)
             and_clause = value_dic[LL.AND_CLAUSE]
-            stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.stock_db, ticker, and_clause)
+            stock_db_df_obj = stock_database.StockDatabaseDataFrame(self._stock_db, ticker, and_clause)
             df = stock_db_df_obj.df_data
-        elif ticker in self.__crypto_ccy_dic:
-            if config.api_period == ApiPeriod.INTRADAY:
+        elif ticker in self.sys_config.crypto_ccy_dic:
+            if period == ApiPeriod.INTRADAY:
                 fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation)
             else:
                 fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
             df = fetcher.df_data
         else:
             fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
-            if config.api_period == ApiPeriod.INTRADAY:
+            if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
                 df = self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             else:
                 df = fetcher.df_data
-        if config.api_period == ApiPeriod.INTRADAY and for_dash and not config.dash_use_date_time_for_intraday:
+        if period == ApiPeriod.INTRADAY and for_dash and not self.sys_config.config.dash_use_date_time_for_intraday:
             return self.__cut_intraday_df_to_one_day__(df)
         else:
             return df
@@ -156,79 +161,82 @@ class PatternDetectionController:
         return df
 
     def __handle_not_available_symbol__(self, ticker):
-        if not self.stock_db.is_symbol_loaded(ticker):
+        if not self._stock_db.is_symbol_loaded(ticker):
             if UserInput.get_confirmation('{} is not available. Do you want to load it'.format(ticker)):
                 name = UserInput.get_input('Please enter the name for the symbol {}'.format(ticker))
                 if name == 'x':
                     exit()
-                self.stock_db.update_stock_data_for_symbol(ticker, name)
+                self._stock_db.update_stock_data_for_symbol(ticker, name)
             else:
                 exit()
 
     def __update_runtime_parameters__(self, entry_dic: dict):
-        runtime.actual_ticker = entry_dic[LL.TICKER]
-        runtime.actual_ticker_crypto = runtime.actual_ticker in self.__crypto_ccy_dic
-        runtime.actual_expected_win_pct = config.expected_win_pct * (5 if runtime.actual_ticker_crypto else 1)
-        runtime.actual_and_clause = entry_dic[LL.AND_CLAUSE]
-        runtime.actual_number = entry_dic[LL.NUMBER]
-        if self.stock_db is not None:
-            runtime.actual_ticker_name = self.stock_db.get_name_for_symbol(entry_dic[LL.TICKER])
-        if runtime.actual_ticker_name == '':
-            runtime.actual_ticker_name = config.ticker_dic[entry_dic[LL.TICKER]]
+        self.sys_config.runtime.actual_ticker = entry_dic[LL.TICKER]
+        self.sys_config.runtime.actual_ticker_crypto = \
+            self.sys_config.runtime.actual_ticker in self.sys_config.crypto_ccy_dic
+        self.sys_config.runtime.actual_expected_win_pct = self.sys_config.config.expected_win_pct * \
+                                                           (5 if self.sys_config.runtime.actual_ticker_crypto else 1)
+        self.sys_config.runtime.actual_and_clause = entry_dic[LL.AND_CLAUSE]
+        self.sys_config.runtime.actual_number = entry_dic[LL.NUMBER]
+        if self._stock_db is not None:
+            self.sys_config.runtime.actual_ticker_name = self._stock_db.get_name_for_symbol(entry_dic[LL.TICKER])
+        if self.sys_config.runtime.actual_ticker_name == '':
+            self.sys_config.runtime.actual_ticker_name = self.sys_config.config.ticker_dic[entry_dic[LL.TICKER]]
 
     def __show_statistics__(self):
-        config.print()
-        if config.statistics_excel_file_name == '':
+        self.sys_config.config.print()
+        if self.sys_config.config.statistics_excel_file_name == '':
             self.pattern_statistics.print_overview()
             self.detector_statistics.print_overview()
         else:
-            writer = pd.ExcelWriter(config.statistics_excel_file_name)
+            writer = pd.ExcelWriter(self.sys_config.config.statistics_excel_file_name)
             self.pattern_statistics.write_to_excel(writer, 'Formations')
             self.detector_statistics.write_to_excel(writer, 'Overview')
-            print('Statistics were written to file: {}'.format(config.statistics_excel_file_name))
+            print('Statistics were written to file: {}'.format(self.sys_config.config.statistics_excel_file_name))
             writer.save()
 
     def __write_constraints_statistics__(self):
-        if config.statistics_constraints_excel_file_name == '':
+        if self.sys_config.config.statistics_constraints_excel_file_name == '':
             return
         constraints_detail_dict = ConstraintsFactory.get_constraints_details_as_dict()
         for key, details_dict in constraints_detail_dict.items():
             self.constraints_statistics.add_entry(key, details_dict)
-        writer = pd.ExcelWriter(config.statistics_constraints_excel_file_name)
+        writer = pd.ExcelWriter(self.sys_config.config.statistics_constraints_excel_file_name)
         self.constraints_statistics.write_to_excel(writer, 'Constraints_{}'.format(datetime.now().date()))
-        print('Constraints statistics were written to file: {}'.format(config.statistics_constraints_excel_file_name))
+        print('Constraints statistics were written to file: {}'.format(
+            self.sys_config.config.statistics_constraints_excel_file_name))
         writer.save()
 
-    def __init_db_and_test_data__(self, excel_file_with_test_data: str, start_row: int, end_row: int):
-        self.stock_db = stock_database.StockDatabase()
-        if config.get_data_from_db:
-            if excel_file_with_test_data != '':
-                self.__excel_file_with_test_data = excel_file_with_test_data
-                self.df_test_data = pd.ExcelFile(self.__excel_file_with_test_data).parse(0)
-                self.__start_row = start_row
-                self.__end_row = self.df_test_data.shape[0] if end_row == 0 else end_row
+    def __init_db_and_test_data__(self):
+        self._stock_db = stock_database.StockDatabase()
+        if self.sys_config.config.get_data_from_db:
+            if self._excel_file_with_test_data is not None:
+                self._df_test_data = pd.ExcelFile(self._excel_file_with_test_data.file_name).parse(0)
+                self._start_row = self._excel_file_with_test_data.file_name.row_start
+                if self._excel_file_with_test_data.row_end == 0:
+                    self._excel_file_with_test_data.row_end = self._df_test_data.shape[0]
 
     def __init_loop_list_for_ticker__(self):
-        self.__loop_list_ticker = LoopList4Dictionaries()
-        if config.get_data_from_db and self.__excel_file_with_test_data != '':
-            for ind, rows in self.df_test_data.iterrows():
-                if self.__loop_list_ticker.counter >= self.__start_row:
-                    config.ticker_dic[rows[PSC.TICKER]] = rows[PSC.NAME]
+        self._loop_list_ticker = LoopList4Dictionaries()
+        if self.sys_config.config.get_data_from_db and self._excel_file_with_test_data is not None:
+            for ind, rows in self._df_test_data.iterrows():
+                if self._loop_list_ticker.counter >= self._excel_file_with_test_data.row_start:
+                    self.sys_config.config.ticker_dic[rows[PSC.TICKER]] = rows[PSC.NAME]
                     start_date = MyDate.get_date_from_datetime(rows[PSC.BEGIN_PREVIOUS])
                     date_end = MyDate.get_date_from_datetime(rows[PSC.END] + timedelta(days=rows[PSC.T_NEEDED] + 20))
                     and_clause = "Date BETWEEN '{}' AND '{}'".format(start_date, date_end)
-                    self.__loop_list_ticker.append({LL.TICKER: rows[PSC.TICKER], LL.AND_CLAUSE: and_clause})
-                if self.__loop_list_ticker.counter >= self.__end_row:
+                    self._loop_list_ticker.append({LL.TICKER: rows[PSC.TICKER], LL.AND_CLAUSE: and_clause})
+                if self._loop_list_ticker.counter >= self._excel_file_with_test_data.row_end:
                     break
         else:
-            for ticker in config.ticker_dic:
-                self.__loop_list_ticker.append({LL.TICKER: ticker, LL.AND_CLAUSE: config.and_clause})
+            for ticker in self.sys_config.config.ticker_dic:
+                self._loop_list_ticker.append({LL.TICKER: ticker, LL.AND_CLAUSE: self.sys_config.config.and_clause})
 
     def __handle_statistics__(self, detector: PatternDetector):
         for pattern in detector.pattern_list:
             self.pattern_statistics.add_entry(pattern)
 
-        if config.show_final_statistics:
+        if self.sys_config.config.show_final_statistics:
             self.detector_statistics.add_entry(detector.get_statistics_api())
         else:
             detector.print_statistics()

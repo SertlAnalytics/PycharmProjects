@@ -6,9 +6,8 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import FT, FCC, FD
-from pattern_data_container import pattern_data_handler as pdh
 import numpy as np
-from pattern_configuration import debugger
+from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_trade_result import TradeResult
 from pattern_part import PatternPart
 import pattern_constraints as cstr
@@ -18,9 +17,10 @@ from pattern_function_container import PatternFunctionContainerFactoryApi
 
 
 class PatternApi:
-    def __init__(self, pattern_type: str):
+    def __init__(self, sys_config: SystemConfiguration, pattern_type: str):
+        self.sys_config = sys_config
         self.pattern_type = pattern_type
-        self.df_min_max = pdh.pattern_data.df_min_max
+        self.df_min_max = sys_config.pdh.pattern_data.df_min_max
         self.pattern_range = None
         self.constraints = None
         self.function_container = None
@@ -59,10 +59,11 @@ class PatternConditionHandler:
 
 class Pattern:
     def __init__(self, api: PatternApi):
+        self.sys_config = api.sys_config
         self.pattern_type = api.pattern_type
-        self.df = pdh.pattern_data.df
-        self.df_min_max = pdh.pattern_data.df_min_max
-        self.tick_distance = pdh.pattern_data.tick_f_var_distance
+        self.df = api.sys_config.pdh.pattern_data.df
+        self.df_min_max = api.sys_config.pdh.pattern_data.df_min_max
+        self.tick_distance = api.sys_config.pdh.pattern_data.tick_f_var_distance
         self.constraints = api.constraints
         self.pattern_range = api.pattern_range
         self.ticks_initial = 0
@@ -297,9 +298,9 @@ class TKEUpPattern(TKEPattern):
 
 class PatternFactory:
     @staticmethod
-    def get_pattern(api: PatternFunctionContainerFactoryApi):
+    def get_pattern(sys_config: SystemConfiguration, api: PatternFunctionContainerFactoryApi):
         pattern_type = api.pattern_type
-        pattern_api = PatternApi(pattern_type)
+        pattern_api = PatternApi(sys_config, pattern_type)
         pattern_api.df_min_max = api.df_min_max
         pattern_api.pattern_range = api.pattern_range
         pattern_api.constraints = api.constraints
