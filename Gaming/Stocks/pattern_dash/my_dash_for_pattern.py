@@ -306,7 +306,7 @@ class MyDash4Pattern(MyDashBase):
             self._ticker_options.append({'label': '{}'.format(name), 'value': symbol})
 
     def __fill_interval_options__(self):
-        self._interval_options.append({'label': '10 min', 'value': 600}) # this one is the default
+        self._interval_options.append({'label': '15 min', 'value': 900}) # this one is the default
         self._interval_options.append({'label': '5 min', 'value': 300})
         self._interval_options.append({'label': '2 min', 'value': 120})
         self._interval_options.append({'label': '1 min', 'value': 60})
@@ -551,8 +551,7 @@ class MyDash4Pattern(MyDashBase):
 
     def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str):
         if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
-            # x_value = df[CN.DATETIME] if config.dash_use_date_time_for_intraday else df[CN.TIME]
-            x_value = df[CN.DATETIME] if self.sys_config.config.dash_use_date_time_for_intraday else df[CN.TIME]
+            x_value = df[CN.DATETIME]
         else:
             x_value = df[CN.DATE]
         candlestick = {
@@ -698,11 +697,7 @@ class DashInterface:
     @staticmethod
     def get_xy_separated_from_timestamp(sys_config: SystemConfiguration, xy):
         if sys_config.config.api_period == ApiPeriod.INTRADAY:
-            if sys_config.config.dash_use_date_time_for_intraday:
-                xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
-            else:
-                xy_new = DashInterface.get_xy_from_timestamp_to_time_str(xy)
-            # xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
+            xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
         else:
             xy_new = DashInterface.get_xy_from_timestamp_to_date_str(xy)
         return DashInterface.get_x_y_separated_for_shape(xy_new)

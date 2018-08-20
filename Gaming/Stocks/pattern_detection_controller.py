@@ -69,7 +69,7 @@ class PatternDetectionController:
             ticker = value_dic[LL.TICKER]
             self.__update_runtime_parameters__(value_dic)
             print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
-            df_data = self.__get_df_from_source__(ticker, value_dic, False)
+            df_data = self.__get_df_from_source__(ticker, value_dic)
             self.sys_config.pdh.init_by_df(df_data)
             detector = PatternDetector(self.sys_config)
             detector.parse_for_pattern()
@@ -110,7 +110,7 @@ class PatternDetectionController:
     def loop_list_ticker(self):
         return self._loop_list_ticker
 
-    def __get_df_from_source__(self, ticker, value_dic, for_dash: bool):
+    def __get_df_from_source__(self, ticker, value_dic, run_on_dash=False):
         period = self.sys_config.config.api_period
         aggregation = self.sys_config.config.api_period_aggregation
         output_size = self.sys_config.config.api_output_size
@@ -119,32 +119,17 @@ class PatternDetectionController:
             self.__handle_not_available_symbol__(ticker)
             and_clause = value_dic[LL.AND_CLAUSE]
             stock_db_df_obj = stock_database.StockDatabaseDataFrame(self._stock_db, ticker, and_clause)
-            df = stock_db_df_obj.df_data
+            return stock_db_df_obj.df_data
         elif ticker in self.sys_config.crypto_ccy_dic:
             if period == ApiPeriod.INTRADAY:
-                fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation)
+                fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
             else:
                 fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
-            df = fetcher.df_data
+            return fetcher.df_data
         else:
             fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
-            if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
-                df = self.__get_with_concatenated_intraday_data__(fetcher.df_data)
-            else:
-                df = fetcher.df_data
-        if period == ApiPeriod.INTRADAY and for_dash and not self.sys_config.config.dash_use_date_time_for_intraday:
-            return self.__cut_intraday_df_to_one_day__(df)
-        else:
-            return df
+            return fetcher.df_data
 
-    @staticmethod
-    def __cut_intraday_df_to_one_day__(df: pd.DataFrame) -> pd.DataFrame:
-        index_first_row = df.index[0]
-        index_last_row = df.index[-1]
-        timestamp_one_day_before = index_last_row - (23 * 60 * 60)  # 23 = to avoid problems with the last trade shape
-        if index_first_row < timestamp_one_day_before:
-            return df.loc[timestamp_one_day_before:]
-        return df
 
     @staticmethod
     def __get_with_concatenated_intraday_data__(df: pd.DataFrame):

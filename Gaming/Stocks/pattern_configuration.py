@@ -57,7 +57,6 @@ class RuntimeConfiguration:
 
 class PatternConfiguration:
     def __init__(self):
-        self.run_on_dash_server = False
         self.get_data_from_db = True
         self.pattern_type_list = [FT.CHANNEL]
         self.api_period = ApiPeriod.DAILY
@@ -70,7 +69,6 @@ class PatternConfiguration:
         self.plot_only_pattern_with_fibonacci_waves = True
         self.plot_volume = False
         self.plot_close = False
-        self.dash_use_date_time_for_intraday = True  # temporary parameter for date time problem for intraday charts
         self.length_for_global_min_max = 50  # a global minimum or maximum must have at least this number as distance
         self.length_for_global_min_max_fibonacci = 10  # ...for fibonacci
         self.length_for_local_min_max = 2  # a local minimum or maximum must have at least this number as distance

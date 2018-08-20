@@ -27,12 +27,12 @@ class ApiOutputsize:
 
 class APIBaseFetcher:
     def __init__(self, symbol: str, period=ApiPeriod.DAILY, aggregation=1, output_size=ApiOutputsize.COMPACT):
-        self.api_key = self.get_api_key()
+        self.api_key = self._get_api_key_()
         self.symbol = symbol  # like the symbol of a stock, e.g. MSFT
         self.period = period
         self.aggregation = aggregation
         self.output_size = output_size
-        self.url = self.get_url()
+        self.url = self._get_url_()
         print(self.url)
         self.request = requests.get(self.url)
         self.df = self.__get_data_frame__()
@@ -46,10 +46,10 @@ class APIBaseFetcher:
         for col in self.column_list:
             self.df[col] = pd.to_numeric(self.df[col])
 
-    def get_api_key(self):
+    def _get_api_key_(self):
         pass
 
-    def get_url(self):
+    def _get_url_(self):
         pass
 
     def plot_data_frame(self):
@@ -81,7 +81,7 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
     def get_json_data_key(self):
         pass
 
-    def get_api_key(self):
+    def _get_api_key_(self):
         return os.environ["alphavantage_apikey"]
 
     def plot_data_frame(self):
@@ -131,7 +131,7 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         df.columns = self.get_standard_column_names()
         return df
 
-    def get_url(self):
+    def _get_url_(self):
         url = 'https://www.alphavantage.co/query?function={}&symbol={}'.format(self.get_url_function(), self.symbol)
         if self.output_size == ApiOutputsize.FULL:
             url = url + '&outputsize=full'
@@ -185,7 +185,7 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
             df.columns = self.get_standard_column_names()
         return df
 
-    def get_url(self):  # the symbol has the structure symbol_CCY like BTC_USD
+    def _get_url_(self):  # the symbol has the structure symbol_CCY like BTC_USD
         symbol = self.symbol[:-4]
         market = self.symbol[-3:]
         url = 'https://www.alphavantage.co/query?function={}&symbol={}&market={}&apikey={}'.format(
@@ -205,7 +205,7 @@ class AlphavantageCSVFetcher (APIBaseFetcher):
         content = self.request.content
         return pd.read_csv(io.StringIO(content.decode('utf-8')))
 
-    def get_url(self):
+    def _get_url_(self):
         if self.symbol == 'CRYPTO':
             return 'https://www.alphavantage.co/digital_currency_list/'
         elif self.symbol == 'CCY':
@@ -228,7 +228,7 @@ class CryptoCompareJSONFetcher (APIBaseFetcher):
     def get_json_data_key(self):
         pass
 
-    def get_api_key(self):
+    def _get_api_key_(self):
         return 'not_yet'  # os.environ["cryptocompare_apikey"]  # doesn't exist yet
 
     @staticmethod
@@ -237,6 +237,10 @@ class CryptoCompareJSONFetcher (APIBaseFetcher):
 
 
 class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
+    def __init__(self, symbol: str, period=ApiPeriod.DAILY, aggregation=1, run_on_dash=False):
+        self._run_on_dash = run_on_dash
+        CryptoCompareJSONFetcher.__init__(self, symbol, period, aggregation)
+
     def get_column_list_data(self):
         return self.column_list
 
@@ -253,15 +257,20 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
         df.columns = self.get_standard_column_names()
         return df
 
-    def get_url(self):  # the symbol has the structure symbol_CCY like BTC_USD
+    def _get_url_(self):  # the symbol has the structure symbol_CCY like BTC_USD
         url_function = 'histominute' if self.period == ApiPeriod.INTRADAY else 'histoday'
-        url_limit = 300 if self.period == ApiPeriod.INTRADAY else 400
+        url_limit = self._get_url_limit_parameter_()
         url_aggregate = self.aggregation if self.period == ApiPeriod.INTRADAY else 1
         symbol = self.symbol[:-4]
         market = self.symbol[-3:]
         url = 'https://min-api.cryptocompare.com/data/{}?fsym={}&tsym={}&limit={}&aggregate={}'.\
             format(url_function, symbol, market, url_limit, url_aggregate)
         return url
+
+    def _get_url_limit_parameter_(self) -> int:
+        if self.period == ApiPeriod.INTRADAY:
+            return 200 if self._run_on_dash else 300
+        return 400
 
 
 class CorrelationHandler:

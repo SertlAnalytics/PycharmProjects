@@ -44,4 +44,5 @@ class IndicesComponentList:
                 'EOS': 'EOS',
                 'ETH': 'Ethereum',
                 'LTC': 'Litecoin',
-                'NEO': 'NEO'}
+                'NEO': 'NEO'
+                }

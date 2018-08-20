@@ -21,7 +21,7 @@ class SystemConfiguration:
 
 debugger = PatternDebugger()
 
-# Todo Signals and expected win
+# Todo Signals and expected win & connection to Bifinex
 """
 ToDo list:
 a) Signals - later: With support from KI
@@ -30,4 +30,6 @@ a) Signals - later: With support from KI
 b) Expected win for all these case
 c) Channel Pattern: sometimes (???) there are only 2 hits on the entrance side and 3 or more on the opposite (breakout)
 side - so I think we have to go back with the f_params to the left side as well...
+d) Connection to Bitfinex (from 01.09.2018): https://www.bitfinex.com/posts/267
+e) Correlation: Please check BCH_USD and EOS - both had TKEs together....
 """
