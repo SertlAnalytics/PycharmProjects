@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, FCC, FD
+from sertl_analytics.constants.pattern_constants import FT, FCC, FD, PFC
 import numpy as np
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_trade_result import TradeResult
@@ -82,6 +82,7 @@ class Pattern:
         self.breakout = None
         self.trade_result = TradeResult()
         self.intersects_with_fibonacci_wave = False
+        self.available_fibonacci_end = 0  # 1 = Min, 2 = Max
         self.breakout_required_after_ticks = self.__breakout_required_after_ticks__()
 
     @property
@@ -156,7 +157,7 @@ class Pattern:
         if self.pattern_type in [FT.TKE_UP, FT.TKE_DOWN] and self.function_cont.f_var_cross_f_upper_f_lower != 0:
             return self.function_cont.position_cross_f_upper_f_lower - self.function_cont.tick_for_helper.position
         else:
-            return self.pattern_range.position_last - self.pattern_range.position_first
+            return self.pattern_range.length
 
     @staticmethod
     def __get_constraint__():
@@ -232,6 +233,9 @@ class Pattern:
             return tick.close > self.trade_result.limit and (tick.high - tick.close)/tick.close < threshold
         else:
             return tick.close < self.trade_result.limit and (tick.close - tick.low)/tick.close < threshold
+
+    def __get_pattern_feature_value_dic__(self):
+        feature_list = PFC.get_all()
 
 
 class ChannelPattern(Pattern):

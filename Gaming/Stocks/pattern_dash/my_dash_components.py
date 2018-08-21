@@ -175,8 +175,8 @@ class MyHTML:
         return html.Div(id=element_id, children=children, style=style)
 
     @staticmethod
-    def h1(element_text: str, color='black', font_size=12, opacity='1'):
-        style = {'opacity': opacity, 'color': color, 'fontSize': font_size}
+    def h1(element_text: str, style_input=None):
+        style = {'opacity': 1, 'color': 'black', 'fontSize': 12} if style_input is None else style_input
         return html.H1(element_text, style=style)
 
     @staticmethod
@@ -188,6 +188,10 @@ class MyHTML:
     def h3(element_text: str, color='black', font_size=24, opacity='1'):
         style = {'opacity': opacity, 'color': color, 'fontSize': font_size}
         return html.H3(element_text, style=style)
+
+    @staticmethod
+    def p(element_text: str):
+        return html.P(element_text)
 
     @staticmethod
     def pre(element_id: str, children=''):
@@ -221,6 +225,14 @@ class MyHTML:
 
 
 class MyDCC:
+    @staticmethod
+    def tabs(element_id: str, children: list):
+        return dcc.Tabs(id=element_id, children=children)
+
+    @staticmethod
+    def tab(label: str, children: list):
+        return dcc.Tab(label=label, children=children)
+
     @staticmethod
     def drop_down(element_id, options: list, multi=False):
         # {'label': '{} {}'.format(symbol, name), 'value': symbol}

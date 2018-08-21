@@ -47,6 +47,15 @@ class FT:
         return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN, FT.CHANNEL,
                 FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN, FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]
 
+    @staticmethod
+    def get_type_id(pattern_type: str):
+        type_dict = {FT.CHANNEL: 10, FT.CHANNEL_UP: 11, FT.CHANNEL_DOWN: 12,
+                     FT.TRIANGLE: 20, FT.TRIANGLE_UP: 21, FT.TRIANGLE_DOWN: 22,
+                     FT.TRIANGLE_TOP: 23, FT.TRIANGLE_BOTTOM: 24,
+                     FT.TKE_UP: 31, FT.TKE_DOWN: 32,
+                     FT.HEAD_SHOULDER: 43, FT.HEAD_SHOULDER_BOTTOM: 44}
+        return type_dict.get(pattern_type, 0)
+
 
 class Indices:
     DOW_JONES = 'Dow Jones'
@@ -192,3 +201,97 @@ class PSC:  # Pattern Statistics Columns
     RESULT_DF_MIN = 'Result DF min.'
     FIRST_LIMIT_REACHED = 'First limit reached'
     STOP_LOSS_MAX_REACHED = 'Max stop loss reached (bound of original range)'
+
+
+class PFC:  # Pattern Feature Columns
+    TICKER_ID = 'Ticker_Id'
+    TICKER_NAME = 'Ticker_Name'
+    PATTERN_TYPE = 'Pattern_Type'
+    PATTERN_TYPE_ID = 'Pattern_Type_ID'
+    TS_PATTERN_TICK_FIRST = 'Timestamp_Pattern_Tick_First'
+    TS_PATTERN_TICK_LAST = 'Timestamp_Pattern_Tick_Last'
+    TS_BREAKOUT = 'Timestamp_Breakout'
+    TICKS_TILL_PATTERN_FORMED = 'Ticks_Till_Pattern_Formed'
+    TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT = 'Ticks_From_Pattern_Formed_Till_Breakout'
+    DT_BEGIN = 'Begin_Date'
+    TIME_BEGIN = 'Begin_Time'
+    DT_END = 'End_Date'
+    TIME_END = 'END_Time'
+    TOLERANCE_PCT = 'Tolerance in %'
+    BREAKOUT_RANGE_MIN_PCT = 'Breakout range in %'
+    BEGIN_LOW = 'Value_Begin_Low'
+    BEGIN_HIGH = 'Value_Begin_High'
+    END_LOW = 'Value_End_Low'
+    END_HIGH = 'Value_End_High'
+    SLOPE_UPPER = 'Slope_Upper'
+    SLOPE_LOWER = 'Slope_Lower'
+    SLOPE_REGRESSION = 'Slope_Regression'
+    SLOPE_BREAKOUT = 'Slope_Breakout'
+    TOUCH_POINTS_TILL_BREAKOUT_HIGH = 'Touch_Points_High_Till_Breakout'
+    TOUCH_POINTS_TILL_BREAKOUT_LOW= 'Touch_Points_Low_Till_Breakout'
+    BREAKOUT_DIRECTION = 'Breakout_direction'
+    VOLUME_CHANGE_AT_BREAKOUT_PCT = 'Volume_Change_At_Breakout_in_Percentage'
+    SLOPE_VOLUME_REGRESSION = 'Slope_Volume_Regression'
+    SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED = 'Slope_Volume_Regression_After_Pattern_Formed'
+    PREVIOUS_PERIOD_HALF_UPPER_PCT = 'Max_Value_Percentage_Previous_Period_Half'
+    PREVIOUS_PERIOD_FULL_UPPER_PCT = 'Max_Value_Percentage_Previous_Period_Full'
+    PREVIOUS_PERIOD_HALF_LOWER_PCT = 'Min_Value_Percentage_Previous_Period_Half'
+    PREVIOUS_PERIOD_FULL_LOWER_PCT = 'Min_Value_Percentage_Previous_Period_Full'
+    NEXT_PERIOD_HALF_POSITIVE_PCT = 'Next_Period_Half_Positive_Percentage'
+    NEXT_PERIOD_FULL_POSITIVE_PCT= 'Next_Period_Full_Positive_Percentage'
+    NEXT_PERIOD_HALF_NEGATIVE_PCT= 'Next_Period_Half_Negative_Percentage'
+    NEXT_PERIOD_FULL_NEGATIVE_PCT= 'Next_Period_Full_Negative_Percentage'
+    TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF = 'Ticks_From_Breakout_Till_Positive_Half'
+    TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL = 'Ticks_From_Breakout_Till_Positive_Full'
+    TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF = 'Ticks_From_Breakout_Till_Negative_Half'
+    TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL = 'Ticks_From_Breakout_Till_Negative_Full'
+    AVAILABLE_FIBONACCI_END = 'Available_Fibonacci_End'  # 0 = No, 1 = Min, 2 = Max
+    EXPECTED_WIN = 'Expected_Win'
+    FALSE_BREAKOUT = 'False_Breakout'
+    EXPECTED_WIN_REACHED = 'Expected_Win_Reached'
+
+    @staticmethod
+    def get_all():
+        return_list = [PFC.TICKER_ID]
+        return_list.append(PFC.TICKER_NAME)
+        return_list.append(PFC.PATTERN_TYPE)
+        return_list.append(PFC.TS_PATTERN_TICK_FIRST)
+        return_list.append(PFC.TS_PATTERN_TICK_LAST)
+        return_list.append(PFC.TS_BREAKOUT)
+        return_list.append(PFC.TICKS_TILL_PATTERN_FORMED)
+        return_list.append(PFC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT)
+        return_list.append(PFC.DT_BEGIN)
+        return_list.append(PFC.DT_END)
+        return_list.append(PFC.TOLERANCE_PCT)
+        return_list.append(PFC.BREAKOUT_RANGE_MIN_PCT)
+        return_list.append(PFC.BEGIN_LOW)
+        return_list.append(PFC.BEGIN_HIGH)
+        return_list.append(PFC.END_LOW)
+        return_list.append(PFC.END_HIGH)
+        return_list.append(PFC.SLOPE_UPPER)
+        return_list.append(PFC.SLOPE_LOWER)
+        return_list.append(PFC.SLOPE_REGRESSION)
+        return_list.append(PFC.SLOPE_BREAKOUT)
+        return_list.append(PFC.TOUCH_POINTS_TILL_BREAKOUT_HIGH)
+        return_list.append(PFC.TOUCH_POINTS_TILL_BREAKOUT_LOW)
+        return_list.append(PFC.BREAKOUT_DIRECTION)
+        return_list.append(PFC.VOLUME_CHANGE_AT_BREAKOUT_PCT)
+        return_list.append(PFC.SLOPE_VOLUME_REGRESSION)
+        return_list.append(PFC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED)
+        return_list.append(PFC.MAX_VALUE_PREVIOUS_PERIOD_HALF_PCT)
+        return_list.append(PFC.MAX_VALUE_PREVIOUS_PERIOD_FULL_PCT)
+        return_list.append(PFC.MIN_VALUE_PREVIOUS_PERIOD_HALF_PCT)
+        return_list.append(PFC.MIN_VALUE_PREVIOUS_PERIOD_FULL_PCT)
+        return_list.append(PFC.MAX_VALUE_NEXT_PERIOD_HALF_PCT)
+        return_list.append(PFC.MAX_VALUE_NEXT_PERIOD_FULL_PCT)
+        return_list.append(PFC.MIN_VALUE_NEXT_PERIOD_HALF_PCT)
+        return_list.append(PFC.MIN_VALUE_NEXT_PERIOD_FULL_PCT)
+        return_list.append(PFC.TICKS_FROM_BREAKOUT_TILL_MAX_HALF)
+        return_list.append(PFC.TICKS_FROM_BREAKOUT_TILL_MIN_HALF)
+        return_list.append(PFC.TICKS_FROM_BREAKOUT_TILL_MAX_FULL)
+        return_list.append(PFC.TICKS_FROM_BREAKOUT_TILL_MIN_HALF)
+        return_list.append(PFC.AVAILABLE_FIBONACCI_END)
+        return_list.append(PFC.EXPECTED_WIN)
+        return_list.append(PFC.FALSE_BREAKOUT)
+        return_list.append(PFC.EXPECTED_WIN_REACHED)
+        return return_list

@@ -21,6 +21,13 @@ class WaveTick:
     def date(self):
         return self.tick[CN.DATE]
 
+    def time(self):
+        return self.tick[CN.TIME]
+
+    @property
+    def time_str(self):
+        return self.tick[CN.TIME].strftime("%H:%M")
+
     @property
     def date_time(self):
         return self.tick[CN.DATETIME]

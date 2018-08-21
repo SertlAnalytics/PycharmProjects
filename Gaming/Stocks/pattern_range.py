@@ -47,6 +47,10 @@ class PatternRange:
         return len(self.tick_list)
 
     @property
+    def length(self) -> int:
+        return self.tick_last.position - self.tick_first.position
+
+    @property
     def position_first(self) -> int:
         return self.tick_first.position
 
@@ -251,6 +255,11 @@ class HeadShoulderFormation:
         relation = round(distance_to_previous_breakout/self.distance_neckline, 2)
         return relation < allowed_relation
 
+    def is_neckline_not_too_large(self, df_length: int) -> bool:
+        allowed_relation = 0.3
+        relation = round(self.distance_neckline/df_length, 2)
+        return relation <= allowed_relation
+
 
 class PatternRangeHeadShoulder(PatternRangeMin):
     def __init__(self, sys_config: SystemConfiguration, hsf: HeadShoulderFormation, min_length: int):
@@ -435,6 +444,8 @@ class PatternRangeDetectorHeadShoulderBase:
         self.global_min_tuple_list = [(i, tick) for i, tick in enumerate(self.tick_list) if tick.is_global_min]
 
     def get_pattern_range(self, number_required_ticks: int, hsf: HeadShoulderFormation):
+        if not hsf.is_neckline_not_too_large(self.pdh.pattern_data.df_length):
+            return None
         hsf.tick_previous_breakout = self.pdh.pattern_data.get_previous_breakout_for_pattern_type(
             hsf.f_neckline_param, hsf.tick_neckline_left, hsf.tick_neckline_right, hsf.pattern_type)
         if hsf.tick_previous_breakout is None:

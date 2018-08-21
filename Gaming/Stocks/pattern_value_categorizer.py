@@ -69,6 +69,13 @@ class ValueCategorizer:
             self.df = self.df.assign(H_UPPER=(self._h_upper(self.df[self.__index_column])))
             self.df = self.df.assign(H_LOWER=(self._h_lower(self.df[self.__index_column])))
 
+    def count_value_categories(self, category: str):
+        return_value = 0
+        for key, cat_list in self.value_category_dic.items():
+            if category in cat_list:
+                return_value += 1
+        return return_value
+
     def __calculate_value_categories__(self):
         for ind, row in self.df.iterrows():
             self.index_list.append(row[self.__index_column])

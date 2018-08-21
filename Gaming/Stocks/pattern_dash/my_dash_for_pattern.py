@@ -587,6 +587,26 @@ class MyDash4Pattern(MyDashBase):
         return bollinger_traces
 
     def __set_app_layout__(self):
+        self.app.layout = self.__get_div_for_tab_pattern_detection__()
+        # self.app.layout = self.__get_div_for_app_layout__()
+
+    def __get_div_for_app_layout__(self):
+        # see also https://github.com/plotly/dash-core-components/pull/213
+        header = self.__get_header_for_app_layout__()
+        tabs = self.__get_tabs_for_app_layout__()
+        return MyHTML.div('my_app', [header, tabs])
+
+    @staticmethod
+    def __get_header_for_app_layout__():
+        style = {'textAlign': 'center', 'margin': '48px 0', 'fontFamily': 'system-ui'}
+        return MyHTML.h1('Pattern Detection by Sertl Analytics', style)
+
+    def __get_tabs_for_app_layout__(self):
+        tab_01 = MyDCC.tab('Pattern Detector', [self.__get_div_for_tab_pattern_detection__()])
+        tab_02 = MyDCC.tab('Bitfinex', [self.__get_div_for_bitfinex__()])
+        return MyDCC.tabs('my_app_tab', [tab_01, tab_02])
+
+    def __get_div_for_tab_pattern_detection__(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
         li = [MyHTMLHeaderTable().get_table()]
         li.append(MyDCC.interval('my_interval', 100))
@@ -602,7 +622,34 @@ class MyDash4Pattern(MyDashBase):
         li.append(MyHTML.div_with_html_button_submit('my_submit_button', 'Refresh'))
         li.append(MyHTML.div('my_graph_first_div'))
         li.append(MyHTML.div('my_graph_second_div'))
-        li.append(html.Div(id='my_graphs_before_breakout_div'))
+        li.append(MyHTML.div('my_graphs_before_breakout_div'))
+        # li.append(MyHTML.div_embedded('my_graphs_before_breakout_div'))
+        li.append(MyHTML.div_with_html_pre('my_hover_data'))
+        return MyHTML.div('', li)
+
+    @staticmethod
+    def __get_div_for_bitfinex__():
+        header = MyHTML.h1('This is the content in tab 2: Bitfinex data')
+        paragraph = MyHTML.p('A graph here would be nice!')
+        return MyHTML.div('my_bitfinex', [header, paragraph])
+
+    def __set_app_layout_old__(self):
+        # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
+        li = [MyHTMLHeaderTable().get_table()]
+        li.append(MyDCC.interval('my_interval', 100))
+        li.append(MyDCC.interval('my_interval_timer', 1))
+        li.append(MyHTML.div_with_dcc_drop_down(
+            'Stock symbol', 'my_ticker_selection', self._ticker_options, 200))
+        li.append(MyHTML.div_with_dcc_drop_down(
+            'Refresh interval', 'my_interval_selection', self._interval_options, 200))
+        li.append(MyHTML.div_with_dcc_drop_down(
+            'Second graph', 'my_graph_second_days_selection', self._graph_second_days_options, 200))
+        if self.sys_config.config.get_data_from_db:
+            li.append(self.__get_html_div_with_date_picker_range__())
+        li.append(MyHTML.div_with_html_button_submit('my_submit_button', 'Refresh'))
+        li.append(MyHTML.div('my_graph_first_div'))
+        li.append(MyHTML.div('my_graph_second_div'))
+        li.append(MyHTML.div('my_graphs_before_breakout_div'))
         # li.append(MyHTML.div_embedded('my_graphs_before_breakout_div'))
         li.append(MyHTML.div_with_html_pre('my_hover_data'))
         self.app.layout = MyHTML.div('', li)
@@ -611,7 +658,7 @@ class MyDash4Pattern(MyDashBase):
     def __get_html_div_with_date_picker_range__():
         return html.Div(
             [
-                html.H3('Select start and end dates:'),
+                MyHTML.h3('Select start and end dates:'),
                 MyDCC.get_date_picker_range('my_date_picker', datetime.today() - timedelta(days=160))
             ],
             style={'display': 'inline-block', 'vertical-align': 'bottom', 'height': 20}

@@ -16,7 +16,7 @@ import pandas as pd
 import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
-from sertl_analytics.constants.pattern_constants import Indices, CN
+from sertl_analytics.constants.pattern_constants import Indices, CN, PFC
 import os
 import time
 
@@ -283,6 +283,67 @@ class StockDatabase(BaseDatabase):
 
         self.create_database_elements(metadata)
         print(repr(data))
+
+    def create_pattern_feature_table(self):
+        metadata = MetaData()
+        # Define a new table with a name, count, amount, and valid column: data
+        data = Table('Features', metadata,
+                     Column(PFC.TICKER_ID, String(20)),
+                     Column(PFC.TICKER_NAME, String(100)),
+                     Column(PFC.PATTERN_TYPE, String(100)),
+                     Column(PFC.PATTERN_TYPE_ID, Integer()),  # 1x = Channel, 2x = Triangle, 3x = TKE, 4x = HS
+                     Column(PFC.TS_PATTERN_TICK_FIRST, Integer()),
+                     Column(PFC.TS_PATTERN_TICK_LAST, Integer()),
+                     Column(PFC.TS_BREAKOUT, Integer()),
+                     Column(PFC.TICKS_TILL_PATTERN_FORMED, Integer()),
+                     Column(PFC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT, Integer()),
+                     Column(PFC.DT_BEGIN, Date()),
+                     Column(PFC.TIME_BEGIN, Time()),
+                     Column(PFC.DT_END, Date()),
+                     Column(PFC.TIME_END, Time()),
+                     Column(PFC.TOLERANCE_PCT, Float()),
+                     Column(PFC.BREAKOUT_RANGE_MIN_PCT, Float()),
+                     Column(PFC.BEGIN_LOW, Float()),
+                     Column(PFC.BEGIN_HIGH, Float()),
+                     Column(PFC.END_LOW, Float()),
+                     Column(PFC.END_HIGH, Float()),
+                     Column(PFC.SLOPE_UPPER, Float()),
+                     Column(PFC.SLOPE_LOWER, Float()),
+                     Column(PFC.SLOPE_REGRESSION, Float()),
+                     Column(PFC.SLOPE_BREAKOUT, Float()),
+                     Column(PFC.TOUCH_POINTS_TILL_BREAKOUT_HIGH, Integer()),
+                     Column(PFC.TOUCH_POINTS_TILL_BREAKOUT_LOW, Integer()),
+                     Column(PFC.BREAKOUT_DIRECTION, Integer()),
+                     Column(PFC.VOLUME_CHANGE_AT_BREAKOUT_PCT, Float()),
+                     Column(PFC.SLOPE_VOLUME_REGRESSION, Float()),
+                     Column(PFC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED, Float()),
+                     Column(PFC.PREVIOUS_PERIOD_HALF_UPPER_PCT, Float()),
+                     Column(PFC.PREVIOUS_PERIOD_FULL_UPPER_PCT, Float()),
+                     Column(PFC.PREVIOUS_PERIOD_HALF_LOWER_PCT, Float()),
+                     Column(PFC.PREVIOUS_PERIOD_FULL_LOWER_PCT, Float()),
+                     Column(PFC.NEXT_PERIOD_HALF_POSITIVE_PCT, Float()),
+                     Column(PFC.NEXT_PERIOD_FULL_POSITIVE_PCT, Float()),
+                     Column(PFC.NEXT_PERIOD_HALF_NEGATIVE_PCT, Float()),
+                     Column(PFC.NEXT_PERIOD_FULL_NEGATIVE_PCT, Float()),
+                     Column(PFC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF, Integer()),
+                     Column(PFC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF, Integer()),
+                     Column(PFC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL, Integer()),
+                     Column(PFC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL, Integer()),
+                     Column(PFC.AVAILABLE_FIBONACCI_END, Integer()),  # 0=No, 1=MIN, 2 = MAX
+                     Column(PFC.EXPECTED_WIN, Float()),
+                     Column(PFC.FALSE_BREAKOUT, Integer()),
+                     Column(PFC.EXPECTED_WIN_REACHED, Integer())
+                     )
+
+        self.create_database_elements(metadata)
+        print(repr(data))
+
+    def __insert_feature_in_feature_table__(self, ticker: str, input_dic: dict):
+        try:
+            self.__insert_data_into_table__('Features', [input_dic])
+        except Exception:
+            self.error_handler.catch_exception(__name__)
+            print('{}: problem inserting into Features table.'.format(ticker))
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):

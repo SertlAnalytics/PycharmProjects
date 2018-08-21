@@ -75,7 +75,7 @@ class PatternDetectionController:
             detector.parse_for_pattern()
             detector.parse_for_fibonacci_waves()
             detector.check_for_intersections()
-
+            detector.save_pattern_features_to_database()
             self.__handle_statistics__(detector)
 
             if self.sys_config.config.plot_data:
@@ -123,13 +123,24 @@ class PatternDetectionController:
         elif ticker in self.sys_config.crypto_ccy_dic:
             if period == ApiPeriod.INTRADAY:
                 fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
+                return fetcher.df_data
             else:
                 fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
-            return fetcher.df_data
+                return fetcher.df_data
         else:
             fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
+            if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+                return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             return fetcher.df_data
 
+    @staticmethod
+    def __cut_intraday_df_to_one_day__(df: pd.DataFrame) -> pd.DataFrame:
+        index_first_row = df.index[0]
+        index_last_row = df.index[-1]
+        timestamp_one_day_before = index_last_row - (23 * 60 * 60)  # 23 = to avoid problems with the last trade shape
+        if index_first_row < timestamp_one_day_before:
+            return df.loc[timestamp_one_day_before:]
+        return df
 
     @staticmethod
     def __get_with_concatenated_intraday_data__(df: pd.DataFrame):
