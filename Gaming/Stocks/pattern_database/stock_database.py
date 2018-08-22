@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, DateTime, Time
-from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
+from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame, MyTable, MyTableColumn, CDT
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod, ApiOutputsize
@@ -16,9 +16,70 @@ import pandas as pd
 import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
-from sertl_analytics.constants.pattern_constants import Indices, CN, PFC
+from sertl_analytics.constants.pattern_constants import Indices, CN, DC
 import os
 import time
+
+
+class FeaturesTable(MyTable):
+    def _get_name_(self):
+        return 'Features'
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.PERIOD, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.PERIOD_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.PERIOD_AGGREGATION , CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKER_ID, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.TICKER_NAME, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(DC.PATTERN_TYPE, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(DC.PATTERN_TYPE_ID, CDT.INTEGER)) # 1x = Channel, 2x = Triangle, 3x = TKE, 4x = HS
+        self._columns.append(MyTableColumn(DC.TS_PATTERN_TICK_FIRST, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TS_PATTERN_TICK_LAST, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TS_BREAKOUT, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKS_TILL_PATTERN_FORMED, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_DT, CDT.DATE))
+        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_TIME, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.BREAKOUT_DT, CDT.DATE))
+        self._columns.append(MyTableColumn(DC.BREAKOUT_TIME, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.PATTERN_END_DT, CDT.DATE))
+        self._columns.append(MyTableColumn(DC.PATTERN_END_TIME, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.PATTERN_TOLERANCE_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.BREAKOUT_RANGE_MIN_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_LOW, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_HIGH, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.PATTERN_END_LOW, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.PATTERN_END_HIGH, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.SLOPE_UPPER_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.SLOPE_LOWER_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.SLOPE_REGRESSION_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.SLOPE_BREAKOUT_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.SLOPE_VOLUME_REGRESSION_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.NEXT_PERIOD_HALF_POSITIVE_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.NEXT_PERIOD_FULL_POSITIVE_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.NEXT_PERIOD_HALF_NEGATIVE_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.NEXT_PERIOD_FULL_NEGATIVE_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.AVAILABLE_FIBONACCI_TYPE, CDT.STRING))  # MIN, MAX
+        self._columns.append(MyTableColumn(DC.AVAILABLE_FIBONACCI_TYPE_ID, CDT.INTEGER))  # 0=No, -1=MIN, 1 = MAX
+        self._columns.append(MyTableColumn(DC.EXPECTED_WIN, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.FALSE_BREAKOUT, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.EXPECTED_WIN_REACHED, CDT.INTEGER))
 
 
 class StockDatabase(BaseDatabase):
@@ -102,6 +163,9 @@ class StockDatabase(BaseDatabase):
         dt_now_time_stamp = datetime.now().timestamp()
         self.__update_stock_data_for_single_value__(period, aggregation, symbol, name,
                                                     company_dic, last_loaded_date_dic, dt_now_time_stamp)
+
+    def insert_pattern_features(self, input_dict_list: list):
+        self.__insert_data_into_table__('Features', input_dict_list)
 
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict,
@@ -286,57 +350,11 @@ class StockDatabase(BaseDatabase):
 
     def create_pattern_feature_table(self):
         metadata = MetaData()
-        # Define a new table with a name, count, amount, and valid column: data
-        data = Table('Features', metadata,
-                     Column(PFC.TICKER_ID, String(20)),
-                     Column(PFC.TICKER_NAME, String(100)),
-                     Column(PFC.PATTERN_TYPE, String(100)),
-                     Column(PFC.PATTERN_TYPE_ID, Integer()),  # 1x = Channel, 2x = Triangle, 3x = TKE, 4x = HS
-                     Column(PFC.TS_PATTERN_TICK_FIRST, Integer()),
-                     Column(PFC.TS_PATTERN_TICK_LAST, Integer()),
-                     Column(PFC.TS_BREAKOUT, Integer()),
-                     Column(PFC.TICKS_TILL_PATTERN_FORMED, Integer()),
-                     Column(PFC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT, Integer()),
-                     Column(PFC.DT_BEGIN, Date()),
-                     Column(PFC.TIME_BEGIN, Time()),
-                     Column(PFC.DT_END, Date()),
-                     Column(PFC.TIME_END, Time()),
-                     Column(PFC.TOLERANCE_PCT, Float()),
-                     Column(PFC.BREAKOUT_RANGE_MIN_PCT, Float()),
-                     Column(PFC.BEGIN_LOW, Float()),
-                     Column(PFC.BEGIN_HIGH, Float()),
-                     Column(PFC.END_LOW, Float()),
-                     Column(PFC.END_HIGH, Float()),
-                     Column(PFC.SLOPE_UPPER, Float()),
-                     Column(PFC.SLOPE_LOWER, Float()),
-                     Column(PFC.SLOPE_REGRESSION, Float()),
-                     Column(PFC.SLOPE_BREAKOUT, Float()),
-                     Column(PFC.TOUCH_POINTS_TILL_BREAKOUT_HIGH, Integer()),
-                     Column(PFC.TOUCH_POINTS_TILL_BREAKOUT_LOW, Integer()),
-                     Column(PFC.BREAKOUT_DIRECTION, Integer()),
-                     Column(PFC.VOLUME_CHANGE_AT_BREAKOUT_PCT, Float()),
-                     Column(PFC.SLOPE_VOLUME_REGRESSION, Float()),
-                     Column(PFC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED, Float()),
-                     Column(PFC.PREVIOUS_PERIOD_HALF_UPPER_PCT, Float()),
-                     Column(PFC.PREVIOUS_PERIOD_FULL_UPPER_PCT, Float()),
-                     Column(PFC.PREVIOUS_PERIOD_HALF_LOWER_PCT, Float()),
-                     Column(PFC.PREVIOUS_PERIOD_FULL_LOWER_PCT, Float()),
-                     Column(PFC.NEXT_PERIOD_HALF_POSITIVE_PCT, Float()),
-                     Column(PFC.NEXT_PERIOD_FULL_POSITIVE_PCT, Float()),
-                     Column(PFC.NEXT_PERIOD_HALF_NEGATIVE_PCT, Float()),
-                     Column(PFC.NEXT_PERIOD_FULL_NEGATIVE_PCT, Float()),
-                     Column(PFC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF, Integer()),
-                     Column(PFC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF, Integer()),
-                     Column(PFC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL, Integer()),
-                     Column(PFC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL, Integer()),
-                     Column(PFC.AVAILABLE_FIBONACCI_END, Integer()),  # 0=No, 1=MIN, 2 = MAX
-                     Column(PFC.EXPECTED_WIN, Float()),
-                     Column(PFC.FALSE_BREAKOUT, Integer()),
-                     Column(PFC.EXPECTED_WIN_REACHED, Integer())
-                     )
-
+        feature_table = FeaturesTable()
+        exec(feature_table.get_db_description())
         self.create_database_elements(metadata)
-        print(repr(data))
+        table_obj = metadata.tables.get('Features')
+        print(repr(table_obj))
 
     def __insert_feature_in_feature_table__(self, ticker: str, input_dic: dict):
         try:
@@ -344,6 +362,17 @@ class StockDatabase(BaseDatabase):
         except Exception:
             self.error_handler.catch_exception(__name__)
             print('{}: problem inserting into Features table.'.format(ticker))
+
+    def are_features_already_available(self, features_dict: dict) -> bool:
+        query = "SELECT * FROM Features where {}={} and {}={} and {}='{}' and {}={} and {}={}".format(
+            DC.EQUITY_TYPE_ID, features_dict[DC.EQUITY_TYPE_ID],
+            DC.PERIOD_ID, features_dict[DC.PERIOD_ID],
+            DC.TICKER_ID, features_dict[DC.TICKER_ID],
+            DC.TS_PATTERN_TICK_FIRST, features_dict[DC.TS_PATTERN_TICK_FIRST],
+            DC.TS_PATTERN_TICK_LAST, features_dict[DC.TS_PATTERN_TICK_LAST]
+        )
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.shape[0] > 0
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):

@@ -11,6 +11,53 @@ import os
 from sertl_analytics.myexceptions import ErrorHandler
 
 
+class CDT:  # Column Data Types
+    STRING = 'String'
+    INTEGER = 'Integer'
+    FLOAT = 'Float'
+    DATE = 'Date'
+    TIME = 'Time'
+
+
+class MyTable:
+    def __init__(self):
+        self._name = self._get_name_()
+        self._columns = []
+        self._add_columns_()
+
+    def get_column_name_list(self):
+        return [columns.name for columns in self._columns]
+
+    def get_db_description(self, meta_data: str = 'metadata'):
+        table_str = "Table('" + self._name + "', " + meta_data
+        for columns in self._columns:
+            table_str += ", " + columns.description
+        table_str += ")"
+        print(table_str)
+        return table_str
+
+    def _get_name_(self):
+        pass
+
+    def _add_columns_(self):
+        pass
+
+
+class MyTableColumn:
+    def __init__(self, column_name: str, data_type='String', data_size=''):
+        self._name = column_name
+        self._type = data_type
+        self._size = data_size
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def description(self):
+        return "Column('" + self._name + "', " + self._type + "(" + str(self._size) + "))"
+
+
 class BaseDatabase:
     def __init__(self):
         self.engine = self.__get_engine__()
@@ -61,7 +108,7 @@ class BaseDatabase:
         stmt = insert(table_object)
         results = connection.execute(stmt, insert_data_dic_list)
         connection.close()
-        print('Loaded into {}: {}'.format(table_name, results.rowcount))
+        print('Loaded into {}: {} records.'.format(table_name, results.rowcount))
 
 
 """

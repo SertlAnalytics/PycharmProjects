@@ -11,10 +11,21 @@ class CM:  # coverage mode
     NONE = 'NONE'
 
 
+class EXTREMA:
+    MIN = 'MIN'
+    MAX = 'MAX'
+
+    @staticmethod
+    def get_id(key: str) -> int:
+        return int({EXTREMA.MIN: -1, EXTREMA.MAX: 1}.get(key, 0))
+
 class DIR:
     UP = 'UP'
     DOWN = 'DOWN'
 
+    @staticmethod
+    def get_id(key: str):
+        return {DIR.UP: 1, DIR.DOWN: -1}.get(key)
 
 class FR:  # Fibonnaci Retracements
     R_100 = 1.000
@@ -24,6 +35,16 @@ class FR:  # Fibonnaci Retracements
     R_382 = 0.382
     R_236 = 0.236
     R_000 = 0.000
+
+
+class EQUITY_TYPE:
+    SHARE = 'Shares'
+    COMMODITY = 'Commodity'
+    CRYPTO = 'Crypto_Currencies'
+
+    @staticmethod
+    def get_id(key: str):
+        return {EQUITY_TYPE.SHARE: 1, EQUITY_TYPE.COMMODITY: 10, EQUITY_TYPE.CRYPTO: 20}.get(key)
 
 
 class FT:
@@ -48,13 +69,12 @@ class FT:
                 FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN, FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]
 
     @staticmethod
-    def get_type_id(pattern_type: str):
-        type_dict = {FT.CHANNEL: 10, FT.CHANNEL_UP: 11, FT.CHANNEL_DOWN: 12,
-                     FT.TRIANGLE: 20, FT.TRIANGLE_UP: 21, FT.TRIANGLE_DOWN: 22,
-                     FT.TRIANGLE_TOP: 23, FT.TRIANGLE_BOTTOM: 24,
-                     FT.TKE_UP: 31, FT.TKE_DOWN: 32,
-                     FT.HEAD_SHOULDER: 43, FT.HEAD_SHOULDER_BOTTOM: 44}
-        return type_dict.get(pattern_type, 0)
+    def get_id(key: str):
+        return {FT.CHANNEL: 10, FT.CHANNEL_UP: 11, FT.CHANNEL_DOWN: 12,
+                FT.TRIANGLE: 20, FT.TRIANGLE_UP: 21, FT.TRIANGLE_DOWN: 22,
+                FT.TRIANGLE_TOP: 23, FT.TRIANGLE_BOTTOM: 24,
+                FT.TKE_UP: 31, FT.TKE_DOWN: 32,
+                FT.HEAD_SHOULDER: 43, FT.HEAD_SHOULDER_BOTTOM: 44}.get(key, 0)
 
 
 class Indices:
@@ -73,6 +93,9 @@ class FD:
     HOR = 'horizontal'
     ASC = 'ascending'
     DESC = 'descending'
+
+    def get_id(key: str):
+        return {FD.DESC: -1, FD.HOR: 0, FD.ASC: 1}.get(key)
 
 
 class TT:  # Tick types
@@ -203,7 +226,12 @@ class PSC:  # Pattern Statistics Columns
     STOP_LOSS_MAX_REACHED = 'Max stop loss reached (bound of original range)'
 
 
-class PFC:  # Pattern Feature Columns
+class DC:  # Data Columns
+    EQUITY_TYPE = 'Equity_Type'  # Share, Commodities, Crypto Currency
+    EQUITY_TYPE_ID = 'Equity_Type_ID'  # Share, Commodities, Crypto Currency
+    PERIOD = 'Period'  # Daily, Intraday (min)
+    PERIOD_ID = 'Period_ID'  # Intraday = 0, Daily = 1, Weekly = 2, Monthly = 3, Intraday (min)
+    PERIOD_AGGREGATION = 'Aggregation'
     TICKER_ID = 'Ticker_Id'
     TICKER_NAME = 'Ticker_Name'
     PATTERN_TYPE = 'Pattern_Type'
@@ -213,85 +241,43 @@ class PFC:  # Pattern Feature Columns
     TS_BREAKOUT = 'Timestamp_Breakout'
     TICKS_TILL_PATTERN_FORMED = 'Ticks_Till_Pattern_Formed'
     TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT = 'Ticks_From_Pattern_Formed_Till_Breakout'
-    DT_BEGIN = 'Begin_Date'
-    TIME_BEGIN = 'Begin_Time'
-    DT_END = 'End_Date'
-    TIME_END = 'END_Time'
-    TOLERANCE_PCT = 'Tolerance in %'
-    BREAKOUT_RANGE_MIN_PCT = 'Breakout range in %'
-    BEGIN_LOW = 'Value_Begin_Low'
-    BEGIN_HIGH = 'Value_Begin_High'
-    END_LOW = 'Value_End_Low'
-    END_HIGH = 'Value_End_High'
-    SLOPE_UPPER = 'Slope_Upper'
-    SLOPE_LOWER = 'Slope_Lower'
-    SLOPE_REGRESSION = 'Slope_Regression'
-    SLOPE_BREAKOUT = 'Slope_Breakout'
-    TOUCH_POINTS_TILL_BREAKOUT_HIGH = 'Touch_Points_High_Till_Breakout'
-    TOUCH_POINTS_TILL_BREAKOUT_LOW= 'Touch_Points_Low_Till_Breakout'
+    PATTERN_BEGIN_DT = 'Pattern_Begin_Date'
+    PATTERN_BEGIN_TIME = 'Pattern_Begin_Time'
+    BREAKOUT_DT = 'Breakout_Date'
+    BREAKOUT_TIME = 'Breakout_Time'
+    PATTERN_END_DT = 'Pattern_End_Date'
+    PATTERN_END_TIME = 'Pattern_End_Time'
+    PATTERN_TOLERANCE_PCT = 'Patern_Tolerance_PCT'
+    BREAKOUT_RANGE_MIN_PCT = 'Breakout_Range_Min_PCT'
+    PATTERN_BEGIN_LOW = 'Pattern_Begin_Low'
+    PATTERN_BEGIN_HIGH = 'Pattern_Begin_High'
+    PATTERN_END_LOW = 'Pattern_End_Low'
+    PATTERN_END_HIGH = 'Pattern_End_High'
+    SLOPE_UPPER_PCT = 'Slope_Upper_PCT'
+    SLOPE_LOWER_PCT = 'Slope_Lower_PCT'
+    SLOPE_REGRESSION_PCT = 'Slope_Regression_PCT'
+    SLOPE_VOLUME_REGRESSION_PCT = 'Slope_Volume_Regression_PCT'
+    SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT = 'Slope_Volume_Regression_After_Pattern_Formed_PCT'
+    SLOPE_BREAKOUT_PCT = 'Slope_Breakout_PCT'
+    TOUCH_POINTS_TILL_BREAKOUT_TOP = 'Touch_Points_Till_Breakout_Top'
+    TOUCH_POINTS_TILL_BREAKOUT_BOTTOM = 'Touch_Points_Till_Breakout_Bottom'
     BREAKOUT_DIRECTION = 'Breakout_direction'
-    VOLUME_CHANGE_AT_BREAKOUT_PCT = 'Volume_Change_At_Breakout_in_Percentage'
-    SLOPE_VOLUME_REGRESSION = 'Slope_Volume_Regression'
-    SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED = 'Slope_Volume_Regression_After_Pattern_Formed'
-    PREVIOUS_PERIOD_HALF_UPPER_PCT = 'Max_Value_Percentage_Previous_Period_Half'
-    PREVIOUS_PERIOD_FULL_UPPER_PCT = 'Max_Value_Percentage_Previous_Period_Full'
-    PREVIOUS_PERIOD_HALF_LOWER_PCT = 'Min_Value_Percentage_Previous_Period_Half'
-    PREVIOUS_PERIOD_FULL_LOWER_PCT = 'Min_Value_Percentage_Previous_Period_Full'
-    NEXT_PERIOD_HALF_POSITIVE_PCT = 'Next_Period_Half_Positive_Percentage'
-    NEXT_PERIOD_FULL_POSITIVE_PCT= 'Next_Period_Full_Positive_Percentage'
-    NEXT_PERIOD_HALF_NEGATIVE_PCT= 'Next_Period_Half_Negative_Percentage'
-    NEXT_PERIOD_FULL_NEGATIVE_PCT= 'Next_Period_Full_Negative_Percentage'
+    BREAKOUT_DIRECTION_ID = 'Breakout_direction_ID'
+    VOLUME_CHANGE_AT_BREAKOUT_PCT = 'Volume_Change_At_Breakout_in_PCT'
+    PREVIOUS_PERIOD_HALF_TOP_OUT_PCT = 'Previous_Period_Half_Top_Out_PCT'
+    PREVIOUS_PERIOD_FULL_TOP_OUT_PCT = 'Previous_Period_Full_Top_Out_PCT'
+    PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT = 'Previous_Period_Half_Bottom_Out_PCT'
+    PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT = 'Previous_Period_Full_Bottom_Out_PCT'
+    NEXT_PERIOD_HALF_POSITIVE_PCT = 'Next_Period_Half_Positive_PCT'
+    NEXT_PERIOD_FULL_POSITIVE_PCT= 'Next_Period_Full_Positive_PCT'
+    NEXT_PERIOD_HALF_NEGATIVE_PCT= 'Next_Period_Half_Negative_PCT'
+    NEXT_PERIOD_FULL_NEGATIVE_PCT= 'Next_Period_Full_Negative_PCT'
     TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF = 'Ticks_From_Breakout_Till_Positive_Half'
     TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL = 'Ticks_From_Breakout_Till_Positive_Full'
     TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF = 'Ticks_From_Breakout_Till_Negative_Half'
     TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL = 'Ticks_From_Breakout_Till_Negative_Full'
-    AVAILABLE_FIBONACCI_END = 'Available_Fibonacci_End'  # 0 = No, 1 = Min, 2 = Max
+    AVAILABLE_FIBONACCI_TYPE = 'Available_Fibonacci_Type'  # '', Min, Max
+    AVAILABLE_FIBONACCI_TYPE_ID = 'Available_Fibonacci_Type_ID'  # 0 = No, -1 = Min, 1 = Max
     EXPECTED_WIN = 'Expected_Win'
     FALSE_BREAKOUT = 'False_Breakout'
     EXPECTED_WIN_REACHED = 'Expected_Win_Reached'
-
-    @staticmethod
-    def get_all():
-        return_list = [PFC.TICKER_ID]
-        return_list.append(PFC.TICKER_NAME)
-        return_list.append(PFC.PATTERN_TYPE)
-        return_list.append(PFC.TS_PATTERN_TICK_FIRST)
-        return_list.append(PFC.TS_PATTERN_TICK_LAST)
-        return_list.append(PFC.TS_BREAKOUT)
-        return_list.append(PFC.TICKS_TILL_PATTERN_FORMED)
-        return_list.append(PFC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT)
-        return_list.append(PFC.DT_BEGIN)
-        return_list.append(PFC.DT_END)
-        return_list.append(PFC.TOLERANCE_PCT)
-        return_list.append(PFC.BREAKOUT_RANGE_MIN_PCT)
-        return_list.append(PFC.BEGIN_LOW)
-        return_list.append(PFC.BEGIN_HIGH)
-        return_list.append(PFC.END_LOW)
-        return_list.append(PFC.END_HIGH)
-        return_list.append(PFC.SLOPE_UPPER)
-        return_list.append(PFC.SLOPE_LOWER)
-        return_list.append(PFC.SLOPE_REGRESSION)
-        return_list.append(PFC.SLOPE_BREAKOUT)
-        return_list.append(PFC.TOUCH_POINTS_TILL_BREAKOUT_HIGH)
-        return_list.append(PFC.TOUCH_POINTS_TILL_BREAKOUT_LOW)
-        return_list.append(PFC.BREAKOUT_DIRECTION)
-        return_list.append(PFC.VOLUME_CHANGE_AT_BREAKOUT_PCT)
-        return_list.append(PFC.SLOPE_VOLUME_REGRESSION)
-        return_list.append(PFC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED)
-        return_list.append(PFC.MAX_VALUE_PREVIOUS_PERIOD_HALF_PCT)
-        return_list.append(PFC.MAX_VALUE_PREVIOUS_PERIOD_FULL_PCT)
-        return_list.append(PFC.MIN_VALUE_PREVIOUS_PERIOD_HALF_PCT)
-        return_list.append(PFC.MIN_VALUE_PREVIOUS_PERIOD_FULL_PCT)
-        return_list.append(PFC.MAX_VALUE_NEXT_PERIOD_HALF_PCT)
-        return_list.append(PFC.MAX_VALUE_NEXT_PERIOD_FULL_PCT)
-        return_list.append(PFC.MIN_VALUE_NEXT_PERIOD_HALF_PCT)
-        return_list.append(PFC.MIN_VALUE_NEXT_PERIOD_FULL_PCT)
-        return_list.append(PFC.TICKS_FROM_BREAKOUT_TILL_MAX_HALF)
-        return_list.append(PFC.TICKS_FROM_BREAKOUT_TILL_MIN_HALF)
-        return_list.append(PFC.TICKS_FROM_BREAKOUT_TILL_MAX_FULL)
-        return_list.append(PFC.TICKS_FROM_BREAKOUT_TILL_MIN_HALF)
-        return_list.append(PFC.AVAILABLE_FIBONACCI_END)
-        return_list.append(PFC.EXPECTED_WIN)
-        return_list.append(PFC.FALSE_BREAKOUT)
-        return_list.append(PFC.EXPECTED_WIN_REACHED)
-        return return_list

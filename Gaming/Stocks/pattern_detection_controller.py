@@ -71,11 +71,11 @@ class PatternDetectionController:
             print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
             df_data = self.__get_df_from_source__(ticker, value_dic)
             self.sys_config.pdh.init_by_df(df_data)
-            detector = PatternDetector(self.sys_config)
+            detector = PatternDetector(self.sys_config, self._stock_db)
             detector.parse_for_pattern()
             detector.parse_for_fibonacci_waves()
             detector.check_for_intersections()
-            detector.save_pattern_features_to_database()
+            detector.save_pattern_features()
             self.__handle_statistics__(detector)
 
             if self.sys_config.config.plot_data:
@@ -100,10 +100,11 @@ class PatternDetectionController:
         print('\nProcessing {} ({})...\n'.format(ticker, sys_config.runtime.actual_ticker_name))
         df_data = self.__get_df_from_source__(ticker, value_dict, True)
         self.sys_config.pdh.init_by_df(df_data)
-        detector = PatternDetector(self.sys_config)
+        detector = PatternDetector(self.sys_config, self._stock_db)
         detector.parse_for_pattern()
         detector.parse_for_fibonacci_waves()
         detector.check_for_intersections()
+        detector.save_pattern_features()
         return detector
 
     @property
@@ -178,6 +179,7 @@ class PatternDetectionController:
             self.sys_config.runtime.actual_ticker_name = self._stock_db.get_name_for_symbol(entry_dic[LL.TICKER])
         if self.sys_config.runtime.actual_ticker_name == '':
             self.sys_config.runtime.actual_ticker_name = self.sys_config.config.ticker_dic[entry_dic[LL.TICKER]]
+        self.sys_config.runtime.actual_features_table_columns = stock_database.FeaturesTable().get_column_name_list()
 
     def __show_statistics__(self):
         self.sys_config.config.print()

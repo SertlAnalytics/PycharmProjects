@@ -53,6 +53,7 @@ class RuntimeConfiguration:
     actual_breakout = None
     actual_pattern_range = None
     actual_expected_win_pct = 0
+    actual_features_table_columns = []
 
 
 class PatternConfiguration:
@@ -62,6 +63,7 @@ class PatternConfiguration:
         self.api_period = ApiPeriod.DAILY
         self.api_period_aggregation = 5
         self.api_output_size = ApiOutputsize.COMPACT
+        self.save_pattern_features = True
         self.bound_upper_value = CN.HIGH
         self.bound_lower_value = CN.LOW
         self.plot_data = True

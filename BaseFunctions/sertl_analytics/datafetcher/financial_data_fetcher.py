@@ -19,6 +19,10 @@ class ApiPeriod:
     DAILY = 'DAILY'
     INTRADAY = 'INTRADAY'
 
+    @staticmethod
+    def get_id(period: str):
+        return {ApiPeriod.INTRADAY: 0, ApiPeriod.DAILY: 1, ApiPeriod.WEEKLY: 2}.get(period)
+
 
 class ApiOutputsize:
     COMPACT = 'compact'
