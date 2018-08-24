@@ -419,10 +419,8 @@ class Pattern:
 
     def _get_min_max_value_dict_(self, tick_first: WaveTick, tick_last: WaveTick,
                                  pattern_length: int, data_dict: dict, for_prediction: bool):
-        height_begin = data_dict[DC.PATTERN_BEGIN_HIGH] - data_dict[DC.PATTERN_BEGIN_LOW]
-        height_end = data_dict[DC.PATTERN_END_HIGH] - data_dict[DC.PATTERN_END_LOW]
-        if self.pattern_type in [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.TRIANGLE_UP, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM]:
-            height_end = round((height_begin + height_end)/2, 2)  # to avoid devision by zero
+        # the height at the start is the relative comparison value
+        comp_range = data_dict[DC.PATTERN_BEGIN_HIGH] - data_dict[DC.PATTERN_BEGIN_LOW]
         pattern_length_half = int(pattern_length / 2)
         pos_first = tick_first.position
         pos_last = tick_last.position
@@ -432,13 +430,13 @@ class Pattern:
         pos_next_half = pos_last + pattern_length_half
         value_dict = {}
         value_dict['max_previous_half'] = self._get_df_max_values_(pos_previous_half, pos_first,
-                                                                   data_dict[DC.PATTERN_BEGIN_HIGH], height_begin)
+                                                                   data_dict[DC.PATTERN_BEGIN_HIGH], comp_range)
         value_dict['max_previous_full'] = self._get_df_max_values_(pos_previous_full, pos_first,
-                                                                   data_dict[DC.PATTERN_BEGIN_HIGH], height_begin)
+                                                                   data_dict[DC.PATTERN_BEGIN_HIGH], comp_range)
         value_dict['min_previous_half'] = self._get_df_min_values_(pos_previous_half, pos_first,
-                                                                   data_dict[DC.PATTERN_BEGIN_LOW], height_begin)
+                                                                   data_dict[DC.PATTERN_BEGIN_LOW], comp_range)
         value_dict['min_previous_full'] = self._get_df_min_values_(pos_previous_full, pos_first,
-                                                                   data_dict[DC.PATTERN_BEGIN_LOW], height_begin)
+                                                                   data_dict[DC.PATTERN_BEGIN_LOW], comp_range)
 
         value_dict['positive_next_half'] = 0, 0, 0
         value_dict['positive_next_full'] = 0, 0, 0
@@ -448,22 +446,22 @@ class Pattern:
         if not for_prediction:
             if data_dict[DC.BREAKOUT_DIRECTION] == FD.ASC:
                 value_dict['positive_next_half'] = self._get_df_max_values_(pos_last, pos_next_half,
-                                                                            data_dict[DC.PATTERN_END_HIGH], height_end)
+                                                                            data_dict[DC.PATTERN_END_HIGH], comp_range)
                 value_dict['positive_next_full'] = self._get_df_max_values_(pos_last, pos_next_full,
-                                                                            data_dict[DC.PATTERN_END_HIGH], height_end)
+                                                                            data_dict[DC.PATTERN_END_HIGH], comp_range)
                 value_dict['negative_next_half'] = self._get_df_min_values_(pos_last, pos_next_half,
-                                                                            data_dict[DC.PATTERN_END_HIGH], height_end)
+                                                                            data_dict[DC.PATTERN_END_HIGH], comp_range)
                 value_dict['negative_next_full'] = self._get_df_min_values_(pos_last, pos_next_full,
-                                                                            data_dict[DC.PATTERN_END_HIGH], height_end)
+                                                                            data_dict[DC.PATTERN_END_HIGH], comp_range)
             else:
                 value_dict['positive_next_half'] = self._get_df_min_values_(pos_last, pos_next_half,
-                                                                            data_dict[DC.PATTERN_END_LOW], height_end)
+                                                                            data_dict[DC.PATTERN_END_LOW], comp_range)
                 value_dict['positive_next_full'] = self._get_df_min_values_(pos_last, pos_next_full,
-                                                                            data_dict[DC.PATTERN_END_LOW], height_end)
+                                                                            data_dict[DC.PATTERN_END_LOW], comp_range)
                 value_dict['negative_next_half'] = self._get_df_max_values_(pos_last, pos_next_half,
-                                                                            data_dict[DC.PATTERN_END_LOW], height_end)
+                                                                            data_dict[DC.PATTERN_END_LOW], comp_range)
                 value_dict['negative_next_full'] = self._get_df_max_values_(pos_last, pos_next_full,
-                                                                            data_dict[DC.PATTERN_END_LOW], height_end)
+                                                                            data_dict[DC.PATTERN_END_LOW], comp_range)
         return value_dict
 
     def _get_df_min_values_(self, pos_begin: int, pos_end: int, ref_value: float, comp_range: float):

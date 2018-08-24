@@ -57,6 +57,7 @@ class SystemConfiguration:
         sys_config_copy.db_stock = self.db_stock
         sys_config_copy.predictor_before_breakout = self.predictor_before_breakout
         sys_config_copy.predictor_after_breakout = self.predictor_after_breakout
+        sys_config_copy._prediction_mode_active = self._prediction_mode_active
         return sys_config_copy
 
 
