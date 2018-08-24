@@ -16,7 +16,7 @@ from sertl_analytics.mydates import MyDate
 from sertl_analytics.user_input.confirmation import UserInput
 from datetime import timedelta
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
-from sertl_analytics.constants.pattern_constants import PSC, Indices, CN
+from sertl_analytics.constants.pattern_constants import PSC, EQUITY_TYPE, CN
 from pattern_system_configuration import SystemConfiguration
 from pattern_statistics import PatternStatistics, DetectorStatistics, ConstraintsStatistics
 from pattern_constraints import ConstraintsFactory
@@ -24,6 +24,7 @@ from pattern_detector import PatternDetector
 from pattern_plotting.pattern_plotter import PatternPlotter
 from pattern_database import stock_database
 from datetime import datetime
+from time import sleep
 
 """
 Implementation steps:
@@ -55,23 +56,21 @@ class PatternDetectionController:
         self.detector_statistics = DetectorStatistics(self.sys_config)
         self.pattern_statistics = PatternStatistics(self.sys_config)
         self.constraints_statistics = ConstraintsStatistics()
-        self._stock_db = None
         self._excel_file_with_test_data = None
         self._df_test_data = None
         self._loop_list_ticker = None  # format of an entry (ticker, and_clause, number)
 
     def run_pattern_detector(self, excel_file_test_data: PatternExcelFile = None):
         self._excel_file_with_test_data = excel_file_test_data
-        self.__init_db_and_test_data__()
+        self.__init_test_data__()
         self.__init_loop_list_for_ticker__()
-
         for value_dic in self._loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
             self.__update_runtime_parameters__(value_dic)
             print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
             df_data = self.__get_df_from_source__(ticker, value_dic)
             self.sys_config.pdh.init_by_df(df_data)
-            detector = PatternDetector(self.sys_config, self._stock_db)
+            detector = PatternDetector(self.sys_config)
             detector.parse_for_pattern()
             detector.parse_for_fibonacci_waves()
             detector.check_for_intersections()
@@ -84,6 +83,8 @@ class PatternDetectionController:
                 else:
                     plotter = PatternPlotter(self.sys_config, detector)
                     plotter.plot_data_frame()
+            elif self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+                sleep(15)
 
             if value_dic[LL.NUMBER] >= self.sys_config.config.max_number_securities:
                 break
@@ -94,13 +95,12 @@ class PatternDetectionController:
 
     def get_detector_for_dash(self, sys_config: SystemConfiguration, ticker: str, and_clause: str) -> PatternDetector:
         self.sys_config = sys_config
-        self._stock_db = stock_database.StockDatabase()
         value_dict = {LL.TICKER: ticker, LL.AND_CLAUSE: and_clause, LL.NUMBER: 1}
         self.__update_runtime_parameters__(value_dict)
         print('\nProcessing {} ({})...\n'.format(ticker, sys_config.runtime.actual_ticker_name))
         df_data = self.__get_df_from_source__(ticker, value_dict, True)
         self.sys_config.pdh.init_by_df(df_data)
-        detector = PatternDetector(self.sys_config, self._stock_db)
+        detector = PatternDetector(self.sys_config)
         detector.parse_for_pattern()
         detector.parse_for_fibonacci_waves()
         detector.check_for_intersections()
@@ -119,7 +119,7 @@ class PatternDetectionController:
         if self.sys_config.config.get_data_from_db:
             self.__handle_not_available_symbol__(ticker)
             and_clause = value_dic[LL.AND_CLAUSE]
-            stock_db_df_obj = stock_database.StockDatabaseDataFrame(self._stock_db, ticker, and_clause)
+            stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.sys_config.db_stock, ticker, and_clause)
             return stock_db_df_obj.df_data
         elif ticker in self.sys_config.crypto_ccy_dic:
             if period == ApiPeriod.INTRADAY:
@@ -158,28 +158,30 @@ class PatternDetectionController:
         return df
 
     def __handle_not_available_symbol__(self, ticker):
-        if not self._stock_db.is_symbol_loaded(ticker):
+        if not self.sys_config.db_stock.is_symbol_loaded(ticker):
             if UserInput.get_confirmation('{} is not available. Do you want to load it'.format(ticker)):
                 name = UserInput.get_input('Please enter the name for the symbol {}'.format(ticker))
                 if name == 'x':
                     exit()
-                self._stock_db.update_stock_data_for_symbol(ticker, name)
+                self.sys_config.db_stock.update_stock_data_for_symbol(ticker, name)
             else:
                 exit()
 
     def __update_runtime_parameters__(self, entry_dic: dict):
         self.sys_config.runtime.actual_ticker = entry_dic[LL.TICKER]
-        self.sys_config.runtime.actual_ticker_crypto = \
-            self.sys_config.runtime.actual_ticker in self.sys_config.crypto_ccy_dic
-        self.sys_config.runtime.actual_expected_win_pct = self.sys_config.config.expected_win_pct * \
-                                                           (5 if self.sys_config.runtime.actual_ticker_crypto else 1)
+        if self.sys_config.runtime.actual_ticker in self.sys_config.crypto_ccy_dic:
+            self.sys_config.runtime.actual_ticker_equity_type = EQUITY_TYPE.CRYPTO
+            self.sys_config.runtime.actual_expected_win_pct = 5
+        else:
+            self.sys_config.runtime.actual_ticker_equity_type = EQUITY_TYPE.SHARE
+            self.sys_config.runtime.actual_expected_win_pct = 1
         self.sys_config.runtime.actual_and_clause = entry_dic[LL.AND_CLAUSE]
         self.sys_config.runtime.actual_number = entry_dic[LL.NUMBER]
-        if self._stock_db is not None:
-            self.sys_config.runtime.actual_ticker_name = self._stock_db.get_name_for_symbol(entry_dic[LL.TICKER])
+        if self.sys_config.db_stock is not None:
+            self.sys_config.runtime.actual_ticker_name = \
+                self.sys_config.db_stock.get_name_for_symbol(entry_dic[LL.TICKER])
         if self.sys_config.runtime.actual_ticker_name == '':
             self.sys_config.runtime.actual_ticker_name = self.sys_config.config.ticker_dic[entry_dic[LL.TICKER]]
-        self.sys_config.runtime.actual_features_table_columns = stock_database.FeaturesTable().get_column_name_list()
 
     def __show_statistics__(self):
         self.sys_config.config.print()
@@ -205,14 +207,12 @@ class PatternDetectionController:
             self.sys_config.config.statistics_constraints_excel_file_name))
         writer.save()
 
-    def __init_db_and_test_data__(self):
-        self._stock_db = stock_database.StockDatabase()
-        if self.sys_config.config.get_data_from_db:
-            if self._excel_file_with_test_data is not None:
-                self._df_test_data = pd.ExcelFile(self._excel_file_with_test_data.file_name).parse(0)
-                self._start_row = self._excel_file_with_test_data.file_name.row_start
-                if self._excel_file_with_test_data.row_end == 0:
-                    self._excel_file_with_test_data.row_end = self._df_test_data.shape[0]
+    def __init_test_data__(self):
+        if self.sys_config.config.get_data_from_db and self._excel_file_with_test_data is not None:
+            self._df_test_data = pd.ExcelFile(self._excel_file_with_test_data.file_name).parse(0)
+            self._start_row = self._excel_file_with_test_data.file_name.row_start
+            if self._excel_file_with_test_data.row_end == 0:
+                self._excel_file_with_test_data.row_end = self._df_test_data.shape[0]
 
     def __init_loop_list_for_ticker__(self):
         self._loop_list_ticker = LoopList4Dictionaries()

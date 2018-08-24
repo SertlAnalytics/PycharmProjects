@@ -26,9 +26,8 @@ from pattern_database.stock_database import StockDatabase
 
 
 class PatternDetector:
-    def __init__(self, sys_config: SystemConfiguration, db_stocks: StockDatabase):
+    def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
-        self._db_stocks = db_stocks
         self.pattern_type_list = list(self.sys_config.config.pattern_type_list)
         self.df = self.sys_config.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
@@ -49,10 +48,7 @@ class PatternDetector:
                or self.range_detector_min.are_pattern_ranges_available
 
     def _set_data_dict_(self):
-        if self.sys_config.runtime.actual_ticker in self.sys_config.crypto_ccy_dic:
-            self.data_dict[DC.EQUITY_TYPE] = EQUITY_TYPE.CRYPTO
-        else:
-            self.data_dict[DC.EQUITY_TYPE] = EQUITY_TYPE.SHARE
+        self.data_dict[DC.EQUITY_TYPE] = self.sys_config.runtime.actual_ticker_equity_type
         self.data_dict[DC.EQUITY_TYPE_ID] = EQUITY_TYPE.get_id(self.data_dict[DC.EQUITY_TYPE])
         self.data_dict[DC.PERIOD] = self.sys_config.config.api_period
         self.data_dict[DC.PERIOD_ID] = ApiPeriod.get_id(self.sys_config.config.api_period)
@@ -166,13 +162,12 @@ class PatternDetector:
 
     @staticmethod
     def __check_for_loop_break__(pattern: Pattern, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
-        if counter > number_of_positions:  # maximal number for the whole pattern after its building
+        if counter > number_of_positions:  # maximal number for the whole pattern (from start)
             return True
         if pattern.function_cont.is_tick_breakout_on_wrong_side(tick):
             return True
-        if pattern.constraints.is_breakout_required_after_certain_ticks:
-            if counter > pattern.breakout_required_after_ticks:
-                return True
+        if counter > pattern.breakout_required_after_ticks:
+            return True
         if tick.f_var > pattern.function_cont.f_var_cross_f_upper_f_lower > 0:
             return True
         # if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 6):
@@ -257,8 +252,7 @@ class PatternDetector:
         if pattern_dict is None:
             return None
         pattern_dict.update(self.data_dict)
-        return {col: pattern_dict[col]
-                for col in self.sys_config.runtime.actual_features_table_columns if col in pattern_dict}
+        return {col: pattern_dict[col] for col in self.sys_config.features_table.column_name_list}
 
     def save_pattern_features(self):
         if not self.sys_config.config.save_pattern_features:
@@ -268,7 +262,8 @@ class PatternDetector:
             if pattern.is_part_trade_available():
                 feature_dict = self._get_data_dict_for_features_table_(pattern)
                 if feature_dict is not None:
-                    if not self._db_stocks.are_features_already_available(feature_dict):
+                    # print('save_pattern_features: {}'.format(feature_dict))
+                    if not self.sys_config.db_stock.are_features_already_available(feature_dict):
                         input_list.append(feature_dict)
         if len(input_list) > 0:
-            self._db_stocks.insert_pattern_features(input_list)
+            self.sys_config.db_stock.insert_pattern_features(input_list)

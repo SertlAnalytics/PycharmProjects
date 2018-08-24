@@ -20,6 +20,8 @@ sys_config = SystemConfiguration()
 sys_config.config.get_data_from_db = False
 sys_config.config.api_period = ApiPeriod.INTRADAY
 sys_config.config.pattern_type_list = FT.get_all()
+sys_config.config.prediction_mode_active = False
+sys_config.config.save_pattern_features = True
 # sys_config.config.pattern_type_list = [FT.CHANNEL_DOWN]
 # sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN, FT.TRIANGLE_UP, FT.TRIANGLE_BOTTOM]
 sys_config.config.plot_data = True
@@ -48,11 +50,9 @@ sys_config.config.use_index(Indices.CRYPTO_CCY)
 sys_config.config.and_clause = "Date BETWEEN '2018-03-01' AND '2019-09-21'"
 # sys_config.config.and_clause = ''
 sys_config.config.api_output_size = ApiOutputsize.COMPACT
-
 my_dash = MyDash4Pattern(sys_config)
 my_dash.get_pattern()
 my_dash.run_on_server()
-
 my_profiler.disable(False)
 
 # Head Shoulder: GE Date BETWEEN '2016-01-25' AND '2019-10-30'

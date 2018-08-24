@@ -231,15 +231,34 @@ class HeadShoulderFormation:
         self.f_neckline_param = None
 
     @property
-    def distance_neckline(self):
-        return self.tick_neckline_right.position - self.tick_neckline_left.position
+    def distance_start_to_tick_left_neckline(self) -> int:
+        return int(self.tick_neckline_left.position - self.tick_previous_breakout.position)
+
+    @property
+    def distance_neckline(self) -> int:
+        return int(self.tick_neckline_right.position - self.tick_neckline_left.position)
 
     @property
     def expected_win(self):  # distance from neckline to first shoulder
+        return self.value_distance_from_neckline_to_left_shoulder
+
+    @property
+    def value_distance_from_neckline_to_left_shoulder(self) -> float:  # distance from neckline to first shoulder
         if self.pattern_type == FT.HEAD_SHOULDER:
             return self.tick_shoulder_left.high - self.tick_neckline_left.low
         else:
             return self.tick_neckline_left.high - self.tick_shoulder_left.low
+
+    @property
+    def height(self):  # distance from neckline to head
+        if self.pattern_type == FT.HEAD_SHOULDER:
+            return self.tick_head.high - self.tick_neckline_left.low
+        else:
+            return self.tick_neckline_left.high - self.tick_head.low
+
+    def is_left_shoulder_height_compliant(self) -> bool:
+        required_relation = 0.2
+        return self.value_distance_from_neckline_to_left_shoulder/self.height > required_relation
 
     def is_neckline_distance_compliant(self) -> bool:
         allowed_relation = 2.5
@@ -456,6 +475,9 @@ class PatternRangeDetectorHeadShoulderBase:
         hsf.tick_shoulder_left = self._get_shoulder_tick_(hsf, True)
         hsf.tick_shoulder_right = self._get_shoulder_tick_(hsf, False)
         if hsf.tick_shoulder_left is None or hsf.tick_shoulder_right is None:
+            return None
+
+        if not hsf.is_left_shoulder_height_compliant():
             return None
 
         if hsf.pattern_type == FT.HEAD_SHOULDER:

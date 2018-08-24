@@ -45,7 +45,6 @@ class Constraints:
         self.f_lower_percentage_bounds = self._get_f_lower_percentage_bounds_()
         self.f_regression_percentage_bounds = self._get_f_regression_percentage_bounds_()
         self.height_end_start_relation_bounds = self._get_height_end_start_relation_bounds_()
-        self.is_breakout_required_after_certain_ticks = self.__is_breakout_required_after_certain_ticks__()
         self._fill_global_constraints__()
 
     def get_value_dict(self):
@@ -56,8 +55,7 @@ class Constraints:
                     f_upper_percentage_bounds = self.f_upper_percentage_bounds,
                     f_lower_percentage_bounds = self.f_lower_percentage_bounds,
                     height_end_start_relation_bounds = self.height_end_start_relation_bounds,
-                    f_regression_percentage_bounds = self.f_regression_percentage_bounds,
-                    is_breakout_required_after_certain_ticks = self.is_breakout_required_after_certain_ticks)
+                    f_regression_percentage_bounds = self.f_regression_percentage_bounds)
 
     def are_constraints_fulfilled(self, pattern_range: PatternRange, f_cont) -> bool:
         check_dic = {}
@@ -260,8 +258,8 @@ class ChannelConstraints(Constraints):
         self.global_series = ['OR',
                               [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
                               [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in],
-                              [SVC.U_in, SVC.L_in, SVC.L_in, SVC.U_in, SVC.U_in],
-                              [SVC.L_in, SVC.U_in, SVC.U_in, SVC.L_in, SVC.L_in]]
+                              [SVC.U_in, SVC.L_in, SVC.L_in, SVC.U_in, SVC.L_in],
+                              [SVC.L_in, SVC.U_in, SVC.U_in, SVC.L_in, SVC.U_in]]
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():
@@ -300,10 +298,6 @@ class ChannelDownConstraints(ChannelConstraints):
 
 
 class HeadShoulderConstraints(Constraints):
-    @staticmethod
-    def __is_breakout_required_after_certain_ticks__():
-        return True
-
     @staticmethod
     def __get_tolerance_pct__():
         return 0.02
@@ -374,9 +368,8 @@ class TriangleConstraints(Constraints):
                              CountConstraint(SVC.L_in, '>=', 3)]
         self.global_series = ['OR',
                               [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
-                              [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in],
-                              [SVC.L_in, SVC.L_in, SVC.U_in, SVC.U_in, SVC.L_in],
-                              [SVC.U_in, SVC.U_in, SVC.L_in, SVC.L_in, SVC.U_in]]
+                              [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in]
+                              ]
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():

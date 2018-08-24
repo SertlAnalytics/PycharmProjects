@@ -24,20 +24,31 @@ class MyTable:
         self._name = self._get_name_()
         self._columns = []
         self._add_columns_()
+        self._column_name_list = self.__get_column_name_list__()
+        self._description = self.__get_description__()
 
-    def get_column_name_list(self):
+    @property
+    def column_name_list(self):
+        return self._column_name_list
+
+    @property
+    def description(self):
+        return self._description
+
+    def __get_column_name_list__(self):
         return [columns.name for columns in self._columns]
 
-    def get_db_description(self, meta_data: str = 'metadata'):
+    def __get_description__(self, meta_data: str = 'metadata'):
         table_str = "Table('" + self._name + "', " + meta_data
         for columns in self._columns:
             table_str += ", " + columns.description
         table_str += ")"
-        print(table_str)
+        # print('MyTable.__get_description__: '.format(table_str))
         return table_str
 
-    def _get_name_(self):
-        pass
+    @staticmethod
+    def _get_name_():
+        return 'MyTable'
 
     def _add_columns_(self):
         pass
@@ -48,6 +59,7 @@ class MyTableColumn:
         self._name = column_name
         self._type = data_type
         self._size = data_size
+        self._description = self.__get_description__()
 
     @property
     def name(self):
@@ -55,6 +67,9 @@ class MyTableColumn:
 
     @property
     def description(self):
+        return self._description
+
+    def __get_description__(self):
         return "Column('" + self._name + "', " + self._type + "(" + str(self._size) + "))"
 
 

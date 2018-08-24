@@ -215,7 +215,7 @@ class MyDash4Pattern(MyDashBase):
     def __init__(self, sys_config: SystemConfiguration):
         MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH())
         self.sys_config = sys_config
-        self.sys_config_second = deepcopy(self.sys_config)
+        self.sys_config_second = sys_config.get_semi_deep_copy()
         self._color_handler = PatternColorHandler()
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None

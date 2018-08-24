@@ -62,12 +62,12 @@ class PatternPart:
             self.__set_xy_center__()
             self.__set_xy_regression__()
 
-    def get_annotation_parameter(self, color: str = 'blue') -> AnnotationParameter:
+    def get_annotation_parameter(self, text_for_prediction: str, color: str = 'blue') -> AnnotationParameter:
         annotation_param = AnnotationParameter()
         offset_x = self.__get_annotation_offset_x__()
         offset_y = self.__get_annotation_offset_y__()
         offset = [offset_x, offset_y]
-        annotation_param.text = self.__get_text_for_annotation__()
+        annotation_param.text = self.__get_text_for_annotation__(text_for_prediction)
         annotation_param.xy = self.__xy_center
         annotation_param.xy_text = (self.__xy_center[0] + offset[0], self.__xy_center[1] + offset[1])
         annotation_param.visible = False
@@ -186,7 +186,7 @@ class PatternPart:
         # print('u={}, l={}, reg={}'.format(f_upper_slope, f_lower_slope, f_regression_slope))
         return f_upper_slope, f_lower_slope, f_regression_slope
 
-    def __get_text_for_annotation__(self):
+    def __get_text_for_annotation__(self, text_for_prediction: str):
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_percent, f_lower_percent, f_reg_percent = self.get_slope_values()
         if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
@@ -224,6 +224,8 @@ class PatternPart:
                 else date_forecast.date())
 
         breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)
+        if text_for_prediction != '':
+            breakout_str += '\n{}'.format(text_for_prediction)
 
         return '{}\n{}\n{}\n{}'.format(type_date, slopes, height, breakout_str)
 

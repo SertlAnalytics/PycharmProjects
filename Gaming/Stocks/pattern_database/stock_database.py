@@ -8,7 +8,6 @@ Date: 2018-05-14
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, DateTime, Time
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame, MyTable, MyTableColumn, CDT
-from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod, ApiOutputsize
 from sertl_analytics.mydates import MyDate
@@ -22,8 +21,40 @@ import time
 
 
 class FeaturesTable(MyTable):
-    def _get_name_(self):
-        return 'Features'
+    def __init__(self):
+        MyTable.__init__(self)
+        self._feature_columns_before_breakout = self.__get_feature_columns_before_breakout__()
+        self._feature_columns_after_breakout = self.__get_feature_columns_after_breakout__()
+        self._label_columns_before_breakout = self.__get_label_columns_before_breakout__()
+        self._label_columns_after_breakout = self.__get_label_columns_after_breakout__()
+        self._query_for_feature_and_label_data_before_breakout = \
+            self.__get_query_for_feature_and_label_data_before_breakout__()
+        self._query_for_feature_and_label_data_after_breakout = \
+            self.__get_query_for_feature_and_label_data_after_breakout__()
+
+    @property
+    def features_columns_before_breakout(self):
+        return self._feature_columns_before_breakout
+
+    @property
+    def features_columns_after_breakout(self):
+        return self._feature_columns_after_breakout
+
+    @property
+    def label_columns_before_breakout(self):
+        return self._label_columns_before_breakout
+
+    @property
+    def label_columns_after_breakout(self):
+        return self._label_columns_after_breakout
+
+    @property
+    def query_for_feature_and_label_data_before_breakout(self):
+        return self._query_for_feature_and_label_data_before_breakout
+
+    @property
+    def query_for_feature_and_label_data_after_breakout(self):
+        return self._query_for_feature_and_label_data_after_breakout
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
@@ -80,6 +111,58 @@ class FeaturesTable(MyTable):
         self._columns.append(MyTableColumn(DC.EXPECTED_WIN, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.FALSE_BREAKOUT, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.EXPECTED_WIN_REACHED, CDT.INTEGER))
+
+    @staticmethod
+    def _get_name_():
+        return 'Features'
+
+    def __get_query_for_feature_and_label_data_before_breakout__(self) -> str:
+        return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_before_breakout__())
+
+    def __get_query_for_feature_and_label_data_after_breakout__(self):
+        return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_after_breakout__())
+
+    def __get_concatenated_feature_label_columns_before_breakout__(self):
+        return ', '.join(self._feature_columns_before_breakout + self._label_columns_before_breakout)
+
+    def __get_concatenated_feature_label_columns_after_breakout__(self):
+        return ', '.join(self._feature_columns_after_breakout + self._label_columns_after_breakout)
+
+    @staticmethod
+    def __get_feature_columns_after_breakout__():
+        return [DC.EQUITY_TYPE_ID, DC.PERIOD_ID, DC.PERIOD_AGGREGATION, DC.PATTERN_TYPE_ID,
+                DC.TICKS_TILL_PATTERN_FORMED, DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT,
+                DC.SLOPE_UPPER_PCT, DC.SLOPE_LOWER_PCT, DC.SLOPE_REGRESSION_PCT, DC.SLOPE_BREAKOUT_PCT,
+                DC.SLOPE_VOLUME_REGRESSION_PCT, DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT,
+                DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM,
+                DC.BREAKOUT_DIRECTION_ID, DC.VOLUME_CHANGE_AT_BREAKOUT_PCT,
+                DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT,
+                DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT,
+                DC.AVAILABLE_FIBONACCI_TYPE_ID]
+
+    @staticmethod
+    def __get_feature_columns_before_breakout__():
+        base_list = FeaturesTable.__get_feature_columns_after_breakout__()
+        del base_list[base_list.index(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT)]
+        del base_list[base_list.index(DC.BREAKOUT_DIRECTION_ID)]
+        del base_list[base_list.index(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT)]
+        return base_list
+
+    @staticmethod
+    def __get_label_columns_after_breakout__():
+        return [DC.NEXT_PERIOD_HALF_POSITIVE_PCT, DC.NEXT_PERIOD_FULL_POSITIVE_PCT,
+                DC.NEXT_PERIOD_HALF_NEGATIVE_PCT, DC.NEXT_PERIOD_FULL_NEGATIVE_PCT,
+                DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF, DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF,
+                DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL, DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL,
+                DC.FALSE_BREAKOUT]
+
+    @staticmethod
+    def __get_label_columns_before_breakout__():
+        return [DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT, DC.BREAKOUT_DIRECTION_ID, DC.FALSE_BREAKOUT]
+
+    @staticmethod
+    def is_label_column_for_regression(label_column: str):
+        return label_column[-4:] == '_PCT'
 
 
 class StockDatabase(BaseDatabase):
@@ -351,7 +434,7 @@ class StockDatabase(BaseDatabase):
     def create_pattern_feature_table(self):
         metadata = MetaData()
         feature_table = FeaturesTable()
-        exec(feature_table.get_db_description())
+        exec(feature_table.description())
         self.create_database_elements(metadata)
         table_obj = metadata.tables.get('Features')
         print(repr(table_obj))

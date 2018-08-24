@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, Indices, CN
+from sertl_analytics.constants.pattern_constants import FT, Indices, CN, EQUITY_TYPE
 from pattern_database import stock_database as sdb
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiOutputsize, ApiPeriod
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
@@ -46,14 +46,13 @@ class RuntimeConfiguration:
     actual_tick_position = 0
     actual_number = 0
     actual_ticker = ''
-    actual_ticker_crypto = False
+    actual_ticker_equity_type = EQUITY_TYPE.NONE
     actual_ticker_name = ''
     actual_and_clause = ''
     actual_pattern_type = FT.NONE
     actual_breakout = None
     actual_pattern_range = None
     actual_expected_win_pct = 0
-    actual_features_table_columns = []
 
 
 class PatternConfiguration:
@@ -92,7 +91,14 @@ class PatternConfiguration:
 
     @property
     def range_detector_tolerance_pct(self):
-        return 0.001 if self.api_period == ApiPeriod.INTRADAY else 0.005
+        if self.api_period == ApiPeriod.INTRADAY:
+            if self.api_period_aggregation < 5:
+                return 0.0002
+            elif self.api_period_aggregation == 5:
+                return 0.0005
+            else:
+                return 0.001
+        return 0.005
 
     @property
     def expected_win_pct(self):

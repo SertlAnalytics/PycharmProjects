@@ -38,6 +38,7 @@ class FR:  # Fibonnaci Retracements
 
 
 class EQUITY_TYPE:
+    NONE = 'None'
     SHARE = 'Shares'
     COMMODITY = 'Commodity'
     CRYPTO = 'Crypto_Currencies'
