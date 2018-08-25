@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, FCC, FD, DC, CN, SVC, EXTREMA, EQUITY_TYPE
+from sertl_analytics.constants.pattern_constants import FT, FCC, FD, DC, CN, SVC, EXTREMA, EQUITY_TYPE, PT
 import numpy as np
 import math
 from pattern_system_configuration import SystemConfiguration, debugger
@@ -69,7 +69,7 @@ class Pattern:
         self.df = api.sys_config.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
         self.df_min_max = api.sys_config.pdh.pattern_data.df_min_max
-        self.tick_distance = api.sys_config.pdh.pattern_data.tick_f_var_distance
+        # self.tick_distance = api.sys_config.pdh.pattern_data.tick_f_var_distance
         self.constraints = api.constraints
         self.pattern_range = api.pattern_range
         self.ticks_initial = 0
@@ -90,6 +90,7 @@ class Pattern:
         self.intersects_with_fibonacci_wave = False
         self.available_fibonacci_end_type = None  #  Min, Max
         self.breakout_required_after_ticks = self.__breakout_required_after_ticks__()
+        self.y_predict_touch_points = None
         self.y_predict_before_breakout = None
         self.y_predict_after_breakout = None
 
@@ -107,34 +108,49 @@ class Pattern:
         self.xy_center = self._part_main.xy_center
         self.date_first = self._part_main.date_first
         self.date_last = self._part_main.date_last
-        self.__calculate_y_predict__(True)
+        self.__calculate_y_predict__(PT.TOUCH_POINTS)
+        self.__calculate_y_predict__(PT.BEFORE_BREAKOUT)
 
     def add_part_trade(self, part_trade: PatternPart):
         self._part_trade = part_trade
         self.xy_trade = self._part_trade.xy
-        self.__calculate_y_predict__(False)
+        self.__calculate_y_predict__(PT.AFTER_BREAKOUT)
 
-    def __calculate_y_predict__(self, before_breakout: bool):
+    def __calculate_y_predict__(self, prediction_type: str):
         if not self.sys_config.prediction_mode_active:
             return
-        if before_breakout:
-            x_data = self.get_x_data_for_prediction_before_breakout()
-            if x_data is None:
-                return
-            self.y_predict_before_breakout = self.sys_config.predictor_before_breakout.predict_for_label_columns(x_data)
-            # self.__print__prediction__(self.y_predict_before_breakout, before_breakout)
-        else:
-            x_data = self.get_x_data_for_prediction_after_breakout()
-            if x_data is None:
-                return
-            self.y_predict_after_breakout = self.sys_config.predictor_after_breakout.predict_for_label_columns(x_data)
-            # self.__print__prediction__(self.y_predict_after_breakout, before_breakout)
+        if prediction_type == PT.TOUCH_POINTS:
+            self.__calculate_y_predict_touch_points__()
+            # self.__print__prediction__(self.y_predict_touch_points, prediction_type)
+        elif prediction_type == PT.BEFORE_BREAKOUT:
+            self.__calculate_y_predict_before_breakout__()
+            # self.__print__prediction__(self.y_predict_before_breakout, prediction_type)
+        elif prediction_type == PT.AFTER_BREAKOUT:
+            self.__calculate_y_predict_after_breakout__()
+            # self.__print__prediction__(self.y_predict_after_breakout, prediction_type)
 
-    def __print__prediction__(self, prediction_dict: dict, before_breakout: bool):
+    def __calculate_y_predict_touch_points__(self):
+        x_data = self.get_x_data_for_prediction_touch_points()
+        if x_data is None:
+            return
+        self.y_predict_touch_points = self.sys_config.predictor_touch_points.predict_for_label_columns(x_data)
+
+    def __calculate_y_predict_before_breakout__(self):
+        x_data = self.get_x_data_for_prediction_before_breakout()
+        if x_data is None:
+            return
+        self.y_predict_before_breakout = self.sys_config.predictor_before_breakout.predict_for_label_columns(x_data)
+
+    def __calculate_y_predict_after_breakout__(self):
+        x_data = self.get_x_data_for_prediction_after_breakout()
+        if x_data is None:
+            return
+        self.y_predict_after_breakout = self.sys_config.predictor_after_breakout.predict_for_label_columns(x_data)
+
+    def __print__prediction__(self, prediction_dict: dict, prediction_type: str):
         pos_breakout = '-' if self.breakout is None else self.breakout.tick_breakout.position
-        param_str = 'y_predict_before_breakout' if before_breakout else 'y_predict_after_breakout'
         print('pattern.add_parts.. {}/{}: {} = {}'.format(
-            self.pattern_range.position_list, pos_breakout, param_str, prediction_dict))
+            self.pattern_range.position_list, pos_breakout, prediction_type, prediction_dict))
 
     def get_f_upper_trade(self):
         if self.breakout.breakout_direction == FD.DESC:
@@ -198,12 +214,15 @@ class Pattern:
                 max(h_pos, f_pos), max(h_neg, f_neg), max(ticks_h_pos, ticks_f_pos), max(ticks_h_neg, ticks_f_neg),
                 false_breakout_str)
         elif not self.was_breakout_done() and self.y_predict_before_breakout is not None:
+            points_top = self.y_predict_touch_points[DC.TOUCH_POINTS_TILL_BREAKOUT_TOP]
+            points_bottom = self.y_predict_touch_points[DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM]
             ticks = self.y_predict_before_breakout[DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT]
             direction = self.y_predict_before_breakout[DC.BREAKOUT_DIRECTION_ID]
             direction_str = 'ASC' if direction == 1 else 'DESC'
             false_breakout = self.y_predict_before_breakout[DC.FALSE_BREAKOUT]
             false_breakout_str = 'false !!!' if false_breakout == 1 else 'true - GO'
-            return 'Prediction: {}-Breakout after {} ticks - {}'.format(direction_str, ticks, false_breakout_str)
+            return 'Prediction: {}-Breakout after {} ticks and {}/{} touches - {}'.format(
+                direction_str, ticks, points_top, points_bottom, false_breakout_str)
         return 'Prediction: sorry - not enough data (previous period)'
 
     def fill_result_set(self):
@@ -291,24 +310,29 @@ class Pattern:
         else:
             return tick.close < self.trade_result.limit and (tick.close - tick.low)/tick.close < threshold
 
+    def get_x_data_for_prediction_touch_points(self):
+        return self.__get_x_data_for_prediction__(PT.TOUCH_POINTS)
+
     def get_x_data_for_prediction_before_breakout(self):
-        return self.__get_x_data_for_prediction__(True)
+        return self.__get_x_data_for_prediction__(PT.BEFORE_BREAKOUT)
 
     def get_x_data_for_prediction_after_breakout(self):
-        return self.__get_x_data_for_prediction__(False)
+        return self.__get_x_data_for_prediction__(PT.AFTER_BREAKOUT)
 
-    def __get_x_data_for_prediction__(self, before_breakout: bool):
+    def __get_x_data_for_prediction__(self, prediction_type: str):
         data_dict = self.get_data_dict(True)
         if data_dict is None:
             return None
         self.__add_missing_keys_to_data_dict__(data_dict)
-        if before_breakout:
+        if prediction_type == PT.TOUCH_POINTS:
+            feature_columns = self.sys_config.features_table.feature_columns_touch_points
+        elif prediction_type == PT.BEFORE_BREAKOUT:
             feature_columns = self.sys_config.features_table.features_columns_before_breakout
         else:
             feature_columns = self.sys_config.features_table.features_columns_after_breakout
         data_list = [data_dict[feature] for feature in feature_columns]
         np_array = np.array(data_list).reshape(1, len(data_list))
-        # print('np_array.shape={}'.format(np_array.shape))
+        # print('{}: np_array.shape={}'.format(prediction_type, np_array.shape))
         return np_array
 
     def __add_missing_keys_to_data_dict__(self, data_dict: dict):

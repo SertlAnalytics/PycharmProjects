@@ -156,6 +156,17 @@ class PatternPredictor:
         plt.show()
 
 
+class PatternPredictorTouchPoints(PatternPredictor):
+    def __get_feature_columns__(self):
+        return self.feature_table.feature_columns_touch_points
+
+    def __get_label_columns__(self):
+        return self.feature_table.label_columns_touch_points
+
+    def __get_query_for_feature_and_label_data__(self):
+        return self.feature_table.query_for_feature_and_label_data_touch_points
+
+
 class PatternPredictorBeforeBreakout(PatternPredictor):
     def __get_feature_columns__(self):
         return self.feature_table.features_columns_before_breakout

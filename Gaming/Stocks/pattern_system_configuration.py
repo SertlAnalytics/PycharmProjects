@@ -11,7 +11,7 @@ from pattern_data_container import PatternDataHandler
 from pattern_configuration import PatternConfiguration, RuntimeConfiguration, PatternDebugger
 from pattern_database import stock_database
 from copy import deepcopy
-from pattern_predictor import PatternPredictorBeforeBreakout, PatternPredictorAfterBreakout
+from pattern_predictor import PatternPredictorBeforeBreakout, PatternPredictorAfterBreakout, PatternPredictorTouchPoints
 
 
 class SystemConfiguration:
@@ -24,6 +24,7 @@ class SystemConfiguration:
         self.pdh = PatternDataHandler(self.config)
         self.features_table = stock_database.FeaturesTable()
         self.db_stock = stock_database.StockDatabase()
+        self.predictor_touch_points = None
         self.predictor_before_breakout = None
         self.predictor_after_breakout = None
         self._prediction_mode_active = False
@@ -39,6 +40,7 @@ class SystemConfiguration:
     prediction_mode_active = property(__get_prediction_mode_active__, __set_prediction_mode_active__)
 
     def __init__predictors__(self):
+        self.predictor_touch_points = PatternPredictorTouchPoints(self.features_table, self.db_stock)
         self.predictor_before_breakout = PatternPredictorBeforeBreakout(self.features_table, self.db_stock)
         self.predictor_after_breakout = PatternPredictorAfterBreakout(self.features_table, self.db_stock)
 
@@ -55,6 +57,7 @@ class SystemConfiguration:
         sys_config_copy.pdh = self.pdh
         sys_config_copy.features_table = self.features_table
         sys_config_copy.db_stock = self.db_stock
+        sys_config_copy.predictor_touch_points = self.predictor_touch_points
         sys_config_copy.predictor_before_breakout = self.predictor_before_breakout
         sys_config_copy.predictor_after_breakout = self.predictor_after_breakout
         sys_config_copy._prediction_mode_active = self._prediction_mode_active

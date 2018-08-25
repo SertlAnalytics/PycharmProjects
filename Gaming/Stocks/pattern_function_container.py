@@ -151,7 +151,20 @@ class PatternFunctionContainer:
     def __set_f_var_cross_f_upper_f_lower__(self):
         if self._f_upper[1] < self._f_lower[1]:
             for n in range(self._tick_last.position, self._tick_last.position + 3 * self.number_of_positions):
-                f_var = self._tick_last.f_var + (n - self._tick_last.position) * self.sys_config.pdh.pattern_data.tick_f_var_distance
+                tick = self.sys_config.pdh.pattern_data.get_tick_by_pos(n)
+                f_var = tick.f_var
+                u = self._f_upper(f_var)
+                l = self._f_lower(f_var)
+                if self._f_upper(f_var) < self._f_lower(f_var):
+                    self._f_var_cross_f_upper_f_lower = f_var
+                    self._position_cross_f_upper_f_lower = n
+                    break
+
+    def __set_f_var_cross_f_upper_f_lower_OLD__(self):  # ToDo - remove it later - eventual with tick_f_var_distance..
+        if self._f_upper[1] < self._f_lower[1]:
+            for n in range(self._tick_last.position, self._tick_last.position + 3 * self.number_of_positions):
+                f_var = self._tick_last.f_var + \
+                        (n - self._tick_last.position) * self.sys_config.pdh.pattern_data.tick_f_var_distance
                 u = self._f_upper(f_var)
                 l = self._f_lower(f_var)
                 if self._f_upper(f_var) < self._f_lower(f_var):

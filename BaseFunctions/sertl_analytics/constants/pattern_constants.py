@@ -78,6 +78,15 @@ class FT:
                 FT.HEAD_SHOULDER: 43, FT.HEAD_SHOULDER_BOTTOM: 44}.get(key, 0)
 
 
+class PT:  # PredictorType
+    TOUCH_POINTS = 'touch_points'
+    BEFORE_BREAKOUT = 'before_breakout'
+    AFTER_BREAKOUT = 'after_breakout'
+
+    def get_id(key: str):
+        return {PT.TOUCH_POINTS: 1, PT.BEFORE_BREAKOUT: 2, PT.AFTER_BREAKOUT: 3}.get(key)
+
+
 class Indices:
     DOW_JONES = 'Dow Jones'
     NASDAQ100 = 'Nasdaq 100'

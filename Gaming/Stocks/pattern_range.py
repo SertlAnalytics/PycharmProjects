@@ -10,7 +10,7 @@ from sertl_analytics.plotter.my_plot import MyPlotHelper
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.mymath import ToleranceCalculator
-from pattern_system_configuration import SystemConfiguration
+from pattern_system_configuration import SystemConfiguration, debugger
 import math
 import pandas as pd
 import numpy as np
@@ -384,7 +384,9 @@ class PatternRangeDetector:
                     next_position_list.append(tick_k.position)
                 else:
                     last_tick = self.tick_list[next_position_candidates_list[-1]]
-                    if self.__is_last_tick_in_tolerance_range__(last_tick, f_param_i_k):
+                    last_tick_f_param = next_position_linear_f_params[-1]
+                    # if self.__is_last_tick_in_tolerance_range__(last_tick, f_param_i_k):
+                    if self.__is_next_tick_in_tolerance_range__(tick_k, last_tick_f_param):
                         next_position_candidates_list.append(k)
                         next_position_linear_f_params.append(f_param)
                         next_position_list.append(tick_k.position)
@@ -394,7 +396,10 @@ class PatternRangeDetector:
         pass
 
     def __is_last_tick_in_tolerance_range__(self, tick_last: WaveTick, f_param_new_tick: np.poly1d):
-       pass
+        pass
+
+    def __is_next_tick_in_tolerance_range__(self, tick_next: WaveTick, f_param_last_tick: np.poly1d):
+        pass
 
     def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick) -> np.poly1d:
         pass
@@ -434,6 +439,11 @@ class PatternRangeDetectorMax(PatternRangeDetector):
         v_2 = f_param_new_tick(tick_last.f_var)
         return ToleranceCalculator.are_values_in_tolerance_range(v_1, v_2, self._tolerance_pct)
 
+    def __is_next_tick_in_tolerance_range__(self, tick_next: WaveTick, f_param_last_tick: np.poly1d):
+        v_1 = tick_next.high
+        v_2 = f_param_last_tick(tick_next.f_var)
+        return ToleranceCalculator.are_values_in_tolerance_range(v_1, v_2, self._tolerance_pct)
+
 
 class PatternRangeDetectorMin(PatternRangeDetector):
     def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick) -> np.poly1d:
@@ -451,6 +461,11 @@ class PatternRangeDetectorMin(PatternRangeDetector):
     def __is_last_tick_in_tolerance_range__(self, tick_last: WaveTick, f_param_new_tick: np.poly1d):
         v_1 = tick_last.low
         v_2 = f_param_new_tick(tick_last.f_var)
+        return ToleranceCalculator.are_values_in_tolerance_range(v_1, v_2, self._tolerance_pct)
+
+    def __is_next_tick_in_tolerance_range__(self, tick_next: WaveTick, f_param_last_tick: np.poly1d):
+        v_1 = tick_next.low
+        v_2 = f_param_last_tick(tick_next.f_var)
         return ToleranceCalculator.are_values_in_tolerance_range(v_1, v_2, self._tolerance_pct)
 
 

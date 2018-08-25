@@ -37,7 +37,6 @@ class PatternPart:
         self.pdh = self.sys_config.pdh
         self.function_cont = function_cont
         self.df = self.pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
-        self.tick_distance = self.pdh.pattern_data.tick_f_var_distance
         self.tick_list = []
         self.pattern_type = self.sys_config.runtime.actual_pattern_type
         self.breakout = self.sys_config.runtime.actual_breakout
@@ -79,7 +78,7 @@ class PatternPart:
         return self.tick_last.position - self.tick_first.position
 
     def __get_annotation_offset_x__(self):
-        width = 25 * self.tick_distance
+        width = 25 * self.pdh.pattern_data.tick_f_var_distance
         if self.__xy_center[0] - self.pdh.pattern_data.tick_first.f_var <= width:
             return -width
         else:
@@ -224,7 +223,7 @@ class PatternPart:
                 else date_forecast.date())
 
         breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)
-        if text_for_prediction != '':
+        if self.sys_config.prediction_mode_active:
             breakout_str += '\n{}'.format(text_for_prediction)
 
         return '{}\n{}\n{}\n{}'.format(type_date, slopes, height, breakout_str)

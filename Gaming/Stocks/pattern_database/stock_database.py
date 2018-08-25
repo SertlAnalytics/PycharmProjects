@@ -23,14 +23,22 @@ import time
 class FeaturesTable(MyTable):
     def __init__(self):
         MyTable.__init__(self)
+        self._feature_columns_touch_points = self.__get_feature_columns_touch_points__()
         self._feature_columns_before_breakout = self.__get_feature_columns_before_breakout__()
         self._feature_columns_after_breakout = self.__get_feature_columns_after_breakout__()
+        self._label_columns_touch_points = self.__get_label_columns_touch_points__()
         self._label_columns_before_breakout = self.__get_label_columns_before_breakout__()
         self._label_columns_after_breakout = self.__get_label_columns_after_breakout__()
+        self._query_for_feature_and_label_data_touch_points = \
+            self.__get_query_for_feature_and_label_data_touch_points__()
         self._query_for_feature_and_label_data_before_breakout = \
             self.__get_query_for_feature_and_label_data_before_breakout__()
         self._query_for_feature_and_label_data_after_breakout = \
             self.__get_query_for_feature_and_label_data_after_breakout__()
+
+    @property
+    def feature_columns_touch_points(self):
+        return self._feature_columns_touch_points
 
     @property
     def features_columns_before_breakout(self):
@@ -41,12 +49,20 @@ class FeaturesTable(MyTable):
         return self._feature_columns_after_breakout
 
     @property
+    def label_columns_touch_points(self):
+        return self._label_columns_touch_points
+
+    @property
     def label_columns_before_breakout(self):
         return self._label_columns_before_breakout
 
     @property
     def label_columns_after_breakout(self):
         return self._label_columns_after_breakout
+
+    @property
+    def query_for_feature_and_label_data_touch_points(self):
+        return self._query_for_feature_and_label_data_touch_points
 
     @property
     def query_for_feature_and_label_data_before_breakout(self):
@@ -116,11 +132,17 @@ class FeaturesTable(MyTable):
     def _get_name_():
         return 'Features'
 
+    def __get_query_for_feature_and_label_data_touch_points__(self) -> str:
+        return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_touch_points__())
+
     def __get_query_for_feature_and_label_data_before_breakout__(self) -> str:
         return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_before_breakout__())
 
     def __get_query_for_feature_and_label_data_after_breakout__(self):
         return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_after_breakout__())
+
+    def __get_concatenated_feature_label_columns_touch_points__(self):
+        return ', '.join(self._feature_columns_touch_points + self._label_columns_touch_points)
 
     def __get_concatenated_feature_label_columns_before_breakout__(self):
         return ', '.join(self._feature_columns_before_breakout + self._label_columns_before_breakout)
@@ -149,6 +171,13 @@ class FeaturesTable(MyTable):
         return base_list
 
     @staticmethod
+    def __get_feature_columns_touch_points__():
+        base_list = FeaturesTable.__get_feature_columns_before_breakout__()
+        del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_TOP)]
+        del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM)]
+        return base_list
+
+    @staticmethod
     def __get_label_columns_after_breakout__():
         return [DC.NEXT_PERIOD_HALF_POSITIVE_PCT, DC.NEXT_PERIOD_FULL_POSITIVE_PCT,
                 DC.NEXT_PERIOD_HALF_NEGATIVE_PCT, DC.NEXT_PERIOD_FULL_NEGATIVE_PCT,
@@ -159,6 +188,10 @@ class FeaturesTable(MyTable):
     @staticmethod
     def __get_label_columns_before_breakout__():
         return [DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT, DC.BREAKOUT_DIRECTION_ID, DC.FALSE_BREAKOUT]
+
+    @staticmethod
+    def __get_label_columns_touch_points__():
+        return [DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM]
 
     @staticmethod
     def is_label_column_for_regression(label_column: str):
