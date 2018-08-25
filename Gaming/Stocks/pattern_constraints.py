@@ -256,10 +256,9 @@ class ChannelConstraints(Constraints):
                              CountConstraint(SVC.U_in, '>=', 3),
                              CountConstraint(SVC.L_in, '>=', 3)]
         self.global_series = ['OR',
-                              [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
-                              [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in],
-                              [SVC.U_in, SVC.L_in, SVC.L_in, SVC.U_in, SVC.L_in],
-                              [SVC.L_in, SVC.U_in, SVC.U_in, SVC.L_in, SVC.U_in]]
+                              [SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on],
+                              [SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on]
+                              ]
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():

@@ -223,7 +223,7 @@ class Pattern:
             false_breakout_str = 'false !!!' if false_breakout == 1 else 'true - GO'
             return 'Prediction: {}-Breakout after {} ticks and {}/{} touches - {}'.format(
                 direction_str, ticks, points_top, points_bottom, false_breakout_str)
-        return 'Prediction: sorry - not enough data (previous period)'
+        return 'Prediction: sorry - not enough previous data'
 
     def fill_result_set(self):
         if self.is_part_trade_available():
