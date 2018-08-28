@@ -197,7 +197,7 @@ class PatternDetector:
         if self.__is_any_non_head_shoulder_pattern_type_selected__():
             self.range_detector_max = PatternRangeDetectorMax(self.sys_config, self.sys_config.pdh.pattern_data.tick_list_max_without_hidden_ticks)
             self.range_detector_min = PatternRangeDetectorMin(self.sys_config, self.sys_config.pdh.pattern_data.tick_list_min_without_hidden_ticks)
-        tick_list_head_shoulder = self.sys_config.pdh.pattern_data.tick_list_min_max_without_hidden_ticks
+        tick_list_head_shoulder = self.sys_config.pdh.pattern_data.tick_list_min_max_for_head_shoulder
         if FT.HEAD_SHOULDER in self.pattern_type_list:
             self.range_detector_h_s = PatternRangeDetectorHeadShoulder(self.sys_config, tick_list_head_shoulder)
         if FT.HEAD_SHOULDER_BOTTOM in self.pattern_type_list:

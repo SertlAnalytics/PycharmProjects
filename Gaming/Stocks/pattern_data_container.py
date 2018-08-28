@@ -43,14 +43,14 @@ class PatternData:
         self.__fill_tick_list_min_max__()
         self.tick_list_min_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_min, False)
         self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
-        self.tick_list_min_max_without_hidden_ticks = self.__get_tick_list_min_max_without_hidden_ticks__()
+        self.tick_list_min_max_for_head_shoulder = self.__get_tick_list_min_max_for_head_shoulder__()
 
-    def __get_tick_list_min_max_without_hidden_ticks__(self):
+    def __get_tick_list_min_max_for_head_shoulder__(self):
         position_tick_dict = {}
         return_list = []
-        for tick_min in self.tick_list_min_without_hidden_ticks:
+        for tick_min in self.tick_list_min:
             position_tick_dict[tick_min.position] = tick_min
-        for tick_max in self.tick_list_max_without_hidden_ticks:
+        for tick_max in self.tick_list_max:
             position_tick_dict[tick_max.position] = tick_max
         for position in range(self.tick_first.position, self.tick_last.position + 1):
             if position in position_tick_dict:

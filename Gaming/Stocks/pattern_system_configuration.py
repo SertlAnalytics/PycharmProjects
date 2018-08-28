@@ -11,6 +11,7 @@ from pattern_data_container import PatternDataHandler
 from pattern_configuration import PatternConfiguration, RuntimeConfiguration, PatternDebugger
 from pattern_database import stock_database
 from copy import deepcopy
+# from bitfinex import Bitfinex
 from pattern_predictor import PatternPredictorBeforeBreakout, PatternPredictorAfterBreakout, PatternPredictorTouchPoints
 
 
@@ -20,6 +21,7 @@ class SystemConfiguration:
             return
         self.config = PatternConfiguration()
         self.runtime = RuntimeConfiguration()
+        # self.bitfinex = Bitfinex()
         self.crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
         self.pdh = PatternDataHandler(self.config)
         self.features_table = stock_database.FeaturesTable()
@@ -53,6 +55,7 @@ class SystemConfiguration:
         sys_config_copy = SystemConfiguration(True)
         sys_config_copy.config = deepcopy(self.config)
         sys_config_copy.runtime = deepcopy(self.runtime)
+        # sys_config_copy.bitfinex = self.bitfinex
         sys_config_copy.crypto_ccy_dic = self.crypto_ccy_dic
         sys_config_copy.pdh = self.pdh
         sys_config_copy.features_table = self.features_table

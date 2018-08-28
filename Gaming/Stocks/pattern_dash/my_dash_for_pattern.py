@@ -610,7 +610,7 @@ class MyDash4Pattern(MyDashBase):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
         li = [MyHTMLHeaderTable().get_table()]
         li.append(MyDCC.interval('my_interval', 100))
-        li.append(MyDCC.interval('my_interval_timer', 1))
+        li.append(MyDCC.interval('my_interval_timer', 5))
         li.append(MyHTML.div_with_dcc_drop_down(
             'Stock symbol', 'my_ticker_selection', self._ticker_options, 200))
         li.append(MyHTML.div_with_dcc_drop_down(

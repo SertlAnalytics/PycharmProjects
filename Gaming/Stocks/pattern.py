@@ -526,7 +526,7 @@ class HeadShoulderPattern(Pattern):
         return self.pattern_range.hsf.distance_start_to_tick_left_neckline
 
     def __get_expected_win__(self):
-        return 4
+        return self.pattern_range.hsf.expected_win
 
 
 class HeadShoulderBottomPattern(Pattern):
