@@ -376,6 +376,7 @@ class Pattern:
         data_dict[DC.PATTERN_END_TIME] = tick_last.time_str
         data_dict[DC.PATTERN_TOLERANCE_PCT] = self.tolerance_pct
         data_dict[DC.BREAKOUT_RANGE_MIN_PCT] = self.sys_config.config.breakout_range_pct
+        data_dict[DC.PATTERN_HEIGHT] = self.part_main.diff_max_min
         data_dict[DC.PATTERN_BEGIN_HIGH] = round(self.function_cont.f_upper(tick_first.f_var), 2)
         data_dict[DC.PATTERN_BEGIN_LOW] = round(self.function_cont.f_lower(tick_first.f_var), 2)
         data_dict[DC.PATTERN_END_HIGH] = round(self.function_cont.f_upper(tick_breakout.f_var), 2)
@@ -445,6 +446,7 @@ class Pattern:
                                  pattern_length: int, data_dict: dict, for_prediction: bool):
         # the height at the start is the relative comparison value
         comp_range = data_dict[DC.PATTERN_BEGIN_HIGH] - data_dict[DC.PATTERN_BEGIN_LOW]
+        # comp_range = data_dict[DC.PATTERN_HEIGHT]  # new since 2018-08-29 - ToDo has to be clarified
         pattern_length_half = int(pattern_length / 2)
         pos_first = tick_first.position
         pos_last = tick_last.position
@@ -523,7 +525,9 @@ class ChannelDownPattern(ChannelPattern):
 
 class HeadShoulderPattern(Pattern):
     def __breakout_required_after_ticks__(self):
-        return self.pattern_range.hsf.distance_start_to_tick_left_neckline
+        value_01 = self.pattern_range.hsf.distance_start_to_tick_left_neckline
+        value_02 = int(self.pattern_range.hsf.distance_neckline/1.5)
+        return max(value_01, value_02)
 
     def __get_expected_win__(self):
         return self.pattern_range.hsf.expected_win
@@ -531,7 +535,9 @@ class HeadShoulderPattern(Pattern):
 
 class HeadShoulderBottomPattern(Pattern):
     def __breakout_required_after_ticks__(self):
-        return self.pattern_range.hsf.distance_start_to_tick_left_neckline
+        value_01 = self.pattern_range.hsf.distance_start_to_tick_left_neckline
+        value_02 = int(self.pattern_range.hsf.distance_neckline /1.5)
+        return max(value_01, value_02)
 
     def __get_expected_win__(self):
         return self.pattern_range.hsf.expected_win
