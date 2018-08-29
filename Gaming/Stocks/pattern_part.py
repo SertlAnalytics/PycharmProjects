@@ -167,6 +167,10 @@ class PatternPart:
         return self.df[CN.MEAN_HL].mean()
 
     @property
+    def diff_max_min(self) -> float:
+        return round(self.max - self.min, 2)
+
+    @property
     def max(self):
         return self.df[CN.HIGH].max()
 
