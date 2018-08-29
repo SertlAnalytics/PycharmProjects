@@ -259,6 +259,7 @@ class DC:  # Data Columns
     PATTERN_END_TIME = 'Pattern_End_Time'
     PATTERN_TOLERANCE_PCT = 'Patern_Tolerance_PCT'
     BREAKOUT_RANGE_MIN_PCT = 'Breakout_Range_Min_PCT'
+    PATTERN_HEIGHT = 'Pattern_Height'
     PATTERN_BEGIN_LOW = 'Pattern_Begin_Low'
     PATTERN_BEGIN_HIGH = 'Pattern_Begin_High'
     PATTERN_END_LOW = 'Pattern_End_Low'
