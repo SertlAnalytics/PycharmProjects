@@ -30,7 +30,8 @@ class PatternDebugger:
         self.__init_process__(process)
         min_len = min(len(position_list), len(self.pattern_range_position_list))
         if min_len > 0:
-            if position_list[:min_len] == self.pattern_range_position_list[:min_len]:
+            intersect = set(position_list).intersection(set(self.pattern_range_position_list))
+            if len(intersect) == len(self.pattern_range_position_list):
                 self.__activate_process__(process)
 
     def __init_process__(self, process: str):
