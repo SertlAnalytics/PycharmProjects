@@ -7,7 +7,8 @@ Date: 2018-05-14
 
 import numpy as np
 import pandas as pd
-from sertl_analytics.constants.pattern_constants import FD, CM, CN
+from sertl_analytics.constants.pattern_constants import FD, CN
+from sertl_analytics.mydates import MyDate
 from fibonacci.fibonacci_wave_component import FibonacciAscendingRegressionComponent, \
     FibonacciDescendingRegressionComponent, FibonacciAscendingRetracementComponent, \
     FibonacciDescendingRetracementComponent
@@ -65,6 +66,26 @@ class FibonacciWaveTree:
     def parse_tree(self):
         self.__parse_for_ascending_waves__()
         self.__parse_for_descending_waves__()
+
+    def was_any_wave_finished_since_time_stamp(self, time_stamp: float):
+        for wave in self.fibonacci_wave_list:
+            tick_end = wave.w_5.tick_end
+            if tick_end.is_asc_fibonacci_end or tick_end.is_desc_fibonacci_end:
+                self.__print_time_stamps__(tick_end.time_stamp, time_stamp)
+                if tick_end.time_stamp >= time_stamp:
+                    return True
+        return False
+
+    @staticmethod
+    def __print_time_stamps__(tick_end_time_stamp: float, last_refresh_time_stamp: float):
+        flag = tick_end_time_stamp >= last_refresh_time_stamp
+        if not flag:
+            return
+        date_time_end = MyDate.get_date_time_from_epoch_seconds(tick_end_time_stamp)
+        date_time_last_refresh = MyDate.get_date_time_from_epoch_seconds(last_refresh_time_stamp)
+        print('was_any_wave_finished_since_time_stamp = {}: tick_end = {} / {} = last_refresh'.format(
+            flag, date_time_end, date_time_last_refresh
+        ))
 
     def __parse_for_descending_waves__(self):
         for tick_max in self.max_tick_list:
@@ -235,7 +256,15 @@ class FibonacciWaveTree:
         #         break
 
         if not is_covered_by_list:
+            self.__mark_last_tick_as_fibonacci_end__(wave)
             if replacing_index == -1:
                 wave_list.append(wave)
             else:
                 wave_list[replacing_index] = wave
+
+    @staticmethod
+    def __mark_last_tick_as_fibonacci_end__(wave: FibonacciWave):
+        if wave.wave_type == FD.ASC:
+            wave.w_5.tick_end.is_asc_fibonacci_end = True
+        else:
+            wave.w_5.tick_end.is_desc_fibonacci_end = True

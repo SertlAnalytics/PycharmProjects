@@ -31,15 +31,15 @@ class FibonacciWave:
         self.forecast_value_list = []
 
     @property
-    def w_1(self):
+    def w_1(self) -> FibonacciWaveComponent:
         return self.get_component_by_number(1)
 
     @property
-    def w_4(self):
+    def w_4(self) -> FibonacciWaveComponent:
         return self.get_component_by_number(4)
 
     @property
-    def w_5(self):
+    def w_5(self) -> FibonacciWaveComponent:
         return self.get_component_by_number(5)
 
     @property

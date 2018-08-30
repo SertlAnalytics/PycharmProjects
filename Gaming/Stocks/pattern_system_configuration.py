@@ -7,8 +7,10 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import Indices
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
+from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from pattern_data_container import PatternDataHandler
-from pattern_configuration import PatternConfiguration, RuntimeConfiguration, PatternDebugger
+from pattern_configuration import PatternConfiguration, RuntimeConfiguration
+from pattern_configuration import PatternDebugger
 from pattern_database import stock_database
 from copy import deepcopy
 # from bitfinex import Bitfinex
@@ -19,6 +21,7 @@ class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
         if for_semi_deep_copy:
             return
+        self.trading = BitfinexConfiguration()
         self.config = PatternConfiguration()
         self.runtime = RuntimeConfiguration()
         # self.bitfinex = Bitfinex()

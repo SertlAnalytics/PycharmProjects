@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 import numpy as np
 from sertl_analytics.constants.pattern_constants import FT, FD, DC, CN, SVC, EQUITY_TYPE, EXTREMA
+from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_configuration import ApiPeriod
 from pattern_wave_tick import WaveTick
@@ -19,10 +20,6 @@ from pattern_statistics import PatternDetectorStatisticsApi
 from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
 from pattern_constraints import ConstraintsFactory
 from pattern_function_container import PatternFunctionContainerFactoryApi, PatternFunctionContainerFactory
-from pattern_data_frame import PatternDataFrame
-from pattern_value_categorizer import ValueCategorizer
-from sertl_analytics.mymath import MyMath
-from pattern_database.stock_database import StockDatabase
 
 
 class PatternDetector:
@@ -105,6 +102,32 @@ class PatternDetector:
                     pattern.intersects_with_fibonacci_wave = True
                     pattern.available_fibonacci_end_type = EXTREMA.MAX if fib_waves.wave_type == FD.ASC else EXTREMA.MIN
                     break
+
+    def was_any_breakout_since_time_stamp(self, ts_since: float, print_id: str, for_print=False):
+        for pattern in self.pattern_list:
+            if pattern.was_breakout_done() and pattern.breakout.tick_breakout.time_stamp > ts_since:
+                if for_print:
+                    self.__print_breakout_details__(print_id, pattern.breakout.tick_breakout.time_stamp, ts_since)
+                return True
+        return False
+
+    def was_any_touch_since_time_stamp(self, time_stamp_since: float, for_print=False):
+        for pattern in self.pattern_list:
+            if pattern.was_any_touch_since_time_stamp(time_stamp_since, for_print):
+                return True
+        return False
+
+    def is_any_pattern_without_breakout(self) -> bool:
+        for pattern in self.pattern_list:
+            if not pattern.was_breakout_done():
+                return True
+        return False
+
+    @staticmethod
+    def __print_breakout_details__(print_id: str, breakout_ts: float, time_stamp_since: float):
+        brk_t = MyDate.get_time_from_epoch_seconds(int(breakout_ts))
+        data_t = MyDate.get_time_from_epoch_seconds(int(time_stamp_since))
+        print('{}: breakout since last data update: breakout={}/{}=last_data_update'.format(print_id, brk_t, data_t))
 
     def __handle_single_pattern_when_parsing__(self, pattern: Pattern):
         can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)

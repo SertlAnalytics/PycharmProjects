@@ -116,6 +116,14 @@ class Pattern:
         self.xy_trade = self._part_trade.xy
         self.__calculate_y_predict__(PT.AFTER_BREAKOUT)
 
+    def was_any_touch_since_time_stamp(self, time_stamp_since: float, for_print=False):
+        if self.was_breakout_done():
+            return False
+        pos_begin = self._part_main.get_first_position_after_time_stamp(time_stamp_since)
+        pos_end = self._part_main.tick_last.position
+        value_categorizer = self._get_value_categorizer_(pos_begin, pos_end)
+        return value_categorizer.has_upper_touches() or value_categorizer.has_lower_touches()
+
     def __calculate_y_predict__(self, prediction_type: str):
         if not self.sys_config.prediction_mode_active:
             return

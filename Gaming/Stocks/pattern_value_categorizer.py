@@ -29,12 +29,18 @@ class ValueCategorizer:
         self.__set_h_upper_h_lower_values__()
         self.__calculate_value_categories__()
 
+    def has_upper_touches(self):
+        return self.get_number_of_rows_with_value_category(SVC.U_on) > 0
+
+    def has_lower_touches(self):
+        return self.get_number_of_rows_with_value_category(SVC.L_on) > 0
+
     def are_all_values_above_f_lower(self, with_tolerance: bool = False) -> bool:  # TODO with_tolerance
         tolerance = self.df[CN.LOW].mean() * self._tolerance_pct
         df_local = self.df[self.df[CN.LOW] < self.df[CN.F_LOWER] - tolerance]
         return df_local.shape[0] == 0
 
-    def are_all_values_in_value_category(self, value_category: SVC) -> bool:
+    def are_all_values_in_value_category(self, value_category: str) -> bool:
         return self.df_length == self.get_number_of_rows_with_value_category(value_category)
 
     def are_all_values_in_value_category_list(self, value_categories: list) -> bool:
@@ -43,7 +49,7 @@ class ValueCategorizer:
                 return False
         return True
 
-    def get_number_of_rows_with_value_category(self, value_category: SVC) -> bool:
+    def get_number_of_rows_with_value_category(self, value_category: str) -> bool:
         counter = 0
         for key in self.value_category_dic:
             if value_category in self.value_category_dic[key]:

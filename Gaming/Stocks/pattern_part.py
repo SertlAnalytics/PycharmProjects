@@ -77,6 +77,12 @@ class PatternPart:
     def length(self):
         return self.tick_last.position - self.tick_first.position
 
+    def get_first_position_after_time_stamp(self, time_stamp_since: float):
+        for wave_tick in self.tick_list:
+            if wave_tick.time_stamp > time_stamp_since:
+                return wave_tick.position
+        return self.tick_last.position
+
     def __get_annotation_offset_x__(self):
         width = 25 * self.pdh.pattern_data.tick_f_var_distance
         if self.__xy_center[0] - self.pdh.pattern_data.tick_first.f_var <= width:

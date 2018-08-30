@@ -71,35 +71,29 @@ class MyGraphCacheObject(MyCacheObject):
         self.detector = cache_api.detector
         self.pattern_data = cache_api.pattern_data
         self.last_refresh_ts = cache_api.last_refresh_ts
-        self.last_refresh_time = MyDate.get_time_from_epoch_seconds(self.last_refresh_ts)
         self.period_aggregation_ts = self.sys_config.config.api_period_aggregation * 60
+        self.adjusted_last_refresh_ts = \
+            self.sys_config.config.get_time_stamp_before_one_period_aggregation(self.last_refresh_ts)
         self.cached_before_breakout = self.__was_cached_before_breakout__()
-        self.breakout_since_last_refresh = self.__was_breakout_since_last_refresh__(self.last_refresh_ts)
+        self.breakout_since_last_data_update = self.__was_breakout_since_last_data_update__()
+        self.fibonacci_finished_since_last_data_update = self.__was_fibonacci_finished_since_last_data_update__()
+        self.touch_since_last_data_update = self.__was_any_touch_since_last_data_update__()
 
-    @property
     def is_under_observation(self):
-        return self.cached_before_breakout or self.breakout_since_last_refresh
+        return self.cached_before_breakout or self.breakout_since_last_data_update or \
+               self.fibonacci_finished_since_last_data_update
 
-    def __was_breakout_since_last_refresh__(self, time_stamp_last_refresh: int):
-        for pattern in self.detector.pattern_list:
-            if pattern.was_breakout_done():
-                adjusted_breakout_ts = pattern.breakout.tick_breakout.time_stamp + self.sys_config.config.api_period_aggregation * 60
-                if adjusted_breakout_ts > time_stamp_last_refresh:
-                    self.__print_breakout_details__(adjusted_breakout_ts, time_stamp_last_refresh)
-                    return True
-        return False
+    def __was_any_touch_since_last_data_update__(self):
+        return self.detector.was_any_touch_since_time_stamp(self.adjusted_last_refresh_ts, True)
 
-    def __print_breakout_details__(self, breakout_ts, last_refresh_ts):
-        breakout_t = MyDate.get_time_from_epoch_seconds(breakout_ts)
-        last_refresh_t = MyDate.get_time_from_epoch_seconds(last_refresh_ts)
-        print('{}: __was_breakout_since_last_refresh__: adjusted_breakout={}/{}=last_refresh'.format(
-            self.id, breakout_t, last_refresh_t))
+    def __was_breakout_since_last_data_update__(self):
+        return self.detector.was_any_breakout_since_time_stamp(self.adjusted_last_refresh_ts, self.id, True)
+
+    def __was_fibonacci_finished_since_last_data_update__(self):
+        return self.detector.fib_wave_tree.was_any_wave_finished_since_time_stamp(self.adjusted_last_refresh_ts)
 
     def __was_cached_before_breakout__(self) -> bool:
-        for pattern in self.detector.pattern_list:
-            if not pattern.was_breakout_done():
-                return True
-        return False
+        return self.detector.is_any_pattern_without_breakout()
 
 
 class MyCache:
@@ -131,6 +125,14 @@ class MyGraphCache(MyCache):
         MyCache.__init__(self)
         self.__cached_and_under_observation_play_sound_list = []
 
+    @property
+    def number_of_finished_fibonacci_waves_since_last_refresh(self) -> int:
+        number_return = 0
+        for cache_object in self._cached_object_dict.values():
+            if cache_object.fibonacci_finished_since_last_data_update:
+                number_return += 1
+        return number_return
+
     @staticmethod
     def get_cache_key(graph_id: str, ticker: str, days: int = 0):
         return '{}_{}_{}'.format(graph_id, ticker, days)
@@ -145,19 +147,22 @@ class MyGraphCache(MyCache):
     def get_pattern_data(self, cache_key):
         return self._cached_object_dict[cache_key].pattern_data
 
-    def was_breakout_since_last_refresh(self, cache_key: str):
-        return self._cached_object_dict[cache_key].breakout_since_last_refresh
+    def was_breakout_since_last_data_update(self, cache_key: str):
+        return self._cached_object_dict[cache_key].breakout_since_last_data_update
 
-    def get_graph_list_before_and_short_after_breakout(self, key_not: str) -> list:
+    def was_touch_since_last_data_update(self, cache_key: str):
+        return self._cached_object_dict[cache_key].touch_since_last_data_update
+
+    def get_graph_list_for_observation(self, key_not: str) -> list:
         play_sound = False
         graphs = []
         for key, cache_object in self._cached_object_dict.items():
-            if key != key_not and cache_object.is_under_observation:
+            if key != key_not and cache_object.is_under_observation():
                 if key not in self.__cached_and_under_observation_play_sound_list:
                     self.__cached_and_under_observation_play_sound_list.append(key)
                     play_sound = True
-                graphs.append(self.__change_to_breakout_graph__(cache_object.value, len(graphs)))
-            elif not cache_object.is_under_observation:
+                graphs.append(self.__change_to_observation_graph__(cache_object.value, len(graphs)))
+            elif not cache_object.is_under_observation():
                 if key in self.__cached_and_under_observation_play_sound_list:
                     self.__cached_and_under_observation_play_sound_list.remove(key)
         if play_sound:
@@ -165,7 +170,7 @@ class MyGraphCache(MyCache):
         return graphs
 
     @staticmethod
-    def __change_to_breakout_graph__(graph_old, number: int):
+    def __change_to_observation_graph__(graph_old, number: int):
         graph = deepcopy(graph_old)
         graph.id = 'my_new_key_{}'.format(number)
         graph.figure['layout']['height'] = graph.figure['layout']['height']/2
@@ -378,8 +383,11 @@ class MyDash4Pattern(MyDashBase):
             graph, graph_key = self.__get_graph_first__(ticker)
             self._graph_key_first = graph_key
             self.__cache_others_ticker_values__(n_intervals, ticker)
-            if self._graph_first_cache.was_breakout_since_last_refresh(graph_key):
-                print('Breakout since last refresh !!!!')
+            if self._graph_first_cache.was_breakout_since_last_data_update(graph_key):
+                print('Breakout since last data update !!!!')
+                playsound('alarm01.wav')
+            elif self._graph_first_cache.was_touch_since_last_data_update(graph_key):
+                print('Touch since last data update !!!!')
                 playsound('alarm01.wav')
             return graph
 
@@ -390,7 +398,7 @@ class MyDash4Pattern(MyDashBase):
              Input('my_graph_first_div', 'children')],
             [State('my_ticker_selection', 'value')])
         def handle_callback_for_graph_second(days_selected, graph_first_div, ticker_selected):
-            if days_selected == 0:
+            if days_selected == 0 or ticker_selected is None:
                 return ''
             return self.__get_graph_second__(ticker_selected, days_selected)[0]
 
@@ -399,9 +407,12 @@ class MyDash4Pattern(MyDashBase):
             Output('my_graphs_before_breakout_div', 'children'),
             [Input('my_graph_first_div', 'children')])
         def handle_callback_for_graphs_before_breakout(graph_first_div):
-            graphs = self._graph_first_cache.get_graph_list_before_and_short_after_breakout(self._graph_key_first)
+            graphs = self._graph_first_cache.get_graph_list_for_observation(self._graph_key_first)
             if len(graphs) > 0:
                 print('\n...handle_callback_for_graphs_before_breakout: {}'.format(len(graphs)))
+            if self._graph_first_cache.number_of_finished_fibonacci_waves_since_last_refresh > 2:
+                print('\n...finished_fibonacci_waves_since_last_refresh > 2')
+                playsound('Ring08.wav')
             return graphs
 
     def __init_interval_callback_for_user_name__(self):

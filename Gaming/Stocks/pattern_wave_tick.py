@@ -16,6 +16,8 @@ from sertl_analytics.mydates import MyDate
 class WaveTick:
     def __init__(self, tick):
         self.tick = tick
+        self.is_asc_fibonacci_end = False
+        self.is_desc_fibonacci_end = False
 
     @property
     def date(self):

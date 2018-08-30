@@ -101,6 +101,12 @@ class PatternConfiguration:
                 return 0.001
         return 0.005
 
+    def get_time_stamp_before_one_period_aggregation(self, time_stamp: float):
+        if self.api_period == ApiPeriod.DAILY:
+            return time_stamp - 60 * 60 * 24
+        elif self.api_period == ApiPeriod.INTRADAY:
+            return time_stamp - self.api_period_aggregation * 60
+
     @property
     def expected_win_pct(self):
         return 0.002 if self.api_period == ApiPeriod.INTRADAY else 0.01  # will be changed in the program for Cryptos
