@@ -32,6 +32,10 @@ class ExInterface:
         raise NotImplementedError
 
     @abstractmethod
+    def update_order(self, order_id: int, price_new: float):
+        raise NotImplementedError
+
+    @abstractmethod
     def get_active_orders(self):
         raise NotImplementedError
 

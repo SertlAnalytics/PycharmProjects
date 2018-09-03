@@ -23,15 +23,6 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="exchange_cls.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1156">
-              <caret line="68" column="30" selection-start-line="68" selection-start-column="30" selection-end-line="68" selection-end-column="30" />
-            </state>
-          </provider>
-        </entry>
-      </file>
     </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
@@ -52,11 +43,12 @@
         <option value="$PROJECT_DIR$/MyBokeh/basics.py" />
         <option value="$PROJECT_DIR$/MyBokeh/server.py" />
         <option value="$PROJECT_DIR$/MyBokeh/server_streaming.py" />
-        <option value="$PROJECT_DIR$/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/environment/__init__.py" />
         <option value="$PROJECT_DIR$/exchanges/exchange_cls.py" />
         <option value="$PROJECT_DIR$/exchanges/exchange_abc.py" />
         <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
+        <option value="$PROJECT_DIR$/mystring.py" />
+        <option value="$PROJECT_DIR$/pybase/df_base.py" />
       </list>
     </option>
   </component>
@@ -70,7 +62,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -87,6 +78,11 @@
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
               <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
               <item name="exchanges" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="pybase" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
@@ -122,6 +118,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -129,11 +126,12 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\exchanges" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\exchanges" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -163,17 +161,18 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1287" height="1407" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25140113" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32862744" />
-      <window_info anchor="bottom" id="Run" order="2" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" />
-      <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -186,7 +185,53 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <option name="time" value="1" />
+    </breakpoint-manager>
+  </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="28" selection-start-line="28" selection-end-line="28" />
+          <folding>
+            <element signature="e#217#256#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1139">
+          <caret line="68" column="30" selection-start-line="68" selection-start-column="30" selection-end-line="68" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mystring.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" column="62" lean-forward="true" selection-start-line="12" selection-start-column="62" selection-end-line="12" selection-end-column="62" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="476">
+          <caret line="28" selection-start-line="28" selection-end-line="28" />
+          <folding>
+            <element signature="e#217#256#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1156">
+          <caret line="68" column="30" selection-start-line="68" selection-start-column="30" selection-end-line="68" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
@@ -307,13 +352,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pybase/df_base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="52" selection-start-line="1" selection-start-column="52" selection-end-line="1" selection-end-column="52" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/mydates.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
@@ -337,8 +375,22 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1156">
+        <state relative-caret-position="1139">
           <caret line="68" column="30" selection-start-line="68" selection-start-column="30" selection-end-line="68" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pybase/df_base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="561">
+          <caret line="33" column="45" lean-forward="true" selection-start-line="33" selection-start-column="45" selection-end-line="33" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mystring.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" column="62" selection-start-line="12" selection-start-column="62" selection-end-line="12" selection-end-column="62" />
         </state>
       </provider>
     </entry>

@@ -290,6 +290,12 @@ class PatternRangeHeadShoulder(PatternRangeMin):
         return FT.HEAD_SHOULDER
 
 
+class PatternRangeHeadShoulderUp(PatternRangeHeadShoulder):
+    @property
+    def dedicated_pattern_type(self) -> str:
+        return FT.HEAD_SHOULDER_UP
+
+
 class PatternRangeHeadShoulderBottom(PatternRangeMax):
     def __init__(self, sys_config: SystemConfiguration, hsf: HeadShoulderFormation, min_length: int):
         self.hsf = hsf
@@ -298,6 +304,12 @@ class PatternRangeHeadShoulderBottom(PatternRangeMax):
     @property
     def dedicated_pattern_type(self) -> str:
         return FT.HEAD_SHOULDER_BOTTOM
+
+
+class PatternRangeHeadShoulderDown(PatternRangeHeadShoulderBottom):
+    @property
+    def dedicated_pattern_type(self) -> str:
+        return FT.HEAD_SHOULDER_DOWN
 
 
 class PatternRangeDetector:

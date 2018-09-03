@@ -67,7 +67,8 @@ class FT:
     @staticmethod
     def get_all():
         return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN, FT.CHANNEL,
-                FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN, FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]
+                FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN,
+                FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]
 
     @staticmethod
     def get_id(key: str):
@@ -186,6 +187,37 @@ class CT:  # Constraint types
     ALL_IN = 'All_In'
     COUNT = 'Count'
     SERIES = 'Series'
+    PRE_TOP_PCT = 'Previous_Period_Top_PCT'
+    PRE_BOTTOM_PCT = 'Previous_Period_Bottom_PCT'
+
+
+class ST:  # Sell Trigger
+    EXPECTED_WIN = 'Expected_win'
+    STOP_LOSS_INITIAL = 'Stop_loss_initial'
+    STOP_LOSS_TRAILED = 'Stop_loss_trailed'
+    TRAILING_STOP = 'Trailing_stop'
+    FIBONACCI_CLUSTER = 'Fibonacci_cluster'
+
+    def get_id(key: str):
+        return {ST.EXPECTED_WIN: 10, ST.STOP_LOSS_INITIAL: 20, ST.STOP_LOSS_TRAILED: 25,
+                ST.TRAILING_STOP: 30, ST.FIBONACCI_CLUSTER: 50}.get(key)
+
+class BT:  # Buy Trigger
+    BREAKOUT = 'Breakout'
+    TOUCH_POINT = 'Touch_point'
+    FIBONACCI_CLUSTER = 'Fibonacci_cluster'
+
+    def get_id(key: str):
+        return {BT.BREAKOUT: 10, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}.get(key)
+
+
+class TR:  # Trade Result
+    WINNER = 'Winner'
+    NEUTRAL = 'Neutral'
+    LOSER = 'Loser'
+
+    def get_id(key: str):
+        return {TR.LOSER: -1, TR.NEUTRAL: 0, TR.WINNER: 1}.get(key)
 
 
 class PSC:  # Pattern Statistics Columns
@@ -292,3 +324,46 @@ class DC:  # Data Columns
     EXPECTED_WIN = 'Expected_Win'
     FALSE_BREAKOUT = 'False_Breakout'
     EXPECTED_WIN_REACHED = 'Expected_Win_Reached'
+    # and additional for Trades
+    BUY_ORDER_ID = 'Buy_Order_ID'
+    BUY_ORDER_TPYE = 'Buy_Order_Type'
+    BUY_ORDER_TPYE_ID = 'Sell_Order_Type_ID'
+    BUY_DT = 'Buy_Date'
+    BUY_TIME = 'Buy_Time'
+    BUY_AMOUNT = 'Buy_Amount'
+    BUY_PRICE = 'Buy_Price'
+    BUY_TOTAL_COSTS = 'Buy_Total_Costs'
+    BUY_TRIGGER = 'Buy_Trigger'
+    BUY_TRIGGER_ID = 'Buy_Trigger_ID'
+    BUY_COMMENT = 'Buy_Comment'
+    FC_TOUCH_POINTS_TILL_BREAKOUT_TOP = 'Forecast_Touch_Points_Till_Breakout_Top'
+    FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM = 'Forecast_Touch_Points_Till_Breakout_Bottom'
+    FC_TICKS_TILL_BREAKOUT = 'Forecast_Ticks_Till_Breakout'
+    FC_BREAKOUT_DIRECTION = 'Forecast_Breakout_direction'
+    FC_BREAKOUT_DIRECTION_ID = 'Forecast_Breakout_direction_ID'
+    FC_FALSE_BREAKOUT_ID  = 'Forecast_False_Breakout'
+    FC_HALF_POSITIVE_PCT = 'Forecast_Half_Positive_PCT'
+    FC_FULL_POSITIVE_PCT = 'Forecast_Full_Positive_PCT'
+    FC_HALF_NEGATIVE_PCT = 'Forecast_Half_Negative_PCT'
+    FC_FULL_NEGATIVE_PCT = 'Forecast_Full_Negative_PCT'
+    FC_TICKS_TO_POSITIVE_HALF = 'Forecast_Ticks_To_Positive_Half'
+    FC_TICKS_TO_POSITIVE_FULL = 'Forecast_Ticks_To_Positive_Full'
+    FC_TICKS_TO_NEGATIVE_HALF = 'Forecast_Ticks_To_Negative_Half'
+    FC_TICKS_TO_NEGATIVE_FULL = 'Forecast_Ticks_To_Negative_Full'
+    FC_BUY_DT = 'Forecast_Buy_Date'
+    FC_BUY_TIME = 'Forecast_Buy_Time'
+    FC_SELL_DT = 'Forecast_Sell_Date'
+    FC_SELL_TIME = 'Forecast_Sell_Time'
+    SELL_ORDER_ID = 'Sell_Order_ID'
+    SELL_ORDER_TPYE = 'Sell_Order_Type'
+    SELL_ORDER_TPYE_ID = 'Sell_Order_Type_ID'
+    SELL_DT = 'Sell_Date'
+    SELL_TIME = 'Sell_Time'
+    SELL_AMOUNT = 'Sell_Amount'
+    SELL_PRICE = 'Sell_Price'
+    SELL_TOTAL_VALUE = 'Sell_Total_Value'
+    SELL_COMMENT = 'Sell_Comment'
+    SELL_TRIGGER = 'Sell_Trigger'
+    SELL_TRIGGER_ID = 'Sell_Trigger_ID'
+    TRADE_RESULT = 'Trade_Result'
+    TRADE_RESULT_ID = 'Trade_Result_ID'

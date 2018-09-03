@@ -73,7 +73,7 @@ class PatternDetectionController:
             detector = PatternDetector(self.sys_config)
             detector.parse_for_pattern()
             detector.parse_for_fibonacci_waves()
-            detector.check_for_intersections()
+            detector.check_for_intersections_and_endings()
             detector.save_pattern_features()
             self.__handle_statistics__(detector)
 
@@ -103,7 +103,7 @@ class PatternDetectionController:
         detector = PatternDetector(self.sys_config)
         detector.parse_for_pattern()
         detector.parse_for_fibonacci_waves()
-        detector.check_for_intersections()
+        detector.check_for_intersections_and_endings()
         detector.save_pattern_features()
         return detector
 

@@ -26,6 +26,7 @@ class MyTable:
         self._add_columns_()
         self._column_name_list = self.__get_column_name_list__()
         self._description = self.__get_description__()
+        self._query_select_all = self.__get_query_select_all__()
 
     @property
     def column_name_list(self):
@@ -34,6 +35,10 @@ class MyTable:
     @property
     def description(self):
         return self._description
+
+    @property
+    def query_select_all(self):
+        return self._query_select_all
 
     def __get_column_name_list__(self):
         return [columns.name for columns in self._columns]
@@ -52,6 +57,9 @@ class MyTable:
 
     def _add_columns_(self):
         pass
+
+    def __get_query_select_all__(self):
+        return 'SELECT * from {}'.format(self._name)
 
 
 class MyTableColumn:

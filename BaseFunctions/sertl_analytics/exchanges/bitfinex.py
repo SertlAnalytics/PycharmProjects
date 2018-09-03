@@ -15,8 +15,10 @@ import hmac
 import hashlib
 import time
 from sertl_analytics.exchanges.exchange_abc import ExInterface
-from sertl_analytics.exchanges.exchange_cls import Order, OrderStatus, OrderBook, Balance, Ticker, ExchangeConfiguration
+from sertl_analytics.exchanges.exchange_cls import Order, OrderStatus, OrderStatusApi, OrderBook, Balance, Ticker
+from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mystring import MyString
 
 
 class OT:
@@ -24,6 +26,9 @@ class OT:
     EXCHANGE_LIMIT = 'exchange limit'
     EXCHANGE_STOP = 'exchange stop'
     EXCHANGE_TRAILING_STOP = 'exchange trailing - stop'
+
+    def get_id(key: str):
+        return {OT.EXCHANGE_MARKET: 1, OT.EXCHANGE_LIMIT: 2, OT.EXCHANGE_STOP: 3, OT.EXCHANGE_TRAILING_STOP: 4}.get(key)
 
 
 class OS:
@@ -56,40 +61,12 @@ class BitfinexConfiguration(ExchangeConfiguration):
         self.is_simulation = True
         self.hodl_dict = {'IOT': 7000}  # currency in upper characters
         self.buy_order_value_max = 100
+        self.buy_fee_pct = 0.25
+        self.sell_fee_pct = 0.25
 
-
-class BitfinexFactory:
-    @staticmethod
-    def get_balance_by_json_dict(json: dict) -> Balance:
-        # {'type': 'exchange', 'currency': 'usd', 'amount': '12.743', 'available': '12.743'}
-        return Balance(json['type'], json['currency'], float(json['amount']), float(json['available']))
-
-    @staticmethod
-    def get_ticker_by_json_dict(json: dict) -> Ticker:
-        # {'mid': 7052.45, 'bid': 7052.4, 'ask': 7052.5, 'last_price': 7051.3, 'timestamp': 1535469615.659593}
-        return Ticker(float(json['bid']), float(json['ask']), float(json['last_price']),
-                      0, 0, 0, float(json['timestamp']))
-
-    @staticmethod
-    def get_order_status_by_json_dict(order_id: int, json: dict) -> OrderStatus:
-        return OrderStatus(order_id, json['symbol'], json['exchange'], float(json['price']),
-                           float(json['avg_execution_price']), json['side'], json['type'],
-                           float(json['executed_amount']), float(json['original_amount']),
-                           float(json['remaining_amount']), json['is_cancelled'], float(json['timestamp']))
-
-    @staticmethod
-    def get_order_status_list_by_json_dict_list(json_dict_list: list) -> list:
-        order_list = []
-        for json_dict in json_dict_list:
-            order_id = json_dict['id']
-            order_list.append(BitfinexFactory.get_order_status_by_json_dict(order_id, json_dict))
-        return order_list
-
-    @staticmethod
-    def get_order_status_by_order_for_simulation(order: Order):  # it is used for simulations
-        order_id = MyDate.get_epoch_seconds_from_datetime()
-        return OrderStatus(order_id, order.symbol, 'simulation', order.price, order.price,
-                           order.side, order.type, order.amount, order.amount, 0, False, order_id)
+    def print_actual_mode(self):
+        text = 'Bitfinex running in {} mode.'.format('SIMULATION' if self.is_simulation else 'TRADING (!!!)')
+        print(MyString.surround(text))
 
 
 class BitfinexOrder(Order):
@@ -104,6 +81,16 @@ class BitfinexOrder(Order):
     @property
     def currency(self):
         return self.symbol[-3:].upper()
+
+
+class BitfinexOrderStatus(OrderStatus):
+    @property
+    def value_total(self):
+        amount = self.original_amount if self.executed_amount == 0 else self.executed_amount
+        if self.side == OS.BUY:
+            return round(self.price * amount + self.fee_amount, 2)
+        else:
+            return round(self.price * amount - self.fee_amount, 2)
 
 
 class BuyMarketOrder(BitfinexOrder):
@@ -140,10 +127,64 @@ class SellTrailingStopOrder(BitfinexOrder):
     def __init__(self, symbol: str, amount: float, price_distance: float):
         Order.__init__(self, symbol, amount, price_distance, OS.SELL, OT.EXCHANGE_TRAILING_STOP)
 
-    def __init__(self, exchange_config: BitfinexConfiguration):
-        self.trading_config = trading_config
-        self.is_simulation = self.trading_config.is_simulation
-        self.hodl_dict = self.trading_config.hodl_dict
+
+class BitfinexFactory:
+    @staticmethod
+    def get_balance_by_json_dict(json: dict) -> Balance:
+        # {'type': 'exchange', 'currency': 'usd', 'amount': '12.743', 'available': '12.743'}
+        return Balance(json['type'], json['currency'], float(json['amount']), float(json['available']))
+
+    @staticmethod
+    def get_ticker_by_json_dict(json: dict) -> Ticker:
+        # {'mid': 7052.45, 'bid': 7052.4, 'ask': 7052.5, 'last_price': 7051.3, 'timestamp': 1535469615.659593}
+        return Ticker(float(json['bid']), float(json['ask']), float(json['last_price']),
+                      0, 0, 0, float(json['timestamp']))
+
+    @staticmethod
+    def get_order_status_by_json_dict(config: BitfinexConfiguration, order_id: int, json: dict) -> BitfinexOrderStatus:
+        order_status_api = OrderStatusApi()
+        order_status_api.order_id = order_id
+        order_status_api.symbol = json['symbol']
+        order_status_api.exchange = json['exchange']
+        order_status_api.price = float(json['price'])
+        order_status_api.avg_execution_price = float(json['avg_execution_price'])
+        order_status_api.side = json['side']
+        order_status_api.type = json['type']
+        order_status_api.executed_amount = float(json['executed_amount'])
+        order_status_api.original_amount = float(json['original_amount'])
+        order_status_api.remaining_amount = float(json['remaining_amount'])
+        order_status_api.is_cancelled = json['is_cancelled']
+        order_status_api.time_stamp = float(json['timestamp'])
+        order_status = BitfinexOrderStatus(order_status_api)
+        order_status.set_fee_amount(config.buy_fee_pct if order_status_api.side == OS.BUY else config.sell_fee_pct, True)
+        return order_status
+
+    @staticmethod
+    def get_order_status_list_by_json_dict_list(exchange_config, json_dict_list: list) -> list:
+        order_list = []
+        for json_dict in json_dict_list:
+            order_id = json_dict['id']
+            order_list.append(BitfinexFactory.get_order_status_by_json_dict(exchange_config, order_id, json_dict))
+        return order_list
+
+    @staticmethod
+    def get_order_status_by_order_for_simulation(config: BitfinexConfiguration, order: Order):  # it is used for simulations
+        order_status_api = OrderStatusApi()
+        order_status_api.order_id = MyDate.get_epoch_seconds_from_datetime()
+        order_status_api.symbol = order.symbol
+        order_status_api.exchange = 'simulation'
+        order_status_api.price = order.price
+        order_status_api.avg_execution_price = order.price
+        order_status_api.side = order.side
+        order_status_api.type = order.type
+        order_status_api.executed_amount = order.amount
+        order_status_api.original_amount = order.amount
+        order_status_api.remaining_amount = 0
+        order_status_api.is_cancelled = False
+        order_status_api.time_stamp = order_status_api.order_id
+        order_status = BitfinexOrderStatus(order_status_api)
+        order_status.set_fee_amount(config.buy_fee_pct if order.side == OS.BUY else config.sell_fee_pct, True)
+        return order_status
 
 
 class MyBitfinex(ExInterface):
@@ -189,7 +230,7 @@ class MyBitfinex(ExInterface):
             except:
                 print('Error deleting order {}: {}'.format(order_id, json_resp['message']))
                 return
-            order_status = BitfinexFactory.get_order_status_by_json_dict(json_resp['id'], json_resp)
+            order_status = BitfinexFactory.get_order_status_by_json_dict(self.exchange_config, json_resp['id'], json_resp)
         if order_status:
             order_status.print_order_status(prefix)
 
@@ -226,15 +267,15 @@ class MyBitfinex(ExInterface):
         self.create_order(order_sell_all, 'Sell all')
 
     def buy_available(self, symbol: str):
-        amount_available = min(self.get_available_money(), self.exchange_config.buy_order_value_max)
-        if amount_available < 10:
-            print('Not enough (>{}$) balance for {} available'.format(10, self.base_currency))
+        available_money = min(self.get_available_money(), self.exchange_config.buy_order_value_max)
+        if available_money < 10:
+            print('\nNot enough (>{}$) balance for {} available'.format(10, self.base_currency))
         else:
             ticker = self.get_ticker(symbol)
             # the minus value in the next term is necessary to ensure that this amount is buyable
-            amount = round(amount_available / ticker.ask - 0.05, 2)
+            amount = round(available_money / ticker.ask - 0.05, 2)
             order_buy_all = BuyMarketOrder(symbol, amount)
-            order_buy_all.actual_money_available = amount_available
+            order_buy_all.actual_money_available = available_money
             order_buy_all.actual_ticker = ticker
             self.create_order(order_buy_all, 'Buy available')
 
@@ -245,7 +286,7 @@ class MyBitfinex(ExInterface):
                 return balance
         return None
 
-    def get_order(self, order_id: int) -> OrderStatus:
+    def get_order(self, order_id: int) -> BitfinexOrderStatus:
         payload_additional = {'order_id': order_id}
         json_resp = self.__get_json__('/order/status', payload_additional)
         try:
@@ -253,10 +294,29 @@ class MyBitfinex(ExInterface):
         except:
             print('Error get_order {}: {}'.format(order_id, json_resp['message']))
             return None
-        return BitfinexFactory.get_order_status_by_json_dict(order_id, json_resp)
+        return BitfinexFactory.get_order_status_by_json_dict(self.exchange_config, order_id, json_resp)
+
+    def update_order(self, order_id: int, price_new: float) -> BitfinexOrderStatus:
+        old_order_status = self.get_order(order_id)
+        if not old_order_status:
+            return
+        payload_additional = {
+            'order_id': order_id, 'symbol': old_order_status.symbol.lower(),
+            'amount': str(old_order_status.original_amount),
+            'price': str(price_new), 'exchange': 'bitfinex', 'side': old_order_status.side,
+            'type': old_order_status.type
+        }
+        json_resp = self.__get_json__('/order/cancel/replace', payload_additional)
+        try:
+            json_resp['avg_execution_price']
+        except:
+            print('Error update_order {}: {}'.format(order_id, json_resp['message']))
+            return None
+        return BitfinexFactory.get_order_status_by_json_dict(self.exchange_config, order_id, json_resp)
 
     def get_active_orders(self) -> list:
-        return BitfinexFactory.get_order_status_list_by_json_dict_list(self.__get_json__('/orders'))
+        return BitfinexFactory.get_order_status_list_by_json_dict_list(
+            self.exchange_config, self.__get_json__('/orders'))
 
     def get_active_positions(self):
         return self.__get_json__('/positions')
@@ -333,7 +393,7 @@ class MyBitfinex(ExInterface):
         if self._is_simulation:
             if order.type == OT.EXCHANGE_MARKET:
                 order.price = order.actual_ticker.ask
-            order_status = BitfinexFactory.get_order_status_by_order_for_simulation(order)
+            order_status = BitfinexFactory.get_order_status_by_order_for_simulation(self.exchange_config, order)
             order_status.print_order_status(print_prefix)
         else:
             payload_additional = {
@@ -346,7 +406,8 @@ class MyBitfinex(ExInterface):
             except:
                 order.print_order('Error create_order: {}'.format(json_resp['message']))
                 return
-            order_status = BitfinexFactory.get_order_status_by_json_dict(json_resp['order_id'], json_resp)
+            order_status = BitfinexFactory.get_order_status_by_json_dict(self.exchange_config,
+                                                                         json_resp['order_id'], json_resp)
             order_status.print_order_status(print_prefix)
             time.sleep(2)  # time to execute and update the application
 
@@ -392,7 +453,7 @@ class MyBitfinex(ExInterface):
             if order.actual_balance_symbol_amount < order.amount:
                 print('\nNot enough balance ({:.2f}) for {} to sell {:.2f}.'.format(
                     order.actual_balance_symbol_amount, order.crypto, order.amount))
-                return True
+                return False
         return True
 
     @staticmethod

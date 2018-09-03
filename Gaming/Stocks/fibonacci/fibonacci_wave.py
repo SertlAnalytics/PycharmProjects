@@ -31,6 +31,14 @@ class FibonacciWave:
         self.forecast_value_list = []
 
     @property
+    def position_start(self):
+        return self.comp_position_list[0]
+
+    @property
+    def position_end(self):
+        return self.comp_position_list[-1]
+
+    @property
     def w_1(self) -> FibonacciWaveComponent:
         return self.get_component_by_number(1)
 

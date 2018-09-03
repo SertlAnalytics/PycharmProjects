@@ -9,6 +9,7 @@ import pandas as pd
 from sertl_analytics.constants.pattern_constants import CN, SVC
 from pattern_wave_tick import WaveTick
 import numpy as np
+import math
 
 
 class ValueCategorizer:
@@ -21,7 +22,7 @@ class ValueCategorizer:
         self._f_lower = f_lower
         self._h_upper = h_upper
         self._h_lower = h_lower
-        self.index_list = []
+        self.value_category_dic_key_list = []
         self.value_category_dic = {}  # list of value categories by position of each entry
         self._tolerance_pct = tolerance_pct
         self._tolerance_pct_equal = 0.001
@@ -29,11 +30,11 @@ class ValueCategorizer:
         self.__set_h_upper_h_lower_values__()
         self.__calculate_value_categories__()
 
-    def has_upper_touches(self):
-        return self.get_number_of_rows_with_value_category(SVC.U_on) > 0
+    def get_number_upper_touches(self, ts_start=0, ts_end=math.inf) -> int:
+        return self.count_value_category(SVC.U_on, ts_start, ts_end)
 
-    def has_lower_touches(self):
-        return self.get_number_of_rows_with_value_category(SVC.L_on) > 0
+    def get_number_lower_touches(self, ts_start=0, ts_end=math.inf) -> int:
+        return self.count_value_category(SVC.L_on, ts_start, ts_end)
 
     def are_all_values_above_f_lower(self, with_tolerance: bool = False) -> bool:  # TODO with_tolerance
         tolerance = self.df[CN.LOW].mean() * self._tolerance_pct
@@ -41,20 +42,13 @@ class ValueCategorizer:
         return df_local.shape[0] == 0
 
     def are_all_values_in_value_category(self, value_category: str) -> bool:
-        return self.df_length == self.get_number_of_rows_with_value_category(value_category)
+        return self.df_length == self.count_value_category(value_category)
 
     def are_all_values_in_value_category_list(self, value_categories: list) -> bool:
         for key in self.value_category_dic:
             if not set(self.value_category_dic[key]).issubset(set(value_categories)):
                 return False
         return True
-
-    def get_number_of_rows_with_value_category(self, value_category: str) -> bool:
-        counter = 0
-        for key in self.value_category_dic:
-            if value_category in self.value_category_dic[key]:
-                counter += 1
-        return counter
 
     def print_data(self):
         print('\nValue categories for u=({}) and l=({}):'.format(self._f_upper, self._f_lower), end='\n')
@@ -75,16 +69,18 @@ class ValueCategorizer:
             self.df = self.df.assign(H_UPPER=(self._h_upper(self.df[self.__index_column])))
             self.df = self.df.assign(H_LOWER=(self._h_lower(self.df[self.__index_column])))
 
-    def count_value_categories(self, category: str):
-        return_value = 0
-        for key, cat_list in self.value_category_dic.items():
-            if category in cat_list:
-                return_value += 1
-        return return_value
+    def count_value_category(self, category: str, ts_start=0, ts_end=math.inf) -> int:
+        counter = 0
+        filtered_list = [self.value_category_dic[key] for key in self.value_category_dic_key_list
+                         if ts_start <= key <= ts_end]
+        for category_list in filtered_list:
+                if category in category_list:
+                    counter += 1
+        return counter
 
     def __calculate_value_categories__(self):
         for ind, row in self.df.iterrows():
-            self.index_list.append(row[self.__index_column])
+            self.value_category_dic_key_list.append(row[self.__index_column])
             self.value_category_dic[row[self.__index_column]] = self.__get_value_categories_for_df_row__(row)
 
     def __get_value_categories_for_df_row__(self, row) -> list:  # the series is important

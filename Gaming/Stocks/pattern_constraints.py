@@ -6,11 +6,12 @@ Date: 2018-05-14
 """
 
 import pandas as pd
-from sertl_analytics.constants.pattern_constants import CT, SVC, FT
+from sertl_analytics.constants.pattern_constants import CT, SVC, FT, DC
 from sertl_analytics.mymath import MyMath
 from pattern_value_categorizer import ValueCategorizer, ValueCategorizerHeadShoulder
 from pattern_range import PatternRange
 from sertl_analytics.myexceptions import MyException
+import math
 
 
 class CountConstraint:
@@ -45,6 +46,8 @@ class Constraints:
         self.f_lower_percentage_bounds = self._get_f_lower_percentage_bounds_()
         self.f_regression_percentage_bounds = self._get_f_regression_percentage_bounds_()
         self.height_end_start_relation_bounds = self._get_height_end_start_relation_bounds_()
+        self.previous_period_top_out_pct_bounds = self.__get_previous_period_top_out_pct_bounds__()
+        self.previous_period_bottom_out_pct_bounds = self.__get_previous_period_bottom_out_pct_bounds__()
         self._fill_global_constraints__()
 
     def get_value_dict(self):
@@ -57,23 +60,43 @@ class Constraints:
                     height_end_start_relation_bounds = self.height_end_start_relation_bounds,
                     f_regression_percentage_bounds = self.f_regression_percentage_bounds)
 
+    def are_pre_constraints_fulfilled(self, data_dict: dict) -> bool:
+        if len(self.previous_period_top_out_pct_bounds) > 0:
+            val = data_dict[DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT]
+            if not(self.previous_period_top_out_pct_bounds[0] <= val <= self.previous_period_top_out_pct_bounds[1]):
+                return False
+        if len(self.previous_period_bottom_out_pct_bounds) > 0:
+            val = data_dict[DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT]
+            if not(self.previous_period_bottom_out_pct_bounds[0] <= val <= self.previous_period_bottom_out_pct_bounds[1]):
+                return False
+        return True
+
     def are_constraints_fulfilled(self, pattern_range: PatternRange, f_cont) -> bool:
-        check_dic = {}
-        check_dic[CT.F_UPPER] = self.__is_f_upper_percentage_compliant__(f_cont.f_upper_percentage)
-        check_dic[CT.F_LOWER] = self.__is_f_lower_percentage_compliant__(f_cont.f_lower_percentage)
-        check_dic[CT.F_REGRESSION] = self.__is_f_regression_percentage_compliant__(f_cont.f_regression_percentage)
-        check_dic[CT.REL_HEIGHTS] = self.__is_relation_heights_compliant__(f_cont.height_end, f_cont.height_start)
-        if False in [check_dic[key] for key in check_dic]:  # first check - next step has calculations
+        check_dict = {
+            CT.F_UPPER: self.__is_f_upper_percentage_compliant__(f_cont.f_upper_percentage),
+            CT.F_LOWER: self.__is_f_lower_percentage_compliant__(f_cont.f_lower_percentage),
+            CT.F_REGRESSION: self.__is_f_regression_percentage_compliant__(f_cont.f_regression_percentage),
+            CT.REL_HEIGHTS: self.__is_relation_heights_compliant__(f_cont.height_end, f_cont.height_start)
+        }
+        if False in [check_dict[key] for key in check_dict]:  # first check - next step has calculations
             return False
         value_categorizer = self.__get_value_categorizer__(pattern_range, f_cont)
-        check_dic[CT.ALL_IN] = self.__is_global_constraint_all_in_satisfied__(value_categorizer)
-        check_dic[CT.COUNT] = self.__is_global_constraint_count_satisfied__(value_categorizer)
-        check_dic[CT.SERIES] = self.__is_global_constraint_series_satisfied__(value_categorizer)
-        return False if False in [check_dic[key] for key in check_dic] else True
+        check_dict[CT.ALL_IN] = self.__is_global_constraint_all_in_satisfied__(value_categorizer)
+        check_dict[CT.COUNT] = self.__is_global_constraint_count_satisfied__(value_categorizer)
+        check_dict[CT.SERIES] = self.__is_global_constraint_series_satisfied__(value_categorizer)
+        return False if False in [check_dict[key] for key in check_dict] else True
 
     def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
         return ValueCategorizer(f_cont.df, f_cont.f_upper, f_cont.f_lower,
                                              f_cont.h_upper, f_cont.h_lower, self.tolerance_pct)
+
+    @staticmethod
+    def __get_previous_period_top_out_pct_bounds__():
+        return []
+
+    @staticmethod
+    def __get_previous_period_bottom_out_pct_bounds__():
+        return []
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():
@@ -163,7 +186,7 @@ class Constraints:
         conjunction = self.global_count[0]
         for k in range(1, len(self.global_count)):
             count_constraint = self.global_count[k]
-            number = value_categorizer.get_number_of_rows_with_value_category(count_constraint.value_category)
+            number = value_categorizer.count_value_category(count_constraint.value_category)
             bool_value = count_constraint.is_value_satisfying_constraint(number)
             if bool_value and conjunction == 'OR':
                 return True
@@ -187,9 +210,9 @@ class Constraints:
     def __is_series_constraint_check_done__(self, series: list, index: int, value_categorizer: ValueCategorizer):
         if len(series) == 0:
             return True
-        if index == len(value_categorizer.index_list):
+        if index == len(value_categorizer.value_category_dic_key_list):
             return False
-        if series[0] in value_categorizer.value_category_dic[value_categorizer.index_list[index]]:
+        if series[0] in value_categorizer.value_category_dic[value_categorizer.value_category_dic_key_list[index]]:
             series = series[1:]
         return self.__is_series_constraint_check_done__(series, index + 1, value_categorizer)
 
@@ -218,6 +241,14 @@ class TKEDownConstraints(Constraints):
     def _get_height_end_start_relation_bounds_():
         return [0.1, 0.5]
 
+    @staticmethod
+    def __get_previous_period_top_out_pct_bounds__():
+        return [20, math.inf]  # min, max percentage required over top of the pattern
+
+    @staticmethod
+    def __get_previous_period_bottom_out_pct_bounds__():
+        return [0, 0]  # min, max, percentage required below bottom of the pattern
+
 
 class TKEUpConstraints(Constraints):
     def _fill_global_constraints__(self):
@@ -242,6 +273,14 @@ class TKEUpConstraints(Constraints):
     @staticmethod
     def _get_height_end_start_relation_bounds_():
         return [0.1, 0.5]
+
+    @staticmethod
+    def __get_previous_period_top_out_pct_bounds__():
+        return [0, 0]  # min, max percentage required over top of the pattern
+
+    @staticmethod
+    def __get_previous_period_bottom_out_pct_bounds__():
+        return [20, math.inf]  # min, max, percentage required below bottom of the pattern
 
 
 class ChannelConstraints(Constraints):
@@ -321,14 +360,15 @@ class HeadShoulderConstraints(Constraints):
         return [-2.0, 2.0]
 
     @staticmethod
-    def _get_f_lower_percentage_bounds_():
-        return []
-
-    def _get_f_regression_percentage_bounds_(self):
-        return []
+    def __get_previous_period_top_out_pct_bounds__():
+        return [0, 0]  # min, max percentage required over top of the pattern
 
 
-class HeadShoulderBottomConstraints(HeadShoulderConstraints):
+class HeadShoulderBottomConstraints(Constraints):
+    @staticmethod
+    def __get_tolerance_pct__():
+        return 0.02
+
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
@@ -345,12 +385,12 @@ class HeadShoulderBottomConstraints(HeadShoulderConstraints):
                                             f_cont.h_upper, f_cont.h_lower, self.tolerance_pct)
 
     @staticmethod
-    def _get_f_upper_percentage_bounds_():
-        return []
-
-    @staticmethod
     def _get_f_lower_percentage_bounds_():
         return [-2.0, 2.0]
+
+    @staticmethod
+    def __get_previous_period_bottom_out_pct_bounds__():
+        return [0, 0]  # min, max, percentage required below bottom of the pattern
 
 
 class TriangleConstraints(Constraints):
@@ -390,6 +430,14 @@ class TriangleTopConstraints(TriangleConstraints):
     def _get_f_lower_percentage_bounds_(self):
         return [1.0, 50.0]
 
+    @staticmethod
+    def __get_previous_period_top_out_pct_bounds__():
+        return [0, 0]  # min, max percentage required over top of the pattern
+
+    @staticmethod
+    def __get_previous_period_bottom_out_pct_bounds__():
+        return [20, math.inf]  # min, max, percentage required below bottom of the pattern
+
 
 class TriangleBottomConstraints(TriangleConstraints):
     @staticmethod
@@ -398,6 +446,14 @@ class TriangleBottomConstraints(TriangleConstraints):
 
     def _get_f_lower_percentage_bounds_(self):
         return TriangleTopConstraints().f_upper_percentage_bounds_complementary
+
+    @staticmethod
+    def __get_previous_period_top_out_pct_bounds__():
+        return [20, math.inf]  # min, max percentage required over top of the pattern
+
+    @staticmethod
+    def __get_previous_period_bottom_out_pct_bounds__():
+        return [0, 0]  # min, max, percentage required below bottom of the pattern
 
 
 class TriangleUpConstraints(TriangleConstraints):

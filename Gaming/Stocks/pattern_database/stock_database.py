@@ -7,10 +7,11 @@ Date: 2018-05-14
 
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, DateTime, Time
-from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame, MyTable, MyTableColumn, CDT
+from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod, ApiOutputsize
 from sertl_analytics.mydates import MyDate
+from pattern_database.stock_tables import FeaturesTable, TradeTable
 import pandas as pd
 import math
 from datetime import datetime
@@ -20,187 +21,13 @@ import os
 import time
 
 
-class FeaturesTable(MyTable):
-    def __init__(self):
-        MyTable.__init__(self)
-        self._feature_columns_touch_points = self.__get_feature_columns_touch_points__()
-        self._feature_columns_before_breakout = self.__get_feature_columns_before_breakout__()
-        self._feature_columns_after_breakout = self.__get_feature_columns_after_breakout__()
-        self._label_columns_touch_points = self.__get_label_columns_touch_points__()
-        self._label_columns_before_breakout = self.__get_label_columns_before_breakout__()
-        self._label_columns_after_breakout = self.__get_label_columns_after_breakout__()
-        self._query_for_feature_and_label_data_touch_points = \
-            self.__get_query_for_feature_and_label_data_touch_points__()
-        self._query_for_feature_and_label_data_before_breakout = \
-            self.__get_query_for_feature_and_label_data_before_breakout__()
-        self._query_for_feature_and_label_data_after_breakout = \
-            self.__get_query_for_feature_and_label_data_after_breakout__()
-
-    @property
-    def feature_columns_touch_points(self):
-        return self._feature_columns_touch_points
-
-    @property
-    def features_columns_before_breakout(self):
-        return self._feature_columns_before_breakout
-
-    @property
-    def features_columns_after_breakout(self):
-        return self._feature_columns_after_breakout
-
-    @property
-    def label_columns_touch_points(self):
-        return self._label_columns_touch_points
-
-    @property
-    def label_columns_before_breakout(self):
-        return self._label_columns_before_breakout
-
-    @property
-    def label_columns_after_breakout(self):
-        return self._label_columns_after_breakout
-
-    @property
-    def query_for_feature_and_label_data_touch_points(self):
-        return self._query_for_feature_and_label_data_touch_points
-
-    @property
-    def query_for_feature_and_label_data_before_breakout(self):
-        return self._query_for_feature_and_label_data_before_breakout
-
-    @property
-    def query_for_feature_and_label_data_after_breakout(self):
-        return self._query_for_feature_and_label_data_after_breakout
-
-    def _add_columns_(self):
-        self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.PERIOD, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(DC.PERIOD_ID, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.PERIOD_AGGREGATION , CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TICKER_ID, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(DC.TICKER_NAME, CDT.STRING, 100))
-        self._columns.append(MyTableColumn(DC.PATTERN_TYPE, CDT.STRING, 100))
-        self._columns.append(MyTableColumn(DC.PATTERN_TYPE_ID, CDT.INTEGER)) # 1x = Channel, 2x = Triangle, 3x = TKE, 4x = HS
-        self._columns.append(MyTableColumn(DC.TS_PATTERN_TICK_FIRST, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TS_PATTERN_TICK_LAST, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TS_BREAKOUT, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TICKS_TILL_PATTERN_FORMED, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_DT, CDT.DATE))
-        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_TIME, CDT.STRING, 10))
-        self._columns.append(MyTableColumn(DC.BREAKOUT_DT, CDT.DATE))
-        self._columns.append(MyTableColumn(DC.BREAKOUT_TIME, CDT.STRING, 10))
-        self._columns.append(MyTableColumn(DC.PATTERN_END_DT, CDT.DATE))
-        self._columns.append(MyTableColumn(DC.PATTERN_END_TIME, CDT.STRING, 10))
-        self._columns.append(MyTableColumn(DC.PATTERN_TOLERANCE_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.BREAKOUT_RANGE_MIN_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_LOW, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_HIGH, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.PATTERN_END_LOW, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.PATTERN_END_HIGH, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.SLOPE_UPPER_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.SLOPE_LOWER_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.SLOPE_REGRESSION_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.SLOPE_BREAKOUT_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.SLOPE_VOLUME_REGRESSION_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION, CDT.STRING, 10))
-        self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION_ID, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.NEXT_PERIOD_HALF_POSITIVE_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.NEXT_PERIOD_FULL_POSITIVE_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.NEXT_PERIOD_HALF_NEGATIVE_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.NEXT_PERIOD_FULL_NEGATIVE_PCT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.AVAILABLE_FIBONACCI_TYPE, CDT.STRING))  # MIN, MAX
-        self._columns.append(MyTableColumn(DC.AVAILABLE_FIBONACCI_TYPE_ID, CDT.INTEGER))  # 0=No, -1=MIN, 1 = MAX
-        self._columns.append(MyTableColumn(DC.EXPECTED_WIN, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.FALSE_BREAKOUT, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.EXPECTED_WIN_REACHED, CDT.INTEGER))
-
-    @staticmethod
-    def _get_name_():
-        return 'Features'
-
-    def __get_query_for_feature_and_label_data_touch_points__(self) -> str:
-        return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_touch_points__())
-
-    def __get_query_for_feature_and_label_data_before_breakout__(self) -> str:
-        return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_before_breakout__())
-
-    def __get_query_for_feature_and_label_data_after_breakout__(self):
-        return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_after_breakout__())
-
-    def __get_concatenated_feature_label_columns_touch_points__(self):
-        return ', '.join(self._feature_columns_touch_points + self._label_columns_touch_points)
-
-    def __get_concatenated_feature_label_columns_before_breakout__(self):
-        return ', '.join(self._feature_columns_before_breakout + self._label_columns_before_breakout)
-
-    def __get_concatenated_feature_label_columns_after_breakout__(self):
-        return ', '.join(self._feature_columns_after_breakout + self._label_columns_after_breakout)
-
-    @staticmethod
-    def __get_feature_columns_after_breakout__():
-        return [DC.EQUITY_TYPE_ID, DC.PERIOD_ID, DC.PERIOD_AGGREGATION, DC.PATTERN_TYPE_ID,
-                DC.TICKS_TILL_PATTERN_FORMED, DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT,
-                DC.SLOPE_UPPER_PCT, DC.SLOPE_LOWER_PCT, DC.SLOPE_REGRESSION_PCT, DC.SLOPE_BREAKOUT_PCT,
-                DC.SLOPE_VOLUME_REGRESSION_PCT, DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT,
-                DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM,
-                DC.BREAKOUT_DIRECTION_ID, DC.VOLUME_CHANGE_AT_BREAKOUT_PCT,
-                DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT,
-                DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT,
-                DC.AVAILABLE_FIBONACCI_TYPE_ID]
-
-    @staticmethod
-    def __get_feature_columns_before_breakout__():
-        base_list = FeaturesTable.__get_feature_columns_after_breakout__()
-        del base_list[base_list.index(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT)]
-        del base_list[base_list.index(DC.BREAKOUT_DIRECTION_ID)]
-        del base_list[base_list.index(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT)]
-        return base_list
-
-    @staticmethod
-    def __get_feature_columns_touch_points__():
-        base_list = FeaturesTable.__get_feature_columns_before_breakout__()
-        del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_TOP)]
-        del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM)]
-        return base_list
-
-    @staticmethod
-    def __get_label_columns_after_breakout__():
-        return [DC.NEXT_PERIOD_HALF_POSITIVE_PCT, DC.NEXT_PERIOD_FULL_POSITIVE_PCT,
-                DC.NEXT_PERIOD_HALF_NEGATIVE_PCT, DC.NEXT_PERIOD_FULL_NEGATIVE_PCT,
-                DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF, DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF,
-                DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL, DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL,
-                DC.FALSE_BREAKOUT]
-
-    @staticmethod
-    def __get_label_columns_before_breakout__():
-        return [DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT, DC.BREAKOUT_DIRECTION_ID, DC.FALSE_BREAKOUT]
-
-    @staticmethod
-    def __get_label_columns_touch_points__():
-        return [DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM]
-
-    @staticmethod
-    def is_label_column_for_regression(label_column: str):
-        return label_column[-4:] == '_PCT'
-
-
 class StockDatabase(BaseDatabase):
-    _crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
-    _sleep_seconds = 20
+    def __init__(self):
+        BaseDatabase.__init__(self)
+        self._crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+        self._sleep_seconds = 20
+        self._features_table = FeaturesTable()
+        self._trade_table = TradeTable()
 
     def is_symbol_loaded(self, symbol: str):
         last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
@@ -466,10 +293,16 @@ class StockDatabase(BaseDatabase):
 
     def create_pattern_feature_table(self):
         metadata = MetaData()
-        feature_table = FeaturesTable()
-        exec(feature_table.description())
+        exec(self._features_table.description())
         self.create_database_elements(metadata)
         table_obj = metadata.tables.get('Features')
+        print(repr(table_obj))
+
+    def create_trade_table(self):
+        metadata = MetaData()
+        exec(self._trade_table.description())
+        self.create_database_elements(metadata)
+        table_obj = metadata.tables.get('Trade')
         print(repr(table_obj))
 
     def __insert_feature_in_feature_table__(self, ticker: str, input_dic: dict):
@@ -480,15 +313,16 @@ class StockDatabase(BaseDatabase):
             print('{}: problem inserting into Features table.'.format(ticker))
 
     def are_features_already_available(self, features_dict: dict) -> bool:
-        query = "SELECT * FROM Features where {}={} and {}={} and {}='{}' and {}={} and {}={}".format(
-            DC.EQUITY_TYPE_ID, features_dict[DC.EQUITY_TYPE_ID],
-            DC.PERIOD_ID, features_dict[DC.PERIOD_ID],
-            DC.TICKER_ID, features_dict[DC.TICKER_ID],
-            DC.TS_PATTERN_TICK_FIRST, features_dict[DC.TS_PATTERN_TICK_FIRST],
-            DC.TS_PATTERN_TICK_LAST, features_dict[DC.TS_PATTERN_TICK_LAST]
-        )
+        query = self._features_table.get_query_for_unique_record_by_column_value_dict(features_dict)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
+
+    def get_features_differences_to_saved_version(self, features_dict: dict) -> dict:
+        query = self._features_table.get_query_for_unique_record_by_column_value_dict(features_dict)
+        db_df = DatabaseDataFrame(self, query)
+        df_first = db_df.df.iloc[0]
+        return {key: [str(df_first[key]), str(features_dict[key])] for key, values in features_dict.items()
+                if str(df_first[key]) != str(features_dict[key])}
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):

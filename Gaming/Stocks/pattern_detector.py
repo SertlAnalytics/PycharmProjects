@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-import numpy as np
+import pandas as pd
 from sertl_analytics.constants.pattern_constants import FT, FD, DC, CN, SVC, EQUITY_TYPE, EXTREMA
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
@@ -86,22 +86,22 @@ class PatternDetector:
                                                self.sys_config.pdh.pattern_data.tick_f_var_distance)
         self.fib_wave_tree.parse_tree()
 
-    def check_for_intersections(self):
-        fib_wave_list = self.fib_wave_tree.fibonacci_wave_forecast_collector.get_forecast_wave_list()
-        fib_wave_list = list(fib_wave_list + self.fib_wave_tree.fibonacci_wave_list)
-        for pattern in self.pattern_list:
-            start_pos = pattern.part_main.tick_first.position
-            end_pos = pattern.part_main.tick_last.position
-            pattern_position_set = set(range(start_pos, end_pos + 1))
-            for fib_waves in fib_wave_list:
-                start_pos = fib_waves.comp_position_list[0]
-                end_pos = fib_waves.comp_position_list[-1]
-                fib_waves_position_set = set(range(start_pos, end_pos + 1))
-                intersection_set = pattern_position_set.intersection(fib_waves_position_set)
-                if len(intersection_set) > 0:
+    def check_for_intersections_and_endings(self):
+        # fib_wave_list = self.fib_wave_tree.fibonacci_wave_forecast_collector.get_forecast_wave_list()
+        fib_wave_list = self.fib_wave_tree.fibonacci_wave_list
+        pattern_list_filtered = [pattern for pattern in self.pattern_list if pattern.was_breakout_done()]
+        for pattern in pattern_list_filtered:
+            pattern_start_pos = pattern.part_main.tick_first.position
+            pattern_end_pos = pattern.breakout.tick_breakout.position
+            for fib_wave in fib_wave_list:
+                fib_start_pos = fib_wave.position_start
+                fib_end_pos = fib_wave.position_end
+                if pattern_start_pos <= fib_start_pos <= pattern_end_pos or \
+                        pattern_start_pos <= fib_end_pos <= pattern_end_pos or \
+                        (fib_start_pos <= pattern_start_pos and fib_end_pos >= pattern_end_pos):
                     pattern.intersects_with_fibonacci_wave = True
-                    pattern.available_fibonacci_end_type = EXTREMA.MAX if fib_waves.wave_type == FD.ASC else EXTREMA.MIN
-                    break
+                if pattern.available_fibonacci_end_type is None and pattern_start_pos <= fib_end_pos <= pattern_end_pos:
+                    pattern.available_fibonacci_end_type = EXTREMA.MAX if fib_wave.wave_type == FD.ASC else EXTREMA.MIN
 
     def was_any_breakout_since_time_stamp(self, ts_since: float, print_id: str, for_print=False):
         for pattern in self.pattern_list:
@@ -135,8 +135,7 @@ class PatternDetector:
             return
         self.sys_config.runtime.actual_breakout = pattern.breakout
         pattern.add_part_main(PatternPart(self.sys_config, pattern.function_cont))
-        if pattern.is_formation_established() and pattern.is_expected_win_sufficient(
-                self.sys_config.runtime.actual_expected_win_pct):
+        if pattern.are_pre_conditions_fulfilled():
             if pattern.breakout is not None:
                 pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
                 self.__add_part_trade__(pattern)
@@ -224,7 +223,7 @@ class PatternDetector:
         if FT.HEAD_SHOULDER in self.pattern_type_list:
             self.range_detector_h_s = PatternRangeDetectorHeadShoulder(self.sys_config, tick_list_head_shoulder)
         if FT.HEAD_SHOULDER_BOTTOM in self.pattern_type_list:
-            self.range_detector_h_s = PatternRangeDetectorHeadShoulderBottom(self.sys_config, tick_list_head_shoulder)
+            self.range_detector_h_s_b = PatternRangeDetectorHeadShoulderBottom(self.sys_config, tick_list_head_shoulder)
 
     def __is_any_non_head_shoulder_pattern_type_selected__(self):
         head_shoulder_set = {FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM}
@@ -236,10 +235,10 @@ class PatternDetector:
         list_max = [] if self.range_detector_max is None else self.range_detector_max.get_pattern_range_list()
         list_min = [] if self.range_detector_min is None else self.range_detector_min.get_pattern_range_list()
         list_h_s = [] if self.range_detector_h_s is None else self.range_detector_h_s.get_pattern_range_list()
-        list_h_s_i = [] if self.range_detector_h_s_b is None else self.range_detector_h_s_b.get_pattern_range_list()
+        list_h_s_b = [] if self.range_detector_h_s_b is None else self.range_detector_h_s_b.get_pattern_range_list()
         list_max_without_covered = self.__remove_entries_covered_by_second_list__(list_max, list_min)
         list_min_without_covered = self.__remove_entries_covered_by_second_list__(list_min, list_max)
-        result_list = list_max + list_min + list_h_s + list_h_s_i
+        result_list = list_max + list_min + list_h_s + list_h_s_b
         return result_list
 
     @staticmethod
@@ -270,23 +269,29 @@ class PatternDetector:
     def get_statistics_api(self):
         return PatternDetectorStatisticsApi(self.pattern_list, self.sys_config.config.investment)
 
-    def _get_data_dict_for_features_table_(self, pattern: Pattern):
-        pattern_dict = pattern.get_data_dict()
-        if pattern_dict is None:
-            return None
-        pattern_dict.update(self.data_dict)
-        return {col: pattern_dict[col] for col in self.sys_config.features_table.column_name_list}
-
     def save_pattern_features(self):
         if not self.sys_config.config.save_pattern_features:
             return
         input_list = []
         for pattern in self.pattern_list:
-            if pattern.is_part_trade_available():
-                feature_dict = self._get_data_dict_for_features_table_(pattern)
+            if pattern.is_data_dict_ready_for_features_table():
+                feature_dict = pattern.data_dict_obj.get_data_dict_for_features_table()
                 if feature_dict is not None:
                     # print('save_pattern_features: {}'.format(feature_dict))
-                    if not self.sys_config.db_stock.are_features_already_available(feature_dict):
+                    if self.sys_config.db_stock.are_features_already_available(feature_dict):
+                        self.__print_difference_to_stored_version__(feature_dict)
+                    else:
                         input_list.append(feature_dict)
-        if len(input_list) > 0:
-            self.sys_config.db_stock.insert_pattern_features(input_list)
+
+        # if len(input_list) > 0:
+        #     self.sys_config.db_stock.insert_pattern_features(input_list)
+
+    def __print_difference_to_stored_version__(self, feature_dict: dict):
+        dict_diff = self.sys_config.db_stock.get_features_differences_to_saved_version(feature_dict)
+        if len(dict_diff) > 0:
+            print('Difference for Pattern {} [{}, {}]:'.format(
+                feature_dict[DC.PATTERN_TYPE], feature_dict[DC.PATTERN_BEGIN_DT], feature_dict[DC.PATTERN_END_DT]
+            ))
+            for key, values in dict_diff.items():
+                print('Different {}: old = {} <> {} = new'.format(key, values[0], values[1]))
+            print('')

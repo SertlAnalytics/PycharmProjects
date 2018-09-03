@@ -7,6 +7,7 @@ Date: 2018-08-28
 """
 
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mystring import MyString
 
 
 class ExchangeConfiguration:
@@ -14,10 +15,16 @@ class ExchangeConfiguration:
         self.is_simulation = True
         self.hodl_dict = {}  # currency in upper characters
         self.buy_order_value_max = 0
+        self.buy_fee_pct = 0.25
+        self.sell_fee_pct = 0.25
         self.__set_values__()
 
     def __set_values__(self):
         pass
+
+    def print_actual_mode(self):
+        text = 'Exchange running in {} mode.'.format('SIMULATION' if self.is_simulation else 'TRADING (!!!)')
+        print(MyString.surround(text))
 
 
 class Balance:
@@ -90,37 +97,88 @@ class Order:
             self.symbol, self.amount, self.price, self.side, self.type)
 
 
-class OrderStatus:
-    def __init__(self, order_id: int, symbol: str, exchange: str, price: float, avg_execution_price: float,
-                 side: str, order_type: str, executed_amount: float, original_amount: float,
-                 remaining_amount: float, is_cancelled: bool, time_stamp: float):
-        self.order_id = order_id
-        self.symbol = symbol        # The symbol name the order belongs to
-        self.exchange = exchange    # “bitfinex”
-        self.price = price          # The price the order was issued at (can be null for market orders)
-        self.avg_execution_price = avg_execution_price  # The average price at which this order as been executed so far.
+class OrderStatusApi:
+    def __init__(self):
+        self.order_id = 0
+        self.symbol = ''            # The symbol name the order belongs to
+        self.exchange = 'bitfinex'          # “bitfinex”
+        self.price = 0              # The price the order was issued at (can be null for market orders)
+        self.avg_execution_price = 0  # The average price at which this order as been executed so far.
                                                         # 0 if the order has not been executed at all
-        self.side = side            # Either “buy” or “sell”
-        self.type = order_type      # Either “market” / “limit” / “stop” / “trailing-stop'
-        self.time_stamp = round(time_stamp)  # The timestamp the order was submitted
+        self.side = ''              # Either “buy” or “sell”
+        self.type = ''              # Either “market” / “limit” / “stop” / “trailing-stop'
+        self.time_stamp = 0         # The timestamp the order was submitted
         self.is_live = False        # Could the order still be filled?
-        self.is_cancelled = is_cancelled   # Has the order been cancelled?
+        self.is_cancelled = False   # Has the order been cancelled?
         self.is_hidden = False      # Is the order hidden?
         self.oco_order = None       # If the order is an OCO order, the ID of the linked order. or null
         self.was_forced = False     # For margin only true if it was forced by the system
-        self.executed_amount = executed_amount # How much of the order has been executed so far in its history?
-        self.remaining_amount = remaining_amount # How much is still remaining to be submitted?
-        self.original_amount = original_amount # What was the order originally submitted for?
+        self.executed_amount = 0    # How much of the order has been executed so far in its history?
+        self.remaining_amount = 0   # How much is still remaining to be submitted?
+        self.original_amount = 0    # What was the order originally submitted for?
+        self.order_trigger = ''
+        self.order_comment = ''
+
+
+class OrderStatus:
+    def __init__(self, api: OrderStatusApi):
+        self.order_id = api.order_id
+        self.symbol = api.symbol
+        self.exchange = api.exchange
+        self.price = api.price
+        self.avg_execution_price = api.avg_execution_price
+        self.side = api.side
+        self.type = api.type
+        self.time_stamp = round(api.time_stamp)
+        self.is_live = False
+        self.is_cancelled = api.is_cancelled
+        self.is_hidden = False
+        self.oco_order = None
+        self.was_forced = False
+        self.executed_amount = api.executed_amount
+        self.remaining_amount = api.remaining_amount
+        self.original_amount = api.original_amount
+        self.order_trigger = api.order_trigger
+        self.order_comment = api.order_comment
+        self._fee_amount = 0
+
+    @property
+    def fee_amount(self):
+        return self._fee_amount
+
+    def set_fee_amount(self, fee_value: float, as_pct=False):
+        amount = self.original_amount if self.executed_amount == 0 else self.executed_amount
+        if as_pct:
+            self._fee_amount = round(self.price * amount * fee_value/100, 2)
+        else:
+            self._fee_amount = fee_value
+
+    @property
+    def value_total(self):
+        return round(self.price * self.executed_amount + self.fee_amount, 2)
 
 
     def print_order_status(self, prefix = ''):
         if prefix != '':
             print('\n{}:'.format(prefix))
-        print('Order_Id: {}\nSymbol: {}\nExchange: {}\nPrice: {}\nSide: {}\nType: {}\n' \
-               'Is_cancelled: {}\nExecuted_amount: {}\nDateTime: {}\nTimestamp: {}'.format(
-            self.order_id, self.symbol, self.exchange, self.price, self.side, self.type, self.is_cancelled,
-            self.executed_amount, MyDate.get_date_time_from_epoch_seconds(self.time_stamp), self.time_stamp
-        ))
+        print('\n'.join('{}: {}'.format(key, value) for key, value in self.__get_value_dict__().items()))
+
+    def __get_value_dict__(self) -> dict:
+        value_dict = {}
+        value_dict['Order_Id'] = self.order_id
+        value_dict['Symbol'] = self.symbol
+        value_dict['Exchange'] = self.exchange
+        value_dict['Price'] = self.price
+        value_dict['Original_amount'] = self.original_amount
+        value_dict['Side'] = self.side
+        value_dict['Type'] = self.type
+        value_dict['Is_cancelled'] = self.is_cancelled
+        value_dict['Executed_amount'] = self.executed_amount
+        value_dict['Fee_amount'] = self.fee_amount
+        value_dict['Value_total'] = self.value_total
+        value_dict['DateTime'] = MyDate.get_date_time_from_epoch_seconds(self.time_stamp)
+        value_dict['Timestamp'] = self.time_stamp
+        return value_dict
 
 
 class OrderBook:

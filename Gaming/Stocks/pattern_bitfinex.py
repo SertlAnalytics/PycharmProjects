@@ -23,6 +23,7 @@ from sertl_analytics.exchanges.bitfinex import SellMarketOrder, SellLimitOrder, 
 class MyBitfinexTradeClient:
     def __init__(self, trading_config: BitfinexConfiguration):
         self.trading_config = trading_config
+        self.trading_config.print_actual_mode()
         self._api_key = os.environ['bitfinex_apikey']
         self._api_key_secret = os.environ['bitfinex_apikeysecret']
         self._bitfinex = MyBitfinex(self._api_key, self._api_key_secret, trading_config)
@@ -39,6 +40,9 @@ class MyBitfinexTradeClient:
 
     def delete_order(self, order_id: int):
         self._bitfinex.delete_order(order_id)
+
+    def update_order(self, order_id: int, price_new: float):
+        self._bitfinex.update_order(order_id, price_new)
 
     def delete_all_orders(self):
         self._bitfinex.delete_all_orders()

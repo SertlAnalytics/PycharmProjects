@@ -26,3 +26,13 @@ class PyBaseDataFrame:
                 if not row[key] == condition_dic[key]:
                     return False
         return True
+
+    @staticmethod
+    def change_dict_list_to_data_frame(dict_list: list):
+        df_dict = {}
+        for dicts in dict_list:
+            for key, values in dicts.items():
+                if key not in df_dict:
+                    df_dict[key] = []
+                df_dict[key].append(values)
+        return pd.DataFrame.from_dict(df_dict)
