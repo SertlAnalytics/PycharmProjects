@@ -15,7 +15,7 @@ import math
 class ValueCategorizer:
     __index_column = CN.TIMESTAMP
 
-    def __init__(self, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower, tolerance_pct: float):
+    def __init__(self, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower, tolerance_pct_list: list):
         self.df = df
         self.df_length = self.df.shape[0]
         self._f_upper = f_upper
@@ -24,8 +24,8 @@ class ValueCategorizer:
         self._h_lower = h_lower
         self.value_category_dic_key_list = []
         self.value_category_dic = {}  # list of value categories by position of each entry
-        self._tolerance_pct = tolerance_pct
-        self._tolerance_pct_equal = 0.001
+        self._tolerance_pct = tolerance_pct_list[0]
+        self._tolerance_pct_equal = tolerance_pct_list[1]
         self.__set_f_upper_f_lower_values__()
         self.__set_h_upper_h_lower_values__()
         self.__calculate_value_categories__()
@@ -124,8 +124,8 @@ class ValueCategorizer:
         # the second condition is needed to get only the values which are in the tail of the TKE pattern.
 
     def __is_row_value_equal_f_upper__(self, row):
-        return abs(row[CN.HIGH] - row[CN.F_UPPER]) / np.mean([row[CN.HIGH], row[CN.F_UPPER]]) \
-               <= self._tolerance_pct_equal
+        value_pct = abs(row[CN.HIGH] - row[CN.F_UPPER]) / np.mean([row[CN.HIGH], row[CN.F_UPPER]])
+        return value_pct <= self._tolerance_pct_equal
 
     def __is_row_value_larger_f_upper__(self, row):
         return row[CN.HIGH] > row[CN.F_UPPER] and not self.__is_row_value_in_f_upper_range__(row)
@@ -135,8 +135,8 @@ class ValueCategorizer:
         return row[CN.HIGH] < row[CN.F_UPPER]
 
     def __is_row_value_equal_f_lower__(self, row):
-        return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) \
-               <= self._tolerance_pct_equal
+        value_pct = abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]])
+        return value_pct <= self._tolerance_pct_equal
 
     @staticmethod
     def __is_row_value_larger_f_lower__(row):
@@ -147,11 +147,11 @@ class ValueCategorizer:
 
 
 class ValueCategorizerHeadShoulder(ValueCategorizer):  # currently we don't need a separate for ...Bottom
-    def __init__(self, pattern_range, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower, tolerance_pct: float):
+    def __init__(self, pattern_range, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower, tolerance_pct_list: list):
         self._pattern_range = pattern_range
         self._shoulder_timestamps = [self._pattern_range.hsf.tick_shoulder_left.time_stamp,
                                      self._pattern_range.hsf.tick_shoulder_right.time_stamp]
-        ValueCategorizer.__init__(self, df, f_upper, f_lower, h_upper, h_lower, tolerance_pct)
+        ValueCategorizer.__init__(self, df, f_upper, f_lower, h_upper, h_lower, tolerance_pct_list)
 
     def __get_helper_values_categories_for_df_row__(self, return_list, row):
         if row[CN.TIMESTAMP] in self._shoulder_timestamps:

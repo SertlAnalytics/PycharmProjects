@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FD, DC, CN, EQUITY_TYPE, BT, ST, TR
+from sertl_analytics.constants.pattern_constants import FD, DC, CN, EQUITY_TYPE, BT, ST, TR, TSTR
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
@@ -14,6 +14,7 @@ from pattern_configuration import ApiPeriod
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.exchanges.exchange_cls import Order, OrderStatus
 from sertl_analytics.exchanges.bitfinex import OT
+import numpy as np
 
 
 class PatternDataDictionary:
@@ -30,7 +31,15 @@ class PatternDataDictionary:
         return self._data_dict
 
     def add(self, key: str, value):
+        value = self.__get_manipulated_value__(value)
         self._data_dict[key] = value
+
+    @staticmethod
+    def __get_manipulated_value__(value):
+        if type(value) in [np.float64, float]:
+            if value == -0.0:
+                value = 0.0
+        return value
 
     def get(self, key: str):
         return self._data_dict[key]
@@ -40,7 +49,10 @@ class PatternDataDictionary:
         self._data_dict[DC.EQUITY_TYPE_ID] = EQUITY_TYPE.get_id(self._data_dict[DC.EQUITY_TYPE])
         self._data_dict[DC.PERIOD] = self.sys_config.config.api_period
         self._data_dict[DC.PERIOD_ID] = ApiPeriod.get_id(self.sys_config.config.api_period)
-        self._data_dict[DC.PERIOD_AGGREGATION] = self.sys_config.config.api_period_aggregation
+        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+            self._data_dict[DC.PERIOD_AGGREGATION] = self.sys_config.config.api_period_aggregation
+        else:
+            self._data_dict[DC.PERIOD_AGGREGATION] = 1
         self._data_dict[DC.TICKER_ID] = self.sys_config.runtime.actual_ticker
         self._data_dict[DC.TICKER_NAME] = self.sys_config.runtime.actual_ticker_name
 
@@ -59,41 +71,41 @@ class PatternDataDictionary:
     def get_data_dict_for_features_table(self):
         return {col: self._data_dict[col] for col in self.sys_config.features_table.column_name_list}
 
-    @staticmethod
-    def add_buy_order_status_data_to_pattern_data_dict(self, data_dict: dict, order_status: OrderStatus):
-        data_dict[DC.BUY_ORDER_ID] = order_status.order_id
-        data_dict[DC.BUY_ORDER_TPYE] = order_status.type
-        data_dict[DC.BUY_ORDER_TPYE_ID] = OT.get_id(order_status.type)
-        data_dict[DC.BUY_DT] = MyDate.get_date_from_epoch_seconds(order_status.time_stamp)
-        data_dict[DC.BUY_TIME] = str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp))
-        data_dict[DC.BUY_AMOUNT] = order_status.original_amount
-        data_dict[DC.BUY_PRICE] = order_status.avg_execution_price
-        data_dict[DC.BUY_TOTAL_COSTS] = order_status.value_total
-        data_dict[DC.BUY_TRIGGER] = order_status.order_trigger
-        data_dict[DC.BUY_TRIGGER_ID] = BT.get_id(order_status.order_trigger)
-        data_dict[DC.BUY_COMMENT] = order_status.order_comment
+    def add_buy_order_status_data_to_pattern_data_dict(self, order_status: OrderStatus, trade_strategy: str):
+        self._data_dict[DC.BUY_ORDER_ID] = order_status.order_id
+        self._data_dict[DC.BUY_ORDER_TPYE] = order_status.type
+        self._data_dict[DC.BUY_ORDER_TPYE_ID] = OT.get_id(order_status.type)
+        self._data_dict[DC.BUY_DT] = MyDate.get_date_from_epoch_seconds(order_status.time_stamp)
+        self._data_dict[DC.BUY_TIME] = str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp))
+        self._data_dict[DC.BUY_AMOUNT] = order_status.original_amount
+        self._data_dict[DC.BUY_PRICE] = order_status.avg_execution_price
+        self._data_dict[DC.BUY_TOTAL_COSTS] = order_status.value_total
+        self._data_dict[DC.BUY_TRIGGER] = order_status.order_trigger
+        self._data_dict[DC.BUY_TRIGGER_ID] = BT.get_id(order_status.order_trigger)
+        self._data_dict[DC.BUY_COMMENT] = order_status.order_comment
+        self._data_dict[DC.TRADE_STRATEGY] = trade_strategy
+        self._data_dict[DC.TRADE_STRATEGY_ID] = TSTR.get_id(trade_strategy)
 
-    @staticmethod
-    def add_sell_order_status_data_to_pattern_data_dict(self, data_dict: dict, order_status: OrderStatus):
-        data_dict[DC.SELL_ORDER_ID] = order_status.order_id
-        data_dict[DC.SELL_ORDER_TPYE] = order_status.type
-        data_dict[DC.SELL_ORDER_TPYE_ID] = OT.get_id(order_status.type)
-        data_dict[DC.SELL_DT] = MyDate.get_date_from_epoch_seconds(order_status.time_stamp)
-        data_dict[DC.SELL_TIME] = str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp))
-        data_dict[DC.SELL_AMOUNT] = order_status.original_amount
-        data_dict[DC.SELL_PRICE] = order_status.avg_execution_price
-        data_dict[DC.SELL_TOTAL_VALUE] = order_status.value_total
-        data_dict[DC.SELL_TRIGGER] = order_status.order_trigger
-        data_dict[DC.SELL_TRIGGER_ID] = ST.get_id(order_status.order_trigger)
-        data_dict[DC.SELL_COMMENT] = order_status.order_comment
-        win_min = round(data_dict[DC.BUY_PRICE] * 1.005, 2)  # at least 0.5%
-        if data_dict[DC.SELL_PRICE] > win_min:
-            data_dict[DC.TRADE_RESULT] = TR.WINNER
-        elif data_dict[DC.SELL_PRICE] > data_dict[DC.BUY_PRICE]:
-            data_dict[DC.TRADE_RESULT] = TR.NEUTRAL
+    def add_sell_order_status_data_to_pattern_data_dict(self, order_status: OrderStatus):
+        self._data_dict[DC.SELL_ORDER_ID] = order_status.order_id
+        self._data_dict[DC.SELL_ORDER_TPYE] = order_status.type
+        self._data_dict[DC.SELL_ORDER_TPYE_ID] = OT.get_id(order_status.type)
+        self._data_dict[DC.SELL_DT] = MyDate.get_date_from_epoch_seconds(order_status.time_stamp)
+        self._data_dict[DC.SELL_TIME] = str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp))
+        self._data_dict[DC.SELL_AMOUNT] = order_status.original_amount
+        self._data_dict[DC.SELL_PRICE] = order_status.avg_execution_price
+        self._data_dict[DC.SELL_TOTAL_VALUE] = order_status.value_total
+        self._data_dict[DC.SELL_TRIGGER] = order_status.order_trigger
+        self._data_dict[DC.SELL_TRIGGER_ID] = ST.get_id(order_status.order_trigger)
+        self._data_dict[DC.SELL_COMMENT] = order_status.order_comment
+        win_min = round(self._data_dict[DC.BUY_PRICE] * 1.005, 2)  # at least 0.5%
+        if self._data_dict[DC.SELL_PRICE] > win_min:
+            self._data_dict[DC.TRADE_RESULT] = TR.WINNER
+        elif self._data_dict[DC.SELL_PRICE] > self._data_dict[DC.BUY_PRICE]:
+            self._data_dict[DC.TRADE_RESULT] = TR.NEUTRAL
         else:
-            data_dict[DC.TRADE_RESULT] = TR.LOSER
-        data_dict[DC.TRADE_RESULT_ID] = TR.get_id(data_dict[DC.TRADE_RESULT])
+            self._data_dict[DC.TRADE_RESULT] = TR.LOSER
+        self._data_dict[DC.TRADE_RESULT_ID] = TR.get_id(self._data_dict[DC.TRADE_RESULT])
 
     def get_flag_for_false_breakout(self):
         is_positive_first = self._data_dict[DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF] < \
@@ -102,9 +114,6 @@ class PatternDataDictionary:
                                    self._data_dict[DC.NEXT_PERIOD_HALF_NEGATIVE_PCT]
         min_pct_reached = self._data_dict[DC.NEXT_PERIOD_FULL_POSITIVE_PCT] >= 20.0
         return 0 if (is_positive_first or is_positive_value_larger) and min_pct_reached else 1
-
-    def get_flag_for_expected_win_reached(self):
-        return 1 if self._data_dict[DC.NEXT_PERIOD_FULL_POSITIVE_PCT] > 60.0 else 0
 
     def get_slope_breakout(self, pos_breakout: int, df_col: str = CN.CLOSE):
         distance = 4
@@ -120,8 +129,8 @@ class PatternDataDictionary:
 
     def get_min_max_value_dict(self, tick_first: WaveTick, tick_last: WaveTick, pattern_length: int):
         # the height at the start is the relative comparison value
-        c_range = round(self._data_dict[DC.PATTERN_BEGIN_HIGH] - self._data_dict[DC.PATTERN_BEGIN_LOW], 2)
-        # comp_range = _data_dict[DC.PATTERN_HEIGHT]  # new since 2018-08-29 - ToDo has to be clarified
+        # c_range = round(self._data_dict[DC.PATTERN_BEGIN_HIGH] - self._data_dict[DC.PATTERN_BEGIN_LOW], 2)
+        c_range = self._data_dict[DC.PATTERN_HEIGHT]  # new since 2018-08-29 - ToDo has to be clarified
         pattern_length_half = int(pattern_length / 2)
         pos_first = tick_first.position
         pos_last = tick_last.position

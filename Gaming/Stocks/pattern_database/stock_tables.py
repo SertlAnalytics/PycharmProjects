@@ -19,6 +19,7 @@ class TradeTable(MyTable):
         return 'Trade'
 
     def _add_columns_(self):
+        self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 50))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.PERIOD, CDT.STRING, 20))
@@ -78,6 +79,9 @@ class TradeTable(MyTable):
         self._columns.append(MyTableColumn(DC.SELL_COMMENT, CDT.STRING, 100))
         self._columns.append(MyTableColumn(DC.SELL_TRIGGER, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.SELL_TRIGGER_ID, CDT.INTEGER))
+
+        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.TRADE_RESULT, CDT.STRING, 10))
         self._columns.append(MyTableColumn(DC.TRADE_RESULT_ID, CDT.INTEGER))
 
@@ -99,14 +103,8 @@ class FeaturesTable(MyTable):
             self.__get_query_for_feature_and_label_data_after_breakout__()
 
     @staticmethod
-    def get_query_for_unique_record_by_column_value_dict(column_value_dict: dict) -> str:
-        return "SELECT * FROM Features where {}={} and {}={} and {}='{}' and {}={} and {}={}".format(
-            DC.EQUITY_TYPE_ID, column_value_dict[DC.EQUITY_TYPE_ID],
-            DC.PERIOD_ID, column_value_dict[DC.PERIOD_ID],
-            DC.TICKER_ID, column_value_dict[DC.TICKER_ID],
-            DC.TS_PATTERN_TICK_FIRST, column_value_dict[DC.TS_PATTERN_TICK_FIRST],
-            DC.TS_PATTERN_TICK_LAST, column_value_dict[DC.TS_PATTERN_TICK_LAST]
-        )
+    def get_query_for_unique_record_by_id(id: str) -> str:
+        return "SELECT * FROM Features where ID='{}'".format(id)
 
     @property
     def feature_columns_touch_points(self):
@@ -145,6 +143,7 @@ class FeaturesTable(MyTable):
         return self._query_for_feature_and_label_data_after_breakout
 
     def _add_columns_(self):
+        self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 50))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.PERIOD, CDT.STRING, 20))

@@ -216,7 +216,7 @@ class MyBitfinex(ExInterface):
         if self.__is_enough_balance_available__(order):
             if not self.__is_order_affected_by_hodl_config__(order):
                 if self.__is_order_value_compliant__(order):
-                    self.__create_order__(order, order_type)
+                    return self.__create_order__(order, order_type)
 
     def delete_order(self, order_id: int):
         prefix = 'Delete order - executed (simulation)' if self._is_simulation else 'Delete order - executed'
@@ -255,19 +255,25 @@ class MyBitfinex(ExInterface):
             print('Sell all{} for {}: no amounts available.'.format(self.simulation_text, symbol))
 
     def sell_all_assets(self):
+        order_status_list = []
         balances = self.get_balances()
         for balance in balances:
             trading_pair = '{}{}'.format(balance.asset, self.base_currency).lower()
             if trading_pair in self.trading_pairs:
-                self.__sell_all_in_balance__(balance, trading_pair)
+                order_status_list.append(self.__sell_all_in_balance__(balance, trading_pair))
+        return order_status_list
 
     def __sell_all_in_balance__(self, balance: Balance, trading_pair: str):
         order_sell_all = SellMarketOrder(trading_pair, balance.amount_available)
         order_sell_all.actual_balance_symbol = balance
-        self.create_order(order_sell_all, 'Sell all')
+        return self.create_order(order_sell_all, 'Sell all')
 
     def buy_available(self, symbol: str):
-        available_money = min(self.get_available_money(), self.exchange_config.buy_order_value_max)
+        if self._is_simulation:
+            available_money = self.exchange_config.buy_order_value_max
+        else:
+            available_money = min(self.get_available_money(), self.exchange_config.buy_order_value_max)
+
         if available_money < 10:
             print('\nNot enough (>{}$) balance for {} available'.format(10, self.base_currency))
         else:
@@ -277,7 +283,7 @@ class MyBitfinex(ExInterface):
             order_buy_all = BuyMarketOrder(symbol, amount)
             order_buy_all.actual_money_available = available_money
             order_buy_all.actual_ticker = ticker
-            self.create_order(order_buy_all, 'Buy available')
+            return self.create_order(order_buy_all, 'Buy available')
 
     def get_balance_for_symbol(self, symbol: str) -> Balance:
         balances = self.get_balances()
@@ -410,6 +416,8 @@ class MyBitfinex(ExInterface):
                                                                          json_resp['order_id'], json_resp)
             order_status.print_order_status(print_prefix)
             time.sleep(2)  # time to execute and update the application
+        return order_status
+
 
     def __init_actual_order_properties__(self, order: BitfinexOrder):
         if order.actual_ticker is None:

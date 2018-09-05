@@ -293,14 +293,14 @@ class StockDatabase(BaseDatabase):
 
     def create_pattern_feature_table(self):
         metadata = MetaData()
-        exec(self._features_table.description())
+        exec(self._features_table.description)
         self.create_database_elements(metadata)
         table_obj = metadata.tables.get('Features')
         print(repr(table_obj))
 
     def create_trade_table(self):
         metadata = MetaData()
-        exec(self._trade_table.description())
+        exec(self._trade_table.description)
         self.create_database_elements(metadata)
         table_obj = metadata.tables.get('Trade')
         print(repr(table_obj))
@@ -312,13 +312,13 @@ class StockDatabase(BaseDatabase):
             self.error_handler.catch_exception(__name__)
             print('{}: problem inserting into Features table.'.format(ticker))
 
-    def are_features_already_available(self, features_dict: dict) -> bool:
-        query = self._features_table.get_query_for_unique_record_by_column_value_dict(features_dict)
+    def are_features_already_available(self, id: str) -> bool:
+        query = self._features_table.get_query_for_unique_record_by_id(id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
     def get_features_differences_to_saved_version(self, features_dict: dict) -> dict:
-        query = self._features_table.get_query_for_unique_record_by_column_value_dict(features_dict)
+        query = self._features_table.get_query_for_unique_record_by_id(features_dict[DC.ID])
         db_df = DatabaseDataFrame(self, query)
         df_first = db_df.df.iloc[0]
         return {key: [str(df_first[key]), str(features_dict[key])] for key, values in features_dict.items()
@@ -333,8 +333,11 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
         if and_clause != '':
             self.statement += ' and ' + and_clause
         DatabaseDataFrame.__init__(self, db, self.statement)
-        self.df.set_index(CN.TIMESTAMP, drop=False, inplace=True)
-        self.column_data = [CN.CLOSE]
-        self.df_data = self.df[[CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL, CN. TIMESTAMP, CN.BIG_MOVE, CN.DIRECTION]]
+        if self.df.shape[0] == 0:
+            self.df_data = None
+        else:
+            self.df.set_index(CN.TIMESTAMP, drop=False, inplace=True)
+            self.column_data = [CN.CLOSE]
+            self.df_data = self.df[[CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL, CN. TIMESTAMP, CN.BIG_MOVE, CN.DIRECTION]]
 
 

@@ -58,25 +58,46 @@ class FT:
     CHANNEL = 'Channel'  # https://www.investopedia.com/articles/trading/05/020905.asp
     CHANNEL_UP = 'Channel up'
     CHANNEL_DOWN = 'Channel down'
-    TKE_DOWN = 'TKE down'  # Trend correction extrema
-    TKE_UP = 'TKE up'  # Trend correction extrema
+    TKE_BOTTOM = 'TKE bottom'  # Trend correction extrema
+    TKE_TOP = 'TKE top'  # Trend correction extrema
     HEAD_SHOULDER = 'Head-Shoulder'
+    HEAD_SHOULDER_ASC = 'Head-Shoulder_Ascending'
     HEAD_SHOULDER_BOTTOM = 'Head-Shoulder-Bottom'
-    ALL = 'All'
+    HEAD_SHOULDER_BOTTOM_DESC = 'Head-Shoulder-Bottom_Descending'
 
     @staticmethod
     def get_all():
-        return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN, FT.CHANNEL,
-                FT.CHANNEL_UP, FT.CHANNEL_DOWN, FT.TKE_UP, FT.TKE_DOWN,
-                FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]
+        return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN,
+                FT.CHANNEL, FT.CHANNEL_UP, FT.CHANNEL_DOWN,
+                FT.TKE_TOP, FT.TKE_BOTTOM,
+                FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_ASC, FT.HEAD_SHOULDER_BOTTOM, FT.HEAD_SHOULDER_BOTTOM_DESC]
+
+    @staticmethod
+    def get_non_head_shoulder_types():
+        hs_list = FT.get_head_shoulder_types() + FT.get_head_shoulder_bottom_types()
+        return [entry for entry in FT.get_all() if entry not in hs_list]
+
+    @staticmethod
+    def get_head_shoulder_types():
+        return [FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_ASC]
+
+    @staticmethod
+    def get_head_shoulder_bottom_types():
+        return [FT.HEAD_SHOULDER_BOTTOM, FT.HEAD_SHOULDER_BOTTOM_DESC]
+
+    @staticmethod
+    def is_pattern_type_any_head_shoulder(pattern_type: str) -> bool:
+        return pattern_type in FT.get_head_shoulder_types() + FT.get_head_shoulder_bottom_types()
 
     @staticmethod
     def get_id(key: str):
         return {FT.CHANNEL: 10, FT.CHANNEL_UP: 11, FT.CHANNEL_DOWN: 12,
                 FT.TRIANGLE: 20, FT.TRIANGLE_UP: 21, FT.TRIANGLE_DOWN: 22,
                 FT.TRIANGLE_TOP: 23, FT.TRIANGLE_BOTTOM: 24,
-                FT.TKE_UP: 31, FT.TKE_DOWN: 32,
-                FT.HEAD_SHOULDER: 43, FT.HEAD_SHOULDER_BOTTOM: 44}.get(key, 0)
+                FT.TKE_TOP: 31, FT.TKE_BOTTOM: 32,
+                FT.HEAD_SHOULDER: 43, FT.HEAD_SHOULDER_BOTTOM: 44,
+                FT.HEAD_SHOULDER_ASC: 45, FT.HEAD_SHOULDER_BOTTOM_DESC: 46
+                }.get(key, 0)
 
 
 class PT:  # PredictorType
@@ -191,6 +212,29 @@ class CT:  # Constraint types
     PRE_BOTTOM_PCT = 'Previous_Period_Bottom_PCT'
 
 
+class BT:  # Buy Trigger
+    BREAKOUT = 'Breakout'
+    TOUCH_POINT = 'Touch_point'
+    FIBONACCI_CLUSTER = 'Fibonacci_cluster'
+
+    def get_id(key: str):
+        return {BT.BREAKOUT: 10, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}.get(key)
+
+
+class TSTR:  # Trading Strategy
+    EXPECTED_WIN = 'Expected_win'
+    TRAILING_EXPECTED_WIN = 'Trailing_Expected_win'
+    TRAILING_EXPECTED_WIN_HALF = 'Trailing_Expected_win_half'
+    TRAILING_STEPPED_EXPECTED_WIN = 'Trailing_Stepped_Expected_win'
+    TRAILING_STEPPED_EXPECTED_WIN_HALF = 'Trailing_Stepped_Expected_win_half'
+    FIBONACCI = 'Fibonacci_reached'
+
+    def get_id(key: str):
+        return {TSTR.TRAILING_EXPECTED_WIN: 10, TSTR.TRAILING_EXPECTED_WIN_HALF: 15,
+                TSTR.TRAILING_STEPPED_EXPECTED_WIN: 20, TSTR.TRAILING_STEPPED_EXPECTED_WIN_HALF: 25,
+                TSTR.FIBONACCI: 50}.get(key)
+
+
 class ST:  # Sell Trigger
     EXPECTED_WIN = 'Expected_win'
     STOP_LOSS_INITIAL = 'Stop_loss_initial'
@@ -201,14 +245,6 @@ class ST:  # Sell Trigger
     def get_id(key: str):
         return {ST.EXPECTED_WIN: 10, ST.STOP_LOSS_INITIAL: 20, ST.STOP_LOSS_TRAILED: 25,
                 ST.TRAILING_STOP: 30, ST.FIBONACCI_CLUSTER: 50}.get(key)
-
-class BT:  # Buy Trigger
-    BREAKOUT = 'Breakout'
-    TOUCH_POINT = 'Touch_point'
-    FIBONACCI_CLUSTER = 'Fibonacci_cluster'
-
-    def get_id(key: str):
-        return {BT.BREAKOUT: 10, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}.get(key)
 
 
 class TR:  # Trade Result
@@ -269,12 +305,13 @@ class PSC:  # Pattern Statistics Columns
 
 
 class DC:  # Data Columns
+    ID = 'ID'  # Ticker_ID-Pattern_Type_ID-Pattern_Range_Begin_DT-Pattern_Range_End_DT
     EQUITY_TYPE = 'Equity_Type'  # Share, Commodities, Crypto Currency
     EQUITY_TYPE_ID = 'Equity_Type_ID'  # Share, Commodities, Crypto Currency
     PERIOD = 'Period'  # Daily, Intraday (min)
     PERIOD_ID = 'Period_ID'  # Intraday = 0, Daily = 1, Weekly = 2, Monthly = 3, Intraday (min)
     PERIOD_AGGREGATION = 'Aggregation'
-    TICKER_ID = 'Ticker_Id'
+    TICKER_ID = 'Ticker_ID'
     TICKER_NAME = 'Ticker_Name'
     PATTERN_TYPE = 'Pattern_Type'
     PATTERN_TYPE_ID = 'Pattern_Type_ID'
@@ -336,6 +373,8 @@ class DC:  # Data Columns
     BUY_TRIGGER = 'Buy_Trigger'
     BUY_TRIGGER_ID = 'Buy_Trigger_ID'
     BUY_COMMENT = 'Buy_Comment'
+    TRADE_STRATEGY = 'Trade_Strategy'
+    TRADE_STRATEGY_ID = 'Trade_Strategy_ID'
     FC_TOUCH_POINTS_TILL_BREAKOUT_TOP = 'Forecast_Touch_Points_Till_Breakout_Top'
     FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM = 'Forecast_Touch_Points_Till_Breakout_Bottom'
     FC_TICKS_TILL_BREAKOUT = 'Forecast_Ticks_Till_Breakout'

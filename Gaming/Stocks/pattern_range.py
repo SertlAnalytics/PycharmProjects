@@ -29,6 +29,12 @@ class PatternRange:
         self._f_param_parallel = None  # parallel function through low or high
         self._f_param_const = None  # constant through low or high
         self._f_param_list = []  # contains the possible f_params of the opposite side
+        self._covered_pattern_types = self._get_covered_pattern_types_()
+
+    @property
+    def id(self) -> str:
+        return '{}_{}_{}_{}'.format(self.tick_first.date_str, self.tick_first.time_str,
+                                    self.tick_last.date_str, self.tick_last.time_str)
 
     @property
     def f_param(self) -> np.poly1d:
@@ -64,12 +70,15 @@ class PatternRange:
         return stock_df.get_f_regression()
 
     @property
-    def dedicated_pattern_type(self) -> str:
-        return FT.ALL
-
-    @property
     def is_minimum_pattern_range(self) -> bool:
         return False  # is overwritten
+
+    def covers_pattern_type(self, pattern_type: str) -> bool:  # for head shoulder we have dedicated classes
+        return pattern_type in self._covered_pattern_types
+
+    @staticmethod
+    def _get_covered_pattern_types_() -> list:
+        return FT.get_non_head_shoulder_types()
 
     def __get_actual_df_min_max__(self):
         if self.tick_breakout_successor is None:
@@ -98,9 +107,9 @@ class PatternRange:
         self._f_param_const = self.__get_const_function__()
 
     def get_complementary_function_list(self, pattern_type: str) -> list:
-        if pattern_type in [FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]:
-            return [self.f_param_parallel] if self.dedicated_pattern_type == pattern_type else []
-        elif pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
+        if FT.is_pattern_type_any_head_shoulder(pattern_type):
+            return [self.f_param_parallel]
+        elif pattern_type in [FT.TKE_BOTTOM, FT.TKE_TOP]:
             return [self.f_param_const]
         else:
             return [] if self._f_param_list is None else self._f_param_list
@@ -285,15 +294,9 @@ class PatternRangeHeadShoulder(PatternRangeMin):
         self.hsf = hsf
         PatternRangeMin.__init__(self, sys_config, hsf.tick_previous_breakout, min_length)
 
-    @property
-    def dedicated_pattern_type(self) -> str:
-        return FT.HEAD_SHOULDER
-
-
-class PatternRangeHeadShoulderUp(PatternRangeHeadShoulder):
-    @property
-    def dedicated_pattern_type(self) -> str:
-        return FT.HEAD_SHOULDER_UP
+    @staticmethod
+    def _get_covered_pattern_types_() -> list:
+        return FT.get_head_shoulder_types()
 
 
 class PatternRangeHeadShoulderBottom(PatternRangeMax):
@@ -301,15 +304,9 @@ class PatternRangeHeadShoulderBottom(PatternRangeMax):
         self.hsf = hsf
         PatternRangeMax.__init__(self, sys_config, hsf.tick_previous_breakout, min_length)
 
-    @property
-    def dedicated_pattern_type(self) -> str:
-        return FT.HEAD_SHOULDER_BOTTOM
-
-
-class PatternRangeHeadShoulderDown(PatternRangeHeadShoulderBottom):
-    @property
-    def dedicated_pattern_type(self) -> str:
-        return FT.HEAD_SHOULDER_DOWN
+    @staticmethod
+    def _get_covered_pattern_types_() -> list:
+        return FT.get_head_shoulder_bottom_types()
 
 
 class PatternRangeDetector:

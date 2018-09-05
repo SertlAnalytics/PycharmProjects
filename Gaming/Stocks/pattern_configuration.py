@@ -9,6 +9,7 @@ from sertl_analytics.constants.pattern_constants import FT, Indices, CN, EQUITY_
 from pattern_database import stock_database as sdb
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiOutputsize, ApiPeriod
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
+from sertl_analytics.mydates import MyDate
 from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 
@@ -99,13 +100,31 @@ class PatternConfiguration:
                 return 0.0005
             else:
                 return 0.001
-        return 0.005
+        return 0.005  # orig: 0.005
+
+    @property
+    def value_categorizer_tolerance_pct_equal(self):
+        if self.api_period == ApiPeriod.INTRADAY:
+            if self.api_period_aggregation <= 5:
+                return 0.001
+            else:
+                return 0.002
+        return 0.005  # orig: 0.005
 
     def get_time_stamp_before_one_period_aggregation(self, time_stamp: float):
         if self.api_period == ApiPeriod.DAILY:
             return time_stamp - 60 * 60 * 24
         elif self.api_period == ApiPeriod.INTRADAY:
             return time_stamp - self.api_period_aggregation * 60
+
+    def get_time_stamp_after_ticks(self, tick_number: int, ts_set_off = MyDate.get_epoch_seconds_from_datetime()):
+        return int(ts_set_off + tick_number * self.__get_seconds_for_one_period_aggregation__())
+
+    def __get_seconds_for_one_period_aggregation__(self):
+        if self.api_period == ApiPeriod.DAILY:
+            return 60 * 60 * 24
+        elif self.api_period == ApiPeriod.INTRADAY:
+            return self.api_period_aggregation * 60
 
     @property
     def expected_win_pct(self):

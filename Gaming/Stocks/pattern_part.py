@@ -110,7 +110,7 @@ class PatternPart:
             f_lower_last = self.function_cont.get_lower_value(tick_breakout.f_var)
         self.bound_upper = f_upper_last
         self.bound_lower = f_lower_last
-        if self.pattern_type in [FT.TKE_DOWN, FT.TKE_UP]:
+        if self.pattern_type in [FT.TKE_BOTTOM, FT.TKE_TOP]:
             self.height = round(self.bound_upper - self.bound_lower, 2)
         else:
             self.distance_min = round(min(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
@@ -167,8 +167,10 @@ class PatternPart:
         return self.df[CN.MEAN_HL].mean()
 
     @property
-    def diff_max_min(self) -> float:
-        return round(self.max - self.min, 2)
+    def diff_max_min_till_breakout(self) -> float:
+        position_last = self.breakout.tick_breakout.position if self.breakout else self.tick_last.position
+        df_part = self.df.loc[self.tick_first.position:position_last]
+        return round(df_part[CN.HIGH].max() - df_part[CN.LOW].min(), 2)
 
     @property
     def max(self):
@@ -201,11 +203,11 @@ class PatternPart:
 
         type_date = 'Type={}: {} - {} ({})'.format(self.pattern_type, date_str_first, date_str_last, len(self.tick_list))
 
-        if self.pattern_type in [FT.TKE_UP, FT.HEAD_SHOULDER]:
+        if self.pattern_type in [FT.TKE_TOP, FT.HEAD_SHOULDER]:
             slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_percent, f_reg_percent)
             slopes_2 = 'f_param: L={}%, Reg={}%'.format(self.function_cont.f_lower[1], f_reg_percent)
             height = 'Height={}, Std_dev={}'.format(self.height, std_dev)
-        elif self.pattern_type in [FT.TKE_DOWN, FT.HEAD_SHOULDER_BOTTOM]:
+        elif self.pattern_type in [FT.TKE_BOTTOM, FT.HEAD_SHOULDER_BOTTOM]:
             slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_percent, f_reg_percent)
             height = 'Height={}, Std_dev={}'.format(self.height, std_dev)
         else:
@@ -237,9 +239,9 @@ class PatternPart:
         f_upper_slope = round(self.function_cont.f_upper[1] * multiplier, 1)
         f_lower_slope = round(self.function_cont.f_lower[1] * multiplier, 1)
         f_reg_slope = round(self.function_cont.f_regression[1] * multiplier, 1)
-        if self.pattern_type in [FT.TKE_UP, FT.HEAD_SHOULDER]:
+        if self.pattern_type in [FT.TKE_TOP, FT.HEAD_SHOULDER]:
             return 'f_param: L={}%, Reg={}%'.format(f_lower_slope, f_reg_slope)
-        elif self.pattern_type in [FT.TKE_DOWN, FT.HEAD_SHOULDER_BOTTOM]:
+        elif self.pattern_type in [FT.TKE_BOTTOM, FT.HEAD_SHOULDER_BOTTOM]:
             return 'f_param: U={}%, Reg={}%'.format(f_upper_slope, f_reg_slope)
         else:
             return 'f_param: U={}%, L={}%, Reg={}%'.format(f_upper_slope, f_lower_slope, f_reg_slope)

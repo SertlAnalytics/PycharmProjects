@@ -48,7 +48,7 @@ class MyTable:
         for columns in self._columns:
             table_str += ", " + columns.description
         table_str += ")"
-        # print('MyTable.__get_description__: '.format(table_str))
+        # print('MyTable.__get_description__: {}'.format(table_str))
         return table_str
 
     @staticmethod

@@ -7,10 +7,13 @@ Date: 2018-05-14
 
 import pandas as pd
 from sertl_analytics.constants.pattern_constants import CT, SVC, FT, DC
+from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mymath import MyMath
 from pattern_value_categorizer import ValueCategorizer, ValueCategorizerHeadShoulder
 from pattern_range import PatternRange
 from sertl_analytics.myexceptions import MyException
+from pattern_system_configuration import SystemConfiguration
+from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 import math
 
 
@@ -37,8 +40,12 @@ class CountConstraint:
 
 
 class Constraints:
-    def __init__(self):
+    def __init__(self, sys_config: SystemConfiguration):
+        self.sys_config = sys_config
+        self.api_period = self.sys_config.config.api_period
+        self.period_related_divisor = 10 if self.api_period == ApiPeriod.INTRADAY else 1
         self.tolerance_pct = self.__get_tolerance_pct__()
+        self.tolerance_pct_equal = self.sys_config.config.value_categorizer_tolerance_pct_equal
         self.global_all_in = []
         self.global_count = []
         self.global_series = []
@@ -87,8 +94,8 @@ class Constraints:
         return False if False in [check_dict[key] for key in check_dict] else True
 
     def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
-        return ValueCategorizer(f_cont.df, f_cont.f_upper, f_cont.f_lower,
-                                             f_cont.h_upper, f_cont.h_lower, self.tolerance_pct)
+        tol_pct_list = [self.tolerance_pct, self.tolerance_pct_equal]
+        return ValueCategorizer(f_cont.df, f_cont.f_upper, f_cont.f_lower, f_cont.h_upper, f_cont.h_lower, tol_pct_list)
 
     @staticmethod
     def __get_previous_period_top_out_pct_bounds__():
@@ -121,7 +128,8 @@ class Constraints:
     def __is_f_regression_percentage_compliant__(self, f_reg_percentage: float):
         if len(self.f_regression_percentage_bounds) == 0:  # no bounds defined
             return True
-        return self.f_regression_percentage_bounds[0] <= f_reg_percentage <= self.f_regression_percentage_bounds[1]
+        return self.f_regression_percentage_bounds[0]/self.period_related_divisor <= f_reg_percentage \
+               <= self.f_regression_percentage_bounds[1]/self.period_related_divisor
 
     @staticmethod
     def __is_breakout_required_after_certain_ticks__():
@@ -130,12 +138,14 @@ class Constraints:
     def __is_f_lower_percentage_compliant__(self, f_lower_percentage: float):
         if len(self.f_lower_percentage_bounds) == 0:  # no lower bounds defined
             return True
-        return self.f_lower_percentage_bounds[0] <= f_lower_percentage <= self.f_lower_percentage_bounds[1]
+        return self.f_lower_percentage_bounds[0]/self.period_related_divisor <= f_lower_percentage \
+               <= self.f_lower_percentage_bounds[1]/self.period_related_divisor
 
     def __is_f_upper_percentage_compliant__(self, f_upper_pct: float):
         if len(self.f_upper_percentage_bounds) == 0:  # no upper bounds defined
             return True
-        return self.f_upper_percentage_bounds[0] <= f_upper_pct <= self.f_upper_percentage_bounds[1]
+        return self.f_upper_percentage_bounds[0]/self.period_related_divisor <= f_upper_pct \
+               <= self.f_upper_percentage_bounds[1]/self.period_related_divisor
 
     def __is_relation_heights_compliant__(self, height_end: float, height_start: float):
         if len(self.height_end_start_relation_bounds) == 0:  # no relation defined
@@ -217,7 +227,7 @@ class Constraints:
         return self.__is_series_constraint_check_done__(series, index + 1, value_categorizer)
 
 
-class TKEDownConstraints(Constraints):
+class TKEBottomConstraints(Constraints):
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
@@ -250,7 +260,7 @@ class TKEDownConstraints(Constraints):
         return [0, 0]  # min, max, percentage required below bottom of the pattern
 
 
-class TKEUpConstraints(Constraints):
+class TKETopConstraints(Constraints):
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
@@ -352,8 +362,9 @@ class HeadShoulderConstraints(Constraints):
                               [SVC.H_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.H_in]]
 
     def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
+        tolerance_pct_list = [self.tolerance_pct, self.tolerance_pct_equal]
         return ValueCategorizerHeadShoulder(pattern_range, f_cont.df, f_cont.f_upper, f_cont.f_lower,
-                                            f_cont.h_upper, f_cont.h_lower, self.tolerance_pct)
+                                            f_cont.h_upper, f_cont.h_lower, tolerance_pct_list)
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():
@@ -362,6 +373,20 @@ class HeadShoulderConstraints(Constraints):
     @staticmethod
     def __get_previous_period_top_out_pct_bounds__():
         return [0, 0]  # min, max percentage required over top of the pattern
+
+    @staticmethod
+    def __get_previous_period_bottom_out_pct_bounds__():
+        return [100, math.inf]  # min, max percentage required under bottom of the pattern
+
+
+class HeadShoulderAscConstraints(HeadShoulderConstraints):
+    @staticmethod
+    def _get_f_upper_percentage_bounds_():
+        return [0.0, 4.0]
+
+    @staticmethod
+    def __get_previous_period_bottom_out_pct_bounds__():
+        return [0, 20]  # min, max percentage required under bottom of the pattern
 
 
 class HeadShoulderBottomConstraints(Constraints):
@@ -381,16 +406,31 @@ class HeadShoulderBottomConstraints(Constraints):
                               [SVC.H_on, SVC.U_on, SVC.L_on, SVC.U_on, SVC.H_in]]
 
     def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
+        tolerance_pct_list = [self.tolerance_pct, self.tolerance_pct_equal]
         return ValueCategorizerHeadShoulder(pattern_range, f_cont.df, f_cont.f_upper, f_cont.f_lower,
-                                            f_cont.h_upper, f_cont.h_lower, self.tolerance_pct)
+                                            f_cont.h_upper, f_cont.h_lower, tolerance_pct_list)
 
     @staticmethod
     def _get_f_lower_percentage_bounds_():
         return [-2.0, 2.0]
 
     @staticmethod
+    def __get_previous_period_top_out_pct_bounds__():
+        return [100, math.inf]  # min, max percentage allowed over top of the pattern
+
+    @staticmethod
     def __get_previous_period_bottom_out_pct_bounds__():
         return [0, 0]  # min, max, percentage required below bottom of the pattern
+
+
+class HeadShoulderBottomDescConstraints(HeadShoulderBottomConstraints):
+    @staticmethod
+    def _get_f_upper_percentage_bounds_():
+        return [-4.0, 0.0]
+
+    @staticmethod
+    def __get_previous_period_top_out_pct_bounds__():
+        return [0, 20]  # min, max percentage allowed over top of the pattern
 
 
 class TriangleConstraints(Constraints):
@@ -440,12 +480,11 @@ class TriangleTopConstraints(TriangleConstraints):
 
 
 class TriangleBottomConstraints(TriangleConstraints):
-    @staticmethod
-    def _get_f_upper_percentage_bounds_():
-        return TriangleTopConstraints().f_lower_percentage_bounds_complementary
+    def _get_f_upper_percentage_bounds_(self):
+        return TriangleTopConstraints(self.sys_config).f_lower_percentage_bounds_complementary
 
     def _get_f_lower_percentage_bounds_(self):
-        return TriangleTopConstraints().f_upper_percentage_bounds_complementary
+        return TriangleTopConstraints(self.sys_config).f_upper_percentage_bounds_complementary
 
     @staticmethod
     def __get_previous_period_top_out_pct_bounds__():
@@ -466,9 +505,8 @@ class TriangleUpConstraints(TriangleConstraints):
 
 
 class TriangleDownConstraints(TriangleConstraints):
-    @staticmethod
-    def _get_f_upper_percentage_bounds_():
-        return TriangleUpConstraints().f_lower_percentage_bounds_complementary
+    def _get_f_upper_percentage_bounds_(self):
+        return TriangleUpConstraints(self.sys_config).f_lower_percentage_bounds_complementary
 
     def _get_f_lower_percentage_bounds_(self):
         return self.f_upper_percentage_bounds
@@ -476,46 +514,50 @@ class TriangleDownConstraints(TriangleConstraints):
 
 class ConstraintsFactory:
     @staticmethod
-    def get_constraints_details_as_dict():
+    def get_constraints_details_as_dict(sys_config: SystemConfiguration):
         return_dict = {}
-        constraints_dic = ConstraintsFactory.get_constraints_as_dict()
+        constraints_dic = ConstraintsFactory.get_constraints_as_dict(sys_config)
         for key, constraints in constraints_dic.items():
             return_dict[key] = constraints.get_value_dict()
         return return_dict
 
     @staticmethod
-    def get_constraints_as_dict():
+    def get_constraints_as_dict(sys_config: SystemConfiguration):
         return_dict = {}
         for pattern_type in FT.get_all():
-            return_dict[pattern_type] = ConstraintsFactory.get_constraints_by_pattern_type(pattern_type)
+            return_dict[pattern_type] = ConstraintsFactory.get_constraints_by_pattern_type(pattern_type, sys_config)
         return return_dict
 
     @staticmethod
-    def get_constraints_by_pattern_type(pattern_type: str):
+    def get_constraints_by_pattern_type(pattern_type: str, sys_config: SystemConfiguration):
         if pattern_type == FT.TRIANGLE:
-            return TriangleConstraints()
+            return TriangleConstraints(sys_config)
         elif pattern_type == FT.TRIANGLE_TOP:
-            return TriangleTopConstraints()
+            return TriangleTopConstraints(sys_config)
         elif pattern_type == FT.TRIANGLE_BOTTOM:
-            return TriangleBottomConstraints()
+            return TriangleBottomConstraints(sys_config)
         elif pattern_type == FT.TRIANGLE_UP:
-            return TriangleUpConstraints()
+            return TriangleUpConstraints(sys_config)
         elif pattern_type == FT.TRIANGLE_DOWN:
-            return TriangleDownConstraints()
+            return TriangleDownConstraints(sys_config)
         elif pattern_type == FT.CHANNEL:
-            return ChannelConstraints()
+            return ChannelConstraints(sys_config)
         elif pattern_type == FT.CHANNEL_UP:
-            return ChannelUpConstraints()
+            return ChannelUpConstraints(sys_config)
         elif pattern_type == FT.CHANNEL_DOWN:
-            return ChannelDownConstraints()
-        elif pattern_type == FT.TKE_UP:
-            return TKEUpConstraints()
-        elif pattern_type == FT.TKE_DOWN:
-            return TKEDownConstraints()
+            return ChannelDownConstraints(sys_config)
+        elif pattern_type == FT.TKE_TOP:
+            return TKETopConstraints(sys_config)
+        elif pattern_type == FT.TKE_BOTTOM:
+            return TKEBottomConstraints(sys_config)
         elif pattern_type == FT.HEAD_SHOULDER:
-            return HeadShoulderConstraints()
+            return HeadShoulderConstraints(sys_config)
+        elif pattern_type == FT.HEAD_SHOULDER_ASC:
+            return HeadShoulderAscConstraints(sys_config)
         elif pattern_type == FT.HEAD_SHOULDER_BOTTOM:
-            return HeadShoulderBottomConstraints()
+            return HeadShoulderBottomConstraints(sys_config)
+        elif pattern_type == FT.HEAD_SHOULDER_BOTTOM_DESC:
+            return HeadShoulderBottomDescConstraints(sys_config)
         else:
             raise MyException('No constraints defined for pattern type "{}"'.format(pattern_type))
 

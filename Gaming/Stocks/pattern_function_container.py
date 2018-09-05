@@ -243,7 +243,7 @@ class ChannelDownPatternFunctionContainer(ChannelPatternFunctionContainer):
         return tick.close < self.get_lower_value(tick.f_var)
 
 
-class TKEUpPatternFunctionContainer(PatternFunctionContainer):
+class TKETopPatternFunctionContainer(PatternFunctionContainer):
     def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
         # print('TKEUp: self.f_var_cross_f_upper_f_lower = {}'.format(self.f_var_cross_f_upper_f_lower))
         tick_list = [tick_first, tick_last, tick_last, self.tick_for_helper, tick_first]
@@ -262,7 +262,7 @@ class TKEUpPatternFunctionContainer(PatternFunctionContainer):
         return tick.close < self.get_lower_value(tick.f_var)
 
     def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
-        return tick.close > self.get_upper_value(tick.f_var)
+        return tick.high > self.get_upper_value(tick.f_var)
 
     def get_lower_value(self, f_var: int):
         return round(min(self._f_lower(f_var), self._h_lower(f_var)), 2)
@@ -278,7 +278,7 @@ class TKEUpPatternFunctionContainer(PatternFunctionContainer):
             self.__set_tick_for_helper__(tick)
 
 
-class TKEDownPatternFunctionContainer(PatternFunctionContainer):
+class TKEBottomPatternFunctionContainer(PatternFunctionContainer):
     def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
         # print('TKEDown: self.f_var_cross_f_upper_f_lower = {}'.format(self.f_var_cross_f_upper_f_lower))
         tick_list = [tick_first, self.tick_for_helper, tick_last, tick_last, tick_first]
@@ -297,7 +297,7 @@ class TKEDownPatternFunctionContainer(PatternFunctionContainer):
         return tick.close > self.get_upper_value(tick.f_var)
 
     def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
-        return tick.close < self.get_lower_value(tick.f_var)
+        return tick.low < self.get_lower_value(tick.f_var)
 
     def get_upper_value(self, f_var: int):
         return round(max(self._f_upper(f_var), self._h_upper(f_var)), 2)
@@ -375,6 +375,10 @@ class HeadShoulderPatternFunctionContainer(PatternFunctionContainer):
         self._h_lower = self._h_upper
 
 
+class HeadShoulderAscPatternFunctionContainer(HeadShoulderPatternFunctionContainer):
+    pass
+
+
 class HeadShoulderBottomPatternFunctionContainer(PatternFunctionContainer):
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close > self.get_upper_value(tick.f_var)
@@ -386,6 +390,10 @@ class HeadShoulderBottomPatternFunctionContainer(PatternFunctionContainer):
         self._tick_for_helper = tick
         self._h_upper = MyPoly1d.get_parallel_through_point(self._f_upper, tick.f_var, tick.low)
         self._h_lower = self._h_upper
+
+
+class HeadShoulderBottomDescPatternFunctionContainer(HeadShoulderBottomPatternFunctionContainer):
+    pass
 
 
 class PatternFunctionContainerFactoryApi:
@@ -411,7 +419,7 @@ class PatternFunctionContainerFactory:
             f_upper = api.pattern_range.f_param
 
         f_cont = PatternFunctionContainerFactory.get_function_container(api.sys_config, api.pattern_type, df_check, f_lower, f_upper)
-        if api.pattern_type in [FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM]:
+        if FT.is_pattern_type_any_head_shoulder(api.pattern_type):
             f_cont.set_tick_for_helper(api.pattern_range.hsf.tick_shoulder_left)
         return f_cont
 
@@ -425,8 +433,12 @@ class PatternFunctionContainerFactory:
             return ChannelUpPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.HEAD_SHOULDER:
             return HeadShoulderPatternFunctionContainer(sys_config, df, f_lower, f_upper)
+        elif pattern_type == FT.HEAD_SHOULDER_ASC:
+            return HeadShoulderAscPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.HEAD_SHOULDER_BOTTOM:
             return HeadShoulderBottomPatternFunctionContainer(sys_config, df, f_lower, f_upper)
+        elif pattern_type == FT.HEAD_SHOULDER_BOTTOM_DESC:
+            return HeadShoulderBottomDescPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE:
             return TrianglePatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE_TOP:
@@ -437,10 +449,10 @@ class PatternFunctionContainerFactory:
             return TriangleUpPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.TRIANGLE_DOWN:
             return TriangleDownPatternFunctionContainer(sys_config, df, f_lower, f_upper)
-        elif pattern_type == FT.TKE_DOWN:
-            return TKEDownPatternFunctionContainer(sys_config, df, f_lower, f_upper)
-        elif pattern_type == FT.TKE_UP:
-            return TKEUpPatternFunctionContainer(sys_config, df, f_lower, f_upper)
+        elif pattern_type == FT.TKE_BOTTOM:
+            return TKEBottomPatternFunctionContainer(sys_config, df, f_lower, f_upper)
+        elif pattern_type == FT.TKE_TOP:
+            return TKETopPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         else:
             raise MyException('No pattern function container defined for pattern type "{}"'.format(pattern_type))
 

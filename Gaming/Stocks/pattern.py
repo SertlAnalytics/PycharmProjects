@@ -13,7 +13,7 @@ from pattern_trade_result import TradeResult
 from pattern_part import PatternPart
 import pattern_constraints as cstr
 from sertl_analytics.myexceptions import MyException
-from sertl_analytics.mymath import MyMath
+from sertl_analytics.mydates import MyDate
 from pattern_wave_tick import WaveTick
 from pattern_function_container import PatternFunctionContainerFactoryApi
 from pattern_value_categorizer import ValueCategorizer
@@ -68,6 +68,7 @@ class Pattern:
         self.sys_config = api.sys_config
         self.pattern_type = api.pattern_type
         self.data_dict_obj = PatternDataDictionary(self.sys_config)
+        self.ticker_id = self.sys_config.runtime.actual_ticker
         self.df = self.sys_config.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
         self.df_min_max = self.sys_config.pdh.pattern_data.df_min_max
@@ -97,6 +98,16 @@ class Pattern:
         self.y_predict_after_breakout = None
         self.value_categorizer = None
 
+    @property
+    def id(self) -> str:
+        equity_type_id = self.data_dict_obj.get(DC.EQUITY_TYPE_ID)
+        period_id = self.data_dict_obj.get(DC.PERIOD_ID)
+        aggregation = self.data_dict_obj.get(DC.PERIOD_AGGREGATION)
+        ticker_id = self.data_dict_obj.get(DC.TICKER_ID)
+        pattern_type_id = FT.get_id(self.pattern_type)
+        range_id = self.pattern_range.id
+        return '{}_{}_{}_{}_{}_{}'.format(equity_type_id, period_id, aggregation, ticker_id, pattern_type_id, range_id)
+
     def __get_available_fibonacci_end_type__(self):
         return self._available_fibonacci_end_type
 
@@ -114,6 +125,15 @@ class Pattern:
     @property
     def part_trade(self) -> PatternPart:
         return self._part_trade
+
+    @property
+    def length(self):
+        pos_first = self.part_main.tick_first.position
+        if self.part_main.breakout:
+            pos_last = self.part_main.breakout.tick_breakout.position
+        else:
+            pos_last = self.part_main.tick_last.position
+        return pos_last - pos_first
 
     def add_part_main(self, part_main: PatternPart):
         self._part_main = part_main
@@ -202,6 +222,10 @@ class Pattern:
         if self.was_breakout_done():
             return self.breakout.breakout_direction
         return FD.NONE
+
+    @property
+    def expected_breakout_direction(self):
+        return self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION)
 
     @property
     def type(self):
@@ -305,6 +329,9 @@ class Pattern:
         self.data_dict_obj.add(DC.FC_TICKS_TO_NEGATIVE_FULL,
                                self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL])
         self.data_dict_obj.add(DC.FC_FALSE_BREAKOUT_ID, self.y_predict_before_breakout[DC.FALSE_BREAKOUT])
+        ts = self.sys_config.config.get_time_stamp_after_ticks(self.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_FULL))
+        self.data_dict_obj.add(DC.FC_SELL_DT, MyDate.get_date_from_epoch_seconds(ts))
+        self.data_dict_obj.add(DC.FC_SELL_TIME, str(MyDate.get_time_from_epoch_seconds(ts)))
 
     def __add_predictions_before_breakout_to_data_dict__(self):
         if self.y_predict_touch_points is None:
@@ -319,6 +346,9 @@ class Pattern:
         self.data_dict_obj.add(DC.FC_BREAKOUT_DIRECTION,
                                FD.ASC if self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID) == 1 else FD.DESC)
         self.data_dict_obj.add(DC.FC_FALSE_BREAKOUT_ID, self.y_predict_before_breakout[DC.FALSE_BREAKOUT])
+        ts = self.sys_config.config.get_time_stamp_after_ticks(self.data_dict_obj.get(DC.FC_TICKS_TILL_BREAKOUT))
+        self.data_dict_obj.add(DC.FC_BUY_DT, MyDate.get_date_from_epoch_seconds(ts))
+        self.data_dict_obj.add(DC.FC_BUY_TIME, str(MyDate.get_time_from_epoch_seconds(ts)))
 
     def fill_result_set(self):
         if self.is_part_trade_available():
@@ -326,14 +356,13 @@ class Pattern:
             self.__add_data_dict_entries_after_filling_trade_result__()
 
     def get_maximal_trade_position_size(self) -> int:
-        if self.pattern_type in [FT.TKE_UP, FT.TKE_DOWN] and self.function_cont.f_var_cross_f_upper_f_lower != 0:
+        if self.pattern_type in [FT.TKE_TOP, FT.TKE_BOTTOM] and self.function_cont.f_var_cross_f_upper_f_lower != 0:
             return self.function_cont.position_cross_f_upper_f_lower - self.function_cont.tick_for_helper.position
         else:
             return self.pattern_range.length
 
-    @staticmethod
-    def __get_constraint__():
-        return cstr.Constraints()
+    def __get_constraint__(self):
+        return cstr.Constraints(self.sys_config)
 
     def __breakout_required_after_ticks__(self):
         return math.inf
@@ -341,8 +370,17 @@ class Pattern:
     def is_part_trade_available(self):
         return self._part_trade is not None
 
-    def is_data_dict_ready_for_features_table(self):
-        return DC.TS_BREAKOUT in  self.data_dict_obj._data_dict
+    def is_pattern_ready_for_features_table(self):
+        enough_distance = self._has_pattern_enough_distance_for_features_table_()
+        all_columns = self.data_dict_obj.is_data_dict_ready_for_features_table()
+        return enough_distance and all_columns
+
+    def _has_pattern_enough_distance_for_features_table_(self) -> bool:
+        if self.part_main.breakout is None:
+            return False
+        pos_first = self.part_main.tick_first.position
+        pos_last = self.part_main.breakout.tick_breakout.position
+        return self.length <= pos_first and pos_last <= self.df_length - self.length
 
     def __fill_trade_result__(self):
         tolerance_range = self._part_main.height * self.constraints.tolerance_pct
@@ -441,7 +479,8 @@ class Pattern:
         df_part = self.df_min_max.loc[np.logical_and(self.df_min_max[CN.POSITION] >= pos_begin,
                                                      self.df_min_max[CN.POSITION] <= pos_end)]
         f_cnt = self.function_cont
-        return ValueCategorizer(df_part, f_cnt.f_upper, f_cnt.f_lower, f_cnt.h_upper, f_cnt.h_lower, self.tolerance_pct)
+        tolerance_pct_list = [self.tolerance_pct, self.sys_config.config.value_categorizer_tolerance_pct_equal]
+        return ValueCategorizer(df_part, f_cnt.f_upper, f_cnt.f_lower, f_cnt.h_upper, f_cnt.h_lower, tolerance_pct_list)
 
     def __add_data_dict_entries_after_part_main__(self):
         tick_first = self.part_main.tick_first
@@ -458,10 +497,9 @@ class Pattern:
             tick_breakout = None
             pos_brk = 0
             time_stamp_brk = 0
-        pattern_length = pos_brk - pos_first if tick_breakout else pos_last - pos_first
-        # print('tick_first={},tick_breakout={},pattern_length={}'.format(pos_start, pos_brk, pattern_length))
 
         slope_upper, slope_lower, slope_regression = self.part_main.get_slope_values()
+        self.data_dict_obj.add(DC.ID, self.id)
         self.data_dict_obj.add(DC.PATTERN_TYPE, self.pattern_type)
         self.data_dict_obj.add(DC.PATTERN_TYPE_ID, FT.get_id(self.pattern_type))
         self.data_dict_obj.add(DC.TS_PATTERN_TICK_FIRST, time_stamp_first)
@@ -480,7 +518,7 @@ class Pattern:
         self.data_dict_obj.add(DC.PATTERN_END_TIME, tick_last.time_str)
         self.data_dict_obj.add(DC.PATTERN_TOLERANCE_PCT, self.tolerance_pct)
         self.data_dict_obj.add(DC.BREAKOUT_RANGE_MIN_PCT, self.sys_config.config.breakout_range_pct)
-        self.data_dict_obj.add(DC.PATTERN_HEIGHT, self.part_main.diff_max_min)
+        self.data_dict_obj.add(DC.PATTERN_HEIGHT, self.part_main.diff_max_min_till_breakout)
         self.data_dict_obj.add(DC.PATTERN_BEGIN_HIGH, round(self.function_cont.f_upper(tick_first.f_var), 2))
         self.data_dict_obj.add(DC.PATTERN_BEGIN_LOW, round(self.function_cont.f_lower(tick_first.f_var), 2))
         tick_end = tick_breakout if tick_breakout else tick_last
@@ -510,7 +548,7 @@ class Pattern:
             self.data_dict_obj.add(DC.BREAKOUT_DIRECTION, '')
             self.data_dict_obj.add(DC.BREAKOUT_DIRECTION_ID, 0)
             self.data_dict_obj.add(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT, 0)
-        min_max_dict = self.data_dict_obj.get_min_max_value_dict(tick_first, tick_end, pattern_length)
+        min_max_dict = self.data_dict_obj.get_min_max_value_dict(tick_first, tick_end, self.length)
         self.data_dict_obj.add(DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT, float(min_max_dict['max_previous_half'][0]))
         self.data_dict_obj.add(DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT, float(min_max_dict['max_previous_full'][0]))
         self.data_dict_obj.add(DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT, float(min_max_dict['min_previous_half'][0]))
@@ -533,7 +571,21 @@ class Pattern:
     def __add_data_dict_entries_after_filling_trade_result__(self):
         self.data_dict_obj.add(DC.EXPECTED_WIN, round(self.trade_result.expected_win, 2))
         self.data_dict_obj.add(DC.FALSE_BREAKOUT, self.data_dict_obj.get_flag_for_false_breakout())
-        self.data_dict_obj.add(DC.EXPECTED_WIN_REACHED, self.data_dict_obj.get_flag_for_expected_win_reached())
+        self.data_dict_obj.add(DC.EXPECTED_WIN_REACHED, self.__get_expected_win_reached_flag__())
+
+    def __get_expected_win_reached_flag__(self):
+        tick_breakout = self.part_main.breakout.tick_breakout
+        df_part = self.df.iloc[tick_breakout.position:min(self.df_length, tick_breakout.position + self.length)]
+        win_expected = self.data_dict_obj.get(DC.EXPECTED_WIN)
+        if self.breakout_direction == FD.ASC:
+            f_value_breakout = self.function_cont.get_upper_value(tick_breakout.f_var)
+            max_value = df_part[CN.HIGH].max()
+            expected_win_reached = max_value >= f_value_breakout + win_expected
+        else:
+            f_value_breakout = self.function_cont.get_lower_value(tick_breakout.f_var)
+            min_value = df_part[CN.LOW].min()
+            expected_win_reached = min_value <= f_value_breakout - win_expected
+        return 1 if expected_win_reached else 0
 
 
 class ChannelPattern(Pattern):
@@ -558,6 +610,10 @@ class HeadShoulderPattern(Pattern):
         return self.pattern_range.hsf.expected_win
 
 
+class HeadShoulderAscPattern(HeadShoulderPattern):
+    pass
+
+
 class HeadShoulderBottomPattern(Pattern):
     def __breakout_required_after_ticks__(self):
         value_01 = self.pattern_range.hsf.distance_start_to_tick_left_neckline
@@ -566,6 +622,10 @@ class HeadShoulderBottomPattern(Pattern):
 
     def __get_expected_win__(self):
         return self.pattern_range.hsf.expected_win
+
+
+class HeadShoulderBottomDescPattern(HeadShoulderBottomPattern):
+    pass
 
 
 class TrianglePattern(Pattern):
@@ -619,8 +679,12 @@ class PatternFactory:
             return ChannelUpPattern(pattern_api)
         elif pattern_type == FT.HEAD_SHOULDER:
             return HeadShoulderPattern(pattern_api)
+        elif pattern_type == FT.HEAD_SHOULDER_ASC:
+            return HeadShoulderAscPattern(pattern_api)
         elif pattern_type == FT.HEAD_SHOULDER_BOTTOM:
             return HeadShoulderBottomPattern(pattern_api)
+        elif pattern_type == FT.HEAD_SHOULDER_BOTTOM_DESC:
+            return HeadShoulderBottomDescPattern(pattern_api)
         elif pattern_type == FT.TRIANGLE:
             return TrianglePattern(pattern_api)
         elif pattern_type == FT.TRIANGLE_TOP:
@@ -631,9 +695,9 @@ class PatternFactory:
             return TriangleUpPattern(pattern_api)
         elif pattern_type == FT.TRIANGLE_DOWN:
             return TriangleDownPattern(pattern_api)
-        elif pattern_type == FT.TKE_DOWN:
+        elif pattern_type == FT.TKE_BOTTOM:
             return TKEDownPattern(pattern_api)
-        elif pattern_type == FT.TKE_UP:
+        elif pattern_type == FT.TKE_TOP:
             return TKEUpPattern(pattern_api)
         else:
             raise MyException('No pattern defined for pattern type "{}"'.format(pattern_type))

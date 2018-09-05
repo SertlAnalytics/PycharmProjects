@@ -62,10 +62,10 @@ class PatternDetector:
         for pattern_type in self.pattern_type_list:
             # print('parsing for pattern: {}'.format(pattern_type))
             pfcf_api = PatternFunctionContainerFactoryApi(self.sys_config, pattern_type)
-            pfcf_api.constraints = ConstraintsFactory.get_constraints_by_pattern_type(pattern_type)
+            pfcf_api.constraints = ConstraintsFactory.get_constraints_by_pattern_type(pattern_type, self.sys_config)
             self.sys_config.runtime.actual_pattern_type = pattern_type
             for pattern_range in possible_pattern_range_list:
-                if pattern_range.dedicated_pattern_type in [FT.ALL, pattern_type]:
+                if pattern_range.covers_pattern_type(pattern_type):
                     pfcf_api.pattern_range = pattern_range
                     self.sys_config.runtime.actual_pattern_range = pattern_range
                     # pattern_range.print_range_details()
@@ -216,20 +216,15 @@ class PatternDetector:
         return PatternBreakout(breakout_api)
 
     def __fill_possible_pattern_ranges__(self):
-        if self.__is_any_non_head_shoulder_pattern_type_selected__():
+        pattern_type_set = set(self.pattern_type_list)
+        if len(pattern_type_set.intersection(set(FT.get_non_head_shoulder_types()))) > 0:
             self.range_detector_max = PatternRangeDetectorMax(self.sys_config, self.sys_config.pdh.pattern_data.tick_list_max_without_hidden_ticks)
             self.range_detector_min = PatternRangeDetectorMin(self.sys_config, self.sys_config.pdh.pattern_data.tick_list_min_without_hidden_ticks)
         tick_list_head_shoulder = self.sys_config.pdh.pattern_data.tick_list_min_max_for_head_shoulder
-        if FT.HEAD_SHOULDER in self.pattern_type_list:
+        if len(pattern_type_set.intersection(set(FT.get_head_shoulder_types()))) > 0:
             self.range_detector_h_s = PatternRangeDetectorHeadShoulder(self.sys_config, tick_list_head_shoulder)
-        if FT.HEAD_SHOULDER_BOTTOM in self.pattern_type_list:
+        if len(pattern_type_set.intersection(set(FT.get_head_shoulder_bottom_types()))) > 0:
             self.range_detector_h_s_b = PatternRangeDetectorHeadShoulderBottom(self.sys_config, tick_list_head_shoulder)
-
-    def __is_any_non_head_shoulder_pattern_type_selected__(self):
-        head_shoulder_set = {FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_BOTTOM}
-        pattern_type_set = set(self.pattern_type_list)
-        intersection_pt_head_shoulder = pattern_type_set.intersection(head_shoulder_set)
-        return False if len(intersection_pt_head_shoulder) == len(pattern_type_set) else True
 
     def get_combined_possible_pattern_ranges(self) -> list:
         list_max = [] if self.range_detector_max is None else self.range_detector_max.get_pattern_range_list()
@@ -274,23 +269,27 @@ class PatternDetector:
             return
         input_list = []
         for pattern in self.pattern_list:
-            if pattern.is_data_dict_ready_for_features_table():
+            if pattern.is_pattern_ready_for_features_table():
                 feature_dict = pattern.data_dict_obj.get_data_dict_for_features_table()
                 if feature_dict is not None:
                     # print('save_pattern_features: {}'.format(feature_dict))
-                    if self.sys_config.db_stock.are_features_already_available(feature_dict):
+                    if self.sys_config.db_stock.are_features_already_available(feature_dict[DC.ID]):
                         self.__print_difference_to_stored_version__(feature_dict)
                     else:
                         input_list.append(feature_dict)
 
-        # if len(input_list) > 0:
-        #     self.sys_config.db_stock.insert_pattern_features(input_list)
+        if len(input_list) > 0:
+            self.sys_config.db_stock.insert_pattern_features(input_list)
 
     def __print_difference_to_stored_version__(self, feature_dict: dict):
         dict_diff = self.sys_config.db_stock.get_features_differences_to_saved_version(feature_dict)
         if len(dict_diff) > 0:
             print('Difference for Pattern {} [{}, {}]:'.format(
-                feature_dict[DC.PATTERN_TYPE], feature_dict[DC.PATTERN_BEGIN_DT], feature_dict[DC.PATTERN_END_DT]
+                feature_dict[DC.PATTERN_TYPE],
+                feature_dict[DC.PATTERN_BEGIN_TIME] if self.sys_config.config.api_period == ApiPeriod.INTRADAY
+                else feature_dict[DC.PATTERN_BEGIN_DT],
+                feature_dict[DC.PATTERN_END_TIME] if self.sys_config.config.api_period == ApiPeriod.INTRADAY
+                else feature_dict[DC.PATTERN_END_DT]
             ))
             for key, values in dict_diff.items():
                 print('Different {}: old = {} <> {} = new'.format(key, values[0], values[1]))

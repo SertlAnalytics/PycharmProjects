@@ -59,6 +59,7 @@ class PatternDetectionController:
         self._excel_file_with_test_data = None
         self._df_test_data = None
         self._loop_list_ticker = None  # format of an entry (ticker, and_clause, number)
+        self._number_pattern_total = 0
 
     def run_pattern_detector(self, excel_file_test_data: PatternExcelFile = None):
         self._excel_file_with_test_data = excel_file_test_data
@@ -69,6 +70,9 @@ class PatternDetectionController:
             self.__update_runtime_parameters__(value_dic)
             print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
             df_data = self.__get_df_from_source__(ticker, value_dic)
+            if df_data is None:
+                print('No data available for: {} and {}'.format(ticker, self.sys_config.runtime.actual_and_clause))
+                continue
             self.sys_config.pdh.init_by_df(df_data)
             detector = PatternDetector(self.sys_config)
             detector.parse_for_pattern()
@@ -76,7 +80,7 @@ class PatternDetectionController:
             detector.check_for_intersections_and_endings()
             detector.save_pattern_features()
             self.__handle_statistics__(detector)
-
+            self._number_pattern_total += len(detector.pattern_list)
             if self.sys_config.config.plot_data:
                 if len(detector.pattern_list) == 0 and False:  # and not detector.possible_pattern_ranges_available:
                     print('...no formations found.')
@@ -89,7 +93,7 @@ class PatternDetectionController:
             if value_dic[LL.NUMBER] >= self.sys_config.config.max_number_securities:
                 break
 
-        if self.sys_config.config.show_final_statistics:
+        if self.sys_config.config.show_final_statistics and self._number_pattern_total > 0:
             self.__show_statistics__()
         self.__write_constraints_statistics__()
 
@@ -228,7 +232,8 @@ class PatternDetectionController:
                     break
         else:
             for ticker in self.sys_config.config.ticker_dic:
-                self._loop_list_ticker.append({LL.TICKER: ticker, LL.AND_CLAUSE: self.sys_config.config.and_clause})
+                if ticker not in ['DWDPxx']:
+                    self._loop_list_ticker.append({LL.TICKER: ticker, LL.AND_CLAUSE: self.sys_config.config.and_clause})
 
     def __handle_statistics__(self, detector: PatternDetector):
         for pattern in detector.pattern_list:
