@@ -19,10 +19,11 @@ from sertl_analytics.myconstants import MyAPPS
 from pattern_dash.my_dash_base import MyDashBase
 from pattern_detection_controller import PatternDetectionController
 from pattern_detector import PatternDetector
-from sertl_analytics.constants.pattern_constants import CN, FD
+from sertl_analytics.constants.pattern_constants import CN, FD, BT, ST, TSTR, TBT
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mycache import MyCache, MyCacheObject, MyCacheObjectApi
 from pattern import Pattern
 from pattern_part import PatternPart
 from pattern_range import PatternRange
@@ -30,44 +31,26 @@ from pattern_wave_tick import WaveTickList
 from pattern_colors import PatternColorHandler
 from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi, MyHTMLHeaderTable
 from fibonacci.fibonacci_wave import FibonacciWave
+from pattern_bitfinex import BitfinexConfiguration
+from pattern_trade_handler import PatternTradeHandler
 from copy import deepcopy
 from textwrap import dedent
 
 
-class MyCacheObjectApi:
-    def __init__(self, sys_config: SystemConfiguration):
-        self.sys_config = sys_config
-        self.key = None
-        self.value = None
-        self.valid_until_ts = None
-        self.period_aggregation_ts = self.sys_config.config.api_period_aggregation * 60
-
-
 class MyGraphCacheObjectApi(MyCacheObjectApi):
     def __init__(self, sys_config: SystemConfiguration):
-        MyCacheObjectApi.__init__(self, sys_config)
+        MyCacheObjectApi.__init__(self)
+        self.sys_config = sys_config
         self.detector = None
         self.pattern_data = None
         self.last_refresh_ts = None
-
-
-class MyCacheObject:
-    def __init__(self, cache_api: MyCacheObjectApi):
-        self.sys_config = cache_api.sys_config
-        self.id = cache_api.key
-        self.value = cache_api.value
-        self.valid_until_ts = cache_api.valid_until_ts
-        self.valid_until_time = MyDate.get_time_from_epoch_seconds(self.valid_until_ts)
-
-    def is_valid(self):
-        if self.valid_until_ts is None:
-            return True
-        return MyDate.time_stamp_now() < self.valid_until_ts
+        self.period_aggregation_ts = self.sys_config.config.api_period_aggregation * 60
 
 
 class MyGraphCacheObject(MyCacheObject):
     def __init__(self, cache_api: MyGraphCacheObjectApi):
         MyCacheObject.__init__(self, cache_api)
+        self.sys_config = cache_api.sys_config
         self.detector = cache_api.detector
         self.pattern_data = cache_api.pattern_data
         self.last_refresh_ts = cache_api.last_refresh_ts
@@ -96,30 +79,6 @@ class MyGraphCacheObject(MyCacheObject):
         return self.detector.is_any_pattern_without_breakout()
 
 
-class MyCache:
-    def __init__(self):
-        self._cached_object_dict = {}
-
-    def add_cache_value(self, cache_api: MyCacheObjectApi):
-        self._cached_object_dict[cache_api.key] = MyCacheObject(cache_api)
-        self._print_add_to_cache_(cache_api.key, cache_api.valid_until_ts)
-
-    @staticmethod
-    def _print_add_to_cache_(cache_key, valid_until_ts):
-        valid_until_t = MyDate.get_time_from_epoch_seconds(valid_until_ts)
-        now_t = MyDate.get_time_from_epoch_seconds(MyDate.time_stamp_now())
-        print('\nAdd to cache: key={}, valid_until={}, now={}'.format(cache_key, valid_until_t, now_t))
-
-    def get_cached_value_by_cache_key(self, cache_key):
-        if cache_key in self._cached_object_dict:
-            if self._cached_object_dict[cache_key].is_valid():
-                return self._cached_object_dict[cache_key].value
-        return None
-
-    def clear(self):
-        self._cached_object_dict = {}
-
-
 class MyGraphCache(MyCache):
     def __init__(self):
         MyCache.__init__(self)
@@ -137,9 +96,9 @@ class MyGraphCache(MyCache):
     def get_cache_key(graph_id: str, ticker: str, days: int = 0):
         return '{}_{}_{}'.format(graph_id, ticker, days)
 
-    def add_cache_value(self, cache_api: MyGraphCacheObjectApi):
+    def add_cache_object(self, cache_api: MyGraphCacheObjectApi):
         self._cached_object_dict[cache_api.key] = MyGraphCacheObject(cache_api)
-        self._print_add_to_cache_(cache_api.key, cache_api.valid_until_ts)
+        self._cached_object_dict[cache_api.key].print()
 
     def get_detector(self, cache_key: str):
         return self._cached_object_dict[cache_key].detector
@@ -161,13 +120,20 @@ class MyGraphCache(MyCache):
                 if key not in self.__cached_and_under_observation_play_sound_list:
                     self.__cached_and_under_observation_play_sound_list.append(key)
                     play_sound = True
-                graphs.append(self.__change_to_observation_graph__(cache_object.value, len(graphs)))
+                graphs.append(self.__change_to_observation_graph__(cache_object.object, len(graphs)))
             elif not cache_object.is_under_observation():
                 if key in self.__cached_and_under_observation_play_sound_list:
                     self.__cached_and_under_observation_play_sound_list.remove(key)
         if play_sound:
             playsound('ring08.wav')  # C:/Windows/media/...
         return graphs
+
+    def get_pattern_list_for_buy_trigger(self, buy_trigger: str) -> list:
+        pattern_list = []
+        for key, cache_object in self._cached_object_dict.items():
+            if cache_object.is_under_observation():
+                pattern_list += cache_object.detector.get_pattern_list_for_buy_trigger(buy_trigger)
+        return pattern_list
 
     @staticmethod
     def __change_to_observation_graph__(graph_old, number: int):
@@ -217,9 +183,11 @@ class MyDashStateHandler:
 
 
 class MyDash4Pattern(MyDashBase):
-    def __init__(self, sys_config: SystemConfiguration):
+    def __init__(self, sys_config: SystemConfiguration, bitfinex_config: BitfinexConfiguration):
         MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH())
         self.sys_config = sys_config
+        self.bitfinex_config = bitfinex_config
+        self.trade_handler = PatternTradeHandler(sys_config, bitfinex_config)
         self.sys_config_second = sys_config.get_semi_deep_copy()
         self._color_handler = PatternColorHandler()
         self._pattern_controller = PatternDetectionController(self.sys_config)
@@ -344,7 +312,7 @@ class MyDash4Pattern(MyDashBase):
             Output('my_interval', 'interval'),
             [Input('my_interval_selection', 'value')])
         def handle_interval_setting_callback(interval_selected):
-            print('interval set to: {}'.format(interval_selected))
+            print('Interval set to: {}'.format(interval_selected))
             return interval_selected * 1000
 
     def __init_ticker_selection_callback__(self):
@@ -408,6 +376,8 @@ class MyDash4Pattern(MyDashBase):
             [Input('my_graph_first_div', 'children')])
         def handle_callback_for_graphs_before_breakout(graph_first_div):
             graphs = self._graph_first_cache.get_graph_list_for_observation(self._graph_key_first)
+            pattern_list = self._graph_first_cache.get_pattern_list_for_buy_trigger(BT.BREAKOUT)
+            self.trade_handler.add_pattern_list_for_trade(pattern_list, BT.BREAKOUT, TBT.EXPECTED_WIN, TSTR.LIMIT)
             if len(graphs) > 0:
                 print('\n...handle_callback_for_graphs_before_breakout: {}'.format(len(graphs)))
             if self._graph_first_cache.number_of_finished_fibonacci_waves_since_last_refresh > 2:
@@ -446,6 +416,8 @@ class MyDash4Pattern(MyDashBase):
             Output('my_time_div', 'children'),
             [Input('my_interval_timer', 'n_intervals')])
         def handle_interval_callback_for_timer(n_intervals):
+            if n_intervals % self.bitfinex_config.check_ticker_after_timer_intervals == 0:
+                self.trade_handler.check_actual_trades()
             return '{}'.format(MyDate.get_time_from_datetime(datetime.now()))
 
     @staticmethod
@@ -464,12 +436,12 @@ class MyDash4Pattern(MyDashBase):
         graph_id = 'my_graph_first'
         graph_title = '{} {}'.format(ticker, self.sys_config.config.api_period)
         graph_key = MyGraphCache.get_cache_key(graph_id, ticker, 0)
-        cached_graph = self._graph_first_cache.get_cached_value_by_cache_key(graph_key)
+        cached_graph = self._graph_first_cache.get_cached_object_by_key(graph_key)
         if cached_graph is not None:
             if not for_caching:
                 self._detector_first = self._graph_first_cache.get_detector(graph_key)
                 self._pattern_data_first = self._graph_first_cache.get_pattern_data(graph_key)
-            print('...return cached graph_first: {}'.format(graph_key))
+            # print('...return cached graph_first: {}'.format(graph_key))
             return cached_graph, graph_key
 
         detector = self._pattern_controller.get_detector_for_dash(self.sys_config, ticker, and_clause)
@@ -480,16 +452,16 @@ class MyDash4Pattern(MyDashBase):
         graph_api = DccGraphApi(graph_id, graph_title)
         graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
         cache_api = self.__get_cache_api__(graph_key, graph, detector, pattern_data)
-        self._graph_first_cache.add_cache_value(cache_api)
+        self._graph_first_cache.add_cache_object(cache_api)
         return graph, graph_key
 
     def __get_graph_second__(self, ticker: str, days: int):
         graph_id = 'my_graph_second'
         graph_title = '{} {} days'.format(ticker, days if days > 1 else 'Intraday')
         graph_key = MyGraphCache.get_cache_key(graph_id, ticker, days)
-        cached_graph = self._graph_second_cache.get_cached_value_by_cache_key(graph_key)
+        cached_graph = self._graph_second_cache.get_cached_object_by_key(graph_key)
         if cached_graph is not None:
-            print('...return cached graph_second: {}'.format(graph_key))
+            # print('...return cached graph_second: {}'.format(graph_key))
             return cached_graph, graph_key
         if days == 1:
             self.sys_config_second.config.api_period_aggregation = 15
@@ -499,7 +471,7 @@ class MyDash4Pattern(MyDashBase):
             graph_api = DccGraphSecondApi(graph_id, graph_title)
             graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
-            self._graph_second_cache.add_cache_value(cache_api)
+            self._graph_second_cache.add_cache_object(cache_api)
         else:
             self.sys_config_second.config.api_period = ApiPeriod.DAILY
             self.sys_config_second.config.get_data_from_db = True
@@ -510,13 +482,13 @@ class MyDash4Pattern(MyDashBase):
             graph_api = DccGraphSecondApi(graph_id, graph_title)
             graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
-            self._graph_second_cache.add_cache_value(cache_api)
+            self._graph_second_cache.add_cache_object(cache_api)
         return graph, graph_key
 
     def __get_cache_api__(self, graph_key, graph, detector, pattern_data):
         cache_api = MyGraphCacheObjectApi(self.sys_config)
         cache_api.key = graph_key
-        cache_api.value = graph
+        cache_api.object = graph
         cache_api.detector = detector
         cache_api.pattern_data = pattern_data
         cache_api.valid_until_ts = self._time_stamp_next_refresh

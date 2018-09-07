@@ -68,7 +68,7 @@ class Pattern:
         self.sys_config = api.sys_config
         self.pattern_type = api.pattern_type
         self.data_dict_obj = PatternDataDictionary(self.sys_config)
-        self.ticker_id = self.sys_config.runtime.actual_ticker
+        self.ticker_id = self.sys_config.runtime.actual_ticker.replace('_', '')
         self.df = self.sys_config.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
         self.df_min_max = self.sys_config.pdh.pattern_data.df_min_max
@@ -145,6 +145,8 @@ class Pattern:
         self.__add_data_dict_entries_after_part_main__()
         self.__calculate_predictions_after_part_main__()
         self.__add_predictions_before_breakout_to_data_dict__()
+        # The next call is done to have the necessary columns for a online trading predicton
+        self.__calculate_predictions_after_breakout__()
 
     def __calculate_predictions_after_part_main__(self):
         self.__calculate_y_predict__(PT.TOUCH_POINTS)
@@ -153,6 +155,9 @@ class Pattern:
     def add_part_trade(self, part_trade: PatternPart):
         self._part_trade = part_trade
         self.xy_trade = self._part_trade.xy
+        self.__calculate_predictions_after_breakout__()
+
+    def __calculate_predictions_after_breakout__(self):
         self.__calculate_y_predict__(PT.AFTER_BREAKOUT)
         self.__add_predictions_after_breakout_to_data_dict__()
 
@@ -315,24 +320,6 @@ class Pattern:
                 direction_str, ticks, points_top, points_bottom, false_breakout_str)
         return 'Prediction: sorry - not enough previous data'
 
-    def __add_predictions_after_breakout_to_data_dict__(self):
-        self.data_dict_obj.add(DC.FC_HALF_POSITIVE_PCT, self.y_predict_after_breakout[DC.NEXT_PERIOD_HALF_POSITIVE_PCT])
-        self.data_dict_obj.add(DC.FC_FULL_POSITIVE_PCT, self.y_predict_after_breakout[DC.NEXT_PERIOD_FULL_POSITIVE_PCT])
-        self.data_dict_obj.add(DC.FC_HALF_NEGATIVE_PCT, self.y_predict_after_breakout[DC.NEXT_PERIOD_HALF_NEGATIVE_PCT])
-        self.data_dict_obj.add(DC.FC_FULL_NEGATIVE_PCT, self.y_predict_after_breakout[DC.NEXT_PERIOD_FULL_NEGATIVE_PCT])
-        self.data_dict_obj.add(DC.FC_TICKS_TO_POSITIVE_HALF,
-                               self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF])
-        self.data_dict_obj.add(DC.FC_TICKS_TO_POSITIVE_FULL,
-                               self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL])
-        self.data_dict_obj.add(DC.FC_TICKS_TO_NEGATIVE_HALF,
-                               self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF])
-        self.data_dict_obj.add(DC.FC_TICKS_TO_NEGATIVE_FULL,
-                               self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL])
-        self.data_dict_obj.add(DC.FC_FALSE_BREAKOUT_ID, self.y_predict_before_breakout[DC.FALSE_BREAKOUT])
-        ts = self.sys_config.config.get_time_stamp_after_ticks(self.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_FULL))
-        self.data_dict_obj.add(DC.FC_SELL_DT, MyDate.get_date_from_epoch_seconds(ts))
-        self.data_dict_obj.add(DC.FC_SELL_TIME, str(MyDate.get_time_from_epoch_seconds(ts)))
-
     def __add_predictions_before_breakout_to_data_dict__(self):
         if self.y_predict_touch_points is None:
             return
@@ -349,6 +336,23 @@ class Pattern:
         ts = self.sys_config.config.get_time_stamp_after_ticks(self.data_dict_obj.get(DC.FC_TICKS_TILL_BREAKOUT))
         self.data_dict_obj.add(DC.FC_BUY_DT, MyDate.get_date_from_epoch_seconds(ts))
         self.data_dict_obj.add(DC.FC_BUY_TIME, str(MyDate.get_time_from_epoch_seconds(ts)))
+
+    def __add_predictions_after_breakout_to_data_dict__(self):
+        self.data_dict_obj.add(DC.FC_HALF_POSITIVE_PCT, self.y_predict_after_breakout[DC.NEXT_PERIOD_HALF_POSITIVE_PCT])
+        self.data_dict_obj.add(DC.FC_FULL_POSITIVE_PCT, self.y_predict_after_breakout[DC.NEXT_PERIOD_FULL_POSITIVE_PCT])
+        self.data_dict_obj.add(DC.FC_HALF_NEGATIVE_PCT, self.y_predict_after_breakout[DC.NEXT_PERIOD_HALF_NEGATIVE_PCT])
+        self.data_dict_obj.add(DC.FC_FULL_NEGATIVE_PCT, self.y_predict_after_breakout[DC.NEXT_PERIOD_FULL_NEGATIVE_PCT])
+        self.data_dict_obj.add(DC.FC_TICKS_TO_POSITIVE_HALF,
+                               self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF])
+        self.data_dict_obj.add(DC.FC_TICKS_TO_POSITIVE_FULL,
+                               self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL])
+        self.data_dict_obj.add(DC.FC_TICKS_TO_NEGATIVE_HALF,
+                               self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF])
+        self.data_dict_obj.add(DC.FC_TICKS_TO_NEGATIVE_FULL,
+                               self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL])
+        ts = self.sys_config.config.get_time_stamp_after_ticks(self.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_FULL))
+        self.data_dict_obj.add(DC.FC_SELL_DT, MyDate.get_date_from_epoch_seconds(ts))
+        self.data_dict_obj.add(DC.FC_SELL_TIME, str(MyDate.get_time_from_epoch_seconds(ts)))
 
     def fill_result_set(self):
         if self.is_part_trade_available():
@@ -459,7 +463,6 @@ class Pattern:
         return self.__get_x_data_for_prediction__(PT.AFTER_BREAKOUT)
 
     def __get_x_data_for_prediction__(self, prediction_type: str):
-        data_dict = self.data_dict_obj._data_dict
         if prediction_type == PT.TOUCH_POINTS:
             feature_columns = self.sys_config.features_table.feature_columns_touch_points
         elif prediction_type == PT.BEFORE_BREAKOUT:
@@ -467,7 +470,7 @@ class Pattern:
         else:
             feature_columns = self.sys_config.features_table.features_columns_after_breakout
         if self.data_dict_obj.is_data_dict_ready_for_columns(feature_columns):
-            data_list = [data_dict[feature] for feature in feature_columns]
+            data_list = self.data_dict_obj.get_data_list_for_columns(feature_columns)
             np_array = np.array(data_list).reshape(1, len(data_list))
             # print('{}: np_array.shape={}'.format(prediction_type, np_array.shape))
             return np_array
@@ -487,16 +490,14 @@ class Pattern:
         pos_first = tick_first.position
         time_stamp_first = tick_first.time_stamp
         tick_last = self.part_main.tick_last
-        pos_last = tick_last.position
         time_stamp_last = tick_last.time_stamp
         if self.part_main.breakout:
             tick_breakout = self.part_main.breakout.tick_breakout
-            pos_brk = tick_breakout.position
-            time_stamp_brk = tick_breakout.time_stamp
         else:
-            tick_breakout = None
-            pos_brk = 0
-            time_stamp_brk = 0
+            tick_breakout = tick_last
+
+        pos_brk = tick_breakout.position
+        time_stamp_brk = tick_breakout.time_stamp
 
         slope_upper, slope_lower, slope_regression = self.part_main.get_slope_values()
         self.data_dict_obj.add(DC.ID, self.id)
@@ -505,15 +506,13 @@ class Pattern:
         self.data_dict_obj.add(DC.TS_PATTERN_TICK_FIRST, time_stamp_first)
         self.data_dict_obj.add(DC.TS_PATTERN_TICK_LAST, time_stamp_last)
         self.data_dict_obj.add(DC.TICKS_TILL_PATTERN_FORMED, self.pattern_range.length)
-        if tick_breakout:
-            self.data_dict_obj.add(DC.TS_BREAKOUT, time_stamp_brk)
-            self.data_dict_obj.add(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT,
-                                   int(tick_breakout.position - self.pattern_range.position_last))
+        self.data_dict_obj.add(DC.TS_BREAKOUT, time_stamp_brk)
+        self.data_dict_obj.add(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT,
+                               int(tick_breakout.position - self.pattern_range.position_last))
         self.data_dict_obj.add(DC.PATTERN_BEGIN_DT, tick_first.date)
         self.data_dict_obj.add(DC.PATTERN_BEGIN_TIME, tick_first.time_str)
-        if tick_breakout:
-            self.data_dict_obj.add(DC.BREAKOUT_DT, tick_breakout.date)
-            self.data_dict_obj.add(DC.BREAKOUT_TIME, tick_breakout.time_str)
+        self.data_dict_obj.add(DC.BREAKOUT_DT, tick_breakout.date)
+        self.data_dict_obj.add(DC.BREAKOUT_TIME, tick_breakout.time_str)
         self.data_dict_obj.add(DC.PATTERN_END_DT, tick_last.date)
         self.data_dict_obj.add(DC.PATTERN_END_TIME, tick_last.time_str)
         self.data_dict_obj.add(DC.PATTERN_TOLERANCE_PCT, self.tolerance_pct)
@@ -521,17 +520,15 @@ class Pattern:
         self.data_dict_obj.add(DC.PATTERN_HEIGHT, self.part_main.diff_max_min_till_breakout)
         self.data_dict_obj.add(DC.PATTERN_BEGIN_HIGH, round(self.function_cont.f_upper(tick_first.f_var), 2))
         self.data_dict_obj.add(DC.PATTERN_BEGIN_LOW, round(self.function_cont.f_lower(tick_first.f_var), 2))
-        tick_end = tick_breakout if tick_breakout else tick_last
-        self.data_dict_obj.add(DC.PATTERN_END_HIGH, round(self.function_cont.f_upper(tick_end.f_var), 2))
-        self.data_dict_obj.add(DC.PATTERN_END_LOW, round(self.function_cont.f_lower(tick_end.f_var), 2))
+        self.data_dict_obj.add(DC.PATTERN_END_HIGH, round(self.function_cont.f_upper(tick_breakout.f_var), 2))
+        self.data_dict_obj.add(DC.PATTERN_END_LOW, round(self.function_cont.f_lower(tick_breakout.f_var), 2))
         self.data_dict_obj.add(DC.SLOPE_UPPER_PCT, slope_upper)
         self.data_dict_obj.add(DC.SLOPE_LOWER_PCT, slope_lower)
         self.data_dict_obj.add(DC.SLOPE_REGRESSION_PCT, slope_regression)
         self.data_dict_obj.add(DC.SLOPE_VOLUME_REGRESSION_PCT,
-                               self.data_dict_obj.get_slope(pos_first, tick_end.position, CN.VOL))
-        if tick_breakout:
-            self.data_dict_obj.add(DC.SLOPE_BREAKOUT_PCT, self.data_dict_obj.get_slope_breakout(pos_brk))
-            self.data_dict_obj.add(DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT,
+                               self.data_dict_obj.get_slope(pos_first, tick_breakout.position, CN.VOL))
+        self.data_dict_obj.add(DC.SLOPE_BREAKOUT_PCT, self.data_dict_obj.get_slope_breakout(pos_brk))
+        self.data_dict_obj.add(DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT,
                                    self.data_dict_obj.get_slope_breakout(pos_brk, CN.VOL))
         vc = [SVC.U_on, SVC.L_on] if self.sys_config.config.api_period == ApiPeriod.INTRADAY else [SVC.U_in, SVC.L_in]
         time_stamp_end = time_stamp_brk if tick_breakout else time_stamp_last
@@ -539,16 +536,16 @@ class Pattern:
         touches_bottom = self.value_categorizer.count_value_category(vc[1], time_stamp_first, time_stamp_end)
         self.data_dict_obj.add(DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, touches_top)
         self.data_dict_obj.add(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM, touches_bottom)
-        if tick_breakout:
+        if self.part_main.breakout:
             self.data_dict_obj.add(DC.BREAKOUT_DIRECTION, self.part_main.breakout.breakout_direction)
             self.data_dict_obj.add(DC.BREAKOUT_DIRECTION_ID, self.part_main.breakout.sign)  # 1 = ASC, else -1
             self.data_dict_obj.add(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT,
                                    round((self.part_main.breakout.volume_change_pct - 1) * 100, 2))
         else:
-            self.data_dict_obj.add(DC.BREAKOUT_DIRECTION, '')
+            self.data_dict_obj.add(DC.BREAKOUT_DIRECTION, 'None')
             self.data_dict_obj.add(DC.BREAKOUT_DIRECTION_ID, 0)
             self.data_dict_obj.add(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT, 0)
-        min_max_dict = self.data_dict_obj.get_min_max_value_dict(tick_first, tick_end, self.length)
+        min_max_dict = self.data_dict_obj.get_min_max_value_dict(tick_first, tick_breakout, self.length)
         self.data_dict_obj.add(DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT, float(min_max_dict['max_previous_half'][0]))
         self.data_dict_obj.add(DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT, float(min_max_dict['max_previous_full'][0]))
         self.data_dict_obj.add(DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT, float(min_max_dict['min_previous_half'][0]))
@@ -567,6 +564,7 @@ class Pattern:
                                int(min_max_dict['negative_next_full'][1] - pos_brk))
         self.data_dict_obj.add(DC.AVAILABLE_FIBONACCI_TYPE, self.available_fibonacci_end_type)
         self.data_dict_obj.add(DC.AVAILABLE_FIBONACCI_TYPE_ID, EXTREMA.get_id(self.available_fibonacci_end_type))
+        self.data_dict_obj.add(DC.EXPECTED_WIN, round(self.__get_expected_win__(), 2))
 
     def __add_data_dict_entries_after_filling_trade_result__(self):
         self.data_dict_obj.add(DC.EXPECTED_WIN, round(self.trade_result.expected_win, 2))

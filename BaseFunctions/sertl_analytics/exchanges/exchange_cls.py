@@ -31,8 +31,8 @@ class Balance:
     def __init__(self, balance_type: str, asset: str, amount: float, amount_available: float):
         self.type = balance_type  # 'trading', 'deposit' or 'exchange'
         self.asset = asset.upper()  # currency or equity symbol
-        self.amount = amount
-        self.amount_available = amount_available
+        self.amount = round(amount, 2)
+        self.amount_available = round(amount_available, 2)
 
     def print_balance(self, prefix = ''):
         if prefix != '':
@@ -40,6 +40,7 @@ class Balance:
         print('Type: {}, Asset: {}, Amount: {:.2f}, Amount_available: {:.2f}'.format(
             self.type, self.asset, self.amount, self.amount_available
         ))
+
 
 class Ticker:
     """
@@ -53,33 +54,47 @@ class Ticker:
     volume	[price]	Trading volume of the last 24 hours
     timestamp	[time]	The timestamp at which this information was valid
     """
-    def __init__(self, bid: float, ask: float, last_price: float, low: float, high: float, vol: float, ts: float):
+    def __init__(self, ticker_id: str,
+                 bid: float, ask: float, last_price: float, low: float, high: float, vol: float, ts: float):
+        self.ticker_id = ticker_id
         self.bid = round(bid, 4)
         self.ask = round(ask, 4)
         self.last_price = round(last_price, 4)
         self.low = round(low, 4)
         self.high = round(high, 4)
-        self.vol = vol
+        self.vol = round(vol, 2)
         self.time_stamp = round(ts)
 
     def print_ticker(self, prefix = ''):
         if prefix != '':
             print('\n{}:'.format(prefix))
-        print('Bid: {}, Ask: {}, Last: {}, Low: {}, High: {}, Volume: {}, Time: {}'.format(
-            self.bid, self.ask, self.last_price, self.low, self.high, self.vol, self.time_stamp
+        print('{}: Bid: {}, Ask: {}, Last: {}, Low: {}, High: {}, Volume: {}, Time: {}'.format(
+            self.ticker_id, self.bid, self.ask, self.last_price, self.low, self.high, self.vol, self.time_stamp
         ))
 
 
-class Order:
-    def __init__(self, symbol: str, amount: float, price: float, side: str, order_type: str):
+class OrderApi:
+    def __init__(self, symbol: str, amount: float, price: float=0, side: str='', order_type: str=''):
         self.symbol = symbol
         self.amount = amount
         self.price = price
         self.side = side
         self.type = order_type
         self.actual_ticker = None
-        self.actual_money_available = 0
-        self.actual_balance_symbol = None
+        self.actual_symbol_balance = None
+        self.actual_money_balance = None
+
+
+class Order:
+    def __init__(self, api: OrderApi):
+        self.symbol = api.symbol
+        self.amount = api.amount
+        self.price = api.price
+        self.side = api.side
+        self.type = api.type
+        self.actual_ticker = api.actual_ticker
+        self.actual_symbol_balance = api.actual_symbol_balance
+        self.actual_money_balance = api.actual_money_balance
 
     @property
     def actual_balance_symbol_amount(self):
@@ -156,7 +171,6 @@ class OrderStatus:
     @property
     def value_total(self):
         return round(self.price * self.executed_amount + self.fee_amount, 2)
-
 
     def print_order_status(self, prefix = ''):
         if prefix != '':

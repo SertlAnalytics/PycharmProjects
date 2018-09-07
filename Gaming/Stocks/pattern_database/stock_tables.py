@@ -193,11 +193,27 @@ class FeaturesTable(MyTable):
         self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.AVAILABLE_FIBONACCI_TYPE, CDT.STRING))  # MIN, MAX
+        self._columns.append(MyTableColumn(DC.AVAILABLE_FIBONACCI_TYPE, CDT.STRING, 10))  # MIN, MAX
         self._columns.append(MyTableColumn(DC.AVAILABLE_FIBONACCI_TYPE_ID, CDT.INTEGER))  # 0=No, -1=MIN, 1 = MAX
         self._columns.append(MyTableColumn(DC.EXPECTED_WIN, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.FALSE_BREAKOUT, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.EXPECTED_WIN_REACHED, CDT.INTEGER))
+
+        self._columns.append(MyTableColumn(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_TOP, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_TICKS_TILL_BREAKOUT, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_BREAKOUT_DIRECTION_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_BREAKOUT_DIRECTION, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.FC_FALSE_BREAKOUT_ID, CDT.INTEGER))
+
+        self._columns.append(MyTableColumn(DC.FC_HALF_POSITIVE_PCT, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_FULL_POSITIVE_PCT, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_HALF_NEGATIVE_PCT, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_FULL_NEGATIVE_PCT, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_TICKS_TO_POSITIVE_HALF, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_TICKS_TO_POSITIVE_FULL, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_TICKS_TO_NEGATIVE_HALF, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_TICKS_TO_NEGATIVE_FULL, CDT.INTEGER))
 
     @staticmethod
     def _get_name_():

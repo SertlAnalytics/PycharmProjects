@@ -4,7 +4,8 @@ Snapshots (data structure): https://docs.bitfinex.com/v1/reference#ws-auth-order
 """
 
 import os
-from sertl_analytics.exchanges.bitfinex import MyBitfinex, BitfinexOrder, OT, OS, BitfinexConfiguration, Ticker
+from sertl_analytics.exchanges.bitfinex import MyBitfinex, BitfinexConfiguration
+from sertl_analytics.exchanges.bitfinex import Ticker, Balance
 from sertl_analytics.exchanges.bitfinex import BuyMarketOrder, BuyLimitOrder, BuyStopOrder
 from sertl_analytics.exchanges.bitfinex import SellMarketOrder, SellLimitOrder, SellStopLossOrder, SellTrailingStopOrder
 
@@ -32,6 +33,9 @@ class MyBitfinexTradeClient:
     def get_ticker(self, symbol: str) -> Ticker:
         return self._bitfinex.get_ticker(symbol)
 
+    def get_balance(self, symbol: str) -> Balance:
+        return self._bitfinex.get_balance_for_symbol(symbol)
+
     def print_active_orders(self):
         self._bitfinex.print_active_orders()
 
@@ -50,9 +54,9 @@ class MyBitfinexTradeClient:
     def delete_all_orders(self):
         self._bitfinex.delete_all_orders()
 
-    def buy_available(self, trading_pair: str):
+    def buy_available(self, trading_pair: str, last_price=0):
         self.print_active_balances('Before "Buy available {}"'.format(trading_pair))
-        order_status = self._bitfinex.buy_available(trading_pair)
+        order_status = self._bitfinex.buy_available(trading_pair, last_price)
         self.print_active_balances('After "Buy available {}"'.format(trading_pair))
         return order_status
 

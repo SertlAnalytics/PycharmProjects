@@ -222,29 +222,39 @@ class BT:  # Buy Trigger
 
 
 class TSTR:  # Trading Strategy
-    EXPECTED_WIN = 'Expected_win'
-    TRAILING_EXPECTED_WIN = 'Trailing_Expected_win'
-    TRAILING_EXPECTED_WIN_HALF = 'Trailing_Expected_win_half'
-    TRAILING_STEPPED_EXPECTED_WIN = 'Trailing_Stepped_Expected_win'
-    TRAILING_STEPPED_EXPECTED_WIN_HALF = 'Trailing_Stepped_Expected_win_half'
-    FIBONACCI = 'Fibonacci_reached'
+    LIMIT = 'Limit'
+    TRAILING_STOP = 'Trailing_stop'
+    TRAILING_STEPPED_STOP = 'Trailing_stepped_stop'
 
     def get_id(key: str):
-        return {TSTR.TRAILING_EXPECTED_WIN: 10, TSTR.TRAILING_EXPECTED_WIN_HALF: 15,
-                TSTR.TRAILING_STEPPED_EXPECTED_WIN: 20, TSTR.TRAILING_STEPPED_EXPECTED_WIN_HALF: 25,
-                TSTR.FIBONACCI: 50}.get(key)
+        return {TSTR.LIMIT: 10, TSTR.TRAILING_STOP: 20, TSTR.TRAILING_STEPPED_STOP: 30}.get(key)
+
+
+class PTS:  # PatternTradeStatus
+    NEW = 'new'
+    EXECUTED = 'executed'
+    PENDING = 'pending'
+    FINISHED = 'finished'
+
+
+class TBT:  # TradingBoxType
+    EXPECTED_WIN = 'Expected_win'
+    FORECAST_HALF_LENGTH = 'Forecast_half_length'
+    FORECAST_FULL_LENGTH = 'Forecast_full_length'
+    TOUCH_POINT = 'Touchpoint'
+    FIBONACCI = 'Fibonacci'
+
+    def get_id(key: str):
+        return {TBT.EXPECTED_WIN: 10, TBT.FORECAST_HALF_LENGTH: 20, TBT.FORECAST_FULL_LENGTH: 30,
+                TBT.FIBONACCI: 50}.get(key)
 
 
 class ST:  # Sell Trigger
-    EXPECTED_WIN = 'Expected_win'
-    STOP_LOSS_INITIAL = 'Stop_loss_initial'
-    STOP_LOSS_TRAILED = 'Stop_loss_trailed'
-    TRAILING_STOP = 'Trailing_stop'
-    FIBONACCI_CLUSTER = 'Fibonacci_cluster'
+    LIMIT = 'Limit'
+    STOP_LOSS = 'Stop_loss'
 
     def get_id(key: str):
-        return {ST.EXPECTED_WIN: 10, ST.STOP_LOSS_INITIAL: 20, ST.STOP_LOSS_TRAILED: 25,
-                ST.TRAILING_STOP: 30, ST.FIBONACCI_CLUSTER: 50}.get(key)
+        return {ST.LIMIT: 10, ST.STOP_LOSS: 20}.get(key)
 
 
 class TR:  # Trade Result
@@ -378,8 +388,8 @@ class DC:  # Data Columns
     FC_TOUCH_POINTS_TILL_BREAKOUT_TOP = 'Forecast_Touch_Points_Till_Breakout_Top'
     FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM = 'Forecast_Touch_Points_Till_Breakout_Bottom'
     FC_TICKS_TILL_BREAKOUT = 'Forecast_Ticks_Till_Breakout'
-    FC_BREAKOUT_DIRECTION = 'Forecast_Breakout_direction'
-    FC_BREAKOUT_DIRECTION_ID = 'Forecast_Breakout_direction_ID'
+    FC_BREAKOUT_DIRECTION = 'Forecast_Breakout_Direction'
+    FC_BREAKOUT_DIRECTION_ID = 'Forecast_Breakout_Direction_ID'
     FC_FALSE_BREAKOUT_ID  = 'Forecast_False_Breakout'
     FC_HALF_POSITIVE_PCT = 'Forecast_Half_Positive_PCT'
     FC_FULL_POSITIVE_PCT = 'Forecast_Full_Positive_PCT'

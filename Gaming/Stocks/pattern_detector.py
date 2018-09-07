@@ -5,8 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-import pandas as pd
-from sertl_analytics.constants.pattern_constants import FT, FD, DC, CN, SVC, EQUITY_TYPE, EXTREMA
+from sertl_analytics.constants.pattern_constants import FT, FD, DC, BT, EQUITY_TYPE, EXTREMA
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_configuration import ApiPeriod
@@ -122,6 +121,17 @@ class PatternDetector:
             if not pattern.was_breakout_done():
                 return True
         return False
+
+    def get_pattern_list_for_buy_trigger(self, buy_trigger: str) -> list:
+        pattern_list = []
+        for pattern in self.pattern_list:
+            if buy_trigger == BT.BREAKOUT and not pattern.is_part_trade_available():
+                pattern_list.append(pattern)
+            elif buy_trigger == BT.TOUCH_POINT:
+                pass
+            elif buy_trigger == BT.FIBONACCI_CLUSTER:
+                pass
+        return pattern_list
 
     @staticmethod
     def __print_breakout_details__(print_id: str, breakout_ts: float, time_stamp_since: float):
@@ -277,11 +287,12 @@ class PatternDetector:
                         self.__print_difference_to_stored_version__(feature_dict)
                     else:
                         input_list.append(feature_dict)
-
         if len(input_list) > 0:
             self.sys_config.db_stock.insert_pattern_features(input_list)
 
     def __print_difference_to_stored_version__(self, feature_dict: dict):
+        if not self.sys_config.config.show_differences_to_stored_features:
+            return
         dict_diff = self.sys_config.db_stock.get_features_differences_to_saved_version(feature_dict)
         if len(dict_diff) > 0:
             print('Difference for Pattern {} [{}, {}]:'.format(

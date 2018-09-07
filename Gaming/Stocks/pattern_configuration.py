@@ -65,6 +65,7 @@ class PatternConfiguration:
         self.api_period_aggregation = 5
         self.api_output_size = ApiOutputsize.COMPACT
         self.save_pattern_features = True
+        self.show_differences_to_stored_features = False
         self.bound_upper_value = CN.HIGH
         self.bound_lower_value = CN.LOW
         self.plot_data = True

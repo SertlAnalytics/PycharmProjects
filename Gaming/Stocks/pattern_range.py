@@ -354,7 +354,7 @@ class PatternRangeDetector:
         return True
 
     def __parse_tick_list__(self):
-        for i in range(0, self._elements - self.number_required_ticks):
+        for i in range(0, self._elements - self.number_required_ticks + 1):
             tick_i = self.tick_list[i]
             pattern_range = self.__get_pattern_range_by_tick__(tick_i)
             next_list, next_linear_f_params, pos_list = self.__get_pattern_range_next_position_candidates__(i, tick_i)

@@ -15,10 +15,12 @@ import hmac
 import hashlib
 import time
 from sertl_analytics.exchanges.exchange_abc import ExInterface
-from sertl_analytics.exchanges.exchange_cls import Order, OrderStatus, OrderStatusApi, OrderBook, Balance, Ticker
+from sertl_analytics.exchanges.exchange_cls import Order, OrderApi, OrderStatus, OrderStatusApi
+from sertl_analytics.exchanges.exchange_cls import OrderBook, Balance, Ticker
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mystring import MyString
+from sertl_analytics.mycache import MyCacheObjectApi, MyCacheObject, MyCache
 
 
 class OT:
@@ -63,6 +65,9 @@ class BitfinexConfiguration(ExchangeConfiguration):
         self.buy_order_value_max = 100
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
+        self.cache_ticker_seconds = 30  # keep ticker in the Bitfinex cache
+        self.cache_balance_seconds = 300  # keep balances in the Bitfinex cache (it's overwriten when changes happen)
+        self.check_ticker_after_timer_intervals = 4  # currently the timer intervall is set to 5 sec, i.e. chech each 20 sed.
 
     def print_actual_mode(self):
         text = 'Bitfinex running in {} mode.'.format('SIMULATION' if self.is_simulation else 'TRADING (!!!)')
@@ -95,37 +100,60 @@ class BitfinexOrderStatus(OrderStatus):
 
 class BuyMarketOrder(BitfinexOrder):
     def __init__(self, symbol: str, amount: float):
-        Order.__init__(self, symbol, amount, 1.00, OS.BUY, OT.EXCHANGE_MARKET)
+        api = OrderApi(symbol, amount)
+        api.price = 1.00
+        api.side = OS.BUY
+        api.type = OT.EXCHANGE_MARKET
+        Order.__init__(self, api)
 
 
 class BuyLimitOrder(BitfinexOrder):
     def __init__(self, symbol: str, amount: float, limit: float):
-        Order.__init__(self, symbol, amount, limit, OS.BUY, OT.EXCHANGE_LIMIT)
+        api = OrderApi(symbol, amount, price=limit)
+        api.side = OS.BUY
+        api.type = OT.EXCHANGE_LIMIT
+        Order.__init__(self, api)
 
 
 class BuyStopOrder(BitfinexOrder):
     def __init__(self, symbol: str, amount: float, stop_price: float):
-        Order.__init__(self, symbol, amount, stop_price, OS.BUY, OT.EXCHANGE_STOP)
+        api = OrderApi(symbol, amount, price=stop_price)
+        api.side = OS.BUY
+        api.type = OT.EXCHANGE_STOP
+        Order.__init__(self, api)
 
 
 class SellMarketOrder(BitfinexOrder):
     def __init__(self, symbol: str, amount: float):
-        Order.__init__(self, symbol, amount, 1.00, OS.SELL, OT.EXCHANGE_MARKET)
+        api = OrderApi(symbol, amount)
+        api.price = 1.00
+        api.side = OS.SELL
+        api.type = OT.EXCHANGE_MARKET
+        Order.__init__(self, api)
 
 
 class SellLimitOrder(BitfinexOrder):
     def __init__(self, symbol: str, amount: float, limit: float):
-        Order.__init__(self, symbol, amount, limit, OS.SELL, OT.EXCHANGE_LIMIT)
+        api = OrderApi(symbol, amount, price=limit)
+        api.side = OS.SELL
+        api.type = OT.EXCHANGE_LIMIT
+        Order.__init__(self, api)
 
 
 class SellStopLossOrder(BitfinexOrder):
     def __init__(self, symbol: str, amount: float, stop_price: float):
-        Order.__init__(self, symbol, amount, stop_price, OS.SELL, OT.EXCHANGE_STOP)
+        api = OrderApi(symbol, amount, price=stop_price)
+        api.side = OS.SELL
+        api.type = OT.EXCHANGE_STOP
+        Order.__init__(self, api)
 
 
 class SellTrailingStopOrder(BitfinexOrder):
     def __init__(self, symbol: str, amount: float, price_distance: float):
-        Order.__init__(self, symbol, amount, price_distance, OS.SELL, OT.EXCHANGE_TRAILING_STOP)
+        api = OrderApi(symbol, amount, price=price_distance)
+        api.side = OS.SELL
+        api.type = OT.EXCHANGE_TRAILING_STOP
+        Order.__init__(self, api)
 
 
 class BitfinexFactory:
@@ -135,9 +163,9 @@ class BitfinexFactory:
         return Balance(json['type'], json['currency'], float(json['amount']), float(json['available']))
 
     @staticmethod
-    def get_ticker_by_json_dict(json: dict) -> Ticker:
+    def get_ticker_by_json_dict(ticker_id: str, json: dict) -> Ticker:
         # {'mid': 7052.45, 'bid': 7052.4, 'ask': 7052.5, 'last_price': 7051.3, 'timestamp': 1535469615.659593}
-        return Ticker(float(json['bid']), float(json['ask']), float(json['last_price']),
+        return Ticker(ticker_id, float(json['bid']), float(json['ask']), float(json['last_price']),
                       0, 0, 0, float(json['timestamp']))
 
     @staticmethod
@@ -187,6 +215,37 @@ class BitfinexFactory:
         return order_status
 
 
+class BitfinexTickerCache(MyCache):
+    def __init__(self, cache_seconds: int):
+        MyCache.__init__(self)
+        self._cache_seconds = cache_seconds
+
+    def add_ticker(self, ticker: Ticker):
+        api = MyCacheObjectApi()
+        api.valid_until_ts = MyDate.get_epoch_seconds_from_datetime() + self._cache_seconds
+        api.key = ticker.ticker_id
+        api.object = ticker
+        self.add_cache_object(api)
+
+
+class BitfinexBalanceCache(MyCache):
+    def __init__(self, cache_seconds: int):
+        MyCache.__init__(self)
+        self._cache_seconds = cache_seconds
+
+    def init_by_balance_list(self, balances: list, dedicated_symbol=''):
+        api = MyCacheObjectApi()
+        api.valid_until_ts = MyDate.get_epoch_seconds_from_datetime() + self._cache_seconds
+        for balance in balances:
+            api.key = balance.asset
+            api.object = balance
+            self.add_cache_object(api)
+        if dedicated_symbol != '' and self.get_cached_object_by_key(dedicated_symbol) is None:
+            api.key = dedicated_symbol
+            api.object = Balance('exchange', dedicated_symbol, 0, 0)
+            self.add_cache_object(api)
+
+
 class MyBitfinex(ExInterface):
     def __init__(self, api_key: str, api_secret_key: str, exchange_config: BitfinexConfiguration):
         self.exchange_config = exchange_config
@@ -198,6 +257,8 @@ class MyBitfinex(ExInterface):
         self._is_simulation = self.exchange_config.is_simulation
         self._hodl_dict = self.exchange_config.hodl_dict
         self.trading_pairs = self.get_symbols()
+        self.ticker_cache = BitfinexTickerCache(self.exchange_config.cache_ticker_seconds)
+        self.balance_cache = BitfinexBalanceCache(self.exchange_config.cache_balance_seconds)
 
     @property
     def nonce(self):
@@ -207,15 +268,14 @@ class MyBitfinex(ExInterface):
     def simulation_text(self):
         return ' (simulation)' if self._is_simulation else ''
 
-    def get_available_money(self):
-        balance = self.get_balance_for_symbol(self.base_currency)
-        return 0 if balance is None else balance.amount_available
+    def get_available_money_balance(self) -> Balance:
+        return self.get_balance_for_symbol(self.base_currency)
 
     def create_order(self, order: BitfinexOrder, order_type=''):
         self.__init_actual_order_properties__(order)
-        if self.__is_enough_balance_available__(order):
-            if not self.__is_order_affected_by_hodl_config__(order):
-                if self.__is_order_value_compliant__(order):
+        if self._is_simulation or self.__is_enough_balance_available__(order):
+            if self._is_simulation or not self.__is_order_affected_by_hodl_config__(order):
+                if self._is_simulation or self.__is_order_value_compliant__(order):
                     return self.__create_order__(order, order_type)
 
     def delete_order(self, order_id: int):
@@ -268,7 +328,7 @@ class MyBitfinex(ExInterface):
         order_sell_all.actual_balance_symbol = balance
         return self.create_order(order_sell_all, 'Sell all')
 
-    def buy_available(self, symbol: str):
+    def buy_available(self, symbol: str, last_price=0):
         if self._is_simulation:
             available_money = self.exchange_config.buy_order_value_max
         else:
@@ -277,20 +337,21 @@ class MyBitfinex(ExInterface):
         if available_money < 10:
             print('\nNot enough (>{}$) balance for {} available'.format(10, self.base_currency))
         else:
-            ticker = self.get_ticker(symbol)
+            ticker = self.get_ticker(symbol) if last_price == 0 else None
+            last_price = ticker.last_price if ticker else last_price
             # the minus value in the next term is necessary to ensure that this amount is buyable
-            amount = round(available_money / ticker.ask - 0.05, 2)
+            amount = round(available_money / last_price - 0.005, 2)  # the part 0.005 is for amount safety
             order_buy_all = BuyMarketOrder(symbol, amount)
             order_buy_all.actual_money_available = available_money
             order_buy_all.actual_ticker = ticker
             return self.create_order(order_buy_all, 'Buy available')
 
     def get_balance_for_symbol(self, symbol: str) -> Balance:
-        balances = self.get_balances()
-        for balance in balances:
-            if balance.asset == symbol:
-                return balance
-        return None
+        balance_from_cache = self.balance_cache.get_cached_object_by_key(symbol)
+        if balance_from_cache:
+            return balance_from_cache
+        self.balance_cache.init_by_balance_list(self.get_balances(), symbol)
+        return self.balance_cache.get_cached_object_by_key(symbol)
 
     def get_order(self, order_id: int) -> BitfinexOrderStatus:
         payload_additional = {'order_id': order_id}
@@ -349,9 +410,14 @@ class MyBitfinex(ExInterface):
         return self.__get_requests_result__(self.__get_full_url__('symbols'))
 
     def get_ticker(self, symbol: str) -> Ticker:
+        ticker_from_cache = self.ticker_cache.get_cached_object_by_key(symbol)
+        if ticker_from_cache:
+            return ticker_from_cache
         data = self.__get_requests_result__(self.__get_full_url__('ticker/{}'.format(symbol)))
         data_converted = self.__convert_to_floats__(data)
-        return BitfinexFactory.get_ticker_by_json_dict(data_converted)
+        ticker = BitfinexFactory.get_ticker_by_json_dict(symbol, data_converted)
+        self.ticker_cache.add_ticker(ticker)
+        return ticker
 
     def get_order_book(self, symbol: str, parameter_dict: dict=None):
         """
@@ -400,7 +466,7 @@ class MyBitfinex(ExInterface):
             if order.type == OT.EXCHANGE_MARKET:
                 order.price = order.actual_ticker.ask
             order_status = BitfinexFactory.get_order_status_by_order_for_simulation(self.exchange_config, order)
-            order_status.print_order_status(print_prefix)
+            # order_status.print_order_status(print_prefix)
         else:
             payload_additional = {
                 'symbol': order.symbol.lower(), 'amount': str(order.amount), 'price': str(order.price),
@@ -414,18 +480,19 @@ class MyBitfinex(ExInterface):
                 return
             order_status = BitfinexFactory.get_order_status_by_json_dict(self.exchange_config,
                                                                          json_resp['order_id'], json_resp)
-            order_status.print_order_status(print_prefix)
+            # order_status.print_order_status(print_prefix)
             time.sleep(2)  # time to execute and update the application
+            self.balance_cache.clear()  # the next call has to get the updated balances...
         return order_status
 
 
     def __init_actual_order_properties__(self, order: BitfinexOrder):
         if order.actual_ticker is None:
             order.actual_ticker = self.get_ticker(order.symbol)
-        if order.actual_money_available == 0:
-            order.actual_money_available = self.get_available_money()
-        if order.actual_balance_symbol is None:
-            order.actual_balance_symbol = self.get_balance_for_symbol(order.crypto)
+        if order.actual_money_balance is None:
+            order.actual_money_balance = self.get_available_money_balance()
+        if order.actual_symbol_balance is None:
+            order.actual_symbol_balance = self.get_balance_for_symbol(order.crypto)
 
     def __is_order_affected_by_hodl_config__(self, order: BitfinexOrder):
         if order.side == OS.BUY or order.crypto not in self._hodl_dict:

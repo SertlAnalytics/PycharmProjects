@@ -68,6 +68,9 @@ class PatternDataDictionary:
                 return False
         return True
 
+    def get_data_list_for_columns(self, columns: list):
+        return [self._data_dict[col] for col in columns]
+
     def get_data_dict_for_features_table(self):
         return {col: self._data_dict[col] for col in self.sys_config.features_table.column_name_list}
 
