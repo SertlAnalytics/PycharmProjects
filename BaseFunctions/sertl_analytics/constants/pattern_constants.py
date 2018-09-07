@@ -48,6 +48,24 @@ class EQUITY_TYPE:
         return {EQUITY_TYPE.SHARE: 1, EQUITY_TYPE.COMMODITY: 10, EQUITY_TYPE.CRYPTO: 20}.get(key)
 
 
+class OT:  # order type
+    EXCHANGE_MARKET = 'exchange market'
+    EXCHANGE_LIMIT = 'exchange limit'
+    EXCHANGE_STOP = 'exchange stop'
+    EXCHANGE_TRAILING_STOP = 'exchange trailing - stop'
+
+    def get_id(key: str):
+        return {OT.EXCHANGE_MARKET: 1, OT.EXCHANGE_LIMIT: 2, OT.EXCHANGE_STOP: 3, OT.EXCHANGE_TRAILING_STOP: 4}.get(key)
+
+
+class OS:  # Order side
+    BUY = 'buy'
+    SELL = 'sell'
+
+    def get_id(key: str):
+        return {OS.BUY: 1, OS.SELL: -1}.get(key)
+
+
 class FT:
     NONE = 'NONE'
     TRIANGLE = 'Triangle'
@@ -372,6 +390,11 @@ class DC:  # Data Columns
     FALSE_BREAKOUT = 'False_Breakout'
     EXPECTED_WIN_REACHED = 'Expected_Win_Reached'
     # and additional for Trades
+    TRADE_STRATEGY = 'Trade_Strategy'
+    TRADE_STRATEGY_ID = 'Trade_Strategy_ID'
+    TRADE_BOX_TYPE = 'Trade_Box_Type'
+    TRADE_BOX_TYPE_ID = 'Trade_Box_Type_ID'
+
     BUY_ORDER_ID = 'Buy_Order_ID'
     BUY_ORDER_TPYE = 'Buy_Order_Type'
     BUY_ORDER_TPYE_ID = 'Sell_Order_Type_ID'
@@ -383,8 +406,7 @@ class DC:  # Data Columns
     BUY_TRIGGER = 'Buy_Trigger'
     BUY_TRIGGER_ID = 'Buy_Trigger_ID'
     BUY_COMMENT = 'Buy_Comment'
-    TRADE_STRATEGY = 'Trade_Strategy'
-    TRADE_STRATEGY_ID = 'Trade_Strategy_ID'
+
     FC_TOUCH_POINTS_TILL_BREAKOUT_TOP = 'Forecast_Touch_Points_Till_Breakout_Top'
     FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM = 'Forecast_Touch_Points_Till_Breakout_Bottom'
     FC_TICKS_TILL_BREAKOUT = 'Forecast_Ticks_Till_Breakout'
@@ -403,6 +425,7 @@ class DC:  # Data Columns
     FC_BUY_TIME = 'Forecast_Buy_Time'
     FC_SELL_DT = 'Forecast_Sell_Date'
     FC_SELL_TIME = 'Forecast_Sell_Time'
+
     SELL_ORDER_ID = 'Sell_Order_ID'
     SELL_ORDER_TPYE = 'Sell_Order_Type'
     SELL_ORDER_TPYE_ID = 'Sell_Order_Type_ID'

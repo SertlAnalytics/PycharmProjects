@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FD, DC, CN, EQUITY_TYPE, BT, ST, TR, TSTR
+from sertl_analytics.constants.pattern_constants import FD, DC, CN, EQUITY_TYPE, BT, ST, TR, TSTR, OT
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
@@ -13,7 +13,6 @@ from sertl_analytics.mymath import MyMath
 from pattern_configuration import ApiPeriod
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.exchanges.exchange_cls import Order, OrderStatus
-from sertl_analytics.exchanges.bitfinex import OT
 import numpy as np
 
 
@@ -33,6 +32,10 @@ class PatternDataDictionary:
     def add(self, key: str, value):
         value = self.__get_manipulated_value__(value)
         self._data_dict[key] = value
+
+    def inherit_values(self, data_dict: dict):
+        for key, values in data_dict.items():
+            self.data_dict[key] = values
 
     @staticmethod
     def __get_manipulated_value__(value):
@@ -62,6 +65,12 @@ class PatternDataDictionary:
                 return False
         return True
 
+    def is_data_dict_ready_for_trade_table(self):
+        for col in self.sys_config.trade_table.column_name_list:
+            if col not in self._data_dict:
+                return False
+        return True
+
     def is_data_dict_ready_for_columns(self, columns: list):
         for col in columns:
             if col not in self._data_dict:
@@ -73,6 +82,9 @@ class PatternDataDictionary:
 
     def get_data_dict_for_features_table(self):
         return {col: self._data_dict[col] for col in self.sys_config.features_table.column_name_list}
+
+    def get_data_dict_for_trade_table(self):
+        return {col: self._data_dict[col] for col in self.sys_config.trade_table.column_name_list}
 
     def add_buy_order_status_data_to_pattern_data_dict(self, order_status: OrderStatus, trade_strategy: str):
         self._data_dict[DC.BUY_ORDER_ID] = order_status.order_id

@@ -5,13 +5,14 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, DIR, FT, TSTR, BT, ST, FD, DC, TBT, PTS
+from sertl_analytics.constants.pattern_constants import CN, DIR, FT, TSTR, BT, ST, FD, DC, TBT, PTS, OS, OT, TR
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern import Pattern
 from pattern_bitfinex import MyBitfinexTradeClient, BitfinexConfiguration
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
 from pattern_database.stock_database import StockDatabase
+from pattern_data_dictionary import PatternDataDictionary
 
 
 class TradingBox:
@@ -153,6 +154,7 @@ class FibonacciTradingBox(TradingBox):
 
 class PatternTrade:
     def __init__(self, pattern: Pattern, buy_trigger: str, trade_box_type: str, trade_strategy: str):
+        self.sys_config = pattern.sys_config
         self.buy_trigger = buy_trigger
         self.trade_box_type = trade_box_type
         self.trade_strategy = trade_strategy
@@ -164,6 +166,9 @@ class PatternTrade:
         self._order_status_sell = None
         self._status = PTS.NEW
         self._trade_box = None
+        self.data_dict_obj = PatternDataDictionary(self.sys_config)
+        self.data_dict_obj.inherit_values(pattern.data_dict_obj.data_dict)
+        self.__add_trade_basis_data_to_data_dict__()
 
     @property
     def executed_amount(self):
@@ -176,6 +181,53 @@ class PatternTrade:
     @property
     def order_status_sell(self):
         return self._order_status_buy
+
+
+    @property
+    def stop_loss_current(self):
+        return self._trade_box.stop_loss
+
+    @property
+    def limit_current(self):
+        return self._trade_box.limit
+
+    @property
+    def trailing_stop_distance(self):
+        return self._trade_box.trailing_stop_distance
+
+    @property
+    def ticker_id(self):
+        return self.pattern.ticker_id.replace('_', '')
+
+    @property
+    def status(self):
+        return self._status
+
+    def is_ticker_breakout(self, ticker: Ticker, time_stamp: int):
+        if self.expected_breakout_direction == FD.ASC:
+            upper_value = self.pattern.function_cont.get_upper_value(time_stamp)
+            return ticker.last_price >= upper_value
+        # elif self.expected_breakout_direction == FD.DESC:
+        #     lower_value = self.pattern.function_cont.get_lower_value(time_stamp)
+        #     return ticker.last_price <= lower_value
+        return False
+
+    def is_ticker_wrong_breakout(self, ticker: Ticker, time_stamp: int):
+        if self.expected_breakout_direction == FD.ASC:
+            lower_value = self.pattern.function_cont.get_lower_value(time_stamp)
+            return ticker.last_price <= lower_value
+        elif self.expected_breakout_direction == FD.DESC:
+            upper_value = self.pattern.function_cont.get_upper_value(time_stamp)
+            return ticker.last_price >= upper_value
+        return False
+
+    def save_trade(self):
+        if not self.sys_config.config.save_trade_data:
+            return
+        if self.data_dict_obj.is_data_dict_ready_for_trade_table():
+            trade_dict = self.data_dict_obj.get_data_dict_for_trade_table()
+            if not self.sys_config.db_stock.is_trade_already_available(trade_dict[DC.ID]):
+                self.sys_config.db_stock.insert_trade_data([trade_dict])
 
     def print_trade(self, prefix = ''):
         if prefix != '':
@@ -222,6 +274,8 @@ class PatternTrade:
         self._order_status_buy = order_status
         self.pattern.data_dict_obj.add_buy_order_status_data_to_pattern_data_dict(order_status, self.trade_strategy)
         self.__set_properties_after_buy__(ticker)
+        self.__add_order_status_buy_to_data_dict__(self._order_status_buy)
+        self.__add_order_status_sell_to_data_dict__(self._order_status_sell)  # to initialize those data
         self.print_trade('Details after buying')
 
     def __set_properties_after_buy__(self, ticker: Ticker):
@@ -235,48 +289,62 @@ class PatternTrade:
         self._order_status_sell = order_status
         self.pattern.data_dict_obj.add_sell_order_status_data_to_pattern_data_dict(order_status)
         self.__set_properties_after_sell__()
+        self.__add_order_status_sell_to_data_dict__(self._order_status_sell)  # to fill these data finally
         self.print_trade('Details after selling')
 
     def __set_properties_after_sell__(self):
         self._status = PTS.FINISHED
 
-    @property
-    def stop_loss_current(self):
-        return self._trade_box.stop_loss
+    def __add_trade_basis_data_to_data_dict__(self):
+        self.data_dict_obj.add(DC.ID, self.id)
+        self.data_dict_obj.add(DC.TRADE_STRATEGY, self.trade_strategy)
+        self.data_dict_obj.add(DC.TRADE_STRATEGY_ID, TSTR.get_id(self.trade_strategy))
+        self.data_dict_obj.add(DC.TRADE_BOX_TYPE, self.trade_box_type)
+        self.data_dict_obj.add(DC.TRADE_BOX_TYPE_ID, TBT.get_id(self.trade_box_type))
 
-    @property
-    def limit_current(self):
-        return self._trade_box.limit
+    def __add_order_status_buy_to_data_dict__(self, order_status: OrderStatus):
+        self.data_dict_obj.add(DC.BUY_ORDER_ID, order_status.order_id)
+        self.data_dict_obj.add(DC.BUY_ORDER_TPYE, order_status.type)
+        self.data_dict_obj.add(DC.BUY_ORDER_TPYE_ID, OS.get_id(order_status.type))
+        self.data_dict_obj.add(DC.BUY_DT, MyDate.get_date_from_epoch_seconds(order_status.time_stamp))
+        self.data_dict_obj.add(DC.BUY_TIME, str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp)))
+        self.data_dict_obj.add(DC.BUY_AMOUNT, order_status.executed_amount)
+        self.data_dict_obj.add(DC.BUY_PRICE, order_status.avg_execution_price)
+        self.data_dict_obj.add(DC.BUY_TOTAL_COSTS, order_status.value_total)
+        self.data_dict_obj.add(DC.BUY_TRIGGER, order_status.order_trigger)
+        self.data_dict_obj.add(DC.BUY_TRIGGER_ID, BT.get_id(order_status.order_trigger))
+        self.data_dict_obj.add(DC.BUY_COMMENT, order_status.order_comment)
 
-    @property
-    def trailing_stop_distance(self):
-        return self._trade_box.trailing_stop_distance
-
-    @property
-    def ticker_id(self):
-        return self.pattern.ticker_id.replace('_', '')
-
-    @property
-    def status(self):
-        return self._status
-
-    def is_ticker_breakout(self, ticker: Ticker, time_stamp: int):
-        if self.expected_breakout_direction == FD.ASC:
-            upper_value = self.pattern.function_cont.get_upper_value(time_stamp)
-            return ticker.last_price >= upper_value
-        # elif self.expected_breakout_direction == FD.DESC:
-        #     lower_value = self.pattern.function_cont.get_lower_value(time_stamp)
-        #     return ticker.last_price <= lower_value
-        return False
-
-    def is_ticker_wrong_breakout(self, ticker: Ticker, time_stamp: int):
-        if self.expected_breakout_direction == FD.ASC:
-            lower_value = self.pattern.function_cont.get_lower_value(time_stamp)
-            return ticker.last_price <= lower_value
-        elif self.expected_breakout_direction == FD.DESC:
-            upper_value = self.pattern.function_cont.get_upper_value(time_stamp)
-            return ticker.last_price >= upper_value
-        return False
+    def __add_order_status_sell_to_data_dict__(self, order_status: OrderStatus):
+        if order_status:
+            self.data_dict_obj.add(DC.SELL_ORDER_ID, order_status.order_id)
+            self.data_dict_obj.add(DC.SELL_ORDER_TPYE, order_status.type)
+            self.data_dict_obj.add(DC.SELL_ORDER_TPYE_ID, OS.get_id(order_status.type))
+            self.data_dict_obj.add(DC.SELL_DT, MyDate.get_date_from_epoch_seconds(order_status.time_stamp))
+            self.data_dict_obj.add(DC.SELL_TIME, str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp)))
+            self.data_dict_obj.add(DC.SELL_AMOUNT, order_status.executed_amount)
+            self.data_dict_obj.add(DC.SELL_PRICE, order_status.avg_execution_price)
+            self.data_dict_obj.add(DC.SELL_TOTAL_VALUE, order_status.value_total)
+            self.data_dict_obj.add(DC.SELL_TRIGGER, order_status.order_trigger)
+            self.data_dict_obj.add(DC.SELL_TRIGGER_ID, ST.get_id(order_status.order_trigger))
+            self.data_dict_obj.add(DC.SELL_COMMENT, order_status.order_comment)
+            trade_result = TR.WINNER
+            self.data_dict_obj.add(DC.TRADE_RESULT, trade_result)
+            self.data_dict_obj.add(DC.TRADE_RESULT_ID, TR.get_id(trade_result))
+        else:
+            self.data_dict_obj.add(DC.SELL_ORDER_ID, '')
+            self.data_dict_obj.add(DC.SELL_ORDER_TPYE, '')
+            self.data_dict_obj.add(DC.SELL_ORDER_TPYE_ID, 0)
+            self.data_dict_obj.add(DC.SELL_DT, None)
+            self.data_dict_obj.add(DC.SELL_TIME, '')
+            self.data_dict_obj.add(DC.SELL_AMOUNT, 0)
+            self.data_dict_obj.add(DC.SELL_PRICE, 0)
+            self.data_dict_obj.add(DC.SELL_TOTAL_VALUE, 0)
+            self.data_dict_obj.add(DC.SELL_TRIGGER, '')
+            self.data_dict_obj.add(DC.SELL_TRIGGER_ID, 0)
+            self.data_dict_obj.add(DC.SELL_COMMENT, '')
+            self.data_dict_obj.add(DC.TRADE_RESULT, '')
+            self.data_dict_obj.add(DC.TRADE_RESULT_ID, 0)
 
 
 class PatternQueue:
@@ -327,7 +395,8 @@ class PatternTradeHandler:
 
     def __add_pattern_for_trade__(self, pattern: Pattern, buy_trigger: str, box_type: str, trade_strategy: str):
         if pattern.expected_breakout_direction != FD.ASC:  # currently we only handle higher curses...
-            print('pattern.expected_breakout_direction: {}'.format(pattern.expected_breakout_direction))
+            print('\nAdd pattern for trade for {} not possible: expected_breakout_direction: {}'.format(
+                pattern.id, pattern.expected_breakout_direction))
             return
         if pattern.ticker_id not in self.ticker_id_list:
             self.ticker_id_list.append(pattern.ticker_id)
@@ -391,6 +460,7 @@ class PatternTradeHandler:
         print('Sell: {}'.format(sell_comment))
         order_status = self.bitfinex_trade_client.create_sell_market_order(ticker_id, pattern_trade.executed_amount)
         pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
+        pattern_trade.save_trade()
 
     def __handle_wrong_breakout__(self):
         deletion_key_list = []
@@ -422,6 +492,7 @@ class PatternTradeHandler:
         print('Handle_buy_breakout_for_pattern_trade: {}'.format(buy_comment))
         order_status = self.bitfinex_trade_client.buy_available(ticker_id, ticker.last_price)
         pattern_trade.set_order_status_buy(order_status, buy_comment, ticker)
+        pattern_trade.save_trade()
 
     def __handle_buy_touches__(self):
         pass

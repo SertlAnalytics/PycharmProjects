@@ -14,6 +14,7 @@ import base64
 import hmac
 import hashlib
 import time
+from sertl_analytics.constants.pattern_constants import OS, OT
 from sertl_analytics.exchanges.exchange_abc import ExInterface
 from sertl_analytics.exchanges.exchange_cls import Order, OrderApi, OrderStatus, OrderStatusApi
 from sertl_analytics.exchanges.exchange_cls import OrderBook, Balance, Ticker
@@ -21,21 +22,6 @@ from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mystring import MyString
 from sertl_analytics.mycache import MyCacheObjectApi, MyCacheObject, MyCache
-
-
-class OT:
-    EXCHANGE_MARKET = 'exchange market'
-    EXCHANGE_LIMIT = 'exchange limit'
-    EXCHANGE_STOP = 'exchange stop'
-    EXCHANGE_TRAILING_STOP = 'exchange trailing - stop'
-
-    def get_id(key: str):
-        return {OT.EXCHANGE_MARKET: 1, OT.EXCHANGE_LIMIT: 2, OT.EXCHANGE_STOP: 3, OT.EXCHANGE_TRAILING_STOP: 4}.get(key)
-
-
-class OS:
-    BUY = 'buy'
-    SELL = 'sell'
 
 
 class TP:  # trading pairs - they are all put to lowercase when sent to Bitfinex

@@ -28,6 +28,7 @@ class SystemConfiguration:
         self.crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
         self.pdh = PatternDataHandler(self.config)
         self.features_table = stock_database.FeaturesTable()
+        self.trade_table = stock_database.TradeTable()
         self.db_stock = stock_database.StockDatabase()
         self.predictor_touch_points = None
         self.predictor_before_breakout = None

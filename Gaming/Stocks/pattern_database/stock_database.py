@@ -110,6 +110,9 @@ class StockDatabase(BaseDatabase):
     def insert_pattern_features(self, input_dict_list: list):
         self.__insert_data_into_table__('Features', input_dict_list)
 
+    def insert_trade_data(self, input_dict_list: list):
+        self.__insert_data_into_table__('Trade', input_dict_list)
+
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict,
                                                dt_now_time_stamp: float):
@@ -314,6 +317,11 @@ class StockDatabase(BaseDatabase):
 
     def are_features_already_available(self, id: str) -> bool:
         query = self._features_table.get_query_for_unique_record_by_id(id)
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.shape[0] > 0
+
+    def is_trade_already_available(self, id: str) -> bool:
+        query = self._trade_table.get_query_for_unique_record_by_id(id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 

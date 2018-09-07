@@ -18,8 +18,17 @@ class TradeTable(MyTable):
     def _get_name_():
         return 'Trade'
 
+    @staticmethod
+    def get_query_for_unique_record_by_id(id: str) -> str:
+        return "SELECT * FROM Trade where ID='{}'".format(id)
+
     def _add_columns_(self):
-        self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_TYPE, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_TYPE_ID, CDT.INTEGER))
+
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.PERIOD, CDT.STRING, 20))
@@ -80,8 +89,6 @@ class TradeTable(MyTable):
         self._columns.append(MyTableColumn(DC.SELL_TRIGGER, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.SELL_TRIGGER_ID, CDT.INTEGER))
 
-        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY, CDT.STRING, 50))
-        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.TRADE_RESULT, CDT.STRING, 10))
         self._columns.append(MyTableColumn(DC.TRADE_RESULT_ID, CDT.INTEGER))
 
