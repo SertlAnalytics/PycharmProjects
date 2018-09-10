@@ -235,12 +235,12 @@ class BitfinexBalanceCache(MyCache):
 class MyBitfinex(ExInterface):
     def __init__(self, api_key: str, api_secret_key: str, exchange_config: BitfinexConfiguration):
         self.exchange_config = exchange_config
+        self._is_simulation_by_config = self.exchange_config.is_simulation
         self.base_currency = 'USD'
         self.http_timeout = 5.0 # HTTP request timeout in seconds
         self.url = 'https://api.bitfinex.com/v1'
         self.api_key = api_key
         self.api_secret_key = api_secret_key
-        self._is_simulation = self.exchange_config.is_simulation
         self._hodl_dict = self.exchange_config.hodl_dict
         self.trading_pairs = self.get_symbols()
         self.ticker_cache = BitfinexTickerCache(self.exchange_config.cache_ticker_seconds)
@@ -250,23 +250,24 @@ class MyBitfinex(ExInterface):
     def nonce(self):
         return str(time.time() * 1000000)
 
-    @property
-    def simulation_text(self):
-        return ' (simulation)' if self._is_simulation else ''
+    def get_simulation_text(self, is_simulation=True):
+        if is_simulation is None:
+            is_simulation = self._is_simulation_by_config
+        return ' (simulation)' if is_simulation else ''
 
     def get_available_money_balance(self) -> Balance:
         return self.get_balance_for_symbol(self.base_currency)
 
-    def create_order(self, order: BitfinexOrder, order_type=''):
+    def create_order(self, order: BitfinexOrder, order_type='', is_simulation=True):
         self.__init_actual_order_properties__(order)
-        if self._is_simulation or self.__is_enough_balance_available__(order):
-            if self._is_simulation or not self.__is_order_affected_by_hodl_config__(order):
-                if self._is_simulation or self.__is_order_value_compliant__(order):
-                    return self.__create_order__(order, order_type)
+        if is_simulation or self.__is_enough_balance_available__(order):
+            if is_simulation or not self.__is_order_affected_by_hodl_config__(order):
+                if is_simulation or self.__is_order_value_compliant__(order):
+                    return self.__create_order__(order, order_type, is_simulation)
 
-    def delete_order(self, order_id: int):
-        prefix = 'Delete order - executed (simulation)' if self._is_simulation else 'Delete order - executed'
-        if self._is_simulation:
+    def delete_order(self, order_id: int, is_simulation=True):
+        prefix = 'Delete order - executed (simulation)' if is_simulation else 'Delete order - executed'
+        if is_simulation:
             order_status = self.get_order(order_id)
         else:
             payload_additional = {"order_id": order_id}
@@ -280,42 +281,44 @@ class MyBitfinex(ExInterface):
         if order_status:
             order_status.print_order_status(prefix)
 
-    def delete_all_orders(self):
+    def delete_all_orders(self, is_simulation=True):
         order_status_list = self.get_active_orders()
-        prefix = 'Delete all orders - executed{}'.format(self.simulation_text)
-        if self._is_simulation:
+        if is_simulation:
             if len(order_status_list) == 0:
-                print('\nDelete all orders{} - result: {}'.format(self.simulation_text, 'Nothing to delete.'))
+                print('\nDelete all orders{} - result: {}'.format(self.get_simulation_text(is_simulation),
+                                                                  'Nothing to delete.'))
         else:
             json_cancel_all = self.__get_json__('/order/cancel/all')
             print('\nDelete all orders - result: {}'.format(json_cancel_all['result']))
+
+        prefix = 'Delete all orders - executed{}'.format(self.get_simulation_text(is_simulation))
         for order_status in order_status_list:
             order_status.print_order_status(prefix)
 
-    def sell_all(self, trading_pair: str):
+    def sell_all(self, trading_pair: str, is_simulation=True):
         symbol = trading_pair[:-3]
         balance = self.get_balance_for_symbol(symbol)
         if balance:
-            self.__sell_all_in_balance__(balance, trading_pair)
+            self.__sell_all_in_balance__(balance, trading_pair, is_simulation)
         else:
-            print('Sell all{} for {}: no amounts available.'.format(self.simulation_text, symbol))
+            print('Sell all{} for {}: no amounts available.'.format(self.get_simulation_text(is_simulation), symbol))
 
-    def sell_all_assets(self):
+    def sell_all_assets(self, is_simulation=True):
         order_status_list = []
         balances = self.get_balances()
         for balance in balances:
             trading_pair = '{}{}'.format(balance.asset, self.base_currency).lower()
             if trading_pair in self.trading_pairs:
-                order_status_list.append(self.__sell_all_in_balance__(balance, trading_pair))
+                order_status_list.append(self.__sell_all_in_balance__(balance, trading_pair, is_simulation))
         return order_status_list
 
-    def __sell_all_in_balance__(self, balance: Balance, trading_pair: str):
+    def __sell_all_in_balance__(self, balance: Balance, trading_pair: str, is_simulation=True):
         order_sell_all = SellMarketOrder(trading_pair, balance.amount_available)
         order_sell_all.actual_balance_symbol = balance
-        return self.create_order(order_sell_all, 'Sell all')
+        return self.create_order(order_sell_all, 'Sell all', is_simulation)
 
-    def buy_available(self, symbol: str, last_price=0):
-        if self._is_simulation:
+    def buy_available(self, symbol: str, last_price=0, is_simulation=True):
+        if is_simulation:
             available_money = self.exchange_config.buy_order_value_max
         else:
             available_money = min(self.get_available_money(), self.exchange_config.buy_order_value_max)
@@ -436,19 +439,19 @@ class MyBitfinex(ExInterface):
         prefix = 'Active balances' if prefix == '' else prefix
         balances = self.get_balances()
         if len(balances) > 0:
-             print('\n{}{}:'.format(prefix, self.simulation_text))
+             print('\n{}{}:'.format(prefix, self.get_simulation_text()))
         for balance in balances:
             balance.print_balance()
 
-    def print_order_status(self, order_id: int):
+    def print_order_status(self, order_id: int, is_simulation: bool):
         order_status = self.get_order(order_id)
         if order_status:
-            order_status.print_order_status('Order status{}'.format(self.simulation_text))
+            order_status.print_order_status('Order status{}'.format(self.get_simulation_text(is_simulation)))
 
-    def __create_order__(self, order: Order, trigger: str) -> OrderStatus:
+    def __create_order__(self, order: Order, trigger: str, is_simulation: bool) -> OrderStatus:
         trigger = 'Normal' if trigger == '' else trigger
-        print_prefix = '{}: Order executed{} for {}:'.format(trigger, self.simulation_text, order.symbol)
-        if self._is_simulation:
+        print_prefix = '{}: Order executed{} for {}:'.format(trigger, self.get_simulation_text(is_simulation), order.symbol)
+        if is_simulation:
             if order.type == OT.EXCHANGE_MARKET:
                 order.price = order.actual_ticker.ask
             order_status = BitfinexFactory.get_order_status_by_order_for_simulation(self.exchange_config, order)

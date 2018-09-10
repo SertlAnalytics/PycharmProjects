@@ -14,7 +14,8 @@ from pattern_configuration import PatternDebugger
 from pattern_database import stock_database
 from copy import deepcopy
 # from bitfinex import Bitfinex
-from pattern_predictor import PatternPredictorBeforeBreakout, PatternPredictorAfterBreakout, PatternPredictorTouchPoints
+from pattern_predictor import PatternPredictorBeforeBreakout, PatternPredictorAfterBreakout, \
+    PatternPredictorTouchPoints, PatternPredictorForTrades
 
 
 class SystemConfiguration:
@@ -33,6 +34,7 @@ class SystemConfiguration:
         self.predictor_touch_points = None
         self.predictor_before_breakout = None
         self.predictor_after_breakout = None
+        self.predictor_for_trades = None
         self._prediction_mode_active = False
 
     def __get_prediction_mode_active__(self):
@@ -46,9 +48,10 @@ class SystemConfiguration:
     prediction_mode_active = property(__get_prediction_mode_active__, __set_prediction_mode_active__)
 
     def __init__predictors__(self):
-        self.predictor_touch_points = PatternPredictorTouchPoints(self.features_table, self.db_stock)
-        self.predictor_before_breakout = PatternPredictorBeforeBreakout(self.features_table, self.db_stock)
-        self.predictor_after_breakout = PatternPredictorAfterBreakout(self.features_table, self.db_stock)
+        self.predictor_touch_points = PatternPredictorTouchPoints(self.db_stock)
+        self.predictor_before_breakout = PatternPredictorBeforeBreakout(self.db_stock)
+        self.predictor_after_breakout = PatternPredictorAfterBreakout(self.db_stock)
+        self.predictor_for_trades = PatternPredictorForTrades(self.db_stock)
 
     def get_semi_deep_copy(self):
         """

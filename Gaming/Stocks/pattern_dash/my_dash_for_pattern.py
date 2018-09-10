@@ -289,6 +289,7 @@ class MyDash4Pattern(MyDashBase):
 
     def __fill_graph_second_days_options__(self):
         self._graph_second_days_options.append({'label': 'NONE', 'value': 0})
+        self._graph_second_days_options.append({'label': '400 days', 'value': 400})
         self._graph_second_days_options.append({'label': '200 days', 'value': 200})
         self._graph_second_days_options.append({'label': '100 days', 'value': 100})
         self._graph_second_days_options.append({'label': '60 days', 'value': 60})
@@ -377,7 +378,7 @@ class MyDash4Pattern(MyDashBase):
         def handle_callback_for_graphs_before_breakout(graph_first_div):
             graphs = self._graph_first_cache.get_graph_list_for_observation(self._graph_key_first)
             pattern_list = self._graph_first_cache.get_pattern_list_for_buy_trigger(BT.BREAKOUT)
-            self.trade_handler.add_pattern_list_for_trade(pattern_list, BT.BREAKOUT, TBT.EXPECTED_WIN, TSTR.LIMIT)
+            self.trade_handler.add_pattern_list_for_trade(pattern_list)
             if len(graphs) > 0:
                 print('\n...handle_callback_for_graphs_before_breakout: {}'.format(len(graphs)))
             if self._graph_first_cache.number_of_finished_fibonacci_waves_since_last_refresh > 2:

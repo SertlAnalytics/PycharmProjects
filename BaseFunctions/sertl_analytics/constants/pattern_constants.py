@@ -235,6 +235,7 @@ class BT:  # Buy Trigger
     TOUCH_POINT = 'Touch_point'
     FIBONACCI_CLUSTER = 'Fibonacci_cluster'
 
+    @staticmethod
     def get_id(key: str):
         return {BT.BREAKOUT: 10, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}.get(key)
 
@@ -244,6 +245,7 @@ class TSTR:  # Trading Strategy
     TRAILING_STOP = 'Trailing_stop'
     TRAILING_STEPPED_STOP = 'Trailing_stepped_stop'
 
+    @staticmethod
     def get_id(key: str):
         return {TSTR.LIMIT: 10, TSTR.TRAILING_STOP: 20, TSTR.TRAILING_STEPPED_STOP: 30}.get(key)
 
@@ -254,6 +256,9 @@ class PTS:  # PatternTradeStatus
     PENDING = 'pending'
     FINISHED = 'finished'
 
+    @staticmethod
+    def get_id(key: str):
+        return {PTS.NEW: 10, PTS.EXECUTED: 20, PTS.PENDING: 30, PTS.FINISHED: 50}.get(key)
 
 class TBT:  # TradingBoxType
     EXPECTED_WIN = 'Expected_win'
@@ -262,6 +267,7 @@ class TBT:  # TradingBoxType
     TOUCH_POINT = 'Touchpoint'
     FIBONACCI = 'Fibonacci'
 
+    @staticmethod
     def get_id(key: str):
         return {TBT.EXPECTED_WIN: 10, TBT.FORECAST_HALF_LENGTH: 20, TBT.FORECAST_FULL_LENGTH: 30,
                 TBT.FIBONACCI: 50}.get(key)
@@ -270,9 +276,10 @@ class TBT:  # TradingBoxType
 class ST:  # Sell Trigger
     LIMIT = 'Limit'
     STOP_LOSS = 'Stop_loss'
+    PATTERN_END = 'Pattern_end'
 
     def get_id(key: str):
-        return {ST.LIMIT: 10, ST.STOP_LOSS: 20}.get(key)
+        return {ST.LIMIT: 10, ST.STOP_LOSS: 20, ST.PATTERN_END: 50}.get(key)
 
 
 class TR:  # Trade Result
@@ -280,6 +287,7 @@ class TR:  # Trade Result
     NEUTRAL = 'Neutral'
     LOSER = 'Loser'
 
+    @staticmethod
     def get_id(key: str):
         return {TR.LOSER: -1, TR.NEUTRAL: 0, TR.WINNER: 1}.get(key)
 
@@ -394,6 +402,9 @@ class DC:  # Data Columns
     TRADE_STRATEGY_ID = 'Trade_Strategy_ID'
     TRADE_BOX_TYPE = 'Trade_Box_Type'
     TRADE_BOX_TYPE_ID = 'Trade_Box_Type_ID'
+    TRADE_BOX_HEIGHT = 'Trade_Box_Height'
+    TRADE_BOX_LIMIT = 'Trade_Box_Limit'
+    TRADE_BOX_STOP_LOSS = 'Trade_Box_Stop_Loss'
 
     BUY_ORDER_ID = 'Buy_Order_ID'
     BUY_ORDER_TPYE = 'Buy_Order_Type'
@@ -437,5 +448,12 @@ class DC:  # Data Columns
     SELL_COMMENT = 'Sell_Comment'
     SELL_TRIGGER = 'Sell_Trigger'
     SELL_TRIGGER_ID = 'Sell_Trigger_ID'
+
+    TRADE_REACHED_PRICE = 'Trade_Reached_Price'
+    TRADE_REACHED_PRICE_PCT = 'Trade_Reached_Price_PCT'
+
     TRADE_RESULT = 'Trade_Result'
     TRADE_RESULT_ID = 'Trade_Result_ID'
+
+    FC_TRADE_REACHED_PRICE_PCT = 'Forecast_Trade_Reached_Price_PCT'
+    FC_TRADE_RESULT_ID = 'Forecast_Trade_Result_ID'

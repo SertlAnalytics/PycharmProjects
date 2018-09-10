@@ -175,7 +175,10 @@ class PatternDetectionController:
         self.sys_config.runtime.actual_ticker = entry_dic[LL.TICKER]
         if self.sys_config.runtime.actual_ticker in self.sys_config.crypto_ccy_dic:
             self.sys_config.runtime.actual_ticker_equity_type = EQUITY_TYPE.CRYPTO
-            self.sys_config.runtime.actual_expected_win_pct = 5
+            if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+                self.sys_config.runtime.actual_expected_win_pct = 1
+            else:
+                self.sys_config.runtime.actual_expected_win_pct = 1
         else:
             self.sys_config.runtime.actual_ticker_equity_type = EQUITY_TYPE.SHARE
             self.sys_config.runtime.actual_expected_win_pct = 1

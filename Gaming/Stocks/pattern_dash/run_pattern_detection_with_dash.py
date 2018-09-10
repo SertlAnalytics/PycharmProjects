@@ -11,10 +11,13 @@ from sertl_analytics.constants.pattern_constants import FT, Indices, CN
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_detection_controller import PatternDetectionController
 from pattern_dash.my_dash_for_pattern import MyDash4Pattern
+from pattern_bitfinex import BitfinexConfiguration
 
 
 my_profiler = MyProfiler()
 sys_config = SystemConfiguration()
+bitfinex_config = BitfinexConfiguration()
+bitfinex_config.is_simulation = True
 # debugger.pattern_range_position_list = [217, 224, 242]
 
 sys_config.config.get_data_from_db = False
@@ -22,7 +25,7 @@ sys_config.config.api_period = ApiPeriod.INTRADAY
 sys_config.config.pattern_type_list = FT.get_all()
 sys_config.prediction_mode_active = True
 sys_config.config.save_pattern_features = True
-# sys_config.config.pattern_type_list = [FT.CHANNEL_DOWN]
+# sys_config.config.pattern_type_list = [FT.TRIANGLE]
 # sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN, FT.TRIANGLE_UP, FT.TRIANGLE_BOTTOM]
 sys_config.config.plot_data = True
 sys_config.config.plot_only_pattern_with_fibonacci_waves = False
@@ -44,13 +47,13 @@ sys_config.config.fibonacci_detail_print = True
 # sys_config.config.use_index(Indices.DOW_JONES)
 sys_config.config.use_index(Indices.CRYPTO_CCY)
 # sys_config.config.use_own_dic({'TSLA': 'T', 'DWDP': 'DuPont', 'MMM': 'M', 'CAT': 'c', 'GS': 'Goldman'})
-# sys_config.config.use_own_dic({'EOS_USD': 'American'})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
+# sys_config.config.use_own_dic({'BTC_USD': 'American'})  # "INTC": "Intel",  "NKE": "Nike", "V": "Visa",  "GE": "GE", MRK (Merck)
 # "FCEL": "FuelCell" "KO": "Coca Cola" # "BMWYY": "BMW" NKE	Nike, "CSCO": "Nike", "AXP": "American", "WMT": "Wall mart",
 # sys_config.config.and_clause = "Date BETWEEN '2017-10-25' AND '2018-04-18'"
 sys_config.config.and_clause = "Date BETWEEN '2018-03-01' AND '2019-09-21'"
 # sys_config.config.and_clause = ''
 sys_config.config.api_output_size = ApiOutputsize.COMPACT
-my_dash = MyDash4Pattern(sys_config)
+my_dash = MyDash4Pattern(sys_config, bitfinex_config)
 my_dash.get_pattern()
 my_dash.run_on_server()
 my_profiler.disable(False)

@@ -1,5 +1,4 @@
 class Stack:  # Last in - first out LIFO
-
     def __init__(self):
         self.items = []
 
@@ -24,7 +23,6 @@ class Stack:  # Last in - first out LIFO
 
 
 class Queue:  # First in - first out FIFO
-
     def __init__(self):
         self.items = []
 

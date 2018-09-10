@@ -54,9 +54,9 @@ class MyBitfinexTradeClient:
     def delete_all_orders(self):
         self._bitfinex.delete_all_orders()
 
-    def buy_available(self, trading_pair: str, last_price=0):
+    def buy_available(self, trading_pair: str, last_price=0, is_simulation=True):
         self.print_active_balances('Before "Buy available {}"'.format(trading_pair))
-        order_status = self._bitfinex.buy_available(trading_pair, last_price)
+        order_status = self._bitfinex.buy_available(trading_pair, last_price, is_simulation)
         self.print_active_balances('After "Buy available {}"'.format(trading_pair))
         return order_status
 

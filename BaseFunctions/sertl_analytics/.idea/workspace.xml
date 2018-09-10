@@ -50,6 +50,7 @@
         <option value="$PROJECT_DIR$/mystring.py" />
         <option value="$PROJECT_DIR$/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/mycache.py" />
+        <option value="$PROJECT_DIR$/searches/smart_searches.py" />
       </list>
     </option>
   </component>
@@ -85,6 +86,11 @@
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
               <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
               <item name="pybase" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="searches" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
@@ -164,10 +170,9 @@
     <frame x="1273" y="0" width="1287" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25140113" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25140113" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.32941177" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32862744" />
@@ -181,6 +186,7 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32941177" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -192,6 +198,16 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="28" selection-start-line="28" selection-end-line="28" />
+          <folding>
+            <element signature="e#217#256#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
@@ -409,6 +425,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="731">
           <caret line="43" column="49" lean-forward="true" selection-start-line="43" selection-start-column="49" selection-end-line="43" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/searches/smart_searches.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="40" selection-start-column="40" selection-end-column="40" />
         </state>
       </provider>
     </entry>

@@ -10,9 +10,30 @@ from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn,
 from sertl_analytics.constants.pattern_constants import DC
 
 
-class TradeTable(MyTable):
+class PredictionFeatureTable:
+    @staticmethod
+    def is_label_column_for_regression(label_column: str):
+        return label_column[-4:] == '_PCT'
+
+
+class TradeTable(MyTable, PredictionFeatureTable):
     def __init__(self):
         MyTable.__init__(self)
+        self._feature_columns_for_trades = self.__get_feature_columns_for_trades__()
+        self._label_columns_for_trades = self.__get_label_columns_for_trades__()
+        self._query_for_feature_and_label_data_for_trades = self.__get_query_for_feature_and_label_data_for_trades__()
+
+    @property
+    def feature_columns_for_trades(self):
+        return self._feature_columns_for_trades
+
+    @property
+    def label_columns_for_trades(self):
+        return self._label_columns_for_trades
+
+    @property
+    def query_for_feature_and_label_data_for_trades(self):
+        return self._query_for_feature_and_label_data_for_trades
 
     @staticmethod
     def _get_name_():
@@ -28,6 +49,9 @@ class TradeTable(MyTable):
         self._columns.append(MyTableColumn(DC.TRADE_STRATEGY_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.TRADE_BOX_TYPE, CDT.STRING, 50))
         self._columns.append(MyTableColumn(DC.TRADE_BOX_TYPE_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_HEIGHT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_LIMIT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_STOP_LOSS, CDT.FLOAT))
 
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
@@ -89,11 +113,29 @@ class TradeTable(MyTable):
         self._columns.append(MyTableColumn(DC.SELL_TRIGGER, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.SELL_TRIGGER_ID, CDT.INTEGER))
 
+        self._columns.append(MyTableColumn(DC.TRADE_REACHED_PRICE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_REACHED_PRICE_PCT, CDT.INTEGER))
+
         self._columns.append(MyTableColumn(DC.TRADE_RESULT, CDT.STRING, 10))
         self._columns.append(MyTableColumn(DC.TRADE_RESULT_ID, CDT.INTEGER))
 
+    @staticmethod
+    def __get_feature_columns_for_trades__():
+        return [DC.BUY_TRIGGER_ID, DC.TRADE_STRATEGY_ID, DC.TRADE_BOX_TYPE_ID,
+                DC.EQUITY_TYPE_ID, DC.PERIOD_ID, DC.PERIOD_AGGREGATION, DC.PATTERN_TYPE_ID]
 
-class FeaturesTable(MyTable):
+    @staticmethod
+    def __get_label_columns_for_trades__():
+        return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_ID]
+
+    def __get_query_for_feature_and_label_data_for_trades__(self) -> str:
+        return "SELECT {} FROM Trade".format(self.__get_concatenated_feature_label_columns_for_trades__())
+
+    def __get_concatenated_feature_label_columns_for_trades__(self):
+        return ', '.join(self._feature_columns_for_trades + self._label_columns_for_trades)
+
+
+class FeaturesTable(MyTable, PredictionFeatureTable):
     def __init__(self):
         MyTable.__init__(self)
         self._feature_columns_touch_points = self.__get_feature_columns_touch_points__()
@@ -290,8 +332,4 @@ class FeaturesTable(MyTable):
     @staticmethod
     def __get_label_columns_touch_points__():
         return [DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM]
-
-    @staticmethod
-    def is_label_column_for_regression(label_column: str):
-        return label_column[-4:] == '_PCT'
 

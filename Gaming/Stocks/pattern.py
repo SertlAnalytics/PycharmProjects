@@ -205,11 +205,11 @@ class Pattern:
         if self.breakout.breakout_direction == FD.DESC:
             return self.function_cont.f_breakout
         else:
-            return np.poly1d([0, self.function_cont.f_breakout[0] + self.__get_expected_win__()])
+            return np.poly1d([0, self.function_cont.f_breakout[0] + self.get_expected_win()])
 
     def get_f_lower_trade(self):
         if self.breakout.breakout_direction == FD.DESC:
-            return np.poly1d([0, self.function_cont.f_breakout[0] - self.__get_expected_win__()])
+            return np.poly1d([0, self.function_cont.f_breakout[0] - self.get_expected_win()])
         else:
             return self.function_cont.f_breakout
 
@@ -244,12 +244,31 @@ class Pattern:
     def ticks(self):
         return self._part_main.ticks
 
+    def get_upper_value(self, time_stamp: float):
+        return self.function_cont.get_upper_value(time_stamp)
+
+    def get_lower_value(self, time_stamp: float):
+        return self.function_cont.get_lower_value(time_stamp)
+
     def are_pre_conditions_fulfilled(self):
         check_dict = {
             'Pre_constraints': self.__are_pre_constraints_fulfilled__(),
             'Established': self.__is_formation_established__(),
             'Expected_win': self.__is_expected_win_sufficient__()
         }
+        return False if False in [check_dict[key] for key in check_dict] else True
+
+    def are_pre_conditions_for_a_trade_fulfilled(self) -> bool:
+        check_dict = {
+            'Breakout_direction': self.expected_breakout_direction == FD.ASC,  # currently we only handle higher curses
+            'Expected_win_sufficient': self.__is_expected_win_sufficient__()
+        }
+        if not check_dict['Breakout_direction']:
+            print('\n{}: No trade possible: expected_breakout_direction: {}'.format(
+                self.id, self.expected_breakout_direction))
+        elif not check_dict['Expected_win_sufficient']:
+            print('\n{}: No trade possible: expected win {:.2f} not sufficient ({:.2f} required)'.format(
+                self.id, self.get_expected_win(), self.sys_config.runtime.actual_expected_win_pct))
         return False if False in [check_dict[key] for key in check_dict] else True
 
     def __is_formation_established__(self):  # this is the main check whether a formation is ready for a breakout
@@ -388,7 +407,7 @@ class Pattern:
 
     def __fill_trade_result__(self):
         tolerance_range = self._part_main.height * self.constraints.tolerance_pct
-        self.trade_result.expected_win = self.__get_expected_win__()
+        self.trade_result.expected_win = self.get_expected_win()
         self.trade_result.bought_at = round(self.breakout.tick_breakout.close, 2)
         self.trade_result.bought_on = self.breakout.tick_breakout.date
         self.trade_result.max_ticks = self._part_trade.df.shape[0]
@@ -405,14 +424,12 @@ class Pattern:
                 break
 
     def __is_expected_win_sufficient__(self) -> bool:
-        min_expected_win_pct = self.sys_config.runtime.actual_expected_win_pct
         ref_value = self._part_main.tick_last.close
-        expected_win_pct = round((self.__get_expected_win__() + ref_value)/ref_value, 4)
-        # print('min_expected_win_pct = {}, expected_win_pct = {}: {}'.format(
-        #     min_expected_win_pct, expected_win_pct, expected_win_pct >= min_expected_win_pct))
-        return expected_win_pct >= min_expected_win_pct or True
+        min_expected_win_pct = self.sys_config.runtime.actual_expected_win_pct
+        expected_win_pct = round((self.get_expected_win() + ref_value) / ref_value, 4)
+        return expected_win_pct >= min_expected_win_pct
 
-    def __get_expected_win__(self):
+    def get_expected_win(self):
         return round(self._part_main.height, 2)
 
     def __fill_trade_results_for_breakout_direction__(self, tick: WaveTick):
@@ -564,7 +581,7 @@ class Pattern:
                                int(min_max_dict['negative_next_full'][1] - pos_brk))
         self.data_dict_obj.add(DC.AVAILABLE_FIBONACCI_TYPE, self.available_fibonacci_end_type)
         self.data_dict_obj.add(DC.AVAILABLE_FIBONACCI_TYPE_ID, EXTREMA.get_id(self.available_fibonacci_end_type))
-        self.data_dict_obj.add(DC.EXPECTED_WIN, round(self.__get_expected_win__(), 2))
+        self.data_dict_obj.add(DC.EXPECTED_WIN, round(self.get_expected_win(), 2))
 
     def __add_data_dict_entries_after_filling_trade_result__(self):
         self.data_dict_obj.add(DC.EXPECTED_WIN, round(self.trade_result.expected_win, 2))
@@ -604,7 +621,7 @@ class HeadShoulderPattern(Pattern):
         value_02 = int(self.pattern_range.hsf.distance_neckline/1.5)
         return max(value_01, value_02)
 
-    def __get_expected_win__(self):
+    def get_expected_win(self):
         return self.pattern_range.hsf.expected_win
 
 
@@ -618,7 +635,7 @@ class HeadShoulderBottomPattern(Pattern):
         value_02 = int(self.pattern_range.hsf.distance_neckline /1.5)
         return max(value_01, value_02)
 
-    def __get_expected_win__(self):
+    def get_expected_win(self):
         return self.pattern_range.hsf.expected_win
 
 
@@ -627,7 +644,7 @@ class HeadShoulderBottomDescPattern(HeadShoulderBottomPattern):
 
 
 class TrianglePattern(Pattern):
-    def __get_expected_win__(self):
+    def get_expected_win(self):
         return round(self._part_main.height/2, 2)
 
 

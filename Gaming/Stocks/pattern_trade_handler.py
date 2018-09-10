@@ -5,170 +5,46 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, DIR, FT, TSTR, BT, ST, FD, DC, TBT, PTS, OS, OT, TR
+import numpy as np
+from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, OS, TR
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern import Pattern
 from pattern_bitfinex import MyBitfinexTradeClient, BitfinexConfiguration
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
-from pattern_database.stock_database import StockDatabase
+from sertl_analytics.searches.smart_searches import Queue
 from pattern_data_dictionary import PatternDataDictionary
+from pattern_trading_box import FibonacciTradingBox, ExpectedWinTradingBox, TouchPointTradingBox
+from pattern_trading_box import ForecastHalfLengthTradingBox, ForecastFullLengthTradingBox
 
 
-class TradingBox:
-    def __init__(self, pattern_data_dict: dict, off_set_price: float, trade_strategy: str):
-        self.box_type = ''
-        self._data_dict = pattern_data_dict
-        self._ticker_id = self._data_dict[DC.TICKER_ID]
-        self._off_set_price = off_set_price
-        self._trade_strategy = trade_strategy
-        self._ticker_last_price_list = []
-        self._height = 0
-        self._distance_bottom = 0
-        self._distance_top = 0
-        self._stop_loss_orig = 0
-        self._stop_loss_current = 0
-        self._sell_limit_orig = 0
-        self._sell_limit_current = 0
-        self._trailing_stop_distance = 0
-        self._next_trailing_stop = 0
-        self._init_parameters_()
-        self.__calculate_stops_and_limits__()
-
-    @property
-    def distance_top_bottom(self):
-        return self._distance_bottom + self._distance_top
-
-    @property
-    def distance_stepping(self):
-        return round(self._distance_bottom / 2, 2)
-
-    @property
-    def stop_loss(self):
-        return self._stop_loss_current
-
-    @property
-    def limit(self):
-        return self._sell_limit_current
-
-    @property
-    def distance_trailing_stop(self):
-        return self._trailing_stop_distance
-
-    @property
-    def multiplier_positive(self):
-        return round(max(100, self._data_dict[DC.FC_HALF_POSITIVE_PCT], self._data_dict[DC.FC_FULL_POSITIVE_PCT])/100, 2)
-
-    @property
-    def multiplier_negative(self):
-        return round(max(100, self._data_dict[DC.FC_HALF_NEGATIVE_PCT], self._data_dict[DC.FC_FULL_NEGATIVE_PCT])/100, 2)
-
-    def print_box(self, prefix = ''):
-        if prefix != '':
-            print('\n{}:'.format(prefix))
-        details = '; '.join('{}: {}'.format(key, value) for key, value in self.__get_value_dict__().items())
-        print('{}-box for {}: {}'.format(self.box_type, self._ticker_id, details))
-
-    def __get_value_dict__(self) -> dict:
-        return {'Orig_height': self._height,
-                'dist_top': '{:.2f} ({:.2f})'.format(self._distance_top, self.multiplier_positive),
-                'dist_bottom': '{:.2f} ({:.2f})'.format(self._distance_bottom, self.multiplier_negative),
-                'limit': self.limit, 'stop loss': self.stop_loss,
-                'dist_stepping': self.distance_stepping,
-                'dist_trailing_stop': self.distance_trailing_stop
-        }
-
-    def adjust_to_next_ticker_last_price(self, ticker_last_price: float):
-        self._ticker_last_price_list.append(ticker_last_price)
-        self.__adjust_to_next_ticker_last_price__(ticker_last_price)
-
-    def __adjust_to_next_ticker_last_price__(self, ticker_last_price: float):
-        if self._trade_strategy == TSTR.LIMIT:
-            pass
-        elif self._trade_strategy == TSTR.TRAILING_STOP:
-            if self._stop_loss_current < ticker_last_price - self._distance_bottom:
-                self._stop_loss_current = ticker_last_price - self._distance_bottom
-                self._sell_limit_current = self._stop_loss_current + self.distance_top_bottom
-                self.__print_new_adjusted_values__()
-        elif self._trade_strategy == TSTR.TRAILING_STEPPED_STOP:
-            if self._stop_loss_current < ticker_last_price - self._distance_bottom - self.distance_stepping:
-                self._stop_loss_current = ticker_last_price - self.distance_stepping
-                self._sell_limit_current = self._stop_loss_current + self.distance_top_bottom
-                self.__print_new_adjusted_values__()
-
-    def __print_new_adjusted_values__(self):
-        print('..adjusted: new stop_loss={}, new limit={} (top_bottom = {})'.format(
-            self._stop_loss_current, self._sell_limit_current, self.distance_top_bottom))
-
-    def _init_parameters_(self):
-        pass
-
-    def __calculate_stops_and_limits__(self):
-        self._stop_loss_orig = self._off_set_price - self._distance_bottom
-        self._stop_loss_current = self._stop_loss_orig
-        self._sell_limit_orig = self._off_set_price + self._distance_top
-        self._sell_limit_current = self._sell_limit_orig
-        self._trailing_stop_distance = self._distance_bottom
-        self._next_trailing_stop = self._off_set_price
-
-
-class ExpectedWinTradingBox(TradingBox):
-    def _init_parameters_(self):
-        self.box_type = TBT.EXPECTED_WIN
-        self._height = self._data_dict[DC.EXPECTED_WIN]
-        self._distance_bottom = round(self._height * self.multiplier_positive, 2)
-        self._distance_top = round(self._height * self.multiplier_negative, 2)
-
-
-class ForecastHalfLengthTradingBox(TradingBox):
-    def _init_parameters_(self):
-        self.box_type = TBT.FORECAST_HALF_LENGTH
-        self._height = self._data_dict[DC.PATTERN_HEIGHT]
-        self._distance_bottom = round(self._height * self.multiplier_positive, 2)
-        self._distance_top = round(self._height * self.multiplier_positive, 2)
-
-
-class ForecastFullLengthTradingBox(TradingBox):
-    def _init_parameters_(self):
-        self.box_type = TBT.FORECAST_FULL_LENGTH
-        self._height = self._data_dict[DC.PATTERN_HEIGHT]
-        self._distance_bottom = round(self._height * self.multiplier_positive, 2)
-        self._distance_top = round(self._height * self.multiplier_positive, 2)
-
-
-class TouchPointTradingBox(TradingBox):
-    def _init_parameters_(self):
-        self.box_type = TBT.TOUCH_POINT  # ToDo Touch_point
-        self._height = self._data_dict[DC.PATTERN_HEIGHT]
-        self._distance_bottom = round(self._height/2, 2)
-        self._distance_top = round(self._height, 2)
-
-
-class FibonacciTradingBox(TradingBox):
-    def _init_parameters_(self):
-        self.box_type = TBT.FIBONACCI  # ToDo Fibonacci
-        self._height = self._data_dict[DC.PATTERN_HEIGHT]
-        self._distance_bottom = round(self._height, 2)
-        self._distance_top = round(self._height, 2)
+class PatternTradeApi:
+    def __init__(self, pattern: Pattern, buy_trigger: str, box_type: str, trade_strategy: str):
+        self.pattern = pattern
+        self.buy_trigger = buy_trigger
+        self.box_type = box_type
+        self.trade_strategy = trade_strategy
 
 
 class PatternTrade:
-    def __init__(self, pattern: Pattern, buy_trigger: str, trade_box_type: str, trade_strategy: str):
-        self.sys_config = pattern.sys_config
-        self.buy_trigger = buy_trigger
-        self.trade_box_type = trade_box_type
-        self.trade_strategy = trade_strategy
-        self.pattern = pattern
+    def __init__(self, api: PatternTradeApi):
+        self.sys_config = api.pattern.sys_config
+        self.buy_trigger = api.buy_trigger
+        self.trade_box_type = api.box_type
+        self.trade_strategy = api.trade_strategy
+        self.pattern = api.pattern
+        self._is_simulation = True  # Default
         self.expected_win = self.pattern.data_dict_obj.get(DC.EXPECTED_WIN)
         self.expected_breakout_direction = self.pattern.expected_breakout_direction
-        self.id = '{}-{}-{}_{}'.format(buy_trigger, trade_box_type, trade_strategy, pattern.id)
+        self.id = '{}-{}-{}_{}'.format(self.buy_trigger, self.trade_box_type, self.trade_strategy, self.pattern.id)
         self._order_status_buy = None
         self._order_status_sell = None
         self._status = PTS.NEW
         self._trade_box = None
         self.data_dict_obj = PatternDataDictionary(self.sys_config)
-        self.data_dict_obj.inherit_values(pattern.data_dict_obj.data_dict)
+        self.data_dict_obj.inherit_values(self.pattern.data_dict_obj.data_dict)
         self.__add_trade_basis_data_to_data_dict__()
+        self.__calculate_prediction_values__()
 
     @property
     def executed_amount(self):
@@ -182,7 +58,6 @@ class PatternTrade:
     def order_status_sell(self):
         return self._order_status_buy
 
-
     @property
     def stop_loss_current(self):
         return self._trade_box.stop_loss
@@ -190,6 +65,10 @@ class PatternTrade:
     @property
     def limit_current(self):
         return self._trade_box.limit
+
+    @property
+    def time_stamp_end(self):
+        return self._trade_box.time_stamp_end
 
     @property
     def trailing_stop_distance(self):
@@ -203,21 +82,40 @@ class PatternTrade:
     def status(self):
         return self._status
 
+    def set_time_stamp_end(self):
+        self._trade_box.set_time_stamp_end()
+
+    def __get_is_simulation__(self) -> bool:
+        return self._is_simulation
+
+    def __set_is_simulation__(self, value: bool):
+        self._is_simulation = value
+
+    is_simulation = (__get_is_simulation__, __set_is_simulation__)
+
+    def __calculate_prediction_values__(self):
+        predictor = self.sys_config.predictor_for_trades
+        x_data = self.__get_x_data_for_prediction__(predictor.feature_columns)
+        if x_data is not None:
+            prediction_dict = predictor.predict_for_label_columns(x_data)
+            self.data_dict_obj.add(DC.FC_TRADE_REACHED_PRICE_PCT, prediction_dict[DC.TRADE_REACHED_PRICE_PCT])
+            self.data_dict_obj.add(DC.FC_TRADE_RESULT_ID, prediction_dict[DC.TRADE_RESULT_ID])
+
     def is_ticker_breakout(self, ticker: Ticker, time_stamp: int):
         if self.expected_breakout_direction == FD.ASC:
-            upper_value = self.pattern.function_cont.get_upper_value(time_stamp)
+            upper_value = self.pattern.get_upper_value(time_stamp)
             return ticker.last_price >= upper_value
         # elif self.expected_breakout_direction == FD.DESC:
-        #     lower_value = self.pattern.function_cont.get_lower_value(time_stamp)
+        #     lower_value = self.pattern.get_lower_value(time_stamp)
         #     return ticker.last_price <= lower_value
         return False
 
     def is_ticker_wrong_breakout(self, ticker: Ticker, time_stamp: int):
         if self.expected_breakout_direction == FD.ASC:
-            lower_value = self.pattern.function_cont.get_lower_value(time_stamp)
+            lower_value = self.pattern.get_lower_value(time_stamp)
             return ticker.last_price <= lower_value
         elif self.expected_breakout_direction == FD.DESC:
-            upper_value = self.pattern.function_cont.get_upper_value(time_stamp)
+            upper_value = self.pattern.get_upper_value(time_stamp)
             return ticker.last_price >= upper_value
         return False
 
@@ -232,15 +130,18 @@ class PatternTrade:
     def print_trade(self, prefix = ''):
         if prefix != '':
             print('\n{}:'.format(prefix))
-        details = '; '.join('{}: {}'.format(key, value) for key, value in self.__get_value_dict__().items())
-        print('{}: {}'.format(self.id, details))
+        print(self.get_trade_meta_data())
         if self._order_status_buy:
             self._order_status_buy.print_order_status('Buy order')
         if self._order_status_sell:
             self._order_status_sell.print_order_status('Sell order')
 
+    def get_trade_meta_data(self):
+        details = '; '.join('{}: {}'.format(key, value) for key, value in self.__get_value_dict__().items())
+        return '{}: {}'.format(self.id, details)
+
     def __get_value_dict__(self) -> dict:
-        return {'Buy_trigger': self.buy_trigger, 'Trade_box': self.trade_box_type,
+        return {'Status': self.status, 'Buy_trigger': self.buy_trigger, 'Trade_box': self.trade_box_type,
                 'Trade_strategy': self.trade_strategy, 'Pattern_Type': self.pattern.pattern_type,
                 'Expected_win': self.expected_win, 'Result': self.get_trade_result_text()
         }
@@ -301,6 +202,8 @@ class PatternTrade:
         self.data_dict_obj.add(DC.TRADE_STRATEGY_ID, TSTR.get_id(self.trade_strategy))
         self.data_dict_obj.add(DC.TRADE_BOX_TYPE, self.trade_box_type)
         self.data_dict_obj.add(DC.TRADE_BOX_TYPE_ID, TBT.get_id(self.trade_box_type))
+        self.data_dict_obj.add(DC.BUY_TRIGGER, self.buy_trigger)
+        self.data_dict_obj.add(DC.BUY_TRIGGER_ID, BT.get_id(self.buy_trigger))
 
     def __add_order_status_buy_to_data_dict__(self, order_status: OrderStatus):
         self.data_dict_obj.add(DC.BUY_ORDER_ID, order_status.order_id)
@@ -317,6 +220,10 @@ class PatternTrade:
 
     def __add_order_status_sell_to_data_dict__(self, order_status: OrderStatus):
         if order_status:
+            self.data_dict_obj.add(DC.TRADE_BOX_HEIGHT, self._trade_box.height)
+            self.data_dict_obj.add(DC.TRADE_BOX_LIMIT, self._trade_box.limit)
+            self.data_dict_obj.add(DC.TRADE_BOX_STOP_LOSS, self._trade_box.stop_loss)
+
             self.data_dict_obj.add(DC.SELL_ORDER_ID, order_status.order_id)
             self.data_dict_obj.add(DC.SELL_ORDER_TPYE, order_status.type)
             self.data_dict_obj.add(DC.SELL_ORDER_TPYE_ID, OS.get_id(order_status.type))
@@ -328,10 +235,19 @@ class PatternTrade:
             self.data_dict_obj.add(DC.SELL_TRIGGER, order_status.order_trigger)
             self.data_dict_obj.add(DC.SELL_TRIGGER_ID, ST.get_id(order_status.order_trigger))
             self.data_dict_obj.add(DC.SELL_COMMENT, order_status.order_comment)
-            trade_result = TR.WINNER
+            if self.data_dict_obj.get(DC.BUY_TOTAL_COSTS) < self.data_dict_obj.get(DC.SELL_TOTAL_VALUE):
+                trade_result = TR.WINNER
+            else:
+                trade_result = TR.LOSER
+            self.data_dict_obj.add(DC.TRADE_REACHED_PRICE, self._trade_box.max_ticker_last_price)
+            self.data_dict_obj.add(DC.TRADE_REACHED_PRICE_PCT, self._trade_box.max_ticker_last_price_pct)
             self.data_dict_obj.add(DC.TRADE_RESULT, trade_result)
             self.data_dict_obj.add(DC.TRADE_RESULT_ID, TR.get_id(trade_result))
         else:
+            self.data_dict_obj.add(DC.TRADE_BOX_HEIGHT, 0)
+            self.data_dict_obj.add(DC.TRADE_BOX_LIMIT, 0)
+            self.data_dict_obj.add(DC.TRADE_BOX_STOP_LOSS, 0)
+
             self.data_dict_obj.add(DC.SELL_ORDER_ID, '')
             self.data_dict_obj.add(DC.SELL_ORDER_TPYE, '')
             self.data_dict_obj.add(DC.SELL_ORDER_TPYE_ID, 0)
@@ -343,32 +259,81 @@ class PatternTrade:
             self.data_dict_obj.add(DC.SELL_TRIGGER, '')
             self.data_dict_obj.add(DC.SELL_TRIGGER_ID, 0)
             self.data_dict_obj.add(DC.SELL_COMMENT, '')
+            self.data_dict_obj.add(DC.TRADE_REACHED_PRICE, 0)
+            self.data_dict_obj.add(DC.TRADE_REACHED_PRICE_PCT, 0)
             self.data_dict_obj.add(DC.TRADE_RESULT, '')
             self.data_dict_obj.add(DC.TRADE_RESULT_ID, 0)
 
+    def __get_x_data_for_prediction__(self, feature_columns: list):
+        if self.data_dict_obj.is_data_dict_ready_for_columns(feature_columns):
+            data_list = self.data_dict_obj.get_data_list_for_columns(feature_columns)
+            np_array = np.array(data_list).reshape(1, len(data_list))
+            # print('{}: np_array.shape={}'.format(prediction_type, np_array.shape))
+            return np_array
+        return None
 
-class PatternQueue:
-    def __init__(self, pattern_list: list, buy_trigger: str, box_type: str, trade_strategy: str):
-        self.pattern_list = pattern_list
-        self.buy_trigger = buy_trigger
-        self.box_type = box_type
-        self.trade_strategy = trade_strategy
 
-    def is_empty(self):
-        return len(self.pattern_list) == 0
+class TradeQueueEntry:
+    def __init__(self, pattern_trade: PatternTrade):
+        self.pattern_trade = pattern_trade
+        self.forecast_pct = self.pattern_trade.data_dict_obj.get(DC.FC_TRADE_REACHED_PRICE_PCT)
+        self.forecast_result_id = self.pattern_trade.data_dict_obj.get(DC.FC_TRADE_RESULT_ID)
+
+    def get_simulation_flag(self, simulation_by_config: bool) -> bool:
+        if not simulation_by_config:
+            if self.forecast_result_id == 1:
+                return False
+        return True
+
+
+class TradeQueueController:
+    def __init__(self, for_simulation: bool):
+        self.for_simulation = for_simulation
+        self.actual_pattern_id_list = []  # this list contains all pattern_ids for actual trade candidates
+        self.black_pattern_id_list = []
+        self.trade_queue = Queue()
+
+    def add_new_pattern_list(self, pattern_list: list):
+        self.actual_pattern_id_list = []
+        for pattern in pattern_list:
+            self.actual_pattern_id_list.append(pattern.id)
+            self.__add_pattern_to_queue_after_checks__(pattern)
+
+    def __add_pattern_to_queue_after_checks__(self, pattern: Pattern):
+        if pattern.id in self.black_pattern_id_list:
+            return  # already checked against some conditions
+        if pattern.are_pre_conditions_for_a_trade_fulfilled():
+            for strategy in [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP]:
+                trade_api = PatternTradeApi(pattern, BT.BREAKOUT, TBT.EXPECTED_WIN, strategy)
+                trade_queue_entry = TradeQueueEntry(PatternTrade(trade_api))
+                self.trade_queue.enqueue(trade_queue_entry)
+            pass
+        else:
+            self.black_pattern_id_list.append(pattern.id)
+
+    def get_pattern_trades_for_processing(self) -> list:
+        return_list = []
+        while self.trade_queue.size() > 0:
+            trade_queue_entry = self.trade_queue.dequeue()
+            trade_entry = trade_queue_entry.pattern_trade
+            trade_entry.is_simulation = trade_queue_entry.get_simulation_flag(self.for_simulation)
+            return_list.append(trade_entry)
+        return return_list
 
 
 class PatternTradeHandler:
     def __init__(self, sys_config: SystemConfiguration, bitfinex_config: BitfinexConfiguration):
         self.sys_config = sys_config
+        self.bitfinex_config = bitfinex_config
         self.bitfinex_trade_client = MyBitfinexTradeClient(bitfinex_config)
         self.stock_db = self.sys_config.db_stock
         self.ticker_id_list = []
         self.pattern_trade_dict = {}
+        self.pattern_id_black_list = []
         self._time_stamp_check = 0
         self._date_time_check = None
         self.process = ''
-        self.pattern_queue = None
+        self.trade_queue_controller = TradeQueueController(self.bitfinex_config.is_simulation)
         self._last_price_for_test = 0
 
     # def __del__(self):
@@ -379,29 +344,15 @@ class PatternTradeHandler:
     def trade_numbers(self) -> int:
         return len(self.pattern_trade_dict)
 
-    def add_pattern_list_for_trade(self, pattern_list: list, buy_trigger: str, box_type: str, trade_strategy: str):
-        self.pattern_queue = PatternQueue(pattern_list, buy_trigger, box_type, trade_strategy)
+    def add_pattern_list_for_trade(self, pattern_list):
+        self.trade_queue_controller.add_new_pattern_list(pattern_list)
         self.__process_pattern_queue__()
 
-    def __process_pattern_queue__(self):
-        if self.pattern_queue is None or self.pattern_queue.is_empty() or self.process != '':
-            return
-        queue = self.pattern_queue
-        self.process = 'HandlePatternQueue'
-        for pattern in queue.pattern_list:
-            self.__add_pattern_for_trade__(pattern, queue.buy_trigger, queue.box_type, queue.trade_strategy)
-        self.pattern_queue.pattern_list = []
-        self.process = ''
-
-    def __add_pattern_for_trade__(self, pattern: Pattern, buy_trigger: str, box_type: str, trade_strategy: str):
-        if pattern.expected_breakout_direction != FD.ASC:  # currently we only handle higher curses...
-            print('\nAdd pattern for trade for {} not possible: expected_breakout_direction: {}'.format(
-                pattern.id, pattern.expected_breakout_direction))
-            return
-        if pattern.ticker_id not in self.ticker_id_list:
-            self.ticker_id_list.append(pattern.ticker_id)
-        pattern_trade = PatternTrade(pattern, buy_trigger, box_type, trade_strategy)
-        print('Added to trade list: {}'.format(pattern_trade.id))
+    def __add_pattern_trade_for_trading__(self, pattern_trade: PatternTrade):
+        if pattern_trade.pattern.ticker_id not in self.ticker_id_list:
+            self.ticker_id_list.append(pattern_trade.pattern.ticker_id)
+        print('Added to trading list{}: {}'.format(' (simulation)' if pattern_trade.is_simulation else ' (REAL)',
+                                                   pattern_trade.id))
         if pattern_trade.id in self.pattern_trade_dict:
             if self.pattern_trade_dict[pattern_trade.id].status == PTS.NEW:  # replace with new version
                 self.pattern_trade_dict[pattern_trade.id] = pattern_trade
@@ -416,7 +367,6 @@ class PatternTradeHandler:
         self.__process_pattern_queue__()  # take care of old patterns in queue
         if self.trade_numbers == 0:
             return
-        print('Check_actual_trades: {} trades at {}'.format(self.trade_numbers, self._date_time_check))
         self.process = 'Ticker'
         self.__adjust_stops_and_limits__()
         self.__handle_sell_triggers__()
@@ -425,6 +375,26 @@ class PatternTradeHandler:
         self.__handle_buy_touches__()
         self.__update_ticker_lists__()  # some entries could be deleted
         self.process = ''
+
+    def __process_pattern_queue__(self):
+        if self.process != '':
+            return
+        self.process = 'HandlePatternQueue'
+        for pattern_trade in self.trade_queue_controller.get_pattern_trades_for_processing():
+            self.__add_pattern_trade_for_trading__(pattern_trade)
+        self.__remove_outdated_pattern_trades__()
+        self.__set_executed_outdated_pattern_trades_to_end__()
+        self.process = ''
+
+    def __remove_outdated_pattern_trades__(self):  # remove trades which doesn't belong to an actual pattern anymore
+        deletion_key_list = [key for key, trades in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items()
+                             if trades.pattern.id not in self.trade_queue_controller.actual_pattern_id_list]
+        self.__delete_entries_from_pattern_trade_dict__(deletion_key_list)
+
+    def __set_executed_outdated_pattern_trades_to_end__(self):  # pattern is no longer valid. enforce sell.
+        for trades in [trades for trades in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values()
+                             if trades.pattern.id not in self.trade_queue_controller.actual_pattern_id_list]:
+            trades.set_time_stamp_end()
 
     def sell_on_fibonacci_cluster_top(self):
         self.bitfinex_trade_client.delete_all_orders()
@@ -446,14 +416,14 @@ class PatternTradeHandler:
 
     def __handle_sell_triggers__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
-            print('handle_sell: status = {}, stop_loss={}, limit={}'.format(pattern_trade.status,
-                                                                            pattern_trade.stop_loss_current,
-                                                                            pattern_trade.limit_current))
             ticker = self.__get_ticker_by_ticker_id__(pattern_trade.ticker_id)
+            self.__print_current_state__('Check sell', pattern_trade, ticker)
             if pattern_trade.stop_loss_current > ticker.last_price:
                 self.__handle_sell_trigger__(ticker, pattern_trade.ticker_id, pattern_trade, ST.STOP_LOSS)
             elif pattern_trade.limit_current < ticker.last_price:
                 self.__handle_sell_trigger__(ticker, pattern_trade.ticker_id, pattern_trade, ST.LIMIT)
+            elif pattern_trade.time_stamp_end < ticker.time_stamp:
+                self.__handle_sell_trigger__(ticker, pattern_trade.ticker_id, pattern_trade, ST.PATTERN_END)
 
     def __handle_sell_trigger__(self, ticker: Ticker, ticker_id: str, pattern_trade: PatternTrade, sell_trigger: str):
         sell_comment = 'Sell_{} at {:.2f} on {}'.format(sell_trigger, ticker.last_price, self._date_time_check)
@@ -466,6 +436,7 @@ class PatternTradeHandler:
         deletion_key_list = []
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
             ticker = self.__get_ticker_by_ticker_id__(pattern_trade.ticker_id)
+            self.__print_current_state__('Check wrong breakout', pattern_trade, ticker)
             if pattern_trade.is_ticker_wrong_breakout(ticker, self._time_stamp_check):
                 deletion_key_list.append(key)
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list)
@@ -478,21 +449,39 @@ class PatternTradeHandler:
         if len(deletion_key_list) == 0:
             return
         for key in deletion_key_list:
+            pattern_trade = self.pattern_trade_dict[key]
+            print('Removed from processing list: {}'.format(pattern_trade.get_trade_meta_data()))
             del self.pattern_trade_dict[key]
         self.__update_ticker_lists__()
 
     def __handle_buy_breakout__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).values():
             ticker = self.__get_ticker_by_ticker_id__(pattern_trade.ticker_id)
+            self.__print_current_state__('Check buy breakout', pattern_trade, ticker)
             if pattern_trade.is_ticker_breakout(ticker, self._time_stamp_check):
-                self.__handle_buy_breakout_for_pattern_trade__(ticker, pattern_trade.ticker_id, pattern_trade)
+                self.__handle_buy_breakout_for_pattern_trade__(ticker, pattern_trade)
 
-    def __handle_buy_breakout_for_pattern_trade__(self, ticker: Ticker, ticker_id: str, pattern_trade: PatternTrade):
+    def __handle_buy_breakout_for_pattern_trade__(self, ticker: Ticker, pattern_trade: PatternTrade):
+        ticker_id = pattern_trade.ticker_id
         buy_comment = '{}-breakout at {:.2f} on {}'.format(ticker_id, ticker.last_price, self._date_time_check)
         print('Handle_buy_breakout_for_pattern_trade: {}'.format(buy_comment))
         order_status = self.bitfinex_trade_client.buy_available(ticker_id, ticker.last_price)
         pattern_trade.set_order_status_buy(order_status, buy_comment, ticker)
-        pattern_trade.save_trade()
+        # pattern_trade.save_trade()
+
+    @staticmethod
+    def __print_current_state__(scope: str, pattern_trade: PatternTrade, ticker: Ticker):
+        if pattern_trade.status == PTS.NEW:
+            if scope == 'Check buy breakout':
+                breakout_value = pattern_trade.pattern.get_upper_value(ticker.time_stamp)
+            else:
+                breakout_value = pattern_trade.pattern.get_lower_value(ticker.time_stamp)
+            print('{} for {}: ticker.last_price={:.2f}, breakout value={:.2f}'.format(
+                scope, ticker.ticker_id, ticker.last_price, breakout_value))
+        else:
+            print('{} for {}: limit={:.2f}, ticker.last_price={:.2f}, stop_loss={:.2f}, bought_at={:.2f}'.format(
+                scope, ticker.ticker_id, pattern_trade.limit_current, ticker.last_price,
+                pattern_trade.stop_loss_current, pattern_trade.order_status_buy.avg_execution_price))
 
     def __handle_buy_touches__(self):
         pass
@@ -501,6 +490,7 @@ class PatternTradeHandler:
         for pattern_trade in self.pattern_trade_dict.values():
             if pattern_trade.status == PTS.EXECUTED:
                 ticker = self.__get_ticker_by_ticker_id__(pattern_trade.ticker_id)
+                self.__print_current_state__('Adjust limit&stop', pattern_trade, ticker)
                 pattern_trade.adjust_to_next_ticker_last_price(ticker.last_price)
 
     def __create_trailing_stop_order_for_all_executed_trades__(self):

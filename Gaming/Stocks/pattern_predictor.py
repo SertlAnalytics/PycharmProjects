@@ -8,7 +8,8 @@ Date: 2018-08-22
 from sertl_analytics.constants.pattern_constants import DC
 import pandas as pd
 import numpy as np
-from pattern_database.stock_database import StockDatabase, FeaturesTable
+from pattern_database.stock_tables import MyTable, PredictionFeatureTable
+from pattern_database.stock_database import StockDatabase, FeaturesTable, TradeTable
 from pattern_database.stock_database import DatabaseDataFrame
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
@@ -22,9 +23,9 @@ import matplotlib.patches as mpatches
 
 
 class PatternPredictor:
-    def __init__(self, features_table: FeaturesTable, db_stock: StockDatabase):
+    def __init__(self, db_stock: StockDatabase):
         print('Loading Predictor: {}'.format(self.__class__.__name__))
-        self.feature_table = features_table
+        self.feature_table = self.__get_table_with_prediction_features__()
         self.db_stock = db_stock
         self.feature_columns = self.__get_feature_columns__()
         self.label_columns = self.__get_label_columns__()
@@ -46,6 +47,9 @@ class PatternPredictor:
             else:
                 return_dict[label] = int(prediction)
         return return_dict
+
+    def __get_table_with_prediction_features__(self):
+        pass
 
     def __get_feature_columns__(self):
         pass
@@ -157,6 +161,9 @@ class PatternPredictor:
 
 
 class PatternPredictorTouchPoints(PatternPredictor):
+    def __get_table_with_prediction_features__(self) -> FeaturesTable:
+        return FeaturesTable()
+
     def __get_feature_columns__(self):
         return self.feature_table.feature_columns_touch_points
 
@@ -168,6 +175,9 @@ class PatternPredictorTouchPoints(PatternPredictor):
 
 
 class PatternPredictorBeforeBreakout(PatternPredictor):
+    def __get_table_with_prediction_features__(self) -> FeaturesTable:
+        return FeaturesTable()
+
     def __get_feature_columns__(self):
         return self.feature_table.features_columns_before_breakout
 
@@ -179,6 +189,9 @@ class PatternPredictorBeforeBreakout(PatternPredictor):
 
 
 class PatternPredictorAfterBreakout(PatternPredictor):
+    def __get_table_with_prediction_features__(self) -> FeaturesTable:
+        return FeaturesTable()
+
     def __get_feature_columns__(self):
         return self.feature_table.features_columns_after_breakout
 
@@ -187,4 +200,18 @@ class PatternPredictorAfterBreakout(PatternPredictor):
 
     def __get_query_for_feature_and_label_data__(self):
         return self.feature_table.query_for_feature_and_label_data_after_breakout
+
+
+class PatternPredictorForTrades(PatternPredictor):
+    def __get_table_with_prediction_features__(self) -> TradeTable:
+        return TradeTable()
+
+    def __get_feature_columns__(self):
+        return self.feature_table.feature_columns_for_trades
+
+    def __get_label_columns__(self):
+        return self.feature_table.label_columns_for_trades
+
+    def __get_query_for_feature_and_label_data__(self):
+        return self.feature_table.query_for_feature_and_label_data_for_trades
 
