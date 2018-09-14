@@ -82,6 +82,8 @@ class FT:
     HEAD_SHOULDER_ASC = 'Head-Shoulder_Ascending'
     HEAD_SHOULDER_BOTTOM = 'Head-Shoulder-Bottom'
     HEAD_SHOULDER_BOTTOM_DESC = 'Head-Shoulder-Bottom_Descending'
+    FIBONACCI_UP = 'Fibonacci up'
+    FIBONACCI_DOWN = 'Fibonacci down'
 
     @staticmethod
     def get_all():
@@ -260,6 +262,14 @@ class PTS:  # PatternTradeStatus
     def get_id(key: str):
         return {PTS.NEW: 10, PTS.EXECUTED: 20, PTS.PENDING: 30, PTS.FINISHED: 50}.get(key)
 
+
+class PTHP:  # Pattern Trade Handler Processes
+    ADJUST_STOPS_AND_LIMITS = 'ADJUST_STOPS_AND_LIMITS'
+    HANDLE_SELL_TRIGGERS = 'HANDLE_SELL_TRIGGERS'
+    HANDLE_WRONG_BREAKOUT = 'HANDLE_WRONG_BREAKOUT'
+    HANDLE_BUY_TRIGGERS = 'HANDLE_BUY_TRIGGERS'
+
+
 class TBT:  # TradingBoxType
     EXPECTED_WIN = 'Expected_win'
     FORECAST_HALF_LENGTH = 'Forecast_half_length'
@@ -273,13 +283,23 @@ class TBT:  # TradingBoxType
                 TBT.FIBONACCI: 50}.get(key)
 
 
+class PDR:  # Pattern Deletion Reasons
+    PATTERN_VANISHED = 'Pattern_vanished'
+    WRONG_BREAKOUT = 'Wrong_breakout'
+    TRADE_FINISHED = 'Trade_finished'
+
+    def get_id(key: str):
+        return {PDR.PATTERN_VANISHED: 10, PDR.WRONG_BREAKOUT: 20, PDR.TRADE_FINISHED: 40}.get(key)
+
+
 class ST:  # Sell Trigger
     LIMIT = 'Limit'
     STOP_LOSS = 'Stop_loss'
+    PATTERN_VANISHED = 'Pattern_vanished'
     PATTERN_END = 'Pattern_end'
 
     def get_id(key: str):
-        return {ST.LIMIT: 10, ST.STOP_LOSS: 20, ST.PATTERN_END: 50}.get(key)
+        return {ST.LIMIT: 10, ST.STOP_LOSS: 20, ST.PATTERN_END: 40, ST.PATTERN_END: 50}.get(key)
 
 
 class TR:  # Trade Result
@@ -398,17 +418,23 @@ class DC:  # Data Columns
     FALSE_BREAKOUT = 'False_Breakout'
     EXPECTED_WIN_REACHED = 'Expected_Win_Reached'
     # and additional for Trades
+    TRADE_READY_ID = 'Trade_Ready_ID'  # for a real trade = 1, 0 else
     TRADE_STRATEGY = 'Trade_Strategy'
     TRADE_STRATEGY_ID = 'Trade_Strategy_ID'
     TRADE_BOX_TYPE = 'Trade_Box_Type'
     TRADE_BOX_TYPE_ID = 'Trade_Box_Type_ID'
     TRADE_BOX_HEIGHT = 'Trade_Box_Height'
+    TRADE_BOX_OFF_SET = 'Trade_Box_Offset'
+    TRADE_BOX_MAX_VALUE = 'Trade_Box_Max_Value'
+    TRADE_BOX_LIMIT_ORIG = 'Trade_Box_Limit_Orig'
+    TRADE_BOX_STOP_LOSS_ORIG = 'Trade_Box_Stop_Loss_Orig'
     TRADE_BOX_LIMIT = 'Trade_Box_Limit'
     TRADE_BOX_STOP_LOSS = 'Trade_Box_Stop_Loss'
+    TRADE_BOX_STD = 'Trade_Box_STD'  # standard deviation
 
     BUY_ORDER_ID = 'Buy_Order_ID'
     BUY_ORDER_TPYE = 'Buy_Order_Type'
-    BUY_ORDER_TPYE_ID = 'Sell_Order_Type_ID'
+    BUY_ORDER_TPYE_ID = 'Buy_Order_Type_ID'
     BUY_DT = 'Buy_Date'
     BUY_TIME = 'Buy_Time'
     BUY_AMOUNT = 'Buy_Amount'

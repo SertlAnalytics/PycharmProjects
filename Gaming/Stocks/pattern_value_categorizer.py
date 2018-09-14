@@ -50,6 +50,17 @@ class ValueCategorizer:
                 return False
         return True
 
+    def is_value_in_category(self, value: float, time_stamp: float, value_category: str):
+        f_upper = self._f_upper(time_stamp)
+        h_upper = self._h_upper(time_stamp)
+        f_lower = self._f_lower(time_stamp)
+        h_lower = self._h_lower(time_stamp)
+        v_array = np.array([f_upper, h_upper, f_lower, h_lower, value, value, value, value]).reshape([1, 8])
+        df = pd.DataFrame(v_array, columns=[CN.F_UPPER, CN.H_UPPER, CN.F_LOWER, CN.H_LOWER,
+                                            CN.HIGH, CN.LOW, CN.OPEN, CN.CLOSE])
+        value_categories = self.__get_value_categories_for_df_row__(df.iloc[0])
+        return value_category in value_categories
+
     def print_data(self):
         print('\nValue categories for u=({}) and l=({}):'.format(self._f_upper, self._f_lower), end='\n')
         for ind, row in self.df.iterrows():

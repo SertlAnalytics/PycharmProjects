@@ -14,7 +14,7 @@ import base64
 import hmac
 import hashlib
 import time
-from sertl_analytics.constants.pattern_constants import OS, OT
+from sertl_analytics.constants.pattern_constants import OS, OT, TSTR, BT
 from sertl_analytics.exchanges.exchange_abc import ExInterface
 from sertl_analytics.exchanges.exchange_cls import Order, OrderApi, OrderStatus, OrderStatusApi
 from sertl_analytics.exchanges.exchange_cls import OrderBook, Balance, Ticker
@@ -53,7 +53,12 @@ class BitfinexConfiguration(ExchangeConfiguration):
         self.sell_fee_pct = 0.25
         self.cache_ticker_seconds = 30  # keep ticker in the Bitfinex cache
         self.cache_balance_seconds = 300  # keep balances in the Bitfinex cache (it's overwriten when changes happen)
-        self.check_ticker_after_timer_intervals = 4  # currently the timer intervall is set to 5 sec, i.e. chech each 20 sed.
+        self.check_ticker_after_timer_intervals = 4  # currently the timer intervall is set to 5 sec, i.e. check each 20 sec.
+        self.finish_vanished_trades = False  # True <=> if a pattern is vanished after buying sell the position (market)
+        self.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP],
+                                    BT.TOUCH_POINT: [TSTR.LIMIT]}
+        self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP,
+                                    BT.TOUCH_POINT: TSTR.LIMIT}
 
     def print_actual_mode(self):
         text = 'Bitfinex running in {} mode.'.format('SIMULATION' if self.is_simulation else 'TRADING (!!!)')
@@ -385,8 +390,11 @@ class MyBitfinex(ExInterface):
         balance_list = []
         json_resp_list = self.__get_json__('/balances')
         for json_resp in json_resp_list:
-            if round(float(json_resp['amount'])) > 0:
-                balance_list.append(BitfinexFactory.get_balance_by_json_dict(json_resp))
+            if 'error' in json_resp:
+                pass
+            else:
+                if round(float(json_resp['amount'])) > 0:
+                    balance_list.append(BitfinexFactory.get_balance_by_json_dict(json_resp))
         return balance_list
 
     def get_summary(self):  # Returns a 30-day summary of your trading volume and return on margin funding.

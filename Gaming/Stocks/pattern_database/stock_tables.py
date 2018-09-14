@@ -43,15 +43,12 @@ class TradeTable(MyTable, PredictionFeatureTable):
     def get_query_for_unique_record_by_id(id: str) -> str:
         return "SELECT * FROM Trade where ID='{}'".format(id)
 
+    @staticmethod
+    def get_query_for_delete_by_id(trade_id: str) -> str:
+        return "DELETE FROM Trade where ID='{}'".format(trade_id)
+
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 100))
-        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY, CDT.STRING, 50))
-        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY_ID, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TRADE_BOX_TYPE, CDT.STRING, 50))
-        self._columns.append(MyTableColumn(DC.TRADE_BOX_TYPE_ID, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.TRADE_BOX_HEIGHT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.TRADE_BOX_LIMIT, CDT.FLOAT))
-        self._columns.append(MyTableColumn(DC.TRADE_BOX_STOP_LOSS, CDT.FLOAT))
 
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
@@ -66,9 +63,25 @@ class TradeTable(MyTable, PredictionFeatureTable):
         self._columns.append(MyTableColumn(DC.TS_PATTERN_TICK_LAST, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_DT, CDT.DATE))
         self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_TIME, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.PATTERN_END_DT, CDT.DATE))
+        self._columns.append(MyTableColumn(DC.PATTERN_END_TIME, CDT.STRING, 10))
         self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION, CDT.STRING, 10))
         self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.EXPECTED_WIN, CDT.FLOAT))
+
+        self._columns.append(MyTableColumn(DC.TRADE_READY_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(DC.TRADE_STRATEGY_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_TYPE, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_TYPE_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_HEIGHT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_OFF_SET, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_MAX_VALUE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_LIMIT_ORIG, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_STOP_LOSS_ORIG, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_LIMIT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_STOP_LOSS, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_BOX_STD, CDT.FLOAT))
 
         self._columns.append(MyTableColumn(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_TOP, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM, CDT.INTEGER))
@@ -129,7 +142,8 @@ class TradeTable(MyTable, PredictionFeatureTable):
         return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_ID]
 
     def __get_query_for_feature_and_label_data_for_trades__(self) -> str:
-        return "SELECT {} FROM Trade".format(self.__get_concatenated_feature_label_columns_for_trades__())
+        return "SELECT {} FROM Trade WHERE Trade_Result_ID != 0".format(
+            self.__get_concatenated_feature_label_columns_for_trades__())
 
     def __get_concatenated_feature_label_columns_for_trades__(self):
         return ', '.join(self._feature_columns_for_trades + self._label_columns_for_trades)

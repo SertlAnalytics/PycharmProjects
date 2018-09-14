@@ -74,7 +74,7 @@ class PatternPart:
         return annotation_param
 
     @property
-    def length(self):
+    def length(self) -> int:
         return self.tick_last.position - self.tick_first.position
 
     def __get_annotation_offset_x__(self):
@@ -82,7 +82,7 @@ class PatternPart:
         if self.__xy_center[0] - self.pdh.pattern_data.tick_first.f_var <= width:
             return -width
         else:
-            return -2*width
+            return -2 * width
 
     def __get_annotation_offset_y__(self):
         c_value = self.__xy_center[1]
@@ -111,11 +111,11 @@ class PatternPart:
         self.bound_upper = f_upper_last
         self.bound_lower = f_lower_last
         if self.pattern_type in [FT.TKE_BOTTOM, FT.TKE_TOP]:
-            self.height = round(self.bound_upper - self.bound_lower, 2)
+            self.height = self.bound_upper - self.bound_lower
         else:
-            self.distance_min = round(min(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
-            self.distance_max = round(max(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last)), 2)
-            self.height = round((self.distance_min + self.distance_max) / 2, 2)
+            self.distance_min = min(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last))
+            self.distance_max = max(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last))
+            self.height = (self.distance_min + self.distance_max) / 2
 
     def __set_xy_parameter__(self):
         self.__xy = self.stock_df.get_xy_parameter(self.function_cont)
@@ -170,7 +170,7 @@ class PatternPart:
     def diff_max_min_till_breakout(self) -> float:
         position_last = self.breakout.tick_breakout.position if self.breakout else self.tick_last.position
         df_part = self.df.loc[self.tick_first.position:position_last]
-        return round(df_part[CN.HIGH].max() - df_part[CN.LOW].min(), 2)
+        return df_part[CN.HIGH].max() - df_part[CN.LOW].min()
 
     @property
     def max(self):
@@ -204,18 +204,15 @@ class PatternPart:
         type_date = 'Type={}: {} - {} ({})'.format(self.pattern_type, date_str_first, date_str_last, len(self.tick_list))
 
         if self.pattern_type in [FT.TKE_TOP, FT.HEAD_SHOULDER]:
-            slopes = 'Gradients: L={}%, Reg={}%'.format(f_lower_percent, f_reg_percent)
-            slopes_2 = 'f_param: L={}%, Reg={}%'.format(self.function_cont.f_lower[1], f_reg_percent)
-            height = 'Height={}, Std_dev={}'.format(self.height, std_dev)
+            slopes = 'Gradients: L={:.1f}%, Reg={:.1f}%'.format(f_lower_percent, f_reg_percent)
+            height = 'Height={:.2f}, Std_dev={:.2f}'.format(self.height, std_dev)
         elif self.pattern_type in [FT.TKE_BOTTOM, FT.HEAD_SHOULDER_BOTTOM]:
-            slopes = 'Gradients: U={}%, Reg={}%'.format(f_upper_percent, f_reg_percent)
-            height = 'Height={}, Std_dev={}'.format(self.height, std_dev)
+            slopes = 'Gradients: U={:.1f}%, Reg={:.1f}%'.format(f_upper_percent, f_reg_percent)
+            height = 'Height={:.2f}, Std_dev={:.2f}'.format(self.height, std_dev)
         else:
-            slopes = 'Gradients: U={}%, L={}%, Reg={}%'.format(f_upper_percent, f_lower_percent, f_reg_percent)
-            height = 'Height={}, Max={}, Min={}, Std_dev={}'.format(
+            slopes = 'Gradients: U={:.1f}%, L={:.1f}%, Reg={:.1f}%'.format(f_upper_percent, f_lower_percent, f_reg_percent)
+            height = 'Height={:.2f}, Max={:.2f}, Min={:.2f}, Std_dev={:.2f}'.format(
                 self.height, self.distance_max, self.distance_min, std_dev)
-
-        # slopes_by_param = self.__get_slopes_by_f_param__()
 
         if self.breakout is None:
             breakout_str = 'Breakout: not yet'
@@ -229,8 +226,7 @@ class PatternPart:
                 else date_forecast.date())
 
         breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)
-        if self.sys_config.prediction_mode_active:
-            breakout_str += '\n{}'.format(text_for_prediction)
+        breakout_str += '\n{}'.format(text_for_prediction)
 
         return '{}\n{}\n{}\n{}'.format(type_date, slopes, height, breakout_str)
 

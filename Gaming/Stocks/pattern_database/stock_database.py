@@ -320,10 +320,14 @@ class StockDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
-    def is_trade_already_available(self, id: str) -> bool:
-        query = self._trade_table.get_query_for_unique_record_by_id(id)
+    def is_trade_already_available(self, trade_id: str) -> bool:
+        query = self._trade_table.get_query_for_unique_record_by_id(trade_id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
+
+    def delete_existing_trade(self, trade_id: str):
+        if self.is_trade_already_available(trade_id):
+            self.delete_records(self._trade_table.get_query_for_delete_by_id(trade_id))
 
     def get_features_differences_to_saved_version(self, features_dict: dict) -> dict:
         query = self._features_table.get_query_for_unique_record_by_id(features_dict[DC.ID])

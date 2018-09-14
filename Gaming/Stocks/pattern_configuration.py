@@ -54,7 +54,7 @@ class RuntimeConfiguration:
     actual_pattern_type = FT.NONE
     actual_breakout = None
     actual_pattern_range = None
-    actual_expected_win_pct = 0
+    actual_expected_win_pct = 0  # pct in this case is 10 for 10%
 
 
 class PatternConfiguration:
@@ -130,7 +130,8 @@ class PatternConfiguration:
 
     @property
     def expected_win_pct(self):
-        return 0.002 if self.api_period == ApiPeriod.INTRADAY else 0.01  # will be changed in the program for Cryptos
+        return 1.0 if self.api_period == ApiPeriod.INTRADAY else 1.0
+        # will be changed in the program for Cryptos - runtime.actual_expected_win_pct
 
     def __get_previous_period_length__(self):
         return self.__previous_period_length

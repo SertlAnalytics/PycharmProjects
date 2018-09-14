@@ -65,6 +65,10 @@ class Ticker:
         self.vol = round(vol, 2)
         self.time_stamp = round(ts)
 
+    @property
+    def date_time_str(self) -> str:
+        return str(MyDate.get_date_time_from_epoch_seconds(self.time_stamp))
+
     def print_ticker(self, prefix = ''):
         if prefix != '':
             print('\n{}:'.format(prefix))

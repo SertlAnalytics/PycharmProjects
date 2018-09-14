@@ -63,9 +63,11 @@ class FibonacciWaveTree:
         self.min_list_length = len(self.min_tick_list)
         self.max_list_length = len(self.max_tick_list)
 
-    def parse_tree(self):
-        self.__parse_for_ascending_waves__()
-        self.__parse_for_descending_waves__()
+    def parse_tree(self, parse_direction=FD.NONE):
+        if parse_direction in [FD.NONE, FD.ASC]:
+            self.__parse_for_ascending_waves__()
+        if parse_direction in [FD.NONE, FD.DESC]:
+            self.__parse_for_descending_waves__()
 
     def was_any_wave_finished_since_time_stamp(self, time_stamp: float):
         for wave in self.fibonacci_wave_list:

@@ -42,8 +42,8 @@ class MyBitfinexTradeClient:
     def print_active_balances(self, prefix=''):
         self._bitfinex.print_active_balances(prefix)
 
-    def print_order_status(self, order_id: int):
-        self._bitfinex.print_order_status(order_id)
+    def print_order_status(self, order_id: int, is_simulation=True):
+        self._bitfinex.print_order_status(order_id, is_simulation)
 
     def delete_order(self, order_id: int):
         self._bitfinex.delete_order(order_id)

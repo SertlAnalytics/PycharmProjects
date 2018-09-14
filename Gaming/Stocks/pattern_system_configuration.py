@@ -35,17 +35,7 @@ class SystemConfiguration:
         self.predictor_before_breakout = None
         self.predictor_after_breakout = None
         self.predictor_for_trades = None
-        self._prediction_mode_active = False
-
-    def __get_prediction_mode_active__(self):
-        return self._prediction_mode_active
-
-    def __set_prediction_mode_active__(self, value: int):
-        if value and (self.predictor_before_breakout is None or self.predictor_after_breakout is None):
-            self.__init__predictors__()
-        self._prediction_mode_active = value
-
-    prediction_mode_active = property(__get_prediction_mode_active__, __set_prediction_mode_active__)
+        self.__init__predictors__()
 
     def __init__predictors__(self):
         self.predictor_touch_points = PatternPredictorTouchPoints(self.db_stock)
@@ -70,7 +60,7 @@ class SystemConfiguration:
         sys_config_copy.predictor_touch_points = self.predictor_touch_points
         sys_config_copy.predictor_before_breakout = self.predictor_before_breakout
         sys_config_copy.predictor_after_breakout = self.predictor_after_breakout
-        sys_config_copy._prediction_mode_active = self._prediction_mode_active
+        sys_config_copy.predictor_for_trades = self.predictor_for_trades
         return sys_config_copy
 
 

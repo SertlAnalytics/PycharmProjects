@@ -32,16 +32,24 @@ class PatternPredictor:
         self._query_for_feature_and_label_data = self.__get_query_for_feature_and_label_data__()
         self._predictor_dict = self.__get_predictor_dict__()
         self._df_features_with_labels = self.__get_df_features_with_labels__()
-        self._df_features = self._df_features_with_labels[self.feature_columns]
-        self._df_labels = self._df_features_with_labels[self.label_columns]
-        self._x_data = np.array(self._df_features)
-        self.__train_models__(True)
+        if self.is_ready_for_prediction:
+            self._df_features = self._df_features_with_labels[self.feature_columns]
+            self._df_labels = self._df_features_with_labels[self.label_columns]
+            self._x_data = np.array(self._df_features)
+            self.__train_models__(True)
         # print('self.x_data.shape={}'.format(self._x_data.shape))
+
+    @property
+    def is_ready_for_prediction(self):
+        return self._df_features_with_labels.shape[0] > 10
 
     def predict_for_label_columns(self, x_input: np.array):
         return_dict = {}
         for label in self.label_columns:
-            prediction = self._predictor_dict[label].predict(x_input)[0]
+            if self.is_ready_for_prediction:
+                prediction = self._predictor_dict[label].predict(x_input)[0]
+            else:
+                prediction = 0
             if self.feature_table.is_label_column_for_regression(label):
                 return_dict[label] = round(prediction, -1)
             else:

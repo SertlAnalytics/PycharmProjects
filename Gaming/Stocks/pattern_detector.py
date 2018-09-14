@@ -57,6 +57,7 @@ class PatternDetector:
         We parse only over the actual known min-max-dataframe
         """
         self.__fill_possible_pattern_ranges__()
+        self.__adjust_possible_pattern_ranges_to_contraints__()
         possible_pattern_range_list = self.get_combined_possible_pattern_ranges()
         for pattern_type in self.pattern_type_list:
             # print('parsing for pattern: {}'.format(pattern_type))
@@ -76,6 +77,9 @@ class PatternDetector:
                         if pfcf_api.constraints.are_constraints_fulfilled(pattern_range, pfcf_api.function_container):
                             pattern = PatternFactory.get_pattern(self.sys_config, pfcf_api)
                             self.__handle_single_pattern_when_parsing__(pattern)
+
+    def __adjust_possible_pattern_ranges_to_contraints__(self):
+        pass
 
     def parse_for_fibonacci_waves(self):
         df = self.sys_config.pdh.pattern_data_fibonacci.df
@@ -127,8 +131,8 @@ class PatternDetector:
         for pattern in self.pattern_list:
             if buy_trigger == BT.BREAKOUT and not pattern.is_part_trade_available():
                 pattern_list.append(pattern)
-            elif buy_trigger == BT.TOUCH_POINT:
-                pass
+            elif buy_trigger == BT.TOUCH_POINT and pattern.__are_conditions_for_a_touch_point_buy_fulfilled__():
+                    pattern_list.append(pattern)
             elif buy_trigger == BT.FIBONACCI_CLUSTER:
                 pass
         return pattern_list
