@@ -6,7 +6,7 @@ Date: 2018-09-10
 """
 
 import numpy as np
-from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, OS, TR, OT, SVC
+from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, PTHP, TR, OT, SVC
 from sertl_analytics.mydates import MyDate
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
@@ -132,26 +132,54 @@ class PatternTrade:
             self.data_dict_obj.add(DC.FC_TRADE_REACHED_PRICE_PCT, prediction_dict[DC.TRADE_REACHED_PRICE_PCT])
             self.data_dict_obj.add(DC.FC_TRADE_RESULT_ID, prediction_dict[DC.TRADE_RESULT_ID])
 
-    def is_ticker_breakout(self, ticker: Ticker):
+    def is_ticker_breakout(self, process: str, ticker: Ticker):
         if not self._is_breakout_active:
             return False
+        is_breakout = False  # default
         if self.buy_trigger == BT.BREAKOUT:
-            upper_value = self.pattern.get_upper_value(ticker.time_stamp)
-            is_breakout = ticker.last_price >= upper_value
-        else:
-            lower_value = self.pattern.get_lower_value(ticker.time_stamp)
-            is_breakout = ticker.last_price > lower_value  # ToDo eventual some % of the height...
-        self._breakout_counter += 1 if is_breakout else 0
+            is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, SVC.U_out, True)
+        elif self.buy_trigger == BT.TOUCH_POINT:
+            is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, SVC.M_in, True)
+        if is_breakout:
+            self._breakout_counter += 1
+        self.print_state_details(process, ticker)
         return self._breakout_counter >= self._counter_required  # we need a second confirmation
 
-    def is_ticker_wrong_breakout(self, ticker: Ticker):
-        lower_value = self.pattern.get_lower_value(ticker.time_stamp)
-        is_wrong_breakout = ticker.last_price <= lower_value
-        self._wrong_breakout_counter += 1 if is_wrong_breakout else 0
+    def is_ticker_wrong_breakout(self, process: str, ticker: Ticker):
+        is_wrong_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, SVC.L_out, True)
+        if is_wrong_breakout:
+            self._wrong_breakout_counter += 1
+        self.print_state_details(process, ticker)
         return self._wrong_breakout_counter >= self._counter_required  # we need a second confirmation
 
     def verify_touch_point(self, ticker: Ticker):
-        self._is_breakout_active = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, SVC.L_on)
+        self._is_breakout_active = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp,
+                                                                     SVC.L_on, True)
+
+    def print_state_details(self, process: str, ticker: Ticker):
+        if self.status == PTS.NEW:
+            counter_required = self.counter_required
+            if self.buy_trigger == BT.BREAKOUT:
+                if process == PTHP.HANDLE_WRONG_BREAKOUT:
+                    breakout_value = self.pattern.get_lower_value(ticker.time_stamp)
+                    counter = self.wrong_breakout_counter
+                else:
+                    breakout_value = self.pattern.get_upper_value(ticker.time_stamp)
+                    counter = self.breakout_counter
+            else:
+                breakout_value = self.pattern.get_lower_value(ticker.time_stamp)
+                if process == PTHP.HANDLE_WRONG_BREAKOUT:
+                    counter = self.wrong_breakout_counter
+                else:
+                    counter = self.breakout_counter
+            print('{} for {}-{}-{} ({}/{}): ticker.last_price={:.2f}, breakout value={:.2f}'.format(
+                process, ticker.ticker_id, self.buy_trigger, self.trade_strategy,
+                counter, counter_required, ticker.last_price, breakout_value))
+        else:
+            print('{} for {}-{}-{}: limit={:.2f}, ticker.last_price={:.2f}, stop_loss={:.2f}, bought_at={:.2f}'.format(
+                process, ticker.ticker_id, self.buy_trigger, self.trade_strategy,
+                self.limit_current, ticker.last_price,
+                self.stop_loss_current, self.order_status_buy.avg_execution_price))
 
     def save_trade(self):
         if not self.sys_config.config.save_trade_data:
@@ -177,7 +205,7 @@ class PatternTrade:
     def __get_value_dict__(self) -> dict:
         return {'Status': self.status, 'Buy_trigger': self.buy_trigger, 'Trade_box': self.trade_box_type,
                 'Trade_strategy': self.trade_strategy, 'Pattern_Type': self.pattern.pattern_type,
-                'Expected_win': self.expected_win, 'Result': self.get_trade_result_text()
+                'Expected_win': round(self.expected_win, 4), 'Result': self.get_trade_result_text()
         }
 
     def get_trade_result_text(self):
@@ -187,8 +215,10 @@ class PatternTrade:
             self._order_status_sell.value_total - self._order_status_buy.value_total, self._order_status_buy.value_total
         )
 
-    def adjust_to_next_ticker_last_price(self, last_price: float) -> bool:
-        return self._trade_box.adjust_to_next_ticker_last_price(last_price)
+    def adjust_to_next_ticker(self, ticker: Ticker):
+        was_adjusted = self._trade_box.adjust_to_next_ticker_last_price(ticker.last_price)
+        if was_adjusted:
+            self.print_state_details(PTHP.ADJUST_STOPS_AND_LIMITS, ticker)
 
     def __get_trade_box__(self, off_set_price: float, buy_price: float):
         api = TradingBoxApi()
@@ -196,6 +226,7 @@ class PatternTrade:
         api.off_set_value = off_set_price
         api.buy_price = buy_price
         api.trade_strategy = self.trade_strategy
+        api.sma_value_list = self.pattern.get_sma_value_list()
         if self.trade_box_type == TBT.EXPECTED_WIN:
             return ExpectedWinTradingBox(api)
         elif self.trade_box_type == TBT.FORECAST_HALF_LENGTH:

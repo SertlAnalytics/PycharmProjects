@@ -6,7 +6,8 @@ Date: 2018-05-14
 """
 
 import numpy as np
-from sertl_analytics.constants.pattern_constants import FD, FR, CM
+from sertl_analytics.constants.pattern_constants import FD, FR, CM, FWST
+from sertl_analytics.mymath import MyPoly1d
 from fibonacci.fibonacci_wave_component import FibonacciWaveComponent, FibonacciRegressionComponent, \
     FibonacciRetracementComponent
 from fibonacci.fibonacci_wave_component import FibonacciAscendingRegressionComponent
@@ -31,6 +32,10 @@ class FibonacciWave:
         self.forecast_value_list = []
 
     @property
+    def wave_type(self):
+        return FD.NONE
+
+    @property
     def position_start(self):
         return self.comp_position_list[0]
 
@@ -39,8 +44,43 @@ class FibonacciWave:
         return self.comp_position_list[-1]
 
     @property
+    def f_upper(self) -> np.poly1d:
+        if self.wave_type == FD.ASC:
+            tick_01, tick_02 = self.w_3.tick_end, self.w_5.tick_end
+        else:
+            if self.wave_structure == FWST.S_M_L:
+                tick_01, tick_02 = self.w_4.tick_end, self.w_5.tick_end
+            else:
+                tick_01, tick_02 = self.w_3.tick_start, self.w_5.tick_start
+        return MyPoly1d.get_poly1d(tick_01.f_var, tick_01.high, tick_02.f_var, tick_02.high)
+
+    @property
+    def f_lower(self) -> np.poly1d:
+        if self.wave_type == FD.ASC:
+            if self.wave_structure == FWST.S_M_L:
+                tick_01, tick_02 = self.w_4.tick_end, self.w_5.tick_end
+            else:
+                tick_01, tick_02 = self.w_3.tick_start, self.w_5.tick_start
+        else:
+            tick_01, tick_02 = self.w_3.tick_end, self.w_5.tick_end
+        return MyPoly1d.get_poly1d(tick_01.f_var, tick_01.low, tick_02.f_var, tick_02.low)
+
+    def is_closing_triangle_criteria_fulfilled(self):
+        return self.wave_structure == FWST.S_M_L or self.f_upper[1] < self.f_lower[1]
+
+    def is_neckline_criteria_fulfilled(self) -> bool:
+        return self.__is_neckline_without_intersection__()
+
+    def __is_neckline_without_intersection__(self) -> bool:
+        return True
+
+    @property
     def w_1(self) -> FibonacciWaveComponent:
         return self.get_component_by_number(1)
+
+    @property
+    def w_3(self) -> FibonacciWaveComponent:
+        return self.get_component_by_number(3)
 
     @property
     def w_4(self) -> FibonacciWaveComponent:
@@ -67,8 +107,17 @@ class FibonacciWave:
         return comp_list
 
     @property
-    def wave_type(self):
-        return FD.NONE
+    def wave_structure(self):
+        if not self.is_wave_complete():
+            return FWST.NONE
+        if self.w_1.range_max > self.w_3.range_max > self.w_5.range_max:
+            return FWST.L_M_S
+        elif self.w_3.range_max > self.w_1.range_max + self.w_5.range_max \
+                and 0.8 < self.w_1.range_max/self.w_5.range_max < 1.2:
+            return FWST.S_L_S
+        elif self.w_1.range_max < self.w_3.range_max < self.w_5.range_max:
+            return FWST.S_M_L
+        return FWST.NONE
 
     @property
     def max(self):
@@ -124,6 +173,23 @@ class FibonacciWave:
     def comp_position_key_5(self):
         return self.__get_comp_position_key__(5)
 
+    def get_minimal_retracement_range_after_finishing(self) -> float:
+        wave_structure = self.wave_structure
+        if self.wave_type == FD.ASC:
+            if wave_structure == FWST.L_M_S:  # retracement at least to large wave
+                return self.w_5.max - self.w_1.max
+            elif wave_structure == FWST.S_M_L:  # retracement at least to medium wave
+                return self.w_5.max - self.w_3.max
+            elif wave_structure == FWST.S_L_S:  # retracement at least to middle of large wave
+                return self.w_5.max - (self.w_3.max - self.w_3.min)/2
+        else:
+            if wave_structure == FWST.L_M_S:  # retracement at least to large wave
+                return self.w_1.min - self.w_5.min
+            elif wave_structure == FWST.S_M_L:  # retracement at least to medium wave
+                return self.w_3.min - self.w_5.min
+            elif wave_structure == FWST.S_L_S:  # retracement at least to middle of large wave
+                return (self.w_3.max - self.w_3.min)/2 - self.w_5.min
+
     def __get_comp_position_key__(self, elements: int):
         part_list = self.comp_position_list[:elements]
         return '-'.join(map(str, part_list))
@@ -161,14 +227,6 @@ class FibonacciWave:
             return [round(value, 2) for value in return_list]
         else:
             return return_list
-
-    @property
-    def position_start(self):
-        return self.comp_position_list[0]
-
-    @property
-    def position_end(self):
-        return self.comp_position_list[-1]
 
     def clone(self):
         return deepcopy(self)
@@ -270,10 +328,15 @@ class FibonacciWave:
         if self.__get_number_of_fibonacci_compliant_regressions__(0.05 if for_forecast else 0.1) < 2:
                 return False
 
-        if not for_forecast:  # 5. verify that the middle regression is not the smallest one
+        # 5. verify that the middle regression is not the smallest one
+        if not for_forecast:
             reg_range_list = [comp.range_max for comp in self.reg_comp_list]
             if np.argmin(reg_range_list) == 1:
                 return False
+
+        # 6. Only certain relations for the 3 regressions are allowed...
+        if self.wave_structure == FWST.NONE:
+            return False
 
         return True
 
@@ -359,6 +422,9 @@ class FibonacciAscendingWave(FibonacciWave):
     def wave_type(self):
         return FD.ASC
 
+    def __is_neckline_without_intersection__(self) -> bool:
+        return self.f_lower(self.w_5.tick_end.f_var) < self.w_5.tick_end.high
+
     @property
     def value_list(self) -> list:
         return_list = []
@@ -408,6 +474,9 @@ class FibonacciDescendingWave(FibonacciWave):
     @property
     def wave_type(self):
         return FD.DESC
+
+    def __is_neckline_without_intersection__(self) -> bool:
+        return self.f_upper(self.w_5.tick_end.f_var) > self.w_5.tick_end.low
 
     @property
     def value_list(self) -> list:

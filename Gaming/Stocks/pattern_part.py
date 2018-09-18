@@ -110,7 +110,7 @@ class PatternPart:
             f_lower_last = self.function_cont.get_lower_value(tick_breakout.f_var)
         self.bound_upper = f_upper_last
         self.bound_lower = f_lower_last
-        if self.pattern_type in [FT.TKE_BOTTOM, FT.TKE_TOP]:
+        if self.pattern_type in [FT.TKE_BOTTOM, FT.TKE_TOP, FT.FIBONACCI_ASC, FT.FIBONACCI_DESC]:
             self.height = self.bound_upper - self.bound_lower
         else:
             self.distance_min = min(abs(f_upper_first - f_lower_first), abs(f_upper_last - f_lower_last))
@@ -183,6 +183,10 @@ class PatternPart:
     @property
     def std(self):  # we need the standard deviation from the mean_HL for Low and High
         return ((self.df[CN.HIGH]-self.mean).std() + (self.df[CN.LOW]-self.mean).std())/2
+
+    def get_sma_value_list(self) -> list:
+        low_value_list = list(self.df[CN.LOW])
+        return low_value_list
 
     def get_slope_values(self):
         f_upper_slope = self.function_cont.f_upper_percentage

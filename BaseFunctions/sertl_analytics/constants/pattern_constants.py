@@ -37,6 +37,13 @@ class FR:  # Fibonnaci Retracements
     R_000 = 0.000
 
 
+class FWST:   # Fibonacci Wave Structure
+    S_M_L = 'Short_medium_long'
+    S_L_S = 'Short_long_short'
+    L_M_S = 'Long_medium_short'
+    NONE = 'None'
+
+
 class EQUITY_TYPE:
     NONE = 'None'
     SHARE = 'Shares'
@@ -82,20 +89,21 @@ class FT:
     HEAD_SHOULDER_ASC = 'Head-Shoulder_Ascending'
     HEAD_SHOULDER_BOTTOM = 'Head-Shoulder-Bottom'
     HEAD_SHOULDER_BOTTOM_DESC = 'Head-Shoulder-Bottom_Descending'
-    FIBONACCI_UP = 'Fibonacci up'
-    FIBONACCI_DOWN = 'Fibonacci down'
+    FIBONACCI_ASC = 'Fibonacci_Ascending'
+    FIBONACCI_DESC = 'Fibonacci_Descending'
 
     @staticmethod
     def get_all():
         return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN,
                 FT.CHANNEL, FT.CHANNEL_UP, FT.CHANNEL_DOWN,
                 FT.TKE_TOP, FT.TKE_BOTTOM,
+                FT.FIBONACCI_ASC, FT.FIBONACCI_DESC,
                 FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_ASC, FT.HEAD_SHOULDER_BOTTOM, FT.HEAD_SHOULDER_BOTTOM_DESC]
 
     @staticmethod
-    def get_non_head_shoulder_types():
-        hs_list = FT.get_head_shoulder_types() + FT.get_head_shoulder_bottom_types()
-        return [entry for entry in FT.get_all() if entry not in hs_list]
+    def get_normal_types():
+        special_list = FT.get_head_shoulder_types() + FT.get_head_shoulder_bottom_types() + FT.get_fibonacci_types()
+        return [entry for entry in FT.get_all() if entry not in special_list]
 
     @staticmethod
     def get_head_shoulder_types():
@@ -106,8 +114,16 @@ class FT:
         return [FT.HEAD_SHOULDER_BOTTOM, FT.HEAD_SHOULDER_BOTTOM_DESC]
 
     @staticmethod
+    def get_fibonacci_types():
+        return [FT.FIBONACCI_ASC, FT.FIBONACCI_DESC]
+
+    @staticmethod
     def is_pattern_type_any_head_shoulder(pattern_type: str) -> bool:
         return pattern_type in FT.get_head_shoulder_types() + FT.get_head_shoulder_bottom_types()
+
+    @staticmethod
+    def is_pattern_type_any_fibonacci(pattern_type: str) -> bool:
+        return pattern_type in FT.get_fibonacci_types()
 
     @staticmethod
     def get_id(key: str):
@@ -116,7 +132,8 @@ class FT:
                 FT.TRIANGLE_TOP: 23, FT.TRIANGLE_BOTTOM: 24,
                 FT.TKE_TOP: 31, FT.TKE_BOTTOM: 32,
                 FT.HEAD_SHOULDER: 43, FT.HEAD_SHOULDER_BOTTOM: 44,
-                FT.HEAD_SHOULDER_ASC: 45, FT.HEAD_SHOULDER_BOTTOM_DESC: 46
+                FT.HEAD_SHOULDER_ASC: 45, FT.HEAD_SHOULDER_BOTTOM_DESC: 46,
+                FT.FIBONACCI_ASC: 55, FT.FIBONACCI_DESC: 56
                 }.get(key, 0)
 
 
@@ -246,10 +263,11 @@ class TSTR:  # Trading Strategy
     LIMIT = 'Limit'
     TRAILING_STOP = 'Trailing_stop'
     TRAILING_STEPPED_STOP = 'Trailing_stepped_stop'
+    SMA = 'Simple_moving_average'
 
     @staticmethod
     def get_id(key: str):
-        return {TSTR.LIMIT: 10, TSTR.TRAILING_STOP: 20, TSTR.TRAILING_STEPPED_STOP: 30}.get(key)
+        return {TSTR.LIMIT: 10, TSTR.TRAILING_STOP: 20, TSTR.TRAILING_STEPPED_STOP: 30, TSTR.SMA: 40}.get(key)
 
 
 class PTS:  # PatternTradeStatus

@@ -167,6 +167,9 @@ class Pattern:
         self.xy_trade = self._part_trade.xy
         self.__calculate_predictions_after_breakout__()
 
+    def get_sma_value_list(self):
+        return self._part_main.get_sma_value_list()
+
     def __calculate_predictions_after_breakout__(self):
         self.__calculate_y_predict__(PT.AFTER_BREAKOUT)
         self.__add_predictions_after_breakout_to_data_dict__()
@@ -178,8 +181,8 @@ class Pattern:
         number_lower_touches = self.value_categorizer.get_number_lower_touches(time_stamp_since)
         return number_upper_touches + number_lower_touches > 0
 
-    def is_value_in_category(self, value: float, time_stamp: float, value_category: str):
-        return self.value_categorizer.is_value_in_category(value, time_stamp, value_category)
+    def is_value_in_category(self, value: float, time_stamp: float, value_category: str, print_range: False):
+        return self.value_categorizer.is_value_in_category(value, time_stamp, value_category, print_range)
 
     def __calculate_y_predict__(self, prediction_type: str):
         if prediction_type == PT.TOUCH_POINTS:
@@ -702,15 +705,18 @@ class TKEUpPattern(TKEPattern):
     pass
 
 
-class FibonacciPattern(TKEPattern):
+class FibonacciPattern(Pattern):
+    def get_expected_win(self):
+        height_end = self.function_cont.height_end
+        expected_retracement = self.pattern_range.fib_form.get_minimal_retracement_range_after_wave_finishing()
+        return round(max(expected_retracement - height_end, height_end), 4)
+
+
+class FibonacciAscPattern(FibonacciPattern):
     pass
 
 
-class FibonacciUpPattern(FibonacciPattern):
-    pass
-
-
-class FibonacciDownPattern(FibonacciPattern):
+class FibonacciDescPattern(FibonacciPattern):
     pass
 
 
@@ -751,9 +757,9 @@ class PatternFactory:
             return TKEDownPattern(pattern_api)
         elif pattern_type == FT.TKE_TOP:
             return TKEUpPattern(pattern_api)
-        elif pattern_type == FT.FIBONACCI_UP:
-            return FibonacciUpPattern(pattern_api)
-        elif pattern_type == FT.FIBONACCI_DOWN:
-            return FibonacciDownPattern(pattern_api)
+        elif pattern_type == FT.FIBONACCI_ASC:
+            return FibonacciAscPattern(pattern_api)
+        elif pattern_type == FT.FIBONACCI_DESC:
+            return FibonacciDescPattern(pattern_api)
         else:
             raise MyException('No pattern defined for pattern type "{}"'.format(pattern_type))

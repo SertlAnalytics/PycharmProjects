@@ -9,6 +9,7 @@ from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT
 from sertl_analytics.mydates import MyDate
 import math
 from scipy import stats
+import numpy as np
 
 
 class TradingBoxApi:
@@ -17,6 +18,7 @@ class TradingBoxApi:
         self.off_set_value = 0.0
         self.buy_price = 0.0
         self.trade_strategy = ''
+        self.sma_value_list = []
 
 
 class TradingBox:
@@ -26,6 +28,8 @@ class TradingBox:
         self._ticker_id = self._data_dict[DC.TICKER_ID]
         self._off_set_value = api.off_set_value
         self._buy_price = api.buy_price
+        self._sma_value_list = api.sma_value_list  # simple moving average
+        self._sma_length = len(self._sma_value_list)
         self._round_decimals = 2 if self._off_set_value > 100 else 4
         self._trade_strategy = api.trade_strategy
         self._ticker_last_price_list = [api.off_set_value, api.buy_price]  # off_set is used to guarantee: max >= offset
@@ -81,6 +85,12 @@ class TradingBox:
         return self.round(self._distance_bottom / 2)
 
     @property
+    def sma_low_value(self):
+        sma_base_list = self._sma_value_list + self._ticker_last_price_list
+        # ToDo - we need a weight for the second part - the time period is much faster...
+        return np.mean(sma_base_list[:-self._sma_length])
+
+    @property
     def stop_loss_orig(self):
         return self.round(self._stop_loss_orig)
 
@@ -134,16 +144,22 @@ class TradingBox:
         return self.__adjust_to_next_ticker_last_price__(ticker_last_price)
 
     def __adjust_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
-        if self._trade_strategy == TSTR.LIMIT:
-            return False
-        elif self._trade_strategy == TSTR.TRAILING_STOP:
+        if self._trade_strategy == TSTR.LIMIT:  # with trailing stop
             if self._stop_loss < ticker_last_price - self._distance_bottom:
                 self._stop_loss = ticker_last_price - self._distance_bottom
                 return True
-        elif self._trade_strategy == TSTR.TRAILING_STEPPED_STOP:
+        elif self._trade_strategy == TSTR.TRAILING_STOP:  # ToDo trailing stop closer after some time...
+            if self._stop_loss < ticker_last_price - self._distance_bottom:
+                self._stop_loss = ticker_last_price - self._distance_bottom
+                return True
+        elif self._trade_strategy == TSTR.TRAILING_STEPPED_STOP:  # ToDo trailing stop closer after some time...
             if self._stop_loss < ticker_last_price - 2 * self.distance_stepping:
                 multiplier = int((ticker_last_price - self._stop_loss) / self.distance_stepping) - 1
                 self._stop_loss = self._stop_loss + multiplier * self.distance_stepping
+                return True
+        elif self._trade_strategy == TSTR.SMA:  # ToDo trailing stop closer after some time (above buy price !!!)
+            if self._stop_loss < self.sma_low_value:
+                self._stop_loss = self.sma_low_value
                 return True
         return False
 

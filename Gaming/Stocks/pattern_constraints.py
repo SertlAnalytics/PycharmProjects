@@ -519,13 +519,15 @@ class FibonacciConstraints(Constraints):  # TODO
         2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
         3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
         """
-        self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_on, SVC.H_in]
-        self.global_count = ['OR',
-                             CountConstraint(SVC.U_in, '>=', 3),
-                             CountConstraint(SVC.L_in, '>=', 3)]
+        self.global_all_in = []
+        self.global_count = ['AND',
+                             CountConstraint(SVC.U_in, '>=', 2),
+                             CountConstraint(SVC.L_in, '>=', 2)]
         self.global_series = ['OR',
-                              [SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on],
-                              [SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on]
+                              [SVC.L_in, SVC.U_in, SVC.L_in, SVC.U_in],
+                              [SVC.U_in, SVC.L_in, SVC.U_in, SVC.L_in],
+                              [SVC.L_in, SVC.U_in, SVC.L_in],
+                              [SVC.U_in, SVC.L_in, SVC.U_in]
                               ]
 
     @staticmethod
@@ -533,22 +535,22 @@ class FibonacciConstraints(Constraints):  # TODO
         return []
 
 
-class FibonacciUpConstraints(FibonacciConstraints):
+class FibonacciAscConstraints(FibonacciConstraints):
     @staticmethod
     def _get_f_upper_percentage_bounds_():
-        return [1.0, 50.0]
+        return [1.0, 400.0]
 
     def _get_f_lower_percentage_bounds_(self):
-        return [1.0, 50.0]
+        return [1.0, 400.0]
 
 
-class FibonacciDownConstraints(FibonacciConstraints):
+class FibonacciDescConstraints(FibonacciConstraints):
     @staticmethod
     def _get_f_upper_percentage_bounds_():
-        return [-50.0, -1.0]
+        return [-400.0, -1.0]
 
     def _get_f_lower_percentage_bounds_(self):
-        return [-50.0, -1.0]
+        return [-400.0, -1.0]
 
 
 class ConstraintsFactory:
@@ -597,10 +599,10 @@ class ConstraintsFactory:
             return HeadShoulderBottomConstraints(sys_config)
         elif pattern_type == FT.HEAD_SHOULDER_BOTTOM_DESC:
             return HeadShoulderBottomDescConstraints(sys_config)
-        elif pattern_type == FT.FIBONACCI_UP:
-            return FibonacciUpConstraints(sys_config)
-        elif pattern_type == FT.FIBONACCI_UP:
-            return FibonacciDownConstraints(sys_config)
+        elif pattern_type == FT.FIBONACCI_ASC:
+            return FibonacciAscConstraints(sys_config)
+        elif pattern_type == FT.FIBONACCI_DESC:
+            return FibonacciDescConstraints(sys_config)
         else:
             raise MyException('No constraints defined for pattern type "{}"'.format(pattern_type))
 

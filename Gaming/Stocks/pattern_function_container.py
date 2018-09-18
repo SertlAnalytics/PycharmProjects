@@ -34,6 +34,7 @@ class PatternFunctionContainer:
         self._f_var_cross_f_upper_f_lower = 0
         self._position_cross_f_upper_f_lower = 0
         self._breakout_direction = None
+        self._max_positions_after_tick_for_helper = 0
         if self.is_valid():
             self.__init_tick_for_helper__()
             self.__set_f_var_cross_f_upper_f_lower__()
@@ -41,7 +42,17 @@ class PatternFunctionContainer:
 
     @property
     def number_of_positions(self):
-        return self._tick_last.position - self._tick_first.position
+        if self._max_positions_after_tick_for_helper == 0:
+            return self._tick_last.position - self._tick_first.position
+        return self._max_positions_after_tick_for_helper
+
+    @property
+    def max_positions_after_tick_for_helper(self):
+        return self._max_positions_after_tick_for_helper
+
+    @max_positions_after_tick_for_helper.setter
+    def max_positions_after_tick_for_helper(self, value):
+        self._max_positions_after_tick_for_helper = value
 
     @property
     def position_first(self):
@@ -160,18 +171,6 @@ class PatternFunctionContainer:
                     self._position_cross_f_upper_f_lower = n
                     break
 
-    def __set_f_var_cross_f_upper_f_lower_OLD__(self):  # ToDo - remove it later - eventual with tick_f_var_distance..
-        if self._f_upper[1] < self._f_lower[1]:
-            for n in range(self._tick_last.position, self._tick_last.position + 3 * self.number_of_positions):
-                f_var = self._tick_last.f_var + \
-                        (n - self._tick_last.position) * self.sys_config.pdh.pattern_data.tick_f_var_distance
-                u = self._f_upper(f_var)
-                l = self._f_lower(f_var)
-                if self._f_upper(f_var) < self._f_lower(f_var):
-                    self._f_var_cross_f_upper_f_lower = f_var - self.sys_config.pdh.pattern_data.tick_f_var_distance
-                    self._position_cross_f_upper_f_lower = n - 1
-                    break
-
     def __get_tick_for_helper__(self):
         return self._tick_for_helper
 
@@ -236,6 +235,53 @@ class ChannelUpPatternFunctionContainer(ChannelPatternFunctionContainer):
 
 
 class ChannelDownPatternFunctionContainer(ChannelPatternFunctionContainer):
+    def is_tick_breakout(self, tick: WaveTick):
+        return tick.close > self.get_upper_value(tick.f_var)
+
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close < self.get_lower_value(tick.f_var)
+
+
+class FibonacciPatternFunctionContainer(PatternFunctionContainer):
+    def __init_tick_for_helper__(self):
+        self.__set_tick_for_helper__(self._tick_last)
+
+
+class FibonacciAscPatternFunctionContainer(FibonacciPatternFunctionContainer):
+    def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
+        tick_list = [tick_first, self.tick_for_helper, tick_last, tick_last, self.tick_for_helper, tick_first]
+        function_list = [self.f_lower, self.h_lower, self.h_lower, self.h_upper, self.h_upper, self.f_upper]
+        return tick_list, function_list
+
+    def get_upper_value(self, f_var: int):
+        if f_var < self.tick_for_helper.f_var:
+            return round(self._f_upper(f_var), 4)
+        return round(self._h_upper(f_var), 4)
+
+    def get_lower_value(self, f_var: float):
+        return round(min(self._f_lower(f_var), self._h_lower(f_var)), 4)
+
+    def is_tick_breakout(self, tick: WaveTick):
+        return tick.close < self.get_lower_value(tick.f_var)
+
+    def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
+        return tick.close > self.get_upper_value(tick.f_var)
+
+
+class FibonacciDescPatternFunctionContainer(FibonacciPatternFunctionContainer):
+    def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
+        tick_list = [tick_first, self.tick_for_helper, tick_last, tick_last, self.tick_for_helper, tick_first]
+        function_list = [self.f_upper, self.h_upper, self.h_upper, self.h_lower, self.h_lower, self.f_lower]
+        return tick_list, function_list
+
+    def get_upper_value(self, f_var: int):
+        return round(max(self._f_upper(f_var), self._h_upper(f_var)), 4)
+
+    def get_lower_value(self, f_var: float):
+        if f_var < self.tick_for_helper.f_var:
+            return round(self._f_lower(f_var), 4)
+        return round(self._h_lower(f_var), 4)
+
     def is_tick_breakout(self, tick: WaveTick):
         return tick.close > self.get_upper_value(tick.f_var)
 
@@ -418,9 +464,12 @@ class PatternFunctionContainerFactory:
             f_lower = api.complementary_function
             f_upper = api.pattern_range.f_param
 
-        f_cont = PatternFunctionContainerFactory.get_function_container(api.sys_config, api.pattern_type, df_check, f_lower, f_upper)
+        f_cont = PatternFunctionContainerFactory.get_function_container(api.sys_config, api.pattern_type, df_check,
+                                                                        f_lower, f_upper)
         if FT.is_pattern_type_any_head_shoulder(api.pattern_type):
             f_cont.set_tick_for_helper(api.pattern_range.hsf.tick_shoulder_left)
+        elif FT.is_pattern_type_any_fibonacci(api.pattern_type):
+            f_cont.max_positions_after_tick_for_helper = api.pattern_range.fib_form.max_positions_after_tick_for_helper
         return f_cont
 
     @staticmethod
@@ -431,6 +480,10 @@ class PatternFunctionContainerFactory:
             return ChannelDownPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.CHANNEL_UP:
             return ChannelUpPatternFunctionContainer(sys_config, df, f_lower, f_upper)
+        elif pattern_type == FT.FIBONACCI_ASC:
+            return FibonacciAscPatternFunctionContainer(sys_config, df, f_lower, f_upper)
+        elif pattern_type == FT.FIBONACCI_DESC:
+            return FibonacciDescPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.HEAD_SHOULDER:
             return HeadShoulderPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.HEAD_SHOULDER_ASC:
@@ -455,4 +508,5 @@ class PatternFunctionContainerFactory:
             return TKETopPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         else:
             raise MyException('No pattern function container defined for pattern type "{}"'.format(pattern_type))
+
 

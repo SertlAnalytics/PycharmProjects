@@ -14,6 +14,7 @@ from pattern_part import PatternPart
 from pattern import Pattern, PatternFactory
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
     , PatternRangeDetectorHeadShoulderBottom
+from pattern_range_fibonacci import PatternRangeDetectorFibonacciAsc, PatternRangeDetectorFibonacciDesc
 from pattern_breakout import PatternBreakoutApi, PatternBreakout
 from pattern_statistics import PatternDetectorStatisticsApi
 from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
@@ -33,6 +34,8 @@ class PatternDetector:
         self.range_detector_min = None
         self.range_detector_h_s = None  # Head_Shoulder
         self.range_detector_h_s_b = None  # Head_Shoulder_Bottom
+        self.range_detector_fib_asc = None  # Fibonacci ascending
+        self.range_detector_fib_desc = None  # Fibonacci descending
         self.pattern_list = []
         self.fib_wave_tree = None
         self.data_dict = {}
@@ -169,7 +172,10 @@ class PatternDetector:
 
     def __get_trade_df__(self, pattern: Pattern):
         left_pos = pattern.function_cont.tick_for_breakout.position
-        right_pos_max = left_pos + int(pattern.get_maximal_trade_position_size()/2)
+        if FT.is_pattern_type_any_fibonacci(pattern.pattern_type):
+            right_pos_max = left_pos + pattern.function_cont.max_positions_after_tick_for_helper
+        else:
+            right_pos_max = left_pos + int(pattern.get_maximal_trade_position_size() / 2)
         right_pos = min(right_pos_max, self.df_length)
         if right_pos - left_pos <= 1:
             left_pos += -2 + (right_pos - left_pos)  # we need at least 2 ticks for the trade_df...
@@ -205,7 +211,8 @@ class PatternDetector:
         if counter > pattern.breakout_required_after_ticks:
             return True
         if tick.f_var > pattern.function_cont.f_var_cross_f_upper_f_lower > 0:
-            return True
+            if not FT.is_pattern_type_any_fibonacci(pattern.pattern_type):
+                return True
         # if not function_cont.is_regression_value_in_pattern_for_f_var(tick.f_var - 6):
         #     # check the last value !!! in some IMPORTANT cases is the breakout just on that day...
         #     return True
@@ -231,23 +238,28 @@ class PatternDetector:
 
     def __fill_possible_pattern_ranges__(self):
         pattern_type_set = set(self.pattern_type_list)
-        if len(pattern_type_set.intersection(set(FT.get_non_head_shoulder_types()))) > 0:
-            self.range_detector_max = PatternRangeDetectorMax(self.sys_config, self.sys_config.pdh.pattern_data.tick_list_max_without_hidden_ticks)
-            self.range_detector_min = PatternRangeDetectorMin(self.sys_config, self.sys_config.pdh.pattern_data.tick_list_min_without_hidden_ticks)
-        tick_list_head_shoulder = self.sys_config.pdh.pattern_data.tick_list_min_max_for_head_shoulder
+        if len(pattern_type_set.intersection(set(FT.get_normal_types()))) > 0:
+            self.range_detector_max = PatternRangeDetectorMax(self.sys_config)
+            self.range_detector_min = PatternRangeDetectorMin(self.sys_config)
         if len(pattern_type_set.intersection(set(FT.get_head_shoulder_types()))) > 0:
-            self.range_detector_h_s = PatternRangeDetectorHeadShoulder(self.sys_config, tick_list_head_shoulder)
+            self.range_detector_h_s = PatternRangeDetectorHeadShoulder(self.sys_config)
         if len(pattern_type_set.intersection(set(FT.get_head_shoulder_bottom_types()))) > 0:
-            self.range_detector_h_s_b = PatternRangeDetectorHeadShoulderBottom(self.sys_config, tick_list_head_shoulder)
+            self.range_detector_h_s_b = PatternRangeDetectorHeadShoulderBottom(self.sys_config)
+        if FT.FIBONACCI_ASC in self.pattern_type_list:
+            self.range_detector_fib_asc = PatternRangeDetectorFibonacciAsc(self.sys_config)
+        if FT.FIBONACCI_DESC in self.pattern_type_list:
+            self.range_detector_fib_desc = PatternRangeDetectorFibonacciDesc(self.sys_config)
 
     def get_combined_possible_pattern_ranges(self) -> list:
         list_max = [] if self.range_detector_max is None else self.range_detector_max.get_pattern_range_list()
         list_min = [] if self.range_detector_min is None else self.range_detector_min.get_pattern_range_list()
         list_h_s = [] if self.range_detector_h_s is None else self.range_detector_h_s.get_pattern_range_list()
         list_h_s_b = [] if self.range_detector_h_s_b is None else self.range_detector_h_s_b.get_pattern_range_list()
+        list_f_asc = [] if self.range_detector_fib_asc is None else self.range_detector_fib_asc.get_pattern_range_list()
+        list_f_desc = [] if self.range_detector_fib_desc is None else self.range_detector_fib_desc.get_pattern_range_list()
         list_max_without_covered = self.__remove_entries_covered_by_second_list__(list_max, list_min)
         list_min_without_covered = self.__remove_entries_covered_by_second_list__(list_min, list_max)
-        result_list = list_max + list_min + list_h_s + list_h_s_b
+        result_list = list_max + list_min + list_h_s + list_h_s_b + list_f_asc + list_f_desc
         return result_list
 
     @staticmethod

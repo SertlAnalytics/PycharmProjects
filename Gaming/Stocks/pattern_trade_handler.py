@@ -277,7 +277,7 @@ class PatternTradeHandler:
     def __handle_sell_triggers__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
             ticker = self.__get_ticker_for_pattern_trade__(pattern_trade)
-            self.__print_current_state__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, ticker)
+            pattern_trade.print_state_details(PTHP.HANDLE_SELL_TRIGGERS, ticker)
             if pattern_trade.stop_loss_current > ticker.last_price:
                 self.__handle_sell_trigger__(ticker, pattern_trade.ticker_id, pattern_trade, ST.STOP_LOSS)
             elif pattern_trade.limit_current < ticker.last_price:
@@ -299,8 +299,7 @@ class PatternTradeHandler:
         deletion_key_list = []
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
             ticker = self.__get_ticker_for_pattern_trade__(pattern_trade)
-            self.__print_current_state__(PTHP.HANDLE_WRONG_BREAKOUT, pattern_trade, ticker)
-            if pattern_trade.is_ticker_wrong_breakout(ticker):
+            if pattern_trade.is_ticker_wrong_breakout(PTHP.HANDLE_WRONG_BREAKOUT, ticker):
                 deletion_key_list.append(key)
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.WRONG_BREAKOUT)
 
@@ -323,8 +322,7 @@ class PatternTradeHandler:
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).values():
             ticker = self.__get_ticker_for_pattern_trade__(pattern_trade)
             if pattern_trade.is_breakout_active:
-                self.__print_current_state__(PTHP.HANDLE_BUY_TRIGGERS, pattern_trade, ticker)
-                if pattern_trade.is_ticker_breakout(ticker):
+                if pattern_trade.is_ticker_breakout(PTHP.HANDLE_BUY_TRIGGERS, ticker):
                     self.__handle_buy_trigger_for_pattern_trade__(ticker, pattern_trade)
             else:
                 pattern_trade.verify_touch_point(ticker)
@@ -341,38 +339,10 @@ class PatternTradeHandler:
         pattern_trade.set_order_status_buy(order_status, buy_comment, ticker)
         pattern_trade.save_trade()
 
-    @staticmethod
-    def __print_current_state__(process: str, pattern_trade: PatternTrade, ticker: Ticker):
-        if pattern_trade.status == PTS.NEW:
-            counter_required = pattern_trade.counter_required
-            if pattern_trade.buy_trigger == BT.BREAKOUT:
-                if process == PTHP.HANDLE_WRONG_BREAKOUT:
-                    breakout_value = pattern_trade.pattern.get_lower_value(ticker.time_stamp)
-                    counter = pattern_trade.wrong_breakout_counter
-                else:
-                    breakout_value = pattern_trade.pattern.get_upper_value(ticker.time_stamp)
-                    counter = pattern_trade.breakout_counter
-            else:
-                breakout_value = pattern_trade.pattern.get_lower_value(ticker.time_stamp)
-                if process == PTHP.HANDLE_WRONG_BREAKOUT:
-                    counter = pattern_trade.wrong_breakout_counter
-                else:
-                    counter = pattern_trade.breakout_counter
-            print('{} for {}-{} ({}/{}): ticker.last_price={:.2f}, breakout value={:.2f}'.format(
-                process, ticker.ticker_id, pattern_trade.buy_trigger, counter, counter_required,
-                ticker.last_price, breakout_value))
-        else:
-            print('{} for {}-{}-{}: limit={:.2f}, ticker.last_price={:.2f}, stop_loss={:.2f}, bought_at={:.2f}'.format(
-                process, ticker.ticker_id, pattern_trade.buy_trigger, pattern_trade.trade_strategy,
-                pattern_trade.limit_current, ticker.last_price,
-                pattern_trade.stop_loss_current, pattern_trade.order_status_buy.avg_execution_price))
-
     def __adjust_stops_and_limits__(self):
-        for pattern_trade in self.pattern_trade_dict.values():
-            if pattern_trade.status == PTS.EXECUTED:
-                ticker = self.__get_ticker_for_pattern_trade__(pattern_trade)
-                if pattern_trade.adjust_to_next_ticker_last_price(ticker.last_price):
-                    self.__print_current_state__(PTHP.ADJUST_STOPS_AND_LIMITS, pattern_trade, ticker)
+        for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
+            ticker = self.__get_ticker_for_pattern_trade__(pattern_trade)
+            pattern_trade.adjust_to_next_ticker(ticker)
 
     def __create_trailing_stop_order_for_all_executed_trades__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():

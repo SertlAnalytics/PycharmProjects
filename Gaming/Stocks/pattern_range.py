@@ -78,7 +78,7 @@ class PatternRange:
 
     @staticmethod
     def _get_covered_pattern_types_() -> list:
-        return FT.get_non_head_shoulder_types()
+        return FT.get_normal_types()
 
     def __get_actual_df_min_max__(self):
         if self.tick_breakout_successor is None:
@@ -431,6 +431,11 @@ class PatternRangeDetector:
 
 
 class PatternRangeDetectorMax(PatternRangeDetector):
+    def __init__(self, sys_config: SystemConfiguration, tick_list=None):
+        if tick_list is None:
+            tick_list = sys_config.pdh.pattern_data.tick_list_max_without_hidden_ticks
+        PatternRangeDetector.__init__(self, sys_config, tick_list)
+
     def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick) -> np.poly1d:
         return tick_i.get_linear_f_params_for_high(tick_k)
 
@@ -455,6 +460,11 @@ class PatternRangeDetectorMax(PatternRangeDetector):
 
 
 class PatternRangeDetectorMin(PatternRangeDetector):
+    def __init__(self, sys_config: SystemConfiguration, tick_list=None):
+        if tick_list is None:
+            tick_list = sys_config.pdh.pattern_data.tick_list_min_without_hidden_ticks
+        PatternRangeDetector.__init__(self, sys_config, tick_list)
+
     def __get_linear_f_params__(self, tick_i: WaveTick, tick_k: WaveTick) -> np.poly1d:
         return tick_i.get_linear_f_params_for_low(tick_k)
 
@@ -585,7 +595,8 @@ class PatternRangeDetectorHeadShoulderBase:
 
 
 class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin, PatternRangeDetectorHeadShoulderBase):
-    def __init__(self, sys_config: SystemConfiguration, tick_list: list):
+    def __init__(self, sys_config: SystemConfiguration):
+        tick_list = sys_config.pdh.pattern_data.tick_list_min_max_for_head_shoulder
         PatternRangeDetectorHeadShoulderBase.__init__(self, sys_config, tick_list)
         PatternRangeDetectorMin.__init__(self, sys_config, tick_list)
 
@@ -610,7 +621,8 @@ class PatternRangeDetectorHeadShoulder(PatternRangeDetectorMin, PatternRangeDete
 
 
 class PatternRangeDetectorHeadShoulderBottom(PatternRangeDetectorMax, PatternRangeDetectorHeadShoulderBase):
-    def __init__(self, sys_config: SystemConfiguration, tick_list: list):
+    def __init__(self, sys_config: SystemConfiguration):
+        tick_list = sys_config.pdh.pattern_data.tick_list_min_max_for_head_shoulder
         PatternRangeDetectorHeadShoulderBase.__init__(self, sys_config, tick_list)
         PatternRangeDetectorMax.__init__(self, sys_config, tick_list)
 
