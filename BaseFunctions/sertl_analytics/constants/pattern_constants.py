@@ -270,6 +270,15 @@ class TSTR:  # Trading Strategy
         return {TSTR.LIMIT: 10, TSTR.TRAILING_STOP: 20, TSTR.TRAILING_STEPPED_STOP: 30, TSTR.SMA: 40}.get(key)
 
 
+class TTC:  # Trade test cases
+    FALSE_BREAKOUT = 'false breakout'
+    NO_FALSE_BREAKOUT = 'no false breakout'
+    BUY_SELL_LIMIT = 'buy & sell at limit'
+    BUY_ADJUST_STOP_LOSS = 'buy & adjust stop loss'
+    BUY_SELL_STOP_LOSS = 'buy & sell at stop loss'
+    ACTIVATE_BREAKOUT = 'activate breakout for touch'
+
+
 class PTS:  # PatternTradeStatus
     NEW = 'new'
     EXECUTED = 'executed'
@@ -290,15 +299,11 @@ class PTHP:  # Pattern Trade Handler Processes
 
 class TBT:  # TradingBoxType
     EXPECTED_WIN = 'Expected_win'
-    FORECAST_HALF_LENGTH = 'Forecast_half_length'
-    FORECAST_FULL_LENGTH = 'Forecast_full_length'
     TOUCH_POINT = 'Touchpoint'
-    FIBONACCI = 'Fibonacci'
 
     @staticmethod
     def get_id(key: str):
-        return {TBT.EXPECTED_WIN: 10, TBT.FORECAST_HALF_LENGTH: 20, TBT.FORECAST_FULL_LENGTH: 30,
-                TBT.FIBONACCI: 50}.get(key)
+        return {TBT.EXPECTED_WIN: 10, TBT.TOUCH_POINT: 20}.get(key)
 
 
 class PDR:  # Pattern Deletion Reasons

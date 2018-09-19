@@ -64,6 +64,7 @@ class PatternConfiguration:
         self.api_period = ApiPeriod.DAILY
         self.api_period_aggregation = 5
         self.api_output_size = ApiOutputsize.COMPACT
+        self.simple_moving_average_number = 20
         self.save_pattern_features = True
         self.save_trade_data = True
         self.show_differences_to_stored_features = False
@@ -94,7 +95,7 @@ class PatternConfiguration:
         self.__previous_period_length = 0
 
     @property
-    def range_detector_tolerance_pct(self):
+    def value_categorizer_tolerance_pct(self):
         if self.api_period == ApiPeriod.INTRADAY:
             if self.api_period_aggregation < 5:
                 return 0.0002

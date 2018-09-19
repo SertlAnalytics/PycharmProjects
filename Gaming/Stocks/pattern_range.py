@@ -314,7 +314,7 @@ class PatternRangeDetector:
         self.sys_config = sys_config
         self.tick_list = tick_list
         self._elements = len(self.tick_list)
-        self._tolerance_pct = self.sys_config.config.range_detector_tolerance_pct
+        self._tolerance_pct = self.sys_config.config.value_categorizer_tolerance_pct
         self._max_pattern_range_length = self.sys_config.config.max_pattern_range_length
         self._pattern_range_list = []
         self.__parse_tick_list__()

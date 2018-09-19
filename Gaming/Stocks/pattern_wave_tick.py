@@ -164,19 +164,26 @@ class WaveTickList:
 
     @property
     def mean(self):
-        return round(self.min + self.value_range/2, 2)
+        return round(np.mean([tick.mean for tick in self.tick_list])[0], 2)
 
     @property
     def max(self):
-        return round(np.max([tick.close for tick in self.tick_list]), 2)
+        return round(np.max([tick.high for tick in self.tick_list]), 2)
 
     @property
     def min(self):
-        return round(np.min([tick.close for tick in self.tick_list]), 2)
+        return round(np.min([tick.low for tick in self.tick_list]), 2)
 
     @property
     def value_range(self):
         return round(self.max - self.min, 2)
+
+    def add_wave_tick(self, tick: WaveTick):
+        self.tick_list.append(tick)
+
+    def get_simple_moving_average(self, elements: int=0):
+        base_list = self.tick_list if elements == 0 else self.tick_list[-elements:]
+        return round(np.average([tick.mean for tick in base_list]), 2)
 
     def get_list_without_hidden_ticks(self, for_high: bool, tolerance_pct: float):
         """

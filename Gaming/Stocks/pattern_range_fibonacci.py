@@ -112,7 +112,7 @@ class PatternRangeDetectorFibonacciBase:
         return pattern_range
 
     def get_tick_range(self, off_set: int):
-        return range(off_set + 1, len(self.tick_list)-1)
+        return range(off_set + 1, len(self.tick_list))
 
     def __get_fibonacci_wave_tree_for_formation__(self, tick_start: WaveTick, tick_end: WaveTick, direction: str) -> \
             FibonacciWaveTree:

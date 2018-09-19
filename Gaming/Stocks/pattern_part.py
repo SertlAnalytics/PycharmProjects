@@ -93,7 +93,7 @@ class PatternPart:
 
     def __calculate_values__(self):
         self.tick_list = [self.pdh.pattern_data.tick_list[k] for k in range(self.function_cont.position_first,
-                                                                            self.function_cont.position_last)]
+                                                                            self.function_cont.position_last + 1)]
         self.tick_first = self.tick_list[0]
         self.tick_last = self.tick_list[-1]
         self.tick_high = WaveTick(self.df.loc[self.df[CN.HIGH].idxmax(axis=0)])
@@ -184,9 +184,9 @@ class PatternPart:
     def std(self):  # we need the standard deviation from the mean_HL for Low and High
         return ((self.df[CN.HIGH]-self.mean).std() + (self.df[CN.LOW]-self.mean).std())/2
 
-    def get_sma_value_list(self) -> list:
-        low_value_list = list(self.df[CN.LOW])
-        return low_value_list
+    def get_simple_moving_average_tick_list(self) -> list:
+        elements = min(len(self.tick_list), self.sys_config.config.simple_moving_average_number)
+        return self.tick_list[-elements:]
 
     def get_slope_values(self):
         f_upper_slope = self.function_cont.f_upper_percentage

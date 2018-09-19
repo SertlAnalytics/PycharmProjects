@@ -11,21 +11,22 @@ from sertl_analytics.mydates import MyDate
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
 from pattern_data_dictionary import PatternDataDictionary
-from pattern_trade_box import FibonacciTradingBox, ExpectedWinTradingBox, TouchPointTradingBox, TradingBoxApi
-from pattern_trade_box import ForecastHalfLengthTradingBox, ForecastFullLengthTradingBox
+from pattern_trade_box import ExpectedWinTradingBox, TouchPointTradingBox, TradingBoxApi
 
 
 class PatternTradeApi:
-    def __init__(self, pattern: Pattern, buy_trigger: str, box_type: str, trade_strategy: str):
+    def __init__(self, pattern: Pattern, buy_trigger: str, trade_strategy: str):
+        self.bitfinex_config = None
         self.pattern = pattern
         self.buy_trigger = buy_trigger
-        self.box_type = box_type
+        self.box_type = TBT.TOUCH_POINT if buy_trigger == BT.TOUCH_POINT else TBT.EXPECTED_WIN
         self.trade_strategy = trade_strategy
 
 
 class PatternTrade:
     def __init__(self, api: PatternTradeApi):
         self.sys_config = api.pattern.sys_config
+        self.bitfinex_config = api.bitfinex_config
         self.buy_trigger = api.buy_trigger
         self.trade_box_type = api.box_type
         self.trade_strategy = api.trade_strategy
@@ -153,8 +154,12 @@ class PatternTrade:
         return self._wrong_breakout_counter >= self._counter_required  # we need a second confirmation
 
     def verify_touch_point(self, ticker: Ticker):
-        self._is_breakout_active = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp,
-                                                                     SVC.L_on, True)
+        last_tick = self.pattern.part_main.tick_last
+        value_tuple_list = [[ticker.last_price, ticker.time_stamp], [last_tick.low, last_tick.time_stamp]]
+        for value_tuple in value_tuple_list:
+            if self.pattern.is_value_in_category(value_tuple[0], value_tuple[1], SVC.L_on, True):
+                self._is_breakout_active = True
+                break
 
     def print_state_details(self, process: str, ticker: Ticker):
         if self.status == PTS.NEW:
@@ -220,23 +225,22 @@ class PatternTrade:
         if was_adjusted:
             self.print_state_details(PTHP.ADJUST_STOPS_AND_LIMITS, ticker)
 
-    def __get_trade_box__(self, off_set_price: float, buy_price: float):
+    def __get_trade_box__(self, off_set_price: float, buy_price: float, height=0.0, distance_bottom=0.0):
         api = TradingBoxApi()
         api.data_dict = self.pattern.data_dict_obj.data_dict
         api.off_set_value = off_set_price
         api.buy_price = buy_price
         api.trade_strategy = self.trade_strategy
-        api.sma_value_list = self.pattern.get_sma_value_list()
+        api.sma_tick_list = self.pattern.get_simple_moving_average_tick_list_from_part_main()
+        api.height = height
+        api.distance_bottom = distance_bottom
+        api.period = self.sys_config.config.api_period
+        api.aggregation = self.sys_config.config.api_period_aggregation
+        api.refresh_trigger_in_seconds = self.bitfinex_config.ticker_refresh_rate_in_seconds
         if self.trade_box_type == TBT.EXPECTED_WIN:
             return ExpectedWinTradingBox(api)
-        elif self.trade_box_type == TBT.FORECAST_HALF_LENGTH:
-            return ForecastHalfLengthTradingBox(api)
-        elif self.trade_box_type == TBT.FORECAST_FULL_LENGTH:
-            return ForecastFullLengthTradingBox(api)
         elif self.trade_box_type == TBT.TOUCH_POINT:
             return TouchPointTradingBox(api)
-        elif self.trade_box_type == TBT.FIBONACCI:
-            return FibonacciTradingBox(api)
         return None
 
     def set_order_status_buy(self, order_status: OrderStatus, buy_comment, ticker: Ticker):
@@ -251,9 +255,16 @@ class PatternTrade:
 
     def __set_properties_after_buy__(self, ticker: Ticker):
         self._status = PTS.EXECUTED
-        off_set_value = self.pattern.get_upper_value(ticker.time_stamp)
         buy_price = ticker.last_price
-        self._trade_box = self.__get_trade_box__(off_set_value, buy_price)
+        height = 0
+        distance_bottom = 0
+        if self.buy_trigger == BT.TOUCH_POINT:
+            off_set_value = buy_price
+            height = self.pattern.get_upper_value(ticker.time_stamp) - self.pattern.get_lower_value(ticker.time_stamp)
+            distance_bottom = buy_price - self.pattern.get_lower_value(ticker.time_stamp)
+        else:
+            off_set_value = self.pattern.get_upper_value(ticker.time_stamp)
+        self._trade_box = self.__get_trade_box__(off_set_value, buy_price, height, distance_bottom)
         self._trade_box.print_box()
 
     def set_order_status_sell(self, order_status: OrderStatus, sell_trigger: str, sell_comment: str):

@@ -123,7 +123,8 @@ class TradeCandidateController:
                 continue
             if pattern.are_conditions_for_buy_trigger_fulfilled(buy_trigger):
                 for trade_strategy in trade_strategies:
-                    trade_api = PatternTradeApi(pattern, buy_trigger, TBT.EXPECTED_WIN, trade_strategy)
+                    trade_api = PatternTradeApi(pattern, buy_trigger, trade_strategy)
+                    trade_api.bitfinex_config = self.bitfinex_config
                     self.__add_trade_candidate_entry_to_ticker_id_dict__(TradeCandidate(PatternTrade(trade_api)))
             else:
                 self.__add_to_black_buy_trigger_pattern_id_readable_list__(key)

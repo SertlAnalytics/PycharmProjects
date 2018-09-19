@@ -44,7 +44,7 @@ class Constraints:
         self.sys_config = sys_config
         self.api_period = self.sys_config.config.api_period
         self.period_related_divisor = 10 if self.api_period == ApiPeriod.INTRADAY else 1
-        self.tolerance_pct = self.__get_tolerance_pct__()
+        self.tolerance_pct = self.sys_config.config.value_categorizer_tolerance_pct
         self.tolerance_pct_equal = self.sys_config.config.value_categorizer_tolerance_pct_equal
         self.global_all_in = []
         self.global_count = []
@@ -154,10 +154,6 @@ class Constraints:
             return False
         end_start_relation = MyMath.divide(height_end, height_start)
         return self.height_end_start_relation_bounds[0] <= end_start_relation <= self.height_end_start_relation_bounds[1]
-
-    @staticmethod
-    def __get_tolerance_pct__():
-        return 0.01
 
     def get_unary_constraints(self, df: pd.DataFrame):
         pass
@@ -346,10 +342,6 @@ class ChannelDownConstraints(ChannelConstraints):
 
 
 class HeadShoulderConstraints(Constraints):
-    @staticmethod
-    def __get_tolerance_pct__():
-        return 0.02
-
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
@@ -390,10 +382,6 @@ class HeadShoulderAscConstraints(HeadShoulderConstraints):
 
 
 class HeadShoulderBottomConstraints(Constraints):
-    @staticmethod
-    def __get_tolerance_pct__():
-        return 0.02
-
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)

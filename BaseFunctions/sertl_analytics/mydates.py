@@ -25,11 +25,11 @@ class MyDate:
             return datetime.strptime(str(date_time), '%Y-%m-%d %H:%M:%S')
 
     @staticmethod
-    def get_epoch_seconds_from_datetime(date_time=None) -> float:
+    def get_epoch_seconds_from_datetime(date_time=None) -> int:
         if date_time is None:
             return int(datetime.timestamp(datetime.now()))
         date_time_object = MyDate.get_datetime_object(date_time)
-        return datetime.timestamp(date_time_object)
+        return int(datetime.timestamp(date_time_object))
 
     @staticmethod
     def get_epoch_number_from_datetime(date_time) -> float:

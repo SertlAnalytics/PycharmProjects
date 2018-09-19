@@ -167,8 +167,8 @@ class Pattern:
         self.xy_trade = self._part_trade.xy
         self.__calculate_predictions_after_breakout__()
 
-    def get_sma_value_list(self):
-        return self._part_main.get_sma_value_list()
+    def get_simple_moving_average_tick_list_from_part_main(self):
+        return self._part_main.get_simple_moving_average_tick_list()
 
     def __calculate_predictions_after_breakout__(self):
         self.__calculate_y_predict__(PT.AFTER_BREAKOUT)
@@ -527,7 +527,8 @@ class Pattern:
         df_part = self.df_min_max.loc[np.logical_and(self.df_min_max[CN.POSITION] >= pos_begin,
                                                      self.df_min_max[CN.POSITION] <= pos_end)]
         f_cnt = self.function_cont
-        tolerance_pct_list = [self.tolerance_pct, self.sys_config.config.value_categorizer_tolerance_pct_equal]
+        tolerance_pct_list = [self.sys_config.config.value_categorizer_tolerance_pct,  # self.tolerance_pct
+                              self.sys_config.config.value_categorizer_tolerance_pct_equal]
         return ValueCategorizer(df_part, f_cnt.f_upper, f_cnt.f_lower, f_cnt.h_upper, f_cnt.h_lower, tolerance_pct_list)
 
     def __add_data_dict_entries_after_part_main__(self):
@@ -707,9 +708,10 @@ class TKEUpPattern(TKEPattern):
 
 class FibonacciPattern(Pattern):
     def get_expected_win(self):
-        height_end = self.function_cont.height_end
+        # we have to calculate the difference between the last value and the expected minimal retracement
+        last_value = self.function_cont.height_end
         expected_retracement = self.pattern_range.fib_form.get_minimal_retracement_range_after_wave_finishing()
-        return round(max(expected_retracement - height_end, height_end), 4)
+        return round(max(expected_retracement - last_value, last_value), 4)
 
 
 class FibonacciAscPattern(FibonacciPattern):

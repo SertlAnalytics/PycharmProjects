@@ -5,11 +5,14 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-10
 """
 
-from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT
+from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT, CN
+from pattern_wave_tick import WaveTick, WaveTickList
+from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mydates import MyDate
 import math
 from scipy import stats
 import numpy as np
+import pandas as pd
 
 
 class TradingBoxApi:
@@ -18,7 +21,68 @@ class TradingBoxApi:
         self.off_set_value = 0.0
         self.buy_price = 0.0
         self.trade_strategy = ''
-        self.sma_value_list = []
+        self.height = 0  # is used for touch point
+        self.distance_bottom = 0  # is used for touch point
+        self.period = ''
+        self.aggregation = 0
+        self.refresh_trigger_in_seconds = 0
+        self.sma_tick_list = []
+
+
+class SimpleMovingAverageHandler:
+    def __init__(self, tick_list: list, period: str, aggregation: int, refresh_rate_seconds: int):
+        self._period = period
+        self._aggregation = aggregation
+        self._refresh_rate_seconds = refresh_rate_seconds
+        self._wave_tick_list = WaveTickList(tick_list)
+        self._length = len(tick_list)
+        self._latest_sma_value = self._wave_tick_list.get_simple_moving_average(self._length)
+        self._latest_wave_tick = self._wave_tick_list.tick_list[-1]
+        self._ticker_per_aggregation = self.__get_ticker_per_aggregation__()
+        self._current_ticker_counter = 0
+        self._current_open = 0
+        self._current_close = 0
+        self._current_low = math.inf
+        self._current_high = -math.inf
+        self._current_time_stamp = 0
+
+    def get_simple_moving_average(self) -> float:
+        return self._latest_sma_value
+
+    def get_simple_moving_average_after_this_ticker(self, ticker_last_price: float) -> float:
+        if self._current_open == 0:
+            self._current_open = ticker_last_price
+        if self._current_high < ticker_last_price:
+            self._current_high = ticker_last_price
+        if self._current_low > ticker_last_price:
+            self._current_low = ticker_last_price
+        self._current_close = ticker_last_price
+        self._current_time_stamp = MyDate.get_epoch_seconds_from_datetime()
+
+        self._current_ticker_counter += 1
+        if self._current_ticker_counter >= self._ticker_per_aggregation:
+            self._latest_wave_tick = self.__get_current_tick_values_as_wave_tick__(self._latest_wave_tick.position)
+            self._wave_tick_list.add_wave_tick(self._latest_wave_tick)
+            self._latest_sma_value = self._wave_tick_list.get_simple_moving_average(self._length)
+            self._current_open = 0
+            self._current_close = 0
+            self._current_low = math.inf
+            self._current_high = -math.inf
+            self._current_time_stamp = 0
+            self._current_ticker_counter = 0
+        return self._latest_sma_value
+
+    def __get_current_tick_values_as_wave_tick__(self, last_position: int):
+        v_array = np.array([self._current_open, self._current_close, self._current_low, self._current_high,
+                            self._current_time_stamp, last_position + 1]).reshape([1, 6])
+        df = pd.DataFrame(v_array, columns=[CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.TIMESTAMP, CN.POSITION])
+        return WaveTick(df.iloc[0])
+
+    def __get_ticker_per_aggregation__(self):
+        if self._period == ApiPeriod.DAILY:
+            return int(24 * 60 * 60)/self._refresh_rate_seconds
+        elif self._period == ApiPeriod.INTRADAY:
+            return int(self._aggregation * 60) / self._refresh_rate_seconds
 
 
 class TradingBox:
@@ -26,17 +90,18 @@ class TradingBox:
         self.box_type = ''
         self._data_dict = api.data_dict
         self._ticker_id = self._data_dict[DC.TICKER_ID]
-        self._off_set_value = api.off_set_value
+        self._off_set_value = api.off_set_value  # basis for distance_top and _bottom
         self._buy_price = api.buy_price
-        self._sma_value_list = api.sma_value_list  # simple moving average
-        self._sma_length = len(self._sma_value_list)
+        self._sma_handler = SimpleMovingAverageHandler(api.sma_tick_list, api.period, api.aggregation,
+                                                       api.refresh_trigger_in_seconds)
+        self._sma_value = self._sma_handler.get_simple_moving_average()
         self._round_decimals = 2 if self._off_set_value > 100 else 4
         self._trade_strategy = api.trade_strategy
         self._ticker_last_price_list = [api.off_set_value, api.buy_price]  # off_set is used to guarantee: max >= offset
-        self._height = 0
+        self._height = self.round(api.height)
         self._time_stamp_end = self.__get_time_stamp_end__()
         self._date_time_end = MyDate.get_date_time_from_epoch_seconds(self._time_stamp_end)
-        self._distance_bottom = 0
+        self._distance_bottom = api.distance_bottom
         self._distance_top = 0
         self._stop_loss_orig = 0
         self._stop_loss = 0
@@ -85,10 +150,8 @@ class TradingBox:
         return self.round(self._distance_bottom / 2)
 
     @property
-    def sma_low_value(self):
-        sma_base_list = self._sma_value_list + self._ticker_last_price_list
-        # ToDo - we need a weight for the second part - the time period is much faster...
-        return np.mean(sma_base_list[:-self._sma_length])
+    def sma_value(self):
+        return self._sma_value
 
     @property
     def stop_loss_orig(self):
@@ -141,6 +204,7 @@ class TradingBox:
 
     def adjust_to_next_ticker_last_price(self, ticker_last_price: float) -> bool:
         self._ticker_last_price_list.append(ticker_last_price)
+        self._sma_value = self._sma_handler.get_simple_moving_average_after_this_ticker(ticker_last_price)
         return self.__adjust_to_next_ticker_last_price__(ticker_last_price)
 
     def __adjust_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
@@ -158,8 +222,8 @@ class TradingBox:
                 self._stop_loss = self._stop_loss + multiplier * self.distance_stepping
                 return True
         elif self._trade_strategy == TSTR.SMA:  # ToDo trailing stop closer after some time (above buy price !!!)
-            if self._stop_loss < self.sma_low_value:
-                self._stop_loss = self.sma_low_value
+            if self._stop_loss < self.sma_value:
+                self._stop_loss = self.sma_value
                 return True
         return False
 
@@ -184,40 +248,15 @@ class TradingBox:
 class ExpectedWinTradingBox(TradingBox):
     def _init_parameters_(self):
         self.box_type = TBT.EXPECTED_WIN
-        self._height = self._data_dict[DC.EXPECTED_WIN]
+        self._height = self.round(self._data_dict[DC.EXPECTED_WIN])
         self._distance_top = self.round(self._height * self.multiplier_positive)
         self._distance_bottom = self.round(self._height * self.multiplier_negative)
 
 
-class ForecastHalfLengthTradingBox(TradingBox):
-    def _init_parameters_(self):
-        self.box_type = TBT.FORECAST_HALF_LENGTH
-        self._height = self._data_dict[DC.PATTERN_HEIGHT]
-        self._top_correction = 0.8
-        self._bottom_correction = 1.0
-        self._distance_top = self.round(self._height * self.multiplier_positive * self._top_correction)
-        self._distance_bottom = self.round(self._height * self.multiplier_positive)
-
-
-class ForecastFullLengthTradingBox(TradingBox):
-    def _init_parameters_(self):
-        self.box_type = TBT.FORECAST_FULL_LENGTH
-        self._height = self._data_dict[DC.PATTERN_HEIGHT]
-        self._distance_top = self.round(self._height * self.multiplier_positive)
-        self._distance_bottom = self.round(self._height * self.multiplier_positive)
-
-
 class TouchPointTradingBox(TradingBox):
     def _init_parameters_(self):
-        self.box_type = TBT.TOUCH_POINT  # ToDo Touch_point
-        self._height = self._data_dict[DC.PATTERN_HEIGHT]
-        self._distance_top = self.round(self._height)
-        self._distance_bottom = self.round(self._height/2)
+        self.box_type = TBT.TOUCH_POINT
+        self._distance_top = self.round(self._height - self._distance_bottom)
+        self._distance_bottom = self.round(self._distance_bottom)
 
 
-class FibonacciTradingBox(TradingBox):
-    def _init_parameters_(self):
-        self.box_type = TBT.FIBONACCI  # ToDo Fibonacci
-        self._height = self._data_dict[DC.PATTERN_HEIGHT]
-        self._distance_top = self.round(self._height)
-        self._distance_bottom = self.round(self._height)

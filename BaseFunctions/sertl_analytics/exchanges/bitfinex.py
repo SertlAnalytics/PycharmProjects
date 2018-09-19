@@ -51,6 +51,7 @@ class BitfinexConfiguration(ExchangeConfiguration):
         self.buy_order_value_max = 100
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
+        self.ticker_refresh_rate_in_seconds = 5
         self.cache_ticker_seconds = 30  # keep ticker in the Bitfinex cache
         self.cache_balance_seconds = 300  # keep balances in the Bitfinex cache (it's overwriten when changes happen)
         self.check_ticker_after_timer_intervals = 4  # currently the timer intervall is set to 5 sec, i.e. check each 20 sec.
