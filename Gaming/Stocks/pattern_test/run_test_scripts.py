@@ -37,7 +37,7 @@ for k in range(0, 10):
 print('Max_value_list: {}'.format(max_value_list))
 print('Result_list: {}'.format(result_list))
 for k in range(0, 10):
-    print(' value_list: {}'.format(value_summary_list[k]))
+    print(' value_pair_list: {}'.format(value_summary_list[k]))
     print(' stop_loss_list: {}'.format(stop_loss_summary_list[k]))
 
 

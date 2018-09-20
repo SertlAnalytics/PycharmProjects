@@ -6,6 +6,8 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC
+from pattern import Pattern
+from sertl_analytics.mydates import MyDate
 
 
 class TradeTestCase:
@@ -16,10 +18,11 @@ class TradeTestCase:
         self.test_process = ''
         self.symbol = ''
         self.and_clause = ''
-        self.value_list = []
+        self.time_stamp_start = 0
+        self.value_pair_list = []  # [time_stamp, value]
 
 
-class BitfinexTestCaseFactory:
+class TradeTestCaseFactory:
     @staticmethod
     def get_test_case(pattern_type: str, buy_trigger, trade_strategy: str, test_process: str) -> TradeTestCase:
         tc = TradeTestCase()
@@ -27,20 +30,39 @@ class BitfinexTestCaseFactory:
         tc.buy_trigger = buy_trigger
         tc.trade_strategy = trade_strategy
         tc.test_process = test_process
-        BitfinexTestCaseFactory.__fill_test_data_for_pattern_type__(tc)
+        TradeTestCaseFactory.fill_test_data_for_pattern_type(tc)
         return tc
 
     @staticmethod
-    def __fill_test_data_for_pattern_type__(tc: TradeTestCase):
+    def get_test_case_from_pattern(pattern: Pattern, buy_trigger: str, strategy: str, process: str) -> TradeTestCase:
+        tc = TradeTestCase()
+        tc.pattern_type = pattern.pattern_type
+        tc.buy_trigger = buy_trigger
+        tc.trade_strategy = strategy
+        tc.test_process = process
+        TradeTestCaseFactory.fill_test_data_for_pattern(tc, pattern)
+        return tc
+
+    @staticmethod
+    def fill_test_data_for_pattern(tc: TradeTestCase, pattern: Pattern):
+        tc.symbol = pattern.ticker_id
+        from_date = MyDate.adjust_by_days(pattern.part_main.date_first, -20)
+        to_date = pattern.part_main.breakout.tick_previous.date
+        tc.and_clause = "Date BETWEEN '{}' AND '{}'".format(from_date, to_date)
+        tc.value_pair_list = pattern.get_part_trade_back_testing_value_pairs()
+
+    @staticmethod
+    def fill_test_data_for_pattern_type(tc: TradeTestCase):
         if tc.pattern_type == FT.TRIANGLE_DOWN:
-            BitfinexTestCaseFactory.fill_test_data_for_triangle_down(tc)
+            TradeTestCaseFactory.fill_test_data_for_triangle_down(tc)
         elif tc.pattern_type == FT.FIBONACCI_DESC:
-            BitfinexTestCaseFactory.fill_test_data_for_fibonacci_desc(tc)
+            TradeTestCaseFactory.fill_test_data_for_fibonacci_desc(tc)
 
     @staticmethod
     def fill_test_data_for_triangle_down(tc: TradeTestCase):
         tc.symbol = 'ETH_USD'
         tc.and_clause = "Date BETWEEN '2018-03-01' AND '2018-07-05'"
+        tc.time_stamp_start = MyDate.get_epoch_seconds_from_datetime('2018-07-05')
         base_list = [
             [BT.BREAKOUT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [470, 380, 370]],
             [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [470, 484, 485, 600]],
@@ -52,8 +74,8 @@ class BitfinexTestCaseFactory:
             [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [470, 480, 490, 520, 530, 550]],
             [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [470, 480, 500, 550, 450]],
             [BT.BREAKOUT, TSTR.SMA, TTC.FALSE_BREAKOUT, [470, 380, 370]],
-            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_ADJUST_STOP_LOSS, BitfinexTestCaseFactory.get_sma_values(470, 20000, 0.1, 800)],
-            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_SELL_STOP_LOSS, BitfinexTestCaseFactory.get_sma_values(470, 20000, 0.1, 500)],
+            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_ADJUST_STOP_LOSS, TradeTestCaseFactory.get_sma_values(470, 20000, 0.1, 800)],
+            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_SELL_STOP_LOSS, TradeTestCaseFactory.get_sma_values(470, 20000, 0.1, 500)],
             [BT.TOUCH_POINT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [388, 380, 370]],
             [BT.TOUCH_POINT, TSTR.LIMIT, TTC.ACTIVATE_BREAKOUT, [388, 405, 410]],
             [BT.TOUCH_POINT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [388, 405, 410, 420]],
@@ -64,7 +86,7 @@ class BitfinexTestCaseFactory:
             [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [388, 405, 410, 420, 430, 440, 450]],
             [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [388, 405, 410, 430, 440, 450, 400]],
         ]
-        BitfinexTestCaseFactory.fill_value_list_from_base_list(base_list, tc)
+        TradeTestCaseFactory.fill_value_list_from_base_list(base_list, tc)
 
     @staticmethod
     def get_sma_values(start_value: float, times: int, increment: float, end_value: float):
@@ -80,6 +102,7 @@ class BitfinexTestCaseFactory:
     def fill_test_data_for_fibonacci_desc(tc: TradeTestCase):
         tc.symbol = 'ETH_USD'
         tc.and_clause = "Date BETWEEN '2018-03-01' AND '2018-06-29'"
+        tc.time_stamp_start = MyDate.get_epoch_seconds_from_datetime('2018-06-29')
         base_list = [
             [BT.BREAKOUT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [470, 380, 370]],
             [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [470, 484, 485, 600]],
@@ -104,10 +127,11 @@ class BitfinexTestCaseFactory:
             [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [406, 410, 412, 471, 609, 610, 700]],
             [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [406, 410, 412, 471, 609, 500]],
         ]
-        BitfinexTestCaseFactory.fill_value_list_from_base_list(base_list, tc)
+        TradeTestCaseFactory.fill_value_list_from_base_list(base_list, tc)
 
     @staticmethod
     def fill_value_list_from_base_list(base_list, tc):
         for entries in base_list:
             if entries[0] == tc.buy_trigger and entries[1] == tc.trade_strategy and entries[2] == tc.test_process:
-                tc.value_list = entries[3]
+                for values in entries[3]:
+                    tc.value_pair_list.append([tc.time_stamp_start, values])

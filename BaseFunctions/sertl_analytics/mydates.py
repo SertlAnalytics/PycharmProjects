@@ -4,7 +4,7 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-21
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import matplotlib.dates as m_dates
 
 
@@ -103,6 +103,12 @@ class MyDate:
     @staticmethod
     def get_date_from_number(num: int):
         return (datetime(1, 1, 1) + timedelta(days=num)).date()
+
+    @staticmethod
+    def adjust_by_days(date_time, days: int):
+        if type(date_time) is date:
+            return (date_time + timedelta(days=days))
+        return (date_time + timedelta(days=days)).date()
 
 
 class MyClock:

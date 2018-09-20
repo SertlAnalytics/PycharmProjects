@@ -445,6 +445,9 @@ class TriangleConstraints(Constraints):
     def _get_f_lower_percentage_bounds_(self):
         return [1.0, 50.0]
 
+    def _get_f_regression_percentage_bounds_(self):
+        return [-5.0, 5.0]
+
     @staticmethod
     def _get_height_end_start_relation_bounds_():
         return [0.1, 0.8]
@@ -456,6 +459,9 @@ class TriangleTopConstraints(TriangleConstraints):
         return [-1.0, 1.0]
 
     def _get_f_lower_percentage_bounds_(self):
+        return [1.0, 50.0]
+
+    def _get_f_regression_percentage_bounds_(self):
         return [1.0, 50.0]
 
     @staticmethod
@@ -474,6 +480,9 @@ class TriangleBottomConstraints(TriangleConstraints):
     def _get_f_lower_percentage_bounds_(self):
         return TriangleTopConstraints(self.sys_config).f_upper_percentage_bounds_complementary
 
+    def _get_f_regression_percentage_bounds_(self):
+        return [-50.0, -1.0]
+
     @staticmethod
     def __get_previous_period_top_out_pct_bounds__():
         return [20, math.inf]  # min, max percentage required over top of the pattern
@@ -491,12 +500,18 @@ class TriangleUpConstraints(TriangleConstraints):
     def _get_f_lower_percentage_bounds_(self):
         return self.f_upper_percentage_bounds
 
+    def _get_f_regression_percentage_bounds_(self):
+        return self.f_upper_percentage_bounds
+
 
 class TriangleDownConstraints(TriangleConstraints):
     def _get_f_upper_percentage_bounds_(self):
         return TriangleUpConstraints(self.sys_config).f_lower_percentage_bounds_complementary
 
     def _get_f_lower_percentage_bounds_(self):
+        return self.f_upper_percentage_bounds
+
+    def _get_f_regression_percentage_bounds_(self):
         return self.f_upper_percentage_bounds
 
 

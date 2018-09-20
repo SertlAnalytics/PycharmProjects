@@ -8,6 +8,7 @@ from sertl_analytics.exchanges.bitfinex import MyBitfinex, BitfinexConfiguration
 from sertl_analytics.exchanges.bitfinex import Ticker, Balance
 from sertl_analytics.exchanges.bitfinex import BuyMarketOrder, BuyLimitOrder, BuyStopOrder
 from sertl_analytics.exchanges.bitfinex import SellMarketOrder, SellLimitOrder, SellStopLossOrder, SellTrailingStopOrder
+from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 
 # log = logging.getLogger(__name__)
 #
@@ -22,12 +23,12 @@ from sertl_analytics.exchanges.bitfinex import SellMarketOrder, SellLimitOrder, 
 
 
 class MyBitfinexTradeClient:
-    def __init__(self, trading_config: BitfinexConfiguration):
-        self.trading_config = trading_config
-        self.trading_config.print_actual_mode()
+    def __init__(self, exchange_config: ExchangeConfiguration):
+        self.exchange_config = exchange_config
+        self.exchange_config.print_actual_mode()
         self._api_key = os.environ['bitfinex_apikey']
         self._api_key_secret = os.environ['bitfinex_apikeysecret']
-        self._bitfinex = MyBitfinex(self._api_key, self._api_key_secret, trading_config)
+        self._bitfinex = MyBitfinex(self._api_key, self._api_key_secret, exchange_config)
         self._trading_pairs = self._bitfinex.trading_pairs
 
     def get_ticker(self, symbol: str) -> Ticker:

@@ -59,12 +59,13 @@ class RuntimeConfiguration:
 
 class PatternConfiguration:
     def __init__(self):
+        self.for_back_testing = False
         self.get_data_from_db = True
         self.pattern_type_list = [FT.CHANNEL]
         self.api_period = ApiPeriod.DAILY
         self.api_period_aggregation = 5
         self.api_output_size = ApiOutputsize.COMPACT
-        self.simple_moving_average_number = 20
+        self.simple_moving_average_number = 10
         self.save_pattern_features = True
         self.save_trade_data = True
         self.show_differences_to_stored_features = False

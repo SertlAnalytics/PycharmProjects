@@ -6,6 +6,7 @@ Date: 2018-05-14
 """
 
 from pattern import Pattern
+from sertl_analytics.constants.pattern_constants import FT
 
 
 class PatternColorHandler:
@@ -14,10 +15,11 @@ class PatternColorHandler:
 
     @staticmethod
     def __get_pattern_color__(pattern: Pattern):
+        is_trade_able = FT.is_pattern_type_long_trade_able(pattern.pattern_type)
         if pattern.was_breakout_done():
-            return 'green'
+            return 'green' if is_trade_able else 'lightgreen'
         else:
-            return 'yellow'
+            return 'yellow' if is_trade_able else 'khaki'
 
     @staticmethod
     def __get_trade_color__(pattern: Pattern):

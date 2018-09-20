@@ -140,6 +140,11 @@ class PatternDetector:
                 pass
         return pattern_list
 
+    def get_pattern_list_for_back_testing(self) -> list:
+        pattern_list = [pattern for pattern in self.pattern_list if pattern.is_part_trade_available()
+                        and FT.is_pattern_type_long_trade_able(pattern.pattern_type)]
+        return pattern_list
+
     @staticmethod
     def __print_breakout_details__(print_id: str, breakout_ts: float, time_stamp_since: float):
         brk_t = MyDate.get_time_from_epoch_seconds(int(breakout_ts))
@@ -223,7 +228,7 @@ class PatternDetector:
     def __get_confirmed_breakout__(self, pattern: Pattern, last_tick: WaveTick, next_tick: WaveTick):
         if pattern.function_cont.is_tick_breakout(next_tick):
             breakout = self.__get_pattern_breakout__(pattern, last_tick, next_tick)
-            if breakout.is_breakout_a_signal() or True:  # ToDo is_breakout a signal by ML algorithm
+            if breakout.is_breakout_a_signal():  # ToDo is_breakout a signal by ML algorithm
                 pattern.function_cont.tick_for_breakout = next_tick
                 return breakout
         return None

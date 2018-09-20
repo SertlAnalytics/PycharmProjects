@@ -8,6 +8,7 @@ Date: 2018-08-28
 
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mystring import MyString
+from sertl_analytics.constants.pattern_constants import BT, TSTR
 
 
 class ExchangeConfiguration:
@@ -17,6 +18,15 @@ class ExchangeConfiguration:
         self.buy_order_value_max = 0
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
+        self.ticker_refresh_rate_in_seconds = 5
+        self.cache_ticker_seconds = 30  # keep ticker in the cache
+        self.cache_balance_seconds = 300  # keep balances in the cache (it's overwriten when changes happen)
+        self.check_ticker_after_timer_intervals = 4  # currently the timer intervall is set to 5 sec, i.e. check each 20 sec.
+        self.finish_vanished_trades = False  # True <=> if a pattern is vanished after buying sell the position (market)
+        self.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP],
+                                    BT.TOUCH_POINT: [TSTR.LIMIT]}
+        self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP,
+                                    BT.TOUCH_POINT: TSTR.LIMIT}
         self.__set_values__()
 
     def __set_values__(self):

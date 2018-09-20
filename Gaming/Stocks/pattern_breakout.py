@@ -64,7 +64,7 @@ class PatternBreakout:
         return FD.ASC if self.tick_breakout.close > self.bound_upper else FD.DESC
 
     def __is_breakout_powerful__(self) -> bool:
-        return self.tick_breakout.is_sustainable or (
+        return self.tick_breakout.is_sustainable() or (
                 self.tick_breakout.tick_type != TT.DOJI and self.tick_breakout.has_gap_to(self.tick_previous))
 
     def __is_breakout_over_limit__(self) -> bool:

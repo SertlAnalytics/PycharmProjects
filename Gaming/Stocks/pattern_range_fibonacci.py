@@ -93,8 +93,10 @@ class PatternRangeFibonacciDesc(PatternRangeMax):
 class PatternRangeDetectorFibonacciBase:
     def __init__(self, sys_config: SystemConfiguration, tick_list: list):
         self.sys_config = sys_config
+        self.for_back_testing = self.sys_config.config.for_back_testing
         self.pdh = self.sys_config.pdh
         self.df = self.pdh.pattern_data_fibonacci.df
+        self.df_length = len(self.df)
         self.tick_list = tick_list
         self.global_max_tuple_list = [(i, tick) for i, tick in enumerate(self.tick_list) if tick.is_global_max]
         self.global_min_tuple_list = [(i, tick) for i, tick in enumerate(self.tick_list) if tick.is_global_min]
@@ -128,6 +130,8 @@ class PatternRangeDetectorFibonacciBase:
         list_return = []
         for k in self.get_tick_range(index_start):
             tick_k = self.tick_list[k]
+            if not self.for_back_testing and tick_k.position - tick_start.position > 150:
+                break
             if tick_k.is_global_min and tick_k.low < min_value:
                 list_return.append(tick_k)
                 min_value = tick_k.low
@@ -140,6 +144,8 @@ class PatternRangeDetectorFibonacciBase:
         list_return = []
         for k in self.get_tick_range(index_start):
             tick_k = self.tick_list[k]
+            if not self.for_back_testing and tick_k.position - tick_start.position > 150:
+                break
             if tick_k.is_global_max and tick_k.high > max_value:
                 list_return.append(tick_k)
                 max_value = tick_k.high

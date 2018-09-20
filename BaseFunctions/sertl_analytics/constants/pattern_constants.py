@@ -101,6 +101,14 @@ class FT:
                 FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_ASC, FT.HEAD_SHOULDER_BOTTOM, FT.HEAD_SHOULDER_BOTTOM_DESC]
 
     @staticmethod
+    def get_long_trade_able_types():
+        return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_DOWN,
+                FT.CHANNEL, FT.CHANNEL_DOWN,
+                FT.TKE_BOTTOM,
+                FT.FIBONACCI_DESC,
+                FT.HEAD_SHOULDER_BOTTOM, FT.HEAD_SHOULDER_BOTTOM_DESC]
+
+    @staticmethod
     def get_normal_types():
         special_list = FT.get_head_shoulder_types() + FT.get_head_shoulder_bottom_types() + FT.get_fibonacci_types()
         return [entry for entry in FT.get_all() if entry not in special_list]
@@ -120,6 +128,10 @@ class FT:
     @staticmethod
     def is_pattern_type_any_head_shoulder(pattern_type: str) -> bool:
         return pattern_type in FT.get_head_shoulder_types() + FT.get_head_shoulder_bottom_types()
+
+    @staticmethod
+    def is_pattern_type_long_trade_able(pattern_type: str) -> bool:
+        return pattern_type in FT.get_long_trade_able_types()
 
     @staticmethod
     def is_pattern_type_any_fibonacci(pattern_type: str) -> bool:
@@ -277,6 +289,7 @@ class TTC:  # Trade test cases
     BUY_ADJUST_STOP_LOSS = 'buy & adjust stop loss'
     BUY_SELL_STOP_LOSS = 'buy & sell at stop loss'
     ACTIVATE_BREAKOUT = 'activate breakout for touch'
+    BACK_TESTING = 'back testing'
 
 
 class PTS:  # PatternTradeStatus

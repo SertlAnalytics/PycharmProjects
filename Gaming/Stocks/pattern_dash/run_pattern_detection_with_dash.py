@@ -7,7 +7,7 @@ Date: 2018-06-10
 
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod, ApiOutputsize
 from sertl_analytics.myprofiler import MyProfiler
-from sertl_analytics.constants.pattern_constants import FT, Indices, CN
+from sertl_analytics.constants.pattern_constants import FT, Indices, CN, BT, TSTR
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_detection_controller import PatternDetectionController
 from pattern_dash.my_dash_for_pattern import MyDash4Pattern
@@ -18,6 +18,9 @@ my_profiler = MyProfiler()
 sys_config = SystemConfiguration()
 bitfinex_config = BitfinexConfiguration()
 bitfinex_config.is_simulation = True
+bitfinex_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP],
+                                       BT.TOUCH_POINT: [TSTR.LIMIT, TSTR.TRAILING_STOP]}
+
 # debugger.pattern_range_position_list = [217, 224, 242]
 
 sys_config.config.get_data_from_db = False

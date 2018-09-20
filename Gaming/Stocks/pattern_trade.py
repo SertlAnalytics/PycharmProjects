@@ -243,7 +243,7 @@ class PatternTrade:
             return TouchPointTradingBox(api)
         return None
 
-    def set_order_status_buy(self, order_status: OrderStatus, buy_comment, ticker: Ticker):
+    def set_order_status_buy(self, order_status: OrderStatus, buy_comment, ticker: Ticker, for_back_testing: bool):
         order_status.order_trigger = self.buy_trigger
         order_status.order_comment = buy_comment
         self._order_status_buy = order_status
@@ -251,7 +251,8 @@ class PatternTrade:
         self.__set_properties_after_buy__(ticker)
         self.__add_order_status_buy_to_data_dict__(self._order_status_buy)
         self.__add_order_status_sell_to_data_dict__(self._order_status_sell)  # to initialize those data
-        self.print_trade('Details after buying')
+        if not for_back_testing:
+            self.print_trade('Details after buying')
 
     def __set_properties_after_buy__(self, ticker: Ticker):
         self._status = PTS.EXECUTED

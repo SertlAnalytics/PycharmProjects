@@ -270,7 +270,6 @@ class Candlestick:
         self.Volume = volume
         self.Date = date
 
-    @property
     def is_sustainable(self):
         return abs((self.Open - self.Close) / (self.High - self.Low)) > 0.6
 

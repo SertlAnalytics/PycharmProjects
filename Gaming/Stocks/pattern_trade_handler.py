@@ -5,13 +5,14 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, DC, TBT, PTS, FT, FD, PTHP, PDR
+from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, DC, TBT, PTS, FT, FD, PTHP, PDR, OS, OT
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern import Pattern
 from pattern_bitfinex import MyBitfinexTradeClient, BitfinexConfiguration
+from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade import PatternTrade, PatternTradeApi
-from sertl_analytics.exchanges.exchange_cls import Ticker
+from sertl_analytics.exchanges.exchange_cls import Ticker, OrderStatus, OrderStatusApi
 
 
 class TradeCandidate:
@@ -54,8 +55,8 @@ class TradeCandidateCollection:
         we try to get the one with the highest success probability for real trading the others for that pattern run
         in simulation mode
     """
-    def __init__(self, bitfinex_config: BitfinexConfiguration, symbol: str):
-        self.bitfinex_config = bitfinex_config
+    def __init__(self, exchange_config: ExchangeConfiguration, symbol: str):
+        self.exchange_config = exchange_config
         self.symbol = symbol
         self.candidates_by_pattern_id_dict = {}  # contains for each pattern_id the related trade candidates
 
@@ -90,8 +91,8 @@ class TradeCandidateController:
     """
         controls which trade is put into the trade process - this process is handled by PatternTradeHandler
     """
-    def __init__(self, bitfinex_config: BitfinexConfiguration):
-        self.bitfinex_config = bitfinex_config
+    def __init__(self, exchange_config: ExchangeConfiguration):
+        self.exchange_config = exchange_config
         self._actual_pattern_id_list = []  # this list contains all pattern_ids for actual trade candidates
         self._black_pattern_id_readable_list = []
         self._black_buy_trigger_pattern_id_readable_list = []
@@ -117,14 +118,14 @@ class TradeCandidateController:
             self.__add_to_black_pattern_id_list__(pattern.id_readable)
 
     def __add_pattern_to_trade_candidate_list__(self, pattern):
-        for buy_trigger, trade_strategies in self.bitfinex_config.trade_strategy_dict.items():
+        for buy_trigger, trade_strategies in self.exchange_config.trade_strategy_dict.items():
             key = self.__get_key_for_black_buy_trigger_pattern_id_readable_list(pattern, buy_trigger)
             if key in self._black_buy_trigger_pattern_id_readable_list:
                 continue
             if pattern.are_conditions_for_buy_trigger_fulfilled(buy_trigger):
                 for trade_strategy in trade_strategies:
                     trade_api = PatternTradeApi(pattern, buy_trigger, trade_strategy)
-                    trade_api.bitfinex_config = self.bitfinex_config
+                    trade_api.bitfinex_config = self.exchange_config
                     self.__add_trade_candidate_entry_to_ticker_id_dict__(TradeCandidate(PatternTrade(trade_api)))
             else:
                 self.__add_to_black_buy_trigger_pattern_id_readable_list__(key)
@@ -151,7 +152,7 @@ class TradeCandidateController:
     def __add_trade_candidate_entry_to_ticker_id_dict__(self, trade_candidate: TradeCandidate):
         ticker_id = trade_candidate.ticker_id
         if ticker_id not in self._trade_candidates_for_ticker_id_dict:
-            self._trade_candidates_for_ticker_id_dict[ticker_id] = TradeCandidateCollection(self.bitfinex_config,
+            self._trade_candidates_for_ticker_id_dict[ticker_id] = TradeCandidateCollection(self.exchange_config,
                                                                                             ticker_id)
         self._trade_candidates_for_ticker_id_dict[ticker_id].add_trade_candidate(trade_candidate)
 
@@ -165,15 +166,17 @@ class TradeCandidateController:
 
 
 class PatternTradeHandler:
-    def __init__(self, sys_config: SystemConfiguration, bitfinex_config: BitfinexConfiguration):
+    def __init__(self, sys_config: SystemConfiguration, exchange_config: ExchangeConfiguration):
         self.sys_config = sys_config
-        self.bitfinex_config = bitfinex_config
-        self.bitfinex_trade_client = MyBitfinexTradeClient(bitfinex_config)
+        self.exchange_config = exchange_config
+        self.for_back_testing = self.sys_config.config.for_back_testing
+        self.trade_client = MyBitfinexTradeClient(exchange_config)
         self.stock_db = self.sys_config.db_stock
         self.ticker_id_list = []
         self.pattern_trade_dict = {}
         self.process = ''
-        self.trade_candidate_controller = TradeCandidateController(self.bitfinex_config)
+        self.trade_candidate_controller = TradeCandidateController(self.exchange_config)
+        self._last_time_stamp_for_test = 0
         self._last_price_for_test = 0
 
     # def __del__(self):
@@ -184,12 +187,14 @@ class PatternTradeHandler:
     def trade_numbers(self) -> int:
         return len(self.pattern_trade_dict)
 
-    def add_pattern_list_for_trade(self, pattern_list):
+    def add_pattern_list_for_trade(self, pattern_list: list):
         self.trade_candidate_controller.add_new_pattern_list(pattern_list)
         self.__process_trade_candidates__()
 
-    def check_actual_trades(self, last_price_for_test=None):
-        self._last_price_for_test = last_price_for_test
+    def check_actual_trades(self, last_time_stamp_price_for_test=None):
+        if last_time_stamp_price_for_test is not None:
+            self._last_time_stamp_for_test = last_time_stamp_price_for_test[0]
+            self._last_price_for_test = last_time_stamp_price_for_test[1]
         self.__remove_finished_pattern_trades__()
         self.__process_trade_candidates__()  # take care of old patterns in queue
         if self.trade_numbers == 0:
@@ -201,6 +206,14 @@ class PatternTradeHandler:
         self.__handle_buy_triggers__()
         self.__update_ticker_lists__()  # some entries could be deleted
         self.process = ''
+
+    def enforce_sell_at_end(self, last_time_stamp_price_for_test: list):  # it is used for back-testing
+        self._last_time_stamp_for_test = last_time_stamp_price_for_test[0]
+        self._last_price_for_test = last_time_stamp_price_for_test[1]
+        for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
+            ticker = self.__get_ticker_for_pattern_trade__(pattern_trade)
+            pattern_trade.print_state_details(PTHP.HANDLE_SELL_TRIGGERS, ticker)
+            self.__handle_sell_trigger__(ticker, pattern_trade.ticker_id, pattern_trade, ST.PATTERN_END)
 
     def __process_trade_candidates__(self):
         if self.process != '':
@@ -214,13 +227,13 @@ class PatternTradeHandler:
     def __process_trade_candidate__(self, trade_candidate: TradeCandidate):
         pattern_trade = trade_candidate.pattern_trade
         pattern_trade.was_candidate_for_real_trading = trade_candidate.is_candidate_for_real_trading
-        if not self.bitfinex_config.is_simulation:
+        if not self.exchange_config.is_simulation:
             if trade_candidate.is_candidate_for_real_trading:
                 pattern_trade.is_simulation = False  # REAL Trading
                 print('Trade was initiated by is_candidate_for_real_trading: {}'.format(pattern_trade.id))
-            elif pattern_trade.buy_trigger in self.bitfinex_config.default_trade_strategy_dict:
+            elif pattern_trade.buy_trigger in self.exchange_config.default_trade_strategy_dict:
                 buy_trigger = pattern_trade.buy_trigger
-                if pattern_trade.trade_strategy == self.bitfinex_config.default_trade_strategy_dict(buy_trigger):
+                if pattern_trade.trade_strategy == self.exchange_config.default_trade_strategy_dict(buy_trigger):
                     pattern_trade.is_simulation = False  # REAL Trading
                     print('Trade was initiated by default_trade_strategy: {}'.format(pattern_trade.id))
         self.__add_pattern_trade_to_trade_dict__(pattern_trade)
@@ -253,23 +266,23 @@ class PatternTradeHandler:
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.PATTERN_VANISHED)
 
     def sell_on_fibonacci_cluster_top(self):
-        self.bitfinex_trade_client.delete_all_orders()
-        self.bitfinex_trade_client.sell_all_assets()
+        self.trade_client.delete_all_orders()
+        self.trade_client.sell_all_assets()
         self.__clear_internal_lists__()
 
     def __get_ticker_for_pattern_trade__(self, pattern_trade: PatternTrade) -> Ticker:
-        if self._last_price_for_test:
+        if self._last_price_for_test > 0:
             return self.__get_ticker_for_pattern_trade_and_test_data__(pattern_trade)
         else:
-            return self.bitfinex_trade_client.get_ticker(pattern_trade.ticker_id)
+            return self.trade_client.get_ticker(pattern_trade.ticker_id)
 
     def __get_ticker_for_pattern_trade_and_test_data__(self, pattern_trade: PatternTrade) -> Ticker:
         val = self._last_price_for_test
-        ts = pattern_trade.pattern.part_main.tick_last.time_stamp
+        ts = self._last_time_stamp_for_test
         return Ticker(pattern_trade.ticker_id, bid=val, ask=val, last_price=val, low=val, high=val, vol=0, ts=ts)
 
     def __get_balance_by_symbol__(self, symbol: str):
-        return self.bitfinex_trade_client.get_balance(symbol)
+        return self.trade_client.get_balance(symbol)
 
     def __clear_internal_lists__(self):
         self.ticker_id_list = []
@@ -286,13 +299,16 @@ class PatternTradeHandler:
             elif pattern_trade.time_stamp_end < ticker.time_stamp:
                 self.__handle_sell_trigger__(ticker, pattern_trade.ticker_id, pattern_trade, ST.PATTERN_END)
             elif not self.trade_candidate_controller.is_pattern_id_in_actual_pattern_id_list(pattern_trade.pattern.id):
-                if self.bitfinex_config.finish_vanished_trades:
+                if self.exchange_config.finish_vanished_trades:
                     self.__handle_sell_trigger__(ticker, pattern_trade.ticker_id, pattern_trade, ST.PATTERN_VANISHED)
 
     def __handle_sell_trigger__(self, ticker: Ticker, ticker_id: str, pattern_trade: PatternTrade, sell_trigger: str):
         sell_comment = 'Sell_{} at {:.2f} on {}'.format(sell_trigger, ticker.last_price, ticker.date_time_str)
         print('Sell: {}'.format(sell_comment))
-        order_status = self.bitfinex_trade_client.create_sell_market_order(ticker_id, pattern_trade.executed_amount)
+        if self.for_back_testing:
+            order_status = self.__get_order_status_for_back_testing__(PTHP.HANDLE_SELL_TRIGGERS, ticker, pattern_trade)
+        else:
+            order_status = self.trade_client.create_sell_market_order(ticker_id, pattern_trade.executed_amount)
         pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
         pattern_trade.save_trade()
 
@@ -336,9 +352,32 @@ class PatternTradeHandler:
                                                         pattern_trade.buy_trigger, pattern_trade.trade_strategy,
                                                         ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
-        order_status = self.bitfinex_trade_client.buy_available(ticker_id, ticker.last_price)
-        pattern_trade.set_order_status_buy(order_status, buy_comment, ticker)
+        if self.for_back_testing:
+            order_status = self.__get_order_status_for_back_testing__(PTHP.HANDLE_BUY_TRIGGERS, ticker, pattern_trade)
+        else:
+            order_status = self.trade_client.buy_available(ticker_id, ticker.last_price)
+        pattern_trade.set_order_status_buy(order_status, buy_comment, ticker, self.for_back_testing)
         pattern_trade.save_trade()
+
+    def __get_order_status_for_back_testing__(self, process: str, ticker: Ticker, pattern_trade: PatternTrade):
+        api = OrderStatusApi()
+        api.order_id = ticker.time_stamp
+        api.symbol = ticker.ticker_id
+        api.exchange = 'back testing'
+        api.price = ticker.last_price
+        api.avg_execution_price = ticker.last_price
+        api.side = OS.BUY if process == PTHP.HANDLE_BUY_TRIGGERS else OS.SELL
+        api.type = OT.EXCHANGE_MARKET
+        api.time_stamp = ticker.time_stamp
+        if process == PTHP.HANDLE_BUY_TRIGGERS:
+            api.executed_amount = round(self.exchange_config.buy_order_value_max/ticker.last_price, 2)
+        else:
+            api.executed_amount = pattern_trade.data_dict_obj.get(DC.BUY_AMOUNT)
+        api.remaining_amount = 0
+        api.original_amount = api.executed_amount
+        api.order_trigger = ''  # will be filled later
+        api.order_comment = ''  # will be filled later
+        return OrderStatus(api)
 
     def __adjust_stops_and_limits__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
@@ -350,7 +389,7 @@ class PatternTradeHandler:
             ticker_id = pattern_trade.ticker_id
             amount = pattern_trade.order_status_buy.executed_amount
             distance = pattern_trade.trailing_stop_distance
-            pattern_trade.order_status_sell = self.bitfinex_trade_client.create_sell_trailing_stop_order(
+            pattern_trade.order_status_sell = self.trade_client.create_sell_trailing_stop_order(
                 ticker_id, amount, distance)
 
     def __update_ticker_lists__(self):

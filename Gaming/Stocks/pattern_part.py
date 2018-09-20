@@ -6,7 +6,6 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import CN, FT
-from sertl_analytics.mymath import MyMath
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mydates import MyDate
 from pattern_function_container import PatternFunctionContainer
@@ -14,7 +13,6 @@ from pattern_wave_tick import WaveTick
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_data_frame import PatternDataFrame
 import numpy as np
-import math
 
 
 class AnnotationParameter:
@@ -72,6 +70,15 @@ class PatternPart:
         annotation_param.visible = False
         annotation_param.arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
         return annotation_param
+
+    def get_back_testing_value_pairs(self):  # [time_stamp, value]
+        return_list = []
+        for tick in self.tick_list:
+            return_list.append([tick.time_stamp, tick.open])
+            return_list.append([tick.time_stamp, tick.high])
+            return_list.append([tick.time_stamp, tick.low])
+            return_list.append([tick.time_stamp, tick.close])
+        return return_list
 
     @property
     def length(self) -> int:

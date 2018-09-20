@@ -170,6 +170,9 @@ class Pattern:
     def get_simple_moving_average_tick_list_from_part_main(self):
         return self._part_main.get_simple_moving_average_tick_list()
 
+    def get_part_trade_back_testing_value_pairs(self):
+        return self.part_trade.get_back_testing_value_pairs()
+
     def __calculate_predictions_after_breakout__(self):
         self.__calculate_y_predict__(PT.AFTER_BREAKOUT)
         self.__add_predictions_after_breakout_to_data_dict__()
@@ -274,10 +277,13 @@ class Pattern:
 
     def are_pre_conditions_for_a_trade_fulfilled(self) -> bool:
         check_dict = {
+            'Long_trade_able': FT.is_pattern_type_long_trade_able(self.pattern_type),
             'Breakout_direction': self.expected_breakout_direction in [FD.ASC, FD.DESC],
             'Expected_win_sufficient': self.__is_expected_win_sufficient__()
         }
-        if not check_dict['Breakout_direction']:
+        if not check_dict['Long_trade_able']:
+            print('\n{}: Pattern is not long trade-able.'.format(self.id))
+        elif not check_dict['Breakout_direction']:
             print('\n{}: No trade possible: expected_breakout_direction: {}'.format(
                 self.id, self.expected_breakout_direction))
         elif not check_dict['Expected_win_sufficient']:
