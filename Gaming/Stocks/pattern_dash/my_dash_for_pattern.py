@@ -499,7 +499,7 @@ class MyDash4Pattern(MyDashBase):
     def __get_dcc_graph_element__(self, detector, graph_api, ticker: str):
         pattern_df = detector.sys_config.pdh.pattern_data.df
         candlestick = self.__get_candlesticks_trace__(pattern_df, ticker)
-        bollinger_traces = self.__get_boolinger_band_trace__(pattern_df, ticker)
+        bollinger_traces = self.__get_bollinger_band_trace__(pattern_df, ticker)
         shapes = self.__get_pattern_shape_list__(detector)
         shapes += self.__get_pattern_regression_shape_list__(detector)
         shapes += self.__get_fibonacci_shape_list__(detector)
@@ -553,7 +553,7 @@ class MyDash4Pattern(MyDashBase):
         }
         return candlestick
 
-    def __get_boolinger_band_trace__(self, df: pd.DataFrame, ticker: str):
+    def __get_bollinger_band_trace__(self, df: pd.DataFrame, ticker: str):
         color_scale = cl.scales['9']['qual']['Paired']
         bb_bands = self.__get_bollinger_band_values__(df[CN.CLOSE])
 
@@ -582,13 +582,14 @@ class MyDash4Pattern(MyDashBase):
 
     @staticmethod
     def __get_header_for_app_layout__():
-        style = {'textAlign': 'center', 'margin': '48px 0', 'fontFamily': 'system-ui'}
+        style = {'textAlign': 'center', 'margin': '20px 0', 'fontFamily': 'system-ui'}
         return MyHTML.h1('Pattern Detection by Sertl Analytics', style)
 
     def __get_tabs_for_app_layout__(self):
         tab_01 = MyDCC.tab('Pattern Detector', [self.__get_div_for_tab_pattern_detection__()])
-        tab_02 = MyDCC.tab('Bitfinex', [self.__get_div_for_bitfinex__()])
-        return MyDCC.tabs('my_app_tab', [tab_01, tab_02])
+        tab_02 = MyDCC.tab('Trades', [self.__get_div_for_trades__()])
+        tab_03 = MyDCC.tab('Statistics', [self.__get_div_for_statistics__()])
+        return MyDCC.tabs('my_app_tabs', [tab_01, tab_02, tab_03])
 
     def __get_div_for_tab_pattern_detection__(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
@@ -611,11 +612,51 @@ class MyDash4Pattern(MyDashBase):
         li.append(MyHTML.div_with_html_pre('my_hover_data'))
         return MyHTML.div('', li)
 
-    @staticmethod
-    def __get_div_for_bitfinex__():
-        header = MyHTML.h1('This is the content in tab 2: Bitfinex data')
+    def __get_div_for_trades__(self):
+        header = MyHTML.h1('This is the content in tab 2: Trade data - from back testing and online trades')
         paragraph = MyHTML.p('A graph here would be nice!')
-        return MyHTML.div('my_bitfinex', [header, paragraph])
+        drop_down = self.__get_drop_down_for_trades__()
+        table = self.__get_table_for_trades__()
+        return MyHTML.div('my_trades', [header, paragraph, drop_down, table])
+
+    def __get_drop_down_for_trades__(self):
+        df = self.sys_config.db_stock.get_trade_records_as_dataframe()
+        options = [{'label': 'df', 'value': 'df'}]
+        return MyDCC.drop_down('trades-selection', options)
+
+    def __get_table_for_trades__(self):
+        df = self.sys_config.db_stock.get_trade_records_as_dataframe()
+        df_dict = df.to_dict()
+        # {'ID': {0: 'Breakout-Expected_win-Trailing_stop_Crypto_Currencies_DAILY_1_ETH_USD_Triangle down_2...
+        rows = []
+        columns = [column for column in df_dict]
+        row_numbers = [number for number in df_dict[columns[0]]]
+        for row_number in row_numbers:
+            rows.append({column: df_dict[column][row_number] for column in columns})
+        return MyDCC.data_table('trade_table', rows)
+
+    def __get_div_for_statistics__(self):
+        header = MyHTML.h1('This is the content in tab 3: Statistics data - from features and trades')
+        paragraph = MyHTML.p('A graph here would be nice!')
+        drop_down = self.__get_drop_down_for_features__()
+        table = self.__get_table_for_features__()
+        return MyHTML.div('my_statistics', [header, paragraph, drop_down, table])
+
+    def __get_drop_down_for_features__(self):
+        df = self.sys_config.db_stock.get_features_records_as_dataframe()
+        options = [{'label': 'df', 'value': 'df'}]
+        return MyDCC.drop_down('features-selection', options)
+
+    def __get_table_for_features__(self):
+        df = self.sys_config.db_stock.get_features_records_as_dataframe()
+        df_dict = df.to_dict()
+        # {'ID': {0: 'Breakout-Expected_win-Trailing_stop_Crypto_Currencies_DAILY_1_ETH_USD_Triangle down_2...
+        rows = []
+        columns = [column for column in df_dict]
+        row_numbers = [number for number in df_dict[columns[0]]]
+        for row_number in row_numbers:
+            rows.append({column: df_dict[column][row_number] for column in columns})
+        return MyDCC.data_table('features_table', rows)
 
     def __set_app_layout_old__(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))

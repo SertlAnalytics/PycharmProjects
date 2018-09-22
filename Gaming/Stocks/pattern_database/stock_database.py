@@ -320,10 +320,20 @@ class StockDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
+    def get_features_records_as_dataframe(self) -> pd.DataFrame:
+        query = self._features_table.get_query_for_records()
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df
+
     def is_trade_already_available(self, trade_id: str) -> bool:
         query = self._trade_table.get_query_for_unique_record_by_id(trade_id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
+
+    def get_trade_records_as_dataframe(self) -> pd.DataFrame:
+        query = self._trade_table.get_query_for_records()
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df
 
     def delete_existing_trade(self, trade_id: str):
         if self.is_trade_already_available(trade_id):

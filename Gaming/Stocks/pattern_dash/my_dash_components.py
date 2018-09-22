@@ -7,6 +7,7 @@ Date: 2018-06-17
 
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table_experiments as dte
 from datetime import datetime
 from sertl_analytics.mydates import MyDate
 
@@ -234,9 +235,9 @@ class MyDCC:
         return dcc.Tab(label=label, children=children)
 
     @staticmethod
-    def drop_down(element_id, options: list, multi=False):
+    def drop_down(element_id, options: list, multi=False, clearable=False):
         # {'label': '{} {}'.format(symbol, name), 'value': symbol}
-        return dcc.Dropdown(id=element_id, options=options, value=options[0]['value'], multi=multi)
+        return dcc.Dropdown(id=element_id, options=options, value=options[0]['value'], multi=multi, clearable=clearable)
 
     @staticmethod
     def graph(graph_api: DccGraphApi):
@@ -261,6 +262,19 @@ class MyDCC:
     def interval(element_id: str, seconds=10):
         print('get_interval: id={}, seconds={}'.format(element_id, seconds))
         return dcc.Interval(id=element_id, interval=seconds * 1000, n_intervals=0)
+
+    @staticmethod
+    def data_table(element_id: str, rows: list, min_width=1200, min_height=1000):
+        return dte.DataTable(
+            id = element_id,
+            row_selectable=True,
+            filterable=True,
+            sortable=True,
+            selected_row_indices=[],
+            rows=rows,
+            min_width=min_width,
+            min_height=min_height
+        )
 
     @staticmethod
     def markdown(element_id: str, children=''):

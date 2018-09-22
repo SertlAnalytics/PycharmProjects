@@ -44,6 +44,10 @@ class TradeTable(MyTable, PredictionFeatureTable):
         return "SELECT * FROM Trade where ID='{}'".format(id)
 
     @staticmethod
+    def get_query_for_records(where_clause='') -> str:
+        return "SELECT * FROM Trade".format(id)
+
+    @staticmethod
     def get_query_for_delete_by_id(trade_id: str) -> str:
         return "DELETE FROM Trade where ID='{}'".format(trade_id)
 
@@ -168,6 +172,10 @@ class FeaturesTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def get_query_for_unique_record_by_id(id: str) -> str:
         return "SELECT * FROM Features where ID='{}'".format(id)
+
+    @staticmethod
+    def get_query_for_records(where_clause='') -> str:
+        return "SELECT * FROM Features".format(id)
 
     @property
     def feature_columns_touch_points(self):
