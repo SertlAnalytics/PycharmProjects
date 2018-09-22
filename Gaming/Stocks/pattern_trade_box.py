@@ -80,7 +80,7 @@ class SimpleMovingAverageHandler:
 
     def __get_ticker_per_aggregation__(self):
         if self._period == ApiPeriod.DAILY:
-            return int(24 * 60 * 60)/self._refresh_rate_seconds
+            return 1
         elif self._period == ApiPeriod.INTRADAY:
             return int(self._aggregation * 60) / self._refresh_rate_seconds
 
@@ -240,9 +240,10 @@ class TradingBox:
         self.__print_values__('Initialize stop and limit')
 
     def __print_values__(self, prefix: str):
-        print('...{} for {}-{}: limit={}, buy={}, offset={}, stop_loss={} (dist_top={}, dist_bottom={})'.format(
-            prefix, self._ticker_id, self._trade_strategy, self._sell_limit,
-            self._buy_price, self.off_set_value, self._stop_loss, self._distance_top, self._distance_bottom))
+        print('...{} for {}-{}: limit={:.2f}, buy={:.2f}, offset={:.2f}, stop_loss={:.2f} '
+              '(dist_top={:.2f}, dist_bottom={:.2f})'.format(
+            prefix, self._ticker_id, self._trade_strategy, self._sell_limit, self._buy_price,
+            self.off_set_value, self._stop_loss, self._distance_top, self._distance_bottom))
 
 
 class ExpectedWinTradingBox(TradingBox):

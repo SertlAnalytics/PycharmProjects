@@ -71,15 +71,6 @@ class PatternPart:
         annotation_param.arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
         return annotation_param
 
-    def get_back_testing_value_pairs(self):  # [time_stamp, value]
-        return_list = []
-        for tick in self.tick_list:
-            return_list.append([tick.time_stamp, tick.open])
-            return_list.append([tick.time_stamp, tick.high])
-            return_list.append([tick.time_stamp, tick.low])
-            return_list.append([tick.time_stamp, tick.close])
-        return return_list
-
     @property
     def length(self) -> int:
         return self.tick_last.position - self.tick_first.position

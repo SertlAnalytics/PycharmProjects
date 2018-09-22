@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, DC, TBT, PTS, FT, FD, PTHP, PDR, OS, OT
+from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, DC, TP, PTS, FT, FD, PTHP, PDR, OS, OT
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern import Pattern
@@ -169,7 +169,7 @@ class PatternTradeHandler:
     def __init__(self, sys_config: SystemConfiguration, exchange_config: ExchangeConfiguration):
         self.sys_config = sys_config
         self.exchange_config = exchange_config
-        self.for_back_testing = self.sys_config.config.for_back_testing
+        self.trade_process = self.sys_config.config.trade_process
         self.trade_client = MyBitfinexTradeClient(exchange_config)
         self.stock_db = self.sys_config.db_stock
         self.ticker_id_list = []
@@ -305,10 +305,10 @@ class PatternTradeHandler:
     def __handle_sell_trigger__(self, ticker: Ticker, ticker_id: str, pattern_trade: PatternTrade, sell_trigger: str):
         sell_comment = 'Sell_{} at {:.2f} on {}'.format(sell_trigger, ticker.last_price, ticker.date_time_str)
         print('Sell: {}'.format(sell_comment))
-        if self.for_back_testing:
-            order_status = self.__get_order_status_for_back_testing__(PTHP.HANDLE_SELL_TRIGGERS, ticker, pattern_trade)
-        else:
+        if self.trade_process == TP.ONLINE:
             order_status = self.trade_client.create_sell_market_order(ticker_id, pattern_trade.executed_amount)
+        else:
+            order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, ticker, pattern_trade)
         pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
         pattern_trade.save_trade()
 
@@ -352,18 +352,18 @@ class PatternTradeHandler:
                                                         pattern_trade.buy_trigger, pattern_trade.trade_strategy,
                                                         ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
-        if self.for_back_testing:
-            order_status = self.__get_order_status_for_back_testing__(PTHP.HANDLE_BUY_TRIGGERS, ticker, pattern_trade)
-        else:
+        if self.trade_process == TP.ONLINE:
             order_status = self.trade_client.buy_available(ticker_id, ticker.last_price)
-        pattern_trade.set_order_status_buy(order_status, buy_comment, ticker, self.for_back_testing)
+        else:
+            order_status = self.__get_order_status_testing__(PTHP.HANDLE_BUY_TRIGGERS, ticker, pattern_trade)
+        pattern_trade.set_order_status_buy(order_status, buy_comment, ticker)
         pattern_trade.save_trade()
 
-    def __get_order_status_for_back_testing__(self, process: str, ticker: Ticker, pattern_trade: PatternTrade):
+    def __get_order_status_testing__(self, process: str, ticker: Ticker, pattern_trade: PatternTrade):
         api = OrderStatusApi()
         api.order_id = ticker.time_stamp
         api.symbol = ticker.ticker_id
-        api.exchange = 'back testing'
+        api.exchange = 'Test'
         api.price = ticker.last_price
         api.avg_execution_price = ticker.last_price
         api.side = OS.BUY if process == PTHP.HANDLE_BUY_TRIGGERS else OS.SELL
@@ -375,8 +375,7 @@ class PatternTradeHandler:
             api.executed_amount = pattern_trade.data_dict_obj.get(DC.BUY_AMOUNT)
         api.remaining_amount = 0
         api.original_amount = api.executed_amount
-        api.order_trigger = ''  # will be filled later
-        api.order_comment = ''  # will be filled later
+        api.trading_process = self.trade_process
         return OrderStatus(api)
 
     def __adjust_stops_and_limits__(self):

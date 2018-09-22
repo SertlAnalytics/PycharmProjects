@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, Indices, CN, EQUITY_TYPE
+from sertl_analytics.constants.pattern_constants import FT, TP, Indices, CN, EQUITY_TYPE
 from pattern_database import stock_database as sdb
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiOutputsize, ApiPeriod
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
@@ -59,7 +59,8 @@ class RuntimeConfiguration:
 
 class PatternConfiguration:
     def __init__(self):
-        self.for_back_testing = False
+        self.trade_process = TP.ONLINE
+        self.with_trade_part = True  # we need this configuration for testing touch strategy
         self.get_data_from_db = True
         self.pattern_type_list = [FT.CHANNEL]
         self.api_period = ApiPeriod.DAILY

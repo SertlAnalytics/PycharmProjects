@@ -110,13 +110,11 @@ class Pattern:
 
     @property
     def id_readable(self) -> str:
-        equity_type = self.data_dict_obj.get(DC.EQUITY_TYPE)
         period = self.data_dict_obj.get(DC.PERIOD)
-        aggregation = self.data_dict_obj.get(DC.PERIOD_AGGREGATION)
         ticker_id = self.data_dict_obj.get(DC.TICKER_ID)
         pattern_type = self.pattern_type
         range_id = self.pattern_range.id
-        return '{}_{}_{}_{}_{}_{}'.format(equity_type, period, aggregation, ticker_id, pattern_type, range_id)
+        return '{}_{}_{}_{}'.format(period, ticker_id, pattern_type, range_id)
 
     def __get_available_fibonacci_end_type__(self):
         return self._available_fibonacci_end_type
@@ -170,8 +168,27 @@ class Pattern:
     def get_simple_moving_average_tick_list_from_part_main(self):
         return self._part_main.get_simple_moving_average_tick_list()
 
-    def get_part_trade_back_testing_value_pairs(self):
-        return self.part_trade.get_back_testing_value_pairs()
+    def is_ready_for_back_testing(self):
+        pos_start, pos_last = self.__get_first_last_position_for_back_testing_data__()
+        return self.df_length > pos_last and FT.is_pattern_type_long_trade_able(self.pattern_type)
+
+    def get_back_testing_value_pairs(self):
+        pos_start, pos_last = self.__get_first_last_position_for_back_testing_data__()
+        return_list = []
+        for tick in self.sys_config.pdh.pattern_data.tick_list:
+            if pos_start < tick.position < pos_last:
+                return_list.append([tick.time_stamp, tick.open])
+                return_list.append([tick.time_stamp, tick.high])
+                return_list.append([tick.time_stamp, tick.low])
+                return_list.append([tick.time_stamp, tick.close])
+            if tick.position >= pos_last:
+                break
+        return return_list
+
+    def __get_first_last_position_for_back_testing_data__(self):
+        pos_start = self.pattern_range.position_last
+        pos_last = pos_start + self.get_maximal_trade_position_size()
+        return pos_start, pos_last
 
     def __calculate_predictions_after_breakout__(self):
         self.__calculate_y_predict__(PT.AFTER_BREAKOUT)

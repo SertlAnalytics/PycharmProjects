@@ -9,7 +9,6 @@ from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod, ApiOut
 from sertl_analytics.myprofiler import MyProfiler
 from sertl_analytics.constants.pattern_constants import FT, Indices, CN, BT, TSTR
 from pattern_system_configuration import SystemConfiguration, debugger
-from pattern_detection_controller import PatternDetectionController
 from pattern_dash.my_dash_for_pattern import MyDash4Pattern
 from pattern_bitfinex import BitfinexConfiguration
 

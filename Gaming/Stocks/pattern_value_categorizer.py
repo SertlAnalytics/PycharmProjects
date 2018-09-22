@@ -76,7 +76,9 @@ class ValueCategorizer:
                 tick.position, tick.date_str, tick.high, tick.low, self.value_category_dic[tick.position]))
 
     def are_helper_functions_available(self):
-        return self._h_lower is not None and self._h_upper is not None
+        if self._h_lower is None or self._h_upper is None:
+            return False
+        return self._h_upper != self._f_upper or self._h_lower != self._f_lower
 
     def __set_f_upper_f_lower_values__(self):
         self.df = self.df.assign(F_UPPER=(self._f_upper(self.df[self.__index_column])))
@@ -143,14 +145,24 @@ class ValueCategorizer:
         return return_list
 
     def __get_helper_values_categories_for_df_row__(self, return_list, row):
+        if self.__is_row_value_larger_h_upper__(row):
+            return_list.append(SVC.H_U_out)
         if self.__is_row_value_between_h_lower_h_upper__(row):
             return_list.append(SVC.H_M_in)
+        if self.__is_row_value_smaller_h_lower__(row):
+            return_list.append(SVC.H_L_out)
 
     def __is_row_value_in_f_upper_range__(self, row):
         return abs(row[CN.HIGH] - row[CN.F_UPPER])/np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self._tolerance_pct
 
+    def __is_row_value_in_h_upper_range__(self, row):
+        return abs(row[CN.HIGH] - row[CN.H_UPPER])/np.mean([row[CN.HIGH], row[CN.H_UPPER]]) <= self._tolerance_pct
+
     def __is_row_value_in_f_lower_range__(self, row):
         return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) <= self._tolerance_pct
+
+    def __is_row_value_in_h_lower_range__(self, row):
+        return abs(row[CN.LOW] - row[CN.H_LOWER]) / np.mean([row[CN.LOW], row[CN.H_LOWER]]) <= self._tolerance_pct
 
     @staticmethod
     def __is_row_value_between_f_lower_f_upper__(row):
@@ -158,8 +170,10 @@ class ValueCategorizer:
 
     @staticmethod
     def __is_row_value_between_h_lower_h_upper__(row):
-        return row[CN.H_LOWER] < row[CN.LOW] <= row[CN.HIGH] < row[CN.H_UPPER] and row[CN.CLOSE] > row[CN.F_UPPER]
-        # the second condition is needed to get only the values which are in the tail of the TKE pattern.
+        return row[CN.H_LOWER] < row[CN.LOW] <= row[CN.HIGH] < row[CN.H_UPPER]
+
+    def __is_row_value_larger_h_upper__(self, row):
+        return row[CN.HIGH] > row[CN.H_UPPER] and not self.__is_row_value_in_h_upper_range__(row)
 
     def __is_row_value_equal_f_upper__(self, row):
         value_pct = abs(row[CN.HIGH] - row[CN.F_UPPER]) / np.mean([row[CN.HIGH], row[CN.F_UPPER]])
@@ -182,6 +196,9 @@ class ValueCategorizer:
 
     def __is_row_value_smaller_f_lower__(self, row):
         return row[CN.LOW] < row[CN.F_LOWER] and not self.__is_row_value_in_f_lower_range__(row)
+
+    def __is_row_value_smaller_h_lower__(self, row):
+        return row[CN.LOW] < row[CN.H_LOWER] and not self.__is_row_value_in_h_lower_range__(row)
 
 
 class ValueCategorizerHeadShoulder(ValueCategorizer):  # currently we don't need a separate for ...Bottom

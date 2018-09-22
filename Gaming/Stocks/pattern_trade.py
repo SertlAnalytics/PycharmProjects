@@ -6,7 +6,7 @@ Date: 2018-09-10
 """
 
 import numpy as np
-from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, PTHP, TR, OT, SVC
+from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, PTHP, TR, OT, SVC, TP, FT
 from sertl_analytics.mydates import MyDate
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
@@ -137,21 +137,35 @@ class PatternTrade:
         if not self._is_breakout_active:
             return False
         is_breakout = False  # default
+        vc = self.__get_value_category_for_breakout__()
         if self.buy_trigger == BT.BREAKOUT:
-            is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, SVC.U_out, True)
+            is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, vc, True)
         elif self.buy_trigger == BT.TOUCH_POINT:
-            is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, SVC.M_in, True)
+            is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, vc, True)
         if is_breakout:
-            self._breakout_counter += 1
+            self._breakout_counter += 1 if self.buy_trigger == BT.BREAKOUT else 2  # touch point => immediate buy
         self.print_state_details(process, ticker)
         return self._breakout_counter >= self._counter_required  # we need a second confirmation
 
+    def __get_value_category_for_breakout__(self):
+        if self.pattern.pattern_type in [FT.TKE_BOTTOM, FT.FIBONACCI_DESC]:
+            return SVC.H_M_in if self.buy_trigger == BT.TOUCH_POINT else SVC.H_U_out
+        else:
+            return SVC.M_in if self.buy_trigger == BT.TOUCH_POINT else SVC.U_out
+
     def is_ticker_wrong_breakout(self, process: str, ticker: Ticker):
-        is_wrong_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, SVC.L_out, True)
+        vc = self.__get_value_category_for_wrong_breakout__()
+        is_wrong_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, vc, True)
         if is_wrong_breakout:
             self._wrong_breakout_counter += 1
         self.print_state_details(process, ticker)
         return self._wrong_breakout_counter >= self._counter_required  # we need a second confirmation
+
+    def __get_value_category_for_wrong_breakout__(self):
+        if self.pattern.pattern_type in [FT.TKE_BOTTOM, FT.FIBONACCI_DESC]:
+            return SVC.H_L_out
+        else:
+            return SVC.L_out
 
     def verify_touch_point(self, ticker: Ticker):
         last_tick = self.pattern.part_main.tick_last
@@ -194,14 +208,14 @@ class PatternTrade:
             self.sys_config.db_stock.delete_existing_trade(trade_dict[DC.ID])  # we need always the most actual version
             self.sys_config.db_stock.insert_trade_data([trade_dict])
 
-    def print_trade(self, prefix = ''):
+    def print_trade(self, prefix=''):
         if prefix != '':
             print('\n{}:'.format(prefix))
         print(self.get_trade_meta_data())
-        if self._order_status_buy:
-            self._order_status_buy.print_order_status('Buy order')
         if self._order_status_sell:
-            self._order_status_sell.print_order_status('Sell order')
+            self._order_status_buy.print_with_other_order_status(self._order_status_sell, ['buy', 'sell'])
+        elif self._order_status_buy:
+            self._order_status_buy.print_order_status('Buy order')
 
     def get_trade_meta_data(self):
         details = '; '.join('{}: {}'.format(key, value) for key, value in self.__get_value_dict__().items())
@@ -210,7 +224,7 @@ class PatternTrade:
     def __get_value_dict__(self) -> dict:
         return {'Status': self.status, 'Buy_trigger': self.buy_trigger, 'Trade_box': self.trade_box_type,
                 'Trade_strategy': self.trade_strategy, 'Pattern_Type': self.pattern.pattern_type,
-                'Expected_win': round(self.expected_win, 4), 'Result': self.get_trade_result_text()
+                'Expected_win (per unit):': round(self.expected_win, 4), 'Result (resp. amount)': self.get_trade_result_text()
         }
 
     def get_trade_result_text(self):
@@ -243,15 +257,17 @@ class PatternTrade:
             return TouchPointTradingBox(api)
         return None
 
-    def set_order_status_buy(self, order_status: OrderStatus, buy_comment, ticker: Ticker, for_back_testing: bool):
+    def set_order_status_buy(self, order_status: OrderStatus, buy_comment, ticker: Ticker):
         order_status.order_trigger = self.buy_trigger
+        order_status.trade_strategy = self.trade_strategy
+        order_status.trade_process = self.sys_config.config.trade_process
         order_status.order_comment = buy_comment
         self._order_status_buy = order_status
         self.pattern.data_dict_obj.add_buy_order_status_data_to_pattern_data_dict(order_status, self.trade_strategy)
         self.__set_properties_after_buy__(ticker)
         self.__add_order_status_buy_to_data_dict__(self._order_status_buy)
         self.__add_order_status_sell_to_data_dict__(self._order_status_sell)  # to initialize those data
-        if not for_back_testing:
+        if order_status.trade_process != TP.BACK_TESTING:
             self.print_trade('Details after buying')
 
     def __set_properties_after_buy__(self, ticker: Ticker):
@@ -270,6 +286,7 @@ class PatternTrade:
 
     def set_order_status_sell(self, order_status: OrderStatus, sell_trigger: str, sell_comment: str):
         order_status.order_trigger = sell_trigger
+        order_status.trade_strategy = self.trade_strategy
         order_status.order_comment = sell_comment
         self._order_status_sell = order_status
         self.pattern.data_dict_obj.add_sell_order_status_data_to_pattern_data_dict(order_status)

@@ -10,6 +10,18 @@ from pattern import Pattern
 from sertl_analytics.mydates import MyDate
 
 
+class TradeTestApi:
+    def __init__(self):
+        self.pattern_type = ''
+        self.pattern = None
+        self.buy_trigger = ''
+        self.trade_strategy = ''
+        self.test_process = ''
+        self.symbol = ''
+        self.and_clause = ''
+        self.test_case = None
+
+
 class TradeTestCase:
     def __init__(self):
         self.pattern_type = ''
@@ -24,32 +36,35 @@ class TradeTestCase:
 
 class TradeTestCaseFactory:
     @staticmethod
-    def get_test_case(pattern_type: str, buy_trigger, trade_strategy: str, test_process: str) -> TradeTestCase:
+    def get_test_case(api: TradeTestApi) -> TradeTestCase:
         tc = TradeTestCase()
-        tc.pattern_type = pattern_type
-        tc.buy_trigger = buy_trigger
-        tc.trade_strategy = trade_strategy
-        tc.test_process = test_process
+        tc.pattern_type = api.pattern_type
+        tc.buy_trigger = api.buy_trigger
+        tc.trade_strategy = api.trade_strategy
+        tc.test_process = api.test_process
         TradeTestCaseFactory.fill_test_data_for_pattern_type(tc)
         return tc
 
     @staticmethod
-    def get_test_case_from_pattern(pattern: Pattern, buy_trigger: str, strategy: str, process: str) -> TradeTestCase:
+    def get_test_case_from_pattern(api: TradeTestApi) -> TradeTestCase:
         tc = TradeTestCase()
-        tc.pattern_type = pattern.pattern_type
-        tc.buy_trigger = buy_trigger
-        tc.trade_strategy = strategy
-        tc.test_process = process
-        TradeTestCaseFactory.fill_test_data_for_pattern(tc, pattern)
+        tc.pattern_type = api.pattern.pattern_type
+        tc.buy_trigger = api.buy_trigger
+        tc.trade_strategy = api.trade_strategy
+        tc.test_process = api.test_process
+        TradeTestCaseFactory.fill_test_data_for_pattern(tc, api.pattern)
         return tc
 
     @staticmethod
     def fill_test_data_for_pattern(tc: TradeTestCase, pattern: Pattern):
         tc.symbol = pattern.ticker_id
         from_date = MyDate.adjust_by_days(pattern.part_main.date_first, -20)
-        to_date = pattern.part_main.breakout.tick_previous.date
+        if pattern.part_main.breakout:
+            to_date = pattern.part_main.breakout.tick_previous.date
+        else:
+            to_date = pattern.part_main.date_last
         tc.and_clause = "Date BETWEEN '{}' AND '{}'".format(from_date, to_date)
-        tc.value_pair_list = pattern.get_part_trade_back_testing_value_pairs()
+        tc.value_pair_list = pattern.get_back_testing_value_pairs()
 
     @staticmethod
     def fill_test_data_for_pattern_type(tc: TradeTestCase):

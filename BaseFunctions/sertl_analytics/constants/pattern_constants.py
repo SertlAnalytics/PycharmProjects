@@ -261,6 +261,17 @@ class CT:  # Constraint types
     PRE_BOTTOM_PCT = 'Previous_Period_Bottom_PCT'
 
 
+class TP:  # TradeProcess
+    ONLINE = 'Online'
+    TEST_SINGLE = 'Test_single'
+    BACK_TESTING = 'Back_testing'
+    NONE = 'None'
+
+    @staticmethod
+    def get_id(key: str):
+        return {TP.ONLINE: 10, TP.TEST_SINGLE: 20, TP.BACK_TESTING: 20, TP.NONE: 90}.get(key)
+
+
 class BT:  # Buy Trigger
     BREAKOUT = 'Breakout'
     TOUCH_POINT = 'Touch_point'

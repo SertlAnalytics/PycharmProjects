@@ -8,7 +8,7 @@ Date: 2018-08-28
 
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mystring import MyString
-from sertl_analytics.constants.pattern_constants import BT, TSTR
+from sertl_analytics.constants.pattern_constants import BT, TSTR, TP
 
 
 class ExchangeConfiguration:
@@ -145,8 +145,6 @@ class OrderStatusApi:
         self.executed_amount = 0    # How much of the order has been executed so far in its history?
         self.remaining_amount = 0   # How much is still remaining to be submitted?
         self.original_amount = 0    # What was the order originally submitted for?
-        self.order_trigger = ''
-        self.order_comment = ''
 
 
 class OrderStatus:
@@ -167,8 +165,10 @@ class OrderStatus:
         self.executed_amount = api.executed_amount
         self.remaining_amount = api.remaining_amount
         self.original_amount = api.original_amount
-        self.order_trigger = api.order_trigger
-        self.order_comment = api.order_comment
+        self.order_trigger = ''  # will be set later
+        self.order_comment = ''  # will be set later
+        self.trade_process = '' # will be set later
+        self.trade_strategy = ''  # will be set later
         self._fee_amount = 0
 
     @property
@@ -189,23 +189,33 @@ class OrderStatus:
     def print_order_status(self, prefix = ''):
         if prefix != '':
             print('\n{}:'.format(prefix))
-        print('\n'.join('{}: {}'.format(key, value) for key, value in self.__get_value_dict__().items()))
+        print('\n'.join('{}: {}'.format(key, value) for key, value in self.get_value_dict().items()))
 
-    def __get_value_dict__(self) -> dict:
+    def print_with_other_order_status(self, other_order_status, columns: list):
+        value_dict_self = self.get_value_dict()
+        value_dict_other = other_order_status.get_value_dict()
+        print('\n{:16}{:^23}{:^23}'.format('', columns[0], columns[1]))
+        for key, values in value_dict_self.items():
+            print('{:16}{}{:23}{:23}'.format(key, ':  ', str(values), str(value_dict_other[key])))
+
+    def get_value_dict(self) -> dict:
         value_dict = {}
         value_dict['Order_Id'] = self.order_id
         value_dict['Symbol'] = self.symbol
+        value_dict['Order_trigger'] = self.order_trigger
+        value_dict['Trade_strategy'] = self.trade_strategy
+        value_dict['Trade_process'] = self.trade_process
         value_dict['Exchange'] = self.exchange
-        value_dict['Price'] = self.price
-        value_dict['Original_amount'] = self.original_amount
         value_dict['Side'] = self.side
         value_dict['Type'] = self.type
-        value_dict['Is_cancelled'] = self.is_cancelled
+        # value_dict['Original_amount'] = self.original_amount
         value_dict['Executed_amount'] = self.executed_amount
+        value_dict['Price'] = self.price
+        # value_dict['Is_cancelled'] = self.is_cancelled
         value_dict['Fee_amount'] = self.fee_amount
         value_dict['Value_total'] = self.value_total
         value_dict['DateTime'] = MyDate.get_date_time_from_epoch_seconds(self.time_stamp)
-        value_dict['Timestamp'] = self.time_stamp
+        # value_dict['Timestamp'] = self.time_stamp
         return value_dict
 
 

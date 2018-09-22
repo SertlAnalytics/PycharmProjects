@@ -25,6 +25,7 @@ from pattern_function_container import PatternFunctionContainerFactoryApi, Patte
 class PatternDetector:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
+        self.with_trade_part = True
         self.pattern_type_list = list(self.sys_config.config.pattern_type_list)
         self.df = self.sys_config.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
@@ -141,8 +142,7 @@ class PatternDetector:
         return pattern_list
 
     def get_pattern_list_for_back_testing(self) -> list:
-        pattern_list = [pattern for pattern in self.pattern_list if pattern.is_part_trade_available()
-                        and FT.is_pattern_type_long_trade_able(pattern.pattern_type)]
+        pattern_list = [pattern for pattern in self.pattern_list if pattern.is_ready_for_back_testing()]
         return pattern_list
 
     @staticmethod
@@ -152,9 +152,10 @@ class PatternDetector:
         print('{}: breakout since last data update: breakout={}/{}=last_data_update'.format(print_id, brk_t, data_t))
 
     def __handle_single_pattern_when_parsing__(self, pattern: Pattern):
-        can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)
-        if pattern.breakout is None and not can_be_added:
-            return
+        if self.sys_config.config.with_trade_part:
+            can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)
+            if pattern.breakout is None and not can_be_added:
+                return
         self.sys_config.runtime.actual_breakout = pattern.breakout
         pattern.add_part_main(PatternPart(self.sys_config, pattern.function_cont))
         if pattern.are_pre_conditions_fulfilled():

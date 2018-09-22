@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, CN, FD
+from sertl_analytics.constants.pattern_constants import FT, CN, FD, TP
 from pattern_wave_tick import WaveTick
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_range import PatternRangeMax, PatternRangeMin, PatternRangeDetectorMax, PatternRangeDetectorMin
@@ -38,7 +38,7 @@ class FibonacciFormation:
 
     @property
     def max_positions_after_tick_for_helper(self):
-        return self.valid_wave.w_5.duration
+        return self.valid_wave.w_5.duration + self.valid_wave.w_4.duration  # the normal theory would only require w_5..
 
     @property
     def expected_win(self):
@@ -93,7 +93,7 @@ class PatternRangeFibonacciDesc(PatternRangeMax):
 class PatternRangeDetectorFibonacciBase:
     def __init__(self, sys_config: SystemConfiguration, tick_list: list):
         self.sys_config = sys_config
-        self.for_back_testing = self.sys_config.config.for_back_testing
+        self.for_back_testing = self.sys_config.config.trade_process == TP.BACK_TESTING
         self.pdh = self.sys_config.pdh
         self.df = self.pdh.pattern_data_fibonacci.df
         self.df_length = len(self.df)

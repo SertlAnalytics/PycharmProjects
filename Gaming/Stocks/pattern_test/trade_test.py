@@ -1,21 +1,22 @@
 """
-Description: This module contains the global system configuration classes for stock pattern detection
+Description: This module contains the trade test classes which are uses for single test and back testing
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
-Date: 2018-05-14
+Date: 2018-09-21
 """
 
 from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
-from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC
+from sertl_analytics.constants.pattern_constants import FT, TP, BT
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_detection_controller import PatternDetectionController
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
-from pattern_test.trade_test_cases import TradeTestCase, TradeTestCaseFactory
+from pattern_test.trade_test_cases import TradeTestCase, TradeTestCaseFactory, TradeTestApi
 
 
-class TradeBackTest:
-    def __init__(self):
+class TradeTest:
+    def __init__(self, trade_process=TP.NONE):
+        self.trade_process = trade_process
         self.sys_config = SystemConfiguration()
         self.exchange_config = ExchangeConfiguration()
         self.__adjust_sys_config__()
@@ -24,11 +25,11 @@ class TradeBackTest:
     def __adjust_exchange_config__(self):
         self.exchange_config.buy_order_value_max = 100
         self.exchange_config.is_simulation = True
-        # self.exchange_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP],
-        #                             BT.TOUCH_POINT: [TSTR.LIMIT]}
 
     def __adjust_sys_config__(self):
-        self.sys_config.config.for_back_testing = True
+        self.sys_config.config.trade_process = self.trade_process
+        if self.trade_process == TP.BACK_TESTING:
+            self.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
         self.sys_config.config.get_data_from_db = True
         self.sys_config.config.api_period = ApiPeriod.DAILY
         self.sys_config.config.api_period_aggregation = 1
@@ -37,17 +38,12 @@ class TradeBackTest:
         self.sys_config.config.save_pattern_features = False
         self.sys_config.config.save_trade_data = False
 
-    def get_pattern_list_for_back_testing(self, symbol: str, and_clause: str):
-        self.sys_config.config.pattern_type_list = FT.get_all()
-        pattern_controller = PatternDetectionController(self.sys_config)
-        detector = pattern_controller.get_detector_for_dash(self.sys_config, symbol, and_clause)
-        return detector.get_pattern_list_for_back_testing()
-
     def run_test_case(self, tc: TradeTestCase):
         self.exchange_config.trade_strategy_dict = {tc.buy_trigger: [tc.trade_strategy]}
         self.sys_config.config.pattern_type_list = [tc.pattern_type]
         self.sys_config.config.use_own_dic({tc.symbol: tc.symbol})
         self.sys_config.config.and_clause = tc.and_clause
+        self.sys_config.config.with_trade_part = False if tc.buy_trigger == BT.TOUCH_POINT else True
 
         pattern_controller = PatternDetectionController(self.sys_config)
         detector = pattern_controller.get_detector_for_dash(self.sys_config, tc.symbol, tc.and_clause)
@@ -61,30 +57,30 @@ class TradeBackTest:
         trade_handler.enforce_sell_at_end(tc.value_pair_list[-1])
         self.__print_frame_information__(tc.buy_trigger, tc.trade_strategy)
 
+    def run_back_testing(self, api: TradeTestApi):
+        tc_list = self.__get_test_case_list__(api)  # we need this list since the config will be changed for each entry
+        for tc in tc_list:
+            self.run_test_case(tc)
+
+    def __get_test_case_list__(self, api):
+        test_case_list = []
+        pattern_list_all = self.__get_pattern_list_for_back_testing__(api)
+        for pattern in pattern_list_all:
+            api.pattern = pattern
+            tc = TradeTestCaseFactory.get_test_case_from_pattern(api)
+            tc.symbol = api.symbol  # sometimes the symbol is changed within the previous process
+            test_case_list.append(tc)
+        return test_case_list
+
+    def __get_pattern_list_for_back_testing__(self, api: TradeTestApi):
+        pattern_controller = PatternDetectionController(self.sys_config)
+        detector = pattern_controller.get_detector_for_dash(self.sys_config, api.symbol, api.and_clause)
+        return detector.get_pattern_list_for_back_testing()
+
     @staticmethod
     def __print_frame_information__(trigger: str, strategy: str, expected=''):
         if expected == '':
             print('\n************* TEST CASE: {} / {} END *************\n'.format(trigger, strategy))
         else:
             print('\n\n************* TEST CASE: {} / {} EXPECTED: {} *************\n'.format(trigger, strategy, expected))
-
-
-back_test = TradeBackTest()
-# ******** START **********
-buy_trigger = BT.BREAKOUT
-trade_strategy = TSTR.SMA
-process = TTC.BACK_TESTING
-# ******** END **********
-
-symbol = 'ETH_USD'
-and_clause = "Date BETWEEN '2017-11-01' AND '2018-09-05'"
-pattern_list_all = back_test.get_pattern_list_for_back_testing(symbol, and_clause)
-# pattern_list_all = back_test.get_all_finished_patterns_for_a_equity('MMM', "Date BETWEEN '2017-11-25' AND '2019-07-30'")
-for pattern in pattern_list_all:
-    test_case = TradeTestCaseFactory.get_test_case_from_pattern(pattern, buy_trigger, trade_strategy, process)
-    test_case.symbol = symbol
-    back_test.run_test_case(test_case)
-
-
-
 

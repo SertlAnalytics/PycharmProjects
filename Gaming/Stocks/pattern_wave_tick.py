@@ -109,6 +109,8 @@ class WaveTick:
 
     @property
     def tick_type(self):
+        if (self.high - self.low) == 0:
+            return TT.NONE
         if abs((self.open - self.close) / (self.high - self.low)) < 0.2:
             return TT.DOJI
         return TT.NONE
@@ -139,6 +141,8 @@ class WaveTick:
         return MyPoly1d.get_poly1d(self.f_var, self.low, tick.f_var, tick.low)
 
     def is_sustainable(self):
+        if self.high - self.low == 0:
+            return False
         return abs((self.open - self.close) / (self.high - self.low)) > 0.6
 
     def is_volume_rising(self, tick_comp, min_percentage: int):
