@@ -65,7 +65,7 @@ class Ticker:
     timestamp	[time]	The timestamp at which this information was valid
     """
     def __init__(self, ticker_id: str,
-                 bid: float, ask: float, last_price: float, low: float, high: float, vol: float, ts: float):
+                 bid: float, ask: float, last_price: float, low: float, high: float, vol: float, ts: int):
         self.ticker_id = ticker_id
         self.bid = round(bid, 4)
         self.ask = round(ask, 4)
@@ -167,7 +167,6 @@ class OrderStatus:
         self.original_amount = api.original_amount
         self.order_trigger = ''  # will be set later
         self.order_comment = ''  # will be set later
-        self.trade_process = '' # will be set later
         self.trade_strategy = ''  # will be set later
         self._fee_amount = 0
 
@@ -204,7 +203,6 @@ class OrderStatus:
         value_dict['Symbol'] = self.symbol
         value_dict['Order_trigger'] = self.order_trigger
         value_dict['Trade_strategy'] = self.trade_strategy
-        value_dict['Trade_process'] = self.trade_process
         value_dict['Exchange'] = self.exchange
         value_dict['Side'] = self.side
         value_dict['Type'] = self.type

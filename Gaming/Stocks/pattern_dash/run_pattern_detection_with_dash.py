@@ -5,9 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-10
 """
 
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod, ApiOutputsize
 from sertl_analytics.myprofiler import MyProfiler
-from sertl_analytics.constants.pattern_constants import FT, Indices, CN, BT, TSTR
+from sertl_analytics.constants.pattern_constants import FT, Indices, CN, BT, TSTR, PRD, OPS
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_dash.my_dash_for_pattern import MyDash4Pattern
 from pattern_bitfinex import BitfinexConfiguration
@@ -23,7 +22,7 @@ bitfinex_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_S
 # debugger.pattern_range_position_list = [217, 224, 242]
 
 sys_config.config.get_data_from_db = False
-sys_config.config.api_period = ApiPeriod.INTRADAY
+sys_config.config.api_period = PRD.INTRADAY
 sys_config.config.pattern_type_list = FT.get_all()
 sys_config.prediction_mode_active = True
 sys_config.config.save_pattern_features = True
@@ -54,7 +53,7 @@ sys_config.config.use_index(Indices.CRYPTO_CCY)
 # sys_config.config.and_clause = "Date BETWEEN '2017-10-25' AND '2018-04-18'"
 sys_config.config.and_clause = "Date BETWEEN '2018-03-01' AND '2019-09-21'"
 # sys_config.config.and_clause = ''
-sys_config.config.api_output_size = ApiOutputsize.COMPACT
+sys_config.config.api_output_size = OPS.COMPACT
 my_dash = MyDash4Pattern(sys_config, bitfinex_config)
 my_dash.get_pattern()
 my_dash.run_on_server()

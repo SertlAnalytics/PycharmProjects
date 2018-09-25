@@ -6,10 +6,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-10
 """
 
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, ApiPeriod, ApiOutputsize
-from sertl_analytics.constants.pattern_constants import Indices
+from sertl_analytics.constants.pattern_constants import PRD
 from pattern_database.stock_database import StockDatabase
 
 stock_db = StockDatabase()
-stock_db.update_crypto_currencies(ApiPeriod.DAILY)
+stock_db.update_crypto_currencies(PRD.DAILY)
 

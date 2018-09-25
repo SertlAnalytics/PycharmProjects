@@ -5,8 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-21
 """
 
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
-from sertl_analytics.constants.pattern_constants import FT, TP, BT
+from sertl_analytics.constants.pattern_constants import FT, TP, BT, PRD
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_detection_controller import PatternDetectionController
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
@@ -27,16 +26,22 @@ class TradeTest:
         self.exchange_config.is_simulation = True
 
     def __adjust_sys_config__(self):
-        self.sys_config.config.trade_process = self.trade_process
+        self.sys_config.runtime.actual_trade_process = self.trade_process
         if self.trade_process == TP.BACK_TESTING:
             self.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
         self.sys_config.config.get_data_from_db = True
-        self.sys_config.config.api_period = ApiPeriod.DAILY
+        self.sys_config.config.api_period = PRD.DAILY
         self.sys_config.config.api_period_aggregation = 1
         self.sys_config.config.plot_data = False
         self.sys_config.prediction_mode_active = True
         self.sys_config.config.save_pattern_features = False
         self.sys_config.config.save_trade_data = False
+
+    def run_back_testing(self, api: TradeTestApi):
+        self.sys_config.init_predictors_without_condition_list(api.symbol)
+        tc_list = self.__get_test_case_list__(api)  # we need this list since the config will be changed for each entry
+        for tc in tc_list:
+            self.run_test_case(tc)
 
     def run_test_case(self, tc: TradeTestCase):
         self.exchange_config.trade_strategy_dict = {tc.buy_trigger: [tc.trade_strategy]}
@@ -48,7 +53,6 @@ class TradeTest:
         pattern_controller = PatternDetectionController(self.sys_config)
         detector = pattern_controller.get_detector_for_dash(self.sys_config, tc.symbol, tc.and_clause)
         pattern_list = detector.get_pattern_list_for_buy_trigger(tc.buy_trigger)
-
         trade_handler = PatternTradeHandler(self.sys_config, self.exchange_config)  # we need a new one for each
         trade_handler.add_pattern_list_for_trade(pattern_list)
         self.__print_frame_information__(tc.buy_trigger, tc.trade_strategy, tc.test_process)
@@ -56,11 +60,6 @@ class TradeTest:
             trade_handler.check_actual_trades(value_pair)
         trade_handler.enforce_sell_at_end(tc.value_pair_list[-1])
         self.__print_frame_information__(tc.buy_trigger, tc.trade_strategy)
-
-    def run_back_testing(self, api: TradeTestApi):
-        tc_list = self.__get_test_case_list__(api)  # we need this list since the config will be changed for each entry
-        for tc in tc_list:
-            self.run_test_case(tc)
 
     def __get_test_case_list__(self, api):
         test_case_list = []

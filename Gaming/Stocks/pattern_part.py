@@ -5,8 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, FT
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
+from sertl_analytics.constants.pattern_constants import CN, FT, PRD
 from sertl_analytics.mydates import MyDate
 from pattern_function_container import PatternFunctionContainer
 from pattern_wave_tick import WaveTick
@@ -182,10 +181,6 @@ class PatternPart:
     def std(self):  # we need the standard deviation from the mean_HL for Low and High
         return ((self.df[CN.HIGH]-self.mean).std() + (self.df[CN.LOW]-self.mean).std())/2
 
-    def get_simple_moving_average_tick_list(self) -> list:
-        elements = min(len(self.tick_list), self.sys_config.config.simple_moving_average_number)
-        return self.tick_list[-elements:]
-
     def get_slope_values(self):
         f_upper_slope = self.function_cont.f_upper_percentage
         f_lower_slope = self.function_cont.f_lower_percentage
@@ -196,7 +191,7 @@ class PatternPart:
     def __get_text_for_annotation__(self, text_for_prediction: str):
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_percent, f_lower_percent, f_reg_percent = self.get_slope_values()
-        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+        if self.sys_config.config.api_period == PRD.INTRADAY:
             date_str_first = self.tick_first.time_str_for_f_var
             date_str_last = self.tick_last.time_str_for_f_var
         else:
@@ -224,7 +219,7 @@ class PatternPart:
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
             date_forecast = MyDate.get_date_time_from_epoch_seconds(self.function_cont.f_var_cross_f_upper_f_lower)
             breakout_str += '\nExpected trading end: {}'.format(
-                str(date_forecast.time())[:5] if self.sys_config.config.api_period == ApiPeriod.INTRADAY
+                str(date_forecast.time())[:5] if self.sys_config.config.api_period == PRD.INTRADAY
                 else date_forecast.date())
 
         breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)

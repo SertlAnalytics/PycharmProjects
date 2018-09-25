@@ -7,7 +7,14 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC
+from sertl_analytics.constants.pattern_constants import DC, PRD
+
+
+class STBL:  # stocks tables
+    STOCKS = 'Stocks'
+    COMPANY = 'Company'
+    FEATURES = 'Features'
+    TRADE = 'Trade'
 
 
 class PredictionFeatureTable:
@@ -37,7 +44,7 @@ class TradeTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def _get_name_():
-        return 'Trade'
+        return STBL.TRADE
 
     @staticmethod
     def get_query_for_unique_record_by_id(id: str) -> str:
@@ -53,7 +60,7 @@ class TradeTable(MyTable, PredictionFeatureTable):
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 100))
-
+        self._columns.append(MyTableColumn(DC.TRADE_PROCESS, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.PERIOD, CDT.STRING, 20))
@@ -288,7 +295,7 @@ class FeaturesTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def _get_name_():
-        return 'Features'
+        return STBL.FEATURES
 
     def __get_query_for_feature_and_label_data_touch_points__(self) -> str:
         return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_touch_points__())
@@ -354,4 +361,95 @@ class FeaturesTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def __get_label_columns_touch_points__():
         return [DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM]
+
+
+class StocksTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return STBL.STOCKS
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(DC.PERIOD, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.PERIOD_AGGREGATION, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.SYMBOL, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.TIMESTAMP, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.DATE, CDT.DATE))
+        self._columns.append(MyTableColumn(DC.TIME, CDT.TIME))
+        self._columns.append(MyTableColumn(DC.OPEN, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.HIGH, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.LOW, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.CLOSE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.VOLUME, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.BIG_MOVE, CDT.BOOLEAN, default=False))
+        self._columns.append(MyTableColumn(DC.DIRECTION, CDT.INTEGER, default=0)) # 1 = up, -1 = down, 0 = no big move
+
+    def get_query_for_unique_record(self, symbol: str, time_stamp: int, period: str, aggregation: int):
+        return "SELECT * from {} WHERE {}='{}' and {}={} and {}='{}' and {}={}".format(
+            self._name, DC.SYMBOL, symbol, DC.TIMESTAMP, time_stamp, DC.PERIOD, period,
+            DC.PERIOD_AGGREGATION, aggregation)
+
+    def get_distinct_symbol_query(self, symbol_input: str = '', like_input: str = '') -> str:
+        query = 'SELECT DISTINCT Symbol from {}'
+        if symbol_input != '':
+            query += ' WHERE Symbol = "' + symbol_input + '"'
+        elif like_input != '':
+            query += ' WHERE Symbol like "%' + like_input + '"'
+        query += ' ORDER BY Symbol'
+        return query.format(self._name)
+
+    @staticmethod
+    def get_process_type_for_update(period: str, aggregation: int, dt_now_time_stamp, last_loaded_time_stamp):
+        delta_time_stamp = dt_now_time_stamp - last_loaded_time_stamp
+        delta_time_stamp_min = int(delta_time_stamp / 60)
+        delta_time_stamp_days = int(delta_time_stamp_min / (24 * 60))
+        if period == PRD.DAILY:
+            if delta_time_stamp_days < 2:
+                return 'NONE'
+            elif delta_time_stamp_days < 50:
+                return 'COMPACT'
+            else:
+                return 'FULL'
+        else:
+            if delta_time_stamp_min < aggregation:
+                return 'NONE'
+            else:
+                return 'FULL'
+
+
+class CompanyTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return STBL.COMPANY
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(DC.SYMBOL, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.NAME, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(DC.TO_BE_LOADED, CDT.BOOLEAN, default=False))
+        self._columns.append(MyTableColumn(DC.SECTOR, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(DC.YEAR, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.REVENUES, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.EXPENSES, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.EMPLOYEES, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.SAVINGS, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.FORECAST_GROWTH, CDT.FLOAT))
+
+    @staticmethod
+    def get_select_query(symbol_input='', like_input='') -> str:
+        query = 'SELECT * FROM Company'
+        if symbol_input != '':
+            query += ' WHERE Symbol = "' + symbol_input + '"'
+        elif like_input != '':
+            query += ' WHERE Symbol like "%' + like_input + '"'
+        query += ' ORDER BY Symbol'
+        return query
+
+    @staticmethod
+    def get_alternate_name(ticker: str, name: str):
+        dic_alternate = {'GOOG': 'Alphabeth', 'LBTYK': 'Liberty', 'FOX': 'Twenty-First Century'}
+        return dic_alternate[ticker] if ticker in dic_alternate else name
+
+    @staticmethod
+    def get_insert_dict_for_company(symbol: str, name: str, to_be_loaded: bool) -> dict:
+        return {'Symbol': symbol, 'Name': name, 'ToBeLoaded': to_be_loaded, 'Sector': '', 'Year': 2018, 'Revenues': 0,
+                'Expenses': 0, 'Employees': 0, 'Savings': 0, 'ForcastGrowth': 0}
 

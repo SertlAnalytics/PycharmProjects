@@ -149,6 +149,21 @@ class FT:
                 }.get(key, 0)
 
 
+class PRD:  # Periods
+    WEEKLY = 'WEEKLY'
+    DAILY = 'DAILY'
+    INTRADAY = 'INTRADAY'
+
+    @staticmethod
+    def get_id(period: str):
+        return {PRD.INTRADAY: 0, PRD.DAILY: 1, PRD.WEEKLY: 2}.get(period)
+
+
+class OPS:  # Outputsize
+    COMPACT = 'compact'
+    FULL = 'full'
+
+
 class PT:  # PredictorType
     TOUCH_POINTS = 'touch_points'
     BEFORE_BREAKOUT = 'before_breakout'
@@ -334,6 +349,7 @@ class PDR:  # Pattern Deletion Reasons
     PATTERN_VANISHED = 'Pattern_vanished'
     WRONG_BREAKOUT = 'Wrong_breakout'
     TRADE_FINISHED = 'Trade_finished'
+    SMA_PROBLEM = 'Simple_moving_average_problem'
 
     def get_id(key: str):
         return {PDR.PATTERN_VANISHED: 10, PDR.WRONG_BREAKOUT: 20, PDR.TRADE_FINISHED: 40}.get(key)
@@ -408,6 +424,29 @@ class PSC:  # Pattern Statistics Columns
 
 
 class DC:  # Data Columns
+    # for Stocks
+    SYMBOL = 'Symbol'
+    TIMESTAMP = 'Timestamp'
+    DATE = 'Date'
+    TIME = 'Time'
+    OPEN = 'Open'
+    HIGH = 'High'
+    LOW = 'LOW'
+    CLOSE = 'Close'
+    VOLUME = 'Volume'
+    BIG_MOVE = 'BigMove'
+    DIRECTION = 'Direction'
+    # for company
+    NAME = 'Name'
+    TO_BE_LOADED = 'ToBeLoaded'
+    SECTOR = 'Sector'
+    YEAR = 'Year'
+    REVENUES = 'Revenues'
+    EXPENSES = 'Expenses'
+    EMPLOYEES = 'Employees'
+    SAVINGS = 'Savings'
+    FORECAST_GROWTH = 'ForcastGrowth'  # writing error...
+    # for features
     ID = 'ID'  # Ticker_ID-Pattern_Type_ID-Pattern_Range_Begin_DT-Pattern_Range_End_DT
     EQUITY_TYPE = 'Equity_Type'  # Share, Commodities, Crypto Currency
     EQUITY_TYPE_ID = 'Equity_Type_ID'  # Share, Commodities, Crypto Currency
@@ -465,6 +504,7 @@ class DC:  # Data Columns
     FALSE_BREAKOUT = 'False_Breakout'
     EXPECTED_WIN_REACHED = 'Expected_Win_Reached'
     # and additional for Trades
+    TRADE_PROCESS = 'Trade_Process'  #  TP.ONLINE = 'Online', TEST_SINGLE = 'Test_single', BACK_TESTING = 'Back_testing'
     TRADE_READY_ID = 'Trade_Ready_ID'  # for a real trade = 1, 0 else
     TRADE_STRATEGY = 'Trade_Strategy'
     TRADE_STRATEGY_ID = 'Trade_Strategy_ID'

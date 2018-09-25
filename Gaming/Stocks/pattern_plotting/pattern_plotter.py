@@ -5,8 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, FD
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
+from sertl_analytics.constants.pattern_constants import CN, FD, PRD
 from sertl_analytics.mydates import MyDate
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,6 +22,7 @@ from fibonacci.fibonacci_wave import FibonacciWave
 from pattern_plotting.patch_helper import PatchHelper
 from pattern_plotting.fibonacci_patches import FibonacciWavePatch, FibonacciWavePatchContainer
 from pattern_plotting.pattern_plot_container import PatternPlotContainer, PatternPlotContainerLoopList
+from matplotlib.widgets import Cursor
 
 
 class PatternPlotter:
@@ -75,10 +75,13 @@ class PatternPlotter:
         fig.canvas.mpl_connect('button_press_event', self.__on_click__)
         fig.canvas.mpl_connect('motion_notify_event', self.__on_motion_notify__)
         self.axes_for_candlesticks.format_coord = self.__on_hover__
+        # Set useblit=True on most backends for enhanced performance.
+        lp = {'linewidth': 1, 'color': 'deepskyblue', 'linestyle': 'dashed'}
+        cursor = Cursor(self.axes_for_candlesticks, useblit=True, vertOn=False, **lp)
         plt.show()
 
     def __get_y_dlim_for_candlestick_plot__(self):
-        range_pct = [0.99, 1.005] if self.sys_config.config.api_period == ApiPeriod.INTRADAY else [0.95, 1.02]
+        range_pct = [0.99, 1.005] if self.sys_config.config.api_period == PRD.INTRADAY else [0.95, 1.02]
         return self.sys_config.pdh.pattern_data.min_value * range_pct[0], \
                self.sys_config.pdh.pattern_data.max_value * range_pct[1]
 
@@ -97,7 +100,7 @@ class PatternPlotter:
     def __get_date_range_for_title__(self):
         tick_first = self.sys_config.pdh.pattern_data.tick_list[0]
         tick_last = self.sys_config.pdh.pattern_data.tick_list[-1]
-        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+        if self.sys_config.config.api_period == PRD.INTRADAY:
             return 'Date between "{} {}" AND "{} {}"'.format(tick_first.date_str, tick_first.time_str_for_f_var,
                                                              tick_last.date_str, tick_last.time_str_for_f_var)
         else:
@@ -109,7 +112,7 @@ class PatternPlotter:
         if tick is None:
             return ''
         else:
-            if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+            if self.sys_config.config.api_period == PRD.INTRADAY:
                 date_obj = MyDate.get_date_time_from_epoch_seconds(tick.f_var)
                 date_time_str = '{} {}'.format(date_obj.date(), str(date_obj.time())[:5])
             else:
@@ -196,7 +199,7 @@ class PatternPlotter:
         axis.legend(loc='upper left')
 
     def __plot_candlesticks__(self):
-        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+        if self.sys_config.config.api_period == PRD.INTRADAY:
             ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in self.sys_config.pdh.pattern_data.tick_list]
             width = 0.4 * (ohlc_list[1][0] - ohlc_list[0][0])
             candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=width, colorup='g')
@@ -310,7 +313,7 @@ class PatternPlotter:
 class PlotterInterface:
     @staticmethod
     def get_tick_distance_in_date_as_number(sys_config: SystemConfiguration):
-        if sys_config.config.api_period == ApiPeriod.INTRADAY:
+        if sys_config.config.api_period == PRD.INTRADAY:
             return MyDate.get_date_as_number_difference_from_epoch_seconds(0, sys_config.config.api_period_aggregation * 60)
         return 1
 
@@ -320,7 +323,7 @@ class PlotterInterface:
 
     @staticmethod
     def get_ellipse_width_height_for_plot_min_max(sys_config: SystemConfiguration, wave_tick_list: WaveTickList):
-        if sys_config.config.api_period == ApiPeriod.DAILY:
+        if sys_config.config.api_period == PRD.DAILY:
             width_value = 0.6
         else:
             width_value = 0.6 / (sys_config.config.api_period_aggregation * 60)
@@ -352,7 +355,7 @@ class PlotterInterface:
 
     @staticmethod
     def get_pattern_center_shape(pattern: Pattern):
-        if pattern.sys_config.config.api_period == ApiPeriod.DAILY:
+        if pattern.sys_config.config.api_period == PRD.DAILY:
             ellipse_breadth = 10
         else:
             ellipse_breadth = 2 / (pattern.sys_config.config.api_period_aggregation * 60)

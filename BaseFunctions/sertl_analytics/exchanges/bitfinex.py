@@ -158,7 +158,7 @@ class BitfinexFactory:
     def get_ticker_by_json_dict(ticker_id: str, json: dict) -> Ticker:
         # {'mid': 7052.45, 'bid': 7052.4, 'ask': 7052.5, 'last_price': 7051.3, 'timestamp': 1535469615.659593}
         return Ticker(ticker_id, float(json['bid']), float(json['ask']), float(json['last_price']),
-                      0, 0, 0, float(json['timestamp']))
+                      0, 0, 0, int(json['timestamp']))
 
     @staticmethod
     def get_order_status_by_json_dict(config: BitfinexConfiguration, order_id: int, json: dict) -> BitfinexOrderStatus:

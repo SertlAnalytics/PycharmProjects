@@ -10,27 +10,12 @@ import matplotlib.pyplot as plt
 import os
 import io
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.pattern_constants import CN
+from sertl_analytics.constants.pattern_constants import CN, PRD, OPS
 import seaborn as sns
 
 
-class ApiPeriod:
-    WEEKLY = 'WEEKLY'
-    DAILY = 'DAILY'
-    INTRADAY = 'INTRADAY'
-
-    @staticmethod
-    def get_id(period: str):
-        return {ApiPeriod.INTRADAY: 0, ApiPeriod.DAILY: 1, ApiPeriod.WEEKLY: 2}.get(period)
-
-
-class ApiOutputsize:
-    COMPACT = 'compact'
-    FULL = 'full'
-
-
 class APIBaseFetcher:
-    def __init__(self, symbol: str, period=ApiPeriod.DAILY, aggregation=1, output_size=ApiOutputsize.COMPACT):
+    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):
         self.api_key = self._get_api_key_()
         self.symbol = symbol  # like the symbol of a stock, e.g. MSFT
         self.period = period
@@ -64,7 +49,7 @@ class APIBaseFetcher:
 
 
 class AlphavantageJSONFetcher (APIBaseFetcher):
-    def __init__(self, symbol: str, period=ApiPeriod.DAILY, aggregation=1, output_size=ApiOutputsize.COMPACT):
+    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):
         self.api_symbol = ''
         APIBaseFetcher.__init__(self, symbol, period, aggregation, output_size)
         self.column_list_data = self.get_column_list_data()
@@ -112,15 +97,15 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         return self.column_list[-1]
 
     def get_url_function(self):
-        dict = {ApiPeriod.WEEKLY: 'TIME_SERIES_WEEKLY',
-                ApiPeriod.DAILY: 'TIME_SERIES_DAILY',
-                ApiPeriod.INTRADAY: 'TIME_SERIES_INTRADAY'}
+        dict = {PRD.WEEKLY: 'TIME_SERIES_WEEKLY',
+                PRD.DAILY: 'TIME_SERIES_DAILY',
+                PRD.INTRADAY: 'TIME_SERIES_INTRADAY'}
         return dict[self.period]
 
     def get_json_data_key(self):
-        dict = {ApiPeriod.DAILY: 'Time Series (Daily)',
-                ApiPeriod.WEEKLY: 'Time Series (Weekly)',
-                ApiPeriod.INTRADAY: 'Time Series ({}min)'.format(self.aggregation)}
+        dict = {PRD.DAILY: 'Time Series (Daily)',
+                PRD.WEEKLY: 'Time Series (Weekly)',
+                PRD.INTRADAY: 'Time Series ({}min)'.format(self.aggregation)}
         return dict[self.period]
 
     def __get_data_frame__(self) -> pd.DataFrame:
@@ -139,13 +124,13 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         url = 'https://www.alphavantage.co/query?function={}&symbol={}'.format(self.get_url_function(), self.symbol)
         if self.output_size == ApiOutputsize.FULL:
             url = url + '&outputsize=full'
-        if self.period == ApiPeriod.INTRADAY:
+        if self.period == PRD.INTRADAY:
             url = url + '&interval={}min'.format(self.aggregation)
         return url + '&apikey=' + self.api_key
 
 
 class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
-    def __init__(self, symbol: str, period=ApiPeriod.DAILY, aggregation=1):
+    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1):
         AlphavantageJSONFetcher.__init__(self, symbol, period, aggregation)
 
     def get_column_list_data(self):
@@ -158,14 +143,14 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
         return self.column_list[-1]
 
     def get_url_function(self):
-        dict = {ApiPeriod.WEEKLY: 'DIGITAL_CURRENCY_WEEKLY',
-                ApiPeriod.DAILY: 'DIGITAL_CURRENCY_DAILY',
-                ApiPeriod.INTRADAY: 'DIGITAL_CURRENCY_INTRADAY'}
+        dict = {PRD.WEEKLY: 'DIGITAL_CURRENCY_WEEKLY',
+                PRD.DAILY: 'DIGITAL_CURRENCY_DAILY',
+                PRD.INTRADAY: 'DIGITAL_CURRENCY_INTRADAY'}
         return dict[self.period]
 
     def get_json_data_key(self):
-        dict = {ApiPeriod.DAILY: 'Time Series (Digital Currency Daily)',
-                ApiPeriod.INTRADAY: 'Time Series (Digital Currency Intraday)'}
+        dict = {PRD.DAILY: 'Time Series (Digital Currency Daily)',
+                PRD.INTRADAY: 'Time Series (Digital Currency Intraday)'}
         return dict[self.period]
 
     def __get_data_frame__(self) -> pd.DataFrame:
@@ -177,7 +162,7 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
         df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
         df[CN.TIMESTAMP] = df[CN.TIMESTAMP].apply(int)
         df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
-        if self.period == ApiPeriod.INTRADAY:
+        if self.period == PRD.INTRADAY:
             df.drop([df.columns[0],  '3. market cap (USD)'], axis=1, inplace=True)
             df.columns = ['Open', 'Volume']
             df.insert(loc=1, column='Close', value = df[df.columns[0]])
@@ -241,7 +226,7 @@ class CryptoCompareJSONFetcher (APIBaseFetcher):
 
 
 class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
-    def __init__(self, symbol: str, period=ApiPeriod.DAILY, aggregation=1, run_on_dash=False):
+    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, run_on_dash=False):
         self._run_on_dash = run_on_dash
         CryptoCompareJSONFetcher.__init__(self, symbol, period, aggregation)
 
@@ -262,9 +247,9 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
         return df
 
     def _get_url_(self):  # the symbol has the structure symbol_CCY like BTC_USD
-        url_function = 'histominute' if self.period == ApiPeriod.INTRADAY else 'histoday'
+        url_function = 'histominute' if self.period == PRD.INTRADAY else 'histoday'
         url_limit = self._get_url_limit_parameter_()
-        url_aggregate = self.aggregation if self.period == ApiPeriod.INTRADAY else 1
+        url_aggregate = self.aggregation if self.period == PRD.INTRADAY else 1
         symbol = self.symbol[:-4]
         market = self.symbol[-3:]
         url = 'https://min-api.cryptocompare.com/data/{}?fsym={}&tsym={}&limit={}&aggregate={}'.\
@@ -272,7 +257,7 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
         return url
 
     def _get_url_limit_parameter_(self) -> int:
-        if self.period == ApiPeriod.INTRADAY:
+        if self.period == PRD.INTRADAY:
             return 200 if self._run_on_dash else 300
         return 400
 

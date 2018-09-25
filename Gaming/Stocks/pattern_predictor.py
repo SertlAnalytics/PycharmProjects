@@ -23,8 +23,9 @@ import matplotlib.patches as mpatches
 
 
 class PatternPredictor:
-    def __init__(self, db_stock: StockDatabase):
-        print('Loading Predictor: {}'.format(self.__class__.__name__))
+    def __init__(self, db_stock: StockDatabase, skip_condition_list=None):
+        # print('Loading Predictor: {}'.format(self.__class__.__name__))
+        self.skip_condition_list = skip_condition_list
         self.feature_table = self.__get_table_with_prediction_features__()
         self.db_stock = db_stock
         self.feature_columns = self.__get_feature_columns__()
@@ -55,6 +56,14 @@ class PatternPredictor:
             else:
                 return_dict[label] = int(prediction)
         return return_dict
+
+    def __get_base_query_with_skip_conditions__(self, base_query: str):
+        if self.skip_condition_list:
+            skip_condition_all = ' AND '.join(self.skip_condition_list)
+            if base_query.find('WHERE') >= 0:  # already where clause available
+                return base_query + ' AND NOT ({})'.format(skip_condition_all)
+            return base_query + ' WHERE NOT ({})'.format(skip_condition_all)
+        return base_query
 
     def __get_table_with_prediction_features__(self):
         pass
@@ -179,7 +188,8 @@ class PatternPredictorTouchPoints(PatternPredictor):
         return self.feature_table.label_columns_touch_points
 
     def __get_query_for_feature_and_label_data__(self):
-        return self.feature_table.query_for_feature_and_label_data_touch_points
+        base_query = self.feature_table.query_for_feature_and_label_data_touch_points
+        return self.__get_base_query_with_skip_conditions__(base_query)
 
 
 class PatternPredictorBeforeBreakout(PatternPredictor):
@@ -193,7 +203,8 @@ class PatternPredictorBeforeBreakout(PatternPredictor):
         return self.feature_table.label_columns_before_breakout
 
     def __get_query_for_feature_and_label_data__(self):
-        return self.feature_table.query_for_feature_and_label_data_before_breakout
+        base_query = self.feature_table.query_for_feature_and_label_data_before_breakout
+        return self.__get_base_query_with_skip_conditions__(base_query)
 
 
 class PatternPredictorAfterBreakout(PatternPredictor):
@@ -207,7 +218,8 @@ class PatternPredictorAfterBreakout(PatternPredictor):
         return self.feature_table.label_columns_after_breakout
 
     def __get_query_for_feature_and_label_data__(self):
-        return self.feature_table.query_for_feature_and_label_data_after_breakout
+        base_query = self.feature_table.query_for_feature_and_label_data_after_breakout
+        return self.__get_base_query_with_skip_conditions__(base_query)
 
 
 class PatternPredictorForTrades(PatternPredictor):
@@ -221,5 +233,7 @@ class PatternPredictorForTrades(PatternPredictor):
         return self.feature_table.label_columns_for_trades
 
     def __get_query_for_feature_and_label_data__(self):
-        return self.feature_table.query_for_feature_and_label_data_for_trades
+        base_query = self.feature_table.query_for_feature_and_label_data_for_trades
+        return self.__get_base_query_with_skip_conditions__(base_query)
+
 

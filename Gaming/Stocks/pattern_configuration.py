@@ -5,9 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, TP, Indices, CN, EQUITY_TYPE
+from sertl_analytics.constants.pattern_constants import FT, TP, Indices, CN, EQUITY_TYPE, PRD, OPS
 from pattern_database import stock_database as sdb
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiOutputsize, ApiPeriod
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
@@ -55,17 +54,17 @@ class RuntimeConfiguration:
     actual_breakout = None
     actual_pattern_range = None
     actual_expected_win_pct = 0  # pct in this case is 10 for 10%
+    actual_trade_process = TP.ONLINE
 
 
 class PatternConfiguration:
     def __init__(self):
-        self.trade_process = TP.ONLINE
         self.with_trade_part = True  # we need this configuration for testing touch strategy
         self.get_data_from_db = True
         self.pattern_type_list = [FT.CHANNEL]
-        self.api_period = ApiPeriod.DAILY
+        self.api_period = PRD.DAILY
         self.api_period_aggregation = 5
-        self.api_output_size = ApiOutputsize.COMPACT
+        self.api_output_size = OPS.COMPACT
         self.simple_moving_average_number = 10
         self.save_pattern_features = True
         self.save_trade_data = True
@@ -97,8 +96,12 @@ class PatternConfiguration:
         self.__previous_period_length = 0
 
     @property
+    def and_clause_for_features_trade(self):
+        return self.and_clause.replace('Date', 'Pattern_Begin_Date')
+
+    @property
     def value_categorizer_tolerance_pct(self):
-        if self.api_period == ApiPeriod.INTRADAY:
+        if self.api_period == PRD.INTRADAY:
             if self.api_period_aggregation < 5:
                 return 0.0002
             elif self.api_period_aggregation == 5:
@@ -109,7 +112,7 @@ class PatternConfiguration:
 
     @property
     def value_categorizer_tolerance_pct_equal(self):
-        if self.api_period == ApiPeriod.INTRADAY:
+        if self.api_period == PRD.INTRADAY:
             if self.api_period_aggregation <= 5:
                 return 0.001
             else:
@@ -117,23 +120,23 @@ class PatternConfiguration:
         return 0.005  # orig: 0.005
 
     def get_time_stamp_before_one_period_aggregation(self, time_stamp: float):
-        if self.api_period == ApiPeriod.DAILY:
+        if self.api_period == PRD.DAILY:
             return time_stamp - 60 * 60 * 24
-        elif self.api_period == ApiPeriod.INTRADAY:
+        elif self.api_period == PRD.INTRADAY:
             return time_stamp - self.api_period_aggregation * 60
 
     def get_time_stamp_after_ticks(self, tick_number: int, ts_set_off = MyDate.get_epoch_seconds_from_datetime()):
         return int(ts_set_off + tick_number * self.__get_seconds_for_one_period_aggregation__())
 
     def __get_seconds_for_one_period_aggregation__(self):
-        if self.api_period == ApiPeriod.DAILY:
+        if self.api_period == PRD.DAILY:
             return 60 * 60 * 24
-        elif self.api_period == ApiPeriod.INTRADAY:
+        elif self.api_period == PRD.INTRADAY:
             return self.api_period_aggregation * 60
 
     @property
     def expected_win_pct(self):
-        return 1.0 if self.api_period == ApiPeriod.INTRADAY else 1.0
+        return 1.0 if self.api_period == PRD.INTRADAY else 1.0
         # will be changed in the program for Cryptos - runtime.actual_expected_win_pct
 
     def __get_previous_period_length__(self):
@@ -160,7 +163,7 @@ class PatternConfiguration:
                   ' \nBreakout big range: {}\n'.format(
                     pattern_type, source, and_clause, bound_upper_v, bound_lower_v, breakout_over_big_range))
         else:
-            print('Formation: {} \nSource: {} \n\nApiPeriod/ApiOutput size: {}/{} \nUpper/Lower Bound Value: {}/{}'
+            print('Formation: {} \nSource: {} \n\nPeriod/Output size: {}/{} \nUpper/Lower Bound Value: {}/{}'
                   ' \nBreakout big range: {}\n'.format(
                     pattern_type, source, period, output_size, bound_upper_v, bound_lower_v, breakout_over_big_range))
 

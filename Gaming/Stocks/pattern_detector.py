@@ -5,10 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, FD, DC, BT, EQUITY_TYPE, EXTREMA
+from sertl_analytics.constants.pattern_constants import FT, FD, DC, BT, EQUITY_TYPE, EXTREMA, PRD
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
-from pattern_configuration import ApiPeriod
 from pattern_wave_tick import WaveTick
 from pattern_part import PatternPart
 from pattern import Pattern, PatternFactory
@@ -51,7 +50,7 @@ class PatternDetector:
         self.data_dict[DC.EQUITY_TYPE] = self.sys_config.runtime.actual_ticker_equity_type
         self.data_dict[DC.EQUITY_TYPE_ID] = EQUITY_TYPE.get_id(self.data_dict[DC.EQUITY_TYPE])
         self.data_dict[DC.PERIOD] = self.sys_config.config.api_period
-        self.data_dict[DC.PERIOD_ID] = ApiPeriod.get_id(self.sys_config.config.api_period)
+        self.data_dict[DC.PERIOD_ID] = PRD.get_id(self.sys_config.config.api_period)
         self.data_dict[DC.PERIOD_AGGREGATION] = self.sys_config.config.api_period_aggregation
         self.data_dict[DC.TICKER_ID] = self.sys_config.runtime.actual_ticker
         self.data_dict[DC.TICKER_NAME] = self.sys_config.runtime.actual_ticker_name
@@ -319,9 +318,9 @@ class PatternDetector:
         if len(dict_diff) > 0:
             print('Difference for Pattern {} [{}, {}]:'.format(
                 feature_dict[DC.PATTERN_TYPE],
-                feature_dict[DC.PATTERN_BEGIN_TIME] if self.sys_config.config.api_period == ApiPeriod.INTRADAY
+                feature_dict[DC.PATTERN_BEGIN_TIME] if self.sys_config.config.api_period == PRD.INTRADAY
                 else feature_dict[DC.PATTERN_BEGIN_DT],
-                feature_dict[DC.PATTERN_END_TIME] if self.sys_config.config.api_period == ApiPeriod.INTRADAY
+                feature_dict[DC.PATTERN_END_TIME] if self.sys_config.config.api_period == PRD.INTRADAY
                 else feature_dict[DC.PATTERN_END_DT]
             ))
             for key, values in dict_diff.items():

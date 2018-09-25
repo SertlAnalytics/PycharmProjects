@@ -7,10 +7,12 @@ Date: 2018-05-14
 
 import pandas as pd
 import numpy as np
-from sertl_analytics.constants.pattern_constants import CN, TT, DIR
+from sertl_analytics.constants.pattern_constants import CN, TT, DIR, PRD, PTS
 from sertl_analytics.mymath import MyMath, MyPoly1d
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 from sertl_analytics.mydates import MyDate
+from pattern_database.stock_database import StockDatabase
+import math
 
 
 class WaveTick:
@@ -150,6 +152,69 @@ class WaveTick:
 
     def has_gap_to(self, tick_comp):
         return self.low > tick_comp.high or self.high < tick_comp.low
+
+
+class TickerWaveTickConverter:
+    def __init__(self, period: str, aggregation: int, refresh_rate_seconds: int, pos_last: int):
+        self._status = PTS.NEW
+        self._period = period
+        self._aggregation = aggregation
+        self._refresh_rate_seconds = refresh_rate_seconds
+        self._ticker_per_aggregation = self.__get_number_of_ticker_per_aggregation__()
+        self._pos_last = pos_last
+        self._current_ticker_counter = 0
+        self._current_open = 0
+        self._current_close = 0
+        self._current_low = math.inf
+        self._current_high = -math.inf
+        self._begin_time_stamp = 0
+        self._current_time_stamp = 0
+        self._current_wave_tick = None
+
+    @property
+    def status(self):
+        return self._status
+
+    @property
+    def wave_tick(self) -> WaveTick:
+        return self._current_wave_tick
+
+    def add_value_with_timestamp(self, value: float, time_stamp: int) -> bool:
+        if self._current_open == 0:
+            self._current_open = value
+        if self._current_high < value:
+            self._current_high = value
+        if self._current_low > value:
+            self._current_low = value
+        self._current_close = value
+        if self._begin_time_stamp == 0:
+            self._begin_time_stamp = time_stamp
+        self._current_time_stamp = time_stamp
+
+        self._current_ticker_counter += 1
+        if self._current_ticker_counter >= self._ticker_per_aggregation:
+            self._current_wave_tick = self.__get_current_tick_values_as_wave_tick__()
+            self._current_open = 0
+            self._current_close = 0
+            self._current_low = math.inf
+            self._current_high = -math.inf
+            self._current_time_stamp = 0
+            self._current_ticker_counter = 0
+            return True
+        return False
+
+    def __get_current_tick_values_as_wave_tick__(self):
+        self._pos_last += 1
+        v_array = np.array([self._current_open, self._current_close, self._current_low, self._current_high,
+                            self._current_time_stamp, self._pos_last]).reshape([1, 6])
+        df = pd.DataFrame(v_array, columns=[CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.TIMESTAMP, CN.POSITION])
+        return WaveTick(df.iloc[0])
+
+    def __get_number_of_ticker_per_aggregation__(self):
+        if self._period == PRD.DAILY:
+            return 1
+        elif self._period == PRD.INTRADAY:
+            return int(self._aggregation * 60) / self._refresh_rate_seconds
 
 
 class WaveTickList:

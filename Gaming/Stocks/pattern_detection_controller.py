@@ -11,12 +11,12 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher\
-    , ApiPeriod, CryptoCompareCryptoFetcher
+    , CryptoCompareCryptoFetcher
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.user_input.confirmation import UserInput
 from datetime import timedelta
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
-from sertl_analytics.constants.pattern_constants import PSC, EQUITY_TYPE, CN, BT
+from sertl_analytics.constants.pattern_constants import PSC, EQUITY_TYPE, CN, BT, PRD
 from pattern_system_configuration import SystemConfiguration
 from pattern_statistics import PatternStatistics, DetectorStatistics, ConstraintsStatistics
 from pattern_constraints import ConstraintsFactory
@@ -67,6 +67,7 @@ class PatternDetectionController:
         self.__init_loop_list_for_ticker__()
         for value_dic in self._loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
+            self.sys_config.init_predictors_without_condition_list(ticker)
             self.__update_runtime_parameters__(value_dic)
             print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
             df_data = self.__get_df_from_source__(ticker, value_dic)
@@ -87,7 +88,7 @@ class PatternDetectionController:
                 else:
                     plotter = PatternPlotter(self.sys_config, detector)
                     plotter.plot_data_frame()
-            elif self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+            elif self.sys_config.config.api_period == PRD.INTRADAY:
                 sleep(15)
 
             if value_dic[LL.NUMBER] >= self.sys_config.config.max_number_securities:
@@ -126,7 +127,7 @@ class PatternDetectionController:
             stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.sys_config.db_stock, ticker, and_clause)
             return stock_db_df_obj.df_data
         elif ticker in self.sys_config.crypto_ccy_dic:
-            if period == ApiPeriod.INTRADAY:
+            if period == PRD.INTRADAY:
                 fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
                 return fetcher.df_data
             else:
@@ -134,7 +135,7 @@ class PatternDetectionController:
                 return fetcher.df_data
         else:
             fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
-            if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+            if self.sys_config.config.api_period == PRD.INTRADAY:
                 return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             return fetcher.df_data
 
@@ -175,7 +176,7 @@ class PatternDetectionController:
         self.sys_config.runtime.actual_ticker = entry_dic[LL.TICKER]
         if self.sys_config.runtime.actual_ticker in self.sys_config.crypto_ccy_dic:
             self.sys_config.runtime.actual_ticker_equity_type = EQUITY_TYPE.CRYPTO
-            if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+            if self.sys_config.config.api_period == PRD.INTRADAY:
                 self.sys_config.runtime.actual_expected_win_pct = 1
             else:
                 self.sys_config.runtime.actual_expected_win_pct = 1
@@ -205,7 +206,7 @@ class PatternDetectionController:
     def __write_constraints_statistics__(self):
         if self.sys_config.config.statistics_constraints_excel_file_name == '':
             return
-        constraints_detail_dict = ConstraintsFactory.get_constraints_details_as_dict()
+        constraints_detail_dict = ConstraintsFactory.get_constraints_details_as_dict(self.sys_config)
         for key, details_dict in constraints_detail_dict.items():
             self.constraints_statistics.add_entry(key, details_dict)
         writer = pd.ExcelWriter(self.sys_config.config.statistics_constraints_excel_file_name)

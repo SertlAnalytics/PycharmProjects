@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, FCC, FD, DC, CN, SVC, EXTREMA, BT, PT
+from sertl_analytics.constants.pattern_constants import FT, FCC, FD, DC, CN, SVC, EXTREMA, BT, PT, PRD
 import numpy as np
 import math
 from pattern_system_configuration import SystemConfiguration, debugger
@@ -17,8 +17,6 @@ from sertl_analytics.mydates import MyDate
 from pattern_wave_tick import WaveTick
 from pattern_function_container import PatternFunctionContainerFactoryApi
 from pattern_value_categorizer import ValueCategorizer
-from pattern_configuration import ApiPeriod
-from pattern_data_frame import PatternDataFrame
 from pattern_data_dictionary import PatternDataDictionary
 
 
@@ -164,9 +162,6 @@ class Pattern:
         self._part_trade = part_trade
         self.xy_trade = self._part_trade.xy
         self.__calculate_predictions_after_breakout__()
-
-    def get_simple_moving_average_tick_list_from_part_main(self):
-        return self._part_main.get_simple_moving_average_tick_list()
 
     def is_ready_for_back_testing(self):
         pos_start, pos_last = self.__get_first_last_position_for_back_testing_data__()
@@ -599,7 +594,7 @@ class Pattern:
         self.data_dict_obj.add(DC.SLOPE_BREAKOUT_PCT, self.data_dict_obj.get_slope_breakout(pos_brk))
         self.data_dict_obj.add(DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT,
                                    self.data_dict_obj.get_slope_breakout(pos_brk, CN.VOL))
-        vc = [SVC.U_on, SVC.L_on] if self.sys_config.config.api_period == ApiPeriod.INTRADAY else [SVC.U_in, SVC.L_in]
+        vc = [SVC.U_on, SVC.L_on] if self.sys_config.config.api_period == PRD.INTRADAY else [SVC.U_in, SVC.L_in]
         time_stamp_end = time_stamp_brk if tick_breakout else time_stamp_last
         touches_top = self.value_categorizer.count_value_category(vc[0], time_stamp_first, time_stamp_end)
         touches_bottom = self.value_categorizer.count_value_category(vc[1], time_stamp_first, time_stamp_end)

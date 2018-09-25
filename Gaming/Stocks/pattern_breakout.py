@@ -6,9 +6,7 @@ Date: 2018-05-14
 """
 
 from pattern_function_container import PatternFunctionContainer
-from pattern_system_configuration import SystemConfiguration
-from sertl_analytics.constants.pattern_constants import FD, TT
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
+from sertl_analytics.constants.pattern_constants import FD, TT, PRD
 from sertl_analytics.mymath import MyMath
 
 
@@ -53,7 +51,7 @@ class PatternBreakout:
         return counter >= 2
 
     def get_details_for_annotations(self):
-        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+        if self.sys_config.config.api_period == PRD.INTRADAY:
             date_str = self.tick_breakout.time_str_for_f_var
         else:
             date_str = self.tick_breakout.date_str_for_f_var

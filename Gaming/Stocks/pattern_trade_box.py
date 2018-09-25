@@ -5,9 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-10
 """
 
-from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT, CN
+from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT, CN, PRD
 from pattern_wave_tick import WaveTick, WaveTickList
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mydates import MyDate
 import math
 from scipy import stats
@@ -23,66 +22,6 @@ class TradingBoxApi:
         self.trade_strategy = ''
         self.height = 0  # is used for touch point
         self.distance_bottom = 0  # is used for touch point
-        self.period = ''
-        self.aggregation = 0
-        self.refresh_trigger_in_seconds = 0
-        self.sma_tick_list = []
-
-
-class SimpleMovingAverageHandler:
-    def __init__(self, tick_list: list, period: str, aggregation: int, refresh_rate_seconds: int):
-        self._period = period
-        self._aggregation = aggregation
-        self._refresh_rate_seconds = refresh_rate_seconds
-        self._wave_tick_list = WaveTickList(tick_list)
-        self._length = len(tick_list)
-        self._latest_sma_value = self._wave_tick_list.get_simple_moving_average(self._length)
-        self._latest_wave_tick = self._wave_tick_list.tick_list[-1]
-        self._ticker_per_aggregation = self.__get_ticker_per_aggregation__()
-        self._current_ticker_counter = 0
-        self._current_open = 0
-        self._current_close = 0
-        self._current_low = math.inf
-        self._current_high = -math.inf
-        self._current_time_stamp = 0
-
-    def get_simple_moving_average(self) -> float:
-        return self._latest_sma_value
-
-    def get_simple_moving_average_after_this_ticker(self, ticker_last_price: float) -> float:
-        if self._current_open == 0:
-            self._current_open = ticker_last_price
-        if self._current_high < ticker_last_price:
-            self._current_high = ticker_last_price
-        if self._current_low > ticker_last_price:
-            self._current_low = ticker_last_price
-        self._current_close = ticker_last_price
-        self._current_time_stamp = MyDate.get_epoch_seconds_from_datetime()
-
-        self._current_ticker_counter += 1
-        if self._current_ticker_counter >= self._ticker_per_aggregation:
-            self._latest_wave_tick = self.__get_current_tick_values_as_wave_tick__(self._latest_wave_tick.position)
-            self._wave_tick_list.add_wave_tick(self._latest_wave_tick)
-            self._latest_sma_value = self._wave_tick_list.get_simple_moving_average(self._length)
-            self._current_open = 0
-            self._current_close = 0
-            self._current_low = math.inf
-            self._current_high = -math.inf
-            self._current_time_stamp = 0
-            self._current_ticker_counter = 0
-        return self._latest_sma_value
-
-    def __get_current_tick_values_as_wave_tick__(self, last_position: int):
-        v_array = np.array([self._current_open, self._current_close, self._current_low, self._current_high,
-                            self._current_time_stamp, last_position + 1]).reshape([1, 6])
-        df = pd.DataFrame(v_array, columns=[CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.TIMESTAMP, CN.POSITION])
-        return WaveTick(df.iloc[0])
-
-    def __get_ticker_per_aggregation__(self):
-        if self._period == ApiPeriod.DAILY:
-            return 1
-        elif self._period == ApiPeriod.INTRADAY:
-            return int(self._aggregation * 60) / self._refresh_rate_seconds
 
 
 class TradingBox:
@@ -92,9 +31,7 @@ class TradingBox:
         self._ticker_id = self._data_dict[DC.TICKER_ID]
         self._off_set_value = api.off_set_value  # basis for distance_top and _bottom
         self._buy_price = api.buy_price
-        self._sma_handler = SimpleMovingAverageHandler(api.sma_tick_list, api.period, api.aggregation,
-                                                       api.refresh_trigger_in_seconds)
-        self._sma_value = self._sma_handler.get_simple_moving_average()
+        self._sma_value = 0  # simple moving average value for this strategy
         self._round_decimals = 2 if self._off_set_value > 100 else 4
         self._trade_strategy = api.trade_strategy
         self._ticker_last_price_list = [api.off_set_value, api.buy_price]  # off_set is used to guarantee: max >= offset
@@ -150,10 +87,6 @@ class TradingBox:
         return self.round(self._distance_bottom / 2)
 
     @property
-    def sma_value(self):
-        return self._sma_value
-
-    @property
     def stop_loss_orig(self):
         return self.round(self._stop_loss_orig)
 
@@ -202,9 +135,9 @@ class TradingBox:
                 'dist_trailing_stop': self.distance_trailing_stop
         }
 
-    def adjust_to_next_ticker_last_price(self, ticker_last_price: float) -> bool:
+    def adjust_to_next_ticker_last_price(self, ticker_last_price: float, sma_value=0) -> bool:
         self._ticker_last_price_list.append(ticker_last_price)
-        self._sma_value = self._sma_handler.get_simple_moving_average_after_this_ticker(ticker_last_price)
+        self._sma_value = sma_value
         return self.__adjust_to_next_ticker_last_price__(ticker_last_price)
 
     def __adjust_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
@@ -222,8 +155,8 @@ class TradingBox:
                 self._stop_loss = self._stop_loss + multiplier * self.distance_stepping
                 return True
         elif self._trade_strategy == TSTR.SMA:  # ToDo trailing stop closer after some time (above buy price !!!)
-            if self._stop_loss < self.sma_value:
-                self._stop_loss = self.sma_value
+            if self._stop_loss < self._sma_value:
+                self._stop_loss = self._sma_value
                 return True
         return False
 

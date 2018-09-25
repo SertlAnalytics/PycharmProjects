@@ -12,6 +12,7 @@ from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
 from pattern_data_dictionary import PatternDataDictionary
 from pattern_trade_box import ExpectedWinTradingBox, TouchPointTradingBox, TradingBoxApi
+from pattern_wave_tick import WaveTick, WaveTickList, TickerWaveTickConverter
 
 
 class PatternTradeApi:
@@ -27,10 +28,15 @@ class PatternTrade:
     def __init__(self, api: PatternTradeApi):
         self.sys_config = api.pattern.sys_config
         self.bitfinex_config = api.bitfinex_config
+        self.trade_process = self.sys_config.runtime.actual_trade_process
         self.buy_trigger = api.buy_trigger
         self.trade_box_type = api.box_type
         self.trade_strategy = api.trade_strategy
         self.pattern = api.pattern
+        self._wave_tick_list = WaveTickList(self.pattern.part_main.tick_list)
+        self._ticker_converter = self.__get_ticker_wave_tick_converter__()
+        self._ticker_time_stamp_list = []
+        self._ticker_dict = {}
         self._is_simulation = True  # Default
         self._is_breakout_active = self.__get_default_value_for_breakout_active__()
         self._counter_required = 2
@@ -120,6 +126,19 @@ class PatternTrade:
     def is_simulation(self, value: bool):
         self._is_simulation = value
 
+    @property
+    def ticker_actual(self) -> Ticker:
+        return self._ticker_dict[self._ticker_time_stamp_list[-1]]
+
+    def add_ticker(self, ticker: Ticker):
+        self._ticker_time_stamp_list.append(ticker.time_stamp)
+        self._ticker_dict[ticker.time_stamp] = ticker
+        if self._ticker_converter.add_value_with_timestamp(ticker.last_price, ticker.time_stamp):
+            self._wave_tick_list.add_wave_tick(self._ticker_converter.wave_tick)
+
+    def get_ticker_for_time_stamp(self, ticker_time_stamp: int):
+        return self._ticker_dict[ticker_time_stamp]
+
     def __get_default_value_for_breakout_active__(self):
         if self.buy_trigger == BT.BREAKOUT:
             return True
@@ -133,10 +152,11 @@ class PatternTrade:
             self.data_dict_obj.add(DC.FC_TRADE_REACHED_PRICE_PCT, prediction_dict[DC.TRADE_REACHED_PRICE_PCT])
             self.data_dict_obj.add(DC.FC_TRADE_RESULT_ID, prediction_dict[DC.TRADE_RESULT_ID])
 
-    def is_ticker_breakout(self, process: str, ticker: Ticker):
+    def is_actual_ticker_breakout(self, process: str):
         if not self._is_breakout_active:
             return False
         is_breakout = False  # default
+        ticker = self.ticker_actual
         vc = self.__get_value_category_for_breakout__()
         if self.buy_trigger == BT.BREAKOUT:
             is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, vc, True)
@@ -144,8 +164,18 @@ class PatternTrade:
             is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, vc, True)
         if is_breakout:
             self._breakout_counter += 1 if self.buy_trigger == BT.BREAKOUT else 2  # touch point => immediate buy
-        self.print_state_details(process, ticker)
+        self.print_state_details_for_actual_ticker(process)
         return self._breakout_counter >= self._counter_required  # we need a second confirmation
+
+    def are_preconditions_for_breakout_buy_fulfilled(self):
+        if self.trade_strategy == TSTR.SMA:
+            sma = self._wave_tick_list.get_simple_moving_average(self.sys_config.config.simple_moving_average_number)
+            time_stamp = self._ticker_time_stamp_list[-1]
+            value_categories = [SVC.M_in, SVC.H_M_in]
+            for value_category in value_categories:
+                if self.pattern.is_value_in_category(sma, time_stamp, value_category, True):
+                    return True
+        return True
 
     def __get_value_category_for_breakout__(self):
         if self.pattern.pattern_type in [FT.TKE_BOTTOM, FT.FIBONACCI_DESC]:
@@ -153,12 +183,13 @@ class PatternTrade:
         else:
             return SVC.M_in if self.buy_trigger == BT.TOUCH_POINT else SVC.U_out
 
-    def is_ticker_wrong_breakout(self, process: str, ticker: Ticker):
+    def is_actual_ticker_wrong_breakout(self, process: str):
+        ticker = self.ticker_actual
         vc = self.__get_value_category_for_wrong_breakout__()
         is_wrong_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, vc, True)
         if is_wrong_breakout:
             self._wrong_breakout_counter += 1
-        self.print_state_details(process, ticker)
+        self.print_state_details_for_actual_ticker(process)
         return self._wrong_breakout_counter >= self._counter_required  # we need a second confirmation
 
     def __get_value_category_for_wrong_breakout__(self):
@@ -167,15 +198,18 @@ class PatternTrade:
         else:
             return SVC.L_out
 
-    def verify_touch_point(self, ticker: Ticker):
+    def verify_touch_point(self):
+        ticker = self.ticker_actual
         last_tick = self.pattern.part_main.tick_last
         value_tuple_list = [[ticker.last_price, ticker.time_stamp], [last_tick.low, last_tick.time_stamp]]
         for value_tuple in value_tuple_list:
             if self.pattern.is_value_in_category(value_tuple[0], value_tuple[1], SVC.L_on, True):
                 self._is_breakout_active = True
+                print('Breakout activated for last price={:.2f}'.format(ticker.last_price))
                 break
 
-    def print_state_details(self, process: str, ticker: Ticker):
+    def print_state_details_for_actual_ticker(self, process: str):
+        ticker = self.ticker_actual
         if self.status == PTS.NEW:
             counter_required = self.counter_required
             if self.buy_trigger == BT.BREAKOUT:
@@ -207,6 +241,12 @@ class PatternTrade:
             trade_dict = self.data_dict_obj.get_data_dict_for_trade_table()
             self.sys_config.db_stock.delete_existing_trade(trade_dict[DC.ID])  # we need always the most actual version
             self.sys_config.db_stock.insert_trade_data([trade_dict])
+            self.__save_to_database__()
+
+    def __save_to_database__(self):
+        period = self.sys_config.config.api_period
+        aggregation = self.sys_config.config.api_period_aggregation
+        self.sys_config.db_stock.save_tick_list(self._wave_tick_list.tick_list, self.ticker_id, period, aggregation)
 
     def print_trade(self, prefix=''):
         if prefix != '':
@@ -234,10 +274,22 @@ class PatternTrade:
             self._order_status_sell.value_total - self._order_status_buy.value_total, self._order_status_buy.value_total
         )
 
-    def adjust_to_next_ticker(self, ticker: Ticker):
-        was_adjusted = self._trade_box.adjust_to_next_ticker_last_price(ticker.last_price)
+    def adjust_trade_box_to_actual_ticker(self):
+        sma = self.__get_simple_moving_average_value__() if self.trade_strategy == TSTR.SMA else 0
+        was_adjusted = self._trade_box.adjust_to_next_ticker_last_price(self.ticker_actual.last_price, sma)
         if was_adjusted:
-            self.print_state_details(PTHP.ADJUST_STOPS_AND_LIMITS, ticker)
+            self.print_state_details_for_actual_ticker(PTHP.ADJUST_STOPS_AND_LIMITS)
+
+    def __get_simple_moving_average_value__(self) -> float:
+        elements = min(self._wave_tick_list.length, self.sys_config.config.simple_moving_average_number)
+        return self._wave_tick_list.get_simple_moving_average(elements)
+
+    def __get_ticker_wave_tick_converter__(self) -> TickerWaveTickConverter:
+        period = self.sys_config.config.api_period
+        aggregation = self.sys_config.config.api_period_aggregation
+        refresh_trigger_in_seconds = self.bitfinex_config.ticker_refresh_rate_in_seconds
+        pos_last = self._wave_tick_list.tick_list[-1].position
+        return TickerWaveTickConverter(period, aggregation, refresh_trigger_in_seconds, pos_last)
 
     def __get_trade_box__(self, off_set_price: float, buy_price: float, height=0.0, distance_bottom=0.0):
         api = TradingBoxApi()
@@ -245,12 +297,8 @@ class PatternTrade:
         api.off_set_value = off_set_price
         api.buy_price = buy_price
         api.trade_strategy = self.trade_strategy
-        api.sma_tick_list = self.pattern.get_simple_moving_average_tick_list_from_part_main()
         api.height = height
         api.distance_bottom = distance_bottom
-        api.period = self.sys_config.config.api_period
-        api.aggregation = self.sys_config.config.api_period_aggregation
-        api.refresh_trigger_in_seconds = self.bitfinex_config.ticker_refresh_rate_in_seconds
         if self.trade_box_type == TBT.EXPECTED_WIN:
             return ExpectedWinTradingBox(api)
         elif self.trade_box_type == TBT.TOUCH_POINT:
@@ -260,14 +308,13 @@ class PatternTrade:
     def set_order_status_buy(self, order_status: OrderStatus, buy_comment, ticker: Ticker):
         order_status.order_trigger = self.buy_trigger
         order_status.trade_strategy = self.trade_strategy
-        order_status.trade_process = self.sys_config.config.trade_process
         order_status.order_comment = buy_comment
         self._order_status_buy = order_status
         self.pattern.data_dict_obj.add_buy_order_status_data_to_pattern_data_dict(order_status, self.trade_strategy)
         self.__set_properties_after_buy__(ticker)
         self.__add_order_status_buy_to_data_dict__(self._order_status_buy)
         self.__add_order_status_sell_to_data_dict__(self._order_status_sell)  # to initialize those data
-        if order_status.trade_process != TP.BACK_TESTING:
+        if self.trade_process != TP.BACK_TESTING:
             self.print_trade('Details after buying')
 
     def __set_properties_after_buy__(self, ticker: Ticker):
@@ -299,6 +346,7 @@ class PatternTrade:
 
     def __add_trade_basis_data_to_data_dict__(self):
         self.data_dict_obj.add(DC.ID, self.id)
+        self.data_dict_obj.add(DC.TRADE_PROCESS, self.trade_process)
         self.data_dict_obj.add(DC.TRADE_READY_ID, 1 if self._was_candidate_for_real_trading else 0)
         self.data_dict_obj.add(DC.TRADE_STRATEGY, self.trade_strategy)
         self.data_dict_obj.add(DC.TRADE_STRATEGY_ID, TSTR.get_id(self.trade_strategy))

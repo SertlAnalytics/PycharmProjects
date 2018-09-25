@@ -17,6 +17,7 @@ class CDT:  # Column Data Types
     FLOAT = 'Float'
     DATE = 'Date'
     TIME = 'Time'
+    BOOLEAN = 'Boolean'
 
 
 class MyTable:
@@ -63,10 +64,11 @@ class MyTable:
 
 
 class MyTableColumn:
-    def __init__(self, column_name: str, data_type='String', data_size=''):
+    def __init__(self, column_name: str, data_type='String', data_size='', default=''):
         self._name = column_name
         self._type = data_type
         self._size = data_size
+        self._default = default
         self._description = self.__get_description__()
 
     @property
@@ -78,7 +80,10 @@ class MyTableColumn:
         return self._description
 
     def __get_description__(self):
-        return "Column('" + self._name + "', " + self._type + "(" + str(self._size) + "))"
+        #  example:  Column('BigMove', Boolean(), default=False)
+        if self._default == '':
+            return "Column('{}', {}({}))".format(self._name, self._type, self._size)
+        return "Column('{}', {}({}), default={})".format(self._name, self._type, self._size, self._default)
 
 
 class BaseDatabase:
@@ -125,6 +130,8 @@ class BaseDatabase:
         metadata.create_all(self.engine)
 
     def __insert_data_into_table__(self, table_name: str, insert_data_dic_list: list):
+        if len(insert_data_dic_list) == 0:
+            return
         connection = self.engine.connect()
         metadata = MetaData()
         table_object = Table(table_name, metadata, autoload=True, autoload_with=self.engine)

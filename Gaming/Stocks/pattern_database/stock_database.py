@@ -9,16 +9,82 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, DateTime, Time
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod, ApiOutputsize
 from sertl_analytics.mydates import MyDate
-from pattern_database.stock_tables import FeaturesTable, TradeTable
+from pattern_database.stock_tables import FeaturesTable, TradeTable, StocksTable, CompanyTable, STBL
 import pandas as pd
 import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
-from sertl_analytics.constants.pattern_constants import Indices, CN, DC
+from sertl_analytics.constants.pattern_constants import Indices, CN, DC, PRD, OPS
 import os
 import time
+
+
+class StockInsertData:
+    def __init__(self):
+        self.time_stamp = 0
+        self.open = 0
+        self.high = 0
+        self.low = 0
+        self.close = 0
+        self.volume = 0
+        self._big_move = False
+        self._direction = 0
+
+    def set_direction_big_move(self, close_previous: float):
+        if self.close != 0:
+            if abs((close_previous - self.close) / self.close) > 0.03:
+                self._big_move = True
+                self._direction = math.copysign(1, self.close - close_previous)
+
+    def get_dict_for_input(self, symbol: str, period: str, aggregation: int):
+        if math.isnan(self.high):
+            return {}
+        date_time = MyDate.get_date_time_from_epoch_seconds(self.time_stamp)
+        return {CN.PERIOD: period, CN.AGGREGATION: aggregation, CN.SYMBOL: symbol,
+                CN.TIMESTAMP: self.time_stamp, CN.DATE: date_time.date(), CN.TIME: date_time.time(),
+                CN.OPEN: self.open, CN.HIGH: self.high, CN.LOW: self.low, CN.CLOSE: self.close,
+                CN.VOL: self.volume, CN.BIG_MOVE: self._big_move, CN.DIRECTION: self._direction}
+
+
+class StockInsertHandler:
+    def __init__(self, symbol: str, period: str, aggregation: int):
+        self._symbol = symbol
+        self._period = period
+        self._aggregation = aggregation
+        self._previous_close = 0
+        self._input_dict_list = []
+
+    @property
+    def input_dict_list(self):
+        return self._input_dict_list
+
+    def add_data_frame_row(self, time_stamp: int, row):
+        insert_data = StockInsertData()
+        insert_data.time_stamp = time_stamp
+        insert_data.open = float(row[CN.OPEN])
+        insert_data.high = float(row[CN.HIGH])
+        insert_data.low = float(row[CN.LOW])
+        insert_data.close = float(row[CN.CLOSE])
+        insert_data.volume = float(row[CN.VOL])
+        self.__add_insert_data_to_list__(insert_data)
+
+    def add_wave_tick(self, wave_tick):
+        insert_data = StockInsertData()
+        insert_data.time_stamp = wave_tick.time_stamp
+        insert_data.open = wave_tick.open
+        insert_data.high = wave_tick.high
+        insert_data.low = wave_tick.low
+        insert_data.close = wave_tick.close
+        insert_data.volume = wave_tick.volume
+        self.__add_insert_data_to_list__(insert_data)
+
+    def __add_insert_data_to_list__(self, insert_data):
+        insert_data.set_direction_big_move(self._previous_close)
+        self._previous_close = insert_data.close
+        input_dict = insert_data.get_dict_for_input(self._symbol, self._period, self._aggregation)
+        if len(input_dict) > 0:
+            self._input_dict_list.append(input_dict)
 
 
 class StockDatabase(BaseDatabase):
@@ -26,6 +92,9 @@ class StockDatabase(BaseDatabase):
         BaseDatabase.__init__(self)
         self._crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
         self._sleep_seconds = 20
+        self._dt_now_time_stamp = int(datetime.now().timestamp())
+        self._stocks_table = StocksTable()
+        self._company_table = CompanyTable()
         self._features_table = FeaturesTable()
         self._trade_table = TradeTable()
 
@@ -34,7 +103,7 @@ class StockDatabase(BaseDatabase):
         return len(last_loaded_time_stamp_dic) == 1
 
     def get_name_for_symbol(self, symbol: str):
-        company_dic = self.__get_company_dic__(symbol)
+        company_dic = self.__get_company_dict__(symbol)
         return '' if len(company_dic) == 0 else company_dic[symbol].Name
 
     def __get_engine__(self):
@@ -48,25 +117,22 @@ class StockDatabase(BaseDatabase):
         package_dir = os.path.abspath(os.path.dirname(__file__))
         return os.path.join(package_dir, self.__get_db_name__())
 
-    def import_stock_data_by_deleting_existing_records(self, symbol: str, period: ApiPeriod = ApiPeriod.DAILY,
-                                                       output_size: ApiOutputsize = ApiOutputsize.COMPACT):
+    def import_stock_data_by_deleting_existing_records(self, symbol: str, period=PRD.DAILY, output_size=OPS.COMPACT):
         self.delete_records("DELETE from Stocks WHERE Symbol = '" + str(symbol) + "'")
         input_dic = self.get_input_values_for_stock_table(period, symbol, output_size)
         self.__insert_data_into_table__('Stocks', input_dic)
 
-    def update_stock_data_by_index(self, index: str, period=ApiPeriod.DAILY, aggregation=1):
-        company_dict = self.__get_company_dic__()
+    def update_stock_data_by_index(self, index: str, period=PRD.DAILY, aggregation=1):
+        company_dict = self.__get_company_dict__()
         self.__check_company_dic_against_web__(index, company_dict)
         last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__()
         index_list = self.__get_index_list__(index)
-        dt_now_time_stamp = datetime.now().timestamp()
         for index in index_list:
             print('\nUpdating {}...\n'.format(index))
             ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
             for ticker in ticker_dic:
                 self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
-                                                            company_dict, last_loaded_date_stamp_dic,
-                                                            dt_now_time_stamp)
+                                                            company_dict, last_loaded_date_stamp_dic)
         self.__handle_error_cases__()
 
     def __check_company_dic_against_web__(self, index: str, company_dict: dict):
@@ -75,18 +141,17 @@ class StockDatabase(BaseDatabase):
             if key not in company_dict:
                 name = company_dict_by_web[key]
                 self.__insert_company_in_company_table__(key, name, True)
-                new_dict = self.__get_company_dic__(key)
+                new_dict = self.__get_company_dict__(key)
                 company_dict[key] = new_dict[key]
 
-    def update_crypto_currencies(self, period=ApiPeriod.DAILY, aggregation=1):
-        company_dic = self.__get_company_dic__(like_input='USD')
+    def update_crypto_currencies(self, period=PRD.DAILY, aggregation=1):
+        company_dic = self.__get_company_dict__(like_input='USD')
         last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(like_input='USD')
-        dt_now_time_stamp = datetime.now().timestamp()
         print('\nUpdating {}...\n'.format(Indices.CRYPTO_CCY))
         ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
         for ticker in ticker_dic:
             self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
-                                                        company_dic, last_loaded_date_stamp_dic, dt_now_time_stamp)
+                                                        company_dic, last_loaded_date_stamp_dic)
         self.__handle_error_cases__()
 
     def __handle_error_cases__(self):
@@ -99,13 +164,11 @@ class StockDatabase(BaseDatabase):
                 li = retry_dic[ticker]
                 self.update_stock_data_for_symbol(ticker, li[0], li[1])
 
-    def update_stock_data_for_symbol(self, symbol: str, name_input='', period=ApiPeriod.DAILY, aggregation=1):
-        company_dic = self.__get_company_dic__(symbol)
+    def update_stock_data_for_symbol(self, symbol: str, name_input='', period=PRD.DAILY, aggregation=1):
+        company_dic = self.__get_company_dict__(symbol)
         name = company_dic[symbol] if symbol in company_dic else name_input
-        last_loaded_date_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
-        dt_now_time_stamp = datetime.now().timestamp()
-        self.__update_stock_data_for_single_value__(period, aggregation, symbol, name,
-                                                    company_dic, last_loaded_date_dic, dt_now_time_stamp)
+        last_loaded_dict = self.__get_last_loaded_time_stamp_dic__(symbol)
+        self.__update_stock_data_for_single_value__(period, aggregation, symbol, name, company_dic, last_loaded_dict)
 
     def insert_pattern_features(self, input_dict_list: list):
         self.__insert_data_into_table__('Features', input_dict_list)
@@ -114,17 +177,16 @@ class StockDatabase(BaseDatabase):
         self.__insert_data_into_table__('Trade', input_dict_list)
 
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str,
-                                               company_dic: dict, last_loaded_date_stamp_dic: dict,
-                                               dt_now_time_stamp: float):
-        name = self.__get_alternate_name__(ticker, name)
+                                               company_dic: dict, last_loaded_date_stamp_dic: dict):
+        name = self._company_table.get_alternate_name(ticker, name)
         last_loaded_time_stamp = last_loaded_date_stamp_dic[ticker] if ticker in last_loaded_date_stamp_dic else 100000
-        process_type = self.__get_process_type_for_update__(period, aggregation, dt_now_time_stamp,
-                                                            last_loaded_time_stamp)
+        process_type = self._stocks_table.get_process_type_for_update(
+            period, aggregation, self._dt_now_time_stamp, last_loaded_time_stamp)
         if process_type == 'NONE':
             print('{} - {} is already up-to-date - no load required.'.format(ticker, name))
             return
         if ticker not in company_dic or company_dic[ticker].ToBeLoaded:
-            output_size = ApiOutputsize.FULL if process_type == 'FULL' else ApiOutputsize.COMPACT
+            output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
             try:
                 if ticker in self._crypto_ccy_dic:
                     stock_fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
@@ -156,50 +218,17 @@ class StockDatabase(BaseDatabase):
                 print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
             time.sleep(self._sleep_seconds)
 
-    @staticmethod
-    def __get_process_type_for_update__(period: str, aggregation: int, dt_now_time_stamp, last_loaded_time_stamp):
-        delta_time_stamp = dt_now_time_stamp - last_loaded_time_stamp
-        delta_time_stamp_min = int(delta_time_stamp / 60)
-        delta_time_stamp_days = int(delta_time_stamp_min / (24 * 60))
-        if period == ApiPeriod.DAILY:
-            if delta_time_stamp_days < 2:
-                return 'NONE'
-            elif delta_time_stamp_days < 50:
-                return 'COMPACT'
-            else:
-                return 'FULL'
-        else:
-            if delta_time_stamp_min < aggregation:
-                return 'NONE'
-            else:
-                return 'FULL'
-
-    @staticmethod
-    def __get_alternate_name__(ticker: str, name: str):
-        dic_alternate = {'GOOG': 'Alphbeth', 'LBTYK': 'Liberty', 'FOX': 'Twenty-First Century'}
-        return dic_alternate[ticker] if ticker in dic_alternate else name
-
-    def __get_company_dic__(self, symbol_input: str = '', like_input: str = ''):
-        company_dic = {}
-        query = 'SELECT * FROM Company'
-        if symbol_input != '':
-            query += ' WHERE Symbol = "' + symbol_input + '"'
-        elif like_input != '':
-            query += ' WHERE Symbol like "%' + like_input + '"'
-        query += ' ORDER BY Symbol'
+    def __get_company_dict__(self, symbol_input: str = '', like_input: str = ''):
+        company_dict = {}
+        query = self._company_table.get_select_query(symbol_input, like_input)
         db_df = DatabaseDataFrame(self, query)
         for index, rows in db_df.df.iterrows():
-            company_dic[rows.Symbol] = rows
-        return company_dic
+            company_dict[rows.Symbol] = rows
+        return company_dict
 
     def __get_last_loaded_time_stamp_dic__(self, symbol_input: str = '', like_input: str = ''):
         last_loaded_time_stamp_dic = {}
-        query = 'SELECT DISTINCT Symbol from Stocks'
-        if symbol_input != '':
-            query += ' WHERE Symbol = "' + symbol_input + '"'
-        elif like_input != '':
-            query += ' WHERE Symbol like "%' + like_input + '"'
-        query += ' ORDER BY Symbol'
+        query = self._stocks_table.get_distinct_symbol_query(symbol_input, like_input)
         db_df = DatabaseDataFrame(self, query)
         loaded_symbol_list = [rows.Symbol for index, rows in db_df.df.iterrows()]
         for symbol in loaded_symbol_list:
@@ -212,9 +241,7 @@ class StockDatabase(BaseDatabase):
         return last_loaded_time_stamp_dic
 
     def __insert_company_in_company_table__(self, ticker: str, name: str, to_be_loaded: bool):
-        input_dic = {'Symbol': ticker, 'Name': name, 'ToBeLoaded': to_be_loaded,
-                     'Sector': '', 'Year': 2018, 'Revenues': 0, 'Expenses': 0,
-                     'Employees': 0, 'Savings': 0, 'ForcastGrowth': 0}
+        input_dic = self._company_table.get_insert_dict_for_company(ticker, name, to_be_loaded)
         try:
             self.__insert_data_into_table__('Company', [input_dic])
         except Exception:
@@ -225,88 +252,36 @@ class StockDatabase(BaseDatabase):
     def __get_index_list__(index: str):
         return [Indices.DOW_JONES, Indices.NASDAQ100, Indices.SP500] if index == Indices.ALL else [index]
 
-    def get_input_values_for_stock_table(self, period, symbol: str, output_size: ApiOutputsize):
+    def get_input_values_for_stock_table(self, period, symbol: str, output_size: OPS):
         stock_fetcher = AlphavantageStockFetcher(symbol, period, output_size)
         df = stock_fetcher.__get_data_frame__()
         return self.__get_df_data_for_insert_statement__(df, period, symbol)
 
     @staticmethod
     def __get_df_data_for_insert_statement__(df: pd.DataFrame, period: str, symbol: str, aggregation=1):
-        input_list = []
-        close_previous = 0
-        for timestamp, row in df.iterrows():
-            date_time = MyDate.get_date_time_from_epoch_seconds(timestamp)
-            v_open = float(row[CN.OPEN])
-            high = float(row[CN.HIGH])
-            low = float(row[CN.LOW])
-            close = float(row[CN.CLOSE])
-            volume = float(row[CN.VOL])
-            big_move = False  # default
-            direction = 0  # default
-            if close != 0:
-                if abs((close_previous - close) / close) > 0.03:
-                    big_move = True
-                    direction = math.copysign(1, close - close_previous)
-            close_previous = close
+        insert_handler = StockInsertHandler(symbol, period, aggregation)
+        for time_stamp, row in df.iterrows():
+            insert_handler.add_data_frame_row(time_stamp, row)
+        return insert_handler.input_dict_list
 
-            if not math.isnan(high):
-                input_dic = {CN.PERIOD: str(period), CN.AGGREGATION: aggregation, CN.SYMBOL: symbol,
-                             CN.TIMESTAMP: timestamp, CN.DATE: date_time.date(), CN.TIME: date_time.time(),
-                             CN.OPEN: v_open, CN.HIGH: high, CN.LOW: low, CN.CLOSE: close,
-                             CN.VOL: volume, CN.BIG_MOVE: big_move, CN.DIRECTION: direction}
-                input_list.append(input_dic)
-        return input_list
+    def save_tick_list(self, tick_list: list, symbol: str, period: str, aggregation: int):
+        insert_handler = StockInsertHandler(symbol, period, aggregation)
+        for wave_tick in tick_list:
+            if not self.is_stock_data_already_available(symbol, wave_tick.time_stamp, period, aggregation):
+                insert_handler.add_wave_tick(wave_tick)
+        self.__insert_data_into_table__(STBL.STOCKS, insert_handler.input_dict_list)
 
-    def create_tables(self):
-        metadata = MetaData()
-        # Define a new table with a name, count, amount, and valid column: data
-        data = Table('Stocks', metadata,
-                     Column('Period', String(20)),  # WEEKLY / DAILY / INTRADAY
-                     Column('Aggregation', Integer()),  # 1, 5, 15 (minute for intraday)
-                     Column('Symbol', String(20)),
-                     Column('Timestamp', Integer()),
-                     Column('Date', Date()),
-                     Column('Time', Time()),
-                     Column('Open', Float()),
-                     Column('High', Float()),
-                     Column('Low', Float()),
-                     Column('Close', Float()),
-                     Column('Volume', Float()),
-                     Column('BigMove', Boolean(), default=False),
-                     Column('Direction', Integer(), default=0)  # 1 = up, -1 = down, 0 = default (no big move)
-                     )
+    def create_stocks_table(self):
+        self.__create_table__(STBL.STOCKS)
 
-        # Define a new table with a name, count, amount, and valid column: data
-        data = Table(
-                'Company', metadata,
-                Column('Symbol', String(10), unique=True),
-                Column('Name', String(100)),
-                Column('ToBeLoaded', Boolean(), default=False),
-                Column('Sector', String(100)),
-                Column('Year', Integer()),
-                Column('Revenues', Float()),
-                Column('Expenses', Float()),
-                Column('Employees', Float()),
-                Column('Savings', Float()),
-                Column('ForcastGrowth', Float())
-        )
+    def create_company_table(self):
+        self.__create_table__(STBL.COMPANY)
 
-        self.create_database_elements(metadata)
-        print(repr(data))
-
-    def create_pattern_feature_table(self):
-        metadata = MetaData()
-        exec(self._features_table.description)
-        self.create_database_elements(metadata)
-        table_obj = metadata.tables.get('Features')
-        print(repr(table_obj))
+    def create_features_table(self):
+        self.__create_table__(STBL.FEATURES)
 
     def create_trade_table(self):
-        metadata = MetaData()
-        exec(self._trade_table.description)
-        self.create_database_elements(metadata)
-        table_obj = metadata.tables.get('Trade')
-        print(repr(table_obj))
+        self.__create_table__(STBL.TRADE)
 
     def __insert_feature_in_feature_table__(self, ticker: str, input_dic: dict):
         try:
@@ -315,8 +290,13 @@ class StockDatabase(BaseDatabase):
             self.error_handler.catch_exception(__name__)
             print('{}: problem inserting into Features table.'.format(ticker))
 
-    def are_features_already_available(self, id: str) -> bool:
-        query = self._features_table.get_query_for_unique_record_by_id(id)
+    def is_stock_data_already_available(self, symbol: str, time_stamp: int, period: str, aggregation: int) -> bool:
+        query = self._stocks_table.get_query_for_unique_record(symbol, time_stamp, period, aggregation)
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.shape[0] > 0
+
+    def are_features_already_available(self, features_id: str) -> bool:
+        query = self._features_table.get_query_for_unique_record_by_id(features_id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
@@ -346,9 +326,21 @@ class StockDatabase(BaseDatabase):
         return {key: [str(df_first[key]), str(features_dict[key])] for key, values in features_dict.items()
                 if str(df_first[key]) != str(features_dict[key])}
 
+    def __create_table__(self, table_name: str):
+        metadata = MetaData()
+        table = self.__get_table_by_name__(table_name)
+        exec(table.description)
+        self.create_database_elements(metadata)
+        table_obj = metadata.tables.get(table_name)
+        print(repr(table_obj))
+
+    def __get_table_by_name__(self, table_name: str):
+        return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table,
+                STBL.FEATURES: self._features_table, STBL.TRADE: self._trade_table}.get(table_name, None)
+
 
 class StockDatabaseDataFrame(DatabaseDataFrame):
-    def __init__(self, db: StockDatabase, symbol='', and_clause='', period='DAILY', aggregation=1):
+    def __init__(self, db: StockDatabase, symbol='', and_clause='', period=PRD.DAILY, aggregation=1):
         self.symbol = symbol
         self.statement = "SELECT * from Stocks WHERE Symbol = '{}' and Period = '{}' and Aggregation = {}".format(
             symbol, period, aggregation)

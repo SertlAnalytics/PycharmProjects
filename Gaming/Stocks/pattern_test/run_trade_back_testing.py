@@ -13,19 +13,19 @@ from pattern_test.trade_test import TradeTest, TradeTestApi
 back_testing = TradeTest(TP.BACK_TESTING)
 api = TradeTestApi()
 
-back_testing.sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN]
-back_testing.sys_config.config.save_trade_data = True
+back_testing.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
+# back_testing.sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN]
+back_testing.sys_config.config.save_trade_data = False
 
 # ******** START setup **********
-api.buy_trigger = BT.TOUCH_POINT
-api.trade_strategy = TSTR.TRAILING_STOP
-api.process = TTC.BACK_TESTING
+api.buy_trigger = BT.BREAKOUT
+api.trade_strategy = TSTR.SMA
 
 # ******** END setup **********
 
-ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.DOW_JONES)
+# ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.DOW_JONES)
 # ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
-ticker_dic = {'DIS': 'a'}
+ticker_dic = {'WMT': 'a'}
 api.and_clause = "Date BETWEEN '2018-01-09' AND '2018-06-03'"
 
 # 2018-02-09_00:00_2018-04-03

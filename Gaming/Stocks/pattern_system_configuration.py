@@ -35,13 +35,18 @@ class SystemConfiguration:
         self.predictor_before_breakout = None
         self.predictor_after_breakout = None
         self.predictor_for_trades = None
-        self.__init__predictors__()
+        self.__init_predictors__()
 
-    def __init__predictors__(self):
-        self.predictor_touch_points = PatternPredictorTouchPoints(self.db_stock)
-        self.predictor_before_breakout = PatternPredictorBeforeBreakout(self.db_stock)
-        self.predictor_after_breakout = PatternPredictorAfterBreakout(self.db_stock)
-        self.predictor_for_trades = PatternPredictorForTrades(self.db_stock)
+    def init_predictors_without_condition_list(self, ticker_id: str):
+        # to avoid that the predictors take just the current pattern for back-testing
+        skip_condition_list = ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_features_trade]
+        self.__init_predictors__(skip_condition_list)
+
+    def __init_predictors__(self, skip_condition_list=None):
+        self.predictor_touch_points = PatternPredictorTouchPoints(self.db_stock, skip_condition_list)
+        self.predictor_before_breakout = PatternPredictorBeforeBreakout(self.db_stock, skip_condition_list)
+        self.predictor_after_breakout = PatternPredictorAfterBreakout(self.db_stock, skip_condition_list)
+        self.predictor_for_trades = PatternPredictorForTrades(self.db_stock, skip_condition_list)
 
     def get_semi_deep_copy(self):
         """

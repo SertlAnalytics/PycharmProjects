@@ -93,7 +93,7 @@ class PatternRangeFibonacciDesc(PatternRangeMax):
 class PatternRangeDetectorFibonacciBase:
     def __init__(self, sys_config: SystemConfiguration, tick_list: list):
         self.sys_config = sys_config
-        self.for_back_testing = self.sys_config.config.trade_process == TP.BACK_TESTING
+        self.for_back_testing = self.sys_config.runtime.actual_trade_process == TP.BACK_TESTING
         self.pdh = self.sys_config.pdh
         self.df = self.pdh.pattern_data_fibonacci.df
         self.df_length = len(self.df)

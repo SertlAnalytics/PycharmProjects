@@ -19,7 +19,6 @@ class TradeTestApi:
         self.test_process = ''
         self.symbol = ''
         self.and_clause = ''
-        self.test_case = None
 
 
 class TradeTestCase:
@@ -51,7 +50,7 @@ class TradeTestCaseFactory:
         tc.pattern_type = api.pattern.pattern_type
         tc.buy_trigger = api.buy_trigger
         tc.trade_strategy = api.trade_strategy
-        tc.test_process = api.test_process
+        tc.test_process = api.pattern.sys_config.runtime.actual_trade_process
         TradeTestCaseFactory.fill_test_data_for_pattern(tc, api.pattern)
         return tc
 

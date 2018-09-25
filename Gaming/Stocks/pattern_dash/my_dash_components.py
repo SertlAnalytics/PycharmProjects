@@ -10,6 +10,7 @@ import dash_html_components as html
 import dash_table_experiments as dte
 from datetime import datetime
 from sertl_analytics.mydates import MyDate
+import pandas as pd
 
 
 COLORS = [
@@ -228,11 +229,29 @@ class MyHTML:
 class MyDCC:
     @staticmethod
     def tabs(element_id: str, children: list):
-        return dcc.Tabs(id=element_id, children=children)
+        return dcc.Tabs(
+            id=element_id,
+            children=children,
+            style={'fontFamily': 'system-ui', 'colors': {'primary': '#FF4136', 'secondary': 'red'}},
+            content_style={
+                'borderLeft': '1px solid #d6d6d6',
+                'borderRight': '1px solid #d6d6d6',
+                'borderBottom': '1px solid #d6d6d6',
+                'padding': '44px'
+            },
+            parent_style={
+                'maxWidth': '1250px',
+                'margin': '0 auto'
+            }
+        )
 
     @staticmethod
     def tab(label: str, children: list):
-        return dcc.Tab(label=label, children=children)
+        return dcc.Tab(
+            label=label,
+            children=children,
+            style={'fontFamily': 'system-ui'}
+        )
 
     @staticmethod
     def drop_down(element_id, options: list, multi=False, clearable=False):
@@ -275,6 +294,16 @@ class MyDCC:
             min_width=min_width,
             min_height=min_height
         )
+
+    @staticmethod
+    def get_rows_from_df_for_data_table(df: pd.DataFrame):
+        df_dict = df.to_dict()
+        rows = []
+        columns = [column for column in df_dict]
+        row_numbers = [number for number in df_dict[columns[0]]]
+        for row_number in row_numbers:
+            rows.append({column: df_dict[column][row_number] for column in columns})
+        return rows
 
     @staticmethod
     def markdown(element_id: str, children=''):

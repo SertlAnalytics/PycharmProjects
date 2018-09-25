@@ -5,12 +5,11 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FD, DC, CN, EQUITY_TYPE, BT, ST, TR, TSTR, OT
+from sertl_analytics.constants.pattern_constants import FD, DC, CN, EQUITY_TYPE, BT, ST, TR, TSTR, OT, PRD
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
 from sertl_analytics.mymath import MyMath
-from pattern_configuration import ApiPeriod
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.exchanges.exchange_cls import Order, OrderStatus
 import numpy as np
@@ -51,8 +50,8 @@ class PatternDataDictionary:
         self._data_dict[DC.EQUITY_TYPE] = self.sys_config.runtime.actual_ticker_equity_type
         self._data_dict[DC.EQUITY_TYPE_ID] = EQUITY_TYPE.get_id(self._data_dict[DC.EQUITY_TYPE])
         self._data_dict[DC.PERIOD] = self.sys_config.config.api_period
-        self._data_dict[DC.PERIOD_ID] = ApiPeriod.get_id(self.sys_config.config.api_period)
-        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+        self._data_dict[DC.PERIOD_ID] = PRD.get_id(self.sys_config.config.api_period)
+        if self.sys_config.config.api_period == PRD.INTRADAY:
             self._data_dict[DC.PERIOD_AGGREGATION] = self.sys_config.config.api_period_aggregation
         else:
             self._data_dict[DC.PERIOD_AGGREGATION] = 1

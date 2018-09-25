@@ -9,6 +9,7 @@ import numpy as np
 import colorlover as cl
 import dash_core_components as dcc
 import dash_html_components as html
+import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State, Event
 from datetime import datetime, timedelta
 import pandas as pd
@@ -19,9 +20,8 @@ from sertl_analytics.myconstants import MyAPPS
 from pattern_dash.my_dash_base import MyDashBase
 from pattern_detection_controller import PatternDetectionController
 from pattern_detector import PatternDetector
-from sertl_analytics.constants.pattern_constants import CN, FD, BT, ST, TSTR, TBT
+from sertl_analytics.constants.pattern_constants import CN, FD, BT, PRD
 from pattern_system_configuration import SystemConfiguration
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mycache import MyCache, MyCacheObject, MyCacheObjectApi
 from pattern import Pattern
@@ -189,6 +189,10 @@ class MyDash4Pattern(MyDashBase):
         self.bitfinex_config = bitfinex_config
         self.trade_handler = PatternTradeHandler(sys_config, bitfinex_config)
         self.sys_config_second = sys_config.get_semi_deep_copy()
+        self._df_trade_records = self.sys_config.db_stock.get_trade_records_as_dataframe()
+        self._trade_rows_for_data_table = MyDCC.get_rows_from_df_for_data_table(self._df_trade_records)
+        self._df_features_records = self.sys_config.db_stock.get_features_records_as_dataframe()
+        self._features_rows_for_data_table = MyDCC.get_rows_from_df_for_data_table(self._df_features_records)
         self._color_handler = PatternColorHandler()
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None
@@ -221,6 +225,7 @@ class MyDash4Pattern(MyDashBase):
         self.__init_hover_over_callback__()
         self.__init_selection_callback__()
         self.__init_ticker_selection_callback__()
+        self.__init_callback_for_trade_selection__()
 
     def __get_ticker_label__(self, ticker_value: str):
         for elements in self._ticker_options:
@@ -386,6 +391,14 @@ class MyDash4Pattern(MyDashBase):
                 playsound('Ring08.wav')
             return graphs
 
+    def __init_callback_for_trade_selection__(self):
+        @self.app.callback(
+            Output('trade_scatter_graph', 'children'),
+            [Input('actual_trade_table', 'selected_row_indices')])
+        def handle_callback_for_graph_first(selected_row_index: int):
+            print('Selected row = {}'.format(selected_row_index))
+            return 'Test'
+
     def __init_interval_callback_for_user_name__(self):
         @self.app.callback(
             Output('my_user_name_div', 'children'),
@@ -466,7 +479,7 @@ class MyDash4Pattern(MyDashBase):
             return cached_graph, graph_key
         if days == 1:
             self.sys_config_second.config.api_period_aggregation = 15
-            self.sys_config_second.config.api_period = ApiPeriod.INTRADAY
+            self.sys_config_second.config.api_period = PRD.INTRADAY
             self.sys_config_second.config.get_data_from_db = False
             detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker, '')
             graph_api = DccGraphSecondApi(graph_id, graph_title)
@@ -474,7 +487,7 @@ class MyDash4Pattern(MyDashBase):
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
             self._graph_second_cache.add_cache_object(cache_api)
         else:
-            self.sys_config_second.config.api_period = ApiPeriod.DAILY
+            self.sys_config_second.config.api_period = PRD.DAILY
             self.sys_config_second.config.get_data_from_db = True
             date_from = datetime.today() - timedelta(days=days)
             date_to = datetime.today() + timedelta(days=5)
@@ -534,7 +547,7 @@ class MyDash4Pattern(MyDashBase):
         return return_list
 
     def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str):
-        if self.sys_config.config.api_period == ApiPeriod.INTRADAY:
+        if self.sys_config.config.api_period == PRD.INTRADAY:
             x_value = df[CN.DATETIME]
         else:
             x_value = df[CN.DATE]
@@ -558,7 +571,7 @@ class MyDash4Pattern(MyDashBase):
         bb_bands = self.__get_bollinger_band_values__(df[CN.CLOSE])
 
         bollinger_traces = [{
-            'x': df[CN.TIME] if self.sys_config.config.api_period == ApiPeriod.INTRADAY else df[CN.DATE],
+            'x': df[CN.TIME] if self.sys_config.config.api_period == PRD.INTRADAY else df[CN.DATE],
             'y': y,
             'type': 'scatter', 'mode': 'lines',
             'line': {'width': 1, 'color': color_scale[(i * 2) % len(color_scale)]},
@@ -571,8 +584,8 @@ class MyDash4Pattern(MyDashBase):
         return bollinger_traces
 
     def __set_app_layout__(self):
-        self.app.layout = self.__get_div_for_tab_pattern_detection__()
-        # self.app.layout = self.__get_div_for_app_layout__()
+        # self.app.layout = self.__get_div_for_tab_pattern_detection__()
+        self.app.layout = self.__get_div_for_app_layout__()
 
     def __get_div_for_app_layout__(self):
         # see also https://github.com/plotly/dash-core-components/pull/213
@@ -587,9 +600,10 @@ class MyDash4Pattern(MyDashBase):
 
     def __get_tabs_for_app_layout__(self):
         tab_01 = MyDCC.tab('Pattern Detector', [self.__get_div_for_tab_pattern_detection__()])
-        tab_02 = MyDCC.tab('Trades', [self.__get_div_for_trades__()])
-        tab_03 = MyDCC.tab('Statistics', [self.__get_div_for_statistics__()])
-        return MyDCC.tabs('my_app_tabs', [tab_01, tab_02, tab_03])
+        tab_02 = MyDCC.tab('Trades', [self.__get_div_for_tab_actual_trades__()])
+        tab_03 = MyDCC.tab('Trade statistics', [self.__get_div_for_trade_statistics__()])
+        tab_04 = MyDCC.tab('Pattern statistics', [self.__get_div_for_pattern_statistics__()])
+        return MyDCC.tabs('my_app_tabs', [tab_01, tab_02, tab_03, tab_04])
 
     def __get_div_for_tab_pattern_detection__(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
@@ -612,51 +626,66 @@ class MyDash4Pattern(MyDashBase):
         li.append(MyHTML.div_with_html_pre('my_hover_data'))
         return MyHTML.div('', li)
 
-    def __get_div_for_trades__(self):
-        header = MyHTML.h1('This is the content in tab 2: Trade data - from back testing and online trades')
+    def __get_div_for_tab_actual_trades__(self):
+        header = MyHTML.h2('This is the content in tab 2: Trade data - from back testing and online trades')
+        paragraph = MyHTML.p('A graph here would be nice!')
+        drop_down = self.__get_drop_down_for_trades__('trades-selection')
+        table = self.__get_table_for_trades__('actual_trade_table', 3)
+        scatter_graph = self.__get_scatter_graph_for_trades__('trade_scatter_graph')
+        return MyHTML.div('my_trades', [header, paragraph, drop_down, table, scatter_graph])
+
+    def __get_div_for_trade_statistics__(self):
+        header = MyHTML.h1('This is the content in tab 3: Trade statistics')
         paragraph = MyHTML.p('A graph here would be nice!')
         drop_down = self.__get_drop_down_for_trades__()
         table = self.__get_table_for_trades__()
-        return MyHTML.div('my_trades', [header, paragraph, drop_down, table])
+        scatter_graph = self.__get_scatter_graph_for_trades__()
+        return MyHTML.div('my_trade_statistics', [header, paragraph, drop_down, table, scatter_graph])
 
-    def __get_drop_down_for_trades__(self):
-        df = self.sys_config.db_stock.get_trade_records_as_dataframe()
+    def __get_scatter_graph_for_trades__(self, scatter_graph_id='trade_statistics_scatter_graph'):
+        graph_api = DccGraphApi(scatter_graph_id, 'My Trades')
+        graph_api.figure_data = self.__get_scatter_figure_data_for_trades__(self._df_trade_records)
+        return MyDCC.graph(graph_api)
+
+    @staticmethod
+    def __get_scatter_figure_data_for_trades__(df: pd.DataFrame):
+        return [
+            go.Scatter(
+                x=df[df['Pattern_Type'] == i]['Forecast_Full_Positive_PCT'],
+                y=df[df['Pattern_Type'] == i]['Trade_Result_ID'],
+                text=df[df['Pattern_Type'] == i]['Trade_Strategy'],
+                mode='markers',
+                opacity=0.7,
+                marker={
+                    'size': 15,
+                    'line': {'width': 0.5, 'color': 'white'}
+                },
+                name=i
+            ) for i in df.Pattern_Type.unique()
+        ]
+
+    @staticmethod
+    def __get_drop_down_for_trades__(drop_down_name='trades-selection_statistics'):
         options = [{'label': 'df', 'value': 'df'}]
-        return MyDCC.drop_down('trades-selection', options)
+        return MyDCC.drop_down(drop_down_name, options)
 
-    def __get_table_for_trades__(self):
-        df = self.sys_config.db_stock.get_trade_records_as_dataframe()
-        df_dict = df.to_dict()
-        # {'ID': {0: 'Breakout-Expected_win-Trailing_stop_Crypto_Currencies_DAILY_1_ETH_USD_Triangle down_2...
-        rows = []
-        columns = [column for column in df_dict]
-        row_numbers = [number for number in df_dict[columns[0]]]
-        for row_number in row_numbers:
-            rows.append({column: df_dict[column][row_number] for column in columns})
-        return MyDCC.data_table('trade_table', rows)
+    def __get_table_for_trades__(self, table_name='trade_table', number=5):
+        return MyDCC.data_table(table_name, self._trade_rows_for_data_table[:number], min_height=200)
 
-    def __get_div_for_statistics__(self):
-        header = MyHTML.h1('This is the content in tab 3: Statistics data - from features and trades')
+    def __get_div_for_pattern_statistics__(self):
+        header = MyHTML.h1('This is the content in tab 4: Features statistics')
         paragraph = MyHTML.p('A graph here would be nice!')
         drop_down = self.__get_drop_down_for_features__()
-        table = self.__get_table_for_features__()
+        table = self.__get_table_for_features__(5)
         return MyHTML.div('my_statistics', [header, paragraph, drop_down, table])
 
-    def __get_drop_down_for_features__(self):
-        df = self.sys_config.db_stock.get_features_records_as_dataframe()
+    @staticmethod
+    def __get_drop_down_for_features__():
         options = [{'label': 'df', 'value': 'df'}]
         return MyDCC.drop_down('features-selection', options)
 
-    def __get_table_for_features__(self):
-        df = self.sys_config.db_stock.get_features_records_as_dataframe()
-        df_dict = df.to_dict()
-        # {'ID': {0: 'Breakout-Expected_win-Trailing_stop_Crypto_Currencies_DAILY_1_ETH_USD_Triangle down_2...
-        rows = []
-        columns = [column for column in df_dict]
-        row_numbers = [number for number in df_dict[columns[0]]]
-        for row_number in row_numbers:
-            rows.append({column: df_dict[column][row_number] for column in columns})
-        return MyDCC.data_table('features_table', rows)
+    def __get_table_for_features__(self, number=5):
+        return MyDCC.data_table('features_table', self._features_rows_for_data_table[:number], min_height=200)
 
     def __set_app_layout_old__(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
@@ -702,7 +731,7 @@ class DashInterface:
 
     @staticmethod
     def get_tick_distance_in_date_as_number(sys_config: SystemConfiguration):
-        if sys_config.config.api_period == ApiPeriod.INTRADAY:
+        if sys_config.config.api_period == PRD.INTRADAY:
             return MyDate.get_date_as_number_difference_from_epoch_seconds(0, sys_config.config.api_period_aggregation * 60)
         return 1
 
@@ -712,7 +741,7 @@ class DashInterface:
 
     @staticmethod
     def get_ellipse_width_height_for_plot_min_max(sys_config: SystemConfiguration, wave_tick_list: WaveTickList):
-        if sys_config.config.api_period == ApiPeriod.DAILY:
+        if sys_config.config.api_period == PRD.DAILY:
             width_value = 0.6
         else:
             width_value = 0.6 / (sys_config.config.api_period_aggregation * 60)
@@ -768,7 +797,7 @@ class DashInterface:
 
     @staticmethod
     def get_xy_separated_from_timestamp(sys_config: SystemConfiguration, xy):
-        if sys_config.config.api_period == ApiPeriod.INTRADAY:
+        if sys_config.config.api_period == PRD.INTRADAY:
             xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
         else:
             xy_new = DashInterface.get_xy_from_timestamp_to_date_str(xy)
@@ -776,7 +805,7 @@ class DashInterface:
 
     @staticmethod
     def get_pattern_center_shape(sys_config: SystemConfiguration, pattern: Pattern):
-        if sys_config.config.api_period == ApiPeriod.DAILY:
+        if sys_config.config.api_period == PRD.DAILY:
             ellipse_breadth = 10
         else:
             ellipse_breadth = 2 / (sys_config.config.api_period_aggregation * 60)

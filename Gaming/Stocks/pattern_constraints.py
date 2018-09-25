@@ -6,14 +6,12 @@ Date: 2018-05-14
 """
 
 import pandas as pd
-from sertl_analytics.constants.pattern_constants import CT, SVC, FT, DC
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
+from sertl_analytics.constants.pattern_constants import CT, SVC, FT, DC, PRD
 from sertl_analytics.mymath import MyMath
 from pattern_value_categorizer import ValueCategorizer, ValueCategorizerHeadShoulder
 from pattern_range import PatternRange
 from sertl_analytics.myexceptions import MyException
 from pattern_system_configuration import SystemConfiguration
-from sertl_analytics.datafetcher.financial_data_fetcher import ApiPeriod
 import math
 
 
@@ -43,7 +41,7 @@ class Constraints:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
         self.api_period = self.sys_config.config.api_period
-        self.period_related_divisor = 10 if self.api_period == ApiPeriod.INTRADAY else 1
+        self.period_related_divisor = 10 if self.api_period == PRD.INTRADAY else 1
         self.tolerance_pct = self.sys_config.config.value_categorizer_tolerance_pct
         self.tolerance_pct_equal = self.sys_config.config.value_categorizer_tolerance_pct_equal
         self.global_all_in = []
