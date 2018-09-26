@@ -102,7 +102,7 @@ class PatternDetectionController:
         self.sys_config = sys_config
         value_dict = {LL.TICKER: ticker, LL.AND_CLAUSE: and_clause, LL.NUMBER: 1}
         self.__update_runtime_parameters__(value_dict)
-        print('\nProcessing {} ({})...\n'.format(ticker, sys_config.runtime.actual_ticker_name))
+        print('\nProcessing {} ({}) for {} ...\n'.format(ticker, sys_config.runtime.actual_ticker_name, and_clause))
         df_data = self.__get_df_from_source__(ticker, value_dict, True)
         self.sys_config.pdh.init_by_df(df_data)
         detector = PatternDetector(self.sys_config)

@@ -67,7 +67,6 @@ class TradeTest:
         for pattern in pattern_list_all:
             api.pattern = pattern
             tc = TradeTestCaseFactory.get_test_case_from_pattern(api)
-            tc.symbol = api.symbol  # sometimes the symbol is changed within the previous process
             test_case_list.append(tc)
         return test_case_list
 

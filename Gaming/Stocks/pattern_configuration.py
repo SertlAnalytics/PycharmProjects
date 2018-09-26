@@ -119,6 +119,12 @@ class PatternConfiguration:
                 return 0.002
         return 0.005  # orig: 0.005
 
+    @staticmethod
+    def get_and_clause(dt_start, dt_end):
+        date_start = MyDate.get_date_from_datetime(dt_start)
+        date_end = MyDate.get_date_from_datetime(dt_end)
+        return "Date BETWEEN '{}' AND '{}'".format(date_start, date_end)
+
     def get_time_stamp_before_one_period_aggregation(self, time_stamp: float):
         if self.api_period == PRD.DAILY:
             return time_stamp - 60 * 60 * 24

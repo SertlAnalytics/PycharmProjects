@@ -66,7 +66,7 @@ class Pattern:
         self.sys_config = api.sys_config
         self.pattern_type = api.pattern_type
         self.data_dict_obj = PatternDataDictionary(self.sys_config)
-        self.ticker_id = self.sys_config.runtime.actual_ticker.replace('_', '')
+        self.ticker_id = self.sys_config.runtime.actual_ticker
         self.df = self.sys_config.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
         self.df_min_max = self.sys_config.pdh.pattern_data.df_min_max

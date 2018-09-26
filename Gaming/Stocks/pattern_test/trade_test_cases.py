@@ -20,6 +20,11 @@ class TradeTestApi:
         self.symbol = ''
         self.and_clause = ''
 
+    def print_test_api(self):
+        print('PatternType={}, buy_trigger={}, trade_strategy={}, test_process={}, symbol={}, and_clause={}'.format(
+            self.pattern_type, self.buy_trigger, self.trade_strategy, self.test_process, self.symbol, self.and_clause
+        ))
+
 
 class TradeTestCase:
     def __init__(self):

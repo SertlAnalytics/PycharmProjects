@@ -280,6 +280,7 @@ class TP:  # TradeProcess
     ONLINE = 'Online'
     TEST_SINGLE = 'Test_single'
     BACK_TESTING = 'Back_testing'
+    TRADE_REPLAY = 'Trade_replay'
     NONE = 'None'
 
     @staticmethod

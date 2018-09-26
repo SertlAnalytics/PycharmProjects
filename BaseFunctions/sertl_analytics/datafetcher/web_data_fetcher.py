@@ -30,7 +30,7 @@ class IndicesComponentList:
             return PyBaseDataFrame.get_rows_as_dictionary(df, 'Symbol', ['Security Name'], {'Market Category': 'Q'})
         elif index == Indices.CRYPTO_CCY:
             base_dic = IndicesComponentList.__get_crypto_currency_base_dic__()
-            return {key + '_' + currency: value + ' (' + currency + ')' for key, value in base_dic.items()}
+            return {key + currency: value + ' (' + currency + ')' for key, value in base_dic.items()}
         elif index == Indices.MIXED:
             return {"TSLA": "Tesla", "FCEL": "Full Cell", "ONVO": "Organovo", "MRAM": "MRAM"}
         else:

@@ -315,6 +315,11 @@ class StockDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
+    def get_trade_records_for_replay_as_dataframe(self) -> pd.DataFrame:
+        query = self._trade_table.get_query_for_trades_for_replay()
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df
+
     def delete_existing_trade(self, trade_id: str):
         if self.is_trade_already_available(trade_id):
             self.delete_records(self._trade_table.get_query_for_delete_by_id(trade_id))

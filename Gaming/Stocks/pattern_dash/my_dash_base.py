@@ -11,6 +11,19 @@ import dash_auth
 from sertl_analytics.mypasswords import MyPasswordHandler
 import base64
 import flask
+from pattern_system_configuration import SystemConfiguration
+
+
+class MyDashBaseTab:
+    def __init__(self, app: Dash, sys_config: SystemConfiguration):
+        self.app = app
+        self.sys_config = sys_config.get_semi_deep_copy()
+
+    def init_callbacks(self):
+        pass
+
+    def get_div_for_tab(self):
+        pass
 
 
 class MyDashBase:
@@ -64,3 +77,4 @@ class MyDashBase:
 
     def __init_interval_callback__(self):
         pass
+

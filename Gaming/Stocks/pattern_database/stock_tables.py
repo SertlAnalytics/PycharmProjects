@@ -52,7 +52,13 @@ class TradeTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def get_query_for_records(where_clause='') -> str:
-        return "SELECT * FROM Trade".format(id)
+        return "SELECT * FROM Trade"
+
+    @staticmethod
+    def get_query_for_trades_for_replay(where_clause='') -> str:
+        col_list = [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
+                    DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT]
+        return "SELECT {} FROM Trade".format(','.join(col_list))
 
     @staticmethod
     def get_query_for_delete_by_id(trade_id: str) -> str:

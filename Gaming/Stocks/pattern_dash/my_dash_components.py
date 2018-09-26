@@ -63,6 +63,14 @@ class MyHTMLTable:
         self._list = [['' for col in self._col_range] for row in self._row_range]
         self._init_cells_()
 
+    @property
+    def padding_table(self):
+        return 5
+
+    @property
+    def padding_cell(self):
+        return 5
+
     def set_value(self, row: int, col: int, value):
         self._list[row-1][col-1] = value
 
@@ -87,12 +95,12 @@ class MyHTMLTable:
         pass
 
     def _get_table_style_(self):
-        pass
+        return {'padding': self.padding_table, 'width': '100%'}
 
 
 class MyHTMLHeaderTable(MyHTMLTable):
     def __init__(self):
-        MyHTMLTable.__init__(self, 2, 3)
+        MyHTMLTable.__init__(self, 1, 3)
 
     def _init_cells_(self):
         user_label_div = MyHTML.div('my_user_label_div', 'Username:', True)
@@ -100,56 +108,61 @@ class MyHTMLHeaderTable(MyHTMLTable):
         time_str = MyDate.get_time_from_datetime(datetime.now())
         login_label_div = MyHTML.div('my_login_label_div', 'Last login:', True, True)
         login_time_div = MyHTML.div('my_login_div', '{}'.format(time_str), False)
+        my_user_div = MyHTML.div_embedded([user_label_div, MyHTML.span(' '), user_div])
+        my_login_div = MyHTML.div_embedded([login_label_div, MyHTML.span(' '), login_time_div])
+        time_label_div = MyHTML.div('my_time_label_div', 'Time:', True)
+        time_div = MyHTML.div('my_time_div', '', False)
+
+        self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div]))
+        self.set_value(1, 2, 'Pattern Detection Dashboard')
+        self.set_value(1, 3, MyHTML.div_embedded([time_label_div, MyHTML.span(' '), time_div]))
+
+    def _get_cell_style_(self, row: int, col: int):
+        width = ['20%', '60%', '20%'][col-1]
+        bg_color = COLORS[0]['background']
+        color = COLORS[0]['text']
+        text_align = ['left', 'center', 'right'][col-1]
+        v_align = ['top', 'top', 'top'][col - 1]
+        font_weight = ['normal', 'bold', 'normal'][col - 1]
+        font_size = [16, 32, 16][col - 1]
+
+        return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
+                'vertical-align': v_align, 'font-weight': font_weight, 'padding': self.padding_cell,
+                'font-size': font_size}
+
+
+class MyHTMLTabHeaderTable(MyHTMLTable):
+    def __init__(self):
+        MyHTMLTable.__init__(self, 1, 3)
+
+    def _init_cells_(self):
+        time_str = MyDate.get_time_from_datetime(datetime.now())
+        ticker_label_div = MyHTML.div('my_ticker_label_div', 'Ticker:', True)
+        ticker_div = MyHTML.div('my_ticker_div', '', False)
         last_refresh_label_div = MyHTML.div('my_last_refresh_label_div', 'Last refresh:', True)
         last_refresh_time_div = MyHTML.div('my_last_refresh_time_div', time_str)
         next_refresh_label_div = MyHTML.div('my_next_refresh_label_div', 'Next refresh:', True)
         next_refresh_time_div = MyHTML.div('my_next_refresh_time_div', time_str)
-        ticker_label_div = MyHTML.div('my_ticker_label_div', 'Ticker:', True)
-        ticker_div = MyHTML.div('my_ticker_div', '', False)
-        time_label_div = MyHTML.div('my_time_label_div', 'Time:', True)
-        time_div = MyHTML.div('my_time_div', '', False)
-
-        my_user_div = MyHTML.div_embedded([user_label_div, MyHTML.span(' '), user_div])
-        my_login_div = MyHTML.div_embedded([login_label_div, MyHTML.span(' '), login_time_div])
-
         last_refresh_div = MyHTML.div_embedded([last_refresh_label_div, MyHTML.span(' '), last_refresh_time_div])
         next_refresh_div = MyHTML.div_embedded([next_refresh_label_div, MyHTML.span(' '), next_refresh_time_div])
 
-        self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div]))
-        self.set_value(1, 2, 'Pattern Detection Dashboard')
+        self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
+        self.set_value(1, 2, MyDCC.markdown('my_ticket_markdown'))
         self.set_value(1, 3, MyHTML.div_embedded([last_refresh_div, next_refresh_div]))
-        self.set_value(2, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
-        self.set_value(2, 2, MyDCC.markdown('my_ticket_markdown'))
-        self.set_value(2, 3, MyHTML.div_embedded([time_label_div, MyHTML.span(' '), time_div]))
 
     def _get_cell_style_(self, row: int, col: int):
-        padding = 5
-        if row == 1:
-            width = ['20%', '60%', '20%'][col-1]
-            bg_color = COLORS[0]['background']
-            color = COLORS[0]['text']
-            text_align = ['left', 'center', 'left'][col-1]
-            v_align = ['top', 'top', 'top'][col - 1]
-            font_weight = ['normal', 'bold', 'normal'][col - 1]
-            font_size = [16, 32, 16][col - 1]
-
-            return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
-                    'vertical-align': v_align, 'font-weight': font_weight, 'padding': padding, 'font-size': font_size}
-        else:
-            bg_color = COLORS[2]['background']
-            color = COLORS[2]['text']
-            text_align = ['left', 'center', 'left'][col - 1]
-            v_align = ['top', 'top', 'top'][col - 1]
-            return {'background-color': bg_color, 'color': color, 'text-align': text_align,
-                    'vertical-align': v_align, 'padding': padding}
-
-    def _get_table_style_(self):
-        return {'padding': 5, 'width': '100%'}
+        width = ['20%', '60%', '20%'][col - 1]
+        bg_color = COLORS[2]['background']
+        color = COLORS[2]['text']
+        text_align = ['left', 'center', 'left'][col - 1]
+        v_align = ['top', 'top', 'top'][col - 1]
+        return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
+                'vertical-align': v_align, 'padding': self.padding_cell}
 
 
 class MyHTML:
     @staticmethod
-    def Button():
+    def button():
         return html.Button
 
     @staticmethod
@@ -237,7 +250,7 @@ class MyDCC:
                 'borderLeft': '1px solid #d6d6d6',
                 'borderRight': '1px solid #d6d6d6',
                 'borderBottom': '1px solid #d6d6d6',
-                'padding': '44px'
+                'padding': '10px'
             },
             parent_style={
                 'maxWidth': '1250px',

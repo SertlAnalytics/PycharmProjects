@@ -144,6 +144,11 @@ class PatternDetector:
         pattern_list = [pattern for pattern in self.pattern_list if pattern.is_ready_for_back_testing()]
         return pattern_list
 
+    def get_pattern_for_replay(self) -> list:
+        if len(self.pattern_list) == 0:
+            return None
+        return self.pattern_list[0]
+
     @staticmethod
     def __print_breakout_details__(print_id: str, breakout_ts: float, time_stamp_since: float):
         brk_t = MyDate.get_time_from_epoch_seconds(int(breakout_ts))

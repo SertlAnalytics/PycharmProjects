@@ -122,7 +122,7 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
 
     def _get_url_(self):
         url = 'https://www.alphavantage.co/query?function={}&symbol={}'.format(self.get_url_function(), self.symbol)
-        if self.output_size == ApiOutputsize.FULL:
+        if self.output_size == OPS.FULL:
             url = url + '&outputsize=full'
         if self.period == PRD.INTRADAY:
             url = url + '&interval={}min'.format(self.aggregation)
@@ -246,11 +246,11 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
         df.columns = self.get_standard_column_names()
         return df
 
-    def _get_url_(self):  # the symbol has the structure symbol_CCY like BTC_USD
+    def _get_url_(self):  # the symbol has the structure symbolCCY like BTCUSD
         url_function = 'histominute' if self.period == PRD.INTRADAY else 'histoday'
         url_limit = self._get_url_limit_parameter_()
         url_aggregate = self.aggregation if self.period == PRD.INTRADAY else 1
-        symbol = self.symbol[:-4]
+        symbol = self.symbol[:-3]
         market = self.symbol[-3:]
         url = 'https://min-api.cryptocompare.com/data/{}?fsym={}&tsym={}&limit={}&aggregate={}'.\
             format(url_function, symbol, market, url_limit, url_aggregate)
