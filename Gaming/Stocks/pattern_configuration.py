@@ -66,7 +66,7 @@ class PatternConfiguration:
         self.api_period_aggregation = 5
         self.api_output_size = OPS.COMPACT
         self.simple_moving_average_number = 10
-        self.save_pattern_features = True
+        self.save_pattern_data = True
         self.save_trade_data = True
         self.show_differences_to_stored_features = False
         self.bound_upper_value = CN.HIGH
@@ -96,7 +96,7 @@ class PatternConfiguration:
         self.__previous_period_length = 0
 
     @property
-    def and_clause_for_features_trade(self):
+    def and_clause_for_pattern_and_trade(self):
         return self.and_clause.replace('Date', 'Pattern_Begin_Date')
 
     @property
@@ -120,10 +120,12 @@ class PatternConfiguration:
         return 0.005  # orig: 0.005
 
     @staticmethod
-    def get_and_clause(dt_start, dt_end):
+    def get_and_clause(dt_start, dt_end=None):
         date_start = MyDate.get_date_from_datetime(dt_start)
-        date_end = MyDate.get_date_from_datetime(dt_end)
-        return "Date BETWEEN '{}' AND '{}'".format(date_start, date_end)
+        if dt_end:
+            date_end = MyDate.get_date_from_datetime(dt_end)
+            return "Date BETWEEN '{}' AND '{}'".format(date_start, date_end)
+        return "Date >= '{}'".format(date_start)
 
     def get_time_stamp_before_one_period_aggregation(self, time_stamp: float):
         if self.api_period == PRD.DAILY:

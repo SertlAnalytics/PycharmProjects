@@ -71,9 +71,10 @@ class MyDash4Pattern(MyDashBase):
     def __get_div_for_app_layout__(self):
         # see also https://github.com/plotly/dash-core-components/pull/213
         header = self.__get_header_for_app__()
-        timer = MyDCC.interval('my_interval_timer', self.bitfinex_config.ticker_refresh_rate_in_seconds)
+        seconds_timer = MyDCC.interval('my_interval_timer', self.bitfinex_config.ticker_refresh_rate_in_seconds)
+        refresh_timer = MyDCC.interval('my_interval', 100)
         tabs = self.__get_tabs_for_app__()
-        return MyHTML.div('my_app', [header, timer, tabs])
+        return MyHTML.div('my_app', [header, seconds_timer, refresh_timer, tabs])
 
     @staticmethod
     def __get_header_for_app__():

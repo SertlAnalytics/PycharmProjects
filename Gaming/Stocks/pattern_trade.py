@@ -6,13 +6,15 @@ Date: 2018-09-10
 """
 
 import numpy as np
-from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, PTHP, TR, OT, SVC, TP, FT
+from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, PTHP, TR, OT, SVC, TP, FT, CN
 from sertl_analytics.mydates import MyDate
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
 from pattern_data_dictionary import PatternDataDictionary
 from pattern_trade_box import ExpectedWinTradingBox, TouchPointTradingBox, TradingBoxApi
 from pattern_wave_tick import WaveTick, WaveTickList, TickerWaveTickConverter
+from sertl_analytics.plotter.my_plot import MyPlotHelper
+import math
 
 
 class PatternTradeApi:
@@ -34,6 +36,12 @@ class PatternTrade:
         self.trade_strategy = api.trade_strategy
         self.pattern = api.pattern
         self._wave_tick_list = WaveTickList(self.pattern.part_main.tick_list)
+        if self.trade_process == TP.TRADE_REPLAY:
+            self.__initialize_replay_values_for_tick_list__()
+        self._wave_tick_at_start = self._wave_tick_list.tick_list[-1]
+        self._wave_tick_at_buying = None
+        self._wave_tick_at_selling = None
+        self._df_for_replay = self._wave_tick_list.get_tick_list_as_data_frame_for_replay()
         self._ticker_converter = self.__get_ticker_wave_tick_converter__()
         self._ticker_time_stamp_list = []
         self._ticker_dict = {}
@@ -53,6 +61,8 @@ class PatternTrade:
         self.data_dict_obj.inherit_values(self.pattern.data_dict_obj.data_dict)
         self.__add_trade_basis_data_to_data_dict__()
         self.__calculate_prediction_values__()
+        self._xy_for_buying = None
+        self._xy_for_selling = None
 
     @property
     def id(self):
@@ -108,7 +118,7 @@ class PatternTrade:
 
     @property
     def trailing_stop_distance(self):
-        return self._trade_box.trailing_stop_distance if self._trade_box else 0
+        return self._trade_box.distance_trailing_stop if self._trade_box else 0
 
     @property
     def ticker_id(self):
@@ -130,11 +140,41 @@ class PatternTrade:
     def ticker_actual(self) -> Ticker:
         return self._ticker_dict[self._ticker_time_stamp_list[-1]]
 
+    @property
+    def xy_for_buying(self):
+        return self._xy_for_buying
+
+    @property
+    def xy_for_selling(self):
+        return self._xy_for_selling
+
+    def get_data_frame_for_replay(self):
+        print('get_data_frame_for_replay: len(self._wave_tick_list.tick_list) = {} / {} = self.pattern.df_length'.format(
+            len(self._wave_tick_list.tick_list), self.pattern.df_length
+        ))
+        if len(self._wave_tick_list.tick_list) > self.pattern.df_length:
+            return self._df_for_replay
+        else:
+            return self.pattern.df
+
     def add_ticker(self, ticker: Ticker):
         self._ticker_time_stamp_list.append(ticker.time_stamp)
         self._ticker_dict[ticker.time_stamp] = ticker
-        if self._ticker_converter.add_value_with_timestamp(ticker.last_price, ticker.time_stamp):
-            self._wave_tick_list.add_wave_tick(self._ticker_converter.wave_tick)
+        self._ticker_converter.add_value_with_timestamp(ticker.last_price, ticker.time_stamp)
+        if self._ticker_converter.is_wave_tick_started():
+            self._wave_tick_list.add_wave_tick(self._ticker_converter.current_wave_tick)
+        else:
+            self._wave_tick_list.replace_last_wave_tick(self._ticker_converter.current_wave_tick)
+        self._df_for_replay = self._wave_tick_list.get_tick_list_as_data_frame_for_replay()
+
+    def calculate_xy_for_replay(self):
+        tick_list_base = self._wave_tick_list.tick_list
+        if self.status == PTS.NEW:
+            tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_start.position]
+            self._xy_for_buying = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, True)
+        elif self._wave_tick_at_buying:
+            tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_buying.position-1]
+            self._xy_for_selling = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, False)
 
     def get_ticker_for_time_stamp(self, ticker_time_stamp: int):
         return self._ticker_dict[ticker_time_stamp]
@@ -152,18 +192,35 @@ class PatternTrade:
             self.data_dict_obj.add(DC.FC_TRADE_REACHED_PRICE_PCT, prediction_dict[DC.TRADE_REACHED_PRICE_PCT])
             self.data_dict_obj.add(DC.FC_TRADE_RESULT_ID, prediction_dict[DC.TRADE_RESULT_ID])
 
+    def __initialize_replay_values_for_tick_list__(self):
+        vc_b = self.__get_value_category_for_breakout__()
+        vc_wb = self.__get_value_category_for_wrong_breakout__()
+        for tick in self._wave_tick_list.tick_list:
+            l_value_b, u_value_b = self.pattern.value_categorizer.get_value_range_for_category(tick.time_stamp, vc_b)
+            l_value_wb, u_value_wb = self.pattern.value_categorizer.get_value_range_for_category(tick.time_stamp, vc_wb)
+            tick.breakout_value = l_value_b
+            tick.wrong_breakout_value = u_value_wb
+
+    def set_limit_stop_loss_to_replay_values(self):
+        last_wave_tick = self._wave_tick_list.last_wave_tick
+        if self.limit_current == math.inf or self.limit_current == 0:
+            last_wave_tick.limit_value = self._df_for_replay[CN.HIGH].max()
+        else:
+            last_wave_tick.limit_value = self.limit_current
+        if self.stop_loss_current == 0:
+            last_wave_tick.stop_loss_value = self.pattern.function_cont.f_lower(last_wave_tick.f_var)
+        else:
+            last_wave_tick.stop_loss_value = self.stop_loss_current
+
     def is_actual_ticker_breakout(self, process: str):
         if not self._is_breakout_active:
             return False
-        is_breakout = False  # default
-        ticker = self.ticker_actual
         vc = self.__get_value_category_for_breakout__()
-        if self.buy_trigger == BT.BREAKOUT:
-            is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, vc, True)
-        elif self.buy_trigger == BT.TOUCH_POINT:
-            is_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, vc, True)
-        if is_breakout:
+        l_value, u_value = self.pattern.value_categorizer.get_value_range_for_category(self.ticker_actual.time_stamp, vc)
+        print('Check breakout vc={}: [{:.2f}, {:.2f}]: price={}'.format(vc, l_value, u_value, self.ticker_actual.last_price))
+        if l_value < self.ticker_actual.last_price < u_value:
             self._breakout_counter += 1 if self.buy_trigger == BT.BREAKOUT else 2  # touch point => immediate buy
+        self._wave_tick_list.last_wave_tick.breakout_value = l_value
         self.print_state_details_for_actual_ticker(process)
         return self._breakout_counter >= self._counter_required  # we need a second confirmation
 
@@ -186,9 +243,10 @@ class PatternTrade:
     def is_actual_ticker_wrong_breakout(self, process: str):
         ticker = self.ticker_actual
         vc = self.__get_value_category_for_wrong_breakout__()
-        is_wrong_breakout = self.pattern.is_value_in_category(ticker.last_price, ticker.time_stamp, vc, True)
-        if is_wrong_breakout:
+        l_value, u_value = self.pattern.value_categorizer.get_value_range_for_category(ticker.time_stamp, vc)
+        if ticker.last_price < u_value:
             self._wrong_breakout_counter += 1
+        self._wave_tick_list.last_wave_tick.wrong_breakout_value = u_value
         self.print_state_details_for_actual_ticker(process)
         return self._wrong_breakout_counter >= self._counter_required  # we need a second confirmation
 
@@ -286,7 +344,10 @@ class PatternTrade:
 
     def __get_ticker_wave_tick_converter__(self) -> TickerWaveTickConverter:
         period = self.sys_config.config.api_period
-        aggregation = self.sys_config.config.api_period_aggregation
+        if self.trade_process in [TP.TRADE_REPLAY, TP.BACK_TESTING]:
+            aggregation = 4
+        else:
+            aggregation = self.sys_config.config.api_period_aggregation
         refresh_trigger_in_seconds = self.bitfinex_config.ticker_refresh_rate_in_seconds
         pos_last = self._wave_tick_list.tick_list[-1].position
         return TickerWaveTickConverter(period, aggregation, refresh_trigger_in_seconds, pos_last)
@@ -319,6 +380,7 @@ class PatternTrade:
 
     def __set_properties_after_buy__(self, ticker: Ticker):
         self._status = PTS.EXECUTED
+        self._wave_tick_at_buying = self._wave_tick_list.tick_list[-1]
         buy_price = ticker.last_price
         height = 0
         distance_bottom = 0
@@ -343,6 +405,7 @@ class PatternTrade:
 
     def __set_properties_after_sell__(self):
         self._status = PTS.FINISHED
+        self._wave_tick_at_selling = self._wave_tick_list.tick_list[-1]
 
     def __add_trade_basis_data_to_data_dict__(self):
         self.data_dict_obj.add(DC.ID, self.id)

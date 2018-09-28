@@ -58,8 +58,8 @@ class PatternDataDictionary:
         self._data_dict[DC.TICKER_ID] = self.sys_config.runtime.actual_ticker
         self._data_dict[DC.TICKER_NAME] = self.sys_config.runtime.actual_ticker_name
 
-    def is_data_dict_ready_for_features_table(self):
-        for col in self.sys_config.features_table.column_name_list:
+    def is_data_dict_ready_for_pattern_table(self):
+        for col in self.sys_config.pattern_table.column_name_list:
             if col not in self._data_dict:
                 return False
         return True
@@ -80,7 +80,7 @@ class PatternDataDictionary:
         return [self._data_dict[col] for col in columns]
 
     def get_data_dict_for_features_table(self):
-        return {col: self._data_dict[col] for col in self.sys_config.features_table.column_name_list}
+        return {col: self._data_dict[col] for col in self.sys_config.pattern_table.column_name_list}
 
     def get_data_dict_for_trade_table(self):
         return {col: self._data_dict[col] for col in self.sys_config.trade_table.column_name_list}

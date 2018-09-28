@@ -5,19 +5,21 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-21
 """
 
-from sertl_analytics.constants.pattern_constants import FT, TP, BT, PRD
+from sertl_analytics.constants.pattern_constants import FT, TP, BT, PRD, DC
+from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_detection_controller import PatternDetectionController
+from pattern_detector import PatternDetector
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from pattern_test.trade_test_cases import TradeTestCase, TradeTestCaseFactory, TradeTestApi
 
 
 class TradeTest:
-    def __init__(self, trade_process=TP.NONE):
+    def __init__(self, trade_process=TP.NONE, sys_config = None, exchange_config = None):
         self.trade_process = trade_process
-        self.sys_config = SystemConfiguration()
-        self.exchange_config = ExchangeConfiguration()
+        self.sys_config = sys_config if sys_config else SystemConfiguration()
+        self.exchange_config = exchange_config if exchange_config else ExchangeConfiguration()
         self.__adjust_sys_config__()
         self.__adjust_exchange_config__()
 
@@ -34,7 +36,7 @@ class TradeTest:
         self.sys_config.config.api_period_aggregation = 1
         self.sys_config.config.plot_data = False
         self.sys_config.prediction_mode_active = True
-        self.sys_config.config.save_pattern_features = False
+        self.sys_config.config.save_pattern_data = False
         self.sys_config.config.save_trade_data = False
 
     def run_back_testing(self, api: TradeTestApi):
@@ -74,6 +76,31 @@ class TradeTest:
         pattern_controller = PatternDetectionController(self.sys_config)
         detector = pattern_controller.get_detector_for_dash(self.sys_config, api.symbol, api.and_clause)
         return detector.get_pattern_list_for_back_testing()
+
+    def get_trade_test_api_by_selected_trade_row(self, row) -> TradeTestApi:
+        api = TradeTestApi()
+        api.test_process = TP.TRADE_REPLAY
+        api.pattern_type = row[DC.PATTERN_TYPE]
+        api.buy_trigger = row[DC.BUY_TRIGGER]
+        api.trade_strategy = row[DC.TRADE_STRATEGY]
+        api.symbol = row[DC.TICKER_ID]
+        api.dt_start = str(row[DC.PATTERN_BEGIN_DT])
+        api.dt_end = MyDate.adjust_by_days(row[DC.PATTERN_END_DT], -1)  # we need this correction for a smooth cont.
+        api.and_clause = self.sys_config.config.get_and_clause(api.dt_start, api.dt_end)
+        api.and_clause_unlimited = self.sys_config.config.get_and_clause(api.dt_start)
+        return api
+
+    def get_pattern_detector_for_replay(self, api: TradeTestApi) -> PatternDetector:
+        self.__adjust_sys_config_for_replay__(api)
+        pattern_controller = PatternDetectionController(self.sys_config)
+        return pattern_controller.get_detector_for_dash(self.sys_config, api.symbol, api.and_clause)
+
+    def __adjust_sys_config_for_replay__(self, api: TradeTestApi):
+        self.exchange_config.trade_strategy_dict = {api.buy_trigger: [api.trade_strategy]}
+        self.sys_config.config.pattern_type_list = [api.pattern_type]
+        self.sys_config.config.use_own_dic({api.symbol: api.symbol})
+        self.sys_config.config.and_clause = api.and_clause
+        self.sys_config.config.with_trade_part = False
 
     @staticmethod
     def __print_frame_information__(trigger: str, strategy: str, expected=''):

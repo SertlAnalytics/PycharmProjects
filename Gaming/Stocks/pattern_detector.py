@@ -300,16 +300,16 @@ class PatternDetector:
     def get_statistics_api(self):
         return PatternDetectorStatisticsApi(self.pattern_list, self.sys_config.config.investment)
 
-    def save_pattern_features(self):
-        if not self.sys_config.config.save_pattern_features:
+    def save_pattern_data(self):
+        if not self.sys_config.config.save_pattern_data:
             return
         input_list = []
         for pattern in self.pattern_list:
-            if pattern.is_pattern_ready_for_features_table():
+            if pattern.is_pattern_ready_for_pattern_table():
                 feature_dict = pattern.data_dict_obj.get_data_dict_for_features_table()
                 if feature_dict is not None:
-                    # print('save_pattern_features: {}'.format(feature_dict))
-                    if self.sys_config.db_stock.are_features_already_available(feature_dict[DC.ID]):
+                    # print('save_pattern_data: {}'.format(feature_dict))
+                    if self.sys_config.db_stock.is_pattern_already_available(feature_dict[DC.ID]):
                         self.__print_difference_to_stored_version__(feature_dict)
                     else:
                         input_list.append(feature_dict)
@@ -319,7 +319,7 @@ class PatternDetector:
     def __print_difference_to_stored_version__(self, feature_dict: dict):
         if not self.sys_config.config.show_differences_to_stored_features:
             return
-        dict_diff = self.sys_config.db_stock.get_features_differences_to_saved_version(feature_dict)
+        dict_diff = self.sys_config.db_stock.get_pattern_differences_to_saved_version(feature_dict)
         if len(dict_diff) > 0:
             print('Difference for Pattern {} [{}, {}]:'.format(
                 feature_dict[DC.PATTERN_TYPE],

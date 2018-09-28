@@ -44,7 +44,7 @@ class TradingBox:
         self._stop_loss = 0
         self._sell_limit_orig = 0 if self._trade_strategy == TSTR.LIMIT else math.inf
         self._sell_limit = self._sell_limit_orig
-        self._trailing_stop_distance = 0
+        self._distance_trailing_stop = 0
         self._next_trailing_stop = 0
         self._init_parameters_()
         self.__calculate_stops_and_limits__()
@@ -104,7 +104,7 @@ class TradingBox:
 
     @property
     def distance_trailing_stop(self):
-        return self.round(self._trailing_stop_distance)
+        return self.round(self._distance_trailing_stop)
 
     @property
     def multiplier_positive(self):
@@ -168,7 +168,7 @@ class TradingBox:
         self._stop_loss = self._stop_loss_orig
         self._sell_limit_orig = self._off_set_value + self._distance_top if self._trade_strategy == TSTR.LIMIT else math.inf
         self._sell_limit = self._sell_limit_orig
-        self._trailing_stop_distance = self._distance_bottom
+        self._distance_trailing_stop = self._distance_bottom
         self._next_trailing_stop = self._off_set_value
         self.__print_values__('Initialize stop and limit')
 

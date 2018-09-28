@@ -79,7 +79,7 @@ class PatternDetectionController:
             detector.parse_for_pattern()
             detector.parse_for_fibonacci_waves()
             detector.check_for_intersections_and_endings()
-            detector.save_pattern_features()
+            detector.save_pattern_data()
             self.__handle_statistics__(detector)
             self._number_pattern_total += len(detector.pattern_list)
             if self.sys_config.config.plot_data:
@@ -109,7 +109,7 @@ class PatternDetectionController:
         detector.parse_for_pattern()
         detector.parse_for_fibonacci_waves()
         detector.check_for_intersections_and_endings()
-        detector.save_pattern_features()
+        detector.save_pattern_data()
         return detector
 
     @property
@@ -236,7 +236,7 @@ class PatternDetectionController:
                     break
         else:
             for ticker in self.sys_config.config.ticker_dic:
-                if ticker not in ['DWDPxx']:
+                if ticker not in ['XRPUSD']:
                     self._loop_list_ticker.append({LL.TICKER: ticker, LL.AND_CLAUSE: self.sys_config.config.and_clause})
 
     def __handle_statistics__(self, detector: PatternDetector):

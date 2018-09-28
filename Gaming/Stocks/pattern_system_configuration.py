@@ -28,7 +28,7 @@ class SystemConfiguration:
         # self.bitfinex = Bitfinex()
         self.crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
         self.pdh = PatternDataHandler(self.config)
-        self.features_table = stock_database.FeaturesTable()
+        self.pattern_table = stock_database.PatternTable()
         self.trade_table = stock_database.TradeTable()
         self.db_stock = stock_database.StockDatabase()
         self.predictor_touch_points = None
@@ -39,7 +39,7 @@ class SystemConfiguration:
 
     def init_predictors_without_condition_list(self, ticker_id: str):
         # to avoid that the predictors take just the current pattern for back-testing
-        skip_condition_list = ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_features_trade]
+        skip_condition_list = ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern_and_trade]
         self.__init_predictors__(skip_condition_list)
 
     def __init_predictors__(self, skip_condition_list=None):
@@ -60,7 +60,7 @@ class SystemConfiguration:
         # sys_config_copy.bitfinex = self.bitfinex
         sys_config_copy.crypto_ccy_dic = self.crypto_ccy_dic
         sys_config_copy.pdh = self.pdh
-        sys_config_copy.features_table = self.features_table
+        sys_config_copy.pattern_table = self.pattern_table
         sys_config_copy.db_stock = self.db_stock
         sys_config_copy.predictor_touch_points = self.predictor_touch_points
         sys_config_copy.predictor_before_breakout = self.predictor_before_breakout

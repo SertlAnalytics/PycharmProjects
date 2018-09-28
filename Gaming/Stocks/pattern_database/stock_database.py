@@ -10,7 +10,7 @@ from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, Dat
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.mydates import MyDate
-from pattern_database.stock_tables import FeaturesTable, TradeTable, StocksTable, CompanyTable, STBL
+from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, CompanyTable, STBL
 import pandas as pd
 import math
 from datetime import datetime
@@ -95,7 +95,7 @@ class StockDatabase(BaseDatabase):
         self._dt_now_time_stamp = int(datetime.now().timestamp())
         self._stocks_table = StocksTable()
         self._company_table = CompanyTable()
-        self._features_table = FeaturesTable()
+        self._pattern_table = PatternTable()
         self._trade_table = TradeTable()
 
     def is_symbol_loaded(self, symbol: str):
@@ -171,10 +171,10 @@ class StockDatabase(BaseDatabase):
         self.__update_stock_data_for_single_value__(period, aggregation, symbol, name, company_dic, last_loaded_dict)
 
     def insert_pattern_features(self, input_dict_list: list):
-        self.__insert_data_into_table__('Features', input_dict_list)
+        self.__insert_data_into_table__(STBL.PATTERN, input_dict_list)
 
     def insert_trade_data(self, input_dict_list: list):
-        self.__insert_data_into_table__('Trade', input_dict_list)
+        self.__insert_data_into_table__(STBL.TRADE, input_dict_list)
 
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
@@ -214,7 +214,7 @@ class StockDatabase(BaseDatabase):
                 df = df.loc[last_loaded_time_stamp:].iloc[1:]
             if df.shape[0] > 0:
                 input_list = self.__get_df_data_for_insert_statement__(df, period, ticker)
-                self.__insert_data_into_table__('Stocks', input_list)
+                self.__insert_data_into_table__(STBL.STOCKS, input_list)
                 print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
             time.sleep(self._sleep_seconds)
 
@@ -232,7 +232,7 @@ class StockDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         loaded_symbol_list = [rows.Symbol for index, rows in db_df.df.iterrows()]
         for symbol in loaded_symbol_list:
-            query = 'SELECT * FROM Stocks WHERE Symbol = "' + symbol + '" ORDER BY Timestamp Desc LIMIT 1'
+            query = "SELECT * FROM {} WHERE Symbol = '{}' ORDER BY Timestamp Desc LIMIT 1".format(STBL.STOCKS, symbol)
             db_df = DatabaseDataFrame(self, query)
             try:
                 last_loaded_time_stamp_dic[symbol] = db_df.df[CN.TIMESTAMP].values[0]
@@ -243,10 +243,10 @@ class StockDatabase(BaseDatabase):
     def __insert_company_in_company_table__(self, ticker: str, name: str, to_be_loaded: bool):
         input_dic = self._company_table.get_insert_dict_for_company(ticker, name, to_be_loaded)
         try:
-            self.__insert_data_into_table__('Company', [input_dic])
+            self.__insert_data_into_table__(STBL.COMPANY, [input_dic])
         except Exception:
             self.error_handler.catch_exception(__name__)
-            print('{} - {}: problem inserting into Company table.'.format(ticker, name))
+            print('{} - {}: problem inserting into {} table.'.format(ticker, name, STBL.COMPANY))
 
     @staticmethod
     def __get_index_list__(index: str):
@@ -277,31 +277,31 @@ class StockDatabase(BaseDatabase):
     def create_company_table(self):
         self.__create_table__(STBL.COMPANY)
 
-    def create_features_table(self):
-        self.__create_table__(STBL.FEATURES)
+    def create_pattern_table(self):
+        self.__create_table__(STBL.PATTERN)
 
     def create_trade_table(self):
         self.__create_table__(STBL.TRADE)
 
-    def __insert_feature_in_feature_table__(self, ticker: str, input_dic: dict):
+    def __insert_pattern_in_pattern_table__(self, ticker: str, input_dic: dict):
         try:
-            self.__insert_data_into_table__('Features', [input_dic])
+            self.__insert_data_into_table__(STBL.PATTERN, [input_dic])
         except Exception:
             self.error_handler.catch_exception(__name__)
-            print('{}: problem inserting into Features table.'.format(ticker))
+            print('{}: problem inserting into {} table.'.format(ticker, STBL.PATTERN))
 
     def is_stock_data_already_available(self, symbol: str, time_stamp: int, period: str, aggregation: int) -> bool:
         query = self._stocks_table.get_query_for_unique_record(symbol, time_stamp, period, aggregation)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
-    def are_features_already_available(self, features_id: str) -> bool:
-        query = self._features_table.get_query_for_unique_record_by_id(features_id)
+    def is_pattern_already_available(self, pattern_id: str) -> bool:
+        query = self._pattern_table.get_query_for_unique_record_by_id(pattern_id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
-    def get_features_records_as_dataframe(self) -> pd.DataFrame:
-        query = self._features_table.get_query_for_records()
+    def get_pattern_records_as_dataframe(self) -> pd.DataFrame:
+        query = self._pattern_table.get_query_for_records()
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
@@ -316,7 +316,7 @@ class StockDatabase(BaseDatabase):
         return db_df.df
 
     def get_trade_records_for_replay_as_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_for_trades_for_replay()
+        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0")
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
@@ -324,12 +324,12 @@ class StockDatabase(BaseDatabase):
         if self.is_trade_already_available(trade_id):
             self.delete_records(self._trade_table.get_query_for_delete_by_id(trade_id))
 
-    def get_features_differences_to_saved_version(self, features_dict: dict) -> dict:
-        query = self._features_table.get_query_for_unique_record_by_id(features_dict[DC.ID])
+    def get_pattern_differences_to_saved_version(self, pattern_dict: dict) -> dict:
+        query = self._pattern_table.get_query_for_unique_record_by_id(pattern_dict[DC.ID])
         db_df = DatabaseDataFrame(self, query)
         df_first = db_df.df.iloc[0]
-        return {key: [str(df_first[key]), str(features_dict[key])] for key, values in features_dict.items()
-                if str(df_first[key]) != str(features_dict[key])}
+        return {key: [str(df_first[key]), str(pattern_dict[key])] for key, values in pattern_dict.items()
+                if str(df_first[key]) != str(pattern_dict[key])}
 
     def __create_table__(self, table_name: str):
         metadata = MetaData()
@@ -341,14 +341,14 @@ class StockDatabase(BaseDatabase):
 
     def __get_table_by_name__(self, table_name: str):
         return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table,
-                STBL.FEATURES: self._features_table, STBL.TRADE: self._trade_table}.get(table_name, None)
+                STBL.PATTERN: self._pattern_table, STBL.TRADE: self._trade_table}.get(table_name, None)
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):
     def __init__(self, db: StockDatabase, symbol='', and_clause='', period=PRD.DAILY, aggregation=1):
         self.symbol = symbol
-        self.statement = "SELECT * from Stocks WHERE Symbol = '{}' and Period = '{}' and Aggregation = {}".format(
-            symbol, period, aggregation)
+        self.statement = "SELECT * from {} WHERE Symbol = '{}' and Period = '{}' and Aggregation = {}".format(
+            STBL.STOCKS, symbol, period, aggregation)
         if and_clause != '':
             self.statement += ' and ' + and_clause
         DatabaseDataFrame.__init__(self, db, self.statement)

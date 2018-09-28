@@ -170,7 +170,7 @@ class PatternTradeHandler:
         self.sys_config = sys_config
         self.exchange_config = exchange_config
         self.trade_process = self.sys_config.runtime.actual_trade_process
-        self.trade_client = MyBitfinexTradeClient(exchange_config)
+        self.trade_client = self.__get_trade_client__()
         self.stock_db = self.sys_config.db_stock
         self.ticker_id_list = []
         self.pattern_trade_dict = {}
@@ -179,18 +179,25 @@ class PatternTradeHandler:
         self._last_time_stamp_for_test = 0
         self._last_price_for_test = 0
         self._time_stamp_for_actual_check = 0
+        self._pattern_trade_for_replay = None
 
-    # def __del__(self):
-    #     print('PatternTradeHandler: Destructor...')
-    #     self.__create_trailing_stop_order_for_all_executed_trades__()
+    def __get_trade_client__(self):
+        if self.trade_process == TP.ONLINE:
+            return MyBitfinexTradeClient(self.exchange_config)
+        return None
 
     @property
     def trade_numbers(self) -> int:
         return len(self.pattern_trade_dict)
 
+    @property
+    def pattern_trade_for_replay(self) -> PatternTrade:
+        return self._pattern_trade_for_replay
+
     def add_pattern_list_for_trade(self, pattern_list: list):
         self.trade_candidate_controller.add_new_pattern_list(pattern_list)
         self.__process_trade_candidates__()
+        self._pattern_trade_for_replay = self.__get_pattern_trade_for_replay__()
 
     def check_actual_trades(self, last_time_stamp_price_for_test=None):
         if last_time_stamp_price_for_test is not None:
@@ -209,6 +216,33 @@ class PatternTradeHandler:
         self.__handle_buy_triggers__()
         self.__update_ticker_lists__()  # some entries could be deleted
         self.process = ''
+
+    def check_actual_trades_for_replay(self, last_time_stamp_price_for_test: list):
+        self._last_time_stamp_for_test = last_time_stamp_price_for_test[0]
+        self._last_price_for_test = last_time_stamp_price_for_test[1]
+        self._time_stamp_for_actual_check = MyDate.get_epoch_seconds_from_datetime()
+        if self.trade_numbers == 0:
+            return
+        self.process = 'Replay'
+        self.__add_tickers_for_actual_time_stamp_to_pattern_trades__()
+        self.__adjust_stops_and_limits__()
+        self.__handle_sell_triggers__()
+        self.__set_limit_stop_loss_to_replay_values__()
+        self.__handle_wrong_breakout__()
+        self.__handle_buy_triggers__()
+        self.__calculate_xy_values__()
+        self.process = ''
+
+    def __set_limit_stop_loss_to_replay_values__(self):
+        for pattern_trade in self.pattern_trade_dict.values():
+            pattern_trade.set_limit_stop_loss_to_replay_values()
+
+    def __get_pattern_trade_for_replay__(self):
+        for pattern_trade in self.pattern_trade_dict.values():
+            return pattern_trade
+
+    def get_pattern_trade_data_frame_for_replay(self):
+        return self._pattern_trade_for_replay.get_data_frame_for_replay()
 
     def enforce_sell_at_end(self, last_time_stamp_price_for_test: list):  # it is used for back-testing
         self._last_time_stamp_for_test = last_time_stamp_price_for_test[0]
@@ -355,6 +389,10 @@ class PatternTradeHandler:
             else:
                 pattern_trade.verify_touch_point()
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.SMA_PROBLEM)
+
+    def __calculate_xy_values__(self):
+        for pattern_trade in self.pattern_trade_dict.values():
+            pattern_trade.calculate_xy_for_replay()
 
     def __handle_buy_trigger_for_pattern_trade__(self, pattern_trade: PatternTrade):
         ticker_id = pattern_trade.ticker_id

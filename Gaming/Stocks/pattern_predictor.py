@@ -9,7 +9,7 @@ from sertl_analytics.constants.pattern_constants import DC
 import pandas as pd
 import numpy as np
 from pattern_database.stock_tables import MyTable, PredictionFeatureTable
-from pattern_database.stock_database import StockDatabase, FeaturesTable, TradeTable
+from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
 from pattern_database.stock_database import DatabaseDataFrame
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
@@ -178,8 +178,8 @@ class PatternPredictor:
 
 
 class PatternPredictorTouchPoints(PatternPredictor):
-    def __get_table_with_prediction_features__(self) -> FeaturesTable:
-        return FeaturesTable()
+    def __get_table_with_prediction_features__(self) -> PatternTable:
+        return PatternTable()
 
     def __get_feature_columns__(self):
         return self.feature_table.feature_columns_touch_points
@@ -193,8 +193,8 @@ class PatternPredictorTouchPoints(PatternPredictor):
 
 
 class PatternPredictorBeforeBreakout(PatternPredictor):
-    def __get_table_with_prediction_features__(self) -> FeaturesTable:
-        return FeaturesTable()
+    def __get_table_with_prediction_features__(self) -> PatternTable:
+        return PatternTable()
 
     def __get_feature_columns__(self):
         return self.feature_table.features_columns_before_breakout
@@ -208,8 +208,8 @@ class PatternPredictorBeforeBreakout(PatternPredictor):
 
 
 class PatternPredictorAfterBreakout(PatternPredictor):
-    def __get_table_with_prediction_features__(self) -> FeaturesTable:
-        return FeaturesTable()
+    def __get_table_with_prediction_features__(self) -> PatternTable:
+        return PatternTable()
 
     def __get_feature_columns__(self):
         return self.feature_table.features_columns_after_breakout

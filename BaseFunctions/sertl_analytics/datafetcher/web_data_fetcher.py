@@ -46,4 +46,5 @@ class IndicesComponentList:
                 'LTC': 'Litecoin',
                 'NEO': 'NEO',
                 'XMR': 'XMR'
+                , 'XRP': 'Ripple'
                 }

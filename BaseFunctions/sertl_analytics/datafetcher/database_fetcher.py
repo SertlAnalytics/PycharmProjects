@@ -27,7 +27,7 @@ class MyTable:
         self._add_columns_()
         self._column_name_list = self.__get_column_name_list__()
         self._description = self.__get_description__()
-        self._query_select_all = self.__get_query_select_all__()
+        self._query_select_all = self.query_select_all
 
     @property
     def column_name_list(self):
@@ -39,7 +39,16 @@ class MyTable:
 
     @property
     def query_select_all(self):
-        return self._query_select_all
+        return 'SELECT * from {}'.format(self._name)
+
+    def get_query_for_unique_record_by_id(self, id: str) -> str:
+        return "SELECT * FROM {} where ID='{}'".format(self._name, id)
+
+    def get_query_for_records(self, where_clause='') -> str:
+        return "SELECT * FROM {}".format(self._name) + ('' if where_clause == '' else " WHERE {}".format(where_clause))
+
+    def get_query_for_delete_by_id(self, trade_id: str) -> str:
+        return "DELETE FROM {} where ID='{}'".format(self._name, trade_id)
 
     def __get_column_name_list__(self):
         return [columns.name for columns in self._columns]
@@ -58,9 +67,6 @@ class MyTable:
 
     def _add_columns_(self):
         pass
-
-    def __get_query_select_all__(self):
-        return 'SELECT * from {}'.format(self._name)
 
 
 class MyTableColumn:

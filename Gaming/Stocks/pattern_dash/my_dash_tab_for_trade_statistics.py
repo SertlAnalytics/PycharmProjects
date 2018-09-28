@@ -7,7 +7,8 @@ Date: 2018-09-26
 
 import plotly.graph_objs as go
 import pandas as pd
-from pattern_dash.my_dash_base import MyDashBase, MyDashBaseTab
+from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_database.stock_tables import TradeTable
 from pattern_system_configuration import SystemConfiguration
 from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi
 from dash import Dash
@@ -16,8 +17,9 @@ from dash import Dash
 class MyDashTab4TradeStatistics(MyDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         MyDashBaseTab.__init__(self, app, sys_config)
-        self._df_trade_records = self.sys_config.db_stock.get_trade_records_as_dataframe()
-        self._trade_rows_for_data_table = MyDCC.get_rows_from_df_for_data_table(self._df_trade_records)
+        self._df_trade = self.sys_config.db_stock.get_trade_records_as_dataframe()
+        self._df_trade_for_statistics = self._df_trade[TradeTable.get_columns_for_statistics()]
+        self._trade_rows_for_data_table = MyDCC.get_rows_from_df_for_data_table(self._df_trade_for_statistics)
 
     def get_div_for_tab(self):
         header = MyHTML.h1('This is the content in tab 3: Trade statistics')
@@ -37,7 +39,7 @@ class MyDashTab4TradeStatistics(MyDashBaseTab):
 
     def __get_scatter_graph_for_trades__(self, scatter_graph_id='trade_statistics_scatter_graph'):
         graph_api = DccGraphApi(scatter_graph_id, 'My Trades')
-        graph_api.figure_data = self.__get_scatter_figure_data_for_trades__(self._df_trade_records)
+        graph_api.figure_data = self.__get_scatter_figure_data_for_trades__(self._df_trade)
         return MyDCC.graph(graph_api)
 
     @staticmethod

@@ -174,8 +174,8 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
             df.columns = self.get_standard_column_names()
         return df
 
-    def _get_url_(self):  # the symbol has the structure symbol_CCY like BTC_USD
-        symbol = self.symbol[:-4]
+    def _get_url_(self):  # the symbol has the structure symbolCCY like BTCUSD
+        symbol = self.symbol[:-3]
         market = self.symbol[-3:]
         url = 'https://www.alphavantage.co/query?function={}&symbol={}&market={}&apikey={}'.format(
             self.get_url_function(), symbol, market, self.api_key

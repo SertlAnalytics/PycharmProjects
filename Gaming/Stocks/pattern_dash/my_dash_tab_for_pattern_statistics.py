@@ -7,6 +7,7 @@ Date: 2018-06-17
 
 from pattern_dash.my_dash_base import MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
+from pattern_database.stock_tables import PatternTable
 from pattern_dash.my_dash_components import MyDCC, MyHTML
 from dash import Dash
 
@@ -14,8 +15,9 @@ from dash import Dash
 class MyDashTab4PatternStatistics(MyDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         MyDashBaseTab.__init__(self, app, sys_config)
-        self._df_features_records = self.sys_config.db_stock.get_features_records_as_dataframe()
-        self._features_rows_for_data_table = MyDCC.get_rows_from_df_for_data_table(self._df_features_records)
+        self._df_pattern = self.sys_config.db_stock.get_pattern_records_as_dataframe()
+        self._df_pattern_for_statistics = self._df_pattern[PatternTable.get_columns_for_statistics()]
+        self._pattern_rows_for_data_table = MyDCC.get_rows_from_df_for_data_table(self._df_pattern_for_statistics)
 
     def get_div_for_tab(self):
         header = MyHTML.h1('This is the content in tab 4: Features statistics')
@@ -30,4 +32,4 @@ class MyDashTab4PatternStatistics(MyDashBaseTab):
         return MyDCC.drop_down('features-selection', options)
 
     def __get_table_for_features__(self, number=5):
-        return MyDCC.data_table('features_table', self._features_rows_for_data_table[:number], min_height=200)
+        return MyDCC.data_table('pattern_table', self._pattern_rows_for_data_table[:number], min_height=200)

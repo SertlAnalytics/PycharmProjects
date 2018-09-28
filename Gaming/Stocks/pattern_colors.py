@@ -6,10 +6,15 @@ Date: 2018-05-14
 """
 
 from pattern import Pattern
-from sertl_analytics.constants.pattern_constants import FT
+from pattern_trade import PatternTrade
+from sertl_analytics.constants.pattern_constants import FT, PTS
 
 
 class PatternColorHandler:
+    @staticmethod
+    def get_colors_for_pattern_trade():
+        return 'orangered', 'lightgreen'  # for buying, selling
+
     def get_colors_for_pattern(self, pattern: Pattern):
         return self.__get_pattern_color__(pattern), self.__get_trade_color__(pattern)
 

@@ -14,7 +14,7 @@ from pattern_part import PatternPart
 import pattern_constraints as cstr
 from sertl_analytics.myexceptions import MyException
 from sertl_analytics.mydates import MyDate
-from pattern_wave_tick import WaveTick
+from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_function_container import PatternFunctionContainerFactoryApi
 from pattern_value_categorizer import ValueCategorizer
 from pattern_data_dictionary import PatternDataDictionary
@@ -167,10 +167,14 @@ class Pattern:
         pos_start, pos_last = self.__get_first_last_position_for_back_testing_data__()
         return self.df_length > pos_last and FT.is_pattern_type_long_trade_able(self.pattern_type)
 
-    def get_back_testing_value_pairs(self):
+    def get_back_testing_value_pairs(self, tick_list_for_replay=None):
+        if tick_list_for_replay is None:
+            tick_list = self.sys_config.pdh.pattern_data.tick_list
+        else:
+            tick_list = tick_list_for_replay
         pos_start, pos_last = self.__get_first_last_position_for_back_testing_data__()
         return_list = []
-        for tick in self.sys_config.pdh.pattern_data.tick_list:
+        for tick in tick_list:
             if pos_start < tick.position < pos_last:
                 return_list.append([tick.time_stamp, tick.open])
                 return_list.append([tick.time_stamp, tick.high])
@@ -439,12 +443,12 @@ class Pattern:
     def is_part_trade_available(self):
         return self._part_trade is not None
 
-    def is_pattern_ready_for_features_table(self):
-        enough_distance = self._has_pattern_enough_distance_for_features_table_()
-        all_columns = self.data_dict_obj.is_data_dict_ready_for_features_table()
+    def is_pattern_ready_for_pattern_table(self):
+        enough_distance = self._has_pattern_enough_distance_for_pattern_table_()
+        all_columns = self.data_dict_obj.is_data_dict_ready_for_pattern_table()
         return enough_distance and all_columns
 
-    def _has_pattern_enough_distance_for_features_table_(self) -> bool:
+    def _has_pattern_enough_distance_for_pattern_table_(self) -> bool:
         if self.part_main.breakout is None:
             return False
         pos_first = self.part_main.tick_first.position
@@ -527,11 +531,11 @@ class Pattern:
 
     def __get_x_data_for_prediction__(self, prediction_type: str):
         if prediction_type == PT.TOUCH_POINTS:
-            feature_columns = self.sys_config.features_table.feature_columns_touch_points
+            feature_columns = self.sys_config.pattern_table.feature_columns_touch_points
         elif prediction_type == PT.BEFORE_BREAKOUT:
-            feature_columns = self.sys_config.features_table.features_columns_before_breakout
+            feature_columns = self.sys_config.pattern_table.features_columns_before_breakout
         else:
-            feature_columns = self.sys_config.features_table.features_columns_after_breakout
+            feature_columns = self.sys_config.pattern_table.features_columns_after_breakout
         if self.data_dict_obj.is_data_dict_ready_for_columns(feature_columns):
             data_list = self.data_dict_obj.get_data_list_for_columns(feature_columns)
             np_array = np.array(data_list).reshape(1, len(data_list))

@@ -58,7 +58,7 @@ class ValueCategorizer:
             self.__print_value_range_for_category__(data_series, value_category)
         return is_in_category
 
-    def __get_data_series_for_value__(self, time_stamp, value):
+    def __get_data_series_for_value__(self, time_stamp, value=0):
         f_upper = self._f_upper(time_stamp)
         h_upper = self._h_upper(time_stamp)
         f_lower = self._f_lower(time_stamp)
@@ -104,24 +104,27 @@ class ValueCategorizer:
             self.value_category_dic[row[self.__index_column]] = self.__get_value_categories_for_df_row__(row)
 
     def __print_value_range_for_category__(self, data_series, value_category: str):
-        value_range = self.__get_value_range_for_category__(data_series, value_category)
-        print('Value range for category {}: {}'.format(value_category, value_range))
+        l_value, u_value = self.__get_value_range_for_category__(data_series, value_category)
+        print('Value range for category {}: [{:.2f}, {:.2f}]'.format(value_category, l_value, u_value))
+
+    def get_value_range_for_category(self, time_stamp: float, value_category: str):
+        data_series = self.__get_data_series_for_value__(time_stamp)
+        return self.__get_value_range_for_category__(data_series, value_category)
 
     def __get_value_range_for_category__(self, row, value_category: str):
         lower_pct, upper_pct  = 1 - self._tolerance_pct, 1 + self._tolerance_pct
         if value_category == SVC.U_out:
-            l_value, u_value  = row[CN.F_UPPER] * lower_pct, math.inf
+            return row[CN.F_UPPER] * upper_pct, math.inf
         elif value_category == SVC.U_on:
-            l_value, u_value = row[CN.F_UPPER] * lower_pct, row[CN.F_UPPER] * upper_pct
+            return row[CN.F_UPPER] * lower_pct, row[CN.F_UPPER] * upper_pct
         elif value_category == SVC.M_in:
-            l_value, u_value = row[CN.F_LOWER] * upper_pct, row[CN.F_UPPER] * lower_pct
+            return row[CN.F_LOWER] * upper_pct, row[CN.F_UPPER] * lower_pct
         elif value_category == SVC.L_on:
-            l_value, u_value = row[CN.F_LOWER] * lower_pct, row[CN.F_LOWER] * upper_pct
+            return row[CN.F_LOWER] * lower_pct, row[CN.F_LOWER] * upper_pct
         elif value_category == SVC.L_out:
-            l_value, u_value = -math.inf, row[CN.F_LOWER] * lower_pct
+            return -math.inf, row[CN.F_LOWER] * lower_pct
         else:
-            u_value, l_value = 0, 0
-        return '[{:.2f}, {:.2f}]'.format(l_value, u_value)
+            return 0, 0
 
     def __get_value_categories_for_df_row__(self, row) -> list:  # the series is important
         return_list = []

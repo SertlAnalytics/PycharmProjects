@@ -36,6 +36,9 @@ COLORS = [
 class DccGraphApi:
     def __init__(self, graph_id: str, title: str):
         self.id = graph_id
+        self.ticker_id = ''
+        self.df = None
+        self.pattern_trade = None
         self.figure_data = None
         self.figure_layout_height = 500
         self.figure_layout_width = 1200

@@ -447,7 +447,7 @@ class DC:  # Data Columns
     EMPLOYEES = 'Employees'
     SAVINGS = 'Savings'
     FORECAST_GROWTH = 'ForcastGrowth'  # writing error...
-    # for features
+    # for pattern
     ID = 'ID'  # Ticker_ID-Pattern_Type_ID-Pattern_Range_Begin_DT-Pattern_Range_End_DT
     EQUITY_TYPE = 'Equity_Type'  # Share, Commodities, Crypto Currency
     EQUITY_TYPE_ID = 'Equity_Type_ID'  # Share, Commodities, Crypto Currency

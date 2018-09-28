@@ -106,6 +106,8 @@ class MyDate:
 
     @staticmethod
     def adjust_by_days(date_time, days: int):
+        if type(date_time) is str:
+            date_time = MyDate.get_date_from_datetime(date_time)
         if type(date_time) is date:
             return (date_time + timedelta(days=days))
         return (date_time + timedelta(days=days)).date()

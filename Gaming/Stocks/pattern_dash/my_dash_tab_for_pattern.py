@@ -33,7 +33,6 @@ class MyDashTab4Pattern(MyDashBaseTab):
         self.bitfinex_config = bitfinex_config
         self.trade_handler = PatternTradeHandler(sys_config, self.bitfinex_config)
         self.sys_config_second = sys_config.get_semi_deep_copy()
-        self._color_handler = PatternColorHandler()
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None
         self._ticker_options = []
@@ -66,7 +65,6 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def get_div_for_tab(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
         li = [MyHTMLTabHeaderTable().get_table()]
-        li.append(MyDCC.interval('my_interval', 100))
         li.append(MyHTML.div_with_dcc_drop_down(
             'Stock symbol', 'my_ticker_selection', self._ticker_options, 200))
         li.append(MyHTML.div_with_dcc_drop_down(
@@ -280,7 +278,9 @@ class MyDashTab4Pattern(MyDashBaseTab):
             self._detector_first = detector
             self._pattern_data_first = self.sys_config.pdh.pattern_data
         graph_api = DccGraphApi(graph_id, graph_title)
-        graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
+        graph_api.ticker_id = ticker
+        graph_api.df = detector.sys_config.pdh.pattern_data.df
+        graph = self.__get_dcc_graph_element__(detector, graph_api)
         cache_api = self.__get_cache_api__(graph_key, graph, detector, pattern_data)
         self._graph_first_cache.add_cache_object(cache_api)
         return graph, graph_key
@@ -299,7 +299,9 @@ class MyDashTab4Pattern(MyDashBaseTab):
             self.sys_config_second.config.get_data_from_db = False
             detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker, '')
             graph_api = DccGraphSecondApi(graph_id, graph_title)
-            graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
+            graph_api.ticker_id = ticker
+            graph_api.df = detector.sys_config.pdh.pattern_data.df
+            graph = self.__get_dcc_graph_element__(detector, graph_api)
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
             self._graph_second_cache.add_cache_object(cache_api)
         else:
@@ -307,10 +309,12 @@ class MyDashTab4Pattern(MyDashBaseTab):
             self.sys_config_second.config.get_data_from_db = True
             date_from = datetime.today() - timedelta(days=days)
             date_to = datetime.today() + timedelta(days=5)
-            and_clause = self.__get_and_clause__(date_from, date_to)
+            and_clause = self.sys_config.config.get_and_clause(date_from, date_to)
             detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker, and_clause)
             graph_api = DccGraphSecondApi(graph_id, graph_title)
-            graph = self.__get_dcc_graph_element__(detector, graph_api, ticker)
+            graph_api.ticker_id = ticker
+            graph_api.df = detector.sys_config.pdh.pattern_data.df
+            graph = self.__get_dcc_graph_element__(detector, graph_api)
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
             self._graph_second_cache.add_cache_object(cache_api)
         return graph, graph_key
@@ -325,18 +329,6 @@ class MyDashTab4Pattern(MyDashBaseTab):
         cache_api.last_refresh_ts = self._time_stamp_last_refresh
         return cache_api
 
-    def __get_dcc_graph_element__(self, detector, graph_api, ticker: str):
-        pattern_df = detector.sys_config.pdh.pattern_data.df
-        candlestick = self.__get_candlesticks_trace__(pattern_df, ticker)
-        bollinger_traces = self.__get_bollinger_band_trace__(pattern_df, ticker)
-        shapes = self.__get_pattern_shape_list__(detector)
-        shapes += self.__get_pattern_regression_shape_list__(detector)
-        shapes += self.__get_fibonacci_shape_list__(detector)
-        graph_api.figure_layout_shapes = [my_shapes.shape_parameters for my_shapes in shapes]
-        graph_api.figure_layout_annotations = [my_shapes.annotation_parameters for my_shapes in shapes]
-        graph_api.figure_data = [candlestick]
-        return MyDCC.graph(graph_api)
-
     def __fill_ticker_options__(self):
         for symbol, name in self.sys_config.config.ticker_dic.items():
             if self._current_symbol == '':
@@ -349,72 +341,3 @@ class MyDashTab4Pattern(MyDashBaseTab):
                 return elements['label']
         return ticker_value
 
-    def __get_pattern_shape_list__(self, detector: PatternDetector):
-        return_list = []
-        for pattern in detector.pattern_list:
-            colors = self._color_handler.get_colors_for_pattern(pattern)
-            return_list.append(DashInterface.get_pattern_part_main_shape(pattern, colors[0]))
-            if pattern.was_breakout_done() and pattern.is_part_trade_available():
-                return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors[1]))
-        return return_list
-
-    @staticmethod
-    def __get_pattern_regression_shape_list__(detector: PatternDetector):
-        return_list = []
-        for pattern in detector.pattern_list:
-            return_list.append(DashInterface.get_f_regression_shape(pattern.part_main, 'skyblue'))
-        return return_list
-
-    @staticmethod
-    def __get_fibonacci_shape_list__(detector: PatternDetector):
-        return_list = []
-        for fib_waves in detector.fib_wave_tree.fibonacci_wave_list:
-            color = 'green' if fib_waves.wave_type == FD.ASC else 'red'
-            return_list.append(DashInterface.get_fibonacci_wave_shape(detector.sys_config, fib_waves, color))
-            # print('Fibonacci: {}'.format(return_list[-1].shape_parameters))
-        return return_list
-
-    def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str):
-        if self.sys_config.config.api_period == PRD.INTRADAY:
-            x_value = df[CN.DATETIME]
-        else:
-            x_value = df[CN.DATE]
-        candlestick = {
-            'x': x_value,
-            'open': df[CN.OPEN],
-            'high': df[CN.HIGH],
-            'low': df[CN.LOW],
-            'close': df[CN.CLOSE],
-            'type': 'candlestick',
-            'name': ticker,
-            'legendgroup': ticker,
-            'hoverover': 'skip',
-            'increasing': {'line': {'color': 'g'}},
-            'decreasing': {'line': {'color': 'r'}}
-        }
-        return candlestick
-
-    def __get_bollinger_band_trace__(self, df: pd.DataFrame, ticker: str):
-        color_scale = cl.scales['9']['qual']['Paired']
-        bb_bands = self.__get_bollinger_band_values__(df[CN.CLOSE])
-
-        bollinger_traces = [{
-            'x': df[CN.TIME] if self.sys_config.config.api_period == PRD.INTRADAY else df[CN.DATE],
-            'y': y,
-            'type': 'scatter', 'mode': 'lines',
-            'line': {'width': 1, 'color': color_scale[(i * 2) % len(color_scale)]},
-            'hoverinfo': 'none',
-            'legendgroup': ticker + ' - Bollinger',
-            'showlegend': True if i == 0 else False,
-            'name': '{} - bollinger bands'.format(ticker)
-        } for i, y in enumerate(bb_bands)]
-
-        return bollinger_traces
-
-    @staticmethod
-    def __get_bollinger_band_values__(price_df: pd.DataFrame, window_size=10, num_of_std=5):
-        rolling_mean = price_df.rolling(window=window_size).mean()
-        rolling_std = price_df.rolling(window=window_size).std()
-        upper_band = rolling_mean + (rolling_std * num_of_std)
-        lower_band = rolling_mean - (rolling_std * num_of_std)
-        return [rolling_mean, upper_band, lower_band]

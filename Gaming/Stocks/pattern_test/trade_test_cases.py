@@ -18,7 +18,11 @@ class TradeTestApi:
         self.trade_strategy = ''
         self.test_process = ''
         self.symbol = ''
+        self.dt_start = None
+        self.dt_end = None
         self.and_clause = ''
+        self.and_clause_unlimited = ''
+        self.tick_list_for_replay = None  # is used for the whole stock data from the begin of the pattern
 
     def print_test_api(self):
         print('PatternType={}, buy_trigger={}, trade_strategy={}, test_process={}, symbol={}, and_clause={}'.format(
@@ -56,11 +60,11 @@ class TradeTestCaseFactory:
         tc.buy_trigger = api.buy_trigger
         tc.trade_strategy = api.trade_strategy
         tc.test_process = api.pattern.sys_config.runtime.actual_trade_process
-        TradeTestCaseFactory.fill_test_data_for_pattern(tc, api.pattern)
+        TradeTestCaseFactory.fill_test_data_for_pattern(tc, api.pattern, api.tick_list_for_replay)
         return tc
 
     @staticmethod
-    def fill_test_data_for_pattern(tc: TradeTestCase, pattern: Pattern):
+    def fill_test_data_for_pattern(tc: TradeTestCase, pattern: Pattern, tick_list_for_replay=None):
         tc.symbol = pattern.ticker_id
         from_date = MyDate.adjust_by_days(pattern.part_main.date_first, -20)
         if pattern.part_main.breakout:
@@ -68,7 +72,7 @@ class TradeTestCaseFactory:
         else:
             to_date = pattern.part_main.date_last
         tc.and_clause = "Date BETWEEN '{}' AND '{}'".format(from_date, to_date)
-        tc.value_pair_list = pattern.get_back_testing_value_pairs()
+        tc.value_pair_list = pattern.get_back_testing_value_pairs(tick_list_for_replay)
 
     @staticmethod
     def fill_test_data_for_pattern_type(tc: TradeTestCase):
@@ -79,7 +83,7 @@ class TradeTestCaseFactory:
 
     @staticmethod
     def fill_test_data_for_triangle_down(tc: TradeTestCase):
-        tc.symbol = 'ETH_USD'
+        tc.symbol = 'ETHUSD'
         tc.and_clause = "Date BETWEEN '2018-03-01' AND '2018-07-05'"
         tc.time_stamp_start = MyDate.get_epoch_seconds_from_datetime('2018-07-05')
         base_list = [
@@ -119,7 +123,7 @@ class TradeTestCaseFactory:
 
     @staticmethod
     def fill_test_data_for_fibonacci_desc(tc: TradeTestCase):
-        tc.symbol = 'ETH_USD'
+        tc.symbol = 'ETHUSD'
         tc.and_clause = "Date BETWEEN '2018-03-01' AND '2018-06-29'"
         tc.time_stamp_start = MyDate.get_epoch_seconds_from_datetime('2018-06-29')
         base_list = [

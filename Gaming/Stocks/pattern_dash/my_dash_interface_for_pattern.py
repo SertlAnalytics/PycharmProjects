@@ -11,6 +11,7 @@ from sertl_analytics.constants.pattern_constants import PRD
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
 from pattern import Pattern
+from pattern_trade import PatternTrade
 from pattern_part import PatternPart
 from pattern_range import PatternRange
 from pattern_wave_tick import WaveTickList
@@ -81,6 +82,21 @@ class DashInterface:
     @staticmethod
     def get_pattern_part_trade_shape(pattern: Pattern, color: str):
         x, y = DashInterface.get_xy_separated_from_timestamp(pattern.sys_config, pattern.xy_trade)
+        return MyPolygonShape(x, y, color)
+
+    @staticmethod
+    def get_pattern_trade_buying_shape(pattern_trade: PatternTrade, color: str):
+        return DashInterface.__get_pattern_trade_shape__(pattern_trade, color, pattern_trade.xy_for_buying)
+
+    @staticmethod
+    def get_pattern_trade_selling_shape(pattern_trade: PatternTrade, color: str):
+        return DashInterface.__get_pattern_trade_shape__(pattern_trade, color, pattern_trade.xy_for_selling)
+
+    @staticmethod
+    def __get_pattern_trade_shape__(pattern_trade: PatternTrade, color: str, xy):
+        if xy is None:
+            return None
+        x, y = DashInterface.get_xy_separated_from_timestamp(pattern_trade.sys_config, xy)
         return MyPolygonShape(x, y, color)
 
     @staticmethod

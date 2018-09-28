@@ -13,7 +13,7 @@ from sertl_analytics.constants.pattern_constants import DC, PRD
 class STBL:  # stocks tables
     STOCKS = 'Stocks'
     COMPANY = 'Company'
-    FEATURES = 'Features'
+    PATTERN = 'Pattern'
     TRADE = 'Trade'
 
 
@@ -45,24 +45,6 @@ class TradeTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def _get_name_():
         return STBL.TRADE
-
-    @staticmethod
-    def get_query_for_unique_record_by_id(id: str) -> str:
-        return "SELECT * FROM Trade where ID='{}'".format(id)
-
-    @staticmethod
-    def get_query_for_records(where_clause='') -> str:
-        return "SELECT * FROM Trade"
-
-    @staticmethod
-    def get_query_for_trades_for_replay(where_clause='') -> str:
-        col_list = [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
-                    DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT]
-        return "SELECT {} FROM Trade".format(','.join(col_list))
-
-    @staticmethod
-    def get_query_for_delete_by_id(trade_id: str) -> str:
-        return "DELETE FROM Trade where ID='{}'".format(trade_id)
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 100))
@@ -158,15 +140,25 @@ class TradeTable(MyTable, PredictionFeatureTable):
     def __get_label_columns_for_trades__():
         return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_ID]
 
+    @staticmethod
+    def get_columns_for_replay() -> list:
+        return [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
+                DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT]
+
+    @staticmethod
+    def get_columns_for_statistics() -> list:
+        return [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
+                DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT, DC.TRADE_BOX_TYPE, DC.SELL_TRIGGER, DC.TRADE_RESULT]
+
     def __get_query_for_feature_and_label_data_for_trades__(self) -> str:
-        return "SELECT {} FROM Trade WHERE Trade_Result_ID != 0".format(
-            self.__get_concatenated_feature_label_columns_for_trades__())
+        return "SELECT {} FROM {} WHERE Trade_Result_ID != 0".format(
+            self.__get_concatenated_feature_label_columns_for_trades__(), self._name)
 
     def __get_concatenated_feature_label_columns_for_trades__(self):
         return ', '.join(self._feature_columns_for_trades + self._label_columns_for_trades)
 
 
-class FeaturesTable(MyTable, PredictionFeatureTable):
+class PatternTable(MyTable, PredictionFeatureTable):
     def __init__(self):
         MyTable.__init__(self)
         self._feature_columns_touch_points = self.__get_feature_columns_touch_points__()
@@ -181,14 +173,6 @@ class FeaturesTable(MyTable, PredictionFeatureTable):
             self.__get_query_for_feature_and_label_data_before_breakout__()
         self._query_for_feature_and_label_data_after_breakout = \
             self.__get_query_for_feature_and_label_data_after_breakout__()
-
-    @staticmethod
-    def get_query_for_unique_record_by_id(id: str) -> str:
-        return "SELECT * FROM Features where ID='{}'".format(id)
-
-    @staticmethod
-    def get_query_for_records(where_clause='') -> str:
-        return "SELECT * FROM Features".format(id)
 
     @property
     def feature_columns_touch_points(self):
@@ -225,6 +209,11 @@ class FeaturesTable(MyTable, PredictionFeatureTable):
     @property
     def query_for_feature_and_label_data_after_breakout(self):
         return self._query_for_feature_and_label_data_after_breakout
+
+    @staticmethod
+    def get_columns_for_statistics() -> list:
+        return [DC.TICKER_ID, DC.TICKER_NAME, DC.PATTERN_TYPE, DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT,
+                DC.BREAKOUT_DT, DC.BREAKOUT_DIRECTION, DC.EXPECTED_WIN, DC.EXPECTED_WIN_REACHED]
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 50))
@@ -301,16 +290,16 @@ class FeaturesTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def _get_name_():
-        return STBL.FEATURES
+        return STBL.PATTERN
 
     def __get_query_for_feature_and_label_data_touch_points__(self) -> str:
-        return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_touch_points__())
+        return "SELECT {} FROM {}".format(self.__get_concatenated_feature_label_columns_touch_points__(), self._name)
 
     def __get_query_for_feature_and_label_data_before_breakout__(self) -> str:
-        return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_before_breakout__())
+        return "SELECT {} FROM {}".format(self.__get_concatenated_feature_label_columns_before_breakout__(), self._name)
 
     def __get_query_for_feature_and_label_data_after_breakout__(self):
-        return "SELECT {} FROM Features".format(self.__get_concatenated_feature_label_columns_after_breakout__())
+        return "SELECT {} FROM {}".format(self.__get_concatenated_feature_label_columns_after_breakout__(), self._name)
 
     def __get_concatenated_feature_label_columns_touch_points__(self):
         return ', '.join(self._feature_columns_touch_points + self._label_columns_touch_points)
@@ -337,7 +326,7 @@ class FeaturesTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def __get_feature_columns_before_breakout__():
-        base_list = FeaturesTable.__get_feature_columns_after_breakout__()
+        base_list = PatternTable.__get_feature_columns_after_breakout__()
         del base_list[base_list.index(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT)]
         del base_list[base_list.index(DC.BREAKOUT_DIRECTION_ID)]
         del base_list[base_list.index(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT)]
@@ -347,7 +336,7 @@ class FeaturesTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def __get_feature_columns_touch_points__():
-        base_list = FeaturesTable.__get_feature_columns_before_breakout__()
+        base_list = PatternTable.__get_feature_columns_before_breakout__()
         del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_TOP)]
         del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM)]
         return base_list
