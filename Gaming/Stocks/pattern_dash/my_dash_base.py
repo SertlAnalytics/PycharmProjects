@@ -37,9 +37,10 @@ class MyDashBaseTab:
         pattern_df = graph_api.df
         candlestick = self.__get_candlesticks_trace__(pattern_df, graph_api.ticker_id)
         bollinger_traces = self.__get_bollinger_band_trace__(pattern_df, graph_api.ticker_id)
-        shapes = self.__get_pattern_shape_list__(detector)
-        shapes += self.__get_pattern_regression_shape_list__(detector)
-        shapes += self.__get_fibonacci_shape_list__(detector)
+        shapes = self.__get_pattern_shape_list__(detector.pattern_list)
+        shapes += self.__get_pattern_regression_shape_list__(detector.pattern_list)
+        if detector:
+            shapes += self.__get_fibonacci_shape_list__(detector)
         if graph_api.pattern_trade:
             shapes += self.__get_pattern_trade_shape_list__(graph_api.pattern_trade)
         graph_api.figure_layout_shapes = [my_shapes.shape_parameters for my_shapes in shapes]
@@ -47,9 +48,9 @@ class MyDashBaseTab:
         graph_api.figure_data = [candlestick]
         return MyDCC.graph(graph_api)
 
-    def __get_pattern_shape_list__(self, detector: PatternDetector):
+    def __get_pattern_shape_list__(self, pattern_list: list):
         return_list = []
-        for pattern in detector.pattern_list:
+        for pattern in pattern_list:
             colors = self._color_handler.get_colors_for_pattern(pattern)
             return_list.append(DashInterface.get_pattern_part_main_shape(pattern, colors[0]))
             if pattern.was_breakout_done() and pattern.is_part_trade_available():
@@ -58,20 +59,23 @@ class MyDashBaseTab:
 
     def __get_pattern_trade_shape_list__(self, pattern_trade: PatternTrade):
         return_list = []
-        colors = self._color_handler.get_colors_for_pattern_trade()
+        colors = self._color_handler.get_colors_for_pattern_trade(pattern_trade)
         shape_buying = DashInterface.get_pattern_trade_buying_shape(pattern_trade, colors[0])
         shape_selling = DashInterface.get_pattern_trade_selling_shape(pattern_trade, colors[1])
+        shape_after_selling = DashInterface.get_pattern_trade_after_selling_shape(pattern_trade, colors[2])
         if shape_buying:
             return_list.append(shape_buying)
         if shape_selling:
             return_list.append(shape_selling)
+        if shape_after_selling:
+            return_list.append(shape_after_selling)
         return return_list
 
     @staticmethod
-    def __get_pattern_regression_shape_list__(detector: PatternDetector):
+    def __get_pattern_regression_shape_list__(pattern_list: list):
         return_list = []
-        for pattern in detector.pattern_list:
-            return_list.append(DashInterface.get_f_regression_shape(pattern.part_main, 'skyblue'))
+        for pattern in pattern_list:
+            return_list.append(DashInterface.get_f_regression_shape(pattern.part_entry, 'skyblue'))
         return return_list
 
     @staticmethod

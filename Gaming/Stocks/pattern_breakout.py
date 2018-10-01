@@ -56,7 +56,7 @@ class PatternBreakout:
         else:
             date_str = self.tick_breakout.date_str_for_f_var
         vol_change = (MyMath.divide(self.tick_breakout.volume, self.tick_previous.volume, 2) - 1) * 100
-        return '{} - Volume change: {}%'.format(date_str, round(vol_change, 0))
+        return '{} ({})- Volume change: {}%'.format(date_str, self.tick_breakout.position, round(vol_change, 0))
 
     def __get_breakout_direction__(self) -> str:
         return FD.ASC if self.tick_breakout.close > self.bound_upper else FD.DESC

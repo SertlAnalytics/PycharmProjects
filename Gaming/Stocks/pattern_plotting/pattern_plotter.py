@@ -231,7 +231,7 @@ class PatternPlotter:
             self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.high), width, height, color='w'))
 
     def __plot_ranges__(self):
-        pattern_range_list = self.detector.get_combined_possible_pattern_ranges()
+        pattern_range_list = self.detector.__get_combined_possible_pattern_ranges__()
         for ranges in pattern_range_list:
             polygon = PlotterInterface.get_range_f_param_shape(ranges)
             self.__add_to_ranges_polygon_dic__(polygon, True, ranges)
@@ -301,7 +301,7 @@ class PatternPlotter:
                 plot_container.annotation_param = PlotterInterface.get_annotation_param(pattern)
                 # plot_container.add_border_line_top_shape(pattern.part_main.get_f_upper_shape())
                 # plot_container.add_border_line_bottom_shape(pattern.part_main.get_f_lower_shape())
-                plot_container.add_regression_line_shape(PlotterInterface.get_f_regression_shape(pattern.part_main))
+                plot_container.add_regression_line_shape(PlotterInterface.get_f_regression_shape(pattern.part_entry))
                 self.pattern_plot_container_loop_list.append(plot_container)
 
     def __add_pattern_shapes_to_plot__(self):
@@ -359,7 +359,7 @@ class PlotterInterface:
             ellipse_breadth = 10
         else:
             ellipse_breadth = 2 / (pattern.sys_config.config.api_period_aggregation * 60)
-        ellipse_height = pattern.part_main.height / 6
+        ellipse_height = pattern.part_entry.height / 6
         xy_center = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern.xy_center)
         return Ellipse(np.array(xy_center), ellipse_breadth, ellipse_height)
 

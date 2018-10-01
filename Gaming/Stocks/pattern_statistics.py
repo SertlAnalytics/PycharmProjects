@@ -98,11 +98,11 @@ class PatternStatistics:
         self.dic[PSC.END] = MyDate.get_date_from_datetime(pattern.date_last)
         self.dic[PSC.LOWER] = round(0, 2)
         self.dic[PSC.UPPER] = round(0, 2)  # TODO Lower & Upper bound for statistics
-        slope_upper, slope_lower, slow_regression = pattern.part_main.get_slope_values()
+        slope_upper, slope_lower, slow_regression = pattern.part_entry.get_slope_values()
         self.dic[PSC.SLOPE_UPPER] = slope_upper
         self.dic[PSC.SLOPE_LOWER] = slope_lower
         self.dic[PSC.SLOPE_RELATION] = 0
-        self.dic[PSC.TICKS] = pattern.part_main.ticks
+        self.dic[PSC.TICKS] = pattern.part_entry.ticks
         if pattern.was_breakout_done():
             self.dic[PSC.BREAKOUT_DATE] = MyDate.get_date_from_datetime(pattern.breakout.breakout_date)
             self.dic[PSC.BREAKOUT_DIRECTION] = pattern.breakout.breakout_direction
@@ -126,16 +126,16 @@ class PatternStatistics:
                 self.dic[PSC.FIRST_LIMIT_REACHED] = False  # default
                 self.dic[PSC.STOP_LOSS_MAX_REACHED] = False  # default
                 if pattern.breakout_direction == FD.ASC \
-                        and (pattern.part_main.bound_upper + pattern.part_main.height < self.dic[PSC.RESULT_DF_MAX]):
+                        and (pattern.part_entry.bound_upper + pattern.part_entry.height < self.dic[PSC.RESULT_DF_MAX]):
                     self.dic[PSC.FIRST_LIMIT_REACHED] = True
                 if pattern.breakout_direction == FD.DESC \
-                        and (pattern.part_main.bound_lower - pattern.part_main.height > self.dic[PSC.RESULT_DF_MIN]):
+                        and (pattern.part_entry.bound_lower - pattern.part_entry.height > self.dic[PSC.RESULT_DF_MIN]):
                     self.dic[PSC.FIRST_LIMIT_REACHED] = True
                 if pattern.breakout_direction == FD.ASC \
-                        and (pattern.part_main.bound_lower > self.dic[PSC.RESULT_DF_MIN]):
+                        and (pattern.part_entry.bound_lower > self.dic[PSC.RESULT_DF_MIN]):
                     self.dic[PSC.STOP_LOSS_MAX_REACHED] = True
                 if pattern.breakout_direction == FD.DESC \
-                        and (pattern.part_main.bound_upper < self.dic[PSC.RESULT_DF_MAX]):
+                        and (pattern.part_entry.bound_upper < self.dic[PSC.RESULT_DF_MAX]):
                     self.dic[PSC.STOP_LOSS_MAX_REACHED] = True
 
         new_entry = [self.dic[column] for column in self.column_list]

@@ -5,22 +5,18 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
-import colorlover as cl
 import dash_html_components as html
 from dash.dependencies import Input, Output, State, Event
 from datetime import datetime, timedelta
-import pandas as pd
 import json
 from playsound import playsound
-from pattern_dash.my_dash_interface_for_pattern import DashInterface
 from pattern_detection_controller import PatternDetectionController
-from pattern_detector import PatternDetector
 from sertl_analytics.constants.pattern_constants import CN, FD, BT, PRD
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_tools import MyGraphCache, MyDashStateHandler, MyGraphCacheObjectApi
 from pattern_colors import PatternColorHandler
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi, MyHTMLTabHeaderTable
+from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi, MyHTMLTabPatternHeaderTable
 from pattern_bitfinex import BitfinexConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from textwrap import dedent
@@ -28,10 +24,11 @@ from pattern_dash.my_dash_base import MyDashBaseTab, Dash
 
 
 class MyDashTab4Pattern(MyDashBaseTab):
-    def __init__(self, app: Dash, sys_config: SystemConfiguration, bitfinex_config: BitfinexConfiguration):
+    def __init__(self, app: Dash, sys_config: SystemConfiguration, bitfinex_config: BitfinexConfiguration,
+                 trade_handler_online: PatternTradeHandler):
         MyDashBaseTab.__init__(self, app, sys_config)
         self.bitfinex_config = bitfinex_config
-        self.trade_handler = PatternTradeHandler(sys_config, self.bitfinex_config)
+        self.trade_handler_online = trade_handler_online
         self.sys_config_second = sys_config.get_semi_deep_copy()
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None
@@ -54,7 +51,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def init_callbacks(self):
         self.__init_interval_callback_for_interval_details__()
         self.__init_interval_setting_callback__()
-        self.__init_callback_for_ticket_markdown__()
+        self.__init_callback_for_pattern_markdown__()
         self.__init_callback_for_graph_first__()
         self.__init_callback_for_graph_second__()
         self.__init_callback_for_graphs_before_breakout__()
@@ -64,7 +61,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
     def get_div_for_tab(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
-        li = [MyHTMLTabHeaderTable().get_table()]
+        li = [MyHTMLTabPatternHeaderTable().get_table()]
         li.append(MyHTML.div_with_dcc_drop_down(
             'Stock symbol', 'my_ticker_selection', self._ticker_options, 200))
         li.append(MyHTML.div_with_dcc_drop_down(
@@ -150,9 +147,9 @@ class MyDashTab4Pattern(MyDashBaseTab):
             print('Interval set to: {}'.format(interval_selected))
             return interval_selected * 1000
 
-    def __init_callback_for_ticket_markdown__(self):
+    def __init_callback_for_pattern_markdown__(self):
         @self.app.callback(
-            Output('my_ticket_markdown', 'children'),
+            Output('my_pattern_markdown', 'children'),
             [Input('my_graph_first_div', 'children')])
         def handle_callback_for_ticket_markdown(children):
             annotation = ''
@@ -214,7 +211,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         def handle_callback_for_graphs_before_breakout(graph_first_div):
             graphs = self._graph_first_cache.get_graph_list_for_observation(self._graph_key_first)
             pattern_list = self._graph_first_cache.get_pattern_list_for_buy_trigger(BT.BREAKOUT)
-            self.trade_handler.add_pattern_list_for_trade(pattern_list)
+            self.trade_handler_online.add_pattern_list_for_trade(pattern_list)
             if len(graphs) > 0:
                 print('\n...handle_callback_for_graphs_before_breakout: {}'.format(len(graphs)))
             if self._graph_first_cache.number_of_finished_fibonacci_waves_since_last_refresh > 2:

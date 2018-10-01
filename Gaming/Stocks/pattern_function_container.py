@@ -452,20 +452,27 @@ class PatternFunctionContainerFactoryApi:
         self.complementary_function = None
         self.function_container = None
 
+    def get_f_upper(self) -> np.poly1d:
+        if self.pattern_range.is_minimum_pattern_range:
+            return self.complementary_function
+        return self.pattern_range.f_param
+
+    def get_f_lower(self) -> np.poly1d:
+        if self.pattern_range.is_minimum_pattern_range:
+            return self.pattern_range.f_param
+        return self.complementary_function
+
 
 class PatternFunctionContainerFactory:
     @staticmethod
     def get_function_container_by_api(api: PatternFunctionContainerFactoryApi):
-        df_check = api.pattern_range.get_related_part_from_data_frame(api.df_min_max)
-        if api.pattern_range.is_minimum_pattern_range:
-            f_upper = api.complementary_function
-            f_lower = api.pattern_range.f_param
-        else:
-            f_lower = api.complementary_function
-            f_upper = api.pattern_range.f_param
+        pattern_type = api.pattern_type
+        sys_config = api.sys_config
+        df = api.pattern_range.get_related_part_from_data_frame(api.df_min_max)
+        f_upper = api.get_f_upper()
+        f_lower = api.get_f_lower()
 
-        f_cont = PatternFunctionContainerFactory.get_function_container(api.sys_config, api.pattern_type, df_check,
-                                                                        f_lower, f_upper)
+        f_cont = PatternFunctionContainerFactory.get_function_container(sys_config, pattern_type, df, f_lower, f_upper)
         if FT.is_pattern_type_any_head_shoulder(api.pattern_type):
             f_cont.set_tick_for_helper(api.pattern_range.hsf.tick_shoulder_left)
         elif FT.is_pattern_type_any_fibonacci(api.pattern_type):
@@ -473,7 +480,8 @@ class PatternFunctionContainerFactory:
         return f_cont
 
     @staticmethod
-    def get_function_container(sys_config: SystemConfiguration, pattern_type: str, df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
+    def get_function_container(sys_config: SystemConfiguration, pattern_type: str, df: pd.DataFrame,
+                               f_lower: np.poly1d, f_upper: np.poly1d):
         if pattern_type == FT.CHANNEL:
             return ChannelPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.CHANNEL_DOWN:

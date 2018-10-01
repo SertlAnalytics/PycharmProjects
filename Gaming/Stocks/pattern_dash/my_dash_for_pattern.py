@@ -19,6 +19,7 @@ from pattern_dash.my_dash_tab_for_trades import MyDashTab4Trades
 from pattern_dash.my_dash_tab_for_trade_statistics import MyDashTab4TradeStatistics
 from pattern_dash.my_dash_tab_for_pattern_statistics import MyDashTab4PatternStatistics
 from pattern_bitfinex import BitfinexConfiguration
+from pattern_trade_handler import PatternTradeHandler
 
 
 class MyDash4Pattern(MyDashBase):
@@ -26,8 +27,9 @@ class MyDash4Pattern(MyDashBase):
         MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH())
         self.sys_config = sys_config
         self.bitfinex_config = bitfinex_config
-        self.tab_pattern = MyDashTab4Pattern(self.app, self.sys_config, self.bitfinex_config)
-        self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.bitfinex_config)
+        self.trade_handler_online = PatternTradeHandler(sys_config, self.bitfinex_config)
+        self.tab_pattern = MyDashTab4Pattern(self.app, self.sys_config, self.bitfinex_config, self.trade_handler_online)
+        self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.bitfinex_config, self.trade_handler_online)
         self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config)
         self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config)
 
@@ -61,7 +63,7 @@ class MyDash4Pattern(MyDashBase):
             [Input('my_interval_timer', 'n_intervals')])
         def handle_interval_callback_for_timer(n_intervals):
             if n_intervals % self.bitfinex_config.check_ticker_after_timer_intervals == 0:
-                self.tab_trades.trade_handler.check_actual_trades()
+                self.tab_trades.trade_handler_online.check_actual_trades()
             return '{}'.format(MyDate.get_time_from_datetime(datetime.now()))
 
     def __set_app_layout__(self):

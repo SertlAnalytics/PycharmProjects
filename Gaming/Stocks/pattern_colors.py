@@ -12,8 +12,11 @@ from sertl_analytics.constants.pattern_constants import FT, PTS
 
 class PatternColorHandler:
     @staticmethod
-    def get_colors_for_pattern_trade():
-        return 'orangered', 'lightgreen'  # for buying, selling
+    def get_colors_for_pattern_trade(pattern_trade: PatternTrade):
+        if pattern_trade.is_winner:
+            return 'orangered', 'lightgreen', 'green'  # for buying, selling, after_selling
+        else:
+            return 'orangered', 'lightgreen', 'red' # for buying, selling, after_selling
 
     def get_colors_for_pattern(self, pattern: Pattern):
         return self.__get_pattern_color__(pattern), self.__get_trade_color__(pattern)

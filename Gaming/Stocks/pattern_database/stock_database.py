@@ -316,7 +316,7 @@ class StockDatabase(BaseDatabase):
         return db_df.df
 
     def get_trade_records_for_replay_as_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0")
+        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0 AND Period = 'DAILY'")
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 

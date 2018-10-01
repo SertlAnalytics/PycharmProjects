@@ -12,6 +12,7 @@ from sertl_analytics.mydates import MyDate
 
 class TradeTestApi:
     def __init__(self):
+        self.trade_id = ''
         self.pattern_type = ''
         self.pattern = None
         self.buy_trigger = ''
@@ -66,11 +67,11 @@ class TradeTestCaseFactory:
     @staticmethod
     def fill_test_data_for_pattern(tc: TradeTestCase, pattern: Pattern, tick_list_for_replay=None):
         tc.symbol = pattern.ticker_id
-        from_date = MyDate.adjust_by_days(pattern.part_main.date_first, -20)
-        if pattern.part_main.breakout:
-            to_date = pattern.part_main.breakout.tick_previous.date
+        from_date = MyDate.adjust_by_days(pattern.part_entry.date_first, -20)
+        if pattern.part_entry.breakout:
+            to_date = pattern.part_entry.breakout.tick_previous.date
         else:
-            to_date = pattern.part_main.date_last
+            to_date = pattern.part_entry.date_last
         tc.and_clause = "Date BETWEEN '{}' AND '{}'".format(from_date, to_date)
         tc.value_pair_list = pattern.get_back_testing_value_pairs(tick_list_for_replay)
 

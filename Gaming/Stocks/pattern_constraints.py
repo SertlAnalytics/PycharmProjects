@@ -57,6 +57,7 @@ class Constraints:
 
     def get_value_dict(self):
         return dict(tolerance_pct = self.tolerance_pct,
+                    tolerance_pct_equal =self.tolerance_pct_equal,
                     global_all_in = self.global_all_in,
                     global_count = self.__get_global_count_details__(),
                     global_series = self.global_series,
@@ -85,15 +86,17 @@ class Constraints:
         }
         if False in [check_dict[key] for key in check_dict]:  # first check - next step has calculations
             return False
-        value_categorizer = self.__get_value_categorizer__(pattern_range, f_cont)
+        value_categorizer = self.__get_value_categorizer_for_pattern_range__(pattern_range, f_cont)
         check_dict[CT.ALL_IN] = self.__is_global_constraint_all_in_satisfied__(value_categorizer)
         check_dict[CT.COUNT] = self.__is_global_constraint_count_satisfied__(value_categorizer)
         check_dict[CT.SERIES] = self.__is_global_constraint_series_satisfied__(value_categorizer)
         return False if False in [check_dict[key] for key in check_dict] else True
 
-    def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
-        tol_pct_list = [self.tolerance_pct, self.tolerance_pct_equal]
-        return ValueCategorizer(f_cont.df, f_cont.f_upper, f_cont.f_lower, f_cont.h_upper, f_cont.h_lower, tol_pct_list)
+    def __get_value_categorizer_for_pattern_range__(self, pattern_range: PatternRange, f_cont):
+        return ValueCategorizer(self.sys_config, f_cont.df, f_cont.f_upper, f_cont.f_lower, f_cont.h_upper, f_cont.h_lower)
+
+    def __get_value_categorizer_after_pattern_range__(self, pattern_range: PatternRange, f_cont):
+        return ValueCategorizer(self.sys_config, f_cont.df, f_cont.f_upper, f_cont.f_lower, f_cont.h_upper, f_cont.h_lower)
 
     @staticmethod
     def __get_previous_period_top_out_pct_bounds__():
@@ -351,10 +354,9 @@ class HeadShoulderConstraints(Constraints):
         self.global_series = ['OR',
                               [SVC.H_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.H_in]]
 
-    def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
-        tolerance_pct_list = [self.tolerance_pct, self.tolerance_pct_equal]
-        return ValueCategorizerHeadShoulder(pattern_range, f_cont.df, f_cont.f_upper, f_cont.f_lower,
-                                            f_cont.h_upper, f_cont.h_lower, tolerance_pct_list)
+    def __get_value_categorizer_for_pattern_range__(self, pattern_range: PatternRange, f_cont):
+        return ValueCategorizerHeadShoulder(self.sys_config, pattern_range, f_cont.df, f_cont.f_upper, f_cont.f_lower,
+                                            f_cont.h_upper, f_cont.h_lower)
 
     @staticmethod
     def _get_f_upper_percentage_bounds_():
@@ -391,10 +393,9 @@ class HeadShoulderBottomConstraints(Constraints):
         self.global_series = ['OR',
                               [SVC.H_on, SVC.U_on, SVC.L_on, SVC.U_on, SVC.H_in]]
 
-    def __get_value_categorizer__(self, pattern_range: PatternRange, f_cont):
-        tolerance_pct_list = [self.tolerance_pct, self.tolerance_pct_equal]
-        return ValueCategorizerHeadShoulder(pattern_range, f_cont.df, f_cont.f_upper, f_cont.f_lower,
-                                            f_cont.h_upper, f_cont.h_lower, tolerance_pct_list)
+    def __get_value_categorizer_for_pattern_range__(self, pattern_range: PatternRange, f_cont):
+        return ValueCategorizerHeadShoulder(self.sys_config, pattern_range, f_cont.df, f_cont.f_upper, f_cont.f_lower,
+                                            f_cont.h_upper, f_cont.h_lower)
 
     @staticmethod
     def _get_f_lower_percentage_bounds_():

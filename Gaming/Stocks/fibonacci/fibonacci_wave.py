@@ -181,14 +181,14 @@ class FibonacciWave:
             elif wave_structure == FWST.S_M_L:  # retracement at least to medium wave
                 return self.w_5.max - self.w_3.max
             elif wave_structure == FWST.S_L_S:  # retracement at least to middle of large wave
-                return self.w_5.max - (self.w_3.max - self.w_3.min)/2
+                return self.w_3.max - (self.w_3.max + self.w_3.min)/2
         else:
             if wave_structure == FWST.L_M_S:  # retracement at least to large wave
                 return self.w_1.min - self.w_5.min
             elif wave_structure == FWST.S_M_L:  # retracement at least to medium wave
                 return self.w_3.min - self.w_5.min
             elif wave_structure == FWST.S_L_S:  # retracement at least to middle of large wave
-                return (self.w_3.max - self.w_3.min)/2 - self.w_5.min
+                return (self.w_3.max + self.w_3.min)/2 - self.w_3.min
 
     def __get_comp_position_key__(self, elements: int):
         part_list = self.comp_position_list[:elements]

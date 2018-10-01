@@ -186,6 +186,12 @@ class PatternTradeHandler:
             return MyBitfinexTradeClient(self.exchange_config)
         return None
 
+    def get_pattern_trade_by_id(self, trade_id: str) -> PatternTrade:
+        for pattern_trade in self.pattern_trade_dict.values():
+            if pattern_trade.id == trade_id:
+                return pattern_trade
+        return None
+
     @property
     def trade_numbers(self) -> int:
         return len(self.pattern_trade_dict)
@@ -232,6 +238,12 @@ class PatternTradeHandler:
         self.__handle_buy_triggers__()
         self.__calculate_xy_values__()
         self.process = ''
+
+    def get_rows_for_dash_data_table(self):
+        return_list = []
+        for pattern_trade in self.pattern_trade_dict.values():
+            return_list.append(pattern_trade.get_row_for_dash_data_table())
+        return return_list
 
     def __set_limit_stop_loss_to_replay_values__(self):
         for pattern_trade in self.pattern_trade_dict.values():

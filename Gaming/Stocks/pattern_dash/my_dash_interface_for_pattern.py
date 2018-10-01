@@ -93,6 +93,10 @@ class DashInterface:
         return DashInterface.__get_pattern_trade_shape__(pattern_trade, color, pattern_trade.xy_for_selling)
 
     @staticmethod
+    def get_pattern_trade_after_selling_shape(pattern_trade: PatternTrade, color: str):
+        return DashInterface.__get_pattern_trade_shape__(pattern_trade, color, pattern_trade.xy_after_selling)
+
+    @staticmethod
     def __get_pattern_trade_shape__(pattern_trade: PatternTrade, color: str, xy):
         if xy is None:
             return None
@@ -123,7 +127,7 @@ class DashInterface:
             ellipse_breadth = 10
         else:
             ellipse_breadth = 2 / (sys_config.config.api_period_aggregation * 60)
-        ellipse_height = pattern.part_main.height / 6
+        ellipse_height = pattern.part_entry.height / 6
         xy_center = DashInterface.get_xy_from_timestamp_to_date(pattern.xy_center)
         return Ellipse(np.array(xy_center), ellipse_breadth, ellipse_height)
 

@@ -60,10 +60,10 @@ class TradeTable(MyTable, PredictionFeatureTable):
         self._columns.append(MyTableColumn(DC.PATTERN_TYPE_ID, CDT.INTEGER)) # 1x = Channel, 2x = Triangle, 3x = TKE, 4x = HS
         self._columns.append(MyTableColumn(DC.TS_PATTERN_TICK_FIRST, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.TS_PATTERN_TICK_LAST, CDT.INTEGER))
-        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_DT, CDT.DATE))
-        self._columns.append(MyTableColumn(DC.PATTERN_BEGIN_TIME, CDT.STRING, 10))
-        self._columns.append(MyTableColumn(DC.PATTERN_END_DT, CDT.DATE))
-        self._columns.append(MyTableColumn(DC.PATTERN_END_TIME, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.PATTERN_RANGE_BEGIN_DT, CDT.DATE))
+        self._columns.append(MyTableColumn(DC.PATTERN_RANGE_BEGIN_TIME, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.PATTERN_RANGE_END_DT, CDT.DATE))
+        self._columns.append(MyTableColumn(DC.PATTERN_RANGE_END_TIME, CDT.STRING, 10))
         self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION, CDT.STRING, 10))
         self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.EXPECTED_WIN, CDT.FLOAT))
@@ -143,12 +143,13 @@ class TradeTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def get_columns_for_replay() -> list:
         return [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
-                DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT]
+                DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_BEGIN_TIME,
+                DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.ID]
 
     @staticmethod
     def get_columns_for_statistics() -> list:
         return [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
-                DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT, DC.TRADE_BOX_TYPE, DC.SELL_TRIGGER, DC.TRADE_RESULT]
+                DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_END_DT, DC.TRADE_BOX_TYPE, DC.SELL_TRIGGER, DC.TRADE_RESULT]
 
     def __get_query_for_feature_and_label_data_for_trades__(self) -> str:
         return "SELECT {} FROM {} WHERE Trade_Result_ID != 0".format(

@@ -139,19 +139,9 @@ class MyHTMLTabHeaderTable(MyHTMLTable):
         MyHTMLTable.__init__(self, 1, 3)
 
     def _init_cells_(self):
-        time_str = MyDate.get_time_from_datetime(datetime.now())
-        ticker_label_div = MyHTML.div('my_ticker_label_div', 'Ticker:', True)
-        ticker_div = MyHTML.div('my_ticker_div', '', False)
-        last_refresh_label_div = MyHTML.div('my_last_refresh_label_div', 'Last refresh:', True)
-        last_refresh_time_div = MyHTML.div('my_last_refresh_time_div', time_str)
-        next_refresh_label_div = MyHTML.div('my_next_refresh_label_div', 'Next refresh:', True)
-        next_refresh_time_div = MyHTML.div('my_next_refresh_time_div', time_str)
-        last_refresh_div = MyHTML.div_embedded([last_refresh_label_div, MyHTML.span(' '), last_refresh_time_div])
-        next_refresh_div = MyHTML.div_embedded([next_refresh_label_div, MyHTML.span(' '), next_refresh_time_div])
-
-        self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
-        self.set_value(1, 2, MyDCC.markdown('my_ticket_markdown'))
-        self.set_value(1, 3, MyHTML.div_embedded([last_refresh_div, next_refresh_div]))
+        self.set_value(1, 1, '')
+        self.set_value(1, 2, '')
+        self.set_value(1, 3, '')
 
     def _get_cell_style_(self, row: int, col: int):
         width = ['20%', '60%', '20%'][col - 1]
@@ -161,6 +151,37 @@ class MyHTMLTabHeaderTable(MyHTMLTable):
         v_align = ['top', 'top', 'top'][col - 1]
         return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
                 'vertical-align': v_align, 'padding': self.padding_cell}
+
+
+class MyHTMLTabPatternHeaderTable(MyHTMLTabHeaderTable):
+    def _init_cells_(self):
+        time_str = MyDate.get_time_from_datetime(datetime.now())
+        ticker_label_div = MyHTML.div('my_ticker_label_div', 'Ticker:', True)
+        ticker_div = MyHTML.div('my_ticker_div', '', False)
+        last_refresh_label_div = MyHTML.div('my_last_refresh_label_div', 'Last refresh:', True)
+        last_refresh_time_div = MyHTML.div('my_last_refresh_time_div', time_str)
+        next_refresh_label_div = MyHTML.div('my_next_refresh_label_div', 'Next refresh:', True)
+        next_refresh_time_div = MyHTML.div('my_next_refresh_time_div', time_str)
+        last_refresh_div = MyHTML.div_embedded([last_refresh_label_div, MyHTML.span(' '), last_refresh_time_div])
+        next_refresh_div = MyHTML.div_embedded([next_refresh_label_div, MyHTML.span(' '), next_refresh_time_div])
+        self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
+        self.set_value(1, 2, MyDCC.markdown('my_pattern_markdown'))
+        self.set_value(1, 3, MyHTML.div_embedded([last_refresh_div, next_refresh_div]))
+
+
+class MyHTMLTabTradeHeaderTable(MyHTMLTabHeaderTable):
+    def _init_cells_(self):
+        ticker_label_div = MyHTML.div('my_trade_ticker_label_div', 'Ticker:', True)
+        ticker_div = MyHTML.div('my_trade_ticker_div', '', False)
+        online_trade_label_div = MyHTML.div('my_online_trade_label_div', 'Online:', True)
+        online_trade_div = MyHTML.div('my_online_trade_div', '0')
+        stored_trade_label_div = MyHTML.div('my_stored_trade_label_div', 'Database:', True)
+        stored_trade_div = MyHTML.div('my_stored_trade_div', '0')
+        online_div = MyHTML.div_embedded([online_trade_label_div, MyHTML.span(' '), online_trade_div])
+        stored_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
+        self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
+        self.set_value(1, 2, MyDCC.markdown('my_trade_markdown'))
+        self.set_value(1, 3, MyHTML.div_embedded([online_div, stored_div]))
 
 
 class MyHTML:
@@ -301,7 +322,7 @@ class MyDCC:
     @staticmethod
     def data_table(element_id: str, rows: list, min_width=1200, min_height=1000):
         return dte.DataTable(
-            id = element_id,
+            id=element_id,
             row_selectable=True,
             filterable=True,
             sortable=True,

@@ -28,5 +28,5 @@ class MyPlotHelper:
         for tick in reversed(tick_list):
             x.append(tick.time_stamp)
             y.append(tick.wrong_breakout_value if for_buying else tick.stop_loss_value)
-        print('list(zip(x, y))={}'.format(list(zip(x, y))))
+        # print('list(zip(x, y))={}'.format(list(zip(x, y))))
         return list(zip(x, y))

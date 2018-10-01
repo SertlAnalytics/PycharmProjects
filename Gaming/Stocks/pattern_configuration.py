@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, TP, Indices, CN, EQUITY_TYPE, PRD, OPS
+from sertl_analytics.constants.pattern_constants import FT, TP, Indices, CN, EQUITY_TYPE, PRD, OPS, DC
 from pattern_database import stock_database as sdb
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.mydates import MyDate
@@ -96,8 +96,12 @@ class PatternConfiguration:
         self.__previous_period_length = 0
 
     @property
-    def and_clause_for_pattern_and_trade(self):
-        return self.and_clause.replace('Date', 'Pattern_Begin_Date')
+    def and_clause_for_pattern(self):
+        return self.and_clause.replace(DC.DATE, DC.PATTERN_BEGIN_DT)
+
+    @property
+    def and_clause_for_trade(self):
+        return self.and_clause.replace(DC.DATE, DC.PATTERN_RANGE_BEGIN_DT)
 
     @property
     def value_categorizer_tolerance_pct(self):

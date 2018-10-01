@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 import pandas as pd
 from sertl_analytics.constants.pattern_constants import CN, SVC
+from pattern_system_configuration import SystemConfiguration
 from pattern_wave_tick import WaveTick
 import numpy as np
 import math
@@ -15,7 +16,10 @@ import math
 class ValueCategorizer:
     __index_column = CN.TIMESTAMP
 
-    def __init__(self, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower, tolerance_pct_list: list):
+    def __init__(self, sys_config: SystemConfiguration, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower):
+        self.sys_config = sys_config
+        self._tolerance_pct = self.sys_config.config.value_categorizer_tolerance_pct
+        self._tolerance_pct_equal = self.sys_config.config.value_categorizer_tolerance_pct_equal
         self.df = df
         self.df_length = self.df.shape[0]
         self._f_upper = f_upper
@@ -24,8 +28,6 @@ class ValueCategorizer:
         self._h_lower = h_lower
         self.value_category_dic_key_list = []
         self.value_category_dic = {}  # list of value categories by position of each entry
-        self._tolerance_pct = tolerance_pct_list[0]
-        self._tolerance_pct_equal = tolerance_pct_list[1]
         self.__set_f_upper_f_lower_values__()
         self.__set_h_upper_h_lower_values__()
         self.__calculate_value_categories__()
@@ -205,11 +207,12 @@ class ValueCategorizer:
 
 
 class ValueCategorizerHeadShoulder(ValueCategorizer):  # currently we don't need a separate for ...Bottom
-    def __init__(self, pattern_range, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower, tolerance_pct_list: list):
+    def __init__(self, sys_config: SystemConfiguration, pattern_range, df: pd.DataFrame,
+                 f_upper, f_lower, h_upper, h_lower):
         self._pattern_range = pattern_range
         self._shoulder_timestamps = [self._pattern_range.hsf.tick_shoulder_left.time_stamp,
                                      self._pattern_range.hsf.tick_shoulder_right.time_stamp]
-        ValueCategorizer.__init__(self, df, f_upper, f_lower, h_upper, h_lower, tolerance_pct_list)
+        ValueCategorizer.__init__(self, sys_config, df, f_upper, f_lower, h_upper, h_lower)
 
     def __get_helper_values_categories_for_df_row__(self, return_list, row):
         if row[CN.TIMESTAMP] in self._shoulder_timestamps:

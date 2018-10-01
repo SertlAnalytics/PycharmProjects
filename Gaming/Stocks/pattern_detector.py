@@ -9,10 +9,10 @@ from sertl_analytics.constants.pattern_constants import FT, FD, DC, BT, EQUITY_T
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
-from pattern_part import PatternPart
+from pattern_part import PatternPart, PatternEntryPart, PatternWatchPart, PatternTradePart
 from pattern import Pattern, PatternFactory
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
-    , PatternRangeDetectorHeadShoulderBottom
+    , PatternRangeDetectorHeadShoulderBottom, PatternRange
 from pattern_range_fibonacci import PatternRangeDetectorFibonacciAsc, PatternRangeDetectorFibonacciDesc
 from pattern_breakout import PatternBreakoutApi, PatternBreakout
 from pattern_statistics import PatternDetectorStatisticsApi
@@ -56,32 +56,34 @@ class PatternDetector:
         self.data_dict[DC.TICKER_NAME] = self.sys_config.runtime.actual_ticker_name
 
     def parse_for_pattern(self):
-        """
-        We parse only over the actual known min-max-dataframe
-        """
         self.__fill_possible_pattern_ranges__()
-        self.__adjust_possible_pattern_ranges_to_contraints__()
-        possible_pattern_range_list = self.get_combined_possible_pattern_ranges()
+        self.__adjust_possible_pattern_ranges_to_constraints__()
+        possible_pattern_range_list = self.__get_combined_possible_pattern_ranges__()
+        possible_pattern_range_list_dict = self.__get_pattern_range_list_dict__(possible_pattern_range_list)
         for pattern_type in self.pattern_type_list:
-            # print('parsing for pattern: {}'.format(pattern_type))
-            pfcf_api = PatternFunctionContainerFactoryApi(self.sys_config, pattern_type)
-            pfcf_api.constraints = ConstraintsFactory.get_constraints_by_pattern_type(pattern_type, self.sys_config)
-            self.sys_config.runtime.actual_pattern_type = pattern_type
-            for pattern_range in possible_pattern_range_list:
-                if pattern_range.covers_pattern_type(pattern_type):
-                    pfcf_api.pattern_range = pattern_range
-                    self.sys_config.runtime.actual_pattern_range = pattern_range
-                    # pattern_range.print_range_details()
-                    debugger.check_range_position_list(pattern_range.position_list)
-                    complementary_function_list = pattern_range.get_complementary_function_list(pattern_type)
-                    for f_complementary in complementary_function_list:
-                        pfcf_api.complementary_function = f_complementary
-                        pfcf_api.function_container = PatternFunctionContainerFactory.get_function_container_by_api(pfcf_api)
-                        if pfcf_api.constraints.are_constraints_fulfilled(pattern_range, pfcf_api.function_container):
-                            pattern = PatternFactory.get_pattern(self.sys_config, pfcf_api)
-                            self.__handle_single_pattern_when_parsing__(pattern)
+            for pattern_range in possible_pattern_range_list_dict[pattern_type]:
+                # print('parsing for pattern: {}'.format(pattern_type))
+                self.__check_pattern_range_for_pattern_type__(pattern_type, pattern_range)
 
-    def __adjust_possible_pattern_ranges_to_contraints__(self):
+    def __check_pattern_range_for_pattern_type__(self, pattern_type: str, pattern_range: PatternRange):
+        self.sys_config.runtime.actual_pattern_type = pattern_type
+        self.sys_config.runtime.actual_pattern_range = pattern_range
+
+        pfcf_api = PatternFunctionContainerFactoryApi(self.sys_config, pattern_type)
+        pfcf_api.pattern_type = pattern_type
+        pfcf_api.pattern_range = pattern_range
+        pfcf_api.constraints = ConstraintsFactory.get_constraints_by_pattern_type(pattern_type, self.sys_config)
+        # pattern_range.print_range_details()
+        debugger.check_range_position_list(pattern_range.position_list)
+        complementary_function_list = pattern_range.get_complementary_function_list(pattern_type)
+        for f_complementary in complementary_function_list:
+            pfcf_api.complementary_function = f_complementary
+            pfcf_api.function_container = PatternFunctionContainerFactory.get_function_container_by_api(pfcf_api)
+            if pfcf_api.constraints.are_constraints_fulfilled(pfcf_api.pattern_range, pfcf_api.function_container):
+                pattern = PatternFactory.get_pattern(self.sys_config, pfcf_api)
+                self.__handle_single_pattern_when_parsing__(pattern)
+
+    def __adjust_possible_pattern_ranges_to_constraints__(self):
         pass
 
     def parse_for_fibonacci_waves(self):
@@ -97,7 +99,7 @@ class PatternDetector:
         fib_wave_list = self.fib_wave_tree.fibonacci_wave_list
         pattern_list_filtered = [pattern for pattern in self.pattern_list if pattern.was_breakout_done()]
         for pattern in pattern_list_filtered:
-            pattern_start_pos = pattern.part_main.tick_first.position
+            pattern_start_pos = pattern.part_entry.tick_first.position
             pattern_end_pos = pattern.breakout.tick_breakout.position
             for fib_wave in fib_wave_list:
                 fib_start_pos = fib_wave.position_start
@@ -146,7 +148,7 @@ class PatternDetector:
 
     def get_pattern_for_replay(self) -> list:
         if len(self.pattern_list) == 0:
-            return None
+            return []
         return self.pattern_list[0]
 
     @staticmethod
@@ -161,7 +163,8 @@ class PatternDetector:
             if pattern.breakout is None and not can_be_added:
                 return
         self.sys_config.runtime.actual_breakout = pattern.breakout
-        pattern.add_part_main(PatternPart(self.sys_config, pattern.function_cont))
+        pattern.add_part_entry(PatternEntryPart(self.sys_config, pattern.function_cont))
+
         if pattern.are_pre_conditions_fulfilled():
             if pattern.breakout is not None:
                 pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
@@ -176,7 +179,7 @@ class PatternDetector:
         f_lower_trade = pattern.get_f_lower_trade()
         function_cont = PatternFunctionContainerFactory.get_function_container(self.sys_config, pattern.pattern_type,
                                                                                df, f_lower_trade, f_upper_trade)
-        part = PatternPart(self.sys_config, function_cont)
+        part = PatternTradePart(self.sys_config, function_cont)
         pattern.add_part_trade(part)
         pattern.fill_result_set()
 
@@ -260,7 +263,7 @@ class PatternDetector:
         if FT.FIBONACCI_DESC in self.pattern_type_list:
             self.range_detector_fib_desc = PatternRangeDetectorFibonacciDesc(self.sys_config)
 
-    def get_combined_possible_pattern_ranges(self) -> list:
+    def __get_combined_possible_pattern_ranges__(self) -> list:
         list_max = [] if self.range_detector_max is None else self.range_detector_max.get_pattern_range_list()
         list_min = [] if self.range_detector_min is None else self.range_detector_min.get_pattern_range_list()
         list_h_s = [] if self.range_detector_h_s is None else self.range_detector_h_s.get_pattern_range_list()
@@ -271,6 +274,15 @@ class PatternDetector:
         list_min_without_covered = self.__remove_entries_covered_by_second_list__(list_min, list_max)
         result_list = list_max + list_min + list_h_s + list_h_s_b + list_f_asc + list_f_desc
         return result_list
+
+    def __get_pattern_range_list_dict__(self, possible_pattern_range_list: list):
+        return_dict = {}
+        for pattern_type in self.pattern_type_list:
+            return_dict[pattern_type] = []
+            for pattern_range in possible_pattern_range_list:
+                if pattern_range.covers_pattern_type(pattern_type):
+                    return_dict[pattern_type].append(pattern_range)
+        return return_dict
 
     @staticmethod
     def __remove_entries_covered_by_second_list__(list_change: list, list_master: list) -> list:

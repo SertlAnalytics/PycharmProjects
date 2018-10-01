@@ -297,6 +297,13 @@ class BT:  # Buy Trigger
     def get_id(key: str):
         return {BT.BREAKOUT: 10, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}.get(key)
 
+    @staticmethod
+    def get_as_dict():
+        return {BT.BREAKOUT: 10, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}
+
+    @staticmethod
+    def get_as_list():
+        return [BT.BREAKOUT, BT.TOUCH_POINT]
 
 class TSTR:  # Trading Strategy
     LIMIT = 'Limit'
@@ -307,6 +314,10 @@ class TSTR:  # Trading Strategy
     @staticmethod
     def get_id(key: str):
         return {TSTR.LIMIT: 10, TSTR.TRAILING_STOP: 20, TSTR.TRAILING_STEPPED_STOP: 30, TSTR.SMA: 40}.get(key)
+
+    @staticmethod
+    def get_as_list():
+        return [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP, TSTR.SMA]
 
 
 class TTC:  # Trade test cases
@@ -463,12 +474,16 @@ class DC:  # Data Columns
     TS_BREAKOUT = 'Timestamp_Breakout'
     TICKS_TILL_PATTERN_FORMED = 'Ticks_Till_Pattern_Formed'
     TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT = 'Ticks_From_Pattern_Formed_Till_Breakout'
+    PATTERN_RANGE_BEGIN_DT = 'Pattern_Range_Begin_Date'
+    PATTERN_RANGE_BEGIN_TIME = 'Pattern_Range_Begin_Time'
     PATTERN_BEGIN_DT = 'Pattern_Begin_Date'
     PATTERN_BEGIN_TIME = 'Pattern_Begin_Time'
     BREAKOUT_DT = 'Breakout_Date'
     BREAKOUT_TIME = 'Breakout_Time'
     PATTERN_END_DT = 'Pattern_End_Date'
     PATTERN_END_TIME = 'Pattern_End_Time'
+    PATTERN_RANGE_END_DT = 'Pattern_Range_End_Date'
+    PATTERN_RANGE_END_TIME = 'Pattern_Range_End_Time'
     PATTERN_TOLERANCE_PCT = 'Patern_Tolerance_PCT'
     BREAKOUT_RANGE_MIN_PCT = 'Breakout_Range_Min_PCT'
     PATTERN_HEIGHT = 'Pattern_Height'

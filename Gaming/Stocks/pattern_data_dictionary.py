@@ -43,8 +43,8 @@ class PatternDataDictionary:
                 value = 0.0
         return value
 
-    def get(self, key: str):
-        return self._data_dict[key]
+    def get(self, key: str, default_value=None):
+        return self._data_dict.get(key, None)
 
     def __init_data_dict__(self):
         self._data_dict[DC.EQUITY_TYPE] = self.sys_config.runtime.actual_ticker_equity_type

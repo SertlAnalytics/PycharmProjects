@@ -10,6 +10,7 @@ from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TB
 from sertl_analytics.mydates import MyDate
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
+from pattern_database.stock_tables import TradeTable
 from pattern_data_dictionary import PatternDataDictionary
 from pattern_trade_box import ExpectedWinTradingBox, TouchPointTradingBox, TradingBoxApi
 from pattern_wave_tick import WaveTick, WaveTickList, TickerWaveTickConverter
@@ -35,7 +36,7 @@ class PatternTrade:
         self.trade_box_type = api.box_type
         self.trade_strategy = api.trade_strategy
         self.pattern = api.pattern
-        self._wave_tick_list = WaveTickList(self.pattern.part_main.tick_list)
+        self._wave_tick_list = WaveTickList(self.pattern.part_entry.tick_list)
         if self.trade_process == TP.TRADE_REPLAY:
             self.__initialize_replay_values_for_tick_list__()
         self._wave_tick_at_start = self._wave_tick_list.tick_list[-1]
@@ -63,10 +64,15 @@ class PatternTrade:
         self.__calculate_prediction_values__()
         self._xy_for_buying = None
         self._xy_for_selling = None
+        self._xy_after_selling = None
 
     @property
     def id(self):
         return '{}-{}-{}_{}'.format(self.buy_trigger, self.trade_box_type, self.trade_strategy, self.pattern.id_readable)
+
+    @property
+    def is_winner(self) -> bool:
+        return self.data_dict_obj.get(DC.TRADE_RESULT_ID, 0) == 1
 
     @property
     def is_breakout_active(self):
@@ -148,10 +154,11 @@ class PatternTrade:
     def xy_for_selling(self):
         return self._xy_for_selling
 
+    @property
+    def xy_after_selling(self):
+        return self._xy_after_selling
+
     def get_data_frame_for_replay(self):
-        print('get_data_frame_for_replay: len(self._wave_tick_list.tick_list) = {} / {} = self.pattern.df_length'.format(
-            len(self._wave_tick_list.tick_list), self.pattern.df_length
-        ))
         if len(self._wave_tick_list.tick_list) > self.pattern.df_length:
             return self._df_for_replay
         else:
@@ -172,9 +179,12 @@ class PatternTrade:
         if self.status == PTS.NEW:
             tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_start.position]
             self._xy_for_buying = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, True)
-        elif self._wave_tick_at_buying:
+        elif self.status == PTS.EXECUTED:
             tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_buying.position-1]
             self._xy_for_selling = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, False)
+        elif self.status == PTS.FINISHED:
+            tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_selling.position]
+            self._xy_after_selling = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, False)
 
     def get_ticker_for_time_stamp(self, ticker_time_stamp: int):
         return self._ticker_dict[ticker_time_stamp]
@@ -258,7 +268,7 @@ class PatternTrade:
 
     def verify_touch_point(self):
         ticker = self.ticker_actual
-        last_tick = self.pattern.part_main.tick_last
+        last_tick = self.pattern.part_entry.tick_last
         value_tuple_list = [[ticker.last_price, ticker.time_stamp], [last_tick.low, last_tick.time_stamp]]
         for value_tuple in value_tuple_list:
             if self.pattern.is_value_in_category(value_tuple[0], value_tuple[1], SVC.L_on, True):
@@ -406,6 +416,10 @@ class PatternTrade:
     def __set_properties_after_sell__(self):
         self._status = PTS.FINISHED
         self._wave_tick_at_selling = self._wave_tick_list.tick_list[-1]
+
+    def get_row_for_dash_data_table(self):
+        columns = TradeTable.get_columns_for_replay()
+        return {column: self.data_dict_obj.get(column) for column in columns}
 
     def __add_trade_basis_data_to_data_dict__(self):
         self.data_dict_obj.add(DC.ID, self.id)

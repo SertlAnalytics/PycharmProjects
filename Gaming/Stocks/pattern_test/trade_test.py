@@ -79,13 +79,14 @@ class TradeTest:
 
     def get_trade_test_api_by_selected_trade_row(self, row) -> TradeTestApi:
         api = TradeTestApi()
+        api.trade_id = row[DC.ID]
         api.test_process = TP.TRADE_REPLAY
         api.pattern_type = row[DC.PATTERN_TYPE]
         api.buy_trigger = row[DC.BUY_TRIGGER]
         api.trade_strategy = row[DC.TRADE_STRATEGY]
         api.symbol = row[DC.TICKER_ID]
-        api.dt_start = str(row[DC.PATTERN_BEGIN_DT])
-        api.dt_end = MyDate.adjust_by_days(row[DC.PATTERN_END_DT], -1)  # we need this correction for a smooth cont.
+        api.dt_start = str(row[DC.PATTERN_RANGE_BEGIN_DT])
+        api.dt_end = MyDate.adjust_by_days(row[DC.PATTERN_RANGE_END_DT], -1)  # we need this correction for a smooth cont.
         api.and_clause = self.sys_config.config.get_and_clause(api.dt_start, api.dt_end)
         api.and_clause_unlimited = self.sys_config.config.get_and_clause(api.dt_start)
         return api
