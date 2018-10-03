@@ -261,11 +261,14 @@ class WaveTickList:
         tick_table = []
         for tick in self.tick_list:
             date = MyDate.get_date_from_epoch_seconds(tick.time_stamp)
-            row = [tick.position, tick.open, tick.high, tick.low, tick.close, tick.volume, date, tick.time_stamp]
+            time = MyDate.get_time_from_epoch_seconds(tick.time_stamp)
+            date_time = MyDate.get_date_time_from_epoch_seconds(tick.time_stamp)
+            row = [tick.position, tick.open, tick.high, tick.low, tick.close, tick.volume,
+                   date, time, date_time, tick.time_stamp]
             tick_table.append(row)
-        v_array = np.array(tick_table).reshape([len(self.tick_list), 8])
+        v_array = np.array(tick_table).reshape([len(self.tick_list), 10])
         return pd.DataFrame(v_array, columns=[CN.POSITION, CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL,
-                                              CN.DATE, CN.TIMESTAMP])
+                                              CN.DATE, CN.TIME, CN.DATETIME, CN.TIMESTAMP])
 
     def add_wave_tick(self, tick: WaveTick):
         self.tick_list.append(tick)

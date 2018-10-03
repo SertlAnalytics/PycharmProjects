@@ -1,0 +1,242 @@
+"""
+Description: This module contains the plotter functions for statistics tabs.
+Author: Josef Sertl
+Copyright: SERTL Analytics, https://sertl-analytics.com
+Date: 2018-06-17
+"""
+
+import plotly.graph_objs as go
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT
+from pattern_dash.my_dash_components import MyDCC, DccGraphApi
+import numpy as np
+import pandas as pd
+
+
+class MyDashTabStatisticsPlotter:
+    def __init__(self, df_base: pd.DataFrame):
+        np.random.seed(123)
+        self._df_base = df_base
+        self._chart_id = ''
+        self._chart_name = ''
+        self.chart_type = ''
+        self.category = ''
+        self.x_variable = ''
+        self.y_variable = ''
+        self.z_variable = ''
+        self.text_variable = ''
+        self.pattern_type = ''
+        self.__init_parameter__()
+
+    def __init_parameter__(self):
+        pass
+
+    def get_chart(self):
+        graph_api = DccGraphApi(self._chart_id, self._chart_name)
+        if self.chart_type == CHT.SCATTER:
+            graph_api.figure_data = self.__get_scatter_figure_data__()
+        elif self.chart_type == CHT.PIE:
+            graph_api.figure_data = self.__get_pie_figure_data__()
+        elif self.chart_type == CHT.AREA_WINNER_LOSER:
+            graph_api.figure_data = self.__get_area_winner_loser_figure_data__()
+            graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
+            graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
+        return MyDCC.graph(graph_api)
+
+    def __get_df_for_selection__(self):
+        if self.pattern_type in [FT.ALL, '']:
+            df = self._df_base
+        else:
+            df = self._df_base[self._df_base[DC.PATTERN_TYPE] == self.pattern_type]
+        return df
+
+    def __get_scatter_figure_data__(self):
+        df = self.__get_df_for_selection__()
+        return [
+            go.Scatter(
+                x=df[df[self.category] == category][self.x_variable],
+                y=df[df[self.category] == category][self.y_variable],
+                text=df[df[self.category] == category][self.text_variable],
+                mode='markers',
+                opacity=0.7,
+                marker={'size': 15, 'line': {'width': 0.5, 'color': 'white'}},
+                name=category
+            ) for category in df[self.category].unique()
+        ]
+
+    def __get_pie_figure_data__(self):
+        labels, values = self.__get_data_for_pie_figure__()
+        return [go.Pie(labels=labels, values=values)]
+
+    def __get_data_for_pie_figure__(self):
+        df = self.__get_df_for_selection__()
+        sorted_categories_orig = sorted(df[self.category].unique())
+        sorted_category_list = ['{}_{}'.format(cat, 'winner') for cat in sorted_categories_orig]
+        for cat in sorted_categories_orig:
+            sorted_category_list.append('{}_{}'.format(cat, 'loser'))
+        y_value_dict = {cat: 0 for cat in sorted_category_list}
+        for index, row in df.iterrows():
+            cat = row[self.category]
+            result_id = self.__get_result_id_from_row__(row)
+            cat_result = '{}_{}'.format(cat, 'winner' if result_id == 1 else 'loser')
+            y_value_dict[cat_result] += 1
+        y_values = [y_value_dict[cat_result] for cat_result in sorted_category_list]
+        return sorted_category_list, y_values
+
+    def __get_area_winner_loser_figure_data__(self):
+        x_values, y_value_dict = self.__get_data_for_area_winner_loser_figure__()
+        return [
+            dict(
+                x=x_values,
+                y=values,
+                text=category,
+                mode='lines',
+                fill='tonexty',
+                opacity=0.7,
+                line=dict(width=0.5, color=self.__get_color_for_winner_category__(category)),
+                stackgroup='one',
+                name=category
+            ) for category, values in y_value_dict.items()
+        ]
+
+    @staticmethod
+    def __get_color_for_winner_category__(category: str):
+        return 'rgb({}, {}, {})'.format(np.random.randint(1,255), np.random.randint(1,255), np.random.randint(1,255))
+
+    def __get_data_for_area_winner_loser_figure__(self):
+        df = self.__get_df_for_selection__()
+        x_value_dict = {}
+        sorted_x_values = sorted(df[self.x_variable].unique())
+        sorted_categories_orig = sorted(df[self.category].unique())
+        sorted_category_list = ['{}_{}'.format(cat, 'winner') for cat in sorted_categories_orig]
+        for cat in sorted_categories_orig:
+            sorted_category_list.append('{}_{}'.format(cat, 'loser'))
+        for index, row in df.iterrows():
+            cat = row[self.category]
+            result_id = self.__get_result_id_from_row__(row)
+            cat_result = '{}_{}'.format(cat, 'winner' if result_id == 1 else 'loser')
+            x_value = row[self.x_variable]
+            if x_value not in x_value_dict:
+                x_value_dict[x_value] = []
+            x_value_dict[x_value].append([cat_result, result_id])
+
+        cat_count_dict = {cat: [] for cat in sorted_category_list}
+        for x_value in sorted_x_values:
+            for cat in sorted_category_list:
+                if len(cat_count_dict[cat]) == 0:
+                    old_value = 0
+                else:
+                    old_value = cat_count_dict[cat][-1]
+                cat_count_dict[cat].append(old_value)
+            if x_value in x_value_dict:
+                for cat_results in x_value_dict[x_value]:
+                    category = cat_results[0]
+                    result_id = cat_results[1]
+                    old_value = cat_count_dict[category][-1]
+                    cat_count_dict[category][-1] = old_value + result_id
+        # print(sorted_x_values)
+        # for cat in cat_count_dict:
+        #     print('{}: {}'.format(cat, cat_count_dict[cat]))
+        return sorted_x_values, cat_count_dict
+
+    @staticmethod
+    def __get_result_id_from_row__(row) -> int:
+        pass
+
+    @staticmethod
+    def __get_area_figure_data_test__():
+        x = ['Winter', 'Spring', 'Summer', 'Fall']
+        trace0 = dict(
+            x=x,
+            y=['40', '20', '30', '40'],
+            mode='lines',
+            line=dict(width=0.5, color='rgb(184, 247, 212)'),
+            stackgroup='one',
+            groupnorm='percent'
+        )
+        trace1 = dict(
+            x=x,
+            y=['50', '70', '40', '60'],
+            mode='lines',
+            line=dict(width=0.5, color='rgb(111, 231, 219)'),
+            stackgroup='one'
+        )
+        trace2 = dict(
+            x=x,
+            y=['70', '80', '60', '70'],
+            mode='lines',
+            line=dict(width=0.5, color='rgb(127, 166, 238)'),
+            stackgroup='one'
+        )
+        trace3 = dict(
+            x=x,
+            y=['100', '100', '100', '100'],
+            mode='lines',
+            line=dict(width=0.5, color='rgb(131, 90, 241)'),
+            stackgroup='one'
+        )
+        return [trace0, trace1, trace2, trace3]
+
+    @staticmethod
+    def _get_area_figure_layout_x_axis__():
+        return dict(
+            title='test',
+            type='date',
+            autotick=True,
+            ticks='outside',
+            tick0=0,
+            dtick=0.25,
+            ticklen=8,
+            tickwidth=4,
+            tickcolor='#000'
+        )
+
+    @staticmethod
+    def __get_scatter_figure_data_old__(df: pd.DataFrame):
+        return [
+            go.Scatter(
+                x=df[df['Pattern_Type'] == i]['Forecast_Full_Positive_PCT'],
+                y=df[df['Pattern_Type'] == i]['Trade_Result_ID'],
+                text=df[df['Pattern_Type'] == i]['Trade_Strategy'],
+                mode='markers',
+                opacity=0.7,
+                marker={
+                    'size': 15,
+                    'line': {'width': 0.5, 'color': 'white'}
+                },
+                name=i
+            ) for i in df.Pattern_Type.unique()
+        ]
+
+
+class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
+    def __init_parameter__(self):
+        self._chart_id = 'trade_statistics_graph'
+        self._chart_name = 'My Trade Statistics'
+        self.chart_type = CHT.AREA_WINNER_LOSER
+        self.category = DC.PATTERN_TYPE
+        self.x_variable = DC.FC_FULL_POSITIVE_PCT
+        self.y_variable = DC.TRADE_RESULT_ID
+        self.z_variable = DC.EXPECTED_WIN
+        self.text_variable = DC.TRADE_STRATEGY
+        self.pattern_type = FT.ALL
+
+    @staticmethod
+    def __get_result_id_from_row__(row) -> int:
+        return row[DC.TRADE_RESULT_ID]
+
+
+class MyDashTabStatisticsPlotter4Pattern(MyDashTabStatisticsPlotter):
+    def __init_parameter__(self):
+        self._chart_id = 'pattern_statistics_graph'
+        self._chart_name = 'My Pattern Statistics'
+        self.chart_type = CHT.SCATTER
+        self.category = DC.PATTERN_TYPE
+        self.x_variable = DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT
+        self.y_variable = DC.EXPECTED_WIN_REACHED
+        self.z_variable = DC.EXPECTED_WIN_REACHED
+        self.text_variable = DC.EXPECTED_WIN_REACHED
+        self.pattern_type = FT.ALL
+
+    @staticmethod
+    def __get_result_id_from_row__(row) -> int:
+        return 1 if row[DC.EXPECTED_WIN_REACHED] == 1 else -1

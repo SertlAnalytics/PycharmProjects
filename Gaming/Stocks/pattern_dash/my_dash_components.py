@@ -11,6 +11,7 @@ import dash_table_experiments as dte
 from datetime import datetime
 from sertl_analytics.mydates import MyDate
 import pandas as pd
+from abc import ABCMeta, abstractmethod
 
 
 COLORS = [
@@ -33,6 +34,77 @@ COLORS = [
 ]
 
 
+class DropDownHandler:
+    __metaclass__ = ABCMeta
+
+    @classmethod
+    def version(cls): return 1.0
+
+    def __init__(self):
+        self._drop_down_value_dict = self.__get_drop_down_value_dict__()
+
+    def get_element_id(self, drop_down_type: str):
+        return self.__get_element_id__(drop_down_type)
+
+    def get_embracing_div_id(self, drop_down_type: str):
+        return '{}_div'.format(self.__get_element_id__(drop_down_type))
+
+    def get_drop_down_type_by_embracing_div_id(self, div_id: str):
+        for drop_down_type in self._drop_down_value_dict:
+            if self.get_embracing_div_id(drop_down_type) == div_id:
+                return drop_down_type
+        return ''
+
+    def get_style_display(self, drop_down_type: str):
+        return {
+            'display': 'inline-block',
+            'verticalAlign': 'top',
+            'width': self.__get_width__(drop_down_type),
+            'padding-bottom': 20,
+            'padding-left': 10
+        }
+
+    def get_drop_down_parameters(self, drop_down_type: str):
+        return {
+            'div_text': self.__get_div_text__(drop_down_type),
+            'element_id': self.__get_element_id__(drop_down_type),
+            'options': self.__get_options__(drop_down_type),
+            'default': self.__get_default_value__(drop_down_type),
+            'width': self.__get_width__(drop_down_type),
+            'for_multi': self.__get_for_multi__(drop_down_type)
+        }
+
+    @abstractmethod
+    def __get_drop_down_value_dict__(self) -> dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def __get_div_text__(self, drop_down_type: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __get_element_id__(self, drop_down_type: str):
+        raise NotImplementedError
+
+    def __get_options__(self, drop_down_type: str):
+        li = self._drop_down_value_dict[drop_down_type]
+        if li[0].__class__.__name__ == 'dict':  # already label - value entries
+            return li
+        return [{'label': value.replace('_', ' '), 'value': value} for value in li]
+
+    @abstractmethod
+    def __get_default_value__(self, drop_down_type: str) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def __get_width__(self, drop_down_type: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __get_for_multi__(self, drop_down_type: str):
+        raise NotImplementedError
+
+
 class DccGraphApi:
     def __init__(self, graph_id: str, title: str):
         self.id = graph_id
@@ -43,11 +115,13 @@ class DccGraphApi:
         self.figure_layout_height = 500
         self.figure_layout_width = 1200
         self.figure_layout_yaxis_title = title
-        self.figure_layout_margin = {'b': 0, 'r': 10, 'l': 60, 't': 0}
+        self.figure_layout_margin = {'b': 50, 'r': 10, 'l': 60, 't': 0}
         self.figure_layout_legend = {'x': 0}
         self.figure_layout_hovermode = 'closest'
         self.figure_layout_shapes = None
         self.figure_layout_annotations = None
+        self.figure_layout_x_axis_dict = None
+        self.figure_layout_y_axis_dict = None
 
 
 class DccGraphSecondApi(DccGraphApi):
@@ -101,89 +175,6 @@ class MyHTMLTable:
         return {'padding': self.padding_table, 'width': '100%'}
 
 
-class MyHTMLHeaderTable(MyHTMLTable):
-    def __init__(self):
-        MyHTMLTable.__init__(self, 1, 3)
-
-    def _init_cells_(self):
-        user_label_div = MyHTML.div('my_user_label_div', 'Username:', True)
-        user_div = MyHTML.div('my_user_name_div', 'Josef Sertl', False)
-        time_str = MyDate.get_time_from_datetime(datetime.now())
-        login_label_div = MyHTML.div('my_login_label_div', 'Last login:', True, True)
-        login_time_div = MyHTML.div('my_login_div', '{}'.format(time_str), False)
-        my_user_div = MyHTML.div_embedded([user_label_div, MyHTML.span(' '), user_div])
-        my_login_div = MyHTML.div_embedded([login_label_div, MyHTML.span(' '), login_time_div])
-        time_label_div = MyHTML.div('my_time_label_div', 'Time:', True)
-        time_div = MyHTML.div('my_time_div', '', False)
-
-        self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div]))
-        self.set_value(1, 2, 'Pattern Detection Dashboard')
-        self.set_value(1, 3, MyHTML.div_embedded([time_label_div, MyHTML.span(' '), time_div]))
-
-    def _get_cell_style_(self, row: int, col: int):
-        width = ['20%', '60%', '20%'][col-1]
-        bg_color = COLORS[0]['background']
-        color = COLORS[0]['text']
-        text_align = ['left', 'center', 'right'][col-1]
-        v_align = ['top', 'top', 'top'][col - 1]
-        font_weight = ['normal', 'bold', 'normal'][col - 1]
-        font_size = [16, 32, 16][col - 1]
-
-        return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
-                'vertical-align': v_align, 'font-weight': font_weight, 'padding': self.padding_cell,
-                'font-size': font_size}
-
-
-class MyHTMLTabHeaderTable(MyHTMLTable):
-    def __init__(self):
-        MyHTMLTable.__init__(self, 1, 3)
-
-    def _init_cells_(self):
-        self.set_value(1, 1, '')
-        self.set_value(1, 2, '')
-        self.set_value(1, 3, '')
-
-    def _get_cell_style_(self, row: int, col: int):
-        width = ['20%', '60%', '20%'][col - 1]
-        bg_color = COLORS[2]['background']
-        color = COLORS[2]['text']
-        text_align = ['left', 'center', 'left'][col - 1]
-        v_align = ['top', 'top', 'top'][col - 1]
-        return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
-                'vertical-align': v_align, 'padding': self.padding_cell}
-
-
-class MyHTMLTabPatternHeaderTable(MyHTMLTabHeaderTable):
-    def _init_cells_(self):
-        time_str = MyDate.get_time_from_datetime(datetime.now())
-        ticker_label_div = MyHTML.div('my_ticker_label_div', 'Ticker:', True)
-        ticker_div = MyHTML.div('my_ticker_div', '', False)
-        last_refresh_label_div = MyHTML.div('my_last_refresh_label_div', 'Last refresh:', True)
-        last_refresh_time_div = MyHTML.div('my_last_refresh_time_div', time_str)
-        next_refresh_label_div = MyHTML.div('my_next_refresh_label_div', 'Next refresh:', True)
-        next_refresh_time_div = MyHTML.div('my_next_refresh_time_div', time_str)
-        last_refresh_div = MyHTML.div_embedded([last_refresh_label_div, MyHTML.span(' '), last_refresh_time_div])
-        next_refresh_div = MyHTML.div_embedded([next_refresh_label_div, MyHTML.span(' '), next_refresh_time_div])
-        self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
-        self.set_value(1, 2, MyDCC.markdown('my_pattern_markdown'))
-        self.set_value(1, 3, MyHTML.div_embedded([last_refresh_div, next_refresh_div]))
-
-
-class MyHTMLTabTradeHeaderTable(MyHTMLTabHeaderTable):
-    def _init_cells_(self):
-        ticker_label_div = MyHTML.div('my_trade_ticker_label_div', 'Ticker:', True)
-        ticker_div = MyHTML.div('my_trade_ticker_div', '', False)
-        online_trade_label_div = MyHTML.div('my_online_trade_label_div', 'Online:', True)
-        online_trade_div = MyHTML.div('my_online_trade_div', '0')
-        stored_trade_label_div = MyHTML.div('my_stored_trade_label_div', 'Database:', True)
-        stored_trade_div = MyHTML.div('my_stored_trade_div', '0')
-        online_div = MyHTML.div_embedded([online_trade_label_div, MyHTML.span(' '), online_trade_div])
-        stored_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
-        self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
-        self.set_value(1, 2, MyDCC.markdown('my_trade_markdown'))
-        self.set_value(1, 3, MyHTML.div_embedded([online_div, stored_div]))
-
-
 class MyHTML:
     @staticmethod
     def button():
@@ -198,8 +189,8 @@ class MyHTML:
     def div_with_html_button_submit(element_id: str, children='Submit'):
         return html.Div(
             [MyHTML.button_submit(element_id, children)],
-            style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'bottom'
-                , 'padding-bottom': 20, 'padding-left': 10}
+            style={'width': '10%', 'display': 'inline-block', 'vertical-align': 'bottom', 'padding-bottom': 20,
+                   'padding-left': 10}
         )
 
     @staticmethod
@@ -212,6 +203,12 @@ class MyHTML:
         if inline:
             style['display'] = 'inline-block'
         return html.Div(id=element_id, children=children, style=style)
+
+    @staticmethod
+    def div_drop_down(children: str):
+        style = {'font-weight': 'bold', 'display': 'inline-block', 'fontSize': 14,
+                 'color': 'black', 'padding-bottom': 5}
+        return html.Div(children=children, style=style)
 
     @staticmethod
     def h1(element_text: str, style_input=None):
@@ -253,14 +250,14 @@ class MyHTML:
                          MyHTML.h1(datetime.now().strftime('%H:%M:%S'))])
 
     @staticmethod
-    def div_with_dcc_drop_down(div_text: str, element_id: str, options: list, width=20, for_multi=False):
+    def div_with_dcc_drop_down(div_text: str, element_id: str, options: list, default='', width=20, for_multi=False):
         div_element_list = []
         if div_text != '':
-            div_element_list.append(html.H3('{}:'.format(div_text), style={'padding-right': '10'}))
-        div_element_list.append(MyDCC.drop_down(element_id, options, for_multi))
+            div_element_list.append(MyHTML.div_drop_down('{}:'.format(div_text)))
+        div_element_list.append(MyDCC.drop_down(element_id, options, default, for_multi))
         style = {'display': 'inline-block', 'verticalAlign': 'top', 'width': width,
-                 'padding-bottom': 20, 'padding-left': 10}
-        return html.Div(div_element_list, style=style)
+                 'padding-bottom': 10, 'padding-left': 10}
+        return html.Div(div_element_list, style=style, id='{}_div'.format(element_id))
 
 
 class MyDCC:
@@ -291,19 +288,33 @@ class MyDCC:
         )
 
     @staticmethod
-    def drop_down(element_id, options: list, multi=False, clearable=False):
+    def drop_down(element_id, options: list, default='', multi=False, clearable=False):
         # {'label': '{} {}'.format(symbol, name), 'value': symbol}
-        return dcc.Dropdown(id=element_id, options=options, value=options[0]['value'], multi=multi, clearable=clearable)
+        default = options[0]['value'] if default == '' else default
+        return dcc.Dropdown(id=element_id, options=options, value=default, multi=multi, clearable=clearable)
 
     @staticmethod
     def graph(graph_api: DccGraphApi):
+        if graph_api.figure_layout_x_axis_dict:
+            x_axis_dict = graph_api.figure_layout_x_axis_dict
+        else:
+            x_axis_dict = {'title': 'ticker-x', 'type': 'date'},
+
+        if graph_api.figure_layout_y_axis_dict:
+            y_axis_dict = graph_api.figure_layout_y_axis_dict
+        else:
+            y_axis_dict = {'title': graph_api.figure_layout_yaxis_title}
+
+        # print('xaxis_dict={}'.format(x_axis_dict))
+
         return dcc.Graph(
             id=graph_api.id,
             figure={
                 'data': graph_api.figure_data,
                 'layout': {
-                    # 'xaxis': {'title': 'ticker-x', 'type': 'date'},
-                    'yaxis': {'title': graph_api.figure_layout_yaxis_title},
+                    'showlegend': True,
+                    # 'xaxis': x_axis_dict,
+                    'yaxis': y_axis_dict,
                     'height': graph_api.figure_layout_height,
                     'width': graph_api.figure_layout_width,
                     'margin': graph_api.figure_layout_margin,

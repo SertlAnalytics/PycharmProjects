@@ -15,12 +15,89 @@ from sertl_analytics.constants.pattern_constants import CN, FD, BT, PRD
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_tools import MyGraphCache, MyDashStateHandler, MyGraphCacheObjectApi
-from pattern_colors import PatternColorHandler
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi, MyHTMLTabPatternHeaderTable
+from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi, DropDownHandler
+from pattern_dash.my_dash_header_tables import MyHTMLTabPatternHeaderTable
 from pattern_bitfinex import BitfinexConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from textwrap import dedent
 from pattern_dash.my_dash_base import MyDashBaseTab, Dash
+
+
+class PDD:  # pattern drop down
+    STOCK_SYMBOL = 'Stock_Symbol'
+    REFRESH_INTERVAL = 'Refresh_Interval'
+    SECOND_GRAPH_RANGE = 'Second_Graph_Range'
+
+
+class PatternTabDropDownHandler(DropDownHandler):
+    def __init__(self, ticker_options: list):
+        self._ticker_options = ticker_options
+        DropDownHandler.__init__(self)
+
+    def __get_div_text__(self, drop_down_type: str):
+        value_dict = {
+            PDD.STOCK_SYMBOL: 'Stock symbol',
+            PDD.REFRESH_INTERVAL: 'Refresh interval',
+            PDD.SECOND_GRAPH_RANGE: 'Second graph range'
+        }
+        return value_dict.get(drop_down_type, None)
+
+    def __get_element_id__(self, drop_down_type: str):
+        value_dict = {
+            PDD.STOCK_SYMBOL: 'my_ticker_selection',
+            PDD.REFRESH_INTERVAL: 'my_interval_selection',
+            PDD.SECOND_GRAPH_RANGE: 'my_graph_second_days_selection'
+        }
+        return value_dict.get(drop_down_type, None)
+
+    def __get_default_value__(self, drop_down_type: str) -> str:
+        default_dict = {
+            PDD.STOCK_SYMBOL: self._ticker_options[0]['value'],
+            PDD.REFRESH_INTERVAL: 900,
+            PDD.SECOND_GRAPH_RANGE: 0
+        }
+        return default_dict.get(drop_down_type, None)
+
+    def __get_width__(self, drop_down_type: str):
+        value_dict = {
+            PDD.STOCK_SYMBOL: 200,
+            PDD.REFRESH_INTERVAL: 200,
+            PDD.SECOND_GRAPH_RANGE: 200
+        }
+        return value_dict.get(drop_down_type, None)
+
+    def __get_drop_down_value_dict__(self) -> dict:
+        return {
+            PDD.STOCK_SYMBOL: self._ticker_options,
+            PDD.REFRESH_INTERVAL: self.__get_refresh_interval_options__(),
+            PDD.SECOND_GRAPH_RANGE: self.__get_second_graph_range_options__(),
+        }
+
+    def __get_for_multi__(self, drop_down_type: str):
+        return False
+
+    @staticmethod
+    def __get_refresh_interval_options__():
+        return [
+            {'label': '15 min', 'value': 900},
+            {'label': '5 min', 'value': 300},
+            {'label': '2 min', 'value': 120},
+            {'label': '1 min', 'value': 60},
+            {'label': '30 sec.', 'value': 30},
+            {'label': '15 sec.', 'value': 15},
+            {'label': '10 sec.', 'value': 10},
+        ]
+
+    @staticmethod
+    def __get_second_graph_range_options__():
+        return [
+            {'label': 'NONE', 'value': 0},
+            {'label': '400 days', 'value': 400},
+            {'label': '200 days', 'value': 200},
+            {'label': '100 days', 'value': 100},
+            {'label': '60 days', 'value': 60},
+            {'label': 'Intraday', 'value': 1},
+        ]
 
 
 class MyDashTab4Pattern(MyDashBaseTab):
@@ -33,12 +110,9 @@ class MyDashTab4Pattern(MyDashBaseTab):
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None
         self._ticker_options = []
-        self._interval_options = []
-        self._graph_second_days_options = []
         self._current_symbol = ''
         self.__fill_ticker_options__()
-        self.__fill_interval_options__()
-        self.__fill_graph_second_days_options__()
+        self._dd_handler = PatternTabDropDownHandler(self._ticker_options)
         self._time_stamp_last_refresh = MyDate.time_stamp_now()
         self._time_stamp_next_refresh = None
         self._graph_first_cache = MyGraphCache()
@@ -62,12 +136,17 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def get_div_for_tab(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
         li = [MyHTMLTabPatternHeaderTable().get_table()]
-        li.append(MyHTML.div_with_dcc_drop_down(
-            'Stock symbol', 'my_ticker_selection', self._ticker_options, 200))
-        li.append(MyHTML.div_with_dcc_drop_down(
-            'Refresh interval', 'my_interval_selection', self._interval_options, 200))
-        li.append(MyHTML.div_with_dcc_drop_down(
-            'Second graph', 'my_graph_second_days_selection', self._graph_second_days_options, 200))
+        # li.append(MyHTML.div_with_dcc_drop_down(
+        #     'Stock symbol', 'my_ticker_selection', self._ticker_options, default='BTCUSD', width=200))
+        # li.append(MyHTML.div_with_dcc_drop_down(
+        #     'Refresh interval', 'my_interval_selection', self._interval_options, width=200))
+        # li.append(MyHTML.div_with_dcc_drop_down(
+        #     'Second graph', 'my_graph_second_days_selection', self._graph_second_days_options, width=200))
+
+        li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.STOCK_SYMBOL)))
+        li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.REFRESH_INTERVAL)))
+        li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.SECOND_GRAPH_RANGE)))
+
         if self.sys_config.config.get_data_from_db:
             li.append(self.__get_html_div_with_date_picker_range__())
         li.append(MyHTML.div_with_html_button_submit('my_submit_button', 'Refresh'))
@@ -87,23 +166,6 @@ class MyDashTab4Pattern(MyDashBaseTab):
             ],
             style={'display': 'inline-block', 'vertical-align': 'bottom', 'height': 20}
         )
-
-    def __fill_interval_options__(self):
-        self._interval_options.append({'label': '15 min', 'value': 900}) # this one is the default
-        self._interval_options.append({'label': '5 min', 'value': 300})
-        self._interval_options.append({'label': '2 min', 'value': 120})
-        self._interval_options.append({'label': '1 min', 'value': 60})
-        self._interval_options.append({'label': '30 sec.', 'value': 30})
-        self._interval_options.append({'label': '15 sec.', 'value': 15})
-        self._interval_options.append({'label': '10 sec.', 'value': 10})
-
-    def __fill_graph_second_days_options__(self):
-        self._graph_second_days_options.append({'label': 'NONE', 'value': 0})
-        self._graph_second_days_options.append({'label': '400 days', 'value': 400})
-        self._graph_second_days_options.append({'label': '200 days', 'value': 200})
-        self._graph_second_days_options.append({'label': '100 days', 'value': 100})
-        self._graph_second_days_options.append({'label': '60 days', 'value': 60})
-        self._graph_second_days_options.append({'label': 'Intraday', 'value': 1})
 
     def __init_interval_callback_with_date_picker__(self):
         @self.app.callback(

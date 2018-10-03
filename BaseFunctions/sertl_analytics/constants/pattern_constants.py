@@ -5,6 +5,67 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
+class CHM:  # chart modes
+    MARKERS = 'markers'
+    LINES = 'lines'
+
+    @staticmethod
+    def get_as_options():
+        return [{'label': chart_mode, 'value': chart_mode} for chart_mode in CHM.get_all()]
+
+    @staticmethod
+    def get_all():
+        return [CHM.MARKERS]
+
+    @staticmethod
+    def get_mode_for_chart_type(chart_type: str):
+        value_dict = {
+            CHT.SCATTER: CHM.MARKERS,
+            CHT.AREA: CHM.LINES,
+        }
+        return value_dict.get(chart_type, CHM.MARKERS)
+
+
+class CHT:  # chart type
+    SCATTER = 'Scatter'
+    AREA_WINNER_LOSER = 'Area winner and losers'
+    AREA = 'Area'
+    BAR = 'Bar'
+    LINE = 'Line'
+    HEAT_MAP = 'Heatmap'
+    TABLE = 'Table'
+    CONTOUR = 'Contour'
+    PIE = 'Pie'
+    D3_SCATTER = '3D Scatter'
+    D3_LINE = '3D Line'
+    D3_SURFACE = '3D Surface'
+    BOX = 'Box'
+    VIOLINE = 'Violine'
+    HISTOGRAM = 'Histogram'
+    D2_CONTOUR_HISTOGRAM = '2D Contour Histogram'
+    POLAR_SCATTER = 'Polar Scatter'
+
+    @staticmethod
+    def get_as_options():
+        li = CHT.get_all()
+        return [{'label': chart_type, 'value': chart_type} for chart_type in li]
+
+    @staticmethod
+    def get_all():
+        li = [CHT.SCATTER, CHT.BAR, CHT.LINE, CHT.AREA, CHT.HEAT_MAP, CHT.TABLE, CHT.CONTOUR, CHT.PIE, CHT.D3_SCATTER,
+              CHT.D3_LINE, CHT.D3_SURFACE, CHT.BOX, CHT.VIOLINE, CHT.HISTOGRAM, CHT.D2_CONTOUR_HISTOGRAM,
+              CHT.POLAR_SCATTER]
+        return li
+
+    @staticmethod
+    def get_for_trade_statistics():
+        return [CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PIE]
+
+    @staticmethod
+    def get_for_pattern_statistics():
+        return [CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PIE]
+
+
 class CM:  # coverage mode
     COVERING = 'covering'
     COVERED_BY = 'covered_by'
@@ -74,6 +135,7 @@ class OS:  # Order side
 
 
 class FT:
+    ALL = 'ALL'
     NONE = 'NONE'
     TRIANGLE = 'Triangle'
     TRIANGLE_TOP = 'Triangle top'
@@ -99,6 +161,10 @@ class FT:
                 FT.TKE_TOP, FT.TKE_BOTTOM,
                 FT.FIBONACCI_ASC, FT.FIBONACCI_DESC,
                 FT.HEAD_SHOULDER, FT.HEAD_SHOULDER_ASC, FT.HEAD_SHOULDER_BOTTOM, FT.HEAD_SHOULDER_BOTTOM_DESC]
+
+    @staticmethod
+    def get_all_for_statistics():
+        return [FT.ALL] + sorted(FT.get_all())
 
     @staticmethod
     def get_long_trade_able_types():

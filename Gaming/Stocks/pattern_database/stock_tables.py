@@ -144,12 +144,31 @@ class TradeTable(MyTable, PredictionFeatureTable):
     def get_columns_for_replay() -> list:
         return [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
                 DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_BEGIN_TIME,
-                DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.ID]
+                DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.TRADE_RESULT, DC.ID]
 
     @staticmethod
     def get_columns_for_statistics() -> list:
         return [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
                 DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_END_DT, DC.TRADE_BOX_TYPE, DC.SELL_TRIGGER, DC.TRADE_RESULT]
+
+    @staticmethod
+    def get_columns_for_statistics_category() -> list:
+        return [DC.PATTERN_TYPE, DC.TRADE_STRATEGY, DC.BUY_TRIGGER, DC.SELL_TRIGGER, DC.TRADE_BOX_TYPE]
+
+    @staticmethod
+    def get_columns_for_statistics_x_variable() -> list:
+        return [DC.PATTERN_RANGE_BEGIN_DT,
+                DC.FC_FULL_POSITIVE_PCT, DC.FC_FULL_NEGATIVE_PCT,
+                DC.FC_TICKS_TO_POSITIVE_FULL, DC.FC_TICKS_TO_NEGATIVE_FULL,
+                DC.FC_BREAKOUT_DIRECTION, DC.FC_FALSE_BREAKOUT_ID]
+
+    @staticmethod
+    def get_columns_for_statistics_y_variable() -> list:
+        return [DC.TRADE_REACHED_PRICE_PCT, DC.EXPECTED_WIN, DC.EXPECTED_WIN_REACHED, DC.TRADE_RESULT]
+
+    @staticmethod
+    def get_columns_for_statistics_text_variable() -> list:
+        return [DC.TRADE_STRATEGY, DC.PATTERN_TYPE, DC.BUY_TRIGGER, DC.SELL_TRIGGER, DC.TRADE_RESULT]
 
     def __get_query_for_feature_and_label_data_for_trades__(self) -> str:
         return "SELECT {} FROM {} WHERE Trade_Result_ID != 0".format(
@@ -215,6 +234,29 @@ class PatternTable(MyTable, PredictionFeatureTable):
     def get_columns_for_statistics() -> list:
         return [DC.TICKER_ID, DC.TICKER_NAME, DC.PATTERN_TYPE, DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT,
                 DC.BREAKOUT_DT, DC.BREAKOUT_DIRECTION, DC.EXPECTED_WIN, DC.EXPECTED_WIN_REACHED]
+
+    @staticmethod
+    def get_columns_for_statistics_category() -> list:
+        return [DC.PATTERN_TYPE,
+                DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT,
+                DC.VOLUME_CHANGE_AT_BREAKOUT_PCT, DC.SLOPE_VOLUME_REGRESSION_PCT,
+                DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT]
+
+    @staticmethod
+    def get_columns_for_statistics_x_variable() -> list:
+        return [DC.PATTERN_BEGIN_DT, DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT,
+                DC.SLOPE_LOWER_PCT, DC.SLOPE_UPPER_PCT, DC.SLOPE_REGRESSION_PCT, DC.SLOPE_BREAKOUT_PCT,
+                DC.VOLUME_CHANGE_AT_BREAKOUT_PCT, DC.SLOPE_VOLUME_REGRESSION_PCT,
+                DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT]
+
+    @staticmethod
+    def get_columns_for_statistics_y_variable() -> list:
+        return [DC.EXPECTED_WIN, DC.EXPECTED_WIN_REACHED, DC.FC_FULL_POSITIVE_PCT,
+                DC.FC_FULL_NEGATIVE_PCT, DC.FC_TRADE_RESULT_ID]
+
+    @staticmethod
+    def get_columns_for_statistics_text_variable() -> list:
+        return [DC.PATTERN_TYPE, DC.BREAKOUT_DIRECTION]
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 50))

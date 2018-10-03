@@ -82,10 +82,14 @@ class MyGraphCache(MyCache):
         return self._cached_object_dict[cache_key].pattern_data
 
     def was_breakout_since_last_data_update(self, cache_key: str):
-        return self._cached_object_dict[cache_key].breakout_since_last_data_update
+        if cache_key in self._cached_object_dict:
+            return self._cached_object_dict[cache_key].breakout_since_last_data_update
+        return False
 
     def was_touch_since_last_data_update(self, cache_key: str):
-        return self._cached_object_dict[cache_key].touch_since_last_data_update
+        if cache_key in self._cached_object_dict:
+            return self._cached_object_dict[cache_key].touch_since_last_data_update
+        return False
 
     def get_graph_list_for_observation(self, key_not: str) -> list:
         play_sound = False

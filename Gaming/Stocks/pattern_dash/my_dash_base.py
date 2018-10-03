@@ -35,10 +35,11 @@ class MyDashBaseTab:
 
     def __get_dcc_graph_element__(self, detector, graph_api: DccGraphApi):
         pattern_df = graph_api.df
+        pattern_list = detector.pattern_list if detector else [graph_api.pattern_trade.pattern]
         candlestick = self.__get_candlesticks_trace__(pattern_df, graph_api.ticker_id)
         bollinger_traces = self.__get_bollinger_band_trace__(pattern_df, graph_api.ticker_id)
-        shapes = self.__get_pattern_shape_list__(detector.pattern_list)
-        shapes += self.__get_pattern_regression_shape_list__(detector.pattern_list)
+        shapes = self.__get_pattern_shape_list__(pattern_list)
+        shapes += self.__get_pattern_regression_shape_list__(pattern_list)
         if detector:
             shapes += self.__get_fibonacci_shape_list__(detector)
         if graph_api.pattern_trade:
@@ -90,6 +91,7 @@ class MyDashBaseTab:
     def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str):
         if self.sys_config.config.api_period == PRD.INTRADAY:
             x_value = df[CN.DATETIME]
+            print('{}: __get_candlesticks_trace__: x_value={}'.format(ticker, x_value))
         else:
             x_value = df[CN.DATE]
         candlestick = {

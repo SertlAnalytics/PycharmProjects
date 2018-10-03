@@ -2,24 +2,24 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a9b7b1e9-a92d-4270-bcc9-9b843e8495d6" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/sertl_analytics/.idea/dictionaries/josef.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sertl_analytics/exchanges/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sertl_analytics/exchanges/exchange_abc.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sertl_analytics/exchanges/exchange_cls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_bitfinex.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Gaming/Stocks/run_bitfinex.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_drop_down.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_header_tables.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sertl_analytics/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sertl_analytics/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sertl_analytics/mydash/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sertl_analytics/mydash/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sertl_analytics/pyurl/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/sertl_analytics/pyurl/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/dictionaries/josef.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/bitfinex.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_components.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_components.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_data_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_data_container.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_detector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_system_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_pattern_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_pattern_statistics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_trade_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_trade_statistics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_trades.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/stock_database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/stock_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/stock_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_trade.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_wave_tick.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_wave_tick.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -30,11 +30,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="file_fetcher.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="file_fetcher.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sertl_analytics/datafetcher/file_fetcher.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="459">
               <caret line="29" column="11" selection-start-line="29" selection-start-column="11" selection-end-line="29" selection-end-column="11" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="exchange_abc.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/sertl_analytics/exchanges/exchange_abc.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="119">
+              <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" selection-end-column="39" />
+              <folding>
+                <element signature="e#217#256#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -87,6 +99,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -127,6 +140,12 @@
               <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
               <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
               <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="exchanges" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="BaseFunctions" type="b2602c69:ProjectViewProjectNode" />
+              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
               <item name="MyBokeh" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -137,7 +156,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -453,9 +471,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sertl_analytics/exchanges/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/sertl_analytics/myprofiler.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="340">
@@ -501,6 +516,16 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
           <caret line="29" column="11" selection-start-line="29" selection-start-column="11" selection-end-line="29" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/exchanges/exchange_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" selection-end-column="39" />
+          <folding>
+            <element signature="e#217#256#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

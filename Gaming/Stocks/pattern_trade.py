@@ -162,7 +162,8 @@ class PatternTrade:
         if len(self._wave_tick_list.tick_list) > self.pattern.df_length:
             return self._df_for_replay
         else:
-            return self.pattern.df
+            return self._df_for_replay
+            # return self.pattern.df
 
     def add_ticker(self, ticker: Ticker):
         self._ticker_time_stamp_list.append(ticker.time_stamp)

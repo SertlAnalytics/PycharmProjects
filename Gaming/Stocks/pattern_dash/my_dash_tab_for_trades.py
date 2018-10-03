@@ -10,7 +10,8 @@ from dash.dependencies import Input, Output
 import pandas as pd
 from pattern_dash.my_dash_base import MyDashBase, MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, MyHTMLTabTradeHeaderTable
+from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi
+from pattern_dash.my_dash_header_tables import MyHTMLTabTradeHeaderTable
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from pattern_database.stock_tables import TradeTable
@@ -47,6 +48,18 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._test_case_value_pair_index = -1
         self._graph_for_replay = None
         self._drop_down_option_dict = self.__get_drop_down_option_dict__()
+
+    def get_div_for_tab(self):
+        children_list = [
+            MyHTMLTabTradeHeaderTable().get_table(),
+            MyHTML.div_with_dcc_drop_down('Trade type selection', 'my_trade_type_selection',
+                                          self.__get_trade_type_options__(), width=200),
+            MyHTML.div('my_trade_table_div', self.__get_table_for_trades__(), False),
+            MyHTML.div('my_graph_trade_replay_div', '', False),
+            MyHTML.div('my_temp_result_div', '', False)
+        ]
+        # scatter_graph = self.__get_scatter_graph_for_trades__('trade_scatter_graph')
+        return MyHTML.div('my_trades', children_list)
 
     def init_callbacks(self):
         self.__init_callback_for_trade_type_selection__()
@@ -160,7 +173,7 @@ class MyDashTab4Trades(MyDashBaseTab):
         return self._graph_for_replay
 
     def __get_graph_trade_online_refreshed__(self):
-        self._graph_api_for_replay.df = self.trade_handler_online.get_pattern_trade_data_frame_for_replay()
+        self._graph_api_for_replay.df = self._graph_api_for_replay.pattern_trade.get_data_frame_for_replay()
         return self.__get_dcc_graph_element__(None, self._graph_api_for_replay)
 
     def __get_graph_trade_replay__(self):
@@ -189,9 +202,14 @@ class MyDashTab4Trades(MyDashBaseTab):
         trade_test_api = self.__get_trade_test_api_for_selected_row__(self._selected_row)
         graph_title = '{} {}'.format(trade_test_api.symbol, self.sys_config.config.api_period)
         graph_key = MyGraphCache.get_cache_key(graph_id, trade_test_api.symbol, 0)
-        self._graph_api_for_replay.pattern_trade = self.trade_handler_online.get_pattern_trade_by_id(trade_test_api.trade_id)
+        self._graph_api_for_replay = DccGraphApi(graph_id, graph_title)
+        self._graph_api_for_replay.pattern_trade = \
+            self.trade_handler_online.get_pattern_trade_by_id(trade_test_api.trade_id)
+        print('get_graph_trade_online:trade_test_api.trade_id={} / {}=pattern_trade.id'.format(trade_test_api.trade_id,
+                                                                        self._graph_api_for_replay.pattern_trade.id))
         self._graph_api_for_replay.ticker_id = trade_test_api.symbol
         self._graph_api_for_replay.df = self._graph_api_for_replay.pattern_trade.get_data_frame_for_replay()
+        print(self._graph_api_for_replay.df.head())
         self._graph_for_replay = self.__get_dcc_graph_element__(None, self._graph_api_for_replay)
         return self._graph_for_replay, graph_key
 
@@ -201,6 +219,7 @@ class MyDashTab4Trades(MyDashBaseTab):
         return pattern_data.tick_list
 
     def __handle_selected_trade__(self, row):
+        return  # ToDo
         api = self.__get_trade_test_api_for_selected_row__(row)
         detector = self._trade_test.get_pattern_detector_for_replay(api)
         api.pattern = detector.get_pattern_for_replay()
@@ -218,18 +237,6 @@ class MyDashTab4Trades(MyDashBaseTab):
 
     def __get_pattern_detector_by_trade_test_api__(self, api: TradeTestApi):
         return self._trade_test.get_pattern_detector_for_replay(api)
-
-    def get_div_for_tab(self):
-        children_list = [
-            MyHTMLTabTradeHeaderTable().get_table(),
-            MyHTML.div_with_dcc_drop_down('Trade type selection', 'my_trade_type_selection',
-                                          self.__get_trade_type_options__(), 200),
-            MyHTML.div('my_trade_table_div', self.__get_table_for_trades__(), False),
-            MyHTML.div('my_graph_trade_replay_div', '', False),
-            MyHTML.div('my_temp_result_div', '', False)
-        ]
-        # scatter_graph = self.__get_scatter_graph_for_trades__('trade_scatter_graph')
-        return MyHTML.div('my_trades', children_list)
 
     def __get_options__(self, key: str):
         return [{'label': '{}'.format(value), 'value': value} for value in self._drop_down_option_dict[key]]
