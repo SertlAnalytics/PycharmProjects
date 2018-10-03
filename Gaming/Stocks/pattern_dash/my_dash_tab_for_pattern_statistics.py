@@ -48,10 +48,14 @@ class MyDashTab4PatternStatistics(MyDashBaseTab):
             Output('my_pattern_statistics_div', 'children'),
             [Input('my_interval_timer', 'n_intervals')])
         def handle_callback_for_numbers(n_intervals: int):
+            self.__update_df_base__()
             number_all = self._df_base.shape[0]
             number_pos = self._df_base[self._df_base[DC.EXPECTED_WIN_REACHED] == 1].shape[0]
             number_neg = self._df_base[self._df_base[DC.EXPECTED_WIN_REACHED] == 0].shape[0]
             return '{} (+{}/-{})'.format(number_all, number_pos, number_neg)
+
+    def __update_df_base__(self):
+        self._df_base = self.sys_config.db_stock.get_pattern_records_as_dataframe()
 
     def __init_callbacks_for_drop_down_visibility__(self):
         for drop_down_type in [DDT.X_VARIABLE, DDT.Y_VARIABLE, DDT.CHART_TEXT_VARIABLE]:
@@ -77,8 +81,10 @@ class MyDashTab4PatternStatistics(MyDashBaseTab):
              Input('my_pattern_statistics_x_variable_selection', 'value'),
              Input('my_pattern_statistics_y_variable_selection', 'value'),
              Input('my_pattern_statistics_text_variable_selection', 'value'),
-             Input('my_pattern_statistics_pattern_type_selection', 'value')])
-        def handle_interval_callback_with_date_picker(ct: str, category: str, x: str, y: str, text_column: str, pt: str):
+             Input('my_pattern_statistics_pattern_type_selection', 'value'),
+             Input('my_interval_timer', 'n_intervals')])
+        def handle_interval_callback_with_date_picker(ct: str, category: str, x: str, y: str,
+                                                      text_column: str, pt: str, n_intervals: int):
             self._plotter.category = category
             self._plotter.chart_type = ct
             self._plotter.x_variable = x

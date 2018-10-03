@@ -67,8 +67,10 @@ class MyDashTab4TradeStatistics(MyDashBaseTab):
              Input('my_trade_statistics_x_variable_selection', 'value'),
              Input('my_trade_statistics_y_variable_selection', 'value'),
              Input('my_trade_statistics_text_variable_selection', 'value'),
-             Input('my_trade_statistics_pattern_type_selection', 'value')])
-        def handle_interval_callback_with_date_picker(ct: str, category: str, x: str, y: str, text_column: str, pt: str):
+             Input('my_trade_statistics_pattern_type_selection', 'value'),
+             Input('my_interval_timer', 'n_intervals')])
+        def handle_interval_callback_with_date_picker(ct: str, category: str, x: str, y: str,
+                                                      text_column: str, pt: str, n_intervals: int):
             self._plotter.category = category
             self._plotter.chart_type = ct
             self._plotter.x_variable = x
@@ -88,10 +90,14 @@ class MyDashTab4TradeStatistics(MyDashBaseTab):
             Output('my_trade_statistics_div', 'children'),
             [Input('my_interval_timer', 'n_intervals')])
         def handle_callback_for_stored_trade_numbers(n_intervals: int):
+            self.__update_df_base__()
             trade_number = self._df_base.shape[0]
             trade_number_pos = self._df_base[self._df_base[DC.TRADE_RESULT_ID] == 1].shape[0]
             trade_number_neg = self._df_base[self._df_base[DC.TRADE_RESULT_ID] == -1].shape[0]
             return '{} (+{}/-{})'.format(trade_number, trade_number_pos, trade_number_neg)
+
+    def __update_df_base__(self):
+        self._df_base = self.sys_config.db_stock.get_trade_records_for_statistics_as_dataframe()
 
     def __init_callback_for_markdown__(self):
         @self.app.callback(
