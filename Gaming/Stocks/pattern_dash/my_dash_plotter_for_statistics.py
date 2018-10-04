@@ -31,20 +31,23 @@ class MyDashTabStatisticsPlotter:
         pass
 
     def get_chart_list(self):
-        graph_api = DccGraphApi(self._chart_id, self._chart_name)
         if self.chart_type == CHT.SCATTER:
+            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
             graph_api.figure_data = self.__get_scatter_figure_data__()
+            return [MyDCC.graph(graph_api)]
         elif self.chart_type == CHT.PIE:
+            graph_api =  DccGraphApi(self._chart_id + '_winner', self._chart_name + ' (winner)')
             graph_api.figure_data = self.__get_pie_figure_data__(True)
-            graph_api_loser = DccGraphApi(self._chart_id + '_loser', self._chart_name + '_loser')
+
+            graph_api_loser = DccGraphApi(self._chart_id + '_loser', self._chart_name + ' (loser)')
             graph_api_loser.figure_data = self.__get_pie_figure_data__(False)
             return [MyDCC.graph(graph_api), MyDCC.graph(graph_api_loser)]
-            # return [MyDCC.graph(graph_api)]
         elif self.chart_type == CHT.AREA_WINNER_LOSER:
+            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
             graph_api.figure_data = self.__get_area_winner_loser_figure_data__()
             graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
             graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
-        return [MyDCC.graph(graph_api)]
+            return [MyDCC.graph(graph_api)]
 
     def __get_df_for_selection__(self):
         if self.pattern_type in [FT.ALL, '']:
@@ -68,8 +71,13 @@ class MyDashTabStatisticsPlotter:
         ]
 
     def __get_pie_figure_data__(self, for_winner: bool):
-        labels, values, colors = self.__get_data_for_pie_figure__(for_winner)
-        return [go.Pie(labels=labels, values=values, marker=dict(colors=colors))]
+        labels, values, colors, text = self.__get_data_for_pie_figure__(for_winner)
+        return [
+            go.Pie(labels=labels,
+                   values=values,
+                   text=text,
+                   marker=dict(colors=colors)
+                   )]
 
     def __get_data_for_pie_figure__(self, for_winner: bool):
         df = self.__get_df_for_selection__()
@@ -87,7 +95,8 @@ class MyDashTabStatisticsPlotter:
                 y_value_dict[cat_result] += 1
         y_values = [y_value_dict[cat_result] for cat_result in sorted_category_list]
         colors = [self._color_handler.get_color_for_category(cat) for cat in sorted_category_list]
-        return sorted_category_list, y_values, colors
+        text = [cat for cat in sorted_categories_orig]
+        return sorted_category_list, y_values, colors, text
 
     def __get_area_winner_loser_figure_data__(self):
         x_values, y_value_dict = self.__get_data_for_area_winner_loser_figure__()
@@ -214,7 +223,7 @@ class MyDashTabStatisticsPlotter:
 class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
     def __init_parameter__(self):
         self._chart_id = 'trade_statistics_graph'
-        self._chart_name = 'My Trade Statistics'
+        self._chart_name = 'Trades'
         self.chart_type = CHT.AREA_WINNER_LOSER
         self.category = DC.PATTERN_TYPE
         self.x_variable = DC.FC_FULL_POSITIVE_PCT
@@ -231,7 +240,7 @@ class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
 class MyDashTabStatisticsPlotter4Pattern(MyDashTabStatisticsPlotter):
     def __init_parameter__(self):
         self._chart_id = 'pattern_statistics_graph'
-        self._chart_name = 'My Pattern Statistics'
+        self._chart_name = 'Pattern'
         self.chart_type = CHT.SCATTER
         self.category = DC.PATTERN_TYPE
         self.x_variable = DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT

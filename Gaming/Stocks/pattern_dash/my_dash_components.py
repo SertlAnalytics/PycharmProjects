@@ -115,7 +115,7 @@ class DccGraphApi:
         self.figure_layout_height = 500
         self.figure_layout_width = 1200
         self.figure_layout_yaxis_title = title
-        self.figure_layout_margin = {'b': 50, 'r': 10, 'l': 60, 't': 0}
+        self.figure_layout_margin = {'b': 50, 'r': 50, 'l': 50, 't': 50}
         self.figure_layout_legend = {'x': 0}
         self.figure_layout_hovermode = 'closest'
         self.figure_layout_shapes = None
@@ -305,7 +305,7 @@ class MyDCC:
         else:
             y_axis_dict = {'title': graph_api.figure_layout_yaxis_title}
 
-        # print('xaxis_dict={}'.format(x_axis_dict))
+        print('y_axis_dict={}'.format(y_axis_dict))
 
         return dcc.Graph(
             id=graph_api.id,
@@ -313,6 +313,7 @@ class MyDCC:
                 'data': graph_api.figure_data,
                 'layout': {
                     'showlegend': True,
+                    'title': graph_api.figure_layout_yaxis_title,
                     # 'xaxis': x_axis_dict,
                     'yaxis': y_axis_dict,
                     'height': graph_api.figure_layout_height,
