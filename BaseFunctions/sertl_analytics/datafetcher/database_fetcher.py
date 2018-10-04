@@ -30,7 +30,7 @@ class MyTable:
         self._query_select_all = self.query_select_all
 
     @property
-    def column_name_list(self):
+    def column_name_list(self) -> list:
         return self._column_name_list
 
     @property
@@ -50,7 +50,7 @@ class MyTable:
     def get_query_for_delete_by_id(self, trade_id: str) -> str:
         return "DELETE FROM {} where ID='{}'".format(self._name, trade_id)
 
-    def __get_column_name_list__(self):
+    def __get_column_name_list__(self) -> list:
         return [columns.name for columns in self._columns]
 
     def __get_description__(self, meta_data: str = 'metadata'):

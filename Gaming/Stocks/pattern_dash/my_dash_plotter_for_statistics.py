@@ -8,14 +8,14 @@ Date: 2018-06-17
 import plotly.graph_objs as go
 from sertl_analytics.constants.pattern_constants import DC, CHT, FT
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
-import numpy as np
+from pattern_dash.my_dash_colors import DashColorHandler
 import pandas as pd
 
 
 class MyDashTabStatisticsPlotter:
-    def __init__(self, df_base: pd.DataFrame):
-        np.random.seed(123)
+    def __init__(self, df_base: pd.DataFrame, color_handler: DashColorHandler):
         self._df_base = df_base
+        self._color_handler = color_handler
         self._chart_id = ''
         self._chart_name = ''
         self.chart_type = ''
@@ -30,17 +30,21 @@ class MyDashTabStatisticsPlotter:
     def __init_parameter__(self):
         pass
 
-    def get_chart(self):
+    def get_chart_list(self):
         graph_api = DccGraphApi(self._chart_id, self._chart_name)
         if self.chart_type == CHT.SCATTER:
             graph_api.figure_data = self.__get_scatter_figure_data__()
         elif self.chart_type == CHT.PIE:
-            graph_api.figure_data = self.__get_pie_figure_data__()
+            graph_api.figure_data = self.__get_pie_figure_data__(True)
+            graph_api_loser = DccGraphApi(self._chart_id + '_loser', self._chart_name + '_loser')
+            graph_api_loser.figure_data = self.__get_pie_figure_data__(False)
+            return [MyDCC.graph(graph_api), MyDCC.graph(graph_api_loser)]
+            # return [MyDCC.graph(graph_api)]
         elif self.chart_type == CHT.AREA_WINNER_LOSER:
             graph_api.figure_data = self.__get_area_winner_loser_figure_data__()
             graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
             graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
-        return MyDCC.graph(graph_api)
+        return [MyDCC.graph(graph_api)]
 
     def __get_df_for_selection__(self):
         if self.pattern_type in [FT.ALL, '']:
@@ -63,24 +67,27 @@ class MyDashTabStatisticsPlotter:
             ) for category in df[self.category].unique()
         ]
 
-    def __get_pie_figure_data__(self):
-        labels, values = self.__get_data_for_pie_figure__()
-        return [go.Pie(labels=labels, values=values)]
+    def __get_pie_figure_data__(self, for_winner: bool):
+        labels, values, colors = self.__get_data_for_pie_figure__(for_winner)
+        return [go.Pie(labels=labels, values=values, marker=dict(colors=colors))]
 
-    def __get_data_for_pie_figure__(self):
+    def __get_data_for_pie_figure__(self, for_winner: bool):
         df = self.__get_df_for_selection__()
         sorted_categories_orig = sorted(df[self.category].unique())
-        sorted_category_list = ['{}_{}'.format(cat, 'winner') for cat in sorted_categories_orig]
-        for cat in sorted_categories_orig:
-            sorted_category_list.append('{}_{}'.format(cat, 'loser'))
+        if for_winner:
+            sorted_category_list = ['{}_{}'.format(cat, 'winner') for cat in sorted_categories_orig]
+        else:
+            sorted_category_list = ['{}_{}'.format(cat, 'loser') for cat in sorted_categories_orig]
         y_value_dict = {cat: 0 for cat in sorted_category_list}
         for index, row in df.iterrows():
             cat = row[self.category]
             result_id = self.__get_result_id_from_row__(row)
             cat_result = '{}_{}'.format(cat, 'winner' if result_id == 1 else 'loser')
-            y_value_dict[cat_result] += 1
+            if cat_result in y_value_dict:
+                y_value_dict[cat_result] += 1
         y_values = [y_value_dict[cat_result] for cat_result in sorted_category_list]
-        return sorted_category_list, y_values
+        colors = [self._color_handler.get_color_for_category(cat) for cat in sorted_category_list]
+        return sorted_category_list, y_values, colors
 
     def __get_area_winner_loser_figure_data__(self):
         x_values, y_value_dict = self.__get_data_for_area_winner_loser_figure__()
@@ -92,15 +99,11 @@ class MyDashTabStatisticsPlotter:
                 mode='lines',
                 fill='tonexty',
                 opacity=0.7,
-                line=dict(width=0.5, color=self.__get_color_for_winner_category__(category)),
+                line=dict(width=0.5, color=self._color_handler.get_color_for_category(category)),
                 stackgroup='one',
                 name=category
             ) for category, values in y_value_dict.items()
         ]
-
-    @staticmethod
-    def __get_color_for_winner_category__(category: str):
-        return 'rgb({}, {}, {})'.format(np.random.randint(1,255), np.random.randint(1,255), np.random.randint(1,255))
 
     def __get_data_for_area_winner_loser_figure__(self):
         df = self.__get_df_for_selection__()

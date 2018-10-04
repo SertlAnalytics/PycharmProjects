@@ -16,8 +16,9 @@ from pattern_dash.my_dash_components import MyDCC, MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLHeaderTable
 from pattern_dash.my_dash_tab_for_pattern import MyDashTab4Pattern
 from pattern_dash.my_dash_tab_for_trades import MyDashTab4Trades
-from pattern_dash.my_dash_tab_for_trade_statistics import MyDashTab4TradeStatistics
-from pattern_dash.my_dash_tab_for_pattern_statistics import MyDashTab4PatternStatistics
+from pattern_dash.my_dash_tab_for_statistics_trade import MyDashTab4TradeStatistics
+from pattern_dash.my_dash_tab_for_statistics_pattern import MyDashTab4PatternStatistics
+from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_bitfinex import BitfinexConfiguration
 from pattern_trade_handler import PatternTradeHandler
 
@@ -28,10 +29,11 @@ class MyDash4Pattern(MyDashBase):
         self.sys_config = sys_config
         self.bitfinex_config = bitfinex_config
         self.trade_handler_online = PatternTradeHandler(sys_config, self.bitfinex_config)
+        self.color_handler = DashColorHandler()
         self.tab_pattern = MyDashTab4Pattern(self.app, self.sys_config, self.bitfinex_config, self.trade_handler_online)
         self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.bitfinex_config, self.trade_handler_online)
-        self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config)
-        self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config)
+        self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config, self.color_handler)
+        self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config, self.color_handler)
 
     def get_pattern(self):
         self.__set_app_layout__()
