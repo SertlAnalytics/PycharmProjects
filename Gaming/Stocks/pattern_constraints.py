@@ -303,7 +303,9 @@ class ChannelConstraints(Constraints):
                              CountConstraint(SVC.L_in, '>=', 3)]
         self.global_series = ['OR',
                               [SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on],
-                              [SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on]
+                              [SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on],
+                              [SVC.U_in, SVC.U_in, SVC.L_in, SVC.U_in],
+                              [SVC.L_in, SVC.L_in, SVC.U_in, SVC.L_in]
                               ]
 
     @staticmethod
@@ -315,7 +317,7 @@ class ChannelConstraints(Constraints):
 
     @staticmethod
     def _get_height_end_start_relation_bounds_():
-        return [0.9, 1.1]
+        return [0.8, 1.2]
 
 
 class ChannelUpConstraints(ChannelConstraints):

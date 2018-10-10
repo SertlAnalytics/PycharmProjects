@@ -144,7 +144,8 @@ class TradeTable(MyTable, PredictionFeatureTable):
     def get_columns_for_replay() -> list:
         return [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
                 DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_BEGIN_TIME,
-                DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.TRADE_RESULT, DC.ID]
+                DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.TRADE_RESULT,
+                DC.PERIOD, DC.PERIOD_AGGREGATION, DC.ID]
 
     @staticmethod
     def get_columns_for_statistics() -> list:

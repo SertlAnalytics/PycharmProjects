@@ -159,29 +159,41 @@ class WaveTick:
 
 
 class TickerWaveTickConverter:
-    def __init__(self, period: str, aggregation: int, refresh_rate_seconds: int, pos_last: int):
+    def __init__(self, period: str, aggregation: int, pos_last: int, time_stamp_last: int):
         self._period = period
         self._aggregation = aggregation
-        self._refresh_rate_seconds = refresh_rate_seconds
-        self._ticker_per_aggregation = self.__get_number_of_ticker_per_aggregation__()
-        self._pos_last = pos_last
-        self._current_ticker_counter = 0
+        self._aggregation_time_stamp_range = PRD.get_seconds_for_period(self._period, self._aggregation)
+        self._current_position = pos_last
+        self._current_time_stamp = time_stamp_last
         self._current_open = 0
         self._current_close = 0
         self._current_low = math.inf
         self._current_high = -math.inf
         self._begin_time_stamp = 0
-        self._current_time_stamp = 0
         self._current_wave_tick = None
 
     @property
     def current_wave_tick(self) -> WaveTick:
         return self._current_wave_tick
 
-    def is_wave_tick_started(self):
-        return self._current_wave_tick and self._current_ticker_counter == 1
+    def reset_variables(self):
+        self._begin_time_stamp = 0
+        self._current_open = 0
+        self._current_close = 0
+        self._current_low = math.inf
+        self._current_high = -math.inf
+
+    def can_next_ticker_been_added_to_current_wave_tick(self, ticker_time_stamp: int):
+        if not self._current_wave_tick:  # to regard the first ticker
+            return False
+        return ticker_time_stamp - self._begin_time_stamp < self._aggregation_time_stamp_range
 
     def add_value_with_timestamp(self, value: float, time_stamp: int):
+        if self._begin_time_stamp == 0:
+            self._begin_time_stamp = time_stamp
+            self._current_position += 1
+            self.__set_current_time_stamp_for_new_tick__(time_stamp)
+
         if self._current_open == 0:
             self._current_open = value
         if self._current_high < value:
@@ -192,35 +204,20 @@ class TickerWaveTickConverter:
         if self._begin_time_stamp == 0:
             self._begin_time_stamp = time_stamp
 
-        self._current_time_stamp = time_stamp
-        self._current_ticker_counter += 1
-
         self._current_wave_tick = self.__get_current_tick_values_as_wave_tick__()
 
-        if self._current_ticker_counter >= self._ticker_per_aggregation:
-            self.__reset_variables__()
-
-    def __reset_variables__(self):
-        self._current_open = 0
-        self._current_close = 0
-        self._current_low = math.inf
-        self._current_high = -math.inf
-        self._current_time_stamp = 0
-        self._current_ticker_counter = 0
+    def __set_current_time_stamp_for_new_tick__(self, time_stamp: int):
+        while self._current_time_stamp < time_stamp:
+            if self._period == PRD.DAILY:  # the values are from the current day
+                if self._current_time_stamp + self._aggregation_time_stamp_range > time_stamp:
+                    break
+            self._current_time_stamp += self._aggregation_time_stamp_range
 
     def __get_current_tick_values_as_wave_tick__(self):
-        if self._current_ticker_counter == 1:  # only for the fist ticker for that wave tick we need a new position
-            self._pos_last += 1
         v_array = np.array([self._current_open, self._current_close, self._current_low, self._current_high, 0,
-                            self._current_time_stamp, self._pos_last]).reshape([1, 7])
+                            self._current_time_stamp, self._current_position]).reshape([1, 7])
         df = pd.DataFrame(v_array, columns=[CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.VOL, CN.TIMESTAMP, CN.POSITION])
         return WaveTick(df.iloc[0])
-
-    def __get_number_of_ticker_per_aggregation__(self):
-        if self._period == PRD.DAILY:
-            return self._aggregation
-        elif self._period == PRD.INTRADAY:
-            return int(self._aggregation * 60) / self._refresh_rate_seconds
 
 
 class WaveTickList:
@@ -262,7 +259,7 @@ class WaveTickList:
         for tick in self.tick_list:
             date = MyDate.get_date_from_epoch_seconds(tick.time_stamp)
             time = MyDate.get_time_from_epoch_seconds(tick.time_stamp)
-            date_time = MyDate.get_date_time_from_epoch_seconds(tick.time_stamp)
+            date_time = str(MyDate.get_date_time_from_epoch_seconds(tick.time_stamp))
             row = [tick.position, tick.open, tick.high, tick.low, tick.close, tick.volume,
                    date, time, date_time, tick.time_stamp]
             tick_table.append(row)

@@ -15,6 +15,7 @@ import flask
 from pattern_system_configuration import SystemConfiguration
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
 from sertl_analytics.constants.pattern_constants import CN, PRD, FD
+from sertl_analytics.mydates import MyDate
 from pattern_detector import PatternDetector
 from pattern_dash.my_dash_interface_for_pattern import DashInterface
 from pattern_colors import PatternColorHandler
@@ -36,13 +37,15 @@ class MyDashBaseTab:
     def __get_dcc_graph_element__(self, detector, graph_api: DccGraphApi):
         pattern_df = graph_api.df
         pattern_list = detector.pattern_list if detector else [graph_api.pattern_trade.pattern]
-        candlestick = self.__get_candlesticks_trace__(pattern_df, graph_api.ticker_id)
-        bollinger_traces = self.__get_bollinger_band_trace__(pattern_df, graph_api.ticker_id)
+        period = detector.sys_config.config.api_period if detector else graph_api.period
+        candlestick = self.__get_candlesticks_trace__(pattern_df, graph_api.ticker_id, period)
+        bollinger_traces = self.__get_bollinger_band_trace__(pattern_df, graph_api.ticker_id, period)
         shapes = self.__get_pattern_shape_list__(pattern_list)
         shapes += self.__get_pattern_regression_shape_list__(pattern_list)
         if detector:
             shapes += self.__get_fibonacci_shape_list__(detector)
         if graph_api.pattern_trade:
+            # graph_api.pattern_trade.ticker_actual.print_ticker('__get_pattern_trade_shape_list__...: last ticker')
             shapes += self.__get_pattern_trade_shape_list__(graph_api.pattern_trade)
         graph_api.figure_layout_shapes = [my_shapes.shape_parameters for my_shapes in shapes]
         graph_api.figure_layout_annotations = [my_shapes.annotation_parameters for my_shapes in shapes]
@@ -88,12 +91,15 @@ class MyDashBaseTab:
             # print('Fibonacci: {}'.format(return_list[-1].shape_parameters))
         return return_list
 
-    def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str):
-        if self.sys_config.config.api_period == PRD.INTRADAY:
+    def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str, period: str):
+        if period == PRD.INTRADAY:
             x_value = df[CN.DATETIME]
-            print('{}: __get_candlesticks_trace__: x_value={}'.format(ticker, x_value))
+            # print('{}: __get_candlesticks_trace__: x_value={}'.format(ticker, x_value))
         else:
             x_value = df[CN.DATE]
+        # columns = [CN.TIMESTAMP, CN.DATE, CN.TIME, CN.HIGH, CN.LOW, CN.DATETIME]
+        # print('__get_candlesticks_trace__: period={}, ticker={}, head={}, x_value={}'.format(
+        #     period, ticker, df[columns].head(-5), x_value))
         candlestick = {
             'x': x_value,
             'open': df[CN.OPEN],
@@ -109,12 +115,12 @@ class MyDashBaseTab:
         }
         return candlestick
 
-    def __get_bollinger_band_trace__(self, df: pd.DataFrame, ticker: str):
+    def __get_bollinger_band_trace__(self, df: pd.DataFrame, ticker: str, period: str):
         color_scale = cl.scales['9']['qual']['Paired']
         bb_bands = self.__get_bollinger_band_values__(df[CN.CLOSE])
 
         bollinger_traces = [{
-            'x': df[CN.TIME] if self.sys_config.config.api_period == PRD.INTRADAY else df[CN.DATE],
+            'x': df[CN.TIME] if period == PRD.INTRADAY else df[CN.DATE],
             'y': y,
             'type': 'scatter', 'mode': 'lines',
             'line': {'width': 1, 'color': color_scale[(i * 2) % len(color_scale)]},

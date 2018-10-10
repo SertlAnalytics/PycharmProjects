@@ -107,6 +107,7 @@ class DropDownHandler:
 
 class DccGraphApi:
     def __init__(self, graph_id: str, title: str):
+        self.period = ''
         self.id = graph_id
         self.ticker_id = ''
         self.df = None
@@ -305,7 +306,7 @@ class MyDCC:
         else:
             y_axis_dict = {'title': graph_api.figure_layout_yaxis_title}
 
-        print('y_axis_dict={}'.format(y_axis_dict))
+        # print('y_axis_dict={}'.format(y_axis_dict))
 
         return dcc.Graph(
             id=graph_api.id,

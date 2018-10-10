@@ -149,7 +149,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
         if self.sys_config.config.get_data_from_db:
             li.append(self.__get_html_div_with_date_picker_range__())
-        li.append(MyHTML.div_with_html_button_submit('my_submit_button', 'Refresh'))
+        li.append(MyHTML.div_with_html_button_submit('my_refresh_button', 'Refresh'))
         li.append(MyHTML.div('my_graph_first_div'))
         li.append(MyHTML.div('my_graph_second_div'))
         li.append(MyHTML.div('my_graphs_before_breakout_div'))
@@ -171,7 +171,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         @self.app.callback(
             Output('my_graph_main_div', 'children'),
             [Input('my_interval', 'n_intervals'),
-             Input('my_submit_button', 'n_clicks')],
+             Input('my_refresh_button', 'n_clicks')],
             [State('my_ticker_selection', 'value'),
              State('my_date_picker', 'start_date'),
              State('my_date_picker', 'end_date')])
@@ -234,7 +234,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         @self.app.callback(
             Output('my_graph_first_div', 'children'),
             [Input('my_interval', 'n_intervals'),
-             Input('my_submit_button', 'n_clicks')],
+             Input('my_refresh_button', 'n_clicks')],
             [State('my_ticker_selection', 'value')])
         def handle_callback_for_graph_first(n_intervals, n_clicks, ticker):
             graph, graph_key = self.__get_graph_first__(ticker)
@@ -283,11 +283,11 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
     def __init_selection_callback__(self):
         @self.app.callback(
-            Output('my_submit_button', 'hidden'),
+            Output('my_refresh_button', 'hidden'),
             [Input('my_ticker_selection', 'value'),
              Input('my_interval_selection', 'value'),
              Input('my_interval', 'n_intervals'),
-             Input('my_submit_button', 'n_clicks')],
+             Input('my_refresh_button', 'n_clicks')],
             [State('my_interval_timer', 'n_intervals')])
         def handle_selection_callback(ticker_selected, interval_selected: int, n_intervals, n_clicks, n_intervals_sec):
             if self._state_handler.change_for_my_interval_selection(interval_selected):

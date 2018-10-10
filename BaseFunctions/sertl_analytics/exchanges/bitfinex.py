@@ -559,6 +559,7 @@ class MyBitfinex(ExInterface):
 
     @staticmethod
     def __convert_to_floats__(data_dict: dict):
+        # print('__convert_to_floats__: {}'.format(data_dict))
         return {key: float(value) for key, value in data_dict.items()}
 
     def __get_requests_result__(self, url: str):

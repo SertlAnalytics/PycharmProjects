@@ -5,13 +5,17 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC
+from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC, DC, PRD
 from pattern import Pattern
 from sertl_analytics.mydates import MyDate
+from pattern_configuration import PatternConfiguration
 
 
 class TradeTestApi:
     def __init__(self):
+        self.get_data_from_db = True
+        self.period = PRD.DAILY
+        self.period_aggregation = 1
         self.trade_id = ''
         self.pattern_type = ''
         self.pattern = None
@@ -45,6 +49,21 @@ class TradeTestCase:
 
 class TradeTestCaseFactory:
     @staticmethod
+    def get_trade_test_api_by_selected_trade_row(row, test_process: str) -> TradeTestApi:
+        api = TradeTestApi()
+        api.trade_id = row[DC.ID]
+        api.test_process = test_process  # e.g. TP.TRADE_REPLAY
+        api.pattern_type = row[DC.PATTERN_TYPE]
+        api.buy_trigger = row[DC.BUY_TRIGGER]
+        api.trade_strategy = row[DC.TRADE_STRATEGY]
+        api.symbol = row[DC.TICKER_ID]
+        api.dt_start = str(row[DC.PATTERN_RANGE_BEGIN_DT])
+        api.dt_end = MyDate.adjust_by_days(row[DC.PATTERN_RANGE_END_DT], -1)  # we need this correction for a smooth cont.
+        api.and_clause = PatternConfiguration.get_and_clause(api.dt_start, api.dt_end)
+        api.and_clause_unlimited = PatternConfiguration.get_and_clause(api.dt_start)
+        return api
+
+    @staticmethod
     def get_test_case(api: TradeTestApi) -> TradeTestCase:
         tc = TradeTestCase()
         tc.pattern_type = api.pattern_type
@@ -71,7 +90,7 @@ class TradeTestCaseFactory:
         if pattern.part_entry.breakout:
             to_date = pattern.part_entry.breakout.tick_previous.date
         else:
-            to_date = pattern.part_entry.date_last
+            to_date = pattern.part_entry.pattern_range.tick_last.date
         tc.and_clause = "Date BETWEEN '{}' AND '{}'".format(from_date, to_date)
         tc.value_pair_list = pattern.get_back_testing_value_pairs(tick_list_for_replay)
 

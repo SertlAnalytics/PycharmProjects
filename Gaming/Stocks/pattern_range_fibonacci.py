@@ -16,13 +16,21 @@ import numpy as np
 
 
 class FibonacciFormation:
-    def __init__(self, pattern_type: str, tick_start: WaveTick, tick_end: WaveTick, fibonacci_tree: FibonacciWaveTree):
+    def __init__(self, pattern_type: str, wave_list: list):
+        self.wave_list = wave_list
         self.pattern_type = pattern_type
-        self.tick_start = tick_start
-        self.tick_end = tick_end
-        self.fibonacci_tree = fibonacci_tree
         self.valid_wave_list = self.__get_valid_wave_list__()
         self.valid_wave = self.valid_wave_list[0] if self.valid_wave_list else None
+
+    @property
+    def tick_start(self) -> WaveTick:
+        if self.valid_wave:
+            return self.valid_wave.w_1.tick_start
+
+    @property
+    def tick_end(self) -> WaveTick:
+        if self.valid_wave:
+            return self.valid_wave.w_5.tick_end
 
     @property
     def are_valid_waves_available(self):
@@ -56,7 +64,7 @@ class FibonacciFormation:
 
     def __get_valid_wave_list__(self):
         return_list = []  # we need waves where the neckline does not intersect the fibonacci wave
-        for fib_wave in self.fibonacci_tree.fibonacci_wave_list:
+        for fib_wave in self.wave_list:
             check_dict = {'neckline_without_intersection': fib_wave.is_neckline_criteria_fulfilled(),
                           'triangle_formation': fib_wave.is_closing_triangle_criteria_fulfilled()}
             if False not in check_dict.values():
@@ -91,17 +99,27 @@ class PatternRangeFibonacciDesc(PatternRangeMax):
 
 
 class PatternRangeDetectorFibonacciBase:
-    def __init__(self, sys_config: SystemConfiguration, tick_list: list):
+    def __init__(self, sys_config: SystemConfiguration, wave_list: list):
         self.sys_config = sys_config
         self.for_back_testing = self.sys_config.runtime.actual_trade_process == TP.BACK_TESTING
-        self.pdh = self.sys_config.pdh
-        self.df = self.pdh.pattern_data_fibonacci.df
-        self.df_length = len(self.df)
-        self.tick_list = tick_list
-        self.global_max_tuple_list = [(i, tick) for i, tick in enumerate(self.tick_list) if tick.is_global_max]
-        self.global_min_tuple_list = [(i, tick) for i, tick in enumerate(self.tick_list) if tick.is_global_min]
+        self.wave_list = wave_list
+        self.start_end_position_dict = self.__get_start_end_position_dict__()
 
-    def get_pattern_range(self, fib_form: FibonacciFormation):
+    def __get_pattern_range_list__(self, pattern_type: str):
+        pattern_range_list = []
+        for start_end_position in self.start_end_position_dict.values():
+            pos_start = start_end_position[0]
+            pos_end = start_end_position[1]
+            fibonacci_wave_list = self.__get_fibonacci_wave_list_for_formation__(pos_start, pos_end)
+            if len(fibonacci_wave_list) > 0:
+                fib_form = FibonacciFormation(pattern_type, fibonacci_wave_list)
+                if fib_form.are_valid_waves_available:
+                    pattern_range = self.__get_pattern_range__(fib_form)
+                    if pattern_range is not None:
+                        pattern_range_list.append(pattern_range)
+        return pattern_range_list
+
+    def __get_pattern_range__(self, fib_form: FibonacciFormation):
         if fib_form.pattern_type == FT.FIBONACCI_ASC:
             pattern_range = PatternRangeFibonacciAsc(self.sys_config, fib_form)
             f_param = fib_form.f_lower
@@ -113,51 +131,20 @@ class PatternRangeDetectorFibonacciBase:
         pattern_range.finalize_pattern_range()
         return pattern_range
 
-    def get_tick_range(self, off_set: int):
-        return range(off_set + 1, len(self.tick_list))
+    def __get_fibonacci_wave_list_for_formation__(self, pos_start: int, pos_end: int) -> list:
+        return [wave for wave in self.wave_list if wave.position_start == pos_start and wave.position_end == pos_end]
 
-    def __get_fibonacci_wave_tree_for_formation__(self, tick_start: WaveTick, tick_end: WaveTick, direction: str) -> \
-            FibonacciWaveTree:
-        df_part = self.df.loc[np.logical_and(self.df[CN.POSITION] >= tick_start.position,
-                                             self.df[CN.POSITION] <= tick_end.position)]
-        min_max_list = [tick for tick in self.tick_list if tick_start.position <= tick.position <= tick_end.position]
-        wave_tree = FibonacciWaveTree(df_part, min_max_list, tick_end.position - tick_start.position, 3)
-        wave_tree.parse_tree(direction)
-        return wave_tree
-
-    def _get_min_tick_list_for_end_point_(self, index_start: int, tick_start: WaveTick):
-        min_value = math.inf
-        list_return = []
-        for k in self.get_tick_range(index_start):
-            tick_k = self.tick_list[k]
-            if not self.for_back_testing and tick_k.position - tick_start.position > 150:
-                break
-            if tick_k.is_global_min and tick_k.low < min_value:
-                list_return.append(tick_k)
-                min_value = tick_k.low
-            elif tick_k.is_max and tick_k.high > tick_start.high:
-                break
-        return list_return
-
-    def _get_max_tick_list_for_end_point_(self, index_start: int, tick_start: WaveTick):
-        max_value = -math.inf
-        list_return = []
-        for k in self.get_tick_range(index_start):
-            tick_k = self.tick_list[k]
-            if not self.for_back_testing and tick_k.position - tick_start.position > 150:
-                break
-            if tick_k.is_global_max and tick_k.high > max_value:
-                list_return.append(tick_k)
-                max_value = tick_k.high
-            elif tick_k.is_min and tick_k.low < tick_start.low:
-                break
-        return list_return
+    def __get_start_end_position_dict__(self):
+        return {
+            '{}_{}'.format(wave.position_start, wave.position_end): [wave.position_start, wave.position_end]
+            for wave in self.wave_list
+        }
 
 
 class PatternRangeDetectorFibonacciDesc(PatternRangeDetectorMin, PatternRangeDetectorFibonacciBase):
-    def __init__(self, sys_config: SystemConfiguration):
+    def __init__(self, sys_config: SystemConfiguration, wave_list: list):
         tick_list = sys_config.pdh.pattern_data_fibonacci.wave_tick_list_min_max.tick_list
-        PatternRangeDetectorFibonacciBase.__init__(self, sys_config, tick_list)
+        PatternRangeDetectorFibonacciBase.__init__(self, sys_config, wave_list)
         PatternRangeDetectorMin.__init__(self, sys_config, tick_list)
 
     @property
@@ -165,23 +152,14 @@ class PatternRangeDetectorFibonacciDesc(PatternRangeDetectorMin, PatternRangeDet
         return FT.FIBONACCI_DESC
 
     def __parse_tick_list__(self):
-        for entries in self.global_max_tuple_list:
-            index_start, tick_start = entries[0], entries[1]
-            tick_list_end = self._get_min_tick_list_for_end_point_(index_start, tick_start)
-            for tick_end in tick_list_end:
-                fibonacci_wave_tree = self.__get_fibonacci_wave_tree_for_formation__(tick_start, tick_end, FD.DESC)
-                if len(fibonacci_wave_tree.fibonacci_wave_list) > 0:
-                    fib_form = FibonacciFormation(self.pattern_type, tick_start, tick_end, fibonacci_wave_tree)
-                    if fib_form.are_valid_waves_available:
-                        pattern_range = self.get_pattern_range(fib_form)
-                        if pattern_range is not None:
-                            self.__add_pattern_range_to_list_after_check__(pattern_range)
+        for pattern_range in self.__get_pattern_range_list__(self.pattern_type):
+            self.__add_pattern_range_to_list_after_check__(pattern_range)
 
 
 class PatternRangeDetectorFibonacciAsc(PatternRangeDetectorMax, PatternRangeDetectorFibonacciBase):
-    def __init__(self, sys_config: SystemConfiguration):
+    def __init__(self, sys_config: SystemConfiguration, wave_list: list):
         tick_list = sys_config.pdh.pattern_data_fibonacci.wave_tick_list_min_max.tick_list
-        PatternRangeDetectorFibonacciBase.__init__(self, sys_config, tick_list)
+        PatternRangeDetectorFibonacciBase.__init__(self, sys_config, wave_list)
         PatternRangeDetectorMax.__init__(self, sys_config, tick_list)
 
     @property
@@ -189,14 +167,5 @@ class PatternRangeDetectorFibonacciAsc(PatternRangeDetectorMax, PatternRangeDete
         return FT.FIBONACCI_ASC
 
     def __parse_tick_list__(self):
-        for entries in self.global_min_tuple_list:
-            index_start, tick_start = entries[0], entries[1]
-            tick_list_end = self._get_max_tick_list_for_end_point_(index_start, tick_start)
-            for tick_end in tick_list_end:
-                fibonacci_wave_tree = self.__get_fibonacci_wave_tree_for_formation__(tick_start, tick_end, FD.ASC)
-                if len(fibonacci_wave_tree.fibonacci_wave_list) > 0:
-                    fib_form = FibonacciFormation(self.pattern_type, tick_start, tick_end, fibonacci_wave_tree)
-                    if fib_form.are_valid_waves_available:
-                        pattern_range = self.get_pattern_range(fib_form)
-                        if pattern_range is not None:
-                            self.__add_pattern_range_to_list_after_check__(pattern_range)
+        for pattern_range in self.__get_pattern_range_list__(self.pattern_type):
+            self.__add_pattern_range_to_list_after_check__(pattern_range)

@@ -73,7 +73,7 @@ class Ticker:
         self.low = round(low, 4)
         self.high = round(high, 4)
         self.vol = round(vol, 2)
-        self.time_stamp = round(ts)
+        self.time_stamp = round(ts)        
 
     @property
     def date_time_str(self) -> str:
@@ -82,8 +82,9 @@ class Ticker:
     def print_ticker(self, prefix = ''):
         if prefix != '':
             print('\n{}:'.format(prefix))
-        print('{}: Bid: {}, Ask: {}, Last: {}, Low: {}, High: {}, Volume: {}, Time: {}'.format(
-            self.ticker_id, self.bid, self.ask, self.last_price, self.low, self.high, self.vol, self.time_stamp
+        print('{}: Bid: {}, Ask: {}, Last: {}, Low: {}, High: {}, Volume: {}, Time: {} ({})'.format(
+            self.ticker_id, self.bid, self.ask, self.last_price, self.low, self.high, self.vol, 
+            self.date_time_str, self.time_stamp
         ))
 
 

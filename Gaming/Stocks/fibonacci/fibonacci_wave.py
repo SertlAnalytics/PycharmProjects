@@ -46,9 +46,12 @@ class FibonacciWave:
     @property
     def f_upper(self) -> np.poly1d:
         if self.wave_type == FD.ASC:
-            tick_01, tick_02 = self.w_3.tick_end, self.w_5.tick_end
+            tick_01, tick_02 = self.w_1.tick_end, self.w_5.tick_end
+            f_upper_temp = MyPoly1d.get_poly1d(tick_01.f_var, tick_01.high, tick_02.f_var, tick_02.high)
+            if f_upper_temp(self.w_1.tick_start.f_var) < self.w_1.tick_start.high:
+                tick_01 = self.w_1.tick_start
         else:
-            if self.wave_structure == FWST.S_M_L:
+            if self.wave_structure in [FWST.S_M_L, FWST.L_M_S]:
                 tick_01, tick_02 = self.w_4.tick_end, self.w_5.tick_end
             else:
                 tick_01, tick_02 = self.w_3.tick_start, self.w_5.tick_start
@@ -57,12 +60,15 @@ class FibonacciWave:
     @property
     def f_lower(self) -> np.poly1d:
         if self.wave_type == FD.ASC:
-            if self.wave_structure == FWST.S_M_L:
+            if self.wave_structure in [FWST.S_M_L, FWST.L_M_S]:
                 tick_01, tick_02 = self.w_4.tick_end, self.w_5.tick_end
             else:
                 tick_01, tick_02 = self.w_3.tick_start, self.w_5.tick_start
         else:
             tick_01, tick_02 = self.w_3.tick_end, self.w_5.tick_end
+            f_lower_temp = MyPoly1d.get_poly1d(tick_01.f_var, tick_01.low, tick_02.f_var, tick_02.low)
+            if f_lower_temp(self.w_1.tick_start.f_var) > self.w_1.tick_start.low:
+                tick_01 = self.w_1.tick_start
         return MyPoly1d.get_poly1d(tick_01.f_var, tick_01.low, tick_02.f_var, tick_02.low)
 
     def is_closing_triangle_criteria_fulfilled(self):
@@ -77,6 +83,10 @@ class FibonacciWave:
     @property
     def w_1(self) -> FibonacciWaveComponent:
         return self.get_component_by_number(1)
+
+    @property
+    def w_2(self) -> FibonacciWaveComponent:
+        return self.get_component_by_number(2)
 
     @property
     def w_3(self) -> FibonacciWaveComponent:

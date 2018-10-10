@@ -10,8 +10,9 @@ from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from pattern_test.trade_test import TradeTest, TradeTestApi
 
 
-back_testing = TradeTest(TP.BACK_TESTING)
 api = TradeTestApi()
+api.test_process = TP.BACK_TESTING
+back_testing = TradeTest(api)
 
 back_testing.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
 back_testing.sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN]
@@ -26,7 +27,7 @@ api.trade_strategy = TSTR.SMA
 # ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.DOW_JONES)
 # ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
 ticker_dic = {'ETHUSD': 'a'}
-api.and_clause = "Date BETWEEN '2018-06-07' AND '2018-07-04'"
+api.and_clause = "Date BETWEEN '2018-06-07' AND '2018-09-04'"
 
 # 2018-02-09_00:00_2018-04-03
 for symbol in ticker_dic:

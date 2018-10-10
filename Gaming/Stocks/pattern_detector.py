@@ -259,9 +259,11 @@ class PatternDetector:
         if len(pattern_type_set.intersection(set(FT.get_head_shoulder_bottom_types()))) > 0:
             self.range_detector_h_s_b = PatternRangeDetectorHeadShoulderBottom(self.sys_config)
         if FT.FIBONACCI_ASC in self.pattern_type_list:
-            self.range_detector_fib_asc = PatternRangeDetectorFibonacciAsc(self.sys_config)
+            wave_list = [wave for wave in self.fib_wave_tree.fibonacci_wave_list if wave.wave_type == FD.ASC]
+            self.range_detector_fib_asc = PatternRangeDetectorFibonacciAsc(self.sys_config, wave_list)
         if FT.FIBONACCI_DESC in self.pattern_type_list:
-            self.range_detector_fib_desc = PatternRangeDetectorFibonacciDesc(self.sys_config)
+            wave_list = [wave for wave in self.fib_wave_tree.fibonacci_wave_list if wave.wave_type == FD.DESC]
+            self.range_detector_fib_desc = PatternRangeDetectorFibonacciDesc(self.sys_config, wave_list)
 
     def __get_combined_possible_pattern_ranges__(self) -> list:
         list_max = [] if self.range_detector_max is None else self.range_detector_max.get_pattern_range_list()

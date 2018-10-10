@@ -249,9 +249,25 @@ class FibonacciPatternFunctionContainer(PatternFunctionContainer):
 
 class FibonacciAscPatternFunctionContainer(FibonacciPatternFunctionContainer):
     def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
-        tick_list = [tick_first, self.tick_for_helper, tick_last, tick_last, self.tick_for_helper, tick_first]
-        function_list = [self.f_lower, self.h_lower, self.h_lower, self.h_upper, self.h_upper, self.f_upper]
+        tick_lower_constant, f_lower_constant = self.__get_lower_constant_parameters__(tick_first)
+        if tick_lower_constant:
+            tick_list = [tick_first, tick_lower_constant, self.tick_for_helper, tick_last, tick_last,
+                         self.tick_for_helper, tick_first]
+            function_list = [f_lower_constant, self.f_lower, self.h_lower, self.h_lower, self.h_upper,
+                             self.h_upper, self.f_upper]
+        else:
+            tick_list = [tick_first, self.tick_for_helper, tick_last, tick_last, self.tick_for_helper, tick_first]
+            function_list = [self.f_lower, self.h_lower, self.h_lower, self.h_upper, self.h_upper, self.f_upper]
         return tick_list, function_list
+
+    def __get_lower_constant_parameters__(self, tick_first: WaveTick):
+        if tick_first.low < self.f_lower(tick_first.f_var):  # we don't need to correct anything
+            return None, None
+        f_lower_constant = np.poly1d([0, tick_first.low])
+        for wave_tick in self.sys_config.pdh.pattern_data.tick_list:
+            if f_lower_constant(wave_tick.f_var) <= self.f_lower(wave_tick.f_var):
+                return wave_tick, f_lower_constant
+        return None, None
 
     def get_upper_value(self, f_var: int):
         if f_var < self.tick_for_helper.f_var:
@@ -270,9 +286,25 @@ class FibonacciAscPatternFunctionContainer(FibonacciPatternFunctionContainer):
 
 class FibonacciDescPatternFunctionContainer(FibonacciPatternFunctionContainer):
     def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
-        tick_list = [tick_first, self.tick_for_helper, tick_last, tick_last, self.tick_for_helper, tick_first]
-        function_list = [self.f_upper, self.h_upper, self.h_upper, self.h_lower, self.h_lower, self.f_lower]
+        tick_upper_constant, f_upper_constant = self.__get_upper_constant_parameters__(tick_first)
+        if tick_upper_constant:
+            tick_list = [tick_first, tick_upper_constant, self.tick_for_helper, tick_last, tick_last,
+                         self.tick_for_helper, tick_first]
+            function_list = [f_upper_constant, self.f_upper, self.h_upper, self.h_upper, self.h_lower,
+                             self.h_lower, self.f_lower]
+        else:
+            tick_list = [tick_first, self.tick_for_helper, tick_last, tick_last, self.tick_for_helper, tick_first]
+            function_list = [self.f_upper, self.h_upper, self.h_upper, self.h_lower, self.h_lower, self.f_lower]
         return tick_list, function_list
+
+    def __get_upper_constant_parameters__(self, tick_first: WaveTick):
+        if tick_first.high > self.f_upper(tick_first.f_var):  # we don't need to correct anything
+            return None, None
+        f_upper_constant = np.poly1d([0, tick_first.high])
+        for wave_tick in self.sys_config.pdh.pattern_data.tick_list:
+            if f_upper_constant(wave_tick.f_var) >= self.f_upper(wave_tick.f_var):
+                return wave_tick, f_upper_constant
+        return None, None
 
     def get_upper_value(self, f_var: int):
         return round(max(self._f_upper(f_var), self._h_upper(f_var)), 4)

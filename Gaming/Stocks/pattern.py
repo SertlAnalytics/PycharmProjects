@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, FCC, FD, DC, CN, SVC, EXTREMA, BT, PT, PRD
+from sertl_analytics.constants.pattern_constants import FT, FCC, FD, DC, CN, SVC, EXTREMA, BT, PT, PRD, TSTR
 import numpy as np
 import math
 from pattern_system_configuration import SystemConfiguration, debugger
@@ -164,7 +164,7 @@ class Pattern:
         self.__calculate_predictions_after_breakout__()
 
     def is_ready_for_back_testing(self):
-        pos_start, pos_last = self.__get_first_last_position_for_back_testing_data__()
+        pos_last = self.part_entry.tick_last.position + self.get_maximal_trade_position_size()
         return self.df_length > pos_last and FT.is_pattern_type_long_trade_able(self.pattern_type)
 
     def get_back_testing_value_pairs(self, tick_list_for_replay=None):
@@ -172,22 +172,25 @@ class Pattern:
             tick_list = self.sys_config.pdh.pattern_data.tick_list
         else:
             tick_list = tick_list_for_replay
-        pos_start, pos_last = self.__get_first_last_position_for_back_testing_data__()
+        off_set_time_stamp = self.pattern_range.tick_last.time_stamp
+        counter = 0
+        max_ticks = self.get_maximal_trade_position_size()
         return_list = []
+
         for tick in tick_list:
-            if pos_start < tick.position < pos_last:
-                return_list.append([tick.time_stamp, tick.open])
-                return_list.append([tick.time_stamp, tick.high])
-                return_list.append([tick.time_stamp, tick.low])
-                return_list.append([tick.time_stamp, tick.close])
-            if tick.position >= pos_last:
+            if off_set_time_stamp < tick.time_stamp:
+                counter += 1
+                ts_list = self.__get_time_stamp_list_for_back_testing_value_pairs__(int(tick.time_stamp), 4)
+                return_list.append([ts_list[0], tick.open])
+                return_list.append([ts_list[1], tick.high])
+                return_list.append([ts_list[2], tick.low])
+                return_list.append([ts_list[3], tick.close])
+            if counter >= max_ticks:
                 break
         return return_list
 
-    def __get_first_last_position_for_back_testing_data__(self):
-        pos_start = self.pattern_range.position_last
-        pos_last = pos_start + self.get_maximal_trade_position_size()
-        return pos_start, pos_last
+    def __get_time_stamp_list_for_back_testing_value_pairs__(self, time_stamp: int, numbers: int):
+        return PRD.get_time_stamp_list_for_time_stamp(time_stamp, numbers, self.sys_config.config.api_period)
 
     def __calculate_predictions_after_breakout__(self):
         self.__calculate_y_predict__(PT.AFTER_BREAKOUT)
@@ -217,17 +220,20 @@ class Pattern:
     def __calculate_y_predict_touch_points__(self):
         x_data = self.get_x_data_for_prediction_touch_points()
         if x_data is not None:
-            self.y_predict_touch_points = self.sys_config.predictor_touch_points.predict_for_label_columns(x_data)
+            self.y_predict_touch_points = \
+                self.sys_config.master_predictor_touch_points.predict_for_label_columns(self.pattern_type, x_data)
 
     def __calculate_y_predict_before_breakout__(self):
         x_data = self.get_x_data_for_prediction_before_breakout()
         if x_data is not None:
-            self.y_predict_before_breakout = self.sys_config.predictor_before_breakout.predict_for_label_columns(x_data)
+            self.y_predict_before_breakout = \
+                self.sys_config.master_predictor_before_breakout.predict_for_label_columns(self.pattern_type, x_data)
 
     def __calculate_y_predict_after_breakout__(self):
         x_data = self.get_x_data_for_prediction_after_breakout()
         if x_data is not None:
-            self.y_predict_after_breakout = self.sys_config.predictor_after_breakout.predict_for_label_columns(x_data)
+            self.y_predict_after_breakout = \
+                self.sys_config.master_predictor_after_breakout.predict_for_label_columns(self.pattern_type, x_data)
 
     def __print__prediction__(self, prediction_dict: dict, prediction_type: str):
         pos_breakout = '-' if self.breakout is None else self.breakout.tick_breakout.position
@@ -287,7 +293,7 @@ class Pattern:
         check_dict = {
             'Pre_constraints': self.__are_pre_constraints_fulfilled__(),
             'Established': self.__is_formation_established__(),
-            'Expected_win': self.__is_expected_win_sufficient__()
+            # 'Expected_win': self.__is_expected_win_sufficient__()
         }
         return False if False in [check_dict[key] for key in check_dict] else True
 
@@ -295,20 +301,25 @@ class Pattern:
         check_dict = {
             'Long_trade_able': FT.is_pattern_type_long_trade_able(self.pattern_type),
             'Breakout_direction': self.expected_breakout_direction in [FD.ASC, FD.DESC],
-            'Expected_win_sufficient': self.__is_expected_win_sufficient__()
+            # 'Expected_win_sufficient': self.__is_expected_win_sufficient__()
         }
         if not check_dict['Long_trade_able']:
             print('\n{}: Pattern is not long trade-able.'.format(self.id))
         elif not check_dict['Breakout_direction']:
             print('\n{}: No trade possible: expected_breakout_direction: {}'.format(
                 self.id, self.expected_breakout_direction))
-        elif not check_dict['Expected_win_sufficient']:
-            print('\n{}: No trade possible: expected win {:.2f} not sufficient ({:.2f} required)'.format(
-                self.id, self.get_expected_win(), self.sys_config.runtime.actual_expected_win_pct))
+        # elif not check_dict['Expected_win_sufficient']:
+        #     print('\n{}: No trade possible: expected win {:.2f} not sufficient ({:.2f} required)'.format(
+        #         self.id, self.get_expected_win(), self.sys_config.runtime.actual_expected_win_pct))
         return False if False in [check_dict[key] for key in check_dict] else True
 
     def are_conditions_for_buy_trigger_fulfilled(self, buy_trigger: str) -> bool:
         if buy_trigger == BT.TOUCH_POINT and not self.__are_conditions_for_a_touch_point_buy_fulfilled__():
+            return False
+        return True
+
+    def are_conditions_for_trade_strategy_fulfilled(self, trade_strategy: str) -> bool:
+        if trade_strategy == TSTR.LIMIT and not self.__is_expected_win_sufficient__():
             return False
         return True
 

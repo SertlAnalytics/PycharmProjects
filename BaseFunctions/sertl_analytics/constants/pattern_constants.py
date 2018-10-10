@@ -224,6 +224,25 @@ class PRD:  # Periods
     def get_id(period: str):
         return {PRD.INTRADAY: 0, PRD.DAILY: 1, PRD.WEEKLY: 2}.get(period)
 
+    @staticmethod
+    def get_seconds_for_period(period: str, aggregation=1):
+        if period == PRD.DAILY:
+            return 86400
+        elif period == PRD.INTRADAY:
+            return 60 * aggregation
+
+    @staticmethod
+    def get_time_stamp_list_for_time_stamp(time_stamp: int, numbers: int, period: str, aggregation=1):
+        period_seconds_part = int(PRD.get_seconds_for_period(period, aggregation)/numbers)
+        if period == PRD.DAILY:
+            return [(time_stamp + k * period_seconds_part) for k in range(0, numbers)]
+        else:
+            return [(time_stamp - k * period_seconds_part) for k in range(0, numbers)]
+
+    @staticmethod
+    def hallo():
+        return 'Hallo'
+
 
 class OPS:  # Outputsize
     COMPACT = 'compact'
@@ -352,6 +371,11 @@ class TP:  # TradeProcess
     @staticmethod
     def get_id(key: str):
         return {TP.ONLINE: 10, TP.TEST_SINGLE: 20, TP.BACK_TESTING: 20, TP.NONE: 90}.get(key)
+
+    @staticmethod
+    def get_as_options():
+        li = [TP.TRADE_REPLAY, TP.ONLINE]
+        return [{'label': trade_process.replace('_', ' '), 'value': trade_process} for trade_process in li]
 
 
 class BT:  # Buy Trigger

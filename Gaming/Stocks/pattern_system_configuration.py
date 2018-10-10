@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import Indices
+from sertl_analytics.constants.pattern_constants import Indices, FT
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from pattern_data_container import PatternDataHandler
@@ -16,6 +16,67 @@ from copy import deepcopy
 # from bitfinex import Bitfinex
 from pattern_predictor import PatternPredictorBeforeBreakout, PatternPredictorAfterBreakout, \
     PatternPredictorTouchPoints, PatternPredictorForTrades
+import numpy as np
+
+
+class PatternMasterPredictor:
+    def __init__(self, config: PatternConfiguration):
+        self.config = config
+        self.pattern_table = stock_database.PatternTable()
+        self.trade_table = stock_database.TradeTable()
+        self.db_stock = stock_database.StockDatabase()
+        self.predictor_dict = {}
+        self.__init_predictor_dict__()
+
+    def predict_for_label_columns(self, pattern_type: str, x_input: np.array):
+        predictor = self.predictor_dict[pattern_type]
+        return predictor.predict_for_label_columns(x_input)
+
+    def init_without_condition_list(self, ticker_id: str):
+        self.__init_predictor_dict__(self.__get_skip_condition_list__(ticker_id))
+
+    def __init_predictor_dict__(self, skip_condition_list=None):
+        for pattern_type in FT.get_all():
+            self.predictor_dict[pattern_type] = \
+                self.__get_predictor_for_pattern_type__(pattern_type, skip_condition_list)
+
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        pass
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        pass
+
+
+class PatternMasterPredictorTouchPoints(PatternMasterPredictor):
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorTouchPoints(self.db_stock, pattern_type, skip_condition_list)
+
+
+class PatternMasterPredictorBeforeBreakout(PatternMasterPredictor):
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorBeforeBreakout(self.db_stock, pattern_type, skip_condition_list)
+
+
+class PatternMasterPredictorAfterBreakout(PatternMasterPredictor):
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorAfterBreakout(self.db_stock, pattern_type, skip_condition_list)
+
+
+class PatternMasterPredictorForTrades(PatternMasterPredictor):
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_trade]
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorForTrades(self.db_stock, pattern_type, skip_condition_list)
 
 
 class SystemConfiguration:
@@ -31,23 +92,16 @@ class SystemConfiguration:
         self.pattern_table = stock_database.PatternTable()
         self.trade_table = stock_database.TradeTable()
         self.db_stock = stock_database.StockDatabase()
-        self.predictor_touch_points = None
-        self.predictor_before_breakout = None
-        self.predictor_after_breakout = None
-        self.predictor_for_trades = None
-        self.__init_predictors__()
+        self.master_predictor_touch_points = PatternMasterPredictorTouchPoints(self.config)
+        self.master_predictor_before_breakout = PatternMasterPredictorBeforeBreakout(self.config)
+        self.master_predictor_after_breakout = PatternMasterPredictorAfterBreakout(self.config)
+        self.master_predictor_for_trades = PatternMasterPredictorForTrades(self.config)
 
     def init_predictors_without_condition_list(self, ticker_id: str):
-        # to avoid that the predictors take just the current pattern for back-testing
-        skip_condition_list_pattern = ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
-        skip_condition_list_trade = ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_trade]
-        self.__init_predictors__(skip_condition_list_pattern, skip_condition_list_trade)
-
-    def __init_predictors__(self, skip_condition_list_pattern=None, skip_condition_list_trade=None):
-        self.predictor_touch_points = PatternPredictorTouchPoints(self.db_stock, skip_condition_list_pattern)
-        self.predictor_before_breakout = PatternPredictorBeforeBreakout(self.db_stock, skip_condition_list_pattern)
-        self.predictor_after_breakout = PatternPredictorAfterBreakout(self.db_stock, skip_condition_list_pattern)
-        self.predictor_for_trades = PatternPredictorForTrades(self.db_stock, skip_condition_list_trade)
+        self.master_predictor_touch_points.init_without_condition_list(ticker_id)
+        self.master_predictor_before_breakout.init_without_condition_list(ticker_id)
+        self.master_predictor_after_breakout.init_without_condition_list(ticker_id)
+        self.master_predictor_for_trades.init_without_condition_list(ticker_id)
 
     def get_semi_deep_copy(self):
         """
@@ -63,10 +117,12 @@ class SystemConfiguration:
         sys_config_copy.pdh = self.pdh
         sys_config_copy.pattern_table = self.pattern_table
         sys_config_copy.db_stock = self.db_stock
-        sys_config_copy.predictor_touch_points = self.predictor_touch_points
-        sys_config_copy.predictor_before_breakout = self.predictor_before_breakout
-        sys_config_copy.predictor_after_breakout = self.predictor_after_breakout
-        sys_config_copy.predictor_for_trades = self.predictor_for_trades
+        sys_config_copy.trade_table = self.trade_table
+        sys_config_copy.pattern_table = self.pattern_table
+        sys_config_copy.master_predictor_touch_points = self.master_predictor_touch_points
+        sys_config_copy.master_predictor_before_breakout = self.master_predictor_before_breakout
+        sys_config_copy.master_predictor_after_breakout = self.master_predictor_after_breakout
+        sys_config_copy.master_predictor_for_trades = self.master_predictor_for_trades
         return sys_config_copy
 
 

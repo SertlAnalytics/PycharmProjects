@@ -98,6 +98,10 @@ class TradeCandidateController:
         self._black_buy_trigger_pattern_id_readable_list = []
         self._trade_candidates_for_ticker_id_dict = {}  # with ticker_id as key and TradeCandidateCollection as value
 
+    @property
+    def actual_pattern_id_list(self):
+        return self._actual_pattern_id_list
+
     def add_new_pattern_list(self, pattern_list: list):
         self._actual_pattern_id_list = []
         self._trade_candidates_for_ticker_id_dict = {}
@@ -124,9 +128,12 @@ class TradeCandidateController:
                 continue
             if pattern.are_conditions_for_buy_trigger_fulfilled(buy_trigger):
                 for trade_strategy in trade_strategies:
-                    trade_api = PatternTradeApi(pattern, buy_trigger, trade_strategy)
-                    trade_api.bitfinex_config = self.exchange_config
-                    self.__add_trade_candidate_entry_to_ticker_id_dict__(TradeCandidate(PatternTrade(trade_api)))
+                    if pattern.are_conditions_for_trade_strategy_fulfilled(trade_strategy):
+                        trade_api = PatternTradeApi(pattern, buy_trigger, trade_strategy)
+                        trade_api.bitfinex_config = self.exchange_config
+                        self.__add_trade_candidate_entry_to_ticker_id_dict__(TradeCandidate(PatternTrade(trade_api)))
+                    else:
+                        self.__add_to_black_buy_trigger_pattern_id_readable_list__(key)
             else:
                 self.__add_to_black_buy_trigger_pattern_id_readable_list__(key)
 
@@ -190,7 +197,6 @@ class PatternTradeHandler:
         for pattern_trade in self.pattern_trade_dict.values():
             if pattern_trade.id == trade_id:
                 return pattern_trade
-        return None
 
     @property
     def trade_numbers(self) -> int:
@@ -310,7 +316,7 @@ class PatternTradeHandler:
     def __remove_outdated_pattern_trades_in_status_new__(self):
         # remove trades which doesn't belong to an actual pattern anymore
         deletion_key_list = [key for key, trades in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items()
-                             if trades.pattern.id not in self.trade_candidate_controller._actual_pattern_id_list]
+                             if trades.pattern.id not in self.trade_candidate_controller.actual_pattern_id_list]
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.PATTERN_VANISHED)
 
     def sell_on_fibonacci_cluster_top(self):

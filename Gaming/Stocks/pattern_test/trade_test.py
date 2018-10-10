@@ -16,8 +16,9 @@ from pattern_test.trade_test_cases import TradeTestCase, TradeTestCaseFactory, T
 
 
 class TradeTest:
-    def __init__(self, trade_process=TP.NONE, sys_config = None, exchange_config = None):
-        self.trade_process = trade_process
+    def __init__(self, api: TradeTestApi, sys_config=None, exchange_config=None):
+        self.api = api
+        self.trade_process = api.test_process
         self.sys_config = sys_config if sys_config else SystemConfiguration()
         self.exchange_config = exchange_config if exchange_config else ExchangeConfiguration()
         self.__adjust_sys_config__()
@@ -31,9 +32,9 @@ class TradeTest:
         self.sys_config.runtime.actual_trade_process = self.trade_process
         if self.trade_process == TP.BACK_TESTING:
             self.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
-        self.sys_config.config.get_data_from_db = True
-        self.sys_config.config.api_period = PRD.DAILY
-        self.sys_config.config.api_period_aggregation = 1
+        self.sys_config.config.get_data_from_db = self.api.get_data_from_db
+        self.sys_config.config.api_period = self.api.period
+        self.sys_config.config.api_period_aggregation = self.api.period_aggregation
         self.sys_config.config.plot_data = False
         self.sys_config.prediction_mode_active = True
         self.sys_config.config.save_pattern_data = False
@@ -76,20 +77,6 @@ class TradeTest:
         pattern_controller = PatternDetectionController(self.sys_config)
         detector = pattern_controller.get_detector_for_dash(self.sys_config, api.symbol, api.and_clause)
         return detector.get_pattern_list_for_back_testing()
-
-    def get_trade_test_api_by_selected_trade_row(self, row) -> TradeTestApi:
-        api = TradeTestApi()
-        api.trade_id = row[DC.ID]
-        api.test_process = TP.TRADE_REPLAY
-        api.pattern_type = row[DC.PATTERN_TYPE]
-        api.buy_trigger = row[DC.BUY_TRIGGER]
-        api.trade_strategy = row[DC.TRADE_STRATEGY]
-        api.symbol = row[DC.TICKER_ID]
-        api.dt_start = str(row[DC.PATTERN_RANGE_BEGIN_DT])
-        api.dt_end = MyDate.adjust_by_days(row[DC.PATTERN_RANGE_END_DT], -1)  # we need this correction for a smooth cont.
-        api.and_clause = self.sys_config.config.get_and_clause(api.dt_start, api.dt_end)
-        api.and_clause_unlimited = self.sys_config.config.get_and_clause(api.dt_start)
-        return api
 
     def get_pattern_detector_for_replay(self, api: TradeTestApi) -> PatternDetector:
         self.__adjust_sys_config_for_replay__(api)

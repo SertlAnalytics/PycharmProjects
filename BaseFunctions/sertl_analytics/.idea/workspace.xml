@@ -32,6 +32,11 @@
       </list>
     </option>
   </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>__convert_to_floats__</find>
+    </findStrings>
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
@@ -46,11 +51,11 @@
         <option value="$PROJECT_DIR$/environment/__init__.py" />
         <option value="$PROJECT_DIR$/exchanges/exchange_cls.py" />
         <option value="$PROJECT_DIR$/exchanges/exchange_abc.py" />
-        <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
         <option value="$PROJECT_DIR$/mystring.py" />
         <option value="$PROJECT_DIR$/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/mycache.py" />
         <option value="$PROJECT_DIR$/searches/smart_searches.py" />
+        <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
       </list>
     </option>
   </component>
@@ -198,6 +203,16 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="476">
+          <caret line="28" selection-start-line="28" selection-end-line="28" />
+          <folding>
+            <element signature="e#217#256#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
@@ -393,13 +408,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1003">
-          <caret line="136" column="45" selection-start-line="136" selection-start-column="45" selection-end-line="136" selection-end-column="45" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1139">
@@ -432,6 +440,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret column="40" selection-start-column="40" selection-end-column="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="700">
+          <caret line="554" column="41" lean-forward="true" selection-start-line="554" selection-start-column="41" selection-end-line="554" selection-end-column="41" />
         </state>
       </provider>
     </entry>

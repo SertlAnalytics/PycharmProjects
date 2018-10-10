@@ -75,8 +75,7 @@ class DashInterface:
     @staticmethod
     def get_pattern_part_main_shape(pattern: Pattern, color: str):
         x, y = DashInterface.get_xy_separated_from_timestamp(pattern.sys_config, pattern.xy)
-        # print('get_pattern_part_main_shape: {}'.format(x))
-        # Todo: format for values in x have to be changed to dtype: datetime64[ns]
+        # print('get_pattern_part_main_shape: x= {}, y={}'.format(x, y))
         return MyPolygonShape(x, y, color)
 
     @staticmethod
@@ -101,6 +100,7 @@ class DashInterface:
         if xy is None:
             return None
         x, y = DashInterface.get_xy_separated_from_timestamp(pattern_trade.sys_config, xy)
+        # print('C={}: __get_pattern_trade_shape__: x={}, y={}\nxy={}'.format(color, x, y, xy))
         return MyPolygonShape(x, y, color)
 
     @staticmethod
