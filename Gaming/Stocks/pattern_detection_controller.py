@@ -10,8 +10,8 @@ Date: 2018-05-14
 
 import pandas as pd
 import numpy as np
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher\
-    , CryptoCompareCryptoFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import CryptoCompareCryptoFetcher, BitfinexCryptoFetcher
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.user_input.confirmation import UserInput
 from datetime import timedelta
@@ -129,6 +129,8 @@ class PatternDetectionController:
         elif ticker in self.sys_config.crypto_ccy_dic:
             if period == PRD.INTRADAY:
                 fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
+                # fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, run_on_dash)
+                #  ToDo - differences between CryptoCompare and Bitfinex data and display (Fib-waves, ...)
                 return fetcher.df_data
             else:
                 fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)

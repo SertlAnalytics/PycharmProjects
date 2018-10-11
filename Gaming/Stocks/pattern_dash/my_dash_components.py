@@ -128,7 +128,7 @@ class DccGraphApi:
 class DccGraphSecondApi(DccGraphApi):
     def __init__(self, graph_id: str, title: str):
         DccGraphApi.__init__(self, graph_id, title)
-        self.figure_layout_height = self.figure_layout_height / 2
+        self.figure_layout_height = self.figure_layout_height # / 2
         self.figure_layout_width = self.figure_layout_width  # / 2
 
 

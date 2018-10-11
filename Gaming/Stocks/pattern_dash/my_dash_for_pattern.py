@@ -73,16 +73,13 @@ class MyDash4Pattern(MyDashBase):
         self.app.layout = self.__get_div_for_app_layout__()
 
     def __get_div_for_app_layout__(self):
-        # see also https://github.com/plotly/dash-core-components/pull/213
-        header = self.__get_header_for_app__()
-        seconds_timer = MyDCC.interval('my_interval_timer', self.bitfinex_config.ticker_refresh_rate_in_seconds)
-        refresh_timer = MyDCC.interval('my_interval', 100)
-        tabs = self.__get_tabs_for_app__()
-        return MyHTML.div('my_app', [header, seconds_timer, refresh_timer, tabs])
-
-    @staticmethod
-    def __get_header_for_app__():
-        return MyHTMLHeaderTable().get_table()
+        children_list = [
+            MyHTMLHeaderTable().get_table(),
+            MyDCC.interval('my_interval_timer', self.bitfinex_config.ticker_refresh_rate_in_seconds),
+            MyDCC.interval('my_interval', 100),
+            self.__get_tabs_for_app__()
+        ]
+        return MyHTML.div('my_app', children_list)
 
     def __get_tabs_for_app__(self):
         tab_01 = MyDCC.tab('Pattern Detector', [self.tab_pattern.get_div_for_tab()])

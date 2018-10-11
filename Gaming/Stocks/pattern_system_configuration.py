@@ -28,6 +28,10 @@ class PatternMasterPredictor:
         self.predictor_dict = {}
         self.__init_predictor_dict__()
 
+    def get_feature_columns(self, pattern_type: str):
+        predictor = self.predictor_dict[pattern_type]
+        return predictor.feature_columns
+
     def predict_for_label_columns(self, pattern_type: str, x_input: np.array):
         predictor = self.predictor_dict[pattern_type]
         return predictor.predict_for_label_columns(x_input)

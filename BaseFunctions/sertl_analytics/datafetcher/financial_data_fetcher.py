@@ -11,6 +11,7 @@ import os
 import io
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import CN, PRD, OPS
+from sertl_analytics.exchanges.bitfinex import MyBitfinex
 import seaborn as sns
 
 
@@ -46,6 +47,10 @@ class APIBaseFetcher:
 
     def get_url_function(self):
         return self.period  # may be overwritten
+
+    @staticmethod
+    def get_standard_column_names():  # OLD: 1. open   2. high    3. low  4. close 5. volume
+        return ['Close', 'High', 'Low', 'Open', 'Volume']
 
 
 class AlphavantageJSONFetcher (APIBaseFetcher):
@@ -220,10 +225,6 @@ class CryptoCompareJSONFetcher (APIBaseFetcher):
     def _get_api_key_(self):
         return 'not_yet'  # os.environ["cryptocompare_apikey"]  # doesn't exist yet
 
-    @staticmethod
-    def get_standard_column_names():  # OLD: 1. open   2. high    3. low  4. close 5. volume
-        return ['Close', 'High', 'Low', 'Open', 'Volume']
-
 
 class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
     def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, run_on_dash=False):
@@ -260,6 +261,62 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
         if self.period == PRD.INTRADAY:
             return 200 if self._run_on_dash else 300
         return 400
+
+
+class BitfinexCryptoFetcher(APIBaseFetcher):
+    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, run_on_dash=False):
+        self._run_on_dash = run_on_dash
+        APIBaseFetcher.__init__(self, symbol, period, aggregation)
+        self.column_list_data = self.get_column_list_data()
+        self.df_data = self.df[self.column_list_data]
+
+    def get_column_list_data(self):
+        return self.column_list
+
+    def _get_api_key_(self):
+        return ''
+
+    def __get_data_frame__(self) -> pd.DataFrame:
+        json_data = self.request.json()
+        self.api_symbol = self.symbol
+        time_series = json_data
+        df = pd.DataFrame(time_series)
+        for ind, row in df.iterrows():  # the values are delivered with ms instead of seconds
+            df.at[ind, 0] = int(row[0]/1000)
+        # (1)Open, (2)Close, (3)High, (4)Low -> standard: ['Close', 'High', 'Low', 'Open', 'Volume']
+        df = df[[0, 2, 3, 4, 1, 5]]
+        df.set_index(0, drop=True, inplace=True)
+        df.columns = self.get_standard_column_names()
+        return df
+
+    def _get_url_(self):  # the symbol has the structure tsymbolCCY like tBTCUSD
+        # https://api.bitfinex.com/v2/candles/trade:5m:tBTCUSD/hist
+        # symbol: e.g. tBTCUSD
+        # time_frame: '1m', '5m', '15m', '30m', '1h', '3h', '6h', '12h', '1D', '7D', '14D', '1M'
+        # section = hist or last
+        # return: MTS	int	millisecond time stamp
+        # OPEN	float	First execution during the time frame
+        # CLOSE	float	Last execution during the time frame
+        # HIGH	float	Highest execution during the time frame
+        # LOW	float	Lowest execution during the timeframe
+        # VOLUME	float	Quantity of symbol traded within the timeframe
+        url_function = 'hist' if self.period == PRD.INTRADAY else 'hist'
+        url_limit = self._get_url_limit_parameter_()
+        url_time_frame = self._get_time_frame_()
+        symbol = 't{}'.format(self.symbol)
+        url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/{}?limit={}'.format(
+            url_time_frame, symbol, url_function, url_limit)
+        return url
+
+    def _get_url_limit_parameter_(self) -> int:
+        if self.period == PRD.INTRADAY:
+            return 200 if self._run_on_dash else 300
+        return 400
+
+    def _get_time_frame_(self) -> int:
+        if self.period == PRD.INTRADAY:
+            return '{}m'.format(self.aggregation)
+        return '1D'
 
 
 class CorrelationHandler:

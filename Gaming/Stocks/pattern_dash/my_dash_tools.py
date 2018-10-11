@@ -118,7 +118,7 @@ class MyGraphCache(MyCache):
     def __change_to_observation_graph__(graph_old, number: int):
         graph = deepcopy(graph_old)
         graph.id = 'my_new_key_{}'.format(number)
-        graph.figure['layout']['height'] = graph.figure['layout']['height']/2
+        graph.figure['layout']['height'] = graph.figure['layout']['height'] # /2
         return graph
 
 

@@ -125,7 +125,7 @@ class StockDatabase(BaseDatabase):
     def update_stock_data_by_index(self, index: str, period=PRD.DAILY, aggregation=1):
         company_dict = self.__get_company_dict__()
         self.__check_company_dic_against_web__(index, company_dict)
-        last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__()
+        last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(period=period)
         index_list = self.__get_index_list__(index)
         for index in index_list:
             print('\nUpdating {}...\n'.format(index))
@@ -146,7 +146,7 @@ class StockDatabase(BaseDatabase):
 
     def update_crypto_currencies(self, period=PRD.DAILY, aggregation=1):
         company_dic = self.__get_company_dict__(like_input='USD')
-        last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(like_input='USD')
+        last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(like_input='USD', period=period)
         print('\nUpdating {}...\n'.format(Indices.CRYPTO_CCY))
         ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
         for ticker in ticker_dic:
@@ -226,13 +226,14 @@ class StockDatabase(BaseDatabase):
             company_dict[rows.Symbol] = rows
         return company_dict
 
-    def __get_last_loaded_time_stamp_dic__(self, symbol_input: str = '', like_input: str = ''):
+    def __get_last_loaded_time_stamp_dic__(self, symbol_input: str = '', like_input: str = '', period=PRD.DAILY):
         last_loaded_time_stamp_dic = {}
         query = self._stocks_table.get_distinct_symbol_query(symbol_input, like_input)
         db_df = DatabaseDataFrame(self, query)
         loaded_symbol_list = [rows.Symbol for index, rows in db_df.df.iterrows()]
         for symbol in loaded_symbol_list:
-            query = "SELECT * FROM {} WHERE Symbol = '{}' ORDER BY Timestamp Desc LIMIT 1".format(STBL.STOCKS, symbol)
+            query = "SELECT * FROM {} WHERE Symbol = '{}' and Period = '{}' ORDER BY Timestamp Desc LIMIT 1".format(
+                STBL.STOCKS, symbol, period)
             db_df = DatabaseDataFrame(self, query)
             try:
                 last_loaded_time_stamp_dic[symbol] = db_df.df[CN.TIMESTAMP].values[0]

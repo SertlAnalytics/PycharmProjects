@@ -39,6 +39,10 @@ class TradeCandidate:
         return self.pattern_trade.pattern.id
 
     @property
+    def trade_id(self):
+        return self.pattern_trade.id
+
+    @property
     def ranking_quotient(self):
         return self._ranking_quotient
 
@@ -96,6 +100,7 @@ class TradeCandidateController:
         self._actual_pattern_id_list = []  # this list contains all pattern_ids for actual trade candidates
         self._black_pattern_id_readable_list = []
         self._black_buy_trigger_pattern_id_readable_list = []
+        self._black_trade_strategy_pattern_id_readable_list = []
         self._trade_candidates_for_ticker_id_dict = {}  # with ticker_id as key and TradeCandidateCollection as value
 
     @property
@@ -121,30 +126,45 @@ class TradeCandidateController:
         else:
             self.__add_to_black_pattern_id_list__(pattern.id_readable)
 
-    def __add_pattern_to_trade_candidate_list__(self, pattern):
+    def __add_pattern_to_trade_candidate_list__(self, pattern: Pattern):
         for buy_trigger, trade_strategies in self.exchange_config.trade_strategy_dict.items():
             key = self.__get_key_for_black_buy_trigger_pattern_id_readable_list(pattern, buy_trigger)
+            print('Add_to_candidate_list: Checking buy trigger: {}'.format(key))
             if key in self._black_buy_trigger_pattern_id_readable_list:
-                continue
-            if pattern.are_conditions_for_buy_trigger_fulfilled(buy_trigger):
-                for trade_strategy in trade_strategies:
-                    if pattern.are_conditions_for_trade_strategy_fulfilled(trade_strategy):
-                        trade_api = PatternTradeApi(pattern, buy_trigger, trade_strategy)
-                        trade_api.bitfinex_config = self.exchange_config
-                        self.__add_trade_candidate_entry_to_ticker_id_dict__(TradeCandidate(PatternTrade(trade_api)))
-                    else:
-                        self.__add_to_black_buy_trigger_pattern_id_readable_list__(key)
+                print('Already in black_buy_trigger_ist: {}'.format(key))
             else:
-                self.__add_to_black_buy_trigger_pattern_id_readable_list__(key)
+                if pattern.are_conditions_for_buy_trigger_fulfilled(buy_trigger):
+                    self.__add_pattern_to_trade_candidate_list_for_buy_trigger__(pattern, buy_trigger, trade_strategies)
+                else:
+                    self.__add_to_black_buy_trigger_pattern_id_readable_list__(key)
+
+    def __add_pattern_to_trade_candidate_list_for_buy_trigger__(self, pattern: Pattern, buy_trigger: str,
+                                                                trade_strategies: list):
+        for trade_strategy in trade_strategies:
+            key = self.__get_key_for_black_buy_trigger_pattern_id_readable_list(pattern, trade_strategy)
+            print('Add_to_candidate_list: Checking trade strategy: {}'.format(key))
+            if key in self._black_trade_strategy_pattern_id_readable_list:
+                print('Already in black_trade_strategy_pattern_id_list: {}'.format(key))
+            else:
+                if pattern.are_conditions_for_trade_strategy_fulfilled(trade_strategy):
+                    trade_api = PatternTradeApi(pattern, buy_trigger, trade_strategy)
+                    trade_api.bitfinex_config = self.exchange_config
+                    self.__add_trade_candidate_entry_to_ticker_id_dict__(TradeCandidate(PatternTrade(trade_api)))
+                else:
+                    self.__add_to_black_trade_strategy_pattern_id_readable_list__(key)
 
     @staticmethod
     def __get_key_for_black_buy_trigger_pattern_id_readable_list(pattern: Pattern, buy_trigger: str):
         return '{}_{}'.format(buy_trigger, pattern.id_readable)
 
+    @staticmethod
+    def __get_key_for_black_trade_strategy_pattern_id_readable_list(pattern: Pattern, trade_strategy: str):
+        return '{}_{}'.format(trade_strategy, pattern.id_readable)
+
     def __add_to_black_pattern_id_list__(self, pattern_id_readable: str):
         if pattern_id_readable not in self._black_pattern_id_readable_list:
             self._black_pattern_id_readable_list.append(pattern_id_readable)
-            print('Added to black pattern_id_readable list: {}'.format(pattern_id_readable))
+            print('Added to black_pattern_id_readable_list: {}'.format(pattern_id_readable))
 
     def add_pattern_trade_to_black_buy_trigger_list(self, pattern_trade: PatternTrade):
         buy_trigger = pattern_trade.buy_trigger
@@ -156,12 +176,18 @@ class TradeCandidateController:
             self._black_buy_trigger_pattern_id_readable_list.append(buy_trigger_key)
             print('Added to black_buy_trigger_pattern_id_readable list: {}'.format(buy_trigger_key))
 
+    def __add_to_black_trade_strategy_pattern_id_readable_list__(self, trade_strategy_key: str):
+        if trade_strategy_key not in self._black_trade_strategy_pattern_id_readable_list:
+            self._black_trade_strategy_pattern_id_readable_list.append(trade_strategy_key)
+            print('Added to black_trade_strategy_pattern_id_readable_list: {}'.format(trade_strategy_key))
+
     def __add_trade_candidate_entry_to_ticker_id_dict__(self, trade_candidate: TradeCandidate):
         ticker_id = trade_candidate.ticker_id
         if ticker_id not in self._trade_candidates_for_ticker_id_dict:
             self._trade_candidates_for_ticker_id_dict[ticker_id] = TradeCandidateCollection(self.exchange_config,
                                                                                             ticker_id)
         self._trade_candidates_for_ticker_id_dict[ticker_id].add_trade_candidate(trade_candidate)
+        print('Added to trade_candidates_for_ticker_id_dict {}: {}'.format(ticker_id, trade_candidate.trade_id))
 
     def get_pattern_trade_candidates_for_processing(self) -> list:
         return_list = []

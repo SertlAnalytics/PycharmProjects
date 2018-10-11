@@ -328,8 +328,10 @@ class Pattern:
             'No_breakout': not self.is_part_trade_available(),
             'Pattern_type': self.pattern_type in [FT.CHANNEL, FT.TRIANGLE_UP, FT.TRIANGLE_DOWN],
             'Breakout_direction': self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION) == FD.ASC,
-            'False_breakout': self.data_dict_obj.get(DC.FC_FALSE_BREAKOUT_ID) == 0
+            'False_breakout': self.data_dict_obj.get(DC.FC_FALSE_BREAKOUT_ID) == 0,
+            'Expected_win_touch_point_sufficient': self.__is_expected_win_for_touch_point_sufficient__()
         }
+        print(check_dict)
         return False if False in check_dict else True
 
     def __is_formation_established__(self):  # this is the main check whether a formation is ready for a breakout
@@ -470,8 +472,21 @@ class Pattern:
         expected_win_pct = round(((self.get_expected_win() + ref_value) / ref_value - 1)*100, 1)
         return expected_win_pct >= min_expected_win_pct
 
+    def __is_expected_win_for_touch_point_sufficient__(self) -> bool:
+        ref_value = self._part_entry.tick_last.close
+        min_expected_win_pct = self.sys_config.runtime.actual_expected_win_pct
+        expected_win = self.get_expected_win_for_touch_point()
+        expected_win_pct = round(((expected_win + ref_value) / ref_value - 1) * 100, 1)
+        print('expected_win_for_touch_point={} / {}% - min={}%'.format(expected_win, expected_win_pct, min_expected_win_pct))
+        return expected_win_pct >= min_expected_win_pct
+
     def get_expected_win(self):
         return round(self._part_entry.height, 4)
+
+    def get_expected_win_for_touch_point(self):
+        u_value = self.function_cont.get_upper_value(self._part_entry.tick_last.f_var)
+        l_value = self.function_cont.get_lower_value(self._part_entry.tick_last.f_var)
+        return round(abs(u_value - l_value), 4)
 
     def __fill_trade_results_for_breakout_direction__(self, tick: WaveTick):
         sig = 1 if self.breakout_direction == FD.ASC else -1

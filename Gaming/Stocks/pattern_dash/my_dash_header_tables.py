@@ -22,12 +22,29 @@ class MyHTMLHeaderTable(MyHTMLTable):
         login_time_div = MyHTML.div('my_login_div', '{}'.format(time_str), False)
         my_user_div = MyHTML.div_embedded([user_label_div, MyHTML.span(' '), user_div])
         my_login_div = MyHTML.div_embedded([login_label_div, MyHTML.span(' '), login_time_div])
+
         time_label_div = MyHTML.div('my_time_label_div', 'Time:', True)
-        time_div = MyHTML.div('my_time_div', '', False)
+        time_value_div = MyHTML.div('my_time_div', '', False)
+        time_div = MyHTML.div_embedded([time_label_div, MyHTML.span(' '), time_value_div])
+
+        last_refresh_label_div = MyHTML.div('my_last_refresh_label_div', 'Last refresh:', True)
+        last_refresh_time_div = MyHTML.div('my_last_refresh_time_div', time_str)
+        next_refresh_label_div = MyHTML.div('my_next_refresh_label_div', 'Next refresh:', True)
+        next_refresh_time_div = MyHTML.div('my_next_refresh_time_div', time_str)
+        last_refresh_div = MyHTML.div_embedded([last_refresh_label_div, MyHTML.span(' '), last_refresh_time_div])
+        next_refresh_div = MyHTML.div_embedded([next_refresh_label_div, MyHTML.span(' '), next_refresh_time_div])
+
+        online_trade_label_div = MyHTML.div('my_online_trade_label_div', 'Trades - Online:', True)
+        online_trade_div = MyHTML.div('my_online_trade_div', '0')
+        stored_trade_label_div = MyHTML.div('my_stored_trade_label_div', 'Trades - Replay:', True)
+        stored_trade_div = MyHTML.div('my_stored_trade_div', '0')
+        online_div = MyHTML.div_embedded([online_trade_label_div, MyHTML.span(' '), online_trade_div])
+        stored_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
 
         self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div]))
         self.set_value(1, 2, 'Pattern Detection Dashboard')
-        self.set_value(1, 3, MyHTML.div_embedded([time_label_div, MyHTML.span(' '), time_div]))
+        self.set_value(1, 3,  MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div,
+                                                   online_div, stored_div]))
 
     def _get_cell_style_(self, row: int, col: int):
         width = ['20%', '60%', '20%'][col-1]
@@ -64,33 +81,21 @@ class MyHTMLTabHeaderTable(MyHTMLTable):
 
 class MyHTMLTabPatternHeaderTable(MyHTMLTabHeaderTable):
     def _init_cells_(self):
-        time_str = MyDate.get_time_from_datetime(datetime.now())
         ticker_label_div = MyHTML.div('my_ticker_label_div', 'Ticker:', True)
         ticker_div = MyHTML.div('my_ticker_div', '', False)
-        last_refresh_label_div = MyHTML.div('my_last_refresh_label_div', 'Last refresh:', True)
-        last_refresh_time_div = MyHTML.div('my_last_refresh_time_div', time_str)
-        next_refresh_label_div = MyHTML.div('my_next_refresh_label_div', 'Next refresh:', True)
-        next_refresh_time_div = MyHTML.div('my_next_refresh_time_div', time_str)
-        last_refresh_div = MyHTML.div_embedded([last_refresh_label_div, MyHTML.span(' '), last_refresh_time_div])
-        next_refresh_div = MyHTML.div_embedded([next_refresh_label_div, MyHTML.span(' '), next_refresh_time_div])
         self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
         self.set_value(1, 2, MyDCC.markdown('my_pattern_markdown'))
-        self.set_value(1, 3, MyHTML.div_embedded([last_refresh_div, next_refresh_div]))
+        self.set_value(1, 3, '')
 
 
 class MyHTMLTabTradeHeaderTable(MyHTMLTabHeaderTable):
     def _init_cells_(self):
         ticker_label_div = MyHTML.div('my_trade_ticker_label_div', 'Ticker:', True)
         ticker_div = MyHTML.div('my_trade_ticker_div', '', False)
-        online_trade_label_div = MyHTML.div('my_online_trade_label_div', 'Online:', True)
-        online_trade_div = MyHTML.div('my_online_trade_div', '0')
-        stored_trade_label_div = MyHTML.div('my_stored_trade_label_div', 'Database:', True)
-        stored_trade_div = MyHTML.div('my_stored_trade_div', '0')
-        online_div = MyHTML.div_embedded([online_trade_label_div, MyHTML.span(' '), online_trade_div])
-        stored_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
+
         self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
         self.set_value(1, 2, MyDCC.markdown('my_trade_markdown'))
-        self.set_value(1, 3, MyHTML.div_embedded([online_div, stored_div]))
+        self.set_value(1, 3, '')
 
 
 class MyHTMLTabTradeStatisticsHeaderTable(MyHTMLTabHeaderTable):

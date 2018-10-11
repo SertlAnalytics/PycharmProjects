@@ -215,10 +215,11 @@ class PatternTrade:
         return False # it's not active for touch and fibonacci till confirmation
 
     def __calculate_prediction_values__(self):
-        predictor = self.sys_config.predictor_for_trades
-        x_data = self.__get_x_data_for_prediction__(predictor.feature_columns)
+        predictor = self.sys_config.master_predictor_for_trades
+        feature_columns = predictor.get_feature_columns(self.pattern.pattern_type)
+        x_data = self.__get_x_data_for_prediction__(feature_columns)
         if x_data is not None:
-            prediction_dict = predictor.predict_for_label_columns(x_data)
+            prediction_dict = predictor.predict_for_label_columns(self.pattern.pattern_type, x_data)
             self.data_dict_obj.add(DC.FC_TRADE_REACHED_PRICE_PCT, prediction_dict[DC.TRADE_REACHED_PRICE_PCT])
             self.data_dict_obj.add(DC.FC_TRADE_RESULT_ID, prediction_dict[DC.TRADE_RESULT_ID])
 
@@ -257,8 +258,9 @@ class PatternTrade:
 
     def __print_details_for_actual_value_category__(self, process: str, l_value: float, u_value: float, vc: str):
         date_time = MyDate.get_date_time_from_epoch_seconds(self.ticker_actual.time_stamp)
-        print('{}: {} vc={}: [{:.2f}, {:.2f}]: price={}, date_time={}'.format(
-            self.trade_process, process, vc, l_value, u_value, self.ticker_actual.last_price, date_time))
+        ticker_id = self.ticker_actual.ticker_id
+        print('{}: {}-{} vc={}: [{:.2f}, {:.2f}]: price={}, date_time={}'.format(
+            self.trade_process, ticker_id, process, vc, l_value, u_value, self.ticker_actual.last_price, date_time))
 
     def are_preconditions_for_breakout_buy_fulfilled(self):
         if self.trade_strategy == TSTR.SMA:
@@ -534,6 +536,6 @@ class PatternTrade:
         if self.data_dict_obj.is_data_dict_ready_for_columns(feature_columns):
             data_list = self.data_dict_obj.get_data_list_for_columns(feature_columns)
             np_array = np.array(data_list).reshape(1, len(data_list))
-            # print('{}: np_array.shape={}'.format(prediction_type, np_array.shape))
+            # print('{}: np_array.shape={}'.format(prediction_type, np_array.shape)) ToDo
             return np_array
         return None
