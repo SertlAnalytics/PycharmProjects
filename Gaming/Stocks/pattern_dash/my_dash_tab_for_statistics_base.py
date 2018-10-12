@@ -9,7 +9,7 @@ from dash.dependencies import Input, Output, State
 from pattern_dash.my_dash_base import MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
 from dash import Dash
-from sertl_analytics.constants.pattern_constants import CHT
+from sertl_analytics.constants.pattern_constants import CHT, PRED
 from pattern_dash.my_dash_components import MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLTabPatternStatisticsHeaderTable
 from pattern_dash.my_dash_drop_down import DDT, PatternStatisticsDropDownHandler
@@ -35,6 +35,7 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         children_list = [
             self.__get_html_tab_header_table__(),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.CHART_TYPE)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.PREDICTOR)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.CATEGORY)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.X_VARIABLE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.Y_VARIABLE)),
@@ -65,6 +66,7 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         self._my_statistics_markdown = 'my_{}_statistics_markdown'.format(self._tab)
         self._my_statistics_div = 'my_{}_statistics_div'.format(self._tab)
         self._my_statistics_chart_type_selection = 'my_{}_statistics_chart_type_selection'.format(self._tab)
+        self._my_statistics_predictor_selection = 'my_{}_statistics_predictor_selection'.format(self._tab)
         self._my_statistics_category_selection = 'my_{}_statistics_category_selection'.format(self._tab)
         self._my_statistics_x_variable_selection = 'my_{}_statistics_x_variable_selection'.format(self._tab)
         self._my_statistics_y_variable_selection = 'my_{}_statistics_y_variable_selection'.format(self._tab)
@@ -96,12 +98,42 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         self.__init_callbacks_for_drop_down_visibility__()
         self.__init_callbacks_for_chart__()
         self.__init_callback_for_markdown__()
+        self.__init_callback_for_x_variable_options__()
+        self.__init_callback_for_y_variable_options__()
 
     def __init_callback_for_numbers__(self):
         pass
 
+    def __init_callback_for_x_variable_options__(self):
+        @self.app.callback(
+            Output(self._my_statistics_x_variable_selection, 'options'),
+            [Input(self._my_statistics_chart_type_selection, 'value'),
+             Input(self._my_statistics_predictor_selection, 'value')]
+        )
+        def handle_callback_for_category_options(chart_type: str, predictor: str):
+            value_list = self.__get_value_list_for_x_variable_options__(chart_type, predictor)
+            return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
+
+    def __init_callback_for_y_variable_options__(self):
+        @self.app.callback(
+            Output(self._my_statistics_y_variable_selection, 'options'),
+            [Input(self._my_statistics_chart_type_selection, 'value'),
+             Input(self._my_statistics_predictor_selection, 'value')]
+        )
+        def handle_callback_for_category_options(chart_type: str, predictor: str):
+            value_list = self.__get_value_list_for_y_variable_options__(chart_type, predictor)
+            return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
+
+    @staticmethod
+    def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):
+        return []
+
+    @staticmethod
+    def __get_value_list_for_y_variable_options__(chart_type: str, predictor: str):
+        return []
+
     def __init_callbacks_for_drop_down_visibility__(self):
-        for drop_down_type in [DDT.X_VARIABLE, DDT.Y_VARIABLE, DDT.CHART_TEXT_VARIABLE]:
+        for drop_down_type in [DDT.PREDICTOR, DDT.CATEGORY, DDT.X_VARIABLE, DDT.Y_VARIABLE, DDT.CHART_TEXT_VARIABLE]:
             @self.app.callback(
                 Output(self._dd_handler.get_embracing_div_id(drop_down_type), 'style'),
                 [Input(self._dd_handler.get_element_id(DDT.CHART_TYPE), 'value')],
@@ -109,7 +141,13 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
             def handle_selection_callback(chart_type: str, div_id: str):
                 dd_type = self._dd_handler.get_drop_down_type_by_embracing_div_id(div_id)
                 style_show = self._dd_handler.get_style_display(dd_type)
-                if chart_type == CHT.AREA_WINNER_LOSER:
+                if dd_type == DDT.PREDICTOR:
+                    if chart_type != CHT.PREDICTOR:
+                        return {'display': 'none'}
+                if dd_type == DDT.CATEGORY:
+                    if chart_type == CHT.PREDICTOR:
+                        return {'display': 'none'}
+                elif chart_type == CHT.AREA_WINNER_LOSER:
                     if dd_type in [DDT.Y_VARIABLE, DDT.CHART_TEXT_VARIABLE]:
                         return {'display': 'none'}
                 elif chart_type == CHT.PIE:
@@ -120,14 +158,16 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         @self.app.callback(
             Output(self._my_statistics_chart_div, 'children'),
             [Input(self._my_statistics_chart_type_selection, 'value'),
+             Input(self._my_statistics_predictor_selection, 'value'),
              Input(self._my_statistics_category_selection, 'value'),
              Input(self._my_statistics_x_variable_selection, 'value'),
              Input(self._my_statistics_y_variable_selection, 'value'),
              Input(self._my_statistics_text_variable_selection, 'value'),
              Input(self._my_statistics_pattern_type_selection, 'value'),
              Input('my_interval', 'n_intervals')])
-        def handle_interval_callback_with_date_picker(ct: str, category: str, x: str, y: str,
+        def handle_interval_callback_with_date_picker(ct: str, predictor: str, category: str, x: str, y: str,
                                                       text_column: str, pt: str, n_intervals: int):
+            self._plotter.predictor = predictor
             self._plotter.category = category
             self._plotter.chart_type = ct
             self._plotter.x_variable = x

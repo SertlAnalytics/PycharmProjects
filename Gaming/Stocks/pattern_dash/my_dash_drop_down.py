@@ -6,12 +6,13 @@ Date: 2018-10-03
 """
 
 from pattern_database.stock_tables import TradeTable, PatternTable
-from sertl_analytics.constants.pattern_constants import DC, CHT, FT
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED
 from pattern_dash.my_dash_components import DropDownHandler
 
 
 class DDT:  # Drop Down Types
     CHART_TYPE = 'Chart_Type'
+    PREDICTOR = 'Predictor'
     CATEGORY = 'Category'
     X_VARIABLE = 'x_variable'
     Y_VARIABLE = 'y_variable'
@@ -24,6 +25,7 @@ class StatisticsDropDownHandler(DropDownHandler):
         value_dict = {
             DDT.CHART_TYPE: 'Chart Type',
             DDT.CATEGORY: 'Category',
+            DDT.PREDICTOR: 'Predictor',
             DDT.X_VARIABLE: 'x-variable',
             DDT.Y_VARIABLE: 'y-variable',
             DDT.CHART_TEXT_VARIABLE: 'Chart Text',
@@ -40,6 +42,7 @@ class StatisticsDropDownHandler(DropDownHandler):
     def __get_width__(self, drop_down_type: str):
         value_dict = {
             DDT.CHART_TYPE: 190,
+            DDT.PREDICTOR: 150,
             DDT.CATEGORY: 150,
             DDT.X_VARIABLE: 260,
             DDT.Y_VARIABLE: 220,
@@ -59,6 +62,7 @@ class TradeStatisticsDropDownHandler(StatisticsDropDownHandler):
     def __get_element_id__(self, drop_down_type: str):
         value_dict = {
             DDT.CHART_TYPE: 'my_trade_statistics_chart_type_selection',
+            DDT.PREDICTOR: 'my_trade_statistics_predictor_selection',
             DDT.CATEGORY: 'my_trade_statistics_category_selection',
             DDT.X_VARIABLE: 'my_trade_statistics_x_variable_selection',
             DDT.Y_VARIABLE: 'my_trade_statistics_y_variable_selection',
@@ -70,6 +74,7 @@ class TradeStatisticsDropDownHandler(StatisticsDropDownHandler):
     def __get_default_value__(self, drop_down_type: str) -> str:
         default_dict = {
             DDT.CHART_TYPE: CHT.AREA_WINNER_LOSER,
+            DDT.PREDICTOR: PRED.FOR_TRADE,
             DDT.CATEGORY: DC.PATTERN_TYPE,
             DDT.X_VARIABLE: DC.PATTERN_RANGE_BEGIN_DT,
             DDT.Y_VARIABLE: DC.TRADE_RESULT,
@@ -81,6 +86,7 @@ class TradeStatisticsDropDownHandler(StatisticsDropDownHandler):
     def __get_drop_down_value_dict__(self) -> dict:
         return {
             DDT.CHART_TYPE: CHT.get_for_trade_statistics(),
+            DDT.PREDICTOR: PRED.get_for_trade_all(),
             DDT.CATEGORY: TradeTable.get_columns_for_statistics_category(),
             DDT.X_VARIABLE: TradeTable.get_columns_for_statistics_x_variable(),
             DDT.Y_VARIABLE: TradeTable.get_columns_for_statistics_y_variable(),
@@ -96,6 +102,7 @@ class PatternStatisticsDropDownHandler(StatisticsDropDownHandler):
     def __get_element_id__(self, drop_down_type: str):
         value_dict = {
             DDT.CHART_TYPE: 'my_pattern_statistics_chart_type_selection',
+            DDT.PREDICTOR: 'my_pattern_statistics_predictor_selection',
             DDT.CATEGORY: 'my_pattern_statistics_category_selection',
             DDT.X_VARIABLE: 'my_pattern_statistics_x_variable_selection',
             DDT.Y_VARIABLE: 'my_pattern_statistics_y_variable_selection',
@@ -107,6 +114,7 @@ class PatternStatisticsDropDownHandler(StatisticsDropDownHandler):
     def __get_default_value__(self, drop_down_type: str) -> str:
         default_dict = {
             DDT.CHART_TYPE: CHT.AREA_WINNER_LOSER,
+            DDT.PREDICTOR: PRED.TOUCH_POINT,
             DDT.CATEGORY: DC.PATTERN_TYPE,
             DDT.X_VARIABLE: DC.PATTERN_BEGIN_DT,
             DDT.Y_VARIABLE: DC.EXPECTED_WIN_REACHED,
@@ -118,6 +126,7 @@ class PatternStatisticsDropDownHandler(StatisticsDropDownHandler):
     def __get_drop_down_value_dict__(self) -> dict:
         return {
             DDT.CHART_TYPE: CHT.get_for_pattern_statistics(),
+            DDT.PREDICTOR: PRED.get_for_pattern_all(),
             DDT.CATEGORY: PatternTable.get_columns_for_statistics_category(),
             DDT.X_VARIABLE: PatternTable.get_columns_for_statistics_x_variable(),
             DDT.Y_VARIABLE: PatternTable.get_columns_for_statistics_y_variable(),
@@ -128,6 +137,7 @@ class PatternStatisticsDropDownHandler(StatisticsDropDownHandler):
     def __get_width__(self, drop_down_type: str):
         value_dict = {
             DDT.CHART_TYPE: 190,
+            DDT.PREDICTOR: 150,
             DDT.CATEGORY: 220,
             DDT.X_VARIABLE: 260,
             DDT.Y_VARIABLE: 220,

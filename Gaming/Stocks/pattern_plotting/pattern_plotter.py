@@ -117,8 +117,24 @@ class PatternPlotter:
                 date_time_str = '{} {}'.format(date_obj.date(), str(date_obj.time())[:5])
             else:
                 date_time_str = tick.date
-            return '{} ({:3.0f} / {:6.0f}): [{:5.1f}; {:5.1f}]; vol={:8.0f}(t); y={:0.2f}'.format(
-                date_time_str, tick.position, tick.f_var, tick.low, tick.high, tick.volume / 1000, y)
+            return self.__get_status_message__(date_time_str, tick, y)
+
+    @staticmethod
+    def __get_status_message__(date_time_str: str, tick: WaveTick, y: float):
+        if tick.high < 1:
+            value_range = '[{:4.3f}; {:4.3f}]'.format(tick.low, tick.high)
+            y_value = 'y={:4.3f}'.format(y)
+        elif tick.high < 10:
+            value_range = '[{:3.2f}; {:3.2f}]'.format(tick.low, tick.high)
+            y_value = 'y={:3.2f}'.format(y)
+        elif tick.high < 1000:
+            value_range = '[{:4.1f}; {:4.1f}]'.format(tick.low, tick.high)
+            y_value = 'y={:4.1f}'.format(y)
+        else:
+            value_range = '[{:5.0f}; {:5.0f}]'.format(tick.low, tick.high)
+            y_value = 'y={:5.0f}'.format(y)
+        return '{} ({:3.0f} / {:6.0f}): {}; vol={:8.0f}(t); {}'.format(
+            date_time_str, tick.position, tick.f_var, value_range, tick.volume / 1000, y_value)
 
     def __on_click__(self, event):
         self.pattern_plot_container_loop_list.show_only_selected_containers(event)

@@ -53,7 +53,7 @@ class PatternTabDropDownHandler(DropDownHandler):
     def __get_default_value__(self, drop_down_type: str) -> str:
         default_dict = {
             PDD.STOCK_SYMBOL: self._ticker_options[0]['value'],
-            PDD.REFRESH_INTERVAL: 900,
+            PDD.REFRESH_INTERVAL: 120,
             PDD.SECOND_GRAPH_RANGE: 0
         }
         return default_dict.get(drop_down_type, None)

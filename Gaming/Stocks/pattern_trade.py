@@ -16,6 +16,7 @@ from pattern_trade_box import ExpectedWinTradingBox, TouchPointTradingBox, Tradi
 from pattern_wave_tick import WaveTick, WaveTickList, TickerWaveTickConverter
 from sertl_analytics.plotter.my_plot import MyPlotHelper
 import math
+from textwrap import dedent
 
 
 class PatternTradeApi:
@@ -112,11 +113,11 @@ class PatternTrade:
 
     @property
     def stop_loss_current(self):
-        return self._trade_box.stop_loss if self._trade_box else 0
+        return self._trade_box.stop_loss if self._trade_box else self.wave_tick_actual.wrong_breakout_value
 
     @property
     def limit_current(self):
-        return self._trade_box.limit if self._trade_box else 0
+        return self._trade_box.limit if self._trade_box else self.wave_tick_actual.breakout_value
 
     @property
     def time_stamp_end(self):
@@ -145,6 +146,18 @@ class PatternTrade:
     @property
     def ticker_actual(self) -> Ticker:
         return self._ticker_dict[self._ticker_time_stamp_list[-1]]
+
+    @property
+    def wave_tick_actual(self) -> WaveTick:
+        return self._wave_tick_list.tick_list[-1]
+
+    @property
+    def current_trade_process(self) -> str:
+        if self._status == PTS.NEW:
+            return 'buying'
+        elif self._status == PTS.EXECUTED:
+            return 'selling'
+        return 're-buying'
 
     @property
     def xy_for_buying(self):
@@ -539,3 +552,34 @@ class PatternTrade:
             # print('{}: np_array.shape={}'.format(prediction_type, np_array.shape)) ToDo
             return np_array
         return None
+
+    def get_markdown_text(self, ticker_refresh: int):
+        last_price = self.ticker_actual.last_price
+        date_time = self.ticker_actual.date_time_str
+        header = '**Last ticker:** {} - **at:** {} (refresh after {} sec.)'.format(last_price, date_time, ticker_refresh)
+        process = self.current_trade_process
+        limit = self.limit_current
+        stop_loss = self.stop_loss_current
+
+        if self._status == PTS.NEW:
+            return dedent('''
+                {}
+
+                **Process**: {} **Breakout**: {:2.2f} **Wrong breakout**: {:2.2f}
+                ''').format(header, process, limit, stop_loss)
+        elif self._status == PTS.EXECUTED:
+            bought_at = self._order_status_buy.price
+            trailing_stop_distance = self.trailing_stop_distance
+            return dedent('''
+                {}
+
+                **Process**: {} **Bought at**: {:2.2f} **Limit**: {:2.2f} **Stop**: {:2.2f} 
+                **Trailing stop distance**: {:2.2f}
+                ''').format(header, process, bought_at, limit, stop_loss, trailing_stop_distance)
+        else:
+            bought_at = self._order_status_buy.price
+            return dedent('''
+                {}
+
+                **Process**: {} **Breakout**: {:2.2f} **Wrong breakout**: {:2.2f}
+                ''').format(header, process, limit, stop_loss)

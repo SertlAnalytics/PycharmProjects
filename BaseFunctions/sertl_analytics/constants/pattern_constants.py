@@ -5,6 +5,25 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
+class PRED:  # Predictors
+    TOUCH_POINT = 'Touch_Point'
+    BEFORE_BREAKOUT = 'Before_Breakout'
+    AFTER_BREAKOUT = 'After_Breakout'
+    FOR_TRADE = 'For_Trade'
+
+    @staticmethod
+    def get_as_options():
+        return [{'label': chart_mode, 'value': chart_mode} for chart_mode in CHM.get_all()]
+
+    @staticmethod
+    def get_for_pattern_all():
+        return [PRED.TOUCH_POINT, PRED.BEFORE_BREAKOUT, PRED.AFTER_BREAKOUT]
+
+    @staticmethod
+    def get_for_trade_all():
+        return [PRED.FOR_TRADE]
+
+
 class CHM:  # chart modes
     MARKERS = 'markers'
     LINES = 'lines'
@@ -29,6 +48,7 @@ class CHM:  # chart modes
 class CHT:  # chart type
     SCATTER = 'Scatter'
     AREA_WINNER_LOSER = 'Area winner and losers'
+    PREDICTOR = 'Predictor'
     AREA = 'Area'
     BAR = 'Bar'
     LINE = 'Line'
@@ -52,18 +72,19 @@ class CHT:  # chart type
 
     @staticmethod
     def get_all():
-        li = [CHT.SCATTER, CHT.BAR, CHT.LINE, CHT.AREA, CHT.HEAT_MAP, CHT.TABLE, CHT.CONTOUR, CHT.PIE, CHT.D3_SCATTER,
+        li = [CHT.SCATTER, CHT.AREA_WINNER_LOSER, CHT.PREDICTOR_PIE,
+              CHT.BAR, CHT.LINE, CHT.AREA, CHT.HEAT_MAP, CHT.TABLE, CHT.CONTOUR, CHT.PIE, CHT.D3_SCATTER,
               CHT.D3_LINE, CHT.D3_SURFACE, CHT.BOX, CHT.VIOLINE, CHT.HISTOGRAM, CHT.D2_CONTOUR_HISTOGRAM,
               CHT.POLAR_SCATTER]
         return li
 
     @staticmethod
     def get_for_trade_statistics():
-        return [CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PIE]
+        return [CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PREDICTOR, CHT.PIE]
 
     @staticmethod
     def get_for_pattern_statistics():
-        return [CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PIE]
+        return [CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PREDICTOR, CHT.PIE]
 
 
 class CM:  # coverage mode

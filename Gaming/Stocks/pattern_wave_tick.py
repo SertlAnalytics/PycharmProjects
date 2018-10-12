@@ -214,10 +214,10 @@ class TickerWaveTickConverter:
             self._current_time_stamp += self._aggregation_time_stamp_range
 
     def __get_current_tick_values_as_wave_tick__(self):
-        v_array = np.array([self._current_open, self._current_close, self._current_low, self._current_high, 0,
-                            self._current_time_stamp, self._current_position]).reshape([1, 7])
-        df = pd.DataFrame(v_array, columns=[CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.VOL, CN.TIMESTAMP, CN.POSITION])
-        return WaveTick(df.iloc[0])
+        value_list = [self._current_open, self._current_close, self._current_low, self._current_high, 0,
+                            self._current_time_stamp, self._current_position]
+        row = pd.Series(value_list, index=[CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.VOL, CN.TIMESTAMP, CN.POSITION])
+        return WaveTick(row)
 
 
 class WaveTickList:

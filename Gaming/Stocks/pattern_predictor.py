@@ -5,21 +5,17 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-08-22
 """
 
-from sertl_analytics.constants.pattern_constants import DC
-import pandas as pd
+from sertl_analytics.constants.pattern_constants import FT
 import numpy as np
-from pattern_database.stock_tables import MyTable, PredictionFeatureTable
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
 from pattern_database.stock_database import DatabaseDataFrame
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from scipy.optimize import basinhopping
-from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import train_test_split
-from random import randrange
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from pattern_configuration import PatternConfiguration
+from pattern_database import stock_database
 
 
 class PatternPredictor:
@@ -249,3 +245,65 @@ class PatternPredictorForTrades(PatternPredictor):
         return self.__get_base_query_with_skip_conditions__(base_query)
 
 
+class PatternMasterPredictor:
+    def __init__(self, config: PatternConfiguration):
+        self.config = config
+        self.pattern_table = stock_database.PatternTable()
+        self.trade_table = stock_database.TradeTable()
+        self.db_stock = stock_database.StockDatabase()
+        self.predictor_dict = {}
+        self.__init_predictor_dict__()
+
+    def get_feature_columns(self, pattern_type: str):
+        predictor = self.predictor_dict[pattern_type]
+        return predictor.feature_columns
+
+    def predict_for_label_columns(self, pattern_type: str, x_input: np.array):
+        predictor = self.predictor_dict[pattern_type]
+        return predictor.predict_for_label_columns(x_input)
+
+    def init_without_condition_list(self, ticker_id: str):
+        self.__init_predictor_dict__(self.__get_skip_condition_list__(ticker_id))
+
+    def __init_predictor_dict__(self, skip_condition_list=None):
+        for pattern_type in FT.get_all():
+            self.predictor_dict[pattern_type] = \
+                self.__get_predictor_for_pattern_type__(pattern_type, skip_condition_list)
+
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        pass
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        pass
+
+
+class PatternMasterPredictorTouchPoints(PatternMasterPredictor):
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorTouchPoints(self.db_stock, pattern_type, skip_condition_list)
+
+
+class PatternMasterPredictorBeforeBreakout(PatternMasterPredictor):
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorBeforeBreakout(self.db_stock, pattern_type, skip_condition_list)
+
+
+class PatternMasterPredictorAfterBreakout(PatternMasterPredictor):
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorAfterBreakout(self.db_stock, pattern_type, skip_condition_list)
+
+
+class PatternMasterPredictorForTrades(PatternMasterPredictor):
+    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_trade]
+
+    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorForTrades(self.db_stock, pattern_type, skip_condition_list)

@@ -6,7 +6,7 @@ Date: 2018-06-17
 """
 
 import plotly.graph_objs as go
-from sertl_analytics.constants.pattern_constants import DC, CHT, FT
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
 from pattern_dash.my_dash_colors import DashColorHandler
 import pandas as pd
@@ -34,6 +34,10 @@ class MyDashTabStatisticsPlotter:
         if self.chart_type == CHT.SCATTER:
             graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
             graph_api.figure_data = self.__get_scatter_figure_data__()
+            return [MyDCC.graph(graph_api)]
+        elif self.chart_type == CHT.PREDICTOR:
+            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'predictor'))
+            graph_api.figure_data = self.__get_scatter_figure_data_for_predictor__()
             return [MyDCC.graph(graph_api)]
         elif self.chart_type == CHT.PIE:
             graph_api =  DccGraphApi(self._chart_id + '_winner', self._chart_name + ' (winner)')
@@ -68,6 +72,20 @@ class MyDashTabStatisticsPlotter:
                 marker={'size': 15, 'line': {'width': 0.5, 'color': 'white'}},
                 name=category
             ) for category in df[self.category].unique()
+        ]
+
+    def __get_scatter_figure_data_for_predictor__(self):
+        df = self.__get_df_for_selection__()
+        return [
+            go.Scatter(
+                x=df[df[DC.PATTERN_TYPE] == pattern_type][self.x_variable],
+                y=df[df[DC.PATTERN_TYPE] == pattern_type][self.y_variable],
+                text=df[df[DC.PATTERN_TYPE] == pattern_type][self.text_variable],
+                mode='markers',
+                opacity=0.7,
+                marker={'size': 15, 'line': {'width': 0.5, 'color': 'white'}},
+                name=pattern_type
+            ) for pattern_type in df[DC.PATTERN_TYPE].unique()
         ]
 
     def __get_pie_figure_data__(self, for_winner: bool):
@@ -242,6 +260,7 @@ class MyDashTabStatisticsPlotter4Pattern(MyDashTabStatisticsPlotter):
         self._chart_id = 'pattern_statistics_graph'
         self._chart_name = 'Pattern'
         self.chart_type = CHT.SCATTER
+        self.predictor = PRED.TOUCH_POINT
         self.category = DC.PATTERN_TYPE
         self.x_variable = DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT
         self.y_variable = DC.EXPECTED_WIN_REACHED

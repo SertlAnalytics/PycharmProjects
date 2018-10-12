@@ -6,7 +6,8 @@ Date: 2018-09-26
 """
 
 from dash.dependencies import Input, Output
-from sertl_analytics.constants.pattern_constants import DC
+from sertl_analytics.constants.pattern_constants import DC, CHT, PRED
+from pattern_database.stock_tables import TradeTable
 from pattern_dash.my_dash_header_tables import MyHTMLTabTradeStatisticsHeaderTable
 from pattern_dash.my_dash_drop_down import TradeStatisticsDropDownHandler
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Trades
@@ -41,3 +42,17 @@ class MyDashTab4TradeStatistics(MyDashTab4StatisticsBase):
             number_pos = self._df_base[self._df_base[DC.TRADE_RESULT_ID] == 1].shape[0]
             number_neg = self._df_base[self._df_base[DC.TRADE_RESULT_ID] == -1].shape[0]
             return '{} (+{}/-{})'.format(number_all, number_pos, number_neg)
+
+    @staticmethod
+    def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):
+        if chart_type == CHT.PREDICTOR:
+            if predictor == PRED.FOR_TRADE:
+                return TradeTable.__get_feature_columns_for_trades__()
+        return TradeTable.get_columns_for_statistics_category()
+
+    @staticmethod
+    def __get_value_list_for_y_variable_options__(chart_type: str, predictor: str):
+        if chart_type == CHT.PREDICTOR:
+            if predictor == PRED.FOR_TRADE:
+                return TradeTable.__get_label_columns_for_trades__()
+        return TradeTable.get_columns_for_statistics_y_variable()

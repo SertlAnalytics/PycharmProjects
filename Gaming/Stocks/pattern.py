@@ -314,13 +314,8 @@ class Pattern:
         return False if False in [check_dict[key] for key in check_dict] else True
 
     def are_conditions_for_buy_trigger_fulfilled(self, buy_trigger: str) -> bool:
-        if buy_trigger == BT.TOUCH_POINT and not self.__are_conditions_for_a_touch_point_buy_fulfilled__():
-            return False
-        return True
-
-    def are_conditions_for_trade_strategy_fulfilled(self, trade_strategy: str) -> bool:
-        if trade_strategy == TSTR.LIMIT and not self.__is_expected_win_sufficient__():
-            return False
+        if buy_trigger == BT.TOUCH_POINT:
+            return self.__are_conditions_for_a_touch_point_buy_fulfilled__()
         return True
 
     def __are_conditions_for_a_touch_point_buy_fulfilled__(self) -> bool:
@@ -331,8 +326,13 @@ class Pattern:
             'False_breakout': self.data_dict_obj.get(DC.FC_FALSE_BREAKOUT_ID) == 0,
             'Expected_win_touch_point_sufficient': self.__is_expected_win_for_touch_point_sufficient__()
         }
-        print(check_dict)
+        print(check_dict)  # Todo remove print
         return False if False in check_dict else True
+
+    def are_conditions_for_trade_strategy_fulfilled(self, trade_strategy: str) -> bool:
+        if self.__is_expected_win_sufficient__():
+            return True
+        return trade_strategy == TSTR.TRAILING_STEPPED_STOP  # only this strategy is allowed in that case
 
     def __is_formation_established__(self):  # this is the main check whether a formation is ready for a breakout
         return True

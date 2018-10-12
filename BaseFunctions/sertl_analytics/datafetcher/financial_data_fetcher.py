@@ -28,6 +28,7 @@ class APIBaseFetcher:
         self.df = self.__get_data_frame__()
         self.column_list = list(self.df.columns.values)
         self.__format_column__()
+        self.__round_df_column_values__()
 
     def __get_data_frame__(self):
         pass
@@ -51,6 +52,21 @@ class APIBaseFetcher:
     @staticmethod
     def get_standard_column_names():  # OLD: 1. open   2. high    3. low  4. close 5. volume
         return ['Close', 'High', 'Low', 'Open', 'Volume']
+
+    def __round_df_column_values__(self):
+        decimal = self.__get_decimals_for_df_column_rounding__()
+        decimals = pd.Series([decimal, decimal, decimal, decimal, 0], index=self.get_standard_column_names())
+        self.df = self.df.round(decimals)
+
+    def __get_decimals_for_df_column_rounding__(self):
+        high_mean = self.df[CN.HIGH].mean()
+        if high_mean < 1:
+            return 4
+        elif high_mean < 10:
+            return 3
+        elif high_mean < 1000:
+            return 1
+        return 0
 
 
 class AlphavantageJSONFetcher (APIBaseFetcher):
@@ -287,6 +303,7 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         df = df[[0, 2, 3, 4, 1, 5]]
         df.set_index(0, drop=True, inplace=True)
         df.columns = self.get_standard_column_names()
+        df.sort_index(inplace=True)
         return df
 
     def _get_url_(self):  # the symbol has the structure tsymbolCCY like tBTCUSD

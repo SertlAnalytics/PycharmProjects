@@ -128,9 +128,9 @@ class PatternDetectionController:
             return stock_db_df_obj.df_data
         elif ticker in self.sys_config.crypto_ccy_dic:
             if period == PRD.INTRADAY:
-                fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
-                # fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, run_on_dash)
-                #  ToDo - differences between CryptoCompare and Bitfinex data and display (Fib-waves, ...)
+                # fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
+                fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, run_on_dash)
+                # self.__handle_difference_of_exchanges(fetcher.df_data, fetcher_bit.df_data)
                 return fetcher.df_data
             else:
                 fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
@@ -140,6 +140,13 @@ class PatternDetectionController:
             if self.sys_config.config.api_period == PRD.INTRADAY:
                 return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             return fetcher.df_data
+
+    @staticmethod
+    def __handle_difference_of_exchanges(df_cc: pd.DataFrame, df_bitfinex: pd.DataFrame):
+        df_diff = df_cc - df_bitfinex
+        print(df_cc.head())
+        print(df_bitfinex.head())
+        print(df_diff.head())
 
     @staticmethod
     def __cut_intraday_df_to_one_day__(df: pd.DataFrame) -> pd.DataFrame:

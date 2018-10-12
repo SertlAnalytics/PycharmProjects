@@ -17,7 +17,7 @@ from pattern_trade_handler import PatternTradeHandler
 from pattern_database.stock_tables import TradeTable
 from pattern_database.stock_database import StockDatabaseDataFrame
 from dash import Dash
-from sertl_analytics.constants.pattern_constants import DC, TP, BT, TSTR, FT, PRD
+from sertl_analytics.constants.pattern_constants import DC, TP, PTS
 from pattern_test.trade_test_cases import TradeTestCaseFactory
 from pattern_test.trade_test import TradeTest, TradeTestApi
 from pattern_dash.my_dash_tools import MyGraphCache
@@ -53,6 +53,10 @@ class ReplayHandler:
         return '{}: {}-{}-{}-{}'.format(self.trade_test_api.symbol,
                                         self.trade_test_api.buy_trigger, self.trade_test_api.trade_strategy,
                                         self.trade_test_api.pattern_type, self.sys_config.config.api_period)
+
+    @property
+    def pattern_trade(self):
+        return self.graph_api.pattern_trade
 
     def set_trade_test_api_by_selected_trade_row(self, selected_row):
         self.trade_test_api = TradeTestCaseFactory.get_trade_test_api_by_selected_trade_row(
@@ -140,6 +144,7 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._trade_rows_for_data_table = MyDCC.get_rows_from_df_for_data_table(self._df_trade_for_replay)
         self.__init_selected_row__(TP.TRADE_REPLAY)
         self.__init_replay_handlers__()
+        self._selected_pattern_trade = None
         self._stop_trade = False
         self._stop_n_clicks = 0
         self._continue_n_clicks = 0
@@ -148,6 +153,7 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._selected_trade_type = trade_type
         self._selected_row_index = -1
         self._selected_row = None
+        self._selected_pattern_trade = None
 
     def __init_replay_handlers__(self):
         self._trade_replay_handler = ReplayHandler(TP.TRADE_REPLAY, self.sys_config, self.exchange_config)
@@ -166,8 +172,7 @@ class MyDashTab4Trades(MyDashBaseTab):
             MyHTML.div_with_html_button_submit('my_trade_stop_button', 'Stop'),
             MyHTML.div_with_html_button_submit('my_trade_continue_button', 'Continue'),
             MyHTML.div('my_trade_table_div', self.__get_table_for_trades__(), False),
-            MyHTML.div('my_graph_trade_replay_div', '', False),
-            MyHTML.div('my_temp_result_div', '', False)
+            MyHTML.div('my_graph_trade_replay_div', '', False)
         ]
         # scatter_graph = self.__get_scatter_graph_for_trades__('trade_scatter_graph')
         return MyHTML.div('my_trades', children_list)
@@ -187,13 +192,9 @@ class MyDashTab4Trades(MyDashBaseTab):
             [Input('my_graph_trade_replay_div', 'children')])
         def handle_callback_for_ticket_markdown(children):
             if self._selected_row_index == -1:
-                return 'nothing selected'
-            text = dedent('''
-                            **Last tick:** open:{} - **close = {}**
-
-                            **Annotations (next breakout)**: {}
-                            ''').format('open', 'close', self._selected_row)
-            return text
+                return ''
+            ticker_refresh_seconds = self.__get_ticker_refresh_seconds__()
+            return self._selected_pattern_trade.get_markdown_text(ticker_refresh_seconds)
 
     def __init_callback_for_trade_numbers__(self):
         @self.app.callback(
@@ -253,12 +254,18 @@ class MyDashTab4Trades(MyDashBaseTab):
                                                 n_clicks_stop: int, n_clicks_cont: int):
             self.__handle_n_clicks_stop__(n_clicks_stop)
             self.__handle_n_clicks_continue__(n_clicks_cont)
+            self.__handle_trade_type_selection__(trade_type)
             if trade_type == TP.TRADE_REPLAY and len(selected_row_indices) > 0 and self._stop_trade:
                 return ''
             else:
                 if not(trade_type == TP.TRADE_REPLAY and len(selected_row_indices)):
                     self._stop_trade = False  # to avoid a continue button with the next selection of a trade
                 return 'hidden'
+
+    def __handle_trade_type_selection__(self, trade_type: str):
+        if trade_type != self._selected_trade_type:
+            self._selected_trade_type = trade_type
+            self.__init_selected_row__(trade_type)
 
     def __handle_n_clicks_stop__(self, n_clicks: int):
         if n_clicks > self._stop_n_clicks:
@@ -275,8 +282,10 @@ class MyDashTab4Trades(MyDashBaseTab):
             Output('my_graph_trade_replay_div', 'children'),
             [Input(self._data_table_name, 'rows'),
              Input(self._data_table_name, 'selected_row_indices'),
-             Input('my_interval_timer', 'n_intervals')])
-        def handle_callback_for_graph_trade(rows: list, selected_row_indices: list, n_intervals: int):
+             Input('my_interval_timer', 'n_intervals'),
+             Input('my_trade_type_selection', 'value')])
+        def handle_callback_for_graph_trade(rows: list, selected_row_indices: list, n_intervals: int, trade_type: str):
+            self.__handle_trade_type_selection__(trade_type)
             if len(selected_row_indices) == 0:
                 self._selected_row_index = -1
                 return ''
@@ -324,6 +333,7 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._trade_replay_handler.add_pattern_list_for_trade()
         self._trade_replay_handler.test_case_value_pair_index = -1
         self._trade_replay_handler.set_graph_api()
+        self._selected_pattern_trade = self._trade_replay_handler.pattern_trade
         self._trade_replay_handler.graph = self.__get_dcc_graph_element__(
             self._trade_replay_handler.detector, self._trade_replay_handler.graph_api)
         return self._trade_replay_handler.graph, self._trade_replay_handler.graph_id
@@ -332,9 +342,17 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._trade_replay_handler_online.set_trade_test_api_by_selected_trade_row(self._selected_row)
         self._trade_replay_handler_online.set_trade_test()
         self._trade_replay_handler_online.set_graph_api()
+        self._selected_pattern_trade = self._trade_replay_handler_online.pattern_trade
         self._trade_replay_handler_online.graph = self.__get_dcc_graph_element__(
             None, self._trade_replay_handler_online.graph_api)
         return self._trade_replay_handler_online.graph, self._trade_replay_handler_online.graph_id
+
+    def __get_ticker_refresh_seconds__(self):
+        if self._selected_trade_type == TP.TRADE_REPLAY:
+            return self.sys_config.config.api_period_aggregation
+        else:
+            return self.exchange_config.check_ticker_after_timer_intervals * \
+                   self.sys_config.config.api_period_aggregation
 
     @staticmethod
     def __get_trade_type_options__():
