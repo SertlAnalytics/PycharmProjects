@@ -5,8 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-08-22
 """
 
-from sertl_analytics.constants.pattern_constants import FT
+from sertl_analytics.constants.pattern_constants import FT, DC
 import numpy as np
+import pandas as pd
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
 from pattern_database.stock_database import DatabaseDataFrame
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
@@ -16,6 +17,93 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from pattern_configuration import PatternConfiguration
 from pattern_database import stock_database
+from sertl_analytics.mymath import MyMath
+
+
+class PatternFeaturesSelector:
+    def __init__(self, _df_features_with_label: pd.DataFrame, label_column: str, features_columns_orig: list):
+        self._df_features_with_label = _df_features_with_label
+        self._label_column = label_column
+        self._features_columns_orig = features_columns_orig
+        self._features_columns_result = features_columns_orig  # default
+        self._label_feature_information_gain_dict = {}
+
+    @property
+    def features_column_result(self) -> list:
+        return self._features_columns_result
+
+    def calculate_information_gain_for_feature_columns(self):
+        if self._df_features_with_label.shape[0] == 0:
+            return
+        df = self._df_features_with_label
+        binary_value = self.__get_value_for_binary_label_column__()
+        label_dict = MyMath.get_entropy_dict_for_df_label_column_values(df, self._label_column, binary_value)
+        # key = '{}={}'.format(column, value) return_dict[key] = [column, value, p_v, column_entropy]
+        for feature_column in self._features_columns_orig:
+            feature_dict = MyMath.get_entropy_dict_for_df_feature_column_values(
+                df, feature_column, self._label_column, binary_value)
+            self.__add_to_gain_dict__(label_dict, feature_column, feature_dict)
+        self.__print_information_gains__()
+
+    @staticmethod
+    def __print_entropy_values__(label_dict, feature_dict):
+        for values in label_dict.values():
+            print(values)
+        for values in feature_dict.values():
+            print(values)
+
+    def __print_information_gains__(self):
+        for key, value in self._label_feature_information_gain_dict.items():
+            print('Information gain for {}: {}'.format(key, value))
+
+    def __add_to_gain_dict__(self, label_dict: dict, feature_column: str, feature_dict: dict):
+        for label_list in label_dict.values():  # [column, value, p_v, column_entropy]
+            label_column = label_list[0]
+            label_value = label_list[1]
+            parent_entropy = label_list[3]
+            child_correction_sum = 0
+            key = 'L={}, LV={}, F={}'.format(label_column, label_value, feature_column)
+            for value_list in feature_dict.values():
+                if label_column == value_list[0] and label_value == value_list[1]:
+                # [label_column, label_value, feature_column, feature_value, p_f_v, column_entropy]
+                    child_correction_sum += value_list[-2] * value_list[-1]
+            child_correction_sum = round(child_correction_sum, 4)
+            information_gain = round(parent_entropy - child_correction_sum, 4)
+            self._label_feature_information_gain_dict[key] = [parent_entropy, child_correction_sum, information_gain]
+
+    @staticmethod
+    def __get_parent_entropy_from_label_dict__(label_column: str, label_dict: dict):
+        # [column, value, p_v, column_entropy]
+        summary_entropy = 0
+        for value_list in label_dict.values():
+            column = value_list[0]
+            value_probability = value_list[2]
+            value_entropy = value_list[3]
+            if column == label_column:
+                if len(label_dict) == 1:
+                    return value_entropy  # we don't need to calculate the entropy over all the values...
+                else:
+                    summary_entropy += value_probability * value_entropy
+        return summary_entropy
+
+    def __calculate_entropy_for_df_features_with_label__(self):
+        print('Calculate entropy for {}:'.format(self.__class__.__name__))
+        if self.__class__.__name__ == 'PatternPredictorBeforeBreakout':
+            pass  # Trade_Reached_Price_PCT
+        else:
+            return
+        for columns in self.label_columns:
+            entropy = MyMath.get_entropy_of_df_column(self._df_features_with_labels, columns)
+            print('Entropy for label {}: {}'.format(columns, entropy))
+        for columns in self.feature_columns:
+            entropy = MyMath.get_entropy_of_df_column(self._df_features_with_labels, columns)
+            print('Entropy for feature {}: {}'.format(columns, entropy))
+
+    def __get_value_for_binary_label_column__(self):  # get the highest value for binary
+        unique_values = sorted(self._df_features_with_label[self._label_column].unique())
+        if len(unique_values) <= 2:
+            return unique_values[-1]
+        return None
 
 
 class PatternPredictor:
@@ -30,6 +118,9 @@ class PatternPredictor:
         self._query_for_feature_and_label_data = self.__get_query_for_feature_and_label_data__()
         self._predictor_dict = self.__get_predictor_dict__()
         self._df_features_with_labels = self.__get_df_features_with_labels__()
+        self._label_feature_information_gain_dict = {}
+        # self.__calculate_information_gain_for_label_feature_columns__()
+        # self.__calculate_entropy_for_df_features_with_label__()
         if self.is_ready_for_prediction:
             self._df_features = self._df_features_with_labels[self.feature_columns]
             self._df_labels = self._df_features_with_labels[self.label_columns]
@@ -41,11 +132,100 @@ class PatternPredictor:
     def is_ready_for_prediction(self):
         return self._df_features_with_labels.shape[0] > 10
 
-    def predict_for_label_columns(self, x_input: np.array):
+    def __calculate_information_gain_for_label_feature_columns__(self):
+        if self._df_features_with_labels.shape[0] == 0:
+            return
+        df = self._df_features_with_labels
+        if self.__class__.__name__ == 'PatternPredictorBeforeBreakout' and self.pattern_type == FT.CHANNEL:
+            pass  # Trade_Reached_Price_PCT
+        else:
+            return
+        print('Calculate entropy for {} and {}:'.format(self.pattern_type, self.__class__.__name__))
+        for label_column in self.label_columns:
+            # if label_column in [DC.FALSE_BREAKOUT, DC.BREAKOUT_DIRECTION_ID]:
+            if label_column in [DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT]:
+                binary_value = self.__get_value_for_binary_label_column__(label_column)
+                label_dict = MyMath.get_entropy_dict_for_df_label_column_values(df, label_column, binary_value)
+                # key = '{}={}'.format(column, value) return_dict[key] = [column, value, p_v, column_entropy]
+                for feature_column in self.feature_columns:
+                    if feature_column == DC.TOUCH_POINTS_TILL_BREAKOUT_TOP:
+                        feature_dict = MyMath.get_entropy_dict_for_df_feature_column_values(
+                            df, feature_column, label_column, binary_value)
+                        # self.__print_entropy_values__(label_dict, feature_dict)
+                        self.__add_to_gain_dict__(label_dict, feature_column, feature_dict)
+        self.__print_information_gains__()
+
+    @staticmethod
+    def __print_entropy_values__(label_dict, feature_dict):
+        for values in label_dict.values():
+            print(values)
+        for values in feature_dict.values():
+            print(values)
+
+    def __print_information_gains__(self):
+        for key, value in self._label_feature_information_gain_dict.items():
+            print('Information gain for {}: {}'.format(key, value))
+
+    def __add_to_gain_dict__(self, label_dict: dict, feature_column: str, feature_dict: dict):
+        for label_list in label_dict.values():  # [column, value, p_v, column_entropy]
+            label_column = label_list[0]
+            label_value = label_list[1]
+            parent_entropy = label_list[3]
+            child_correction_sum = 0
+            key = 'L={}, LV={}, F={}'.format(label_column, label_value, feature_column)
+            for value_list in feature_dict.values():
+                if label_column == value_list[0] and label_value == value_list[1]:
+                # [label_column, label_value, feature_column, feature_value, p_f_v, column_entropy]
+                    child_correction_sum += value_list[-2] * value_list[-1]
+            child_correction_sum = round(child_correction_sum, 4)
+            information_gain = round(parent_entropy - child_correction_sum, 4)
+            self._label_feature_information_gain_dict[key] = [parent_entropy, child_correction_sum, information_gain]
+
+    @staticmethod
+    def __get_parent_entropy_from_label_dict__(label_column: str, label_dict: dict):
+        # [column, value, p_v, column_entropy]
+        summary_entropy = 0
+        for value_list in label_dict.values():
+            column = value_list[0]
+            value_probability = value_list[2]
+            value_entropy = value_list[3]
+            if column == label_column:
+                if len(label_dict) == 1:
+                    return value_entropy  # we don't need to calculate the entropy over all the values...
+                else:
+                    summary_entropy += value_probability * value_entropy
+        return summary_entropy
+
+    def __calculate_entropy_for_df_features_with_label__(self):
+        print('Calculate entropy for {}:'.format(self.__class__.__name__))
+        if self.__class__.__name__ == 'PatternPredictorBeforeBreakout':
+            pass  # Trade_Reached_Price_PCT
+        else:
+            return
+        for columns in self.label_columns:
+            entropy = MyMath.get_entropy_of_df_column(self._df_features_with_labels, columns)
+            print('Entropy for label {}: {}'.format(columns, entropy))
+        for columns in self.feature_columns:
+            entropy = MyMath.get_entropy_of_df_column(self._df_features_with_labels, columns)
+            print('Entropy for feature {}: {}'.format(columns, entropy))
+
+    @staticmethod
+    def __get_value_for_binary_label_column__(column: str):
+        column_value_dict = {
+            DC.TRADE_RESULT_ID: 1,
+            DC.TRADE_REACHED_PRICE: 1,
+            DC.BREAKOUT_DIRECTION_ID: 1,
+            DC.FALSE_BREAKOUT: 1
+        }
+        return column_value_dict.get(column, None)
+
+    def predict_for_label_columns(self, x_input: pd.Series):
+        np_array = x_input.values
+        np_array = np_array.reshape(1, np_array.size)
         return_dict = {}
         for label in self.label_columns:
             if self.is_ready_for_prediction:
-                prediction = self._predictor_dict[label].predict(x_input)[0]
+                prediction = self._predictor_dict[label].predict(np_array)[0]
             else:
                 prediction = 0
             if self.feature_table.is_label_column_for_regression(label):

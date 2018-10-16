@@ -111,8 +111,9 @@ class TradeCandidateController:
         self._actual_pattern_id_list = []
         self._trade_candidates_for_ticker_id_dict = {}
         for pattern in pattern_list:
-            self._actual_pattern_id_list.append(pattern.id)
-            self.__add_pattern_to_candidates_after_check__(pattern)
+            if pattern.ticker_id not in ['NEOUSD']:  # ToDo currently we have some data sourcing issues with that...
+                self._actual_pattern_id_list.append(pattern.id)
+                self.__add_pattern_to_candidates_after_check__(pattern)
 
     def is_pattern_id_in_actual_pattern_id_list(self, pattern_id: str) -> bool:
         return pattern_id in self._actual_pattern_id_list

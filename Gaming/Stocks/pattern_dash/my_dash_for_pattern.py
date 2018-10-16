@@ -76,7 +76,7 @@ class MyDash4Pattern(MyDashBase):
         children_list = [
             MyHTMLHeaderTable().get_table(),
             MyDCC.interval('my_interval_timer', self.bitfinex_config.ticker_refresh_rate_in_seconds),
-            MyDCC.interval('my_interval', 100),
+            MyDCC.interval('my_interval', 120),
             self.__get_tabs_for_app__()
         ]
         return MyHTML.div('my_app', children_list)

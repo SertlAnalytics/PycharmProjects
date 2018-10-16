@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import FT, FCC, FD, DC, CN, SVC, EXTREMA, BT, PT, PRD, TSTR
 import numpy as np
+import pandas as pd
 import math
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_trade_result import TradeResult
@@ -293,7 +294,8 @@ class Pattern:
         check_dict = {
             'Pre_constraints': self.__are_pre_constraints_fulfilled__(),
             'Established': self.__is_formation_established__(),
-            # 'Expected_win': self.__is_expected_win_sufficient__()
+            'Expected_win': self.__is_expected_win_sufficient__() or self.pattern_type in [FT.CHANNEL, FT.CHANNEL_DOWN]
+            # sometimes channels are used to have a strong breakout - we want to follow them...
         }
         return False if False in [check_dict[key] for key in check_dict] else True
 
@@ -544,9 +546,7 @@ class Pattern:
             feature_columns = self.sys_config.pattern_table.features_columns_after_breakout
         if self.data_dict_obj.is_data_dict_ready_for_columns(feature_columns):
             data_list = self.data_dict_obj.get_data_list_for_columns(feature_columns)
-            np_array = np.array(data_list).reshape(1, len(data_list))
-            # print('{}: np_array.shape={}'.format(prediction_type, np_array.shape))
-            return np_array
+            return pd.Series(data_list, feature_columns)  # we need the columns for dedicated features columns later
         return None
 
     def _get_value_categorizer_for_part_entry_(self) -> ValueCategorizer:

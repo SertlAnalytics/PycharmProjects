@@ -328,7 +328,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
             if not for_caching:
                 self._detector_first = self._graph_first_cache.get_detector(graph_key)
                 self._pattern_data_first = self._graph_first_cache.get_pattern_data(graph_key)
-            # print('...return cached graph_first: {}'.format(graph_key))
+            print('...return cached graph_first: {}'.format(graph_key))
             return cached_graph, graph_key
 
         detector = self._pattern_controller.get_detector_for_dash(self.sys_config, ticker, and_clause)

@@ -303,9 +303,7 @@ class ChannelConstraints(Constraints):
                              CountConstraint(SVC.L_in, '>=', 3)]
         self.global_series = ['OR',
                               [SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on],
-                              [SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on],
-                              [SVC.U_in, SVC.U_in, SVC.L_in, SVC.U_in],
-                              [SVC.L_in, SVC.L_in, SVC.U_in, SVC.L_in]
+                              [SVC.U_on, SVC.L_on, SVC.U_on, SVC.L_on, SVC.U_on]
                               ]
 
     @staticmethod

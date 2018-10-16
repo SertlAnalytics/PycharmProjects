@@ -27,6 +27,7 @@ class TradingBoxApi:
 class TradingBox:
     def __init__(self, api: TradingBoxApi):
         self.box_type = ''
+        self._api = api
         self._data_dict = api.data_dict
         self._ticker_id = self._data_dict[DC.TICKER_ID]
         self._off_set_value = api.off_set_value  # basis for distance_top and _bottom
@@ -42,8 +43,8 @@ class TradingBox:
         self._distance_top = 0
         self._stop_loss_orig = 0
         self._stop_loss = 0
-        self._sell_limit_orig = 0 if self._trade_strategy == TSTR.LIMIT else math.inf
-        self._sell_limit = self._sell_limit_orig
+        self._sell_limit_orig = 0
+        self._sell_limit = 0
         self._distance_trailing_stop = 0
         self._next_trailing_stop = 0
         self._init_parameters_()
@@ -103,6 +104,12 @@ class TradingBox:
         return self.round(self._sell_limit)
 
     @property
+    def limit_for_graph(self):
+        if self._trade_strategy == TSTR.LIMIT:
+            return self.limit
+        return self.round(self.max_ticker_last_price + 2 * self._distance_top)
+
+    @property
     def distance_trailing_stop(self):
         return self.round(self._distance_trailing_stop)
 
@@ -141,6 +148,11 @@ class TradingBox:
         return self.__adjust_to_next_ticker_last_price__(ticker_last_price)
 
     def __adjust_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
+        stop_loss_changed = self.__adjust_stop_loss_to_next_ticker_last_price__(ticker_last_price)
+        limit_changed = self.__adjust_limit_to_next_ticker_last_price__(ticker_last_price)
+        return stop_loss_changed or limit_changed
+
+    def __adjust_stop_loss_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
         if self._trade_strategy == TSTR.LIMIT:  # with trailing stop
             if self._stop_loss < ticker_last_price - self._distance_bottom:
                 self._stop_loss = ticker_last_price - self._distance_bottom
@@ -160,13 +172,25 @@ class TradingBox:
                 return True
         return False
 
+    def __adjust_limit_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
+        if self._trade_strategy == TSTR.LIMIT:  # limit doesn't change
+            return False
+        else:
+            # if self._sell_limit < ticker_last_price + self._distance_top:
+            #     self._sell_limit = ticker_last_price + 2 * self._distance_top
+            #     return True
+            return False
+
     def _init_parameters_(self):
         pass
 
     def __calculate_stops_and_limits__(self):
         self._stop_loss_orig = self._off_set_value - self._distance_bottom
         self._stop_loss = self._stop_loss_orig
-        self._sell_limit_orig = self._off_set_value + self._distance_top if self._trade_strategy == TSTR.LIMIT else math.inf
+        if self._trade_strategy == TSTR.LIMIT:
+            self._sell_limit_orig = self._off_set_value + self._distance_top
+        else:
+            self._sell_limit_orig = math.inf
         self._sell_limit = self._sell_limit_orig
         self._distance_trailing_stop = self._distance_bottom
         self._next_trailing_stop = self._off_set_value

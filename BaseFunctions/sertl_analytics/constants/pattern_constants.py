@@ -395,7 +395,8 @@ class TP:  # TradeProcess
 
     @staticmethod
     def get_as_options():
-        li = [TP.TRADE_REPLAY, TP.ONLINE]
+        # li = [TP.TRADE_REPLAY, TP.ONLINE]
+        li = [TP.ONLINE, TP.TRADE_REPLAY]
         return [{'label': trade_process.replace('_', ' '), 'value': trade_process} for trade_process in li]
 
 

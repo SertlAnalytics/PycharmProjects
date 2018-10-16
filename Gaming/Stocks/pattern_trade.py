@@ -145,7 +145,8 @@ class PatternTrade:
 
     @property
     def ticker_actual(self) -> Ticker:
-        return self._ticker_dict[self._ticker_time_stamp_list[-1]]
+        if len(self._ticker_time_stamp_list) > 0:
+            return self._ticker_dict[self._ticker_time_stamp_list[-1]]
 
     @property
     def wave_tick_actual(self) -> WaveTick:
@@ -213,7 +214,7 @@ class PatternTrade:
     def __initialize_limit_stop_loss_values_for_tick_list__(self, tick_list: list):
         for wave_tick in tick_list:
             if wave_tick.limit_value == 0:
-                wave_tick.limit_value = self._trade_box.limit
+                wave_tick.limit_value = self._trade_box.limit_for_graph
             if wave_tick.stop_loss_value == 0:
                 wave_tick.stop_loss_value = self._trade_box.stop_loss
         # for tick in tick_list:
@@ -554,6 +555,8 @@ class PatternTrade:
         return None
 
     def get_markdown_text(self, ticker_refresh: int):
+        if self.ticker_actual is None:
+            return ''
         last_price = self.ticker_actual.last_price
         date_time = self.ticker_actual.date_time_str
         header = '**Last ticker:** {} - **at:** {} (refresh after {} sec.)'.format(last_price, date_time, ticker_refresh)
@@ -570,12 +573,15 @@ class PatternTrade:
         elif self._status == PTS.EXECUTED:
             bought_at = self._order_status_buy.price
             trailing_stop_distance = self.trailing_stop_distance
+            current_win_pct = round(((last_price - bought_at)/bought_at * 100), 2)
+            color = 'red' if current_win_pct < 0 else 'green'
+            # current_state = '<span style="color:{};">**{:.2f}%**</span>'.format(color, current_win_pct)
             return dedent('''
                 {}
 
                 **Process**: {} **Bought at**: {:2.2f} **Limit**: {:2.2f} **Stop**: {:2.2f} 
-                **Trailing stop distance**: {:2.2f}
-                ''').format(header, process, bought_at, limit, stop_loss, trailing_stop_distance)
+                **Trailing stop distance**: {:2.2f}: **{:.2f}%**
+                ''').format(header, process, bought_at, limit, stop_loss, trailing_stop_distance, current_win_pct)
         else:
             bought_at = self._order_status_buy.price
             return dedent('''
