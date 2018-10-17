@@ -330,9 +330,10 @@ class PatternTradeHandler:
         if pattern_trade.pattern.ticker_id not in self.ticker_id_list:
             self.ticker_id_list.append(pattern_trade.pattern.ticker_id)
         if pattern_trade.id in self.pattern_trade_dict:
-            if self.pattern_trade_dict[pattern_trade.id].status == PTS.NEW:  # replace with new version
-                self.pattern_trade_dict[pattern_trade.id] = pattern_trade
-                self.__print_details_after_adding_to_trade_dict(pattern_trade, 'Replace')
+            pass
+            # if self.pattern_trade_dict[pattern_trade.id].status == PTS.NEW:  # replace with new version
+            #     self.pattern_trade_dict[pattern_trade.id] = pattern_trade
+            #     self.__print_details_after_adding_to_trade_dict(pattern_trade, 'Replace')
         else:
             self.pattern_trade_dict[pattern_trade.id] = pattern_trade
             self.__print_details_after_adding_to_trade_dict(pattern_trade, 'Add')
