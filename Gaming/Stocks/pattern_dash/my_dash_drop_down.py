@@ -36,7 +36,7 @@ class StatisticsDropDownHandler(DropDownHandler):
     def __get_element_id__(self, drop_down_type: str):
         pass
 
-    def __get_default_value__(self, drop_down_type: str) -> str:
+    def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
         pass
 
     def __get_width__(self, drop_down_type: str):
@@ -71,7 +71,7 @@ class TradeStatisticsDropDownHandler(StatisticsDropDownHandler):
         }
         return value_dict.get(drop_down_type, None)
 
-    def __get_default_value__(self, drop_down_type: str) -> str:
+    def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
         default_dict = {
             DDT.CHART_TYPE: CHT.AREA_WINNER_LOSER,
             DDT.PREDICTOR: PRED.FOR_TRADE,
@@ -111,7 +111,7 @@ class PatternStatisticsDropDownHandler(StatisticsDropDownHandler):
         }
         return value_dict.get(drop_down_type, None)
 
-    def __get_default_value__(self, drop_down_type: str) -> str:
+    def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
         default_dict = {
             DDT.CHART_TYPE: CHT.AREA_WINNER_LOSER,
             DDT.PREDICTOR: PRED.TOUCH_POINT,

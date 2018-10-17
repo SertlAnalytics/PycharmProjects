@@ -12,7 +12,7 @@ from pattern_dash.my_dash_components import MyHTMLTable, COLORS, MyHTML, MyDCC
 
 class MyHTMLHeaderTable(MyHTMLTable):
     def __init__(self):
-        MyHTMLTable.__init__(self, 1, 3)
+        MyHTMLTable.__init__(self, 2, 3)
 
     def _init_cells_(self):
         user_label_div = MyHTML.div('my_user_label_div', 'Username:', True)
@@ -43,21 +43,22 @@ class MyHTMLHeaderTable(MyHTMLTable):
 
         self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div]))
         self.set_value(1, 2, 'Pattern Detection Dashboard')
-        self.set_value(1, 3,  MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div,
-                                                   online_div, stored_div]))
+        self.set_value(1, 3, MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div]))
+        self.set_value(2, 1, MyDCC.markdown('my_position_markdown'))
+        self.set_value(2, 2, MyDCC.markdown('my_dashboard_markdown'))
+        self.set_value(2, 3, MyHTML.div_embedded([online_div, stored_div]))
 
     def _get_cell_style_(self, row: int, col: int):
         width = ['20%', '60%', '20%'][col-1]
         bg_color = COLORS[0]['background']
         color = COLORS[0]['text']
-        text_align = ['left', 'center', 'right'][col-1]
-        v_align = ['top', 'top', 'top'][col - 1]
+        text_align = [['left', 'center', 'right'], ['left', 'left', 'right']][row - 1][col-1]
+        v_align = [['top', 'top', 'top'], ['top', 'top', 'middle']][row - 1][col - 1]
         font_weight = ['normal', 'bold', 'normal'][col - 1]
-        font_size = [16, 32, 16][col - 1]
-
+        font_size = [[16, 32, 16], [16, 16, 16]][row - 1][col - 1]
+        padding = 0 if row == 2 and col == 2 else self.padding_cell
         return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
-                'vertical-align': v_align, 'font-weight': font_weight, 'padding': self.padding_cell,
-                'font-size': font_size}
+                'vertical-align': v_align, 'font-weight': font_weight, 'padding': padding, 'font-size': font_size}
 
 
 class MyHTMLTabHeaderTable(MyHTMLTable):

@@ -195,8 +195,9 @@ class MyDashTab4Trades(MyDashBaseTab):
     def __init_callback_for_trade_markdown__(self):
         @self.app.callback(
             Output('my_trade_markdown', 'children'),
-            [Input('my_graph_trade_replay_div', 'children')])
-        def handle_callback_for_ticket_markdown(children):
+            [Input('my_graph_trade_replay_div', 'children'),
+             Input('my_interval_timer', 'n_intervals')])
+        def handle_callback_for_ticket_markdown(children, n_intervals: int):
             if self._selected_row_index == -1 or self._selected_pattern_trade is None:
                 return ''
             ticker_refresh_seconds = self.__get_ticker_refresh_seconds__()
@@ -266,10 +267,12 @@ class MyDashTab4Trades(MyDashBaseTab):
     def __update_selected_row_number_after_refresh__(self, trade_rows: list):
         selected_row_id = self._selected_row['ID']
         for index, row in enumerate(trade_rows):
-            if row['ID'] == selected_row_id and self._selected_row_index != index:
-                print('...updated selected row number: old={} -> {}=new'.format(self._selected_row_index, index))
-                self._selected_row_index = index
-                break
+            if row['ID'] == selected_row_id:
+                if self._selected_row_index != index:
+                    print('...updated selected row number: old={} -> {}=new'.format(self._selected_row_index, index))
+                    self._selected_row_index = index
+                return
+        self.__init_selected_row__(self._selected_trade_type)  # we have to reset the selected row, but not the type
 
     def __init_callback_for_stop_button__(self):
         @self.app.callback(

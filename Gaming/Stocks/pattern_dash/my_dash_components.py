@@ -64,12 +64,12 @@ class DropDownHandler:
             'padding-left': 10
         }
 
-    def get_drop_down_parameters(self, drop_down_type: str):
+    def get_drop_down_parameters(self, drop_down_type: str, default_value=None):
         return {
             'div_text': self.__get_div_text__(drop_down_type),
             'element_id': self.__get_element_id__(drop_down_type),
             'options': self.__get_options__(drop_down_type),
-            'default': self.__get_default_value__(drop_down_type),
+            'default': self.__get_default_value__(drop_down_type, default_value),
             'width': self.__get_width__(drop_down_type),
             'for_multi': self.__get_for_multi__(drop_down_type)
         }
@@ -93,7 +93,7 @@ class DropDownHandler:
         return [{'label': value.replace('_', ' '), 'value': value} for value in li]
 
     @abstractmethod
-    def __get_default_value__(self, drop_down_type: str) -> str:
+    def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
         raise NotImplementedError
 
     @abstractmethod

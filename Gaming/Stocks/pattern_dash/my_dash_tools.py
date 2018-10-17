@@ -68,8 +68,8 @@ class MyGraphCache(MyCache):
         return number_return
 
     @staticmethod
-    def get_cache_key(graph_id: str, ticker: str, days: int = 0):
-        return '{}_{}_{}'.format(graph_id, ticker, days)
+    def get_cache_key(graph_id: str, ticker: str, days=0, aggregation=0):
+        return '{}_{}_{}_{}'.format(graph_id, ticker, days, aggregation)
 
     def add_cache_object(self, cache_api: MyGraphCacheObjectApi):
         self._cached_object_dict[cache_api.key] = MyGraphCacheObject(cache_api)
@@ -127,7 +127,14 @@ class MyDashStateHandler:
         self._my_refresh_button_clicks = 0
         self._my_interval_n_intervals = 0
         self._my_interval_selection = 0
+        self._my_period_aggregation = 0
         self._ticker_dict = {dict_element['value']: 0 for dict_element in ticker_list}
+
+    def change_for_my_period_aggregation_selection(self, period_aggregation: int) -> bool:
+        if period_aggregation != self._my_period_aggregation:
+            self._my_period_aggregation = period_aggregation
+            return True
+        return False
 
     def change_for_my_interval_selection(self, interval_selection: int) -> bool:
         if interval_selection != self._my_interval_selection:
