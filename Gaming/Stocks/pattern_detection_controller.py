@@ -128,8 +128,8 @@ class PatternDetectionController:
             return stock_db_df_obj.df_data
         elif ticker in self.sys_config.crypto_ccy_dic:
             if period == PRD.INTRADAY:
-                fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
-                # fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, run_on_dash)
+                # fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
+                fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, run_on_dash)
                 # self.__handle_difference_of_exchanges(fetcher.df_data, fetcher_bit.df_data)
                 return fetcher.df_data
             else:

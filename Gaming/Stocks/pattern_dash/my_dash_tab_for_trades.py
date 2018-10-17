@@ -6,7 +6,7 @@ Date: 2018-09-26
 """
 
 import plotly.graph_objs as go
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import pandas as pd
 from pattern_dash.my_dash_base import MyDashBase, MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
@@ -150,6 +150,9 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._stop_trade = False
         self._stop_n_clicks = 0
         self._continue_n_clicks = 0
+        self._trades_stored_number = 0
+        self._trades_online_number = 0
+        self._cached_trade_table = None
 
     def __init_selected_row__(self, trade_type=''):
         self._selected_trade_type = trade_type
@@ -180,12 +183,13 @@ class MyDashTab4Trades(MyDashBaseTab):
         return MyHTML.div('my_trades', children_list)
 
     def init_callbacks(self):
-        self.__init_callback_for_trade_type_selection__()
+        self.__init_callback_for_trade_table__()
+        self.__init_callback_for_selected_row_indices__()
         self.__init_callback_for_trade_numbers__()
         self.__init_callback_for_trade_markdown__()
         self.__init_callback_for_trade_selection__()
-        # self.__init_callback_for_stop_button__()
-        # self.__init_callback_for_continue_button__()
+        self.__init_callback_for_stop_button__()
+        self.__init_callback_for_continue_button__()
         self.__init_callback_for_graph_trade__()
 
     def __init_callback_for_trade_markdown__(self):
@@ -199,10 +203,17 @@ class MyDashTab4Trades(MyDashBaseTab):
             return self._selected_pattern_trade.get_markdown_text(ticker_refresh_seconds)
 
     def __init_callback_for_trade_numbers__(self):
+        """
+        We need the following series since the call back should be done when all trades are calculated.
+        This is done when the first graph and all the others before breakout are calculated.
+        Detail: my_graphs_before_breakout_div is called by  'my_graph_first_div'.
+        When my_graphs_before_breakout_div is calculated all new trades are known.
+        """
         @self.app.callback(
             Output('my_online_trade_div', 'children'),
-            [Input('my_interval', 'n_intervals')])
-        def handle_callback_for_online_trade_numbers(n_intervals: int):
+            # [Input('my_interval', 'n_intervals')])
+            [Input('my_graphs_before_breakout_div', 'children')])
+        def handle_callback_for_online_trade_numbers(children):
             return str(len(self._trade_replay_handler_online.trade_handler.pattern_trade_dict))
 
         @self.app.callback(
@@ -211,18 +222,26 @@ class MyDashTab4Trades(MyDashBaseTab):
         def handle_callback_for_stored_trade_numbers(n_intervals: int):
             return str(len(self._trade_rows_for_data_table))
 
-    def __init_callback_for_trade_type_selection__(self):
+    def __init_callback_for_trade_table__(self):
         @self.app.callback(
             Output('my_trade_table_div', 'children'),
-            [Input('my_trade_type_selection', 'value')])
-            # [Input('my_trade_type_selection', 'value'),
-            #  Input('my_online_trade_div', 'children'),
-            #  Input('my_stored_trade_div', 'children')])
-        def handle_callback_for_trade_type_selection(trade_type: str):  # , online_trades, stored_trades
-            # if self._selected_trade_type != trade_type:
-            self.__init_selected_row__(trade_type)
-            self.__init_replay_handlers__()
-            return self.__get_table_for_trades__()
+            [Input('my_trade_type_selection', 'value'),
+             Input('my_online_trade_div', 'children'),
+             Input('my_stored_trade_div', 'children')])
+        def handle_callback_for_trade_table(trade_type: str, online_number: int, stored_number: int):
+            if self._selected_trade_type != trade_type:
+                self._trades_online_number = online_number
+                self._trades_stored_number = stored_number
+                self.__init_selected_row__(trade_type)
+                self.__init_replay_handlers__()
+                return self.__get_table_for_trades__()
+            elif self._selected_trade_type == TP.ONLINE and self._trades_online_number != online_number:
+                self._trades_online_number = online_number
+                return self.__get_table_for_trades__()
+            elif self._selected_trade_type == TP.TRADE_REPLAY and self._trades_stored_number != stored_number:
+                self._trades_stored_number = stored_number
+                return self.__get_table_for_trades__()
+            return self.__get_table_for_trades__(True)
 
     def __init_callback_for_trade_selection__(self):
         @self.app.callback(
@@ -232,6 +251,25 @@ class MyDashTab4Trades(MyDashBaseTab):
             if self._selected_row_index == -1:
                 return 'Please select one trade'
             return self._selected_row[DC.TICKER_ID]
+
+    def __init_callback_for_selected_row_indices__(self):
+        @self.app.callback(
+            Output(self._data_table_name, 'selected_row_indices'),
+            [Input('my_trade_table_div', 'children')],
+            [State(self._data_table_name, 'rows')])
+        def handle_callback_for_selected_row_indices(children, rows):
+            if self._selected_row_index == -1 or self._selected_row is None or len(rows) == 0:
+                return []
+            self.__update_selected_row_number_after_refresh__(rows)
+            return [self._selected_row_index]
+
+    def __update_selected_row_number_after_refresh__(self, trade_rows: list):
+        selected_row_id = self._selected_row['ID']
+        for index, row in enumerate(trade_rows):
+            if row['ID'] == selected_row_id and self._selected_row_index != index:
+                print('...updated selected row number: old={} -> {}=new'.format(self._selected_row_index, index))
+                self._selected_row_index = index
+                break
 
     def __init_callback_for_stop_button__(self):
         @self.app.callback(
@@ -356,10 +394,10 @@ class MyDashTab4Trades(MyDashBaseTab):
 
     def __get_ticker_refresh_seconds__(self):
         if self._selected_trade_type == TP.TRADE_REPLAY:
-            return self.sys_config.config.api_period_aggregation
+            return self.exchange_config.ticker_refresh_rate_in_seconds
         else:
             return self.exchange_config.check_ticker_after_timer_intervals * \
-                   self.sys_config.config.api_period_aggregation
+                   self.exchange_config.ticker_refresh_rate_in_seconds
 
     @staticmethod
     def __get_trade_type_options__():
@@ -392,11 +430,15 @@ class MyDashTab4Trades(MyDashBaseTab):
         options = [{'label': 'df', 'value': 'df'}]
         return MyDCC.drop_down(drop_down_name, options)
 
-    def __get_table_for_trades__(self):
+    def __get_table_for_trades__(self, take_cached=False):
+        if take_cached and self._cached_trade_table:
+            print('Returned cached trade table...')
+            return self._cached_trade_table
         rows = self.__get_table_rows_for_trades__()
         if len(rows) == 0:
             rows = self.__get_empty_data_row__()
-        return MyDCC.data_table(self._data_table_name, rows, min_height=300)
+        self._cached_trade_table = MyDCC.data_table(self._data_table_name, rows, min_height=300)
+        return self._cached_trade_table
 
     def __get_table_rows_for_trades__(self):
         if self._selected_trade_type == TP.TRADE_REPLAY:

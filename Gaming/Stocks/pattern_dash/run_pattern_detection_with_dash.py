@@ -23,6 +23,7 @@ bitfinex_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_S
 
 sys_config.config.get_data_from_db = False
 sys_config.config.api_period = PRD.INTRADAY
+sys_config.config.api_period_aggregation = 15
 sys_config.config.pattern_type_list = FT.get_all()
 sys_config.prediction_mode_active = True
 sys_config.config.save_pattern_data = True

@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-10
 """
 
-import numpy as np
+import pandas as pd
 from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, PTHP, TR, OT, SVC, TP, FT, CN
 from sertl_analytics.mydates import MyDate
 from pattern import Pattern
@@ -273,8 +273,13 @@ class PatternTrade:
     def __print_details_for_actual_value_category__(self, process: str, l_value: float, u_value: float, vc: str):
         date_time = MyDate.get_date_time_from_epoch_seconds(self.ticker_actual.time_stamp)
         ticker_id = self.ticker_actual.ticker_id
-        print('{}: {}-{} vc={}: [{:.2f}, {:.2f}]: price={}, date_time={}'.format(
-            self.trade_process, ticker_id, process, vc, l_value, u_value, self.ticker_actual.last_price, date_time))
+        if process == PTHP.VERIFY_TOUCH_POINT:
+            print('{}: {}-{} below {:.2f}: price={}, date_time={} (vc={}: [{:.2f}, {:.2f}])'.format(
+                self.trade_process, ticker_id, process, l_value, self.ticker_actual.last_price, date_time,
+                vc, l_value, u_value))
+        else:
+            print('{}: {}-{} vc={}: [{:.2f}, {:.2f}]: price={}, date_time={}'.format(
+                self.trade_process, ticker_id, process, vc, l_value, u_value, self.ticker_actual.last_price, date_time))
 
     def are_preconditions_for_breakout_buy_fulfilled(self):
         if self.trade_strategy == TSTR.SMA:
@@ -315,7 +320,7 @@ class PatternTrade:
 
         vc_b = self.__get_value_category_for_breakout__()
         l_value, u_value = self.pattern.value_categorizer.get_value_range_for_category(ticker.time_stamp, vc_b)
-        self.__print_details_for_actual_value_category__('Verify touch-point', l_value, u_value, vc_b)
+        self.__print_details_for_actual_value_category__(PTHP.VERIFY_TOUCH_POINT, l_value, u_value, vc_b)
 
         for value_tuple in value_tuple_list:
             if value_tuple[0] < l_value:
@@ -549,9 +554,7 @@ class PatternTrade:
     def __get_x_data_for_prediction__(self, feature_columns: list):
         if self.data_dict_obj.is_data_dict_ready_for_columns(feature_columns):
             data_list = self.data_dict_obj.get_data_list_for_columns(feature_columns)
-            np_array = np.array(data_list).reshape(1, len(data_list))
-            # print('{}: np_array.shape={}'.format(prediction_type, np_array.shape)) ToDo
-            return np_array
+            return pd.Series(data_list, feature_columns)  # we need the columns for dedicated features columns later
         return None
 
     def get_markdown_text(self, ticker_refresh: int):
