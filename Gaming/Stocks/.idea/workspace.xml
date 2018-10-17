@@ -2,14 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_components.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_components.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_drop_down.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_drop_down.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_header_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_header_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_test/run_entropy_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_test/run_entropy_test.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -28,38 +23,35 @@
       <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="202">
-              <caret line="17" selection-start-line="17" selection-end-line="17" />
+            <state relative-caret-position="462">
+              <caret line="37" column="43" selection-start-line="37" selection-start-column="43" selection-end-line="37" selection-end-column="43" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="my_dash_for_pattern.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py">
+      <file leaf-file-name="pattern_predictor.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pattern_predictor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="680">
-              <caret line="76" column="20" lean-forward="true" selection-start-line="76" selection-start-column="20" selection-end-line="76" selection-end-column="20" />
+            <state relative-caret-position="485">
+              <caret line="208" column="23" selection-start-line="208" selection-start-column="23" selection-end-line="208" selection-end-column="23" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="my_dash_header_tables.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_header_tables.py">
+      <file leaf-file-name="mymath.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="561">
-              <caret line="74" column="42" lean-forward="true" selection-start-line="74" selection-start-column="42" selection-end-line="74" selection-end-column="42" />
+            <state relative-caret-position="242">
+              <caret line="91" column="82" selection-start-line="91" selection-start-column="82" selection-end-line="91" selection-end-column="82" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="my_dash_tab_for_pattern.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py">
+      <file leaf-file-name="run_entropy_test.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pattern_test/run_entropy_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="115" lean-forward="true" selection-start-line="115" selection-end-line="115" />
-              <folding>
-                <element signature="e#156#191#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="847">
+              <caret line="58" column="45" lean-forward="true" selection-start-line="58" selection-start-column="45" selection-end-line="58" selection-end-column="45" />
             </state>
           </provider>
         </entry>
@@ -181,8 +173,6 @@
         <option value="$PROJECT_DIR$/pattern_trade_box.py" />
         <option value="$PROJECT_DIR$/pattern.py" />
         <option value="$PROJECT_DIR$/pattern_predictor.py" />
-        <option value="$PROJECT_DIR$/pattern_test/run_entropy_test.py" />
-        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" />
         <option value="$PROJECT_DIR$/run_pattern_detection.py" />
         <option value="$PROJECT_DIR$/pattern_detection_controller.py" />
         <option value="$PROJECT_DIR$/pattern_dash/run_pattern_detection_with_dash.py" />
@@ -196,6 +186,8 @@
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tools.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_header_tables.py" />
+        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" />
+        <option value="$PROJECT_DIR$/pattern_test/run_entropy_test.py" />
       </list>
     </option>
   </component>
@@ -209,7 +201,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -240,6 +231,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -394,9 +386,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.run_pattern_detection_with_dash" />
+        <item itemvalue="Python.run_entropy_test" />
         <item itemvalue="Python.run_import_stock_data" />
         <item itemvalue="Python.run_import_crypto_data" />
-        <item itemvalue="Python.run_entropy_test" />
         <item itemvalue="Python.run_trade_back_testing" />
       </list>
     </recent_temporary>
@@ -425,43 +417,44 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6840237" visible="true" weight="0.23089172" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6831325" visible="true" weight="0.23089172" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32392156" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.28941175" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3370607" />
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.32784313" />
       <window_info anchor="bottom" id="Python Console" order="9" weight="0.3545098" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3372549" />
-      <window_info id="Structure" order="1" sideWeight="0.31597632" side_tool="true" visible="true" weight="0.23089172" />
+      <window_info id="Structure" order="1" sideWeight="0.31686747" side_tool="true" visible="true" weight="0.23089172" />
       <window_info anchor="bottom" id="Terminal" order="10" weight="0.32156864" />
-      <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4062745" />
+      <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.28941175" />
     </layout>
     <layout-to-restore>
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.5683453" visible="true" weight="0.20382166" />
       <window_info id="Structure" order="1" sideWeight="0.43165466" side_tool="true" weight="0.20382166" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32392156" />
-      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32784313" />
       <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.43529412" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.29411766" />
-      <window_info anchor="bottom" id="Python Console" order="9" weight="0.35607845" />
+      <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.563099" />
       <window_info anchor="bottom" id="Terminal" order="10" weight="0.32313725" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32784313" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.29411766" />
+      <window_info anchor="bottom" id="Python Console" order="9" weight="0.35607845" />
     </layout-to-restore>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -854,14 +847,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_test/run_entropy_test.py" />
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="922">
-          <caret line="95" column="76" lean-forward="true" selection-start-line="95" selection-start-column="76" selection-end-line="95" selection-end-column="76" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_data_container.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="451">
@@ -876,20 +861,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_predictor.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="264">
-          <caret line="222" selection-start-line="222" selection-end-line="222" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_dash/run_pattern_detection_with_dash.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
           <caret line="27" column="40" lean-forward="true" selection-start-line="27" selection-start-column="40" selection-end-line="27" selection-end-column="40" />
-          <folding>
-            <element signature="e#198#247#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -956,27 +931,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_pattern.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="36" column="67" selection-start-line="36" selection-start-column="37" selection-end-line="36" selection-end-column="67" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="202">
-          <caret line="17" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_pattern.py" />
     <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="222">
           <caret line="193" selection-start-line="193" selection-end-line="193" />
-          <folding>
-            <element signature="e#183#213#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -994,6 +953,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="115" lean-forward="true" selection-start-line="115" selection-end-line="115" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_header_tables.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="52" column="42" lean-forward="true" selection-start-line="52" selection-start-column="42" selection-end-line="52" selection-end-column="42" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="680">
@@ -1001,20 +974,31 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py">
+    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="115" lean-forward="true" selection-start-line="115" selection-end-line="115" />
-          <folding>
-            <element signature="e#156#191#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="462">
+          <caret line="37" column="43" selection-start-line="37" selection-start-column="43" selection-end-line="37" selection-end-column="43" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_header_tables.py">
+    <entry file="file://$PROJECT_DIR$/pattern_predictor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="74" column="42" lean-forward="true" selection-start-line="74" selection-start-column="42" selection-end-line="74" selection-end-column="42" />
+        <state relative-caret-position="485">
+          <caret line="208" column="23" selection-start-line="208" selection-start-column="23" selection-end-line="208" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="242">
+          <caret line="91" column="82" selection-start-line="91" selection-start-column="82" selection-end-line="91" selection-end-column="82" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_test/run_entropy_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="847">
+          <caret line="58" column="45" lean-forward="true" selection-start-line="58" selection-start-column="45" selection-end-line="58" selection-end-column="45" />
         </state>
       </provider>
     </entry>

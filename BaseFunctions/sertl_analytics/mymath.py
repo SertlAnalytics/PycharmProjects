@@ -89,7 +89,8 @@ class EntropyHandler:
                 child_correction_sum += child_entropy.information_gain_contribution
             child_correction_sum = round(child_correction_sum, 4)
         information_gain = round(parent_entropy.entropy - child_correction_sum, 4)
-        return [parent_entropy.entropy, child_correction_sum, information_gain]
+        percentage = '{:.1f}%'.format(information_gain/parent_entropy.entropy*100)
+        return [parent_entropy.entropy, child_correction_sum, information_gain, percentage]
 
     def __get_child_entropy_list_for_feature_and_parent_entropy__(self, feature: str, p_e: ParentEntropy):
         return [e for e in self._child_entropy_list
