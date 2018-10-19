@@ -38,15 +38,18 @@ class MyHTMLHeaderTable(MyHTMLTable):
         online_trade_div = MyHTML.div('my_online_trade_div', '0')
         stored_trade_label_div = MyHTML.div('my_stored_trade_label_div', 'Trades - Replay:', True)
         stored_trade_div = MyHTML.div('my_stored_trade_div', '0')
+        stored_pattern_label_div = MyHTML.div('my_stored_pattern_label_div', 'Pattern - Replay:', True)
+        stored_pattern_div = MyHTML.div('my_stored_pattern_div', '0')
         online_div = MyHTML.div_embedded([online_trade_label_div, MyHTML.span(' '), online_trade_div])
-        stored_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
+        trade_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
+        pattern_div = MyHTML.div_embedded([stored_pattern_label_div, MyHTML.span(' '), stored_pattern_div])
 
         self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div]))
         self.set_value(1, 2, 'Pattern Detection Dashboard')
         self.set_value(1, 3, MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div]))
         self.set_value(2, 1, MyDCC.markdown('my_position_markdown'))
         self.set_value(2, 2, MyDCC.markdown('my_dashboard_markdown'))
-        self.set_value(2, 3, MyHTML.div_embedded([online_div, stored_div]))
+        self.set_value(2, 3, MyHTML.div_embedded([online_div, trade_div, pattern_div]))
 
     def _get_cell_style_(self, row: int, col: int):
         width = ['20%', '60%', '20%'][col-1]
@@ -54,7 +57,7 @@ class MyHTMLHeaderTable(MyHTMLTable):
         color = COLORS[0]['text']
         text_align = [['left', 'center', 'right'], ['left', 'left', 'right']][row - 1][col-1]
         v_align = [['top', 'top', 'top'], ['top', 'top', 'middle']][row - 1][col - 1]
-        font_weight = ['normal', 'bold', 'normal'][col - 1]
+        font_weight = [['normal', 'bold', 'normal'], ['normal', 'normal', 'normal']][row - 1][col - 1]
         font_size = [[16, 32, 16], [16, 16, 16]][row - 1][col - 1]
         padding = 0 if row == 2 and col == 2 else self.padding_cell
         return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,

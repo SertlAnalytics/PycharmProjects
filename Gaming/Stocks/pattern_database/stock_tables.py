@@ -232,6 +232,12 @@ class PatternTable(MyTable, PredictionFeatureTable):
         return self._query_for_feature_and_label_data_after_breakout
 
     @staticmethod
+    def get_columns_for_replay() -> list:
+        return [DC.TICKER_ID, DC.TICKER_NAME, DC.PATTERN_TYPE, DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT,
+                DC.BREAKOUT_DT, DC.BREAKOUT_DIRECTION, DC.EXPECTED_WIN, DC.EXPECTED_WIN_REACHED,
+                DC.PERIOD, DC.PERIOD_AGGREGATION, DC.ID]
+
+    @staticmethod
     def get_columns_for_statistics() -> list:
         return [DC.TICKER_ID, DC.TICKER_NAME, DC.PATTERN_TYPE, DC.PATTERN_BEGIN_DT, DC.PATTERN_END_DT,
                 DC.BREAKOUT_DT, DC.BREAKOUT_DIRECTION, DC.EXPECTED_WIN, DC.EXPECTED_WIN_REACHED]

@@ -387,16 +387,22 @@ class TP:  # TradeProcess
     TEST_SINGLE = 'Test_single'
     BACK_TESTING = 'Back_testing'
     TRADE_REPLAY = 'Trade_replay'
+    PATTERN_REPLAY = 'Pattern_replay'
     NONE = 'None'
 
     @staticmethod
     def get_id(key: str):
-        return {TP.ONLINE: 10, TP.TEST_SINGLE: 20, TP.BACK_TESTING: 20, TP.NONE: 90}.get(key)
+        return {TP.ONLINE: 10, TP.TEST_SINGLE: 20, TP.BACK_TESTING: 30, TP.TRADE_REPLAY: 40,
+                TP.PATTERN_REPLAY: 50, TP.NONE: 90}.get(key)
+
+    @staticmethod
+    def get_as_list():
+        return [TP.ONLINE, TP.TRADE_REPLAY, TP.PATTERN_REPLAY]
 
     @staticmethod
     def get_as_options():
         # li = [TP.TRADE_REPLAY, TP.ONLINE]
-        li = [TP.ONLINE, TP.TRADE_REPLAY]
+        li = [TP.ONLINE, TP.TRADE_REPLAY, TP.PATTERN_REPLAY]
         return [{'label': trade_process.replace('_', ' '), 'value': trade_process} for trade_process in li]
 
 
@@ -417,6 +423,12 @@ class BT:  # Buy Trigger
     def get_as_list():
         return [BT.BREAKOUT, BT.TOUCH_POINT]
 
+    @staticmethod
+    def get_as_options():
+        li = [BT.BREAKOUT, BT.TOUCH_POINT]
+        return [{'label': buy_trigger.replace('_', ' '), 'value': buy_trigger} for buy_trigger in li]
+
+
 class TSTR:  # Trading Strategy
     LIMIT = 'Limit'
     TRAILING_STOP = 'Trailing_stop'
@@ -430,6 +442,11 @@ class TSTR:  # Trading Strategy
     @staticmethod
     def get_as_list():
         return [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP, TSTR.SMA]
+
+    @staticmethod
+    def get_as_options():
+        li = TSTR.get_as_list()
+        return [{'label': trade_strategy.replace('_', ' '), 'value': trade_strategy} for trade_strategy in li]
 
 
 class TTC:  # Trade test cases

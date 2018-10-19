@@ -20,6 +20,25 @@ from pattern_detector import PatternDetector
 from pattern_dash.my_dash_interface_for_pattern import DashInterface
 from pattern_colors import PatternColorHandler
 from pattern_trade import PatternTrade
+from datetime import datetime
+
+class NewsHandler:
+    def __init__(self):
+        self._news_dict = {}
+
+    def add_news(self, title: str, details: str):
+        self._news_dict[title] = [details, datetime.now().timestamp()]
+
+    def clear(self):
+        self._news_dict = {}
+
+    def get_news_for_markdown_since_last_refresh(self, ts_last_refresh):
+        actual_dict = {key: value for key, value in self._news_dict.items() if value[1] > ts_last_refresh}
+        if len(actual_dict) == 0:
+            self._news_dict = {}  # remove older news...
+            return '- no news -'
+        news_list = ['**{}**: {}'.format(key, value[0]) for key, value in actual_dict.items()]
+        return ';'.join(news_list)
 
 
 class MyDashBaseTab:
@@ -27,6 +46,7 @@ class MyDashBaseTab:
         self.app = app
         self.sys_config = sys_config.get_semi_deep_copy()
         self._color_handler = PatternColorHandler()
+        self._news_handler = NewsHandler()
 
     def init_callbacks(self):
         pass
@@ -37,6 +57,7 @@ class MyDashBaseTab:
     def __get_dcc_graph_element__(self, detector, graph_api: DccGraphApi):
         pattern_df = graph_api.df
         pattern_list = detector.pattern_list if detector else [graph_api.pattern_trade.pattern]
+        # print('Pattern_list={}'.format(pattern_list))
         period = detector.sys_config.config.api_period if detector else graph_api.period
         candlestick = self.__get_candlesticks_trace__(pattern_df, graph_api.ticker_id, period)
         bollinger_traces = self.__get_bollinger_band_trace__(pattern_df, graph_api.ticker_id, period)

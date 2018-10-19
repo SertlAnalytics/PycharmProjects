@@ -91,7 +91,7 @@ class MyGraphCache(MyCache):
             return self._cached_object_dict[cache_key].touch_since_last_data_update
         return False
 
-    def get_graph_list_for_observation(self, key_not: str) -> list:
+    def get_graph_list_for_observation(self, key_not: str):
         play_sound = False
         graphs = []
         for key, cache_object in self._cached_object_dict.items():
@@ -103,9 +103,7 @@ class MyGraphCache(MyCache):
             elif not cache_object.is_under_observation():
                 if key in self.__cached_and_under_observation_play_sound_list:
                     self.__cached_and_under_observation_play_sound_list.remove(key)
-        if play_sound:
-            playsound('ring08.wav')  # C:/Windows/media/...
-        return graphs
+        return graphs, play_sound
 
     def get_pattern_list_for_buy_trigger(self, buy_trigger: str) -> list:
         pattern_list = []

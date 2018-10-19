@@ -62,19 +62,11 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def get_div_for_tab(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
         li = [MyHTMLTabPatternHeaderTable().get_table()]
-        # li.append(MyHTML.div_with_dcc_drop_down(
-        #     'Stock symbol', 'my_ticker_selection', self._ticker_options, default='BTCUSD', width=200))
-        # li.append(MyHTML.div_with_dcc_drop_down(
-        #     'Refresh interval', 'my_interval_selection', self._interval_options, width=200))
-        # li.append(MyHTML.div_with_dcc_drop_down(
-        #     'Second graph', 'my_graph_second_days_selection', self._graph_second_days_options, width=200))
-
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.STOCK_SYMBOL)))
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
             PDD.PERIOD_AGGREGATION, default_value=self.sys_config.config.api_period_aggregation)))
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.REFRESH_INTERVAL)))
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.SECOND_GRAPH_RANGE)))
-
         if self.sys_config.config.get_data_from_db:
             li.append(self.__get_html_div_with_date_picker_range__())
         li.append(MyHTML.div_with_html_button_submit('my_refresh_button', 'Refresh'))
@@ -143,7 +135,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         return '- none -'
 
     def __get_markdown_news__(self):
-        return '- none -'
+        return self._news_handler.get_news_for_markdown_since_last_refresh(self._time_stamp_last_refresh)
 
     def __get_position_total__(self):
         return '- none -'
@@ -164,6 +156,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
             Output('my_last_refresh_time_div', 'children'),
             [Input('my_interval', 'n_intervals')])
         def handle_interval_callback_for_last_refresh(n_intervals):
+            # self._news_handler.clear()
             self._time_stamp_last_refresh = MyDate.time_stamp_now()
             last_refresh_dt = MyDate.get_time_from_datetime(datetime.now())
             return '{} ({})'.format(last_refresh_dt, n_intervals)
@@ -216,10 +209,10 @@ class MyDashTab4Pattern(MyDashBaseTab):
             self._graph_key_first = graph_key
             self.__cache_others_ticker_values__(n_intervals, ticker)
             if self._graph_first_cache.was_breakout_since_last_data_update(graph_key):
-                print('Breakout since last data update !!!!')
+                self._news_handler.add_news(ticker, 'Breakout since last data refresh !!!!')
                 playsound('alarm01.wav')
             elif self._graph_first_cache.was_touch_since_last_data_update(graph_key):
-                print('Touch since last data update !!!!')
+                self._news_handler.add_news(ticker, 'Touch since last data refresh !!!!')
                 playsound('alarm01.wav')
             return graph
 
@@ -248,14 +241,18 @@ class MyDashTab4Pattern(MyDashBaseTab):
             Output('my_graphs_before_breakout_div', 'children'),
             [Input('my_graph_first_div', 'children')])
         def handle_callback_for_graphs_before_breakout(graph_first_div):
-            graphs = self._graph_first_cache.get_graph_list_for_observation(self._graph_key_first)
+            play_sound = False
+            graphs, new_observations = self._graph_first_cache.get_graph_list_for_observation(self._graph_key_first)
+            if new_observations:
+                play_sound = True
+                self._news_handler.add_news('Observations', 'Some new since last refresh !!!!')
             pattern_list = self._graph_first_cache.get_pattern_list_for_buy_trigger(BT.BREAKOUT)
             self.trade_handler_online.add_pattern_list_for_trade(pattern_list)
-            if len(graphs) > 0:
-                print('\n...handle_callback_for_graphs_before_breakout: {}'.format(len(graphs)))
             if self._graph_first_cache.number_of_finished_fibonacci_waves_since_last_refresh > 2:
-                print('\n...finished_fibonacci_waves_since_last_refresh > 2')
-                playsound('Ring08.wav')
+                self._news_handler.add_news('Fibonacci alert', 'More than 2 waves finished since last refresh !!!!')
+                play_sound = True
+            if play_sound:
+                playsound('Ring08.wav')  # C:/Windows/media/...
             return graphs
 
     def __init_selection_callback__(self):

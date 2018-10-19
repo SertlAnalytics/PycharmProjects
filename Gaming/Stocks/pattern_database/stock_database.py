@@ -15,7 +15,7 @@ import pandas as pd
 import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
-from sertl_analytics.constants.pattern_constants import Indices, CN, DC, PRD, OPS
+from sertl_analytics.constants.pattern_constants import Indices, CN, DC, PRD, OPS, FT
 import os
 import time
 
@@ -325,6 +325,11 @@ class StockDatabase(BaseDatabase):
         query = self._trade_table.get_query_for_records("Trade_Result_ID != 0 AND Period = 'DAILY'")
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
+
+    def get_pattern_records_for_replay_as_dataframe(self) -> pd.DataFrame:
+        query = self._pattern_table.get_query_for_records("Period = 'DAILY'")
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df[db_df.df[DC.PATTERN_TYPE].isin(FT.get_long_trade_able_types())]
 
     def delete_existing_trade(self, trade_id: str):
         if self.is_trade_already_available(trade_id):
