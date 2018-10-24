@@ -47,21 +47,21 @@ class MyDashTab4PatternStatistics(MyDashTab4StatisticsBase):
     def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):
         if chart_type == CHT.PREDICTOR:
             if predictor == PRED.BEFORE_BREAKOUT:
-                return PatternTable.__get_feature_columns_before_breakout__()
+                return PatternTable.get_feature_columns_before_breakout_for_statistics()
             elif predictor == PRED.AFTER_BREAKOUT:
-                return PatternTable.__get_feature_columns_after_breakout__()
+                return PatternTable.get_feature_columns_after_breakout_for_statistics()
             else:
-                return PatternTable.__get_feature_columns_touch_points__()
+                return PatternTable.get_feature_columns_touch_points_for_statistics()
         return PatternTable.get_columns_for_statistics_category()
 
     @staticmethod
     def __get_value_list_for_y_variable_options__(chart_type: str, predictor: str):
         if chart_type == CHT.PREDICTOR:
             if predictor == PRED.BEFORE_BREAKOUT:
-                return PatternTable.__get_label_columns_before_breakout__()
+                return PatternTable.get_label_columns_before_breakout_for_statistics()
             elif predictor == PRED.AFTER_BREAKOUT:
-                return PatternTable.__get_label_columns_after_breakout__()
+                return PatternTable.get_label_columns_after_breakout_for_statistics()
             else:
-                return PatternTable.__get_label_columns_touch_points__()
+                return PatternTable.get_label_columns_touch_points_for_statistics()
         return PatternTable.get_columns_for_statistics_y_variable()
 

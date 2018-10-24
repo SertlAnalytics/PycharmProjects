@@ -9,7 +9,7 @@ from abc import ABCMeta, abstractmethod
 from sertl_analytics.exchanges.exchange_cls import Order
 
 
-class ExInterface:
+class ExchangeInterface:
     __metaclass__ = ABCMeta
 
     @classmethod
@@ -64,18 +64,19 @@ class ExInterface:
         raise NotImplementedError
 
     @abstractmethod
-    def get_candles(self, symbol: str, time_frame: str, section='hist', limit=200, ms_start=0, ms_end=0, sort=1):
-        # symbol: e.g. tBTCUSD
-        # time_frame: '1m', '5m', '15m', '30m', '1h', '3h', '6h', '12h', '1D', '7D', '14D', '1M'
-        # section = hist or last
-        # return: MTS	int	millisecond time stamp
-        # OPEN	float	First execution during the time frame
-        # CLOSE	float	Last execution during the time frame
-        # HIGH	float	Highest execution during the time frame
-        # LOW	float	Lowest execution during the timeframe
-        # VOLUME	float	Quantity of symbol traded within the timeframe
+    def get_candles(self, symbol: str, period: str, aggregation: int, section='hist',
+                    limit=200, ms_start=0, ms_end=0, sort=1):
         raise NotImplementedError
 
     @abstractmethod
     def get_order_book(self, symbol: str):
         raise NotImplementedError
+
+    @abstractmethod
+    def print_active_orders(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_active_balances(self, prefix=''):
+        raise NotImplementedError
+

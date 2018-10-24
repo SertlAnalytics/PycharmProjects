@@ -8,6 +8,8 @@ Date: 2018-06-17
 from playsound import playsound
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mycache import MyCache, MyCacheObject, MyCacheObjectApi
+from sertl_analytics.constants.pattern_constants import TP
+from pattern_test.trade_test import TradeTest
 from copy import deepcopy
 
 

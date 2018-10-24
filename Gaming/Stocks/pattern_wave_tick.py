@@ -11,6 +11,7 @@ from sertl_analytics.constants.pattern_constants import CN, TT, DIR, PRD, PTS
 from sertl_analytics.mymath import MyMath, MyPoly1d
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 from sertl_analytics.mydates import MyDate
+from datetime import datetime
 from pattern_database.stock_database import StockDatabase
 import math
 
@@ -24,13 +25,17 @@ class WaveTick:
         self.wrong_breakout_value = 0
         self.limit_value = 0
         self.stop_loss_value = 0
+        self._position = int(self.tick[CN.POSITION])
 
     @property
     def date(self):
-        return self.tick[CN.DATE]
+        return self.tick[CN.DATE] if CN.DATE in self.tick else MyDate.get_date_from_epoch_seconds(
+            self.tick[CN.TIMESTAMP])
 
+    @property
     def time(self):
-        return self.tick[CN.TIME]
+        return self.tick[CN.TIME] if CN.TIME in self.tick else MyDate.get_time_from_epoch_seconds(
+            self.tick[CN.TIMESTAMP])
 
     @property
     def time_str(self):
@@ -62,8 +67,16 @@ class WaveTick:
         return self.tick[CN.DATE].strftime("%Y-%m-%d")
 
     @property
+    def date_time_str(self):
+        return '{} {}'.format(self.date, self.time)
+
+    @property
     def position(self) -> int:
-        return int(self.tick[CN.POSITION])
+        return self._position
+
+    @position.setter
+    def position(self, value: int):
+        self._position = value
 
     @property
     def is_max(self):
@@ -131,8 +144,16 @@ class WaveTick:
         return str(MyDate.get_time_from_epoch_seconds(self.f_var))[:5]
         # return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).time())[:5]
 
+    def get_forecast_volume(self, seconds_for_period: int):
+        actual_time_stamp = int(datetime.now().timestamp())
+        if actual_time_stamp >= self.time_stamp + seconds_for_period:
+            return self.volume
+        else:
+            return round(self.volume * seconds_for_period/(actual_time_stamp - self.time_stamp), 2)
+
     def print(self):
-        print('Pos: {}, Date: {}, High: {}, Low: {}'.format(self.position, self.date, self.high, self.low))
+        print('Pos: {}, Date: {}, Time: {}, High: {}, Low: {}, Close: {}, Volume: {}, Timestamp={}'.format(
+            self.position, self.date, self.time, self.high, self.low, self.close, self.volume, self.time_stamp))
 
     def get_date_or_time_for_f_var(self, for_time: False):
         if for_time:
@@ -169,6 +190,7 @@ class TickerWaveTickConverter:
         self._current_close = 0
         self._current_low = math.inf
         self._current_high = -math.inf
+        self._current_volume = 0
         self._begin_time_stamp = 0
         self._current_wave_tick = None
 
@@ -183,12 +205,13 @@ class TickerWaveTickConverter:
         self._current_low = math.inf
         self._current_high = -math.inf
 
-    def can_next_ticker_been_added_to_current_wave_tick(self, ticker_time_stamp: int):
+    def can_next_ticker_be_added_to_current_wave_tick(self, ticker_time_stamp: int):
         if not self._current_wave_tick:  # to regard the first ticker
             return False
         return ticker_time_stamp - self._begin_time_stamp < self._aggregation_time_stamp_range
 
-    def add_value_with_timestamp(self, value: float, time_stamp: int):
+    def add_value_with_timestamp(self, value: float, time_stamp: int, volume=0):
+        self._current_volume = volume
         if self._begin_time_stamp == 0:
             self._begin_time_stamp = time_stamp
             self._current_position += 1
@@ -214,8 +237,8 @@ class TickerWaveTickConverter:
             self._current_time_stamp += self._aggregation_time_stamp_range
 
     def __get_current_tick_values_as_wave_tick__(self):
-        value_list = [self._current_open, self._current_close, self._current_low, self._current_high, 0,
-                            self._current_time_stamp, self._current_position]
+        value_list = [self._current_open, self._current_close, self._current_low, self._current_high,
+                      self._current_volume, self._current_time_stamp, self._current_position]
         row = pd.Series(value_list, index=[CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.VOL, CN.TIMESTAMP, CN.POSITION])
         return WaveTick(row)
 
@@ -229,6 +252,13 @@ class WaveTickList:
         else:
             self.__init_by_tick_list__(df_or_list)
         self.elements = len(self.tick_list)
+        self.tick_distance_in_seconds = self.__get_tick_distance_in_seconds__()
+
+    def __get_tick_distance_in_seconds__(self):
+        if len(self.tick_list) < 2:
+            return 0
+        else:
+            return abs(self.tick_list[0].time_stamp - self.tick_list[1].time_stamp)
 
     @property
     def length(self):
@@ -273,9 +303,36 @@ class WaveTickList:
     def replace_last_wave_tick(self, wave_tick: WaveTick):
         self.tick_list[-1] = wave_tick
 
-    def get_simple_moving_average(self, elements: int=0):
+    def get_simple_moving_average(self, elements: int=0, ts_breakout=0, default_value=0):
+        """
+        The simple moving average is calculated in this way:
+        a) For all ticks before the breakout we take the lower bound value = default_value
+        b) For all others we take the low
+        """
         base_list = self.tick_list if elements == 0 else self.tick_list[-elements:]
-        return round(np.average([tick.mean for tick in base_list]), 2)
+        base_list_reversed = base_list[::-1]
+        value_list = []
+        for tick in base_list_reversed:
+            if tick.time_stamp < ts_breakout:
+                value_list.append(default_value)
+            else:
+                value_list.append(tick.open)
+        return round(np.average(value_list), 2)
+
+    def get_markdown_text_for_second_last_wave_tick(self, period=PRD.INTRADAY):
+        prev_tick = self.tick_list[-2]
+        prefix = prev_tick.time if period == PRD.INTRADAY else prev_tick.date
+        return '**{}:** open={:0.3f}, close={:0.3f}, volume={:0.1f}'.format(
+            prefix, prev_tick.open, prev_tick.close, prev_tick.volume)
+
+    def get_markdown_text_for_last_wave_tick(self, period=PRD.INTRADAY):
+        prev_tick = self.tick_list[-2]
+        actual_tick = self.tick_list[-1]
+        prefix = actual_tick.time if period == PRD.INTRADAY else actual_tick.date
+        forecast = actual_tick.get_forecast_volume(self.tick_distance_in_seconds)
+        volume_change = round(forecast / prev_tick.volume * 100 - 100)
+        return '**{}:** open={:0.3f}, close={:0.3f}, volume={:0.1f}, volume forecast={:0.1f} ({:+.0f}%)'. \
+            format(prefix, actual_tick.open, actual_tick.close, actual_tick.volume, forecast, volume_change)
 
     def get_list_without_hidden_ticks(self, for_high: bool, tolerance_pct: float):
         """

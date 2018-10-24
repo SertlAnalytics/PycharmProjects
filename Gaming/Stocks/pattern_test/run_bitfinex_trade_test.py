@@ -9,9 +9,9 @@ from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC, TP
 from pattern_test.trade_test_cases import TradeTestCaseFactory
 from pattern_test.trade_test import TradeTest, TradeTestApi
 
-
-bitfinex_test = TradeTest(TP.TEST_SINGLE)
 api = TradeTestApi()
+api.test_process = TP.TEST_SINGLE
+bitfinex_test = TradeTest(api)
 # ******** START setup **********
 triangle = True
 if triangle:

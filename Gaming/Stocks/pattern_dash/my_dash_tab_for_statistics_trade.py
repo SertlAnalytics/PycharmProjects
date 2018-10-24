@@ -47,12 +47,12 @@ class MyDashTab4TradeStatistics(MyDashTab4StatisticsBase):
     def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):
         if chart_type == CHT.PREDICTOR:
             if predictor == PRED.FOR_TRADE:
-                return TradeTable.__get_feature_columns_for_trades__()
+                return TradeTable.get_feature_columns_for_trades_statistics()
         return TradeTable.get_columns_for_statistics_category()
 
     @staticmethod
     def __get_value_list_for_y_variable_options__(chart_type: str, predictor: str):
         if chart_type == CHT.PREDICTOR:
             if predictor == PRED.FOR_TRADE:
-                return TradeTable.__get_label_columns_for_trades__()
+                return TradeTable.get_label_columns_for_trades_statistics()
         return TradeTable.get_columns_for_statistics_y_variable()

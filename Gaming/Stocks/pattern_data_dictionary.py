@@ -29,7 +29,7 @@ class PatternDataDictionary:
         return self._data_dict
 
     def add(self, key: str, value):
-        value = self.__get_manipulated_value__(value)
+        value = self.__get_manipulated_value__(key, value)
         self._data_dict[key] = value
 
     def inherit_values(self, data_dict: dict):
@@ -37,10 +37,21 @@ class PatternDataDictionary:
             self.data_dict[key] = values
 
     @staticmethod
-    def __get_manipulated_value__(value):
+    def __get_manipulated_value__(key: str, value):
         if type(value) in [np.float64, float]:
             if value == -0.0:
                 value = 0.0
+        return PatternDataDictionary.__get_rounded_value__(key, value)
+
+    @staticmethod
+    def __get_rounded_value__(key, value):
+        if key in [DC.SLOPE_VOLUME_REGRESSION_PCT, DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT,
+                   DC.VOLUME_CHANGE_AT_BREAKOUT_PCT,
+                   DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT,
+                   DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT]:
+            return 1000 if value > 1000 else round(value, -1)
+        elif key in [DC.SLOPE_UPPER_PCT, DC.SLOPE_LOWER_PCT, DC.SLOPE_REGRESSION_PCT, DC.SLOPE_BREAKOUT_PCT]:
+            return 1000 if value > 1000 else round(value, 0)
         return value
 
     def get(self, key: str, default_value=None):

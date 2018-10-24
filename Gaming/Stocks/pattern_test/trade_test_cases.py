@@ -9,6 +9,7 @@ from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC, DC, P
 from pattern import Pattern
 from sertl_analytics.mydates import MyDate
 from pattern_configuration import PatternConfiguration
+from pattern_wave_tick import WaveTick, TickerWaveTickConverter
 
 
 class TradeTestApi:
@@ -44,7 +45,9 @@ class TradeTestCase:
         self.symbol = ''
         self.and_clause = ''
         self.time_stamp_start = 0
-        self.value_pair_list = []  # [time_stamp, value]
+        self.period_seconds = 0
+        self.ticks_per_period = 4
+        self.wave_tick_list = []  # [wave_tick]
 
 
 class TradeTestCaseFactory:
@@ -92,7 +95,7 @@ class TradeTestCaseFactory:
         else:
             to_date = pattern.part_entry.pattern_range.tick_last.date
         tc.and_clause = "Date BETWEEN '{}' AND '{}'".format(from_date, to_date)
-        tc.value_pair_list = pattern.get_back_testing_value_pairs(tick_list_for_replay)
+        tc.wave_tick_list = pattern.get_back_testing_wave_ticks(tick_list_for_replay)
 
     @staticmethod
     def fill_test_data_for_pattern_type(tc: TradeTestCase):
@@ -174,7 +177,13 @@ class TradeTestCaseFactory:
 
     @staticmethod
     def fill_value_list_from_base_list(base_list, tc):
+        tc.period_seconds = PRD.get_seconds_for_period(PRD.DAILY, 1)
+        tc.ticks_per_period = 4
+        seconds_per_step = tc.period_seconds/tc.ticks_per_period
+        converter = TickerWaveTickConverter(PRD.DAILY, 1, 0, tc.time_stamp_start)
         for entries in base_list:
             if entries[0] == tc.buy_trigger and entries[1] == tc.trade_strategy and entries[2] == tc.test_process:
-                for values in entries[3]:
-                    tc.value_pair_list.append([tc.time_stamp_start, values])
+                for value in entries[3]:
+                    converter.add_value_with_timestamp(value, tc.time_stamp_start)
+                    tc.wave_tick_list.append(converter.current_wave_tick)
+                    tc.time_stamp_start += seconds_per_step

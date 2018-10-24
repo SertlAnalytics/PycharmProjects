@@ -12,7 +12,9 @@ from pattern import Pattern
 from pattern_bitfinex import MyBitfinexTradeClient, BitfinexConfiguration
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade import PatternTrade, PatternTradeApi
+from pattern_wave_tick import WaveTick, WaveTickList
 from sertl_analytics.exchanges.exchange_cls import Ticker, OrderStatus, OrderStatusApi
+from pattern_news_handler import NewsHandler
 
 
 class TradeCandidate:
@@ -212,8 +214,9 @@ class PatternTradeHandler:
         self.pattern_trade_dict = {}
         self.process = ''
         self.trade_candidate_controller = TradeCandidateController(self.exchange_config)
-        self._last_time_stamp_for_test = 0
-        self._last_price_for_test = 0
+        self.news_handler = NewsHandler()
+        self.value_total_start = 0
+        self._last_wave_tick_for_test = None
         self._time_stamp_for_actual_check = 0
         self._pattern_trade_for_replay = None
 
@@ -240,10 +243,9 @@ class PatternTradeHandler:
         self.__process_trade_candidates__()
         self._pattern_trade_for_replay = self.__get_pattern_trade_for_replay__()
 
-    def check_actual_trades(self, last_time_stamp_price_for_test=None):
-        if last_time_stamp_price_for_test is not None:
-            self._last_time_stamp_for_test = last_time_stamp_price_for_test[0]
-            self._last_price_for_test = last_time_stamp_price_for_test[1]
+    def check_actual_trades(self, last_wave_tick=None):
+        if last_wave_tick is not None:
+            self._last_wave_tick_for_test = last_wave_tick
         self._time_stamp_for_actual_check = MyDate.get_epoch_seconds_from_datetime()
         self.__remove_finished_pattern_trades__()
         self.__process_trade_candidates__()  # take care of old patterns in queue
@@ -259,9 +261,8 @@ class PatternTradeHandler:
         self.__update_ticker_lists__()  # some entries could be deleted
         self.process = ''
 
-    def check_actual_trades_for_replay(self, last_time_stamp_price_for_test: list):
-        self._last_time_stamp_for_test = last_time_stamp_price_for_test[0]
-        self._last_price_for_test = last_time_stamp_price_for_test[1]
+    def check_actual_trades_for_replay(self, wave_tick: WaveTick):
+        self._last_wave_tick_for_test = wave_tick
         self._time_stamp_for_actual_check = MyDate.get_epoch_seconds_from_datetime()
         if self.trade_numbers == 0:
             return
@@ -274,6 +275,11 @@ class PatternTradeHandler:
         self.__handle_buy_triggers__()
         self.__calculate_xy_values__()
         self.process = ''
+
+    def get_latest_tickers_as_wave_tick_list(self, ticker_id: str) -> WaveTickList:
+        if self.trade_client:
+            return self.trade_client.get_latest_tickers_as_wave_tick_list(
+                ticker_id, self.sys_config.config.api_period, self.sys_config.config.api_period_aggregation)
 
     def get_rows_for_dash_data_table(self):
         return_list = []
@@ -292,11 +298,10 @@ class PatternTradeHandler:
     def get_pattern_trade_data_frame_for_replay(self):
         return self._pattern_trade_for_replay.get_data_frame_for_replay()
 
-    def enforce_sell_at_end(self, last_time_stamp_price_for_test: list):  # it is used for back-testing
-        self._last_time_stamp_for_test = last_time_stamp_price_for_test[0]
-        self._last_price_for_test = last_time_stamp_price_for_test[1]
+    def enforce_sell_at_end(self, last_wave_tick: WaveTick):  # it is used for back-testing
+        self._last_wave_tick_for_test = last_wave_tick
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
-            pattern_trade.print_state_details_for_actual_ticker(PTHP.HANDLE_SELL_TRIGGERS)
+            pattern_trade.print_state_details_for_actual_wave_tick(PTHP.HANDLE_SELL_TRIGGERS)
             self.__handle_sell_trigger__(pattern_trade, ST.PATTERN_END)
 
     def __process_trade_candidates__(self):
@@ -355,16 +360,12 @@ class PatternTradeHandler:
         self.trade_client.sell_all_assets()
         self.__clear_internal_lists__()
 
-    def __get_ticker_for_ticker_id__(self, ticker_id: str) -> Ticker:
-        if self._last_price_for_test > 0:
-            return self.__get_ticker_for_pattern_trade_and_test_data__(ticker_id)
+    def __get_current_wave_tick_for_ticker_id__(self, ticker_id: str) -> WaveTick:
+        if self._last_wave_tick_for_test:
+            return self._last_wave_tick_for_test
         else:
-            return self.trade_client.get_ticker(ticker_id)
-
-    def __get_ticker_for_pattern_trade_and_test_data__(self, ticker_id: str) -> Ticker:
-        val = self._last_price_for_test
-        ts = self._last_time_stamp_for_test
-        return Ticker(ticker_id, bid=val, ask=val, last_price=val, low=val, high=val, vol=0, ts=ts)
+            return self.trade_client.get_current_wave_tick(ticker_id, self.sys_config.config.api_period,
+                                                           self.sys_config.config.api_period_aggregation)
 
     def __get_balance_by_symbol__(self, symbol: str):
         return self.trade_client.get_balance(symbol)
@@ -375,8 +376,8 @@ class PatternTradeHandler:
 
     def __add_tickers_for_actual_time_stamp_to_pattern_trades__(self):
         for pattern_trade in self.pattern_trade_dict.values():
-            ticker = self.__get_ticker_for_ticker_id__(pattern_trade.ticker_id)
-            pattern_trade.add_ticker(ticker)
+            wave_tick = self.__get_current_wave_tick_for_ticker_id__(pattern_trade.ticker_id)
+            pattern_trade.add_ticker(wave_tick)
 
     def __handle_sell_triggers__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
@@ -432,26 +433,38 @@ class PatternTradeHandler:
             if pattern_trade.is_breakout_active:
                 if pattern_trade.is_actual_ticker_breakout(PTHP.HANDLE_BUY_TRIGGERS):
                     if pattern_trade.are_preconditions_for_breakout_buy_fulfilled():
-                        self.__handle_buy_trigger_for_pattern_trade__(pattern_trade)
+                        wave_tick_list = self.__get_latest_tickers_as_wave_ticks__(pattern_trade.ticker_id,
+                                                                                   pattern_trade)
+                        if pattern_trade.is_precondition_for_volume_change_fulfilled(wave_tick_list):
+                            self.__handle_buy_trigger_for_pattern_trade__(pattern_trade)
                     else:
                         deletion_key_list.append(key)
             else:
                 pattern_trade.verify_touch_point()
+            self.__get_news_from_pattern_trade__(pattern_trade)
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.SMA_PROBLEM)
+
+    def __get_news_from_pattern_trade__(self, pattern_trade: PatternTrade):
+        self.news_handler.add_news_dict(pattern_trade.news_handler.news_dict)
+
+    def __get_latest_tickers_as_wave_ticks__(self, ticker_id, pattern_trade: PatternTrade):
+        if self.trade_client is None:
+            return pattern_trade.wave_tick_list
+        return self.trade_client.get_latest_tickers_as_wave_tick_list(
+            ticker_id, self.sys_config.config.api_period, self.sys_config.config.api_period_aggregation)
 
     def __calculate_xy_values__(self):
         for pattern_trade in self.pattern_trade_dict.values():
             pattern_trade.calculate_xy_for_replay()
 
     def __handle_buy_trigger_for_pattern_trade__(self, pattern_trade: PatternTrade):
-        ticker_id = pattern_trade.ticker_id
         ticker = pattern_trade.ticker_actual
-        buy_comment = '{}-{}-{} at {:.2f} on {}'.format(ticker_id,
+        buy_comment = '{}-{}-{} at {:.2f} on {}'.format(ticker.ticker_id,
                                                         pattern_trade.buy_trigger, pattern_trade.trade_strategy,
                                                         ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
         if self.trade_process == TP.ONLINE:
-            order_status = self.trade_client.buy_available(ticker_id, ticker.last_price)
+            order_status = self.trade_client.buy_available(ticker.ticker_id, ticker.last_price)
         else:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_BUY_TRIGGERS, pattern_trade)
         pattern_trade.set_order_status_buy(order_status, buy_comment, ticker)

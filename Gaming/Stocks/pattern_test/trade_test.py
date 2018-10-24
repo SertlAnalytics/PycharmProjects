@@ -59,9 +59,9 @@ class TradeTest:
         trade_handler = PatternTradeHandler(self.sys_config, self.exchange_config)  # we need a new one for each
         trade_handler.add_pattern_list_for_trade(pattern_list)
         self.__print_frame_information__(tc.buy_trigger, tc.trade_strategy, tc.test_process)
-        for value_pair in tc.value_pair_list:
-            trade_handler.check_actual_trades(value_pair)
-        trade_handler.enforce_sell_at_end(tc.value_pair_list[-1])
+        for wave_tick in tc.wave_tick_list:
+            trade_handler.check_actual_trades(wave_tick)  # wave_tick
+        trade_handler.enforce_sell_at_end(tc.wave_tick_list[-1])
         self.__print_frame_information__(tc.buy_trigger, tc.trade_strategy)
 
     def __get_test_case_list__(self, api):

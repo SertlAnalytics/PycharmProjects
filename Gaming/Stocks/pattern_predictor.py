@@ -18,209 +18,74 @@ import matplotlib.patches as mpatches
 from pattern_configuration import PatternConfiguration
 from pattern_database import stock_database
 from sertl_analytics.mymath import MyMath
+from datetime import datetime
+from sertl_analytics.mymath import EntropyHandler
 
 
 class PatternFeaturesSelector:
-    def __init__(self, _df_features_with_label: pd.DataFrame, label_column: str, features_columns_orig: list):
+    def __init__(self, _df_features_with_label: pd.DataFrame, label_columns: list, features_columns_orig: list):
         self._df_features_with_label = _df_features_with_label
-        self._label_column = label_column
+        self._label_columns = label_columns
         self._features_columns_orig = features_columns_orig
-        self._features_columns_result = features_columns_orig  # default
+        self._features_columns = self._features_columns_orig  # default
         self._label_feature_information_gain_dict = {}
+        self._entropy_handler = EntropyHandler(
+            self._df_features_with_label, self._label_columns, self._features_columns_orig)
 
     @property
-    def features_column_result(self) -> list:
-        return self._features_columns_result
+    def features_columns(self) -> list:
+        return self._features_columns
 
     def calculate_information_gain_for_feature_columns(self):
         if self._df_features_with_label.shape[0] == 0:
             return
-        df = self._df_features_with_label
-        binary_value = self.__get_value_for_binary_label_column__()
-        label_dict = MyMath.get_entropy_dict_for_df_label_column_values(df, self._label_column, binary_value)
-        # key = '{}={}'.format(column, value) return_dict[key] = [column, value, p_v, column_entropy]
-        for feature_column in self._features_columns_orig:
-            feature_dict = MyMath.get_entropy_dict_for_df_feature_column_values(
-                df, feature_column, self._label_column, binary_value)
-            self.__add_to_gain_dict__(label_dict, feature_column, feature_dict)
-        self.__print_information_gains__()
-
-    @staticmethod
-    def __print_entropy_values__(label_dict, feature_dict):
-        for values in label_dict.values():
-            print(values)
-        for values in feature_dict.values():
-            print(values)
-
-    def __print_information_gains__(self):
-        for key, value in self._label_feature_information_gain_dict.items():
-            print('Information gain for {}: {}'.format(key, value))
-
-    def __add_to_gain_dict__(self, label_dict: dict, feature_column: str, feature_dict: dict):
-        for label_list in label_dict.values():  # [column, value, p_v, column_entropy]
-            label_column = label_list[0]
-            label_value = label_list[1]
-            parent_entropy = label_list[3]
-            child_correction_sum = 0
-            key = 'L={}, LV={}, F={}'.format(label_column, label_value, feature_column)
-            for value_list in feature_dict.values():
-                if label_column == value_list[0] and label_value == value_list[1]:
-                # [label_column, label_value, feature_column, feature_value, p_f_v, column_entropy]
-                    child_correction_sum += value_list[-2] * value_list[-1]
-            child_correction_sum = round(child_correction_sum, 4)
-            information_gain = round(parent_entropy - child_correction_sum, 4)
-            self._label_feature_information_gain_dict[key] = [parent_entropy, child_correction_sum, information_gain]
-
-    @staticmethod
-    def __get_parent_entropy_from_label_dict__(label_column: str, label_dict: dict):
-        # [column, value, p_v, column_entropy]
-        summary_entropy = 0
-        for value_list in label_dict.values():
-            column = value_list[0]
-            value_probability = value_list[2]
-            value_entropy = value_list[3]
-            if column == label_column:
-                if len(label_dict) == 1:
-                    return value_entropy  # we don't need to calculate the entropy over all the values...
-                else:
-                    summary_entropy += value_probability * value_entropy
-        return summary_entropy
-
-    def __calculate_entropy_for_df_features_with_label__(self):
-        print('Calculate entropy for {}:'.format(self.__class__.__name__))
-        if self.__class__.__name__ == 'PatternPredictorBeforeBreakout':
-            pass  # Trade_Reached_Price_PCT
-        else:
-            return
-        for columns in self.label_columns:
-            entropy = MyMath.get_entropy_of_df_column(self._df_features_with_labels, columns)
-            print('Entropy for label {}: {}'.format(columns, entropy))
-        for columns in self.feature_columns:
-            entropy = MyMath.get_entropy_of_df_column(self._df_features_with_labels, columns)
-            print('Entropy for feature {}: {}'.format(columns, entropy))
-
-    def __get_value_for_binary_label_column__(self):  # get the highest value for binary
-        unique_values = sorted(self._df_features_with_label[self._label_column].unique())
-        if len(unique_values) <= 2:
-            return unique_values[-1]
-        return None
+        for label in self._label_columns:
+            for feature in self._features_columns_orig:
+                information_gain = self._entropy_handler.calculate_information_gain_for_label_and_feature(label, feature)
+                print('label={}, feature={}: information_gain={}'.format(label, feature, information_gain))
 
 
 class PatternPredictor:
-    def __init__(self, db_stock: StockDatabase, pattern_type: str, skip_condition_list=None):
+    def __init__(self, db_stock: StockDatabase, skip_condition_list=None):
         # print('Loading Predictor: {}'.format(self.__class__.__name__))
         self.db_stock = db_stock
-        self.pattern_type = pattern_type
         self.skip_condition_list = skip_condition_list
         self.feature_table = self.__get_table_with_prediction_features__()
-        self.feature_columns = self.__get_feature_columns__()
+        self._features_columns_orig = self.__get_feature_columns_orig__()
         self.label_columns = self.__get_label_columns__()
         self._query_for_feature_and_label_data = self.__get_query_for_feature_and_label_data__()
         self._predictor_dict = self.__get_predictor_dict__()
         self._df_features_with_labels = self.__get_df_features_with_labels__()
-        self._label_feature_information_gain_dict = {}
-        # self.__calculate_information_gain_for_label_feature_columns__()
-        # self.__calculate_entropy_for_df_features_with_label__()
+        self._feature_columns = self.__get_feature_columns_by_information_gain__()
         if self.is_ready_for_prediction:
-            self._df_features = self._df_features_with_labels[self.feature_columns]
+            self._df_features = self._df_features_with_labels[self._feature_columns]
             self._df_labels = self._df_features_with_labels[self.label_columns]
             self._x_data = np.array(self._df_features)
             self.__train_models__(True)
         # print('self.x_data.shape={}'.format(self._x_data.shape))
 
     @property
+    def feature_columns(self):
+        return self._feature_columns
+
+    @property
     def is_ready_for_prediction(self):
         return self._df_features_with_labels.shape[0] > 10
 
-    def __calculate_information_gain_for_label_feature_columns__(self):
-        if self._df_features_with_labels.shape[0] == 0:
-            return
-        df = self._df_features_with_labels
-        if self.__class__.__name__ == 'PatternPredictorBeforeBreakout' and self.pattern_type == FT.CHANNEL:
-            pass  # Trade_Reached_Price_PCT
-        else:
-            return
-        print('Calculate entropy for {} and {}:'.format(self.pattern_type, self.__class__.__name__))
-        for label_column in self.label_columns:
-            # if label_column in [DC.FALSE_BREAKOUT, DC.BREAKOUT_DIRECTION_ID]:
-            if label_column in [DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT]:
-                binary_value = self.__get_value_for_binary_label_column__(label_column)
-                label_dict = MyMath.get_entropy_dict_for_df_label_column_values(df, label_column, binary_value)
-                # key = '{}={}'.format(column, value) return_dict[key] = [column, value, p_v, column_entropy]
-                for feature_column in self.feature_columns:
-                    if feature_column == DC.TOUCH_POINTS_TILL_BREAKOUT_TOP:
-                        feature_dict = MyMath.get_entropy_dict_for_df_feature_column_values(
-                            df, feature_column, label_column, binary_value)
-                        # self.__print_entropy_values__(label_dict, feature_dict)
-                        self.__add_to_gain_dict__(label_dict, feature_column, feature_dict)
-        self.__print_information_gains__()
+    def __get_feature_columns_by_information_gain__(self) -> list:
+        if self._df_features_with_labels.shape[0] == 0 or True:
+            return self._features_columns_orig
+        entropy_handler = EntropyHandler(self._df_features_with_labels, self.label_columns, self._features_columns_orig)
+        for label in self.label_columns:
+            for feature in self._features_columns_orig:
+                information_gain = entropy_handler.calculate_information_gain_for_label_and_feature(label, feature)
+                if len(information_gain) > 1:
+                    print('{}: label={}, feature={}: information_gain={}'.format(
+                        self.__class__.__name__, label, feature, information_gain))
+        return self._features_columns_orig
 
-    @staticmethod
-    def __print_entropy_values__(label_dict, feature_dict):
-        for values in label_dict.values():
-            print(values)
-        for values in feature_dict.values():
-            print(values)
-
-    def __print_information_gains__(self):
-        for key, value in self._label_feature_information_gain_dict.items():
-            print('Information gain for {}: {}'.format(key, value))
-
-    def __add_to_gain_dict__(self, label_dict: dict, feature_column: str, feature_dict: dict):
-        for label_list in label_dict.values():  # [column, value, p_v, column_entropy]
-            label_column = label_list[0]
-            label_value = label_list[1]
-            parent_entropy = label_list[3]
-            child_correction_sum = 0
-            key = 'L={}, LV={}, F={}'.format(label_column, label_value, feature_column)
-            for value_list in feature_dict.values():
-                if label_column == value_list[0] and label_value == value_list[1]:
-                # [label_column, label_value, feature_column, feature_value, p_f_v, column_entropy]
-                    child_correction_sum += value_list[-2] * value_list[-1]
-            child_correction_sum = round(child_correction_sum, 4)
-            information_gain = round(parent_entropy - child_correction_sum, 4)
-            self._label_feature_information_gain_dict[key] = [parent_entropy, child_correction_sum, information_gain]
-
-    @staticmethod
-    def __get_parent_entropy_from_label_dict__(label_column: str, label_dict: dict):
-        # [column, value, p_v, column_entropy]
-        summary_entropy = 0
-        for value_list in label_dict.values():
-            column = value_list[0]
-            value_probability = value_list[2]
-            value_entropy = value_list[3]
-            if column == label_column:
-                if len(label_dict) == 1:
-                    return value_entropy  # we don't need to calculate the entropy over all the values...
-                else:
-                    summary_entropy += value_probability * value_entropy
-        return summary_entropy
-
-    def __calculate_entropy_for_df_features_with_label__(self):
-        print('Calculate entropy for {}:'.format(self.__class__.__name__))
-        if self.__class__.__name__ == 'PatternPredictorBeforeBreakout':
-            pass  # Trade_Reached_Price_PCT
-        else:
-            return
-        for columns in self.label_columns:
-            entropy = MyMath.get_entropy_of_df_column(self._df_features_with_labels, columns)
-            print('Entropy for label {}: {}'.format(columns, entropy))
-        for columns in self.feature_columns:
-            entropy = MyMath.get_entropy_of_df_column(self._df_features_with_labels, columns)
-            print('Entropy for feature {}: {}'.format(columns, entropy))
-
-    @staticmethod
-    def __get_value_for_binary_label_column__(column: str):
-        column_value_dict = {
-            DC.TRADE_RESULT_ID: 1,
-            DC.TRADE_REACHED_PRICE: 1,
-            DC.BREAKOUT_DIRECTION_ID: 1,
-            DC.FALSE_BREAKOUT: 1
-        }
-        return column_value_dict.get(column, None)
-
-    def predict_for_label_columns(self, x_input: pd.Series):
-        np_array = x_input.values
+    def predict_for_label_columns(self, x_data: list):
+        np_array = np.array(x_data)
         np_array = np_array.reshape(1, np_array.size)
         return_dict = {}
         for label in self.label_columns:
@@ -234,13 +99,6 @@ class PatternPredictor:
                 return_dict[label] = int(prediction)
         return return_dict
 
-    def __get_base_query_with_pattern_type_condition__(self, base_query: str):
-        if self.pattern_type != '':
-            if base_query.find('WHERE') >= 0:  # already where clause available
-                return base_query + " AND Pattern_Type = '{}'".format(self.pattern_type)
-            return base_query + " WHERE Pattern_Type = '{}'".format(self.pattern_type)
-        return base_query
-
     def __get_base_query_with_skip_conditions__(self, base_query: str):
         if self.skip_condition_list:
             skip_condition_all = ' AND '.join(self.skip_condition_list)
@@ -252,11 +110,11 @@ class PatternPredictor:
     def __get_table_with_prediction_features__(self):
         pass
 
-    def __get_feature_columns__(self):
-        pass
+    def __get_feature_columns_orig__(self):
+        return []
 
     def __get_label_columns__(self):
-        pass
+        return []
 
     def __get_query_for_feature_and_label_data__(self):
         pass
@@ -365,7 +223,7 @@ class PatternPredictorTouchPoints(PatternPredictor):
     def __get_table_with_prediction_features__(self) -> PatternTable:
         return PatternTable()
 
-    def __get_feature_columns__(self):
+    def __get_feature_columns_orig__(self):
         return self.feature_table.feature_columns_touch_points
 
     def __get_label_columns__(self):
@@ -373,7 +231,6 @@ class PatternPredictorTouchPoints(PatternPredictor):
 
     def __get_query_for_feature_and_label_data__(self):
         base_query = self.feature_table.query_for_feature_and_label_data_touch_points
-        base_query = self.__get_base_query_with_pattern_type_condition__(base_query)
         return self.__get_base_query_with_skip_conditions__(base_query)
 
 
@@ -381,7 +238,7 @@ class PatternPredictorBeforeBreakout(PatternPredictor):
     def __get_table_with_prediction_features__(self) -> PatternTable:
         return PatternTable()
 
-    def __get_feature_columns__(self):
+    def __get_feature_columns_orig__(self):
         return self.feature_table.features_columns_before_breakout
 
     def __get_label_columns__(self):
@@ -389,7 +246,6 @@ class PatternPredictorBeforeBreakout(PatternPredictor):
 
     def __get_query_for_feature_and_label_data__(self):
         base_query = self.feature_table.query_for_feature_and_label_data_before_breakout
-        base_query = self.__get_base_query_with_pattern_type_condition__(base_query)
         return self.__get_base_query_with_skip_conditions__(base_query)
 
 
@@ -397,7 +253,7 @@ class PatternPredictorAfterBreakout(PatternPredictor):
     def __get_table_with_prediction_features__(self) -> PatternTable:
         return PatternTable()
 
-    def __get_feature_columns__(self):
+    def __get_feature_columns_orig__(self):
         return self.feature_table.features_columns_after_breakout
 
     def __get_label_columns__(self):
@@ -405,7 +261,6 @@ class PatternPredictorAfterBreakout(PatternPredictor):
 
     def __get_query_for_feature_and_label_data__(self):
         base_query = self.feature_table.query_for_feature_and_label_data_after_breakout
-        base_query = self.__get_base_query_with_pattern_type_condition__(base_query)
         return self.__get_base_query_with_skip_conditions__(base_query)
 
 
@@ -413,7 +268,7 @@ class PatternPredictorForTrades(PatternPredictor):
     def __get_table_with_prediction_features__(self) -> TradeTable:
         return TradeTable()
 
-    def __get_feature_columns__(self):
+    def __get_feature_columns_orig__(self):
         return self.feature_table.feature_columns_for_trades
 
     def __get_label_columns__(self):
@@ -421,7 +276,6 @@ class PatternPredictorForTrades(PatternPredictor):
 
     def __get_query_for_feature_and_label_data__(self):
         base_query = self.feature_table.query_for_feature_and_label_data_for_trades
-        base_query = self.__get_base_query_with_pattern_type_condition__(base_query)
         return self.__get_base_query_with_skip_conditions__(base_query)
 
 
@@ -431,29 +285,25 @@ class PatternMasterPredictor:
         self.pattern_table = stock_database.PatternTable()
         self.trade_table = stock_database.TradeTable()
         self.db_stock = stock_database.StockDatabase()
-        self.predictor_dict = {}
-        self.__init_predictor_dict__()
+        self.predictor = self.__get_predictor__()
 
-    def get_feature_columns(self, pattern_type: str):
-        predictor = self.predictor_dict[pattern_type]
-        return predictor.feature_columns
+    @property
+    def feature_columns(self):
+        return self.predictor.feature_columns
 
-    def predict_for_label_columns(self, pattern_type: str, x_input: np.array):
-        predictor = self.predictor_dict[pattern_type]
-        return predictor.predict_for_label_columns(x_input)
+    def predict_for_label_columns(self, x_data: list):
+        return self.predictor.predict_for_label_columns(x_data)
 
     def init_without_condition_list(self, ticker_id: str):
-        self.__init_predictor_dict__(self.__get_skip_condition_list__(ticker_id))
+        self.predictor = self.__get_predictor__(self.__get_skip_condition_list__(ticker_id))
 
     def __init_predictor_dict__(self, skip_condition_list=None):
-        for pattern_type in FT.get_all():
-            self.predictor_dict[pattern_type] = \
-                self.__get_predictor_for_pattern_type__(pattern_type, skip_condition_list)
+        self.predictor = self.__get_predictor__(skip_condition_list)
 
     def __get_skip_condition_list__(self, ticker_id: str) -> list:
         pass
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+    def __get_predictor__(self, skip_condition_list=None):
         pass
 
 
@@ -461,29 +311,29 @@ class PatternMasterPredictorTouchPoints(PatternMasterPredictor):
     def __get_skip_condition_list__(self, ticker_id: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
-        return PatternPredictorTouchPoints(self.db_stock, pattern_type, skip_condition_list)
+    def __get_predictor__(self, skip_condition_list=None):
+        return PatternPredictorTouchPoints(self.db_stock, skip_condition_list)
 
 
 class PatternMasterPredictorBeforeBreakout(PatternMasterPredictor):
     def __get_skip_condition_list__(self, ticker_id: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
-        return PatternPredictorBeforeBreakout(self.db_stock, pattern_type, skip_condition_list)
+    def __get_predictor__(self, skip_condition_list=None):
+        return PatternPredictorBeforeBreakout(self.db_stock, skip_condition_list)
 
 
 class PatternMasterPredictorAfterBreakout(PatternMasterPredictor):
     def __get_skip_condition_list__(self, ticker_id: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
-        return PatternPredictorAfterBreakout(self.db_stock, pattern_type, skip_condition_list)
+    def __get_predictor__(self, skip_condition_list=None):
+        return PatternPredictorAfterBreakout(self.db_stock, skip_condition_list)
 
 
 class PatternMasterPredictorForTrades(PatternMasterPredictor):
     def __get_skip_condition_list__(self, ticker_id: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_trade]
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
-        return PatternPredictorForTrades(self.db_stock, pattern_type, skip_condition_list)
+    def __get_predictor__(self, skip_condition_list=None):
+        return PatternPredictorForTrades(self.db_stock, skip_condition_list)

@@ -40,11 +40,17 @@ class MyDashTabStatisticsPlotter:
             graph_api.figure_data = self.__get_scatter_figure_data_for_predictor__()
             return [MyDCC.graph(graph_api)]
         elif self.chart_type == CHT.PIE:
-            graph_api =  DccGraphApi(self._chart_id + '_winner', self._chart_name + ' (winner)')
+            graph_api = DccGraphApi(self._chart_id + '_winner', self._chart_name + ' (winner)')
             graph_api.figure_data = self.__get_pie_figure_data__(True)
-
             graph_api_loser = DccGraphApi(self._chart_id + '_loser', self._chart_name + ' (loser)')
             graph_api_loser.figure_data = self.__get_pie_figure_data__(False)
+            w_h, l_h = self.__get_winner_loser_heights__(graph_api.values_total, graph_api_loser.values_total)
+            graph_api_loser.figure_layout_height *= w_h
+            graph_api_loser.figure_layout_height *= l_h
+            graph_api.figure_layout_height = 800
+            graph_api_loser.figure_layout_height = 800
+            graph_api.figure_layout_margin = {'b': 300, 'r': 50, 'l': 50, 't': 50}
+            graph_api_loser.figure_layout_margin = {'b': 300, 'r': 50, 'l': 50, 't': 50}
             return [MyDCC.graph(graph_api), MyDCC.graph(graph_api_loser)]
         elif self.chart_type == CHT.AREA_WINNER_LOSER:
             graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
@@ -52,6 +58,21 @@ class MyDashTabStatisticsPlotter:
             graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
             graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
             return [MyDCC.graph(graph_api)]
+
+    @staticmethod
+    def __get_winner_loser_heights__(total_winner: int, total_loser: int):
+        if total_winner >= total_loser:
+            if total_winner >= 4 * total_loser:
+                return 1, 0.75
+            elif total_winner >= 2 * total_loser:
+                return 1, 0.9
+            return 1, 0.97
+        else:
+            if total_loser >= 4 * total_winner:
+                return 0.75, 1
+            elif total_loser >= 2 * total_winner:
+                return 0.9, 1
+            return 0.97, 1
 
     def __get_df_for_selection__(self):
         if self.pattern_type in [FT.ALL, '']:
@@ -118,6 +139,8 @@ class MyDashTabStatisticsPlotter:
 
     def __get_area_winner_loser_figure_data__(self):
         x_values, y_value_dict = self.__get_data_for_area_winner_loser_figure__()
+        # print(x_values)
+        # print(y_value_dict)
         return [
             dict(
                 x=x_values,
@@ -163,9 +186,7 @@ class MyDashTabStatisticsPlotter:
                     result_id = cat_results[1]
                     old_value = cat_count_dict[category][-1]
                     cat_count_dict[category][-1] = old_value + result_id
-        # print(sorted_x_values)
-        # for cat in cat_count_dict:
-        #     print('{}: {}'.format(cat, cat_count_dict[cat]))
+        # print(sorted_382144: {}'.format(cat, cat_count_dict[cat]))
         return sorted_x_values, cat_count_dict
 
     @staticmethod

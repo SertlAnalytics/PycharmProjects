@@ -14,6 +14,7 @@ from sertl_analytics.constants.pattern_constants import BT, TSTR, TP
 class ExchangeConfiguration:
     def __init__(self):
         self.is_simulation = True
+        self.default_currency = 'USD'
         self.hodl_dict = {}  # currency in upper characters
         self.buy_order_value_max = 0
         self.buy_fee_pct = 0.25
@@ -43,12 +44,13 @@ class Balance:
         self.asset = asset.upper()  # currency or equity symbol
         self.amount = round(amount, 2)
         self.amount_available = round(amount_available, 2)
+        self.current_value = 0  # is set later by another call
 
     def print_balance(self, prefix = ''):
         if prefix != '':
             print('\n{}:'.format(prefix))
-        print('Type: {}, Asset: {}, Amount: {:.2f}, Amount_available: {:.2f}'.format(
-            self.type, self.asset, self.amount, self.amount_available
+        print('Type: {}, Asset: {}, Amount: {:.2f}, Amount_available: {:.2f}, Value: {:.2f}$'.format(
+            self.type, self.asset, self.amount, self.amount_available, self.current_value
         ))
 
 
@@ -113,8 +115,8 @@ class Order:
 
     @property
     def actual_balance_symbol_amount(self):
-        if self.actual_balance_symbol:
-            return self.actual_balance_symbol.amount
+        if self.actual_symbol_balance:
+            return self.actual_symbol_balance.amount
         return 0
 
     def print_order(self, prefix = ''):

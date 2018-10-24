@@ -636,7 +636,7 @@ class FormationBreakout:
         if self.__is_breakout_over_limit__():
             if True or self.__is_breakout_in_allowed_range__():
                 if self.candle_stick.is_volume_rising(self.candle_stick_previous, 10): # i.e. 10% more volume required
-                    if self.__is_breakout_powerfull__():
+                    if self.__is_breakout_powerful__():
                         return True
         return False
 
@@ -645,10 +645,10 @@ class FormationBreakout:
         tick = self.df.iloc[0]
         return Candlestick(tick.Open, tick.High, tick.Low, tick.Close, tick.Volume, date)
 
-    def __get_breakout_direction__(self) -> FD:
+    def __get_breakout_direction__(self) -> str:
         return FD.ASC if self.candle_stick.Close > self.bound_upper else FD.DESC
 
-    def __is_breakout_powerfull__(self) -> bool:
+    def __is_breakout_powerful__(self) -> bool:
         return self.candle_stick.is_sustainable or self.candle_stick.has_gap_to(self.candle_stick_previous)
 
     def __is_breakout_over_limit__(self) -> bool:
@@ -1016,7 +1016,7 @@ class Formation:
 
         if (self.breakout_direction == FD.ASC and row.High > self.trade_result.limit) \
                 or (self.breakout_direction == FD.DESC and row.Low < self.trade_result.limit):
-            if self.__is_row_trigger_for_extension__(row):  # extend the limit (let the win run)
+            if self.__is_row_trigger_for_extension__(row):  # extend the _limit (let the win run)
                 self.trade_result.stop_loss_at += sig * self.trade_result.expected_win
                 self.trade_result.limit += sig * self.trade_result.expected_win
                 self.trade_result.limit_extended_counter += 1
@@ -1382,7 +1382,7 @@ class FSC:  # Formation Statistics Columns
     STOP_LOSS_TRIGGERED = 'Stop loss triggered'
     RESULT_DF_MAX = 'Result DF max.'
     RESULT_DF_MIN = 'Result DF min.'
-    FIRST_LIMIT_REACHED = 'First limit reached'
+    FIRST_LIMIT_REACHED = 'First _limit reached'
     STOP_LOSS_MAX_REACHED = 'Max stop loss reached (bound of original range)'
 
 

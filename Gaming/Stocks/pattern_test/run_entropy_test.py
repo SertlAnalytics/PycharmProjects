@@ -6,8 +6,11 @@ class EntropyHandlerTest:
     def __init__(self):
         self._test_data = self.__get_test_data_list__()
         self._features = ['Name', 'Sex', 'Hair_color', 'School_level']
-        self._labels = ['Schopping_Queen', 'University']
+        self._labels = ['Schopping_Queen', 'University', 'Status']
         self._df = pd.DataFrame(self._test_data, columns=self._features + self._labels)
+        # self._features = ['Hair_color']
+        # self._labels = ['Schopping_Queen']
+        # self._df = self._df[self._features + self._labels]
 
     @property
     def df(self):
@@ -25,14 +28,14 @@ class EntropyHandlerTest:
     def __get_test_data_list__():
         return [
             # ['Name', 'Sex', 'Hair_color', 'School_level', 'Schopping_Queen', 'University'],
-            ['Albert', 'M', 'Blond', 'High', 'No', 'Yes'],
-            ['Meier', 'M', 'Brown', 'College', 'No', 'No'],
-            ['Huber', 'M', 'Dark', 'High', 'No', 'Yes'],
-            ['Franz', 'M', 'Red', 'College', 'No', 'No'],
-            ['Miller', 'F', 'Blond', 'High', 'Yes', 'No'],
-            ['Göhl', 'F', 'Brown', 'College', 'Yes', 'No'],
-            ['Mirka', 'F', 'Dark', 'High', 'Yes', 'No'],
-            ['Müller', 'F', 'Red', 'College', 'Yes', 'No'],
+            ['Albert', 'M', 'Blond', 'High', 'No', 'Yes', 'Single'],
+            ['Meier', 'M', 'Brown', 'College', 'No', 'No', 'Single'],
+            ['Huber', 'M', 'Dark', 'High', 'No', 'Yes', 'Single'],
+            ['Franz', 'M', 'Red', 'College', 'No', 'No', 'Single'],
+            ['Miller', 'F', 'Blond', 'High', 'Yes', 'No', 'Maried'],
+            ['Göhl', 'F', 'Brown', 'College', 'Yes', 'No', 'Maried'],
+            ['Mirka', 'F', 'Dark', 'High', 'Yes', 'No', 'Partner'],
+            ['Müller', 'F', 'Red', 'College', 'Yes', 'No', 'Partner'],
         ]
 
     @staticmethod
@@ -45,7 +48,11 @@ class EntropyHandlerTest:
             'University_Name': [0.811, 0.0, 0.811, '100.0%'],
             'University_Sex': [0.811, 0.5, 0.311, '38.3%'],
             'University_Hair_color': [0.811, 0.5, 0.311, '38.3%'],
-            'University_School_level': [0.811, 0.5, 0.311, '38.3%']
+            'University_School_level': [0.811, 0.5, 0.311, '38.3%'],
+            'Status_Name': [0.9055, 0.0, 0.9055, '100.0%'],
+            'Status_Sex': [0.9055, 0.25, 0.6555, '72.4%'],
+            'Status_Hair_color': [0.9055, 0.75, 0.1555, '17.2%'],
+            'Status_School_level': [0.9055, 0.9055, 0.0, '0.0%']
         }
         return result_dict.get('{}_{}'.format(label, feature), [0, 0, 0, '0.0%'])
 

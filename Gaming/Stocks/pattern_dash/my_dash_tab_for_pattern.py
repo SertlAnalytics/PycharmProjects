@@ -22,6 +22,7 @@ from pattern_bitfinex import BitfinexConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from textwrap import dedent
 from pattern_dash.my_dash_base import MyDashBaseTab, Dash
+from pattern_wave_tick import WaveTick, WaveTickList
 
 
 class MyDashTab4Pattern(MyDashBaseTab):
@@ -34,10 +35,9 @@ class MyDashTab4Pattern(MyDashBaseTab):
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None
         self._ticker_options = []
-        self._current_symbol = ''
+        self._ticker_selected = ''
         self.__fill_ticker_options__()
         self._dd_handler = PatternTabDropDownHandler(self._ticker_options)
-        self._time_stamp_last_refresh = MyDate.time_stamp_now()
         self._time_stamp_next_refresh = None
         self._graph_first_cache = MyGraphCache()
         self._graph_second_cache = MyGraphCache()
@@ -87,22 +87,10 @@ class MyDashTab4Pattern(MyDashBaseTab):
             style={'display': 'inline-block', 'vertical-align': 'bottom', 'height': 20}
         )
 
-    def __init_interval_callback_with_date_picker__(self):
-        @self.app.callback(
-            Output('my_graph_main_div', 'children'),
-            [Input('my_interval', 'n_intervals'),
-             Input('my_refresh_button', 'n_clicks')],
-            [State('my_ticker_selection', 'value'),
-             State('my_date_picker', 'start_date'),
-             State('my_date_picker', 'end_date')])
-        def handle_interval_callback_with_date_picker(n_intervals, n_clicks, ticker, dt_start, dt_end):
-            self.__play_sound__(n_intervals)
-            return self.__get_graph_first__(ticker, self.sys_config.config.get_and_clause(dt_start, dt_end))
-
     def __init_callback_for_position_markdown__(self):
         @self.app.callback(
             Output('my_position_markdown', 'children'),
-            [Input('my_interval_timer', 'n_intervals')])
+            [Input('my_interval', 'n_intervals')])
         def handle_callback_for_position_markdown(n_intervals: int):
             return self.__get_position_markdown__(n_intervals)
 
@@ -121,24 +109,26 @@ class MyDashTab4Pattern(MyDashBaseTab):
         return text
 
     def __get_position_markdown__(self, n_intervals: int):
-        text = dedent('''
-        _**USD**_: {}  
-        _**Others...**_: {}  
-        _**Total**_: {}
-        ''').format(self.__get_position_usd__(), self.__get_position_others__(), self.__get_position_total__())
+        text = dedent('''{}''').format(self.__get_position_markdown_for_active_positions__())
         return text
 
-    def __get_position_usd__(self):
-        return '- none -'
+    def __get_position_markdown_for_active_positions__(self):
+        balances = self.trade_handler_online.trade_client.get_balances_with_current_values()
+        text_list = ['_**{}**_: {:.2f} ({:.2f}): {:.2f}$'.format(
+                b.asset, b.amount, b.amount_available, b.current_value) for b in balances]
+        total_value = sum([balance.current_value for balance in balances])
+        text_list.append(self.__get_position_total__(total_value))
+        return '  \n'.join(text_list)
 
-    def __get_position_others__(self):
-        return '- none -'
+    def __get_position_total__(self, total_value: float):
+        if self.trade_handler_online.value_total_start == 0:
+            self.trade_handler_online.value_total_start = total_value
+        diff_value = total_value - self.trade_handler_online.value_total_start
+        diff_pct = diff_value/self.trade_handler_online.value_total_start*100
+        return '_**Total**_: {:.2f}$ ({:+.2f}$ / {:+.2f}%)'.format(total_value, diff_value, diff_pct)
 
     def __get_markdown_news__(self):
         return self._news_handler.get_news_for_markdown_since_last_refresh(self._time_stamp_last_refresh)
-
-    def __get_position_total__(self):
-        return '- none -'
 
     def __get_markdown_trades__(self):
         return '- none -'
@@ -182,21 +172,20 @@ class MyDashTab4Pattern(MyDashBaseTab):
             Output('my_pattern_markdown', 'children'),
             [Input('my_graph_first_div', 'children')])
         def handle_callback_for_ticket_markdown(children):
-            annotation = ''
-            tick = self._pattern_data_first.tick_last
-            for pattern in self._detector_first.pattern_list:
-                if not pattern.was_breakout_done():
-                    annotation = pattern.get_annotation_parameter().text
+            annotation = self.__get_annotation_for_markdown__()
+            wave_tick_list = self.trade_handler_online.get_latest_tickers_as_wave_tick_list(self._ticker_selected)
+            text_list = [wave_tick_list.get_markdown_text_for_second_last_wave_tick(),
+                         wave_tick_list.get_markdown_text_for_last_wave_tick()]
+            if annotation != '':
+                text_list.append('**Annotations (next breakout)**: {}'.format(annotation))
+            return '  \n'.join(text_list)
 
-            if annotation == '':
-                text = '**Last tick:** open:{} - **close = {}**'.format(tick.open, tick.close)
-            else:
-                text = dedent('''
-                        **Last tick:** open:{} - **close = {}**
-
-                        **Annotations (next breakout)**: {}
-                        ''').format(tick.open, tick.close, annotation)
-            return text
+    def __get_annotation_for_markdown__(self):
+        annotation = ''
+        for pattern in self._detector_first.pattern_list:
+            if not pattern.was_breakout_done():
+                annotation = pattern.get_annotation_parameter().text
+        return annotation
 
     def __init_callback_for_graph_first__(self):
         @self.app.callback(
@@ -205,6 +194,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
              Input('my_refresh_button', 'n_clicks')],
             [State('my_ticker_selection', 'value')])
         def handle_callback_for_graph_first(n_intervals, n_clicks, ticker):
+            self._ticker_selected = ticker
             graph, graph_key = self.__get_graph_first__(ticker)
             self._graph_key_first = graph_key
             self.__cache_others_ticker_values__(n_intervals, ticker)
@@ -385,8 +375,6 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
     def __fill_ticker_options__(self):
         for symbol, name in self.sys_config.config.ticker_dic.items():
-            if self._current_symbol == '':
-                self._current_symbol = symbol
             self._ticker_options.append({'label': '{}'.format(name), 'value': symbol})
 
     def __get_ticker_label__(self, ticker_value: str):

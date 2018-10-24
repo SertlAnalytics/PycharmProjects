@@ -168,7 +168,7 @@ class Pattern:
         pos_last = self.part_entry.tick_last.position + self.get_maximal_trade_position_size()
         return self.df_length > pos_last and FT.is_pattern_type_long_trade_able(self.pattern_type)
 
-    def get_back_testing_value_pairs(self, tick_list_for_replay=None):
+    def get_back_testing_wave_ticks(self, tick_list_for_replay=None):
         if tick_list_for_replay is None:
             tick_list = self.sys_config.pdh.pattern_data.tick_list
         else:
@@ -176,16 +176,21 @@ class Pattern:
         off_set_time_stamp = self.pattern_range.tick_last.time_stamp
         counter = 0
         max_ticks = self.get_maximal_trade_position_size()
+        col_list = [CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.VOL, CN.TIMESTAMP, CN.POSITION]
         return_list = []
 
         for tick in tick_list:
             if off_set_time_stamp < tick.time_stamp:
                 counter += 1
                 ts_list = self.__get_time_stamp_list_for_back_testing_value_pairs__(int(tick.time_stamp), 4)
-                return_list.append([ts_list[0], tick.open])
-                return_list.append([ts_list[1], tick.high])
-                return_list.append([ts_list[2], tick.low])
-                return_list.append([ts_list[3], tick.close])
+                value_list = [tick.open, tick.open, tick.low, tick.high, tick.volume, ts_list[0], tick.position]
+                return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
+                value_list = [tick.open, tick.high, tick.low, tick.high, tick.volume, ts_list[0], tick.position]
+                return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
+                value_list = [tick.open, tick.low, tick.low, tick.high, tick.volume, ts_list[0], tick.position]
+                return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
+                value_list = [tick.open, tick.close, tick.low, tick.high, tick.volume, ts_list[0], tick.position]
+                return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
             if counter >= max_ticks:
                 break
         return return_list
@@ -222,19 +227,19 @@ class Pattern:
         x_data = self.get_x_data_for_prediction_touch_points()
         if x_data is not None:
             self.y_predict_touch_points = \
-                self.sys_config.master_predictor_touch_points.predict_for_label_columns(self.pattern_type, x_data)
+                self.sys_config.master_predictor_touch_points.predict_for_label_columns(x_data)
 
     def __calculate_y_predict_before_breakout__(self):
         x_data = self.get_x_data_for_prediction_before_breakout()
         if x_data is not None:
             self.y_predict_before_breakout = \
-                self.sys_config.master_predictor_before_breakout.predict_for_label_columns(self.pattern_type, x_data)
+                self.sys_config.master_predictor_before_breakout.predict_for_label_columns(x_data)
 
     def __calculate_y_predict_after_breakout__(self):
         x_data = self.get_x_data_for_prediction_after_breakout()
-        if x_data is not None:
+        if len(x_data) > 0:
             self.y_predict_after_breakout = \
-                self.sys_config.master_predictor_after_breakout.predict_for_label_columns(self.pattern_type, x_data)
+                self.sys_config.master_predictor_after_breakout.predict_for_label_columns(x_data)
 
     def __print__prediction__(self, prediction_dict: dict, prediction_type: str):
         pos_breakout = '-' if self.breakout is None else self.breakout.tick_breakout.position
@@ -509,7 +514,7 @@ class Pattern:
 
         if (self.breakout_direction == FD.ASC and tick.high > self.trade_result.limit) \
                 or (self.breakout_direction == FD.DESC and tick.low < self.trade_result.limit):
-            if self.__is_row_trigger_for_extension__(tick):  # extend the limit (let the win run)
+            if self.__is_row_trigger_for_extension__(tick):  # extend the _limit (let the win run)
                 self.trade_result.stop_loss_at += sig * self.trade_result.expected_win
                 self.trade_result.limit += sig * self.trade_result.expected_win
                 self.trade_result.limit_extended_counter += 1
@@ -537,17 +542,18 @@ class Pattern:
     def get_x_data_for_prediction_after_breakout(self):
         return self.__get_x_data_for_prediction__(PT.AFTER_BREAKOUT)
 
-    def __get_x_data_for_prediction__(self, prediction_type: str):
-        if prediction_type == PT.TOUCH_POINTS:
-            feature_columns = self.sys_config.pattern_table.feature_columns_touch_points
-        elif prediction_type == PT.BEFORE_BREAKOUT:
-            feature_columns = self.sys_config.pattern_table.features_columns_before_breakout
-        else:
-            feature_columns = self.sys_config.pattern_table.features_columns_after_breakout
+    def __get_x_data_for_prediction__(self, prediction_type: str) -> list:
+        feature_columns = self.__get_feature_columns_for_prediction_type__(prediction_type)
         if self.data_dict_obj.is_data_dict_ready_for_columns(feature_columns):
-            data_list = self.data_dict_obj.get_data_list_for_columns(feature_columns)
-            return pd.Series(data_list, feature_columns)  # we need the columns for dedicated features columns later
-        return None
+            return self.data_dict_obj.get_data_list_for_columns(feature_columns)
+        return []
+
+    def __get_feature_columns_for_prediction_type__(self, prediction_type: str):
+        if prediction_type == PT.TOUCH_POINTS:
+            return self.sys_config.master_predictor_touch_points.feature_columns
+        elif prediction_type == PT.BEFORE_BREAKOUT:
+            return self.sys_config.master_predictor_before_breakout.feature_columns
+        return self.sys_config.master_predictor_after_breakout.feature_columns
 
     def _get_value_categorizer_for_part_entry_(self) -> ValueCategorizer:
         pos_begin = self._part_entry.tick_first.position

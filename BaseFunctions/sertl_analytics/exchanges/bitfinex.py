@@ -14,11 +14,14 @@ import base64
 import hmac
 import hashlib
 import time
+import pandas as pd
 from sertl_analytics.constants.pattern_constants import OS, OT, TSTR, BT
-from sertl_analytics.exchanges.exchange_abc import ExInterface
+from sertl_analytics.exchanges.exchange_abc import ExchangeInterface
 from sertl_analytics.exchanges.exchange_cls import Order, OrderApi, OrderStatus, OrderStatusApi
 from sertl_analytics.exchanges.exchange_cls import OrderBook, Balance, Ticker
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
+from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher
+from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mystring import MyString
 from sertl_analytics.mycache import MyCacheObjectApi, MyCacheObject, MyCache
@@ -207,6 +210,18 @@ class BitfinexFactory:
         return order_status
 
 
+class BitfinexDataFetcherCacheKey(DataFetcherCacheKey):
+    def __init__(self, ticker: str, period: str, aggregation: int, section: str, limit: int):
+        DataFetcherCacheKey.__init__(self, ticker, period, aggregation)
+        self.section = section
+        self.limit = limit
+
+    @property
+    def key(self):
+        return 'ticker={}_period={}_aggregation={}_section={}_limit={}'.format(
+            self.ticker_id, self.period, self.aggregation, self.section, self.limit)
+
+
 class BitfinexTickerCache(MyCache):
     def __init__(self, cache_seconds: int):
         MyCache.__init__(self)
@@ -238,11 +253,11 @@ class BitfinexBalanceCache(MyCache):
             self.add_cache_object(api)
 
 
-class MyBitfinex(ExInterface):
+class MyBitfinex(ExchangeInterface):
     def __init__(self, api_key: str, api_secret_key: str, exchange_config: BitfinexConfiguration):
         self.exchange_config = exchange_config
         self._is_simulation_by_config = self.exchange_config.is_simulation
-        self.base_currency = 'USD'
+        self.base_currency = self.exchange_config.default_currency
         self.http_timeout = 5.0 # HTTP request timeout in seconds
         self.url = 'https://api.bitfinex.com/v1'
         self.api_key = api_key
@@ -263,6 +278,9 @@ class MyBitfinex(ExInterface):
 
     def get_available_money_balance(self) -> Balance:
         return self.get_balance_for_symbol(self.base_currency)
+
+    def get_available_money(self) -> float:
+        return self.get_available_money_balance().amount_available
 
     def create_order(self, order: BitfinexOrder, order_type='', is_simulation=True):
         self.__init_actual_order_properties__(order)
@@ -361,7 +379,7 @@ class MyBitfinex(ExInterface):
     def update_order(self, order_id: int, price_new: float) -> BitfinexOrderStatus:
         old_order_status = self.get_order(order_id)
         if not old_order_status:
-            return
+            return None
         payload_additional = {
             'order_id': order_id, 'symbol': old_order_status.symbol.lower(),
             'amount': str(old_order_status.original_amount),
@@ -437,10 +455,28 @@ class MyBitfinex(ExInterface):
                     list_[key] = float(value)
         return data
 
+    def get_candles(self, symbol: str, period: str, aggregation: int, section='hist',
+                    limit=200, ms_start=0, ms_end=0, sort=1):
+        data_fetcher_cache_key = BitfinexDataFetcherCacheKey(symbol, period, aggregation, section, limit)
+        df_from_cache = self.ticker_cache.get_cached_object_by_key(data_fetcher_cache_key.key)
+        if df_from_cache is not None:
+            print('df_source from cache: {}'.format(data_fetcher_cache_key.key))
+            return df_from_cache
+        fetcher = BitfinexCryptoFetcher(symbol, period, aggregation, section, limit)
+        self.__add_data_frame_to_cache__(fetcher.df_data, data_fetcher_cache_key)
+        return fetcher.df_data
+
+    def __add_data_frame_to_cache__(self, df: pd.DataFrame, data_fetcher_cache_key: BitfinexDataFetcherCacheKey):
+        cache_api = MyCacheObjectApi()
+        cache_api.key = data_fetcher_cache_key.key
+        cache_api.object = df
+        cache_api.valid_until_ts = data_fetcher_cache_key.valid_until_ts
+        self.ticker_cache.add_cache_object(cache_api)
+
     def print_active_orders(self):
         orders_status_list = self.get_active_orders()
         if len(orders_status_list) > 0:
-            print('\nActive orders{}:'.format(self.simulation_text))
+            print('\nActive orders{}:'.format(self.get_simulation_text))
         for order_status in orders_status_list:
             order_status.print_order_status()
 
@@ -483,7 +519,6 @@ class MyBitfinex(ExInterface):
             self.balance_cache.clear()  # the next call has to get the updated balances...
         return order_status
 
-
     def __init_actual_order_properties__(self, order: BitfinexOrder):
         if order.actual_ticker is None:
             order.actual_ticker = self.get_ticker(order.symbol)
@@ -518,9 +553,10 @@ class MyBitfinex(ExInterface):
     def __is_enough_balance_available__(order: BitfinexOrder):
         if order.side == OS.BUY:
             price = MyBitfinex.__get_price_for_order__(order)
-            if order.actual_money_available < order.amount * price:
+            money_available = order.actual_money_balance.amount_available
+            if money_available < order.amount * price:
                 print('\nNot enough balance ({:.2f}$) to buy {} of {} at {:.4f}$.'.format(
-                    order.actual_money_available, order.amount, order.crypto, price))
+                    money_available, order.amount, order.crypto, price))
                 return False
         else:
             if order.actual_balance_symbol_amount < order.amount:

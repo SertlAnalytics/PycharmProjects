@@ -11,7 +11,8 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
-from sertl_analytics.datafetcher.financial_data_fetcher import CryptoCompareCryptoFetcher, BitfinexCryptoFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher
+from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.user_input.confirmation import UserInput
 from datetime import timedelta
@@ -25,6 +26,8 @@ from pattern_plotting.pattern_plotter import PatternPlotter
 from pattern_database import stock_database
 from datetime import datetime
 from time import sleep
+from sertl_analytics.mycache import MyCache, MyCacheObject, MyCacheObjectApi
+
 
 """
 Implementation steps:
@@ -50,6 +53,20 @@ class PatternExcelFile:
         self.row_end = row_end
 
 
+class PatternDataFetcherCacheKey(DataFetcherCacheKey):
+    def __init__(self, ticker: str, period: str, aggregation: int):
+        DataFetcherCacheKey.__init__(self, ticker, period, aggregation)
+        self.from_db = False
+        self.output_size = ''
+        self.limit = 0
+        self.and_clause = ''
+
+    @property
+    def key(self):
+        return 'from_db={}_ticker={}_period={}_aggregation={}_output_size={}_limit={}_and_clause={}'.format(
+            self.from_db, self.ticker_id, self.period, self.aggregation, self.output_size, self.limit, self.and_clause)
+
+
 class PatternDetectionController:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
@@ -60,6 +77,7 @@ class PatternDetectionController:
         self._df_test_data = None
         self._loop_list_ticker = None  # format of an entry (ticker, and_clause, number)
         self._number_pattern_total = 0
+        self._df_source_cache = MyCache()
 
     def run_pattern_detector(self, excel_file_test_data: PatternExcelFile = None):
         self._excel_file_with_test_data = excel_file_test_data
@@ -70,7 +88,7 @@ class PatternDetectionController:
             self.sys_config.init_predictors_without_condition_list(ticker)
             self.__update_runtime_parameters__(value_dic)
             print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
-            df_data = self.__get_df_from_source__(ticker, value_dic)
+            df_data = self.__get_df_from_source__(ticker, value_dic, limit=300)
             if df_data is None:
                 print('No data available for: {} and {}'.format(ticker, self.sys_config.runtime.actual_and_clause))
                 continue
@@ -103,7 +121,7 @@ class PatternDetectionController:
         value_dict = {LL.TICKER: ticker, LL.AND_CLAUSE: and_clause, LL.NUMBER: 1}
         self.__update_runtime_parameters__(value_dict)
         print('\nProcessing {} ({}) for {} ...\n'.format(ticker, sys_config.runtime.actual_ticker_name, and_clause))
-        df_data = self.__get_df_from_source__(ticker, value_dict, True)
+        df_data = self.__get_df_from_source__(ticker, value_dict, limit=200)
         self.sys_config.pdh.init_by_df(df_data)
         detector = PatternDetector(self.sys_config)
         detector.parse_for_fibonacci_waves()
@@ -116,20 +134,39 @@ class PatternDetectionController:
     def loop_list_ticker(self):
         return self._loop_list_ticker
 
-    def __get_df_from_source__(self, ticker, value_dic, run_on_dash=False):
-        period = self.sys_config.config.api_period
-        aggregation = self.sys_config.config.api_period_aggregation
-        output_size = self.sys_config.config.api_output_size
+    def __get_df_from_source__(self, ticker, value_dic, limit=400):
+        data_fetcher_cache_key = self.__get_data_fetcher_cache_key__(ticker, limit, value_dic[LL.AND_CLAUSE])
+        df_from_cache = self._df_source_cache.get_cached_object_by_key(data_fetcher_cache_key.key)
+        if df_from_cache is not None:
+            print('df_source from cache: {}'.format(data_fetcher_cache_key.key))
+            return df_from_cache
+        df = self.__get_df_from_original_source__(data_fetcher_cache_key)
+        self.__add_data_frame_to_cache__(df, data_fetcher_cache_key)
+        return df
 
+    def __add_data_frame_to_cache__(self, df: pd.DataFrame, data_fetcher_cache_key: PatternDataFetcherCacheKey):
+        cache_api = MyCacheObjectApi()
+        cache_api.key = data_fetcher_cache_key.key
+        cache_api.object = df
+        cache_api.valid_until_ts = data_fetcher_cache_key.valid_until_ts
+        self._df_source_cache.add_cache_object(cache_api)
+
+    def __get_df_from_original_source__(self, data_fetcher_cache_key: PatternDataFetcherCacheKey):
+        ticker = data_fetcher_cache_key.ticker_id
+        period = data_fetcher_cache_key.period
+        aggregation = data_fetcher_cache_key.aggregation
+        and_clause = data_fetcher_cache_key.and_clause
+        limit = data_fetcher_cache_key.limit
+        output_size = data_fetcher_cache_key.output_size
         if self.sys_config.config.get_data_from_db:
-            self.__handle_not_available_symbol__(ticker)
-            and_clause = value_dic[LL.AND_CLAUSE]
+            self.__handle_not_available_symbol__(data_fetcher_cache_key.ticker_id)
             stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.sys_config.db_stock, ticker, and_clause)
             return stock_db_df_obj.df_data
         elif ticker in self.sys_config.crypto_ccy_dic:
             if period == PRD.INTRADAY:
                 # fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
-                fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, run_on_dash)
+                fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, 'hist', limit)
+                # fetcher_last = BitfinexCryptoFetcher(ticker, period, aggregation, 'last')
                 # self.__handle_difference_of_exchanges(fetcher.df_data, fetcher_bit.df_data)
                 return fetcher.df_data
             else:
@@ -140,6 +177,17 @@ class PatternDetectionController:
             if self.sys_config.config.api_period == PRD.INTRADAY:
                 return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             return fetcher.df_data
+
+    def __get_data_fetcher_cache_key__(self, ticker: str, limit: int, and_clause: str) -> PatternDataFetcherCacheKey:
+        period = self.sys_config.config.api_period
+        aggregation = self.sys_config.config.api_period_aggregation
+        output_size = self.sys_config.config.api_output_size
+        cache_key_obj = PatternDataFetcherCacheKey(ticker, period, aggregation)
+        cache_key_obj.from_db = self.sys_config.config.get_data_from_db
+        cache_key_obj.output_size = output_size
+        cache_key_obj.limit = limit
+        cache_key_obj.and_clause = and_clause
+        return cache_key_obj
 
     @staticmethod
     def __handle_difference_of_exchanges(df_cc: pd.DataFrame, df_bitfinex: pd.DataFrame):

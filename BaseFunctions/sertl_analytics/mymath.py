@@ -10,38 +10,85 @@ from scipy.stats import entropy
 import pandas as pd
 
 
-class ParentEntropy:
-    def __init__(self, label: str, value, value_prob: float):
-        self._label = label
-        self._value = value
+class MyEntropy:
+    def __init__(self, value_prob: float):
         self._v_p = value_prob
         self._not_v_p = 1 - self._v_p
+        self._entropy = self.__get_entropy__()
+
+    @property
+    def entropy(self):
+        return self._entropy
+
+    def __get_entropy__(self):
+        if self._v_p == 0 or self._v_p == 1:
+            return 0
+        return round(-self._v_p * np.log2(self._v_p) - self._not_v_p * np.log2(self._not_v_p), 3)
+
+
+class ParentEntropy:
+    def __init__(self, df: pd.DataFrame, label: str, label_value):
+        self._df = df
+        self._label = label
+        self._label_value = label_value
+        self._elements_total = self._df.shape[0]
+        self._elements_for_label_value = self._df[self._df[label] == label_value].shape[0]
+        self._probability_for_label_value = round(self._elements_for_label_value / self._elements_total, 3)
+        self._entropy_obj = MyEntropy(self._probability_for_label_value)
+        self._child_entropy_list = []
+
+    def add_children_entropies_for_feature(self, feature: str):
+        pass
+
+    @property
+    def entropy(self):
+        return self._entropy_obj.entropy
 
     @property
     def label(self):
         return self._label
 
     @property
-    def value(self):
-        return self._value
+    def label_value(self):
+        return self._label_value
 
     @property
-    def entropy(self):
-        if self._v_p == 0 or self._v_p == 1:
-            return 0
-        return round(-self._v_p * np.log2(self._v_p) - self._not_v_p * np.log2(self._not_v_p), 3)
+    def elements_for_label_value(self):
+        return self._elements_for_label_value
+
+    @property
+    def probability(self):
+        return self._probability_for_label_value
 
 
 class ChildEntropy:
-    def __init__(self, label: str, label_value, feature_label_value_prob: float, feature: str, value, value_prob: float):
-        self._label = label
-        self._label_value = label_value
+    def __init__(self, parent: ParentEntropy, df: pd.DataFrame, feature: str, feature_value):
+        self._parent = parent
+        self._df = df
         self._feature = feature
-        self._feature_value = value
-        self._feature_value_prob = value_prob
-        # this is the probability of the feature value over the whole distribution
-        self._v_p = feature_label_value_prob  # the probability of the feature value for the parent value
-        self._not_v_p = 1 - self._v_p
+        self._feature_value = feature_value
+        self._elements_total = self._df.shape[0]
+        self._label = self._parent.label
+        self._label_value = self._parent.label_value
+        self._elements_with_label_value = self._parent.elements_for_label_value
+        self._elements_with_feature_value_total = self._df[self._df[feature] == feature_value].shape[0]
+        self._probability_for_feature_value = round(self._elements_with_feature_value_total / self._elements_total, 3)
+        self._elements_with_feature_label_values = self.__get_elements_with_feature_label_values__()
+        self._probability_for_feature_value_resp_label_value = \
+            round(self._elements_with_feature_label_values / self._elements_with_feature_value_total, 3)
+        self._entropy_obj = MyEntropy(self._probability_for_feature_value_resp_label_value)
+
+    def __get_elements_with_feature_label_values__(self):
+        df_feature_label_values = self.__get_df_with_feature_and_label_values__()
+        return df_feature_label_values.shape[0]
+
+    def __get_df_with_feature_and_label_values__(self):
+        return self._df[
+            np.logical_and(self._df[self._feature] == self._feature_value, self._df[self._label] == self._label_value)]
+
+    @property
+    def entropy(self):
+        return self._entropy_obj.entropy
 
     @property
     def label(self):
@@ -60,14 +107,8 @@ class ChildEntropy:
         return self._feature_value
 
     @property
-    def entropy(self):
-        if self._v_p == 0 or self._v_p == 1:
-            return 0
-        return round(-self._v_p * np.log2(self._v_p) - self._not_v_p * np.log2(self._not_v_p), 3)
-
-    @property
     def information_gain_contribution(self):
-        return round(self._feature_value_prob * self.entropy, 3)
+        return self._probability_for_feature_value * self._entropy_obj.entropy
 
 
 class EntropyHandler:
@@ -76,60 +117,80 @@ class EntropyHandler:
         self._elements_total = self._df.shape[0]
         self._labels = labels
         self._features = features
+        self._unique_label_value_dict = {}
+        self._unique_feature_value_dict = {}
+        self.__fill_unique_label_value_dict__()
+        self.__fill_unique_feature_value_dict__()
         self._parent_entropy_list = []
         self._child_entropy_list = []
         self.__fill_parent_entropy_list__()
         self.__fill_child_entropy_list__()
 
     def calculate_information_gain_for_label_and_feature(self, label: str, feature: str):
-        child_correction_sum = 0
-        for parent_entropy in [e for e in self._parent_entropy_list if e.label == label]: # label, value, entropy
+        if self.__is_calculation_information_gain_too_complex__(label, feature):
+            label_v = len(self._unique_label_value_dict[label])
+            feature_v = len(self._unique_feature_value_dict[feature])
+            return ['label_values={}, feature_values={} ({})'.format(label_v, feature_v, label_v * feature_v)]
+        parent_value_entropy_dict = {}
+        parent_value_probability_dict = {}
+        parent_value_child_correction_dict = {}
+        parent_entropy_list_for_label = [p_e for p_e in self._parent_entropy_list if p_e.label == label]
+        for parent_entropy in parent_entropy_list_for_label:
+            label_value = parent_entropy.label_value
+            parent_value_entropy_dict[label_value] = parent_entropy.entropy
+            parent_value_probability_dict[label_value] = parent_entropy.probability
+            parent_value_child_correction_dict[label_value] = 0
             child_list = self.__get_child_entropy_list_for_feature_and_parent_entropy__(feature, parent_entropy)
             for child_entropy in child_list:
-                child_correction_sum += child_entropy.information_gain_contribution
-            child_correction_sum = round(child_correction_sum, 4)
-        information_gain = round(parent_entropy.entropy - child_correction_sum, 4)
-        percentage = '{:.1f}%'.format(information_gain/parent_entropy.entropy*100)
-        return [parent_entropy.entropy, child_correction_sum, information_gain, percentage]
+                parent_value_child_correction_dict[label_value] += child_entropy.information_gain_contribution
+        parent_entropy_weighted = 0
+        child_correction_weighted = 0
+        for label_value in parent_value_probability_dict:
+            probability = parent_value_probability_dict[label_value]
+            entropy = parent_value_entropy_dict[label_value]
+            child_correction = parent_value_child_correction_dict[label_value]
+            parent_entropy_weighted += probability * entropy
+            child_correction_weighted += probability * child_correction
+        parent_entropy_weighted = round(parent_entropy_weighted, 4)
+        information_gain = round(parent_entropy_weighted - child_correction_weighted, 4)
+        child_correction_weighted = round(child_correction_weighted, 4)
+        if parent_entropy_weighted == 0:
+            percentage = '{:.1f}%'.format(100)
+        else:
+            percentage = '{:.1f}%'.format(information_gain/parent_entropy_weighted*100)
+        return [parent_entropy_weighted, child_correction_weighted, information_gain, percentage]
+
+    def __is_calculation_information_gain_too_complex__(self, label, feature) -> bool:
+        return len(self._unique_label_value_dict[label]) * len(self._unique_feature_value_dict[feature]) > 100
 
     def __get_child_entropy_list_for_feature_and_parent_entropy__(self, feature: str, p_e: ParentEntropy):
         return [e for e in self._child_entropy_list
-                if e.label == p_e.label and e.label_value == p_e.value and e.feature == feature]
+                if e.label == p_e.label and e.label_value == p_e.label_value and e.feature == feature]
+
+    def __fill_unique_label_value_dict__(self):
+        for label in self._labels:
+            self._unique_label_value_dict[label] = self._df[label].unique()
+
+    def __fill_unique_feature_value_dict__(self):
+        for feature in self._features:
+            self._unique_feature_value_dict[feature] = self._df[feature].unique()
 
     def __fill_parent_entropy_list__(self):
         for label in self._labels:
-            binary_value = self.__get_value_for_binary_label_column__(label)
-            unique_values = [binary_value] if binary_value else df[label].unique()
-            for label_value in unique_values:
+            for label_value in self._unique_label_value_dict[label]:
                 self.__fill_parent_entropy_list_for_label__(label, label_value)
 
     def __fill_parent_entropy_list_for_label__(self, label: str, label_value):
-         elements_for_value = self._df[self._df[label] == label_value].shape[0]
-         p_v = round(elements_for_value / self._elements_total, 3)
-         self._parent_entropy_list.append(ParentEntropy(label, label_value, p_v))
+         parent_entropy_obj = ParentEntropy(self._df, label, label_value)
+         self._parent_entropy_list.append(parent_entropy_obj)
 
     def __fill_child_entropy_list__(self):
         for parent_entropy in self._parent_entropy_list:
             for feature in self._features:
-                feature_unique_values = self._df[feature].unique()
-                for feature_value in feature_unique_values:
-                    self.__fill_child_entropy_list_for_label_and_feature__(
-                        parent_entropy.label, parent_entropy.value, feature, feature_value)
-
-    def __fill_child_entropy_list_for_label_and_feature__(
-            self, label: str, label_value, feature: str, feature_value):
-        elements_feature_value_total = self._df[self._df[feature] == feature_value].shape[0]
-        p_f_v = round(elements_feature_value_total / self._elements_total, 3)
-        df_for_values = self._df[np.logical_and(self._df[feature] == feature_value, self._df[label] == label_value)]
-        elements_feature_value_with_label_value = df_for_values.shape[0]
-        p_v = round(elements_feature_value_with_label_value / elements_feature_value_total, 3)
-        self._child_entropy_list.append(ChildEntropy(label, label_value, p_v, feature, feature_value, p_f_v))
-
-    def __get_value_for_binary_label_column__(self, label_column: str):  # get the highest value for binary
-        unique_values = sorted(self._df[label_column].unique())
-        if len(unique_values) <= 2:
-            return unique_values[-1]
-        return None
+                if not self.__is_calculation_information_gain_too_complex__(parent_entropy.label, feature):
+                    for feature_value in self._unique_feature_value_dict[feature]:
+                        child_entropy_obj = ChildEntropy(parent_entropy, self._df, feature, feature_value)
+                        self._child_entropy_list.append(child_entropy_obj)
 
 
 class MyMath:

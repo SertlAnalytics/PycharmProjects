@@ -113,16 +113,23 @@ class DccGraphApi:
         self.df = None
         self.pattern_trade = None
         self.figure_data = None
+        self.figure_layout_auto_size = False
         self.figure_layout_height = 500
         self.figure_layout_width = 1200
         self.figure_layout_yaxis_title = title
         self.figure_layout_margin = {'b': 50, 'r': 50, 'l': 50, 't': 50}
-        self.figure_layout_legend = {'x': 0}
+        self.figure_layout_legend = {'x': +5}
         self.figure_layout_hovermode = 'closest'
         self.figure_layout_shapes = None
         self.figure_layout_annotations = None
         self.figure_layout_x_axis_dict = None
         self.figure_layout_y_axis_dict = None
+
+    @property
+    def values_total(self):
+        figure_data_dict = self.figure_data[0]
+        value_list = figure_data_dict['values']
+        return sum(value_list)
 
 
 class DccGraphSecondApi(DccGraphApi):
@@ -299,13 +306,15 @@ class MyDCC:
         if graph_api.figure_layout_x_axis_dict:
             x_axis_dict = graph_api.figure_layout_x_axis_dict
         else:
-            x_axis_dict = {'title': 'ticker-x', 'type': 'date'},
+            # x_axis_dict = {'title': 'ticker-x', 'type': 'date'}
+            x_axis_dict = {}
 
         if graph_api.figure_layout_y_axis_dict:
             y_axis_dict = graph_api.figure_layout_y_axis_dict
         else:
             y_axis_dict = {'title': graph_api.figure_layout_yaxis_title}
 
+        MyDCC.add_properties_to_x_y_axis_dict(x_axis_dict, y_axis_dict)
         # print('y_axis_dict={}'.format(y_axis_dict))
 
         return dcc.Graph(
@@ -314,8 +323,10 @@ class MyDCC:
                 'data': graph_api.figure_data,
                 'layout': {
                     'showlegend': True,
+                    # 'spikedistance': 1,
                     'title': graph_api.figure_layout_yaxis_title,
-                    # 'xaxis': x_axis_dict,
+                    'xaxis': x_axis_dict,
+                    'autosize': graph_api.figure_layout_auto_size,
                     'yaxis': y_axis_dict,
                     'height': graph_api.figure_layout_height,
                     'width': graph_api.figure_layout_width,
@@ -326,6 +337,22 @@ class MyDCC:
                     'annotations': graph_api.figure_layout_annotations
                 }
             })
+
+    @staticmethod
+    def add_properties_to_x_y_axis_dict(x_axis_dict: dict, y_axis_dict: dict):
+        #  https://plot.ly/python/reference/#layout-xaxis-showspikes
+        axis_dict_list = [x_axis_dict, y_axis_dict]
+        for axis_dict in axis_dict_list:
+            axis_dict['showspikes'] = True
+            axis_dict['spikethickness'] = 1
+            axis_dict['spikedash'] = 'dot'  # "solid", "dot", "dash", "longdash", "dashdot", or "longdashdot"
+            axis_dict['spikemode'] = 'toaxis+across'  #  "toaxis", "across", "marker" joined with a "+"
+            axis_dict['spikesnap'] = 'cursor'  # enumerated : "data" | "cursor"
+            axis_dict['showline'] = True
+            axis_dict['autorange'] = True
+            axis_dict['showticklabels'] = True
+            axis_dict['ticks'] = 'outside'
+        y_axis_dict['automargin'] = True
 
     @staticmethod
     def interval(element_id: str, seconds=10):

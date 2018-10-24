@@ -137,7 +137,7 @@ class TradingBox:
         return {'Orig_height': self._height,
                 'dist_top': dist_top_str.format(self._distance_top, self.multiplier_positive),
                 'dist_bottom': dist_bottom_str.format(self._distance_bottom, self.multiplier_negative),
-                'limit': self.limit, 'stop loss': self.stop_loss,
+                '_limit': self.limit, 'stop loss': self.stop_loss,
                 'dist_stepping': self.distance_stepping,
                 'dist_trailing_stop': self.distance_trailing_stop
         }
@@ -173,7 +173,7 @@ class TradingBox:
         return False
 
     def __adjust_limit_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
-        if self._trade_strategy == TSTR.LIMIT:  # limit doesn't change
+        if self._trade_strategy == TSTR.LIMIT:  # _limit doesn't change
             return False
         else:
             # if self._sell_limit < ticker_last_price + self._distance_top:
@@ -194,10 +194,10 @@ class TradingBox:
         self._sell_limit = self._sell_limit_orig
         self._distance_trailing_stop = self._distance_bottom
         self._next_trailing_stop = self._off_set_value
-        self.__print_values__('Initialize stop and limit')
+        self.__print_values__('Initialize stop and _limit')
 
     def __print_values__(self, prefix: str):
-        print('...{} for {}-{}: limit={:.2f}, buy={:.2f}, offset={:.2f}, stop_loss={:.2f} '
+        print('...{} for {}-{}: _limit={:.2f}, buy={:.2f}, offset={:.2f}, stop_loss={:.2f} '
               '(dist_top={:.2f}, dist_bottom={:.2f})'.format(
             prefix, self._ticker_id, self._trade_strategy, self._sell_limit, self._buy_price,
             self.off_set_value, self._stop_loss, self._distance_top, self._distance_bottom))

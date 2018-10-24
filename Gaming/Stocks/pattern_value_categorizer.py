@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 import pandas as pd
 from sertl_analytics.constants.pattern_constants import CN, SVC
+from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern_wave_tick import WaveTick
 import numpy as np
@@ -52,7 +53,7 @@ class ValueCategorizer:
                 return False
         return True
 
-    def is_value_in_category(self, value: float, time_stamp: float, value_category: str, print_range=False):
+    def is_value_in_category(self, value: float, time_stamp: int, value_category: str, print_range=False):
         data_series = self.__get_data_series_for_value__(time_stamp, value)
         value_categories = self.__get_value_categories_for_df_row__(data_series)
         is_in_category = value_category in value_categories
@@ -60,7 +61,7 @@ class ValueCategorizer:
             self.__print_value_range_for_category__(data_series, value_category)
         return is_in_category
 
-    def __get_data_series_for_value__(self, time_stamp, value=0):
+    def __get_data_series_for_value__(self, time_stamp, value=0.0):
         f_upper = self._f_upper(time_stamp)
         h_upper = self._h_upper(time_stamp)
         f_lower = self._f_lower(time_stamp)
@@ -92,13 +93,19 @@ class ValueCategorizer:
             self.df = self.df.assign(H_LOWER=(self._h_lower(self.df[self.__index_column])))
 
     def count_value_category(self, category: str, ts_start=0, ts_end=math.inf) -> int:
-        counter = 0
         filtered_list = [self.value_category_dic[key] for key in self.value_category_dic_key_list
                          if ts_start <= key <= ts_end]
-        for category_list in filtered_list:
-                if category in category_list:
-                    counter += 1
-        return counter
+        hit_list_counter = sum([1 for category_list in filtered_list if category in category_list])
+        self.__print_count_value_category_details__(ts_start, hit_list_counter, category)
+        return hit_list_counter
+
+    @staticmethod
+    def __print_count_value_category_details__(ts_start: int, hit_list_counter: int, category: str):
+        if ts_start == 0 or hit_list_counter == 0:  # we print only available numbers
+            return
+        ts_start_time = MyDate.get_date_time_from_epoch_seconds(ts_start)
+        # print('pattern.count_value_category for {}: hit_list_counter={}: after: {}'.format(
+        #     category, hit_list_counter, ts_start_time))
 
     def __calculate_value_categories__(self):
         for ind, row in self.df.iterrows():
@@ -125,6 +132,12 @@ class ValueCategorizer:
             return row[CN.F_LOWER] * lower_pct, row[CN.F_LOWER] * upper_pct
         elif value_category == SVC.L_out:
             return -math.inf, row[CN.F_LOWER] * lower_pct
+        elif value_category == SVC.H_U_out:
+            return row[CN.H_UPPER] * upper_pct, math.inf
+        elif value_category == SVC.H_M_in:
+            return row[CN.H_LOWER] * upper_pct, row[CN.H_UPPER] * lower_pct
+        elif value_category == SVC.H_L_out:
+            return -math.inf, row[CN.H_LOWER] * lower_pct
         else:
             return 0, 0
 

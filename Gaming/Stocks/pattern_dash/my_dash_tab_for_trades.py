@@ -15,15 +15,18 @@ from pattern_dash.my_dash_header_tables import MyHTMLTabTradeHeaderTable
 from pattern_dash.my_dash_tab_dd_for_trades import TradeDropDownHandler, TDD
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
+from pattern_trade import PatternTrade
 from pattern_database.stock_tables import TradeTable, PatternTable
 from pattern_database.stock_database import StockDatabaseDataFrame
 from dash import Dash
 from sertl_analytics.constants.pattern_constants import DC, TP, BT, TSTR
+from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_test.trade_test_cases import TradeTestCaseFactory
 from pattern_test.trade_test import TradeTest
 from pattern_data_container import PatternData
 from sertl_analytics.mydates import MyDate
 from copy import deepcopy
+from pattern_news_handler import NewsHandler
 
 
 class ReplayHandler:
@@ -37,7 +40,7 @@ class ReplayHandler:
         self.trade_test = None
         self.detector = None
         self.test_case = None
-        self.test_case_value_pair_index = -1
+        self.test_case_wave_tick_list_index = -1
         self.graph_api = None
         self.graph = None
 
@@ -56,7 +59,7 @@ class ReplayHandler:
                                         self.trade_test_api.pattern_type, self.sys_config.config.api_period)
 
     @property
-    def pattern_trade(self):
+    def pattern_trade(self) -> PatternTrade:
         return self.graph_api.pattern_trade
 
     def set_trade_test_api_by_selected_trade_row(self, selected_row):
@@ -72,18 +75,21 @@ class ReplayHandler:
             self.trade_test_api.period_aggregation = self.sys_config.config.api_period_aggregation
             self.trade_test_api.trade_id = selected_row[DC.ID]
 
-    def is_another_value_pair_available(self):
-        return self.test_case_value_pair_index < len(self.test_case.value_pair_list) - 1
+    def is_another_wave_tick_available(self):
+        return self.get_remaining_tick_number() > 0
 
-    def get_next_value_pair(self):
-        self.test_case_value_pair_index += 1
-        value_pair = self.test_case.value_pair_list[self.test_case_value_pair_index]
-        time_stamp = value_pair[0]
+    def get_remaining_tick_number(self):
+        return len(self.test_case.wave_tick_list) - 1 - self.test_case_wave_tick_list_index
+
+    def get_next_wave_tick(self) -> WaveTick:
+        self.test_case_wave_tick_list_index += 1
+        wave_tick = self.test_case.wave_tick_list[self.test_case_wave_tick_list_index]
+        time_stamp = wave_tick.time_stamp
         date_time = MyDate.get_date_time_from_epoch_seconds(time_stamp)
-        value = value_pair[1]
+        value = wave_tick.close
         print('{}: {}-new value pair to check: [{} ({}), {}]'.format(
             self.trade_process, self.trade_test_api.symbol, date_time, time_stamp, value))
-        return value_pair
+        return wave_tick
 
     def set_trade_test(self):
         self.trade_test = TradeTest(self.trade_test_api, self.sys_config, self.exchange_config)
@@ -125,8 +131,8 @@ class ReplayHandler:
     def set_selected_trade_to_api(self):
         self.graph_api.pattern_trade = self.trade_handler.get_pattern_trade_by_id(self.trade_test_api.trade_id)
 
-    def check_actual_trades_for_replay(self, value_pair):
-        self.trade_handler.check_actual_trades_for_replay(value_pair)
+    def check_actual_trades_for_replay(self, wave_tick: WaveTick):
+        self.trade_handler.check_actual_trades_for_replay(wave_tick)
         self.graph_api.df = self.trade_handler.get_pattern_trade_data_frame_for_replay()
 
     def refresh_api_df_from_pattern_trade(self):
@@ -161,6 +167,10 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._trades_online_number = 0
         self._pattern_stored_number = 0
         self._cached_trade_table = None
+
+    @staticmethod
+    def __get_news_handler__():
+        return NewsHandler('  \n', '')
 
     def __init_dd_handler__(self):
         self._dd_handler = TradeDropDownHandler()
@@ -201,6 +211,7 @@ class MyDashTab4Trades(MyDashBaseTab):
         self.__init_callback_for_selected_row_indices__()
         self.__init_callback_for_trade_numbers__()
         self.__init_callback_for_trade_markdown__()
+        self.__init_callback_for_trade_news_markdown__()
         self.__init_callbacks_for_drop_down_visibility__()
         self.__init_callback_for_trade_selection__()
         self.__init_callback_for_replay_restart_button__()
@@ -217,7 +228,35 @@ class MyDashTab4Trades(MyDashBaseTab):
             if self._selected_row_index == -1 or self._selected_pattern_trade is None:
                 return ''
             ticker_refresh_seconds = self.__get_ticker_refresh_seconds__()
-            return self._selected_pattern_trade.get_markdown_text(ticker_refresh_seconds)
+            ticks_remaining = self.__get_remaining_tick_number__()
+            return self._selected_pattern_trade.get_markdown_text(ticker_refresh_seconds, ticks_remaining)
+
+    def __get_remaining_tick_number__(self):
+        if self._selected_trade_type != TP.ONLINE:
+            return self.__get_actual_replay_handler__().get_remaining_tick_number()
+        return None
+
+    def __init_callback_for_trade_news_markdown__(self):
+        @self.app.callback(
+            Output('my_trade_news_markdown', 'children'),
+            [Input('my_graph_trade_replay_div', 'children'),
+             Input('my_interval_timer', 'n_intervals')])
+        def handle_callback_for_ticket_markdown(children, n_intervals: int):
+            if self._selected_row_index == -1 or self._selected_pattern_trade is None:
+                return ''
+            return self.__get_markdown_news__()
+
+    def __get_markdown_news__(self):
+        actual_replay_handler = self.__get_actual_replay_handler__()
+        self._news_handler.add_news_dict(actual_replay_handler.pattern_trade.news_handler.news_dict)
+        return self._news_handler.get_news_for_markdown_since_last_refresh(self._time_stamp_last_refresh)
+
+    def __get_actual_replay_handler__(self):
+        if self._selected_trade_type == TP.ONLINE:
+            return self._trade_replay_handler_online
+        elif self._selected_trade_type == TP.PATTERN_REPLAY:
+            return self._pattern_replay_handler
+        return self._trade_replay_handler
 
     def __init_callback_for_trade_numbers__(self):
         """
@@ -401,11 +440,11 @@ class MyDashTab4Trades(MyDashBaseTab):
         def handle_callback_for_graph_trade(rows: list, selected_row_indices: list, n_intervals: int,
                                             trade_type: str, n_click_restart: int,
                                             buy_trigger: str, trade_strategy: str):
+            self._time_stamp_last_refresh = MyDate.time_stamp_now()
             self.__handle_trade_type_selection__(trade_type)
             self.__handle_trade_restart_selection__(n_click_restart)
             self._selected_buy_trigger = buy_trigger
             self._selected_trade_strategy = trade_strategy
-            graph = ''
             if len(selected_row_indices) == 0:
                 self._selected_row_index = -1
                 return ''
@@ -428,14 +467,14 @@ class MyDashTab4Trades(MyDashBaseTab):
         replay_handler = self.__get_trade_handler_for_selected_trade_type__()
         if replay_handler.test_case is None:
             return ''
-        if replay_handler.is_another_value_pair_available() and not self._stop_trade:
+        if replay_handler.is_another_wave_tick_available() and not self._stop_trade:
             if self._replay_speed == 'Fast':
                 for k in range(0, 4):
-                    value_pair = replay_handler.get_next_value_pair()
-                    replay_handler.check_actual_trades_for_replay(value_pair)
+                    wave_tick = replay_handler.get_next_wave_tick()
+                    replay_handler.check_actual_trades_for_replay(wave_tick)
             else:
-                value_pair = replay_handler.get_next_value_pair()
-                replay_handler.check_actual_trades_for_replay(value_pair)
+                wave_tick = replay_handler.get_next_wave_tick()
+                replay_handler.check_actual_trades_for_replay(wave_tick)
             replay_handler.graph = self.__get_dcc_graph_element__(replay_handler.detector, replay_handler.graph_api)
         return replay_handler.graph
 
@@ -458,7 +497,7 @@ class MyDashTab4Trades(MyDashBaseTab):
         replay_handler.set_tick_list_to_api()
         replay_handler.set_test_case()
         replay_handler.add_pattern_list_for_trade()
-        replay_handler.test_case_value_pair_index = -1
+        replay_handler.test_case_wave_tick_list_index = -1
         replay_handler.set_graph_api()
         self._selected_pattern_trade = replay_handler.pattern_trade
         replay_handler.graph = self.__get_dcc_graph_element__(replay_handler.detector, replay_handler.graph_api)

@@ -25,6 +25,7 @@ class MyCacheObject:
     def is_valid(self):
         if self.valid_until_ts is None:
             return True
+        # print('{}: valid until {}'.format(self.id, self.valid_until_time))
         return MyDate.time_stamp_now() < self.valid_until_ts
 
     def print(self):

@@ -132,19 +132,13 @@ class PatternConfiguration:
         return "Date >= '{}'".format(date_start)
 
     def get_time_stamp_before_one_period_aggregation(self, time_stamp: float):
-        if self.api_period == PRD.DAILY:
-            return time_stamp - 60 * 60 * 24
-        elif self.api_period == PRD.INTRADAY:
-            return time_stamp - self.api_period_aggregation * 60
+        return time_stamp - self.get_seconds_for_one_period()
 
     def get_time_stamp_after_ticks(self, tick_number: int, ts_set_off = MyDate.get_epoch_seconds_from_datetime()):
-        return int(ts_set_off + tick_number * self.__get_seconds_for_one_period_aggregation__())
+        return int(ts_set_off + tick_number * self.get_seconds_for_one_period())
 
-    def __get_seconds_for_one_period_aggregation__(self):
-        if self.api_period == PRD.DAILY:
-            return 60 * 60 * 24
-        elif self.api_period == PRD.INTRADAY:
-            return self.api_period_aggregation * 60
+    def get_seconds_for_one_period(self):
+        return PRD.get_seconds_for_period(self.api_period, self.api_period_aggregation)
 
     @property
     def expected_win_pct(self):

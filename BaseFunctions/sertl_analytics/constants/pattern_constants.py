@@ -344,6 +344,10 @@ class CN:  # Column Names
     IS_MIN = 'Is_MIN'
     IS_MAX = 'Is_MAX'
 
+    @staticmethod
+    def get_standard_column_names():
+        return [CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL]
+
 
 class ValueCategories:
     pass

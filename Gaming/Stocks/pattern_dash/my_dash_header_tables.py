@@ -58,7 +58,7 @@ class MyHTMLHeaderTable(MyHTMLTable):
         text_align = [['left', 'center', 'right'], ['left', 'left', 'right']][row - 1][col-1]
         v_align = [['top', 'top', 'top'], ['top', 'top', 'middle']][row - 1][col - 1]
         font_weight = [['normal', 'bold', 'normal'], ['normal', 'normal', 'normal']][row - 1][col - 1]
-        font_size = [[16, 32, 16], [16, 16, 16]][row - 1][col - 1]
+        font_size = [[16, 32, 16], [14, 14, 14]][row - 1][col - 1]
         padding = 0 if row == 2 and col == 2 else self.padding_cell
         return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
                 'vertical-align': v_align, 'font-weight': font_weight, 'padding': padding, 'font-size': font_size}
@@ -99,7 +99,7 @@ class MyHTMLTabTradeHeaderTable(MyHTMLTabHeaderTable):
 
         self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
         self.set_value(1, 2, MyDCC.markdown('my_trade_markdown'))
-        self.set_value(1, 3, '')
+        self.set_value(1, 3, MyDCC.markdown('my_trade_news_markdown'))
 
 
 class MyHTMLTabTradeStatisticsHeaderTable(MyHTMLTabHeaderTable):

@@ -11,7 +11,7 @@ import os
 import io
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import CN, PRD, OPS
-from sertl_analytics.exchanges.bitfinex import MyBitfinex
+# from sertl_analytics.exchanges.bitfinex import MyBitfinex
 import seaborn as sns
 
 
@@ -49,13 +49,9 @@ class APIBaseFetcher:
     def get_url_function(self):
         return self.period  # may be overwritten
 
-    @staticmethod
-    def get_standard_column_names():  # OLD: 1. open   2. high    3. low  4. close 5. volume
-        return ['Close', 'High', 'Low', 'Open', 'Volume']
-
     def __round_df_column_values__(self):
         decimal = self.__get_decimals_for_df_column_rounding__()
-        decimals = pd.Series([decimal, decimal, decimal, decimal, 0], index=self.get_standard_column_names())
+        decimals = pd.Series([decimal, decimal, decimal, decimal, 0], index=CN.get_standard_column_names())
         self.df = self.df.round(decimals)
 
     def __get_decimals_for_df_column_rounding__(self):
@@ -102,10 +98,6 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
         self.df_volume.plot(ax=axes[1], title = self.column_volume)
         plt.show()
 
-    @staticmethod
-    def get_standard_column_names():  # OLD: 1. open   2. high    3. low  4. close 5. volume
-        return ['Open', 'High', 'Low', 'Close', 'Volume']
-
 
 class AlphavantageStockFetcher (AlphavantageJSONFetcher):
     def get_column_list_data(self):
@@ -138,7 +130,7 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
         df[CN.TIMESTAMP] = df[CN.TIMESTAMP].apply(int)
         df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
-        df.columns = self.get_standard_column_names()
+        df.columns = CN.get_standard_column_names()
         return df
 
     def _get_url_(self):
@@ -185,14 +177,17 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
         df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
         if self.period == PRD.INTRADAY:
             df.drop([df.columns[0],  '3. market cap (USD)'], axis=1, inplace=True)
-            df.columns = ['Open', 'Volume']
-            df.insert(loc=1, column='Close', value = df[df.columns[0]])
-            df.insert(loc=1, column='Low', value=df[df.columns[0]])
-            df.insert(loc=1, column='High', value=df[df.columns[0]])  # ['Open', 'High', 'Low', 'Close', 'Volume']
+            df.columns = [CN.CLOSE, CN.VOL]
+            df.insert(loc=1, column=CN.LOW, value = df[df.columns[0]])
+            df.insert(loc=1, column=CN.HIGH, value=df[df.columns[0]])
+            df.insert(loc=1, column=CN.OPEN, value=df[df.columns[0]])  # [CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL]
         else:
+            # https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_WEEKLY&symbol=BTC&market=CNY&apikey=demo
+            # 1a. open (CNY), 1b. open (USD), 2a. high (CNY), 2b. high (USD),
+            # 3a. low (CNY), 3b. low (USD), 4a. close (CNY), 4b. close (USD), 5. volume
             df.drop(['1b. open (USD)', '2b. high (USD)', '3b. low (USD)', '4b. close (USD)', '6. market cap (USD)'],
                     axis=1, inplace=True)
-            df.columns = self.get_standard_column_names()
+            df.columns = CN.get_standard_column_names()
         return df
 
     def _get_url_(self):  # the symbol has the structure symbolCCY like BTCUSD
@@ -254,13 +249,15 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
         return 'Data'
 
     def __get_data_frame__(self) -> pd.DataFrame:
+        # https://min-api.cryptocompare.com/data/histominute?fsym=BCH&tsym=USD&limit=300&aggregate=15
+        # "time":1540070100,"close":448.07,"high":448.23,"low":447.44,"open":448.01,"volumefrom":184.81,"volumeto":81598.81
         json_data = self.request.json()
         self.api_symbol = self.symbol
         time_series = json_data[self.get_json_data_key()]
         df = pd.DataFrame(time_series)
-        df.drop(['volumefrom'], axis=1, inplace=True)
+        df = df[['time', 'open', 'high', 'low', 'close', 'volumeto']]
         df.set_index('time', drop=True, inplace=True)
-        df.columns = self.get_standard_column_names()
+        df.columns = CN.get_standard_column_names()
         return df
 
     def _get_url_(self):  # the symbol has the structure symbolCCY like BTCUSD
@@ -280,8 +277,9 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
 
 
 class BitfinexCryptoFetcher(APIBaseFetcher):
-    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, run_on_dash=False):
-        self._run_on_dash = run_on_dash
+    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, section='hist', limit=400):
+        self._limit = limit
+        self._section = section
         APIBaseFetcher.__init__(self, symbol, period, aggregation)
         self.column_list_data = self.get_column_list_data()
         self.df_data = self.df[self.column_list_data]
@@ -295,14 +293,18 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
     def __get_data_frame__(self) -> pd.DataFrame:
         json_data = self.request.json()
         self.api_symbol = self.symbol
-        time_series = json_data
-        df = pd.DataFrame(time_series)
+        if type(json_data[0]) is list:
+            df = pd.DataFrame(json_data)
+        else:
+            series = pd.Series(json_data).values.reshape(1, len(json_data))
+            df = pd.DataFrame(series)
         for ind, row in df.iterrows():  # the values are delivered with ms instead of seconds
-            df.at[ind, 0] = int(row[0]/1000)
-        # (1)Open, (2)Close, (3)High, (4)Low -> standard: ['Close', 'High', 'Low', 'Open', 'Volume']
-        df = df[[0, 2, 3, 4, 1, 5]]
+            df.at[ind, 0] = row[0]/1000
+        df[0] = df[0].apply(int)
+        # (1)Open, (2)Close, (3)High, (4)Low -> standard: # [CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL]
+        df = df[[0, 1, 3, 4, 2, 5]]
         df.set_index(0, drop=True, inplace=True)
-        df.columns = self.get_standard_column_names()
+        df.columns = CN.get_standard_column_names()
         df.sort_index(inplace=True)
         return df
 
@@ -317,23 +319,13 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         # HIGH	float	Highest execution during the time frame
         # LOW	float	Lowest execution during the timeframe
         # VOLUME	float	Quantity of symbol traded within the timeframe
-        url_function = 'hist' if self.period == PRD.INTRADAY else 'hist'
-        url_limit = self._get_url_limit_parameter_()
-        url_time_frame = self._get_time_frame_()
+        url_t_f = '{}m'.format(self.aggregation) if self.period == PRD.INTRADAY else '1D'
         symbol = 't{}'.format(self.symbol)
-        url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/{}?limit={}'.format(
-            url_time_frame, symbol, url_function, url_limit)
+        if self._section == 'last':
+            url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/last'.format(url_t_f, symbol)
+        else:
+            url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/hist?limit={}'.format(url_t_f, symbol, self._limit)
         return url
-
-    def _get_url_limit_parameter_(self) -> int:
-        if self.period == PRD.INTRADAY:
-            return 200 if self._run_on_dash else 300
-        return 400
-
-    def _get_time_frame_(self) -> int:
-        if self.period == PRD.INTRADAY:
-            return '{}m'.format(self.aggregation)
-        return '1D'
 
 
 class CorrelationHandler:
