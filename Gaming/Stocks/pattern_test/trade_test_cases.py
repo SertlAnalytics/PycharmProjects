@@ -14,9 +14,10 @@ from pattern_wave_tick import WaveTick, TickerWaveTickConverter
 
 class TradeTestApi:
     def __init__(self):
-        self.get_data_from_db = True
+        self.from_db = True
         self.period = PRD.DAILY
         self.period_aggregation = 1
+        self.volume_increase = 10
         self.trade_id = ''
         self.pattern_type = ''
         self.pattern = None
@@ -37,11 +38,15 @@ class TradeTestApi:
 
 
 class TradeTestCase:
-    def __init__(self):
-        self.pattern_type = ''
-        self.buy_trigger = ''
-        self.trade_strategy = ''
-        self.test_process = ''
+    def __init__(self, api: TradeTestApi):
+        self.api = api
+        self.pattern_type = api.pattern_type
+        self.buy_trigger = api.buy_trigger
+        self.trade_strategy = api.trade_strategy
+        if api.pattern is None:
+            self.test_process = api.test_process
+        else:
+            self.test_process = api.pattern.sys_config.runtime.actual_trade_process
         self.symbol = ''
         self.and_clause = ''
         self.time_stamp_start = 0
@@ -68,21 +73,13 @@ class TradeTestCaseFactory:
 
     @staticmethod
     def get_test_case(api: TradeTestApi) -> TradeTestCase:
-        tc = TradeTestCase()
-        tc.pattern_type = api.pattern_type
-        tc.buy_trigger = api.buy_trigger
-        tc.trade_strategy = api.trade_strategy
-        tc.test_process = api.test_process
+        tc = TradeTestCase(api)
         TradeTestCaseFactory.fill_test_data_for_pattern_type(tc)
         return tc
 
     @staticmethod
     def get_test_case_from_pattern(api: TradeTestApi) -> TradeTestCase:
-        tc = TradeTestCase()
-        tc.pattern_type = api.pattern.pattern_type
-        tc.buy_trigger = api.buy_trigger
-        tc.trade_strategy = api.trade_strategy
-        tc.test_process = api.pattern.sys_config.runtime.actual_trade_process
+        tc = TradeTestCase(api)
         TradeTestCaseFactory.fill_test_data_for_pattern(tc, api.pattern, api.tick_list_for_replay)
         return tc
 
@@ -109,30 +106,47 @@ class TradeTestCaseFactory:
         tc.symbol = 'ETHUSD'
         tc.and_clause = "Date BETWEEN '2018-03-01' AND '2018-07-05'"
         tc.time_stamp_start = MyDate.get_epoch_seconds_from_datetime('2018-07-05')
+        mv = 459807  # mean volume
         base_list = [
-            [BT.BREAKOUT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [470, 380, 370]],
-            [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [470, 484, 485, 600]],
-            [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_STOP_LOSS, [470, 480, 470, 300]],
-            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.FALSE_BREAKOUT, [470, 380, 370]],
-            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.BUY_ADJUST_STOP_LOSS, [470, 480, 490, 520, 530, 550]],
-            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.BUY_SELL_STOP_LOSS, [470, 480, 500, 550, 450]],
-            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.FALSE_BREAKOUT, [470, 380, 370]],
-            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [470, 480, 490, 520, 530, 550]],
-            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [470, 480, 500, 550, 450]],
-            [BT.BREAKOUT, TSTR.SMA, TTC.FALSE_BREAKOUT, [470, 380, 370]],
-            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_ADJUST_STOP_LOSS, TradeTestCaseFactory.get_sma_values(470, 20000, 0.1, 800)],
-            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_SELL_STOP_LOSS, TradeTestCaseFactory.get_sma_values(470, 20000, 0.1, 500)],
-            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [388, 380, 370]],
-            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.ACTIVATE_BREAKOUT, [388, 405, 410]],
-            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [388, 405, 410, 420]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.FALSE_BREAKOUT, [388, 380, 370]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.BUY_ADJUST_STOP_LOSS, [388, 405, 410, 420, 430, 440, 450]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.BUY_SELL_STOP_LOSS, [388, 405, 410, 420, 430, 440, 450, 400]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.FALSE_BREAKOUT, [388, 380, 370]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [388, 405, 410, 420, 430, 440, 450]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [388, 405, 410, 430, 440, 450, 400]],
+            [BT.BREAKOUT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [470, 380, 370], mv],
+            [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [470, 484, 485, 600], mv],
+            [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_STOP_LOSS, [470, 480, 470, 300], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.FALSE_BREAKOUT, [470, 380, 370], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.BUY_ADJUST_STOP_LOSS, [470, 480, 490, 520, 530, 550], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.BUY_SELL_STOP_LOSS, [470, 480, 500, 550, 450], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.FALSE_BREAKOUT, [470, 380, 370], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [470, 480, 490, 520, 530, 550], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [470, 480, 500, 550, 450], mv],
+            [BT.BREAKOUT, TSTR.SMA, TTC.FALSE_BREAKOUT, [470, 380, 370], mv],
+            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_ADJUST_STOP_LOSS,
+             TradeTestCaseFactory.get_sma_values(470, 20000, 0.1, 800), mv],
+            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_SELL_STOP_LOSS,
+             TradeTestCaseFactory.get_sma_values(470, 20000, 0.1, 500), mv],
+            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [388, 380, 370], mv],
+            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.ACTIVATE_BREAKOUT, [388, 405, 410], mv],
+            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [388, 405, 410, 420], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.FALSE_BREAKOUT, [388, 380, 370], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.BUY_ADJUST_STOP_LOSS, [388, 405, 410, 420, 430, 440, 450], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.BUY_SELL_STOP_LOSS, [388, 405, 410, 420, 430, 440, 450, 400], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.FALSE_BREAKOUT, [388, 380, 370], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [388, 405, 410, 420, 430, 440, 450], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [388, 405, 410, 430, 440, 450, 400], mv],
         ]
+        TradeTestCaseFactory.add_volume_data_to_base_list(base_list, tc.api.volume_increase)
         TradeTestCaseFactory.fill_value_list_from_base_list(base_list, tc)
+
+    @staticmethod
+    def add_volume_data_to_base_list(base_list: list, percentage: int):
+        return_list = []
+        for sub_list in base_list:  # e.g. [BT.BREAKOUT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [470, 380, 370]]
+            value_list = sub_list[-2]
+            mv = sub_list[-1]
+            if len(value_list) < 10:
+                sub_list[-1] = [int(mv * ((1 + percentage/100)**k)) for k in range(0, len(value_list))]
+            else:  # SMA
+                sub_list[-1] = [int(mv + k * (mv * percentage / 100)) for k in range(0, len(value_list))]
+            return_list.append(sub_list)
+        return return_list
 
     @staticmethod
     def get_sma_values(start_value: float, times: int, increment: float, end_value: float):
@@ -140,8 +154,8 @@ class TradeTestCaseFactory:
         value = start_value
         for k in range(0, times):
             value += increment
-            return_list.append(value)
-        return_list.append(end_value)
+            return_list.append(round(value,1))
+        return_list.append(round(end_value,1))
         return return_list
 
     @staticmethod
@@ -149,30 +163,32 @@ class TradeTestCaseFactory:
         tc.symbol = 'ETHUSD'
         tc.and_clause = "Date BETWEEN '2018-03-01' AND '2018-06-29'"
         tc.time_stamp_start = MyDate.get_epoch_seconds_from_datetime('2018-06-29')
+        mv = 459807  # mean volume
         base_list = [
-            [BT.BREAKOUT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [470, 380, 370]],
-            [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [470, 484, 485, 600]],
-            [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_STOP_LOSS, [470, 480, 470, 300]],
-            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.FALSE_BREAKOUT, [470, 380, 370]],
-            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.BUY_ADJUST_STOP_LOSS, [470, 480, 490, 520, 530, 550]],
-            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.BUY_SELL_STOP_LOSS, [470, 480, 500, 550, 450]],
-            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.FALSE_BREAKOUT, [470, 380, 370]],
-            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [470, 480, 490, 520, 530, 550]],
-            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [470, 480, 500, 550, 450]],
-            [BT.BREAKOUT, TSTR.SMA, TTC.FALSE_BREAKOUT, [470, 380, 370]],
-            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_ADJUST_STOP_LOSS, [470, 484, 485, 600]],
-            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_SELL_STOP_LOSS, [470, 490, 495, 490, 5050, 510, 530, 300]],
-            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.ACTIVATE_BREAKOUT, [406, 410]],
-            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [406, 410, 400, 399]],
-            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [406, 410, 412, 471, 609, 610]],
-            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.BUY_SELL_STOP_LOSS, [406, 410, 412, 471, 609, 500]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.FALSE_BREAKOUT, [406, 410, 400, 399]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.BUY_ADJUST_STOP_LOSS, [406, 410, 412, 471, 609, 610, 700]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.BUY_SELL_STOP_LOSS, [406, 410, 412, 471, 609, 500]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.FALSE_BREAKOUT, [406, 410, 400, 399]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [406, 410, 412, 471, 609, 610, 700]],
-            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [406, 410, 412, 471, 609, 500]],
+            [BT.BREAKOUT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [470, 380, 370], mv],
+            [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [470, 484, 485, 600], mv],
+            [BT.BREAKOUT, TSTR.LIMIT, TTC.BUY_SELL_STOP_LOSS, [470, 480, 470, 300], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.FALSE_BREAKOUT, [470, 380, 370], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.BUY_ADJUST_STOP_LOSS, [470, 480, 490, 520, 530, 550], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STOP, TTC.BUY_SELL_STOP_LOSS, [470, 480, 500, 550, 450], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.FALSE_BREAKOUT, [470, 380, 370], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [470, 480, 490, 520, 530, 550], mv],
+            [BT.BREAKOUT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [470, 480, 500, 550, 450], mv],
+            [BT.BREAKOUT, TSTR.SMA, TTC.FALSE_BREAKOUT, [470, 380, 370], mv],
+            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_ADJUST_STOP_LOSS, [470, 484, 485, 600], mv],
+            [BT.BREAKOUT, TSTR.SMA, TTC.BUY_SELL_STOP_LOSS, [470, 490, 495, 490, 5050, 510, 530, 300], mv],
+            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.ACTIVATE_BREAKOUT, [406, 410], mv],
+            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.FALSE_BREAKOUT, [406, 410, 400, 399], mv],
+            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.BUY_SELL_LIMIT, [406, 410, 412, 471, 609, 610], mv],
+            [BT.TOUCH_POINT, TSTR.LIMIT, TTC.BUY_SELL_STOP_LOSS, [406, 410, 412, 471, 609, 500], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.FALSE_BREAKOUT, [406, 410, 400, 399], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.BUY_ADJUST_STOP_LOSS, [406, 410, 412, 471, 609, 610, 700], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STOP, TTC.BUY_SELL_STOP_LOSS, [406, 410, 412, 471, 609, 500], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.FALSE_BREAKOUT, [406, 410, 400, 399], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_ADJUST_STOP_LOSS, [406, 410, 412, 471, 609, 610, 700], mv],
+            [BT.TOUCH_POINT, TSTR.TRAILING_STEPPED_STOP, TTC.BUY_SELL_STOP_LOSS, [406, 410, 412, 471, 609, 500], mv]
         ]
+        TradeTestCaseFactory.add_volume_data_to_base_list(base_list, tc.api.volume_increase)
         TradeTestCaseFactory.fill_value_list_from_base_list(base_list, tc)
 
     @staticmethod
@@ -183,7 +199,10 @@ class TradeTestCaseFactory:
         converter = TickerWaveTickConverter(PRD.DAILY, 1, 0, tc.time_stamp_start)
         for entries in base_list:
             if entries[0] == tc.buy_trigger and entries[1] == tc.trade_strategy and entries[2] == tc.test_process:
-                for value in entries[3]:
-                    converter.add_value_with_timestamp(value, tc.time_stamp_start)
+                value_list = entries[3]
+                volume_list = entries[4]
+                for index, value in enumerate(value_list):
+                    volume = volume_list[index]
+                    converter.add_value_with_timestamp(value, tc.time_stamp_start, volume)
                     tc.wave_tick_list.append(converter.current_wave_tick)
                     tc.time_stamp_start += seconds_per_step

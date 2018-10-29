@@ -43,11 +43,17 @@ class ExtendedDictionary:
         self.index = []
         self.dic = {}
 
+    @staticmethod
+    def get_key_for_value(my_dict: dict, value):
+        my_dict_keys = list(my_dict.keys())
+        index = list(my_dict.values()).index(value)
+        return my_dict_keys[index]
+
     def append(self, key, value):
         self.counter += 1
         self.index.append(key)
         self.dic[key] = value
-        if self.min_index == None:
+        if self.min_index is None:
             self.min_index = key
             self.max_index = key
         else:

@@ -14,6 +14,11 @@ class MyDate:
         return int(datetime.now().timestamp())
 
     @staticmethod
+    def date_time_now_str() -> str:
+        dt_now = datetime.now()
+        return '{} {}'.format(MyDate.get_date_from_datetime(dt_now), MyDate.get_time_from_datetime(dt_now))
+
+    @staticmethod
     def get_datetime_object(date_time):
         if date_time is None:
             return None

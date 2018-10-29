@@ -172,8 +172,8 @@ class WaveTick:
             return False
         return abs((self.open - self.close) / (self.high - self.low)) > 0.6
 
-    def is_volume_rising(self, tick_comp, min_percentage: int):
-        return MyMath.divide(self.volume, tick_comp.volume) > (100 + min_percentage) / 100
+    def is_volume_rising(self, volume_compare, min_percentage: int):
+        return MyMath.divide(self.volume, volume_compare) > (100 + min_percentage) / 100
 
     def has_gap_to(self, tick_comp):
         return self.low > tick_comp.high or self.high < tick_comp.low

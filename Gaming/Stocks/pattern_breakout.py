@@ -15,7 +15,9 @@ class PatternBreakoutApi:
         self.sys_config = function_cont.sys_config
         self.function_cont = function_cont
         self.tick_previous = None
-        self.tick_breakout = None   # test
+        self.tick_breakout = None
+        self.volume_mean_for_breakout = 0
+        self.volume_forecast = 0
         self.constraints = None
 
 
@@ -26,6 +28,8 @@ class PatternBreakout:
         self.constraints = api.constraints
         self.tick_previous = api.tick_previous
         self.tick_breakout = api.tick_breakout
+        self.volume_mean_part_entry = api.volume_mean_for_breakout
+        self.volume_forecast = api.volume_forecast
         self.breakout_date = self.tick_breakout.date
         self.volume_change_pct = MyMath.divide(self.tick_breakout.volume, self.tick_previous.volume, 2, 0)
         self.tolerance_pct = self.constraints.tolerance_pct
@@ -37,26 +41,36 @@ class PatternBreakout:
         self.limit_lower = round(self.bound_lower - self.tolerance_range, 2)
         self.breakout_direction = self.__get_breakout_direction__()
         self.sign = 1 if self.breakout_direction == FD.ASC else -1
+        self.check_dict = {}
 
     def is_breakout_a_signal(self) -> bool:
         counter = 0
         if self.__is_breakout_over_limit__():
             counter += 1
+        else:
+            self.check_dict['Limit'] = False
         # if self.__is_breakout_in_allowed_range__():
         #     counter += 1
-        if self.tick_breakout.is_volume_rising(self.tick_previous, 10):  # i.e. 10% more volume required
-            counter += 1
+        if self.is_volume_rising(10):  # i.e. 10% more volume required
+            counter += 2
+        else:
+            self.check_dict['Volume'] = False
         if self.__is_breakout_powerful__():
             counter += 1
-        return counter >= 2
+        else:
+            self.check_dict['Powerful'] = False
+        return counter >= 3
+
+    def is_volume_rising(self, min_percentage: int):
+        return MyMath.divide(self.volume_forecast, self.volume_mean_part_entry) > (100 + min_percentage) / 100
 
     def get_details_for_annotations(self):
         if self.sys_config.config.api_period == PRD.INTRADAY:
             date_str = self.tick_breakout.time_str_for_f_var
         else:
             date_str = self.tick_breakout.date_str_for_f_var
-        vol_change = (MyMath.divide(self.tick_breakout.volume, self.tick_previous.volume, 2) - 1) * 100
-        return '{} ({})- Volume change: {}%'.format(date_str, self.tick_breakout.position, round(vol_change, 0))
+        vol_change = (MyMath.divide(self.volume_forecast, self.volume_mean_part_entry, 2) - 1) * 100
+        return '{} ({}) - Volume change: {}%'.format(date_str, self.tick_breakout.position, round(vol_change, 0))
 
     def __get_breakout_direction__(self) -> str:
         return FD.ASC if self.tick_breakout.close > self.bound_upper else FD.DESC

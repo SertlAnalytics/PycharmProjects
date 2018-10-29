@@ -26,7 +26,10 @@ from pattern_plotting.pattern_plotter import PatternPlotter
 from pattern_database import stock_database
 from datetime import datetime
 from time import sleep
-from sertl_analytics.mycache import MyCache, MyCacheObject, MyCacheObjectApi
+from sertl_analytics.mycache import MyCache, MyCacheObjectApi
+from pattern import PatternID, PatternIdFactory
+from pattern_data_container import PatternDataHandler
+from pattern_data_provider import PatternDataProviderApi, PatternDataProvider
 
 
 """
@@ -85,17 +88,17 @@ class PatternDetectionController:
         self.__init_loop_list_for_ticker__()
         for value_dic in self._loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
-            self.sys_config.init_predictors_without_condition_list(ticker)
-            self.__update_runtime_parameters__(value_dic)
-            print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
-            df_data = self.__get_df_from_source__(ticker, value_dic, limit=300)
-            if df_data is None:
-                print('No data available for: {} and {}'.format(ticker, self.sys_config.runtime.actual_and_clause))
+            and_clause = value_dic[LL.AND_CLAUSE]
+            if not self.sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit=300):
+                print('No data available for: {} and {}'.format(ticker, and_clause))
                 continue
-            self.sys_config.pdh.init_by_df(df_data)
+            self.sys_config.update_runtime_parameters_by_dict_values(value_dic)
+            print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
+            self.sys_config.init_predictors_without_condition_list(ticker)
             detector = PatternDetector(self.sys_config)
             detector.parse_for_fibonacci_waves()
             detector.parse_for_pattern()
+            # self.check_for_optimal_trading_strategy(detector)  # ToDo error with deepcopy in the called mudule
             detector.check_for_intersections_and_endings()
             detector.save_pattern_data()
             self.__handle_statistics__(detector)
@@ -116,137 +119,43 @@ class PatternDetectionController:
             self.__show_statistics__()
         self.__write_constraints_statistics__()
 
+    def check_for_optimal_trading_strategy(self, detector: PatternDetector):
+        pattern_list_filtered = [pattern for pattern in detector.pattern_list if pattern.was_breakout_done()]
+        api = PatternDataProviderApi(True, PRD.DAILY, 1)
+        sys_config_for_trading_strategy = self.sys_config.get_semi_deep_copy_for_new_pattern_data_provider_api(api)
+        for pattern in pattern_list_filtered:
+            for nn_entry in pattern.nearest_neighbor_entry_list:
+                detector_nn_entry = self.get_detector_for_pattern_id(sys_config_for_trading_strategy, nn_entry.id)
+                print('check_for_optimal_trading_strategy for {}'.format(nn_entry.id))
+
     def get_detector_for_dash(self, sys_config: SystemConfiguration, ticker: str, and_clause: str) -> PatternDetector:
-        self.sys_config = sys_config
         value_dict = {LL.TICKER: ticker, LL.AND_CLAUSE: and_clause, LL.NUMBER: 1}
-        self.__update_runtime_parameters__(value_dict)
+        sys_config.update_runtime_parameters_by_dict_values(value_dict)
         print('\nProcessing {} ({}) for {} ...\n'.format(ticker, sys_config.runtime.actual_ticker_name, and_clause))
-        df_data = self.__get_df_from_source__(ticker, value_dict, limit=200)
-        self.sys_config.pdh.init_by_df(df_data)
-        detector = PatternDetector(self.sys_config)
+        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, 200)
+        detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()
         detector.parse_for_pattern()
         detector.check_for_intersections_and_endings()
         detector.save_pattern_data()
         return detector
 
+    def get_detector_for_pattern_id(self, sys_config: SystemConfiguration, pattern_id_str: str) -> PatternDetector:
+        sys_config.config.init_by_pattern_id_str(pattern_id_str)
+        ticker = sys_config.runtime.actual_ticker
+        and_clause = sys_config.runtime.actual_and_clause
+        value_dict = {LL.TICKER: ticker, LL.AND_CLAUSE: and_clause, LL.NUMBER: 1}
+        print('\nDetector_for_pattern_id - processing {} ({}) for {} ...\n'.format(
+            ticker, sys_config.runtime.actual_ticker_name, and_clause))
+        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, 200)
+        detector = PatternDetector(sys_config)
+        pattern_id = PatternIdFactory(sys_config).get_pattern_id_from_pattern_id_string(pattern_id_str)
+        detector.parse_for_pattern(pattern_id)
+        return detector
+
     @property
     def loop_list_ticker(self):
         return self._loop_list_ticker
-
-    def __get_df_from_source__(self, ticker, value_dic, limit=400):
-        data_fetcher_cache_key = self.__get_data_fetcher_cache_key__(ticker, limit, value_dic[LL.AND_CLAUSE])
-        df_from_cache = self._df_source_cache.get_cached_object_by_key(data_fetcher_cache_key.key)
-        if df_from_cache is not None:
-            print('df_source from cache: {}'.format(data_fetcher_cache_key.key))
-            return df_from_cache
-        df = self.__get_df_from_original_source__(data_fetcher_cache_key)
-        self.__add_data_frame_to_cache__(df, data_fetcher_cache_key)
-        return df
-
-    def __add_data_frame_to_cache__(self, df: pd.DataFrame, data_fetcher_cache_key: PatternDataFetcherCacheKey):
-        cache_api = MyCacheObjectApi()
-        cache_api.key = data_fetcher_cache_key.key
-        cache_api.object = df
-        cache_api.valid_until_ts = data_fetcher_cache_key.valid_until_ts
-        self._df_source_cache.add_cache_object(cache_api)
-
-    def __get_df_from_original_source__(self, data_fetcher_cache_key: PatternDataFetcherCacheKey):
-        ticker = data_fetcher_cache_key.ticker_id
-        period = data_fetcher_cache_key.period
-        aggregation = data_fetcher_cache_key.aggregation
-        and_clause = data_fetcher_cache_key.and_clause
-        limit = data_fetcher_cache_key.limit
-        output_size = data_fetcher_cache_key.output_size
-        if self.sys_config.config.get_data_from_db:
-            self.__handle_not_available_symbol__(data_fetcher_cache_key.ticker_id)
-            stock_db_df_obj = stock_database.StockDatabaseDataFrame(self.sys_config.db_stock, ticker, and_clause)
-            return stock_db_df_obj.df_data
-        elif ticker in self.sys_config.crypto_ccy_dic:
-            if period == PRD.INTRADAY:
-                # fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
-                fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, 'hist', limit)
-                # fetcher_last = BitfinexCryptoFetcher(ticker, period, aggregation, 'last')
-                # self.__handle_difference_of_exchanges(fetcher.df_data, fetcher_bit.df_data)
-                return fetcher.df_data
-            else:
-                fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
-                return fetcher.df_data
-        else:
-            fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
-            if self.sys_config.config.api_period == PRD.INTRADAY:
-                return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
-            return fetcher.df_data
-
-    def __get_data_fetcher_cache_key__(self, ticker: str, limit: int, and_clause: str) -> PatternDataFetcherCacheKey:
-        period = self.sys_config.config.api_period
-        aggregation = self.sys_config.config.api_period_aggregation
-        output_size = self.sys_config.config.api_output_size
-        cache_key_obj = PatternDataFetcherCacheKey(ticker, period, aggregation)
-        cache_key_obj.from_db = self.sys_config.config.get_data_from_db
-        cache_key_obj.output_size = output_size
-        cache_key_obj.limit = limit
-        cache_key_obj.and_clause = and_clause
-        return cache_key_obj
-
-    @staticmethod
-    def __handle_difference_of_exchanges(df_cc: pd.DataFrame, df_bitfinex: pd.DataFrame):
-        df_diff = df_cc - df_bitfinex
-        print(df_cc.head())
-        print(df_bitfinex.head())
-        print(df_diff.head())
-
-    @staticmethod
-    def __cut_intraday_df_to_one_day__(df: pd.DataFrame) -> pd.DataFrame:
-        index_first_row = df.index[0]
-        index_last_row = df.index[-1]
-        timestamp_one_day_before = index_last_row - (23 * 60 * 60)  # 23 = to avoid problems with the last trade shape
-        if index_first_row < timestamp_one_day_before:
-            return df.loc[timestamp_one_day_before:]
-        return df
-
-    @staticmethod
-    def __get_with_concatenated_intraday_data__(df: pd.DataFrame):
-        # df['time'] = df['time'].apply(datetime.fromtimestamp)
-        df[CN.TIMESTAMP] = df.index.map(int)
-        epoch_seconds_number = df.shape[0]
-        epoch_seconds_max = df[CN.TIMESTAMP].max()
-        epoch_seconds_diff = df.iloc[-1][CN.TIMESTAMP] - df.iloc[-2][CN.TIMESTAMP]
-        epoch_seconds_end = epoch_seconds_max
-        epoch_seconds_start = epoch_seconds_end - (epoch_seconds_number - 1) * epoch_seconds_diff
-        time_series = np.linspace(epoch_seconds_start, epoch_seconds_end, epoch_seconds_number)
-        df[CN.TIMESTAMP] = time_series
-        df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
-        return df
-
-    def __handle_not_available_symbol__(self, ticker):
-        if not self.sys_config.db_stock.is_symbol_loaded(ticker):
-            if UserInput.get_confirmation('{} is not available. Do you want to load it'.format(ticker)):
-                name = UserInput.get_input('Please enter the name for the symbol {}'.format(ticker))
-                if name == 'x':
-                    exit()
-                self.sys_config.db_stock.update_stock_data_for_symbol(ticker, name)
-            else:
-                exit()
-
-    def __update_runtime_parameters__(self, entry_dic: dict):
-        self.sys_config.runtime.actual_ticker = entry_dic[LL.TICKER]
-        if self.sys_config.runtime.actual_ticker in self.sys_config.crypto_ccy_dic:
-            self.sys_config.runtime.actual_ticker_equity_type = EQUITY_TYPE.CRYPTO
-            if self.sys_config.config.api_period == PRD.INTRADAY:
-                self.sys_config.runtime.actual_expected_win_pct = 1
-            else:
-                self.sys_config.runtime.actual_expected_win_pct = 1
-        else:
-            self.sys_config.runtime.actual_ticker_equity_type = EQUITY_TYPE.SHARE
-            self.sys_config.runtime.actual_expected_win_pct = 1
-        self.sys_config.runtime.actual_and_clause = entry_dic[LL.AND_CLAUSE]
-        self.sys_config.runtime.actual_number = entry_dic[LL.NUMBER]
-        if self.sys_config.db_stock is not None:
-            self.sys_config.runtime.actual_ticker_name = \
-                self.sys_config.db_stock.get_name_for_symbol(entry_dic[LL.TICKER])
-        if self.sys_config.runtime.actual_ticker_name == '':
-            self.sys_config.runtime.actual_ticker_name = self.sys_config.config.ticker_dic[entry_dic[LL.TICKER]]
 
     def __show_statistics__(self):
         self.sys_config.config.print()
@@ -273,7 +182,7 @@ class PatternDetectionController:
         writer.save()
 
     def __init_test_data__(self):
-        if self.sys_config.config.get_data_from_db and self._excel_file_with_test_data is not None:
+        if self.sys_config.config.api_from_db and self._excel_file_with_test_data is not None:
             self._df_test_data = pd.ExcelFile(self._excel_file_with_test_data.file_name).parse(0)
             self._start_row = self._excel_file_with_test_data.file_name.row_start
             if self._excel_file_with_test_data.row_end == 0:
@@ -281,7 +190,7 @@ class PatternDetectionController:
 
     def __init_loop_list_for_ticker__(self):
         self._loop_list_ticker = LoopList4Dictionaries()
-        if self.sys_config.config.get_data_from_db and self._excel_file_with_test_data is not None:
+        if self.sys_config.config.api_from_db and self._excel_file_with_test_data is not None:
             for ind, rows in self._df_test_data.iterrows():
                 if self._loop_list_ticker.counter >= self._excel_file_with_test_data.row_start:
                     self.sys_config.config.ticker_dic[rows[PSC.TICKER]] = rows[PSC.NAME]

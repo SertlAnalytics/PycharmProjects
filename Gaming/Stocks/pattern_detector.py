@@ -10,7 +10,7 @@ from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
 from pattern_part import PatternPart, PatternEntryPart, PatternWatchPart, PatternTradePart
-from pattern import Pattern, PatternFactory
+from pattern import Pattern, PatternFactory, PatternID
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
     , PatternRangeDetectorHeadShoulderBottom, PatternRange
 from pattern_range_fibonacci import PatternRangeDetectorFibonacciAsc, PatternRangeDetectorFibonacciDesc
@@ -24,11 +24,12 @@ from pattern_function_container import PatternFunctionContainerFactoryApi, Patte
 class PatternDetector:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
+        self.pdh = sys_config.pdh
         self.with_trade_part = True
         self.pattern_type_list = list(self.sys_config.config.pattern_type_list)
-        self.df = self.sys_config.pdh.pattern_data.df
+        self.df = self.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
-        self.df_min_max = self.sys_config.pdh.pattern_data.df_min_max
+        self.df_min_max = self.pdh.pattern_data.df_min_max
         self.df_min_max_length = self.df_min_max.shape[0]
         self.range_detector_max = None
         self.range_detector_min = None
@@ -55,15 +56,21 @@ class PatternDetector:
         self.data_dict[DC.TICKER_ID] = self.sys_config.runtime.actual_ticker
         self.data_dict[DC.TICKER_NAME] = self.sys_config.runtime.actual_ticker_name
 
-    def parse_for_pattern(self):
-        self.__fill_possible_pattern_ranges__()
-        self.__adjust_possible_pattern_ranges_to_constraints__()
-        possible_pattern_range_list = self.__get_combined_possible_pattern_ranges__()
-        possible_pattern_range_list_dict = self.__get_pattern_range_list_dict__(possible_pattern_range_list)
+    def parse_for_pattern(self, pattern_id_to_find: PatternID = None):
+        possible_pattern_range_list_dict = self.__get_possible_pattern_range_list_dict__(pattern_id_to_find)
         for pattern_type in self.pattern_type_list:
             for pattern_range in possible_pattern_range_list_dict[pattern_type]:
                 # print('parsing for pattern: {}'.format(pattern_type))
                 self.__check_pattern_range_for_pattern_type__(pattern_type, pattern_range)
+
+    def __get_possible_pattern_range_list_dict__(self, pattern_id_to_find: PatternID) -> dict:
+        if pattern_id_to_find is None:
+            self.__fill_possible_pattern_ranges__()
+            self.__adjust_possible_pattern_ranges_to_constraints__()
+            possible_pattern_range_list = self.__get_combined_possible_pattern_ranges__()
+            return self.__get_pattern_range_list_dict__(possible_pattern_range_list)
+        else:
+            return {pattern_id_to_find.pattern_type: [pattern_id_to_find.pattern_range]}
 
     def __check_pattern_range_for_pattern_type__(self, pattern_type: str, pattern_range: PatternRange):
         self.sys_config.runtime.actual_pattern_type = pattern_type
@@ -87,11 +94,11 @@ class PatternDetector:
         pass
 
     def parse_for_fibonacci_waves(self):
-        df = self.sys_config.pdh.pattern_data_fibonacci.df
-        min_max_tick_list = self.sys_config.pdh.pattern_data_fibonacci.wave_tick_list_min_max.tick_list
+        df = self.pdh.pattern_data_fibonacci.df
+        min_max_tick_list = self.pdh.pattern_data_fibonacci.wave_tick_list_min_max.tick_list
         self.fib_wave_tree = FibonacciWaveTree(df, min_max_tick_list,
                                                self.sys_config.config.max_pattern_range_length,
-                                               self.sys_config.pdh.pattern_data.tick_f_var_distance)
+                                               self.pdh.pattern_data.tick_f_var_distance)
         self.fib_wave_tree.parse_tree()
 
     def check_for_intersections_and_endings(self):
@@ -164,11 +171,13 @@ class PatternDetector:
                 return
         self.sys_config.runtime.actual_breakout = pattern.breakout
         pattern.add_part_entry(PatternEntryPart(self.sys_config, pattern.function_cont))
-
+        pattern.add_data_dict_entries_after_part_entry()
         if pattern.are_pre_conditions_fulfilled():
+            pattern.calculate_predictions_after_part_entry()
             if pattern.breakout is not None:
                 pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
                 self.__add_part_trade__(pattern)
+            # pattern.print_nearest_neighbor_collection()
             self.pattern_list.append(pattern)
 
     def __add_part_trade__(self, pattern: Pattern):
@@ -177,8 +186,8 @@ class PatternDetector:
         df = self.__get_trade_df__(pattern)
         f_upper_trade = pattern.get_f_upper_trade()
         f_lower_trade = pattern.get_f_lower_trade()
-        function_cont = PatternFunctionContainerFactory.get_function_container(self.sys_config, pattern.pattern_type,
-                                                                               df, f_lower_trade, f_upper_trade)
+        function_cont = PatternFunctionContainerFactory.get_function_container(
+            self.sys_config, pattern.pattern_type, df, f_lower_trade, f_upper_trade)
         part = PatternTradePart(self.sys_config, function_cont)
         pattern.add_part_trade(part)
         pattern.fill_result_set()
@@ -210,7 +219,7 @@ class PatternDetector:
                 break
             if pattern.breakout is None:
                 pattern.function_cont.adjust_functions_when_required(next_tick)
-                pattern.breakout = self.__get_confirmed_breakout__(pattern, tick_last, next_tick)
+                pattern.set_breakout_after_checks(tick_last, next_tick)
             tick_last = next_tick
         pattern.function_cont.add_tick_from_main_df_to_df(self.df, tick_last)
         return can_pattern_be_added
@@ -232,22 +241,6 @@ class PatternDetector:
         if not pattern.function_cont.is_tick_inside_pattern_range(tick):
             return True
         return False
-
-    def __get_confirmed_breakout__(self, pattern: Pattern, last_tick: WaveTick, next_tick: WaveTick):
-        if pattern.function_cont.is_tick_breakout(next_tick):
-            breakout = self.__get_pattern_breakout__(pattern, last_tick, next_tick)
-            if breakout.is_breakout_a_signal():  # ToDo is_breakout a signal by ML algorithm
-                pattern.function_cont.tick_for_breakout = next_tick
-                return breakout
-        return None
-
-    @staticmethod
-    def __get_pattern_breakout__(pattern: Pattern, tick_previous: WaveTick, tick_breakout: WaveTick) -> PatternBreakout:
-        breakout_api = PatternBreakoutApi(pattern.function_cont)
-        breakout_api.tick_previous = tick_previous
-        breakout_api.tick_breakout = tick_breakout
-        breakout_api.constraints = pattern.constraints
-        return PatternBreakout(breakout_api)
 
     def __fill_possible_pattern_ranges__(self):
         pattern_type_set = set(self.pattern_type_list)

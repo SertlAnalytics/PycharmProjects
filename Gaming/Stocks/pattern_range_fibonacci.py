@@ -9,6 +9,7 @@ from sertl_analytics.constants.pattern_constants import FT, CN, FD, TP
 from pattern_wave_tick import WaveTick
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_range import PatternRangeMax, PatternRangeMin, PatternRangeDetectorMax, PatternRangeDetectorMin
+from pattern_data_container import PatternDataHandler
 from fibonacci.fibonacci_wave_tree import FibonacciWaveTree, FibonacciWave
 import math
 import pandas as pd
@@ -101,6 +102,7 @@ class PatternRangeFibonacciDesc(PatternRangeMax):
 class PatternRangeDetectorFibonacciBase:
     def __init__(self, sys_config: SystemConfiguration, wave_list: list):
         self.sys_config = sys_config
+        self.pdh = self.sys_config.pdh
         self.for_back_testing = self.sys_config.runtime.actual_trade_process == TP.BACK_TESTING
         self.wave_list = wave_list
         self.start_end_position_dict = self.__get_start_end_position_dict__()

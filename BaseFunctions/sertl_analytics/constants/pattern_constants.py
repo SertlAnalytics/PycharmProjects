@@ -5,6 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
+from sertl_analytics.pybase.loop_list import ExtendedDictionary
+
+
 class PRED:  # Predictors
     TOUCH_POINT = 'Touch_Point'
     BEFORE_BREAKOUT = 'Before_Breakout'
@@ -226,6 +229,14 @@ class FT:
 
     @staticmethod
     def get_id(key: str):
+        return FT.get_value_key_dict().get(key, 0)
+
+    @staticmethod
+    def get_pattern_type(pattern_type_id: int):
+        return ExtendedDictionary.get_key_for_value(FT.get_value_key_dict(), pattern_type_id)
+
+    @staticmethod
+    def get_value_key_dict() -> dict:
         return {FT.CHANNEL: 10, FT.CHANNEL_UP: 11, FT.CHANNEL_DOWN: 12,
                 FT.TRIANGLE: 20, FT.TRIANGLE_UP: 21, FT.TRIANGLE_DOWN: 22,
                 FT.TRIANGLE_TOP: 23, FT.TRIANGLE_BOTTOM: 24,
@@ -233,7 +244,7 @@ class FT:
                 FT.HEAD_SHOULDER: 43, FT.HEAD_SHOULDER_BOTTOM: 44,
                 FT.HEAD_SHOULDER_ASC: 45, FT.HEAD_SHOULDER_BOTTOM_DESC: 46,
                 FT.FIBONACCI_ASC: 55, FT.FIBONACCI_DESC: 56
-                }.get(key, 0)
+                }
 
 
 class PRD:  # Periods
@@ -243,7 +254,15 @@ class PRD:  # Periods
 
     @staticmethod
     def get_id(period: str):
-        return {PRD.INTRADAY: 0, PRD.DAILY: 1, PRD.WEEKLY: 2}.get(period)
+        return PRD.get_value_key_dict().get(period)
+
+    @staticmethod
+    def get_period(period_id: int):
+        return ExtendedDictionary.get_key_for_value(PRD.get_value_key_dict(), period_id)
+
+    @staticmethod
+    def get_value_key_dict() -> dict:
+        return {PRD.INTRADAY: 0, PRD.DAILY: 1, PRD.WEEKLY: 2}
 
     @staticmethod
     def get_seconds_for_period(period: str, aggregation=1):

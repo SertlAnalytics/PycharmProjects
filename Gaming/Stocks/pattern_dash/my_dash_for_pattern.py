@@ -64,8 +64,8 @@ class MyDash4Pattern(MyDashBase):
             Output('my_time_div', 'children'),
             [Input('my_interval_timer', 'n_intervals')])
         def handle_interval_callback_for_timer(n_intervals):
-            if n_intervals % self.bitfinex_config.check_ticker_after_timer_intervals == 0:
-                self.tab_trades.trade_handler_online.check_actual_trades()
+            # if n_intervals % self.bitfinex_config.check_ticker_after_timer_intervals == 0:
+            #     self.tab_trades.trade_handler_online.check_actual_trades()
             return '{}'.format(MyDate.get_time_from_datetime(datetime.now()))
 
     def __set_app_layout__(self):

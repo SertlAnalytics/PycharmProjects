@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import FT, TP, Indices, CN, EQUITY_TYPE, PRD, OPS, DC
 from pattern_database import stock_database as sdb
+from pattern_data_provider import PatternDataProviderApi
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
@@ -58,13 +59,10 @@ class RuntimeConfiguration:
 
 
 class PatternConfiguration:
-    def __init__(self):
+    def __init__(self, data_provider_api: PatternDataProviderApi):
+        self.data_provider_api = data_provider_api
         self.with_trade_part = True  # we need this configuration for testing touch strategy
-        self.get_data_from_db = True
         self.pattern_type_list = [FT.CHANNEL]
-        self.api_period = PRD.DAILY
-        self.api_period_aggregation = 5
-        self.api_output_size = OPS.COMPACT
         self.simple_moving_average_number = 10
         self.save_pattern_data = True
         self.save_trade_data = True
@@ -94,6 +92,18 @@ class PatternConfiguration:
         self.statistics_constraints_excel_file_name = 'pattern_statistics/constraints.xlsx'
         self.ticker_dic = {}
         self.__previous_period_length = 0
+
+    @property
+    def api_from_db(self):
+        return self.data_provider_api.from_db
+
+    @property
+    def api_period(self):
+        return self.data_provider_api.period
+
+    @property
+    def api_period_aggregation(self):
+        return self.data_provider_api.period_aggregation
 
     @property
     def and_clause_for_pattern(self):
@@ -131,6 +141,27 @@ class PatternConfiguration:
             return "Date BETWEEN '{}' AND '{}'".format(date_start, date_end)
         return "Date >= '{}'".format(date_start)
 
+    def init_by_nearest_neighbor_id(self, nn_id: str):  # example: 128#1_1_1_AAPL_12_2015-12-03_00:00_2016-01-07_00:00
+        id_components = nn_id.split('#')
+        self.init_by_pattern_id_str(id_components[1])
+
+    def init_by_pattern_id_str(self, pattern_id: str):  # example: 1_1_1_AAPL_12_2015-12-03_00:00_2016-01-07_00:00
+        id_parts = pattern_id.split('_')
+        symbol = id_parts[3]
+        pattern_type_id = int(id_parts[4])
+        date_from = id_parts[5]
+        date_to = id_parts[7]
+        self.__init_by_pattern_id_components__(symbol, pattern_type_id, date_from, date_to)
+
+    def __init_by_pattern_id_components__(self, symbol: str, pattern_type_id: int, date_from: str, date_to: str):
+        self.use_own_dic({symbol: symbol})
+        self.pattern_type_list = [FT.get_pattern_type(pattern_type_id)]
+        date_from = MyDate.get_datetime_object(date_from)
+        date_to = MyDate.get_datetime_object(date_to)
+        date_from = MyDate.adjust_by_days(date_from, -30)
+        date_to = MyDate.adjust_by_days(date_to, +30)
+        self.and_clause = "Date BETWEEN '{}' AND '{}'".format(date_from, date_to)
+
     def get_time_stamp_before_one_period_aggregation(self, time_stamp: float):
         return time_stamp - self.get_seconds_for_one_period()
 
@@ -154,7 +185,7 @@ class PatternConfiguration:
     previous_period_length = property(__get_previous_period_length__, __set_previous_period_length__)
 
     def print(self):
-        source = 'DB' if self.get_data_from_db else 'Api'
+        source = 'DB' if self.api_from_db else 'Api'
         pattern_type = self.pattern_type_list
         and_clause = self.and_clause
         period = self.api_period
@@ -164,7 +195,7 @@ class PatternConfiguration:
         breakout_over_big_range = self.breakout_over_congestion_range
 
         print('\nConfiguration settings:')
-        if self.get_data_from_db:
+        if self.api_from_db:
             print('Formation: {} \nSource: {} \nAnd clause: {} \nUpper/Lower Bound Value: {}/{}'
                   ' \nBreakout big range: {}\n'.format(
                     pattern_type, source, and_clause, bound_upper_v, bound_lower_v, breakout_over_big_range))

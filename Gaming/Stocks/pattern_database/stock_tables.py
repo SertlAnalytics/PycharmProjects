@@ -31,6 +31,10 @@ class TradeTable(MyTable, PredictionFeatureTable):
         self._query_for_feature_and_label_data_for_trades = self.__get_query_for_feature_and_label_data_for_trades__()
 
     @property
+    def id_columns(self) -> list:
+        return [DC.ID, DC.PATTERN_TYPE]
+
+    @property
     def feature_columns_for_trades(self):
         return self._feature_columns_for_trades
 
@@ -133,12 +137,11 @@ class TradeTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def __get_feature_columns_for_trades__():
-        return [DC.BUY_TRIGGER_ID, DC.TRADE_STRATEGY_ID, DC.TRADE_BOX_TYPE_ID,
-                DC.PATTERN_TYPE_ID]
+        return [DC.BUY_TRIGGER_ID, DC.TRADE_STRATEGY_ID, DC.TRADE_BOX_TYPE_ID]
 
     @staticmethod
     def get_feature_columns_for_trades_statistics():
-        return [DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.TRADE_BOX_TYPE, DC.PATTERN_TYPE]
+        return [DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.TRADE_BOX_TYPE]
 
     @staticmethod
     def __get_label_columns_for_trades__():
@@ -184,7 +187,7 @@ class TradeTable(MyTable, PredictionFeatureTable):
             self.__get_concatenated_feature_label_columns_for_trades__(), self._name)
 
     def __get_concatenated_feature_label_columns_for_trades__(self):
-        return ', '.join(self._feature_columns_for_trades + self._label_columns_for_trades)
+        return ', '.join(self.id_columns + self._feature_columns_for_trades + self._label_columns_for_trades)
 
 
 class PatternTable(MyTable, PredictionFeatureTable):
@@ -202,6 +205,10 @@ class PatternTable(MyTable, PredictionFeatureTable):
             self.__get_query_for_feature_and_label_data_before_breakout__()
         self._query_for_feature_and_label_data_after_breakout = \
             self.__get_query_for_feature_and_label_data_after_breakout__()
+
+    @property
+    def id_columns(self) -> list:
+        return [DC.ID, DC.PATTERN_TYPE]
 
     @property
     def feature_columns_touch_points(self):
@@ -360,13 +367,13 @@ class PatternTable(MyTable, PredictionFeatureTable):
         return "SELECT {} FROM {}".format(self.__get_concatenated_feature_label_columns_after_breakout__(), self._name)
 
     def __get_concatenated_feature_label_columns_touch_points__(self):
-        return ', '.join(self._feature_columns_touch_points + self._label_columns_touch_points)
+        return ', '.join(self.id_columns + self._feature_columns_touch_points + self._label_columns_touch_points)
 
     def __get_concatenated_feature_label_columns_before_breakout__(self):
-        return ', '.join(self._feature_columns_before_breakout + self._label_columns_before_breakout)
+        return ', '.join(self.id_columns + self._feature_columns_before_breakout + self._label_columns_before_breakout)
 
     def __get_concatenated_feature_label_columns_after_breakout__(self):
-        return ', '.join(self._feature_columns_after_breakout + self._label_columns_after_breakout)
+        return ', '.join(self.id_columns + self._feature_columns_after_breakout + self._label_columns_after_breakout)
 
     @staticmethod
     def get_feature_columns_after_breakout_for_statistics():
@@ -382,8 +389,7 @@ class PatternTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def __get_feature_columns_after_breakout__(for_statistics=False):
-        return [DC.PATTERN_TYPE if for_statistics else DC.PATTERN_TYPE_ID,
-                DC.TICKS_TILL_PATTERN_FORMED, DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT,
+        return [DC.TICKS_TILL_PATTERN_FORMED, DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT,
                 DC.SLOPE_UPPER_PCT, DC.SLOPE_LOWER_PCT, DC.SLOPE_REGRESSION_PCT,
                 DC.SLOPE_BREAKOUT_PCT,
                 DC.SLOPE_VOLUME_REGRESSION_PCT,
@@ -449,6 +455,10 @@ class StocksTable(MyTable):
     @staticmethod
     def _get_name_():
         return STBL.STOCKS
+
+    @property
+    def id_columns(self) -> list:
+        return [DC.PERIOD, DC.PERIOD_AGGREGATION, DC.SYMBOL, DC.TIMESTAMP]
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.PERIOD, CDT.STRING, 20))

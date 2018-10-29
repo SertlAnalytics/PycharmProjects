@@ -5,21 +5,22 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-21
 """
 
-from sertl_analytics.constants.pattern_constants import FT, TP, BT, PRD, DC
-from sertl_analytics.mydates import MyDate
+from sertl_analytics.constants.pattern_constants import FT, TP, BT
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_detection_controller import PatternDetectionController
 from pattern_detector import PatternDetector
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from pattern_test.trade_test_cases import TradeTestCase, TradeTestCaseFactory, TradeTestApi
+from pattern_data_provider import PatternDataProviderApi
 
 
 class TradeTest:
     def __init__(self, api: TradeTestApi, sys_config=None, exchange_config=None):
         self.api = api
         self.trade_process = api.test_process
-        self.sys_config = sys_config if sys_config else SystemConfiguration()
+        data_provider_api = PatternDataProviderApi(api.from_db, api.period, api.period_aggregation)
+        self.sys_config = sys_config if sys_config else SystemConfiguration(data_provider_api)
         self.exchange_config = exchange_config if exchange_config else ExchangeConfiguration()
         self.__adjust_sys_config__()
         self.__adjust_exchange_config__()
@@ -32,9 +33,8 @@ class TradeTest:
         self.sys_config.runtime.actual_trade_process = self.trade_process
         if self.trade_process == TP.BACK_TESTING:
             self.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
-        self.sys_config.config.get_data_from_db = self.api.get_data_from_db
-        self.sys_config.config.api_period = self.api.period
-        self.sys_config.config.api_period_aggregation = self.api.period_aggregation
+        self.sys_config.update_data_provider_api(
+            from_db=self.api.from_db, period=self.api.period, aggregation=self.api.period_aggregation)
         self.sys_config.config.plot_data = False
         self.sys_config.prediction_mode_active = True
         self.sys_config.config.save_pattern_data = False

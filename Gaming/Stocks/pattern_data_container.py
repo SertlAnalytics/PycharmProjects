@@ -198,11 +198,8 @@ class PatternDataFibonacci(PatternData):
 
 
 class PatternDataHandler:
-    def __init__(self, config: PatternConfiguration):
+    def __init__(self, config: PatternConfiguration, df: pd.DataFrame):
         self.config = config
-        self.pattern_data = None
-        self.pattern_data_fibonacci = None
-
-    def init_by_df(self, df: pd.DataFrame):
         self.pattern_data = PatternData(self.config, df)
         self.pattern_data_fibonacci = PatternDataFibonacci(self.config, df)
+

@@ -6,7 +6,7 @@ Date: 2018-03-11
 """
 
 import pandas as pd
-from sqlalchemy import MetaData, Table, insert
+from sqlalchemy import MetaData, Table, insert, exc
 import os
 from sertl_analytics.myexceptions import ErrorHandler
 
@@ -28,6 +28,10 @@ class MyTable:
         self._column_name_list = self.__get_column_name_list__()
         self._description = self.__get_description__()
         self._query_select_all = self.query_select_all
+
+    @property
+    def id_columns(self) -> list:
+        pass
 
     @property
     def column_name_list(self) -> list:
@@ -136,16 +140,22 @@ class BaseDatabase:
         metadata.create_all(self.engine)
 
     def __insert_data_into_table__(self, table_name: str, insert_data_dic_list: list):
+        return_value = True
         if len(insert_data_dic_list) == 0:
-            return
+            return True
         connection = self.engine.connect()
         metadata = MetaData()
         table_object = Table(table_name, metadata, autoload=True, autoload_with=self.engine)
         stmt = insert(table_object)
-        results = connection.execute(stmt, insert_data_dic_list)
-        connection.close()
-        print('Loaded into {}: {} records.'.format(table_name, results.rowcount))
-
+        try:
+            results = connection.execute(stmt, insert_data_dic_list)
+            print('Loaded into {}: {} records.'.format(table_name, results.rowcount))
+        except exc.OperationalError:
+            print('Problem with inserting...')
+            return_value = False
+        finally:
+            connection.close()
+        return return_value
 
 """
 Example for a derived class - connecting to a SQLite database

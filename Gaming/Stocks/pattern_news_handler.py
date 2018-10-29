@@ -30,6 +30,7 @@ class NewsHandler:
         self._news_dict = {}
 
     def get_news_for_markdown_since_last_refresh(self, ts_last_refresh):
+        # print('NewsHandler: {}'.format(self._news_dict))
         actual_dict = {key: value for key, value in self._news_dict.items() if value[1] > ts_last_refresh}
         if len(actual_dict) == 0:
             self._news_dict = {}  # remove older news...

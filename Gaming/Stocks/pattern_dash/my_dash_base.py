@@ -26,7 +26,7 @@ from pattern_news_handler import NewsHandler
 class MyDashBaseTab:
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         self.app = app
-        self.sys_config = sys_config.get_semi_deep_copy()
+        self.sys_config = sys_config.get_semi_deep_copy_for_new_pattern_data_provider_api()
         self._color_handler = PatternColorHandler()
         self._news_handler = self.__get_news_handler__()
         self._time_stamp_last_refresh = MyDate.time_stamp_now()

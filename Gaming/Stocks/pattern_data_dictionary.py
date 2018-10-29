@@ -12,15 +12,17 @@ from pattern_wave_tick import WaveTick
 from sertl_analytics.mymath import MyMath
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.exchanges.exchange_cls import Order, OrderStatus
+from pattern_data_container import PatternDataHandler
 import numpy as np
 
 
 class PatternDataDictionary:
-    def __init__(self, sys_config: SystemConfiguration):
+    def __init__(self, sys_config: SystemConfiguration, pdh: PatternDataHandler):
         self.sys_config = sys_config
-        self.df = self.sys_config.pdh.pattern_data.df
+        self.pdh = pdh
+        self.df = self.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
-        self.df_min_max = self.sys_config.pdh.pattern_data.df_min_max
+        self.df_min_max = self.pdh.pattern_data.df_min_max
         self._data_dict = {}
         self.__init_data_dict__()
 

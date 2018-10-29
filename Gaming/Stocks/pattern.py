@@ -11,21 +11,27 @@ import pandas as pd
 import math
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_trade_result import TradeResult
+from pattern_breakout import PatternBreakout, PatternBreakoutApi
 from pattern_part import PatternPart, PatternEntryPart, PatternWatchPart, PatternTradePart
 import pattern_constraints as cstr
 from sertl_analytics.myexceptions import MyException
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.models.nn_collector import NearestNeighborCollector
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_function_container import PatternFunctionContainerFactoryApi
 from pattern_value_categorizer import ValueCategorizer
 from pattern_data_dictionary import PatternDataDictionary
+from pattern_predictor import PatternMasterPredictor
+from pattern_range import PatternRange
+from pattern_data_container import PatternDataHandler
 
 
 class PatternApi:
     def __init__(self, sys_config: SystemConfiguration, pattern_type: str):
         self.sys_config = sys_config
+        self.pdh = sys_config.pdh
         self.pattern_type = pattern_type
-        self.df_min_max = sys_config.pdh.pattern_data.df_min_max
+        self.df_min_max = self.pdh.pattern_data.df_min_max
         self.pattern_range = None
         self.constraints = None
         self.function_container = None
@@ -62,18 +68,76 @@ class PatternConditionHandler:
     combined_parts_applicable = property(__get_combined_parts_applicable__, __set_combined_parts_applicable__)
 
 
+class PatternID:
+    def __init__(self, equity_type_id: int, ticker_id: str, pattern_type: str, period: str,
+                 aggregation: int, pattern_range: PatternRange):
+        self.equity_type_id = equity_type_id
+        self.ticker_id = ticker_id
+        self.pattern_type = pattern_type
+        self.pattern_type_id = FT.get_id(self.pattern_type)
+        self.period = period
+        self.period_id = PRD.get_id(period)
+        self.aggregation = aggregation
+        self.pattern_range = pattern_range
+        self.range_id = pattern_range.id
+        self.and_clause = self.__get_search_and_clause__()
+
+    @property
+    def id(self):
+        return '{}_{}_{}_{}_{}_{}'.format(self.equity_type_id, self.period_id, self.aggregation, self.ticker_id,
+                                          self.pattern_type_id, self.range_id)
+
+    @property
+    def id_readable(self):
+        return '{}_{}_{}_{}'.format(self.period, self.ticker_id, self.pattern_type, self.range_id)
+
+    def __get_search_and_clause__(self):
+        date_from = MyDate.get_datetime_object(self.pattern_range.tick_first.date_str)
+        date_to = MyDate.get_datetime_object(self.pattern_range.tick_last.date_str)
+        date_from = MyDate.adjust_by_days(date_from, -self.pattern_range.length)
+        date_to = MyDate.adjust_by_days(date_to, self.pattern_range.length)
+        return "Date BETWEEN '{}' AND '{}'".format(date_from, date_to)
+
+
+class PatternIdFactory:
+    def __init__(self, sys_config: SystemConfiguration):
+        self.sys_config = sys_config
+        self.pdh = self.sys_config.pdh
+
+    def get_pattern_id_from_pattern_id_string(self, pattern_id_str: str):
+        # Example: 1_1_1_AAPL_12_2015-12-03_00:00_2016-01-07_00:00
+        parts = pattern_id_str.split('_')
+        equity_type_id = int(parts[0])
+        pattern_type = FT.get_pattern_type(int(parts[4]))
+        period = PRD.get_period(int(parts[1]))
+        aggregation = int(parts[2])
+        wave_tick = self.__get_wave_tick_start_for_pattern_range__()
+        pattern_range = PatternRange(self.sys_config, wave_tick, 12)
+        pattern_range.add_tick(self.__get_wave_tick_end_for_pattern_range__(), 0)
+        return PatternID(equity_type_id, parts[3], pattern_type, period, aggregation, pattern_range)
+
+    def __get_wave_tick_start_for_pattern_range__(self):
+        return WaveTick(self.pdh.pattern_data.df[0])
+
+    def __get_wave_tick_end_for_pattern_range__(self):
+        return WaveTick(self.pdh.pattern_data.df[1])
+
+
 class Pattern:
     def __init__(self, api: PatternApi):
         self.sys_config = api.sys_config
+        self.pdh = api.pdh
         self.pattern_type = api.pattern_type
-        self.data_dict_obj = PatternDataDictionary(self.sys_config)
+        self.data_dict_obj = PatternDataDictionary(self.sys_config, self.pdh)
         self.ticker_id = self.sys_config.runtime.actual_ticker
-        self.df = self.sys_config.pdh.pattern_data.df
+        self.df = self.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
-        self.df_min_max = self.sys_config.pdh.pattern_data.df_min_max
+        self.df_min_max = self.pdh.pattern_data.df_min_max
         # self.tick_distance = api.sys_config.pdh.pattern_data.tick_f_var_distance
         self.constraints = api.constraints
         self.pattern_range = api.pattern_range
+        self._pattern_id = self.__get_pattern_id__()
+        self.volume_mean_for_breakout = self.__get_volume_mean_for_breakout__()
         self.ticks_initial = 0
         self.check_length = 0
         self.function_cont = api.function_container
@@ -96,24 +160,19 @@ class Pattern:
         self.y_predict_before_breakout = None
         self.y_predict_after_breakout = None
         self.value_categorizer = None
+        self._nearest_neighbor_collector = NearestNeighborCollector(self.df, self.id_readable)
+
+    @property
+    def pattern_id(self) -> PatternID:
+        return self._pattern_id
 
     @property
     def id(self) -> str:
-        equity_type_id = self.data_dict_obj.get(DC.EQUITY_TYPE_ID)
-        period_id = self.data_dict_obj.get(DC.PERIOD_ID)
-        aggregation = self.data_dict_obj.get(DC.PERIOD_AGGREGATION)
-        ticker_id = self.data_dict_obj.get(DC.TICKER_ID)
-        pattern_type_id = FT.get_id(self.pattern_type)
-        range_id = self.pattern_range.id
-        return '{}_{}_{}_{}_{}_{}'.format(equity_type_id, period_id, aggregation, ticker_id, pattern_type_id, range_id)
+        return self._pattern_id.id
 
     @property
     def id_readable(self) -> str:
-        period = self.data_dict_obj.get(DC.PERIOD)
-        ticker_id = self.data_dict_obj.get(DC.TICKER_ID)
-        pattern_type = self.pattern_type
-        range_id = self.pattern_range.id
-        return '{}_{}_{}_{}'.format(period, ticker_id, pattern_type, range_id)
+        return self._pattern_id.id_readable
 
     def __get_available_fibonacci_end_type__(self):
         return self._available_fibonacci_end_type
@@ -142,6 +201,16 @@ class Pattern:
             pos_last = self.part_entry.tick_last.position
         return pos_last - pos_first
 
+    @property
+    def nearest_neighbor_entry_list(self):
+        return self._nearest_neighbor_collector.get_sorted_entry_list()
+
+    def __get_pattern_id__(self) -> PatternID:
+        equity_type_id = self.data_dict_obj.get(DC.EQUITY_TYPE_ID)
+        period = self.data_dict_obj.get(DC.PERIOD)
+        aggregation = self.data_dict_obj.get(DC.PERIOD_AGGREGATION)
+        return PatternID(equity_type_id, self.ticker_id, self.pattern_type, period, aggregation, self.pattern_range)
+
     def add_part_entry(self, part_entry: PatternEntryPart):
         self._part_entry = part_entry
         self.value_categorizer = self._get_value_categorizer_for_part_entry_()
@@ -149,10 +218,14 @@ class Pattern:
         self.xy_center = self._part_entry.xy_center
         self.date_first = self._part_entry.date_first
         self.date_last = self._part_entry.date_last
+
+    def add_data_dict_entries_after_part_entry(self):
         self.__add_data_dict_entries_after_part_entry__()
+
+    def calculate_predictions_after_part_entry(self):
         self.__calculate_predictions_after_part_entry__()
         self.__add_predictions_before_breakout_to_data_dict__()
-        # The next call is done to have the necessary columns for a online trading predicton
+        # The next call is done to have the necessary columns for a online trading prediction
         self.__calculate_predictions_after_breakout__()
 
     def __calculate_predictions_after_part_entry__(self):
@@ -164,9 +237,36 @@ class Pattern:
         self.xy_trade = self._part_trade.xy
         self.__calculate_predictions_after_breakout__()
 
+    def print_nearest_neighbor_collection(self):
+        self._nearest_neighbor_collector.print_sorted_list(5)
+
     def is_ready_for_back_testing(self):
         pos_last = self.part_entry.tick_last.position + self.get_maximal_trade_position_size()
         return self.df_length > pos_last and FT.is_pattern_type_long_trade_able(self.pattern_type)
+
+    def set_breakout_after_checks(self, last_tick: WaveTick, next_tick: WaveTick, online=False) -> dict:
+        if online or self.function_cont.is_tick_breakout(next_tick):  # online we have other checks... ToDo...
+            breakout = self.__get_pattern_breakout__(last_tick, next_tick, online)
+            if breakout.is_breakout_a_signal():  # ToDo is_breakout a signal by ML algorithm
+                self.function_cont.tick_for_breakout = next_tick
+                self.breakout = breakout
+            else:
+                return breakout.check_dict
+        return {}
+
+    def __get_pattern_breakout__(self, tick_previous: WaveTick, tick_breakout: WaveTick, online: bool) -> PatternBreakout:
+        breakout_api = PatternBreakoutApi(self.function_cont)
+        breakout_api.tick_previous = tick_previous
+        breakout_api.tick_breakout = tick_breakout
+        breakout_api.constraints = self.constraints
+        breakout_api.volume_mean_for_breakout = self.volume_mean_for_breakout
+        breakout_api.volume_forecast = tick_breakout.volume
+        if online:
+            breakout_api.volume_forecast = tick_breakout.get_forecast_volume(
+                self.sys_config.config.get_seconds_for_one_period())
+        else:
+            breakout_api.volume_forecast = tick_breakout.volume
+        return PatternBreakout(breakout_api)
 
     def get_back_testing_wave_ticks(self, tick_list_for_replay=None):
         if tick_list_for_replay is None:
@@ -176,20 +276,21 @@ class Pattern:
         off_set_time_stamp = self.pattern_range.tick_last.time_stamp
         counter = 0
         max_ticks = self.get_maximal_trade_position_size()
-        col_list = [CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.VOL, CN.TIMESTAMP, CN.POSITION]
+        col_list = [CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.VOL, CN.TIMESTAMP, CN.POSITION, CN.TIME]
         return_list = []
 
         for tick in tick_list:
             if off_set_time_stamp < tick.time_stamp:
                 counter += 1
                 ts_list = self.__get_time_stamp_list_for_back_testing_value_pairs__(int(tick.time_stamp), 4)
-                value_list = [tick.open, tick.open, tick.low, tick.high, tick.volume, ts_list[0], tick.position]
+                time = MyDate.get_time_from_epoch_seconds(tick.time_stamp)
+                value_list = [tick.open, tick.open, tick.low, tick.high, tick.volume, ts_list[0], tick.position, time]
                 return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
-                value_list = [tick.open, tick.high, tick.low, tick.high, tick.volume, ts_list[0], tick.position]
+                value_list = [tick.open, tick.high, tick.low, tick.high, tick.volume, ts_list[0], tick.position, time]
                 return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
-                value_list = [tick.open, tick.low, tick.low, tick.high, tick.volume, ts_list[0], tick.position]
+                value_list = [tick.open, tick.low, tick.low, tick.high, tick.volume, ts_list[0], tick.position, time]
                 return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
-                value_list = [tick.open, tick.close, tick.low, tick.high, tick.volume, ts_list[0], tick.position]
+                value_list = [tick.open, tick.close, tick.low, tick.high, tick.volume, ts_list[0], tick.position, time]
                 return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
             if counter >= max_ticks:
                 break
@@ -226,20 +327,27 @@ class Pattern:
     def __calculate_y_predict_touch_points__(self):
         x_data = self.get_x_data_for_prediction_touch_points()
         if x_data is not None:
-            self.y_predict_touch_points = \
-                self.sys_config.master_predictor_touch_points.predict_for_label_columns(x_data)
+            master_predictor = self.sys_config.master_predictor_touch_points
+            self.y_predict_touch_points = master_predictor.predict_for_label_columns(self.pattern_type, x_data)
+            self.__add_nn_entry_list_from_predictor__(master_predictor, self.pattern_type)
 
     def __calculate_y_predict_before_breakout__(self):
         x_data = self.get_x_data_for_prediction_before_breakout()
         if x_data is not None:
-            self.y_predict_before_breakout = \
-                self.sys_config.master_predictor_before_breakout.predict_for_label_columns(x_data)
+            master_predictor = self.sys_config.master_predictor_before_breakout
+            self.y_predict_before_breakout = master_predictor.predict_for_label_columns(self.pattern_type, x_data)
+            self.__add_nn_entry_list_from_predictor__(master_predictor, self.pattern_type)
 
     def __calculate_y_predict_after_breakout__(self):
         x_data = self.get_x_data_for_prediction_after_breakout()
         if len(x_data) > 0:
-            self.y_predict_after_breakout = \
-                self.sys_config.master_predictor_after_breakout.predict_for_label_columns(x_data)
+            master_predictor = self.sys_config.master_predictor_after_breakout
+            self.y_predict_after_breakout = master_predictor.predict_for_label_columns(self.pattern_type, x_data)
+            self.__add_nn_entry_list_from_predictor__(master_predictor, self.pattern_type)
+
+    def __add_nn_entry_list_from_predictor__(self, master_predictor: PatternMasterPredictor, pattern_type: str):
+        nn_entry_list = master_predictor.get_sorted_nearest_neighbor_entry_list(pattern_type)
+        self._nearest_neighbor_collector.add_entry_list(nn_entry_list)
 
     def __print__prediction__(self, prediction_dict: dict, prediction_type: str):
         pos_breakout = '-' if self.breakout is None else self.breakout.tick_breakout.position
@@ -257,6 +365,10 @@ class Pattern:
             return np.poly1d([0, self.function_cont.f_breakout[0] - self.get_expected_win()])
         else:
             return self.function_cont.f_breakout
+
+    def __get_volume_mean_for_breakout__(self):
+        df = self.df.iloc[self.pattern_range.tick_first.position:self.pattern_range.tick_last.position + 1]
+        return round(df[CN.VOL].mean(), 2)
 
     def was_breakout_done(self):
         return True if self.breakout.__class__.__name__ == 'PatternBreakout' else False
@@ -347,16 +459,23 @@ class Pattern:
     def __are_pre_constraints_fulfilled__(self):
         return self.constraints.are_pre_constraints_fulfilled(self.data_dict_obj.data_dict)
 
+    def get_annotation_text_as_dict(self) -> dict:
+        annotation_prediction_text_list = self.__get_annotation_prediction_text_list__()
+        return self._part_entry.get_annotation_text_as_dict(annotation_prediction_text_list)
+
     def get_annotation_parameter(self, color: str = 'blue'):
+        annotation_prediction_text_list = self.__get_annotation_prediction_text_list__()
+        return self._part_entry.get_annotation_parameter(annotation_prediction_text_list, color)
+
+    def __get_annotation_prediction_text_list__(self):
         annotation_prediction_text_list = [
             self.__get_annotation_text_for_prediction_before_breakout__(),
             self.__get_annotation_text_for_prediction_after_breakout__()]
-        return self._part_entry.get_annotation_parameter(annotation_prediction_text_list, color)
+        return annotation_prediction_text_list
 
     def __get_annotation_text_for_prediction_before_breakout__(self):
-        prefix = 'Prediction before breakout'
         if self.y_predict_before_breakout is None:
-            return '{}: sorry - not enough previous data'.format(prefix)
+            return 'sorry - not enough previous data'
         points_top = self.data_dict_obj.get(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_TOP)
         points_bottom = self.data_dict_obj.get(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM)
         ticks = self.data_dict_obj.get(DC.FC_TICKS_TILL_BREAKOUT)
@@ -364,13 +483,12 @@ class Pattern:
         direction_str = 'ASC' if direction == 1 else 'DESC'
         false_breakout = self.data_dict_obj.get(DC.FC_FALSE_BREAKOUT_ID)
         false_breakout_str = 'false !!!' if false_breakout == 1 else 'true - GO'
-        return '{}: {}-Breakout after {} ticks and {}/{} touches - {}'.format(
-            prefix, direction_str, ticks, points_top, points_bottom, false_breakout_str)
+        return '{}-Breakout after {} ticks and {}/{} touches - {}'.format(
+            direction_str, ticks, points_top, points_bottom, false_breakout_str)
 
     def __get_annotation_text_for_prediction_after_breakout__(self):
-        prefix = 'Prediction after breakout'
         if not(self.was_breakout_done() and self.y_predict_after_breakout is not None):
-            return '{}: sorry - not enough previous data'.format(prefix)
+            return 'sorry - not enough previous data'
         pos_pct_half = self.data_dict_obj.get(DC.FC_HALF_POSITIVE_PCT)
         pos_pct_full = self.data_dict_obj.get(DC.FC_FULL_POSITIVE_PCT)
         pos_pct = max(pos_pct_full, pos_pct_half)
@@ -385,8 +503,8 @@ class Pattern:
         neg_ticks = neg_ticks_half if neg_pct == neg_pct_half else neg_ticks_full
         false_breakout = self.data_dict_obj.get(DC.FC_FALSE_BREAKOUT_ID)
         false_breakout_str = 'FALSE !!!' if false_breakout == 1 else 'GO !!!'
-        return '{}: +{}-{}% / -{}-{}% after {}-{} / {}-{} ticks - {}'.format(
-            prefix, pos_pct_half, pos_pct_full, neg_pct_half, neg_pct_full,
+        return '+{}-{}% / -{}-{}% after {}-{} / {}-{} ticks - {}'.format(
+            pos_pct_half, pos_pct_full, neg_pct_half, neg_pct_full,
             pos_ticks_half, pos_ticks_full, neg_ticks_half, neg_ticks_full, false_breakout_str)
 
     def __add_predictions_before_breakout_to_data_dict__(self):
@@ -550,10 +668,10 @@ class Pattern:
 
     def __get_feature_columns_for_prediction_type__(self, prediction_type: str):
         if prediction_type == PT.TOUCH_POINTS:
-            return self.sys_config.master_predictor_touch_points.feature_columns
+            return self.sys_config.master_predictor_touch_points.get_feature_columns(self.pattern_type)
         elif prediction_type == PT.BEFORE_BREAKOUT:
-            return self.sys_config.master_predictor_before_breakout.feature_columns
-        return self.sys_config.master_predictor_after_breakout.feature_columns
+            return self.sys_config.master_predictor_before_breakout.get_feature_columns(self.pattern_type)
+        return self.sys_config.master_predictor_after_breakout.get_feature_columns(self.pattern_type)
 
     def _get_value_categorizer_for_part_entry_(self) -> ValueCategorizer:
         pos_begin = self._part_entry.tick_first.position

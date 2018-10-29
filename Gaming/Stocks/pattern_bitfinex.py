@@ -43,11 +43,14 @@ class MyBitfinexTradeClient:
     def get_candles(self, symbol: str, period: str, aggregation: int, section='hist', limit=200):
         return self._bitfinex.get_candles(symbol, period, aggregation, section, limit)
 
-    def get_latest_tickers_as_wave_tick_list(self, symbol: str, period: str, aggregation: int, length=2) -> WaveTickList:
-        df = self.get_candles(symbol, period, aggregation, 'hist', length)
+    def get_latest_tickers_as_wave_tick_list(self, symbol: str, period: str, aggregation: int, limit=2) -> WaveTickList:
+        df = self.get_candles(symbol, period, aggregation, 'hist', limit)
         df[CN.TIMESTAMP] = df.index
         df[CN.POSITION] = 0
         return WaveTickList(df)
+
+    def get_last_ticker(self, symbol: str, period: str, aggregation: int):
+        return self.get_candles(symbol, period, aggregation, 'last')
 
     def get_balance(self, symbol: str) -> Balance:
         return self._bitfinex.get_balance_for_symbol(symbol)

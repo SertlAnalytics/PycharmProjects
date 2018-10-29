@@ -12,11 +12,13 @@ import numpy as np
 import pandas as pd
 from sertl_analytics.myexceptions import MyException
 from pattern_system_configuration import SystemConfiguration
+from pattern_data_container import PatternDataHandler
 
 
 class PatternFunctionContainer:
     def __init__(self, sys_config: SystemConfiguration, df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
         self.sys_config = sys_config
+        self.pdh = self.sys_config.pdh
         self.df = df
         self._tick_for_helper = None
         self._tick_for_breakout = None
@@ -162,7 +164,7 @@ class PatternFunctionContainer:
     def __set_f_var_cross_f_upper_f_lower__(self):
         if self._f_upper[1] < self._f_lower[1]:
             for n in range(self._tick_last.position, self._tick_last.position + 3 * self.number_of_positions):
-                tick = self.sys_config.pdh.pattern_data.get_tick_by_pos(n)
+                tick = self.pdh.pattern_data.get_tick_by_pos(n)
                 f_var = tick.f_var
                 u = self._f_upper(f_var)
                 l = self._f_lower(f_var)
@@ -264,7 +266,7 @@ class FibonacciAscPatternFunctionContainer(FibonacciPatternFunctionContainer):
         if tick_first.low < self.f_lower(tick_first.f_var):  # we don't need to correct anything
             return None, None
         f_lower_constant = np.poly1d([0, tick_first.low])
-        for wave_tick in self.sys_config.pdh.pattern_data.tick_list:
+        for wave_tick in self.pdh.pattern_data.tick_list:
             if f_lower_constant(wave_tick.f_var) <= self.f_lower(wave_tick.f_var):
                 return wave_tick, f_lower_constant
         return None, None
@@ -301,7 +303,7 @@ class FibonacciDescPatternFunctionContainer(FibonacciPatternFunctionContainer):
         if tick_first.high > self.f_upper(tick_first.f_var):  # we don't need to correct anything
             return None, None
         f_upper_constant = np.poly1d([0, tick_first.high])
-        for wave_tick in self.sys_config.pdh.pattern_data.tick_list:
+        for wave_tick in self.pdh.pattern_data.tick_list:
             if f_upper_constant(wave_tick.f_var) >= self.f_upper(wave_tick.f_var):
                 return wave_tick, f_upper_constant
         return None, None
@@ -394,12 +396,12 @@ class TKEBottomPatternFunctionContainer(PatternFunctionContainer):
 class TrianglePatternFunctionContainer(PatternFunctionContainer):
     def get_tick_function_list_for_xy_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
         if self.f_var_cross_f_upper_f_lower > 0:
-            if self.f_var_cross_f_upper_f_lower <= self.sys_config.pdh.pattern_data.tick_last.f_var:
-                tick_last = self.sys_config.pdh.pattern_data.get_tick_by_pos(self.position_cross_f_upper_f_lower)
+            if self.f_var_cross_f_upper_f_lower <= self.pdh.pattern_data.tick_last.f_var:
+                tick_last = self.pdh.pattern_data.get_tick_by_pos(self.position_cross_f_upper_f_lower)
                 tick_list = [tick_first, tick_last, tick_first]
                 function_list = [self.f_upper, self.f_upper, self.f_lower]
             else:
-                tick_last = self.sys_config.pdh.pattern_data.tick_last
+                tick_last = self.pdh.pattern_data.tick_last
                 tick_list = [tick_first, tick_last, tick_last, tick_first]
                 function_list = [self.f_upper, self.f_upper, self.f_lower, self.f_lower]
         else:
@@ -477,8 +479,9 @@ class HeadShoulderBottomDescPatternFunctionContainer(HeadShoulderBottomPatternFu
 class PatternFunctionContainerFactoryApi:
     def __init__(self, sys_config: SystemConfiguration, pattern_type: str):
         self.sys_config = sys_config
+        self.pdh = self.sys_config.pdh
         self.pattern_type = pattern_type
-        self.df_min_max = sys_config.pdh.pattern_data.df_min_max
+        self.df_min_max = self.pdh.pattern_data.df_min_max
         self.pattern_range = None
         self.constraints = None
         self.complementary_function = None
@@ -500,6 +503,7 @@ class PatternFunctionContainerFactory:
     def get_function_container_by_api(api: PatternFunctionContainerFactoryApi):
         pattern_type = api.pattern_type
         sys_config = api.sys_config
+        pdh = api.pdh
         df = api.pattern_range.get_related_part_from_data_frame(api.df_min_max)
         f_upper = api.get_f_upper()
         f_lower = api.get_f_lower()
@@ -512,8 +516,8 @@ class PatternFunctionContainerFactory:
         return f_cont
 
     @staticmethod
-    def get_function_container(sys_config: SystemConfiguration, pattern_type: str, df: pd.DataFrame,
-                               f_lower: np.poly1d, f_upper: np.poly1d):
+    def get_function_container(sys_config: SystemConfiguration, pattern_type: str,
+                               df: pd.DataFrame, f_lower: np.poly1d, f_upper: np.poly1d):
         if pattern_type == FT.CHANNEL:
             return ChannelPatternFunctionContainer(sys_config, df, f_lower, f_upper)
         elif pattern_type == FT.CHANNEL_DOWN:

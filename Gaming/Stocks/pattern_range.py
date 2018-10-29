@@ -11,6 +11,7 @@ from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.mymath import ToleranceCalculator
 from pattern_system_configuration import SystemConfiguration, debugger
+from pattern_data_container import PatternDataHandler
 import math
 import pandas as pd
 import numpy as np
@@ -19,6 +20,7 @@ import numpy as np
 class PatternRange:
     def __init__(self, sys_config: SystemConfiguration, tick: WaveTick, min_length: int):
         self.sys_config = sys_config
+        self.pdh = self.sys_config.pdh
         self.df_min_max_final = None
         self.tick_list = [tick]
         self.tick_first = tick
@@ -53,6 +55,10 @@ class PatternRange:
         return len(self.tick_list)
 
     @property
+    def volume_mean(self):
+        return np.mean([tick.volume for tick in self.tick_list])
+
+    @property
     def length(self) -> int:
         return self.tick_last.position - self.tick_first.position
 
@@ -82,13 +88,13 @@ class PatternRange:
 
     def __get_actual_df_min_max__(self):
         if self.tick_breakout_successor is None:
-            df_range = self.sys_config.pdh.pattern_data.df_min_max[np.logical_and(
-                self.sys_config.pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
-                self.sys_config.pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_last.position)]
+            df_range = self.pdh.pattern_data.df_min_max[np.logical_and(
+                self.pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
+                self.pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_last.position)]
         else:
-            df_range = self.sys_config.pdh.pattern_data.df_min_max[np.logical_and(
-                self.sys_config.pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
-                self.sys_config.pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_breakout_successor.position)]
+            df_range = self.pdh.pattern_data.df_min_max[np.logical_and(
+                self.pdh.pattern_data.df_min_max[CN.POSITION] >= self.tick_first.position,
+                self.pdh.pattern_data.df_min_max[CN.POSITION] <= self.tick_breakout_successor.position)]
         return df_range
 
     @property
@@ -175,7 +181,7 @@ class PatternRange:
 
     def __get_breakout_details__(self):
         if self.tick_breakout_successor is None:  # extend the breakouts until the end....
-            pos = self.sys_config.pdh.pattern_data.df_min_max.iloc[-1][CN.POSITION]
+            pos = self.pdh.pattern_data.df_min_max.iloc[-1][CN.POSITION]
         else:
             pos = self.tick_breakout_successor.position
         return [pos, round(self._f_param(pos), 2)]
@@ -312,6 +318,7 @@ class PatternRangeHeadShoulderBottom(PatternRangeMax):
 class PatternRangeDetector:
     def __init__(self, sys_config: SystemConfiguration, tick_list: list):
         self.sys_config = sys_config
+        self.pdh = self.sys_config.pdh
         self.tick_list = tick_list
         self._elements = len(self.tick_list)
         self._tolerance_pct = self.sys_config.config.value_categorizer_tolerance_pct

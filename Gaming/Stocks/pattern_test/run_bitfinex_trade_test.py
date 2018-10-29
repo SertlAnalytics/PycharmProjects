@@ -11,7 +11,9 @@ from pattern_test.trade_test import TradeTest, TradeTestApi
 
 api = TradeTestApi()
 api.test_process = TP.TEST_SINGLE
+api.volume_increase = 10
 bitfinex_test = TradeTest(api)
+
 # ******** START setup **********
 triangle = True
 if triangle:

@@ -29,14 +29,15 @@ class PatternPlotter:
     def __init__(self, sys_config: SystemConfiguration, detector: PatternDetector):
         self.sys_config = sys_config
         self.detector = detector
-        self.df = self.sys_config.pdh.pattern_data.df
-        self.tick_list = self.sys_config.pdh.pattern_data.tick_list
+        self.pdh = self.detector.pdh
+        self.df = self.pdh.pattern_data.df
+        self.tick_list = self.pdh.pattern_data.tick_list
         self.symbol = self.sys_config.runtime.actual_ticker
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
         self.ranges_polygon_dic_list = {}
         self.ranges_opposite_polygon_dic_list = {}
         self.fibonacci_patch_container = None
-        self.__fib_wave_select_tolerance_range = self.sys_config.pdh.pattern_data.height / 50
+        self.__fib_wave_select_tolerance_range = self.pdh.pattern_data.height / 50
         self.__currently_visible_ranges_polygon_list = []
         self.axes_for_candlesticks = None
 
@@ -82,8 +83,8 @@ class PatternPlotter:
 
     def __get_y_dlim_for_candlestick_plot__(self):
         range_pct = [0.99, 1.005] if self.sys_config.config.api_period == PRD.INTRADAY else [0.95, 1.02]
-        return self.sys_config.pdh.pattern_data.min_value * range_pct[0], \
-               self.sys_config.pdh.pattern_data.max_value * range_pct[1]
+        return self.pdh.pattern_data.min_value * range_pct[0], \
+               self.pdh.pattern_data.max_value * range_pct[1]
 
     @staticmethod
     def motion(event):
@@ -98,8 +99,8 @@ class PatternPlotter:
         print('Double Click - so let us stop')
 
     def __get_date_range_for_title__(self):
-        tick_first = self.sys_config.pdh.pattern_data.tick_list[0]
-        tick_last = self.sys_config.pdh.pattern_data.tick_list[-1]
+        tick_first = self.pdh.pattern_data.tick_list[0]
+        tick_last = self.pdh.pattern_data.tick_list[-1]
         if self.sys_config.config.api_period == PRD.INTRADAY:
             return 'Date between "{} {}" AND "{} {}"'.format(tick_first.date_str, tick_first.time_str_for_f_var,
                                                              tick_last.date_str, tick_last.time_str_for_f_var)
@@ -108,7 +109,7 @@ class PatternPlotter:
 
     def __on_hover__(self, x, y):
         tolerance = PlotterInterface.get_tolerance_range_for_extended_dict(self.sys_config)
-        tick = self.sys_config.pdh.pattern_data.tick_by_date_num_ext_dic.get_value_by_dict_key(x, tolerance)
+        tick = self.pdh.pattern_data.tick_by_date_num_ext_dic.get_value_by_dict_key(x, tolerance)
         if tick is None:
             return ''
         else:
@@ -183,7 +184,7 @@ class PatternPlotter:
             if patches.__class__.__name__ == 'Ellipse':
                 cont, dic = patches.contains(event)
                 if cont:
-                    tick = self.sys_config.pdh.pattern_data.get_tick_by_date_num(patches.center[0])
+                    tick = self.pdh.pattern_data.get_tick_by_date_num(patches.center[0])
                     if self.__show_ranges_polygons__(tick):
                         draw_canvas = True
                     break
@@ -216,12 +217,12 @@ class PatternPlotter:
 
     def __plot_candlesticks__(self):
         if self.sys_config.config.api_period == PRD.INTRADAY:
-            ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in self.sys_config.pdh.pattern_data.tick_list]
+            ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in self.pdh.pattern_data.tick_list]
             width = 0.4 * (ohlc_list[1][0] - ohlc_list[0][0])
             candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=width, colorup='g')
             self.axes_for_candlesticks.xaxis_date()
         else:
-            ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in self.sys_config.pdh.pattern_data.tick_list]
+            ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in self.pdh.pattern_data.tick_list]
             candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=0.4, colorup='g')
             self.axes_for_candlesticks.xaxis_date()
         self.axes_for_candlesticks.grid()
@@ -231,7 +232,7 @@ class PatternPlotter:
         self.__add_pattern_shapes_to_plot__()
 
     def __plot_min_max__(self):
-        wave_tick_list = WaveTickList(self.sys_config.pdh.pattern_data.df_min_max)
+        wave_tick_list = WaveTickList(self.pdh.pattern_data.df_min_max)
         width, height = PlotterInterface.get_ellipse_width_height_for_plot_min_max(self.sys_config, wave_tick_list)
         for ticks in wave_tick_list.tick_list:
             x = MyDate.get_date_as_number_from_epoch_seconds(ticks.f_var)
@@ -241,9 +242,9 @@ class PatternPlotter:
                 self.axes_for_candlesticks.add_patch(Ellipse((x, ticks.high), width, height, color='g'))
         # fill some ellipses with color white
         width, height =  width/2, height/2
-        for ticks in self.sys_config.pdh.pattern_data.tick_list_min_without_hidden_ticks:
+        for ticks in self.pdh.pattern_data.tick_list_min_without_hidden_ticks:
             self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.low), width, height, color='w'))
-        for ticks in self.sys_config.pdh.pattern_data.tick_list_max_without_hidden_ticks:
+        for ticks in self.pdh.pattern_data.tick_list_max_without_hidden_ticks:
             self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.high), width, height, color='w'))
 
     def __plot_ranges__(self):

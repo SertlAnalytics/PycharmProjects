@@ -11,6 +11,7 @@ from pattern_function_container import PatternFunctionContainer
 from pattern_wave_tick import WaveTick
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_data_frame import PatternDataFrame
+from pattern_data_container import PatternDataHandler
 import numpy as np
 
 
@@ -31,7 +32,7 @@ class AnnotationParameter:
 class PatternPart:
     def __init__(self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer):
         self.sys_config = sys_config
-        self.pdh = self.sys_config.pdh
+        self.pdh = sys_config.pdh
         self.function_cont = function_cont
         self.df = self.pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
         self.tick_list = []
@@ -189,6 +190,11 @@ class PatternPart:
         return f_upper_slope, f_lower_slope, f_regression_slope
 
     def __get_text_for_annotation__(self, prediction_text_list: list):
+        annotations_as_dict = self.get_annotation_text_as_dict(prediction_text_list)
+        annotation_text_list = ['{}: {}'.format(key, values) for key, values in annotations_as_dict.items()]
+        return '\n'.join(annotation_text_list)
+
+    def get_annotation_text_as_dict(self, prediction_text_list: list) -> dict:
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_percent, f_lower_percent, f_reg_percent = self.get_slope_values()
         if self.sys_config.config.api_period == PRD.INTRADAY:
@@ -198,36 +204,38 @@ class PatternPart:
             date_str_first = self.tick_first.date_str_for_f_var
             date_str_last = self.tick_last.date_str_for_f_var
 
-        type_date = 'Type={}: {} - {} ({})'.format(self.pattern_type, date_str_first, date_str_last, len(self.tick_list))
+        pattern = '{}: {} - {} ({})'.format(self.pattern_type, date_str_first, date_str_last, len(self.tick_list))
 
         if self.pattern_type in [FT.TKE_TOP, FT.HEAD_SHOULDER]:
-            slopes = 'Gradients: L={:.1f}%, Reg={:.1f}%'.format(f_lower_percent, f_reg_percent)
-            height = 'Height={:.2f}, Std_dev={:.2f}'.format(self.height, std_dev)
+            gradients = 'L={:.1f}%, Reg={:.1f}%'.format(f_lower_percent, f_reg_percent)
+            height = '{:.2f}, Std_dev={:.2f}'.format(self.height, std_dev)
         elif self.pattern_type in [FT.TKE_BOTTOM, FT.HEAD_SHOULDER_BOTTOM]:
-            slopes = 'Gradients: U={:.1f}%, Reg={:.1f}%'.format(f_upper_percent, f_reg_percent)
-            height = 'Height={:.2f}, Std_dev={:.2f}'.format(self.height, std_dev)
+            gradients = 'U={:.1f}%, Reg={:.1f}%'.format(f_upper_percent, f_reg_percent)
+            height = '{:.2f}, Std_dev={:.2f}'.format(self.height, std_dev)
         else:
-            slopes = 'Gradients: U={:.1f}%, L={:.1f}%, Reg={:.1f}%'.format(f_upper_percent, f_lower_percent, f_reg_percent)
-            height = 'Height={:.2f}, Max={:.2f}, Min={:.2f}, Std_dev={:.2f}'.format(
+            gradients = 'U={:.1f}%, L={:.1f}%, Reg={:.1f}%'.format(f_upper_percent, f_lower_percent, f_reg_percent)
+            height = '{:.2f}, Max={:.2f}, Min={:.2f}, Std_dev={:.2f}'.format(
                 self.height, self.distance_max, self.distance_min, std_dev)
 
+        return_dict = {'Pattern': pattern, 'Gradients': gradients, 'Height': height}
         if self.breakout is None:
-            breakout_str = 'Breakout: not yet'
+            return_dict['Breakout'] = 'not yet'
         else:
-            breakout_str = 'Breakout: {}'.format(self.breakout.get_details_for_annotations())
+            return_dict['Breakout'] = '{}'.format(self.breakout.get_details_for_annotations())
+        self.__add_expected_trading_end_to_dict__(return_dict)
+        return_dict['Range position'] = '{}'.format(self.pattern_range.position_list)
+        return_dict['Prediction before breakout'] = prediction_text_list[0]
+        if self.breakout:
+            return_dict['Prediction after breakout'] = prediction_text_list[1]
+        return return_dict
 
+    def __add_expected_trading_end_to_dict__(self, return_dict: dict):
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
             date_forecast = MyDate.get_date_time_from_epoch_seconds(self.function_cont.f_var_cross_f_upper_f_lower)
-            breakout_str += '\nExpected trading end: {}'.format(
-                str(date_forecast.time())[:5] if self.sys_config.config.api_period == PRD.INTRADAY
-                else date_forecast.date())
-
-        breakout_str += '\nRange positions: {}'.format(self.pattern_range.position_list)
-        breakout_str += '\n{}'.format(prediction_text_list[0])
-        if self.breakout:
-            breakout_str += '\n{}'.format(prediction_text_list[1])
-
-        return '{}\n{}\n{}\n{}'.format(type_date, slopes, height, breakout_str)
+            if self.sys_config.config.api_period == PRD.INTRADAY:
+                return_dict['Expected trading end'] = str(date_forecast.time())[:5]
+            else:
+                return_dict['Expected trading end'] = str(date_forecast.date())
 
     def __get_slopes_by_f_param__(self) -> str:
         multiplier = 1000000

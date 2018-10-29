@@ -15,11 +15,12 @@ from pattern_dash.my_dash_header_tables import MyHTMLTabTradeHeaderTable
 from pattern_dash.my_dash_tab_dd_for_trades import TradeDropDownHandler, TDD
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
+from pattern_data_provider import PatternDataProviderApi
 from pattern_trade import PatternTrade
 from pattern_database.stock_tables import TradeTable, PatternTable
 from pattern_database.stock_database import StockDatabaseDataFrame
 from dash import Dash
-from sertl_analytics.constants.pattern_constants import DC, TP, BT, TSTR
+from sertl_analytics.constants.pattern_constants import DC, TP, PRD, TSTR
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_test.trade_test_cases import TradeTestCaseFactory
 from pattern_test.trade_test import TradeTest
@@ -32,7 +33,8 @@ from pattern_news_handler import NewsHandler
 class ReplayHandler:
     def __init__(self, trade_process: str, sys_config: SystemConfiguration, exchange_config: ExchangeConfiguration):
         self.trade_process = trade_process
-        self.sys_config = sys_config.get_semi_deep_copy()
+        self.sys_config = sys_config.get_semi_deep_copy_for_new_pattern_data_provider_api(
+            PatternDataProviderApi(True, PRD.DAILY, 1))
         self.sys_config.runtime.actual_trade_process = self.trade_process
         self.exchange_config = deepcopy(exchange_config)  # we change the simulation mode...
         self.trade_handler = PatternTradeHandler(self.sys_config, self.exchange_config)
@@ -66,11 +68,11 @@ class ReplayHandler:
         self.trade_test_api = TradeTestCaseFactory.get_trade_test_api_by_selected_trade_row(
             selected_row, self.trade_process)
         if self.trade_process in [TP.TRADE_REPLAY, TP.PATTERN_REPLAY]:
-            self.trade_test_api.get_data_from_db = True
+            self.trade_test_api.from_db = True
             self.trade_test_api.period = selected_row[DC.PERIOD]
             self.trade_test_api.period_aggregation = selected_row[DC.PERIOD_AGGREGATION]
         else:
-            self.trade_test_api.get_data_from_db = False
+            self.trade_test_api.from_db = False
             self.trade_test_api.period = self.sys_config.config.api_period
             self.trade_test_api.period_aggregation = self.sys_config.config.api_period_aggregation
             self.trade_test_api.trade_id = selected_row[DC.ID]
@@ -119,7 +121,7 @@ class ReplayHandler:
         if self.trade_process in [TP.TRADE_REPLAY, TP.PATTERN_REPLAY]:
             self.graph_api.pattern_trade = self.trade_handler.pattern_trade_for_replay
             self.graph_api.ticker_id = self.trade_test_api.symbol
-            self.graph_api.df = self.detector.sys_config.pdh.pattern_data.df
+            self.graph_api.df = self.detector.pdh.pattern_data.df
         else:
             self.set_selected_trade_to_api()
             print('set_graph_api: trade_id={}, pattern_trade.id={}'.format(self.trade_test_api.trade_id,
@@ -167,6 +169,7 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._trades_online_number = 0
         self._pattern_stored_number = 0
         self._cached_trade_table = None
+        self._time_stamp_last_ticker_refresh = MyDate.time_stamp_now()
 
     @staticmethod
     def __get_news_handler__():
@@ -229,7 +232,8 @@ class MyDashTab4Trades(MyDashBaseTab):
                 return ''
             ticker_refresh_seconds = self.__get_ticker_refresh_seconds__()
             ticks_remaining = self.__get_remaining_tick_number__()
-            return self._selected_pattern_trade.get_markdown_text(ticker_refresh_seconds, ticks_remaining)
+            return self._selected_pattern_trade.get_markdown_text(
+                self._time_stamp_last_ticker_refresh, ticker_refresh_seconds, ticks_remaining)
 
     def __get_remaining_tick_number__(self):
         if self._selected_trade_type != TP.ONLINE:
@@ -248,7 +252,9 @@ class MyDashTab4Trades(MyDashBaseTab):
 
     def __get_markdown_news__(self):
         actual_replay_handler = self.__get_actual_replay_handler__()
+        # collecting all news from dependent sources
         self._news_handler.add_news_dict(actual_replay_handler.pattern_trade.news_handler.news_dict)
+        self._news_handler.add_news_dict(actual_replay_handler.trade_handler.news_handler.news_dict)
         return self._news_handler.get_news_for_markdown_since_last_refresh(self._time_stamp_last_refresh)
 
     def __get_actual_replay_handler__(self):
@@ -450,7 +456,7 @@ class MyDashTab4Trades(MyDashBaseTab):
                 return ''
             if self._selected_row_index == selected_row_indices[0]:
                 if self._selected_trade_type == TP.ONLINE:
-                    graph = self.__get_graph_for_trade_online_refreshed__()
+                    graph = self.__get_graph_for_trade_online_refreshed__(n_intervals)
                 else:
                     graph = self.__get_graph_for_replay_refreshed__()
             else:
@@ -478,9 +484,12 @@ class MyDashTab4Trades(MyDashBaseTab):
             replay_handler.graph = self.__get_dcc_graph_element__(replay_handler.detector, replay_handler.graph_api)
         return replay_handler.graph
 
-    def __get_graph_for_trade_online_refreshed__(self):
+    def __get_graph_for_trade_online_refreshed__(self, n_intervals: int):
         if self._trade_replay_handler_online.trade_test is None:
             return ''
+        if n_intervals % self.exchange_config.check_ticker_after_timer_intervals == 0:
+            self._time_stamp_last_ticker_refresh = MyDate.get_epoch_seconds_from_datetime()
+            self.trade_handler_online.check_actual_trades()
         self._trade_replay_handler_online.refresh_api_df_from_pattern_trade()
         self._trade_replay_handler_online.graph_api.pattern_trade.calculate_xy_for_replay()
         return self.__get_dcc_graph_element__(None, self._trade_replay_handler_online.graph_api)
@@ -519,7 +528,6 @@ class MyDashTab4Trades(MyDashBaseTab):
             self._selected_row[DC.TRADE_STRATEGY] = self._selected_trade_strategy
             self._selected_row[DC.PATTERN_RANGE_BEGIN_DT] = self._selected_row[DC.PATTERN_BEGIN_DT]
             self._selected_row[DC.PATTERN_RANGE_END_DT] = self._selected_row[DC.PATTERN_END_DT]
-            print('Selected_row_after: {}'.format(self._selected_row))
 
     def __get_graph_for_trade_online__(self):
         self._trade_replay_handler_online.set_trade_test_api_by_selected_trade_row(self._selected_row)

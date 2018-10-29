@@ -32,6 +32,7 @@ class PatternTradeApi:
 class PatternTrade:
     def __init__(self, api: PatternTradeApi):
         self.sys_config = api.pattern.sys_config
+        self.pdh = api.pattern.pdh
         self.bitfinex_config = api.bitfinex_config
         self.trade_process = self.sys_config.runtime.actual_trade_process
         self.buy_trigger = api.buy_trigger
@@ -39,7 +40,7 @@ class PatternTrade:
         self.trade_strategy = api.trade_strategy
         self.pattern = api.pattern
         self.news_handler = NewsHandler()
-        self._volume_average = self.pattern.part_entry.df[CN.VOL].mean()
+        self._volume_mean_for_breakout = self.pattern.volume_mean_for_breakout
         self._wave_tick_list = WaveTickList(self.pattern.part_entry.tick_list)
         if self.trade_process == TP.TRADE_REPLAY:
             self.__initialize_breakout_values_for_tick_list__()
@@ -61,7 +62,7 @@ class PatternTrade:
         self._order_status_sell = None
         self._status = PTS.NEW
         self._trade_box = None
-        self.data_dict_obj = PatternDataDictionary(self.sys_config)
+        self.data_dict_obj = PatternDataDictionary(self.sys_config, self.pdh)
         self.data_dict_obj.inherit_values(self.pattern.data_dict_obj.data_dict)
         self.__add_trade_basis_data_to_data_dict__()
         self.__calculate_prediction_values__()
@@ -191,7 +192,7 @@ class PatternTrade:
         else:
             wave_tick.position = self._wave_tick_list.last_wave_tick.position + 1
             self._wave_tick_list.add_wave_tick(wave_tick)
-        self.__set_ticker_actual__()
+        self.__set_ticker_actual__()  # we need this to work with a ticker alone in some cases
         self._df_for_replay = self._wave_tick_list.get_tick_list_as_data_frame_for_replay()
 
     def __set_ticker_actual__(self):
@@ -228,9 +229,10 @@ class PatternTrade:
 
     def __calculate_prediction_values__(self):
         predictor = self.sys_config.master_predictor_for_trades
-        x_data = self.__get_x_data_for_prediction__(predictor.feature_columns)
+        feature_columns = predictor.get_feature_columns(self.pattern.pattern_type)
+        x_data = self.__get_x_data_for_prediction__(feature_columns)
         if x_data is not None:
-            prediction_dict = predictor.predict_for_label_columns(x_data)
+            prediction_dict = predictor.predict_for_label_columns(self.pattern.pattern_type, x_data)
             self.data_dict_obj.add(DC.FC_TRADE_REACHED_PRICE_PCT, prediction_dict[DC.TRADE_REACHED_PRICE_PCT])
             self.data_dict_obj.add(DC.FC_TRADE_RESULT_ID, prediction_dict[DC.TRADE_RESULT_ID])
 
@@ -285,24 +287,6 @@ class PatternTrade:
             'SMA': self.__is_precondition_for_sma_fulfilled__()
         }
         return False not in check_dict.values()
-
-    def is_precondition_for_volume_change_fulfilled(self, last_tick_list: WaveTickList):
-        if last_tick_list is None:
-            return True
-        prev_tick = last_tick_list.tick_list[-2]
-        actual_tick = last_tick_list.tick_list[-1]
-        volume_forecast = actual_tick.get_forecast_volume(self.sys_config.config.get_seconds_for_one_period())
-        volume_change = round(volume_forecast / self._volume_average * 100 - 100)
-        precondition_for_volume_fulfilled = volume_change > 20
-        if precondition_for_volume_fulfilled:
-            self.news_handler.add_news('Vol. change', '{:.0f}% - OK'.format(volume_change))
-            is_new_close_higher = actual_tick.close > prev_tick.open
-            if not is_new_close_higher:
-                self.news_handler.add_news('New close', 'not higher')
-                return False
-        else:
-            self.news_handler.add_news('Vol. change', '{:.0f}% - NOT OK'.format(volume_change))
-        return precondition_for_volume_fulfilled
 
     def __is_precondition_for_sma_fulfilled__(self):
         if self.trade_strategy != TSTR.SMA:
@@ -618,24 +602,27 @@ class PatternTrade:
             return pd.Series(data_list, feature_columns)  # we need the columns for dedicated features columns later
         return None
 
-    def get_markdown_text(self, ticker_refresh: int, ticks_to_go: int):
+    def get_markdown_text(self, ts_ticker_refresh: int, ticker_refresh: int, ticks_to_go: int):
         # if self.ticker_actual is None:
         if self.ticker_actual is None:
             return ''
         period = self.sys_config.config.api_period
         last_price = self.ticker_actual.last_price
-        text_list = [self.__get_header_line_for_markdown_text__(last_price, ticker_refresh),
+        text_list = [self.__get_header_line_for_markdown_text__(last_price, ts_ticker_refresh, ticker_refresh),
                      self._wave_tick_list.get_markdown_text_for_second_last_wave_tick(period),
                      self._wave_tick_list.get_markdown_text_for_last_wave_tick(period)]
         self.__add_process_data_to_markdown_text_list__(text_list, last_price, ticks_to_go)
         self.__add_annotation_text_to_markdown_text_list__(text_list)
         return '  \n'.join(text_list)
 
-    def __get_header_line_for_markdown_text__(self, last_price, ticker_refresh):
+    def __get_header_line_for_markdown_text__(self, last_price, ts_last_ticker_refresh: int, ticker_refresh):
         # date_time = self.ticker_actual.date_time_str
-        date_time = self.wave_tick_actual.date_time_str
+        if self.trade_process == TP.ONLINE:
+            date_time = MyDate.get_date_time_from_epoch_seconds(ts_last_ticker_refresh)
+        else:
+            date_time = self.wave_tick_actual.date_time_str
         return '**Last ticker:** {} - **at:** {} (refresh after {} sec.) **Average volume:** {:.1f}'.format(
-            last_price, date_time, ticker_refresh, self._volume_average)
+            last_price, date_time, ticker_refresh, self._volume_mean_for_breakout)
 
     def __add_process_data_to_markdown_text_list__(self, text_list: list, last_price, ticks_to_go: int):
         limit = self.limit_current
@@ -663,4 +650,6 @@ class PatternTrade:
             text_list.append('**Ticks to end**: {}'.format(ticks_to_go))
 
     def __add_annotation_text_to_markdown_text_list__(self, text_list: list):
-        text_list.append('**Annotations:** {}'.format(self.pattern.get_annotation_parameter().text))
+        for title, values in self.pattern.get_annotation_text_as_dict().items():
+            if title not in ['Gradients', 'Height', 'Range position']:
+                text_list.append('**{}:** {}'.format(title, values))
