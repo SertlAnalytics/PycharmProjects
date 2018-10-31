@@ -62,10 +62,10 @@ class PatternDataDictionary:
     def __init_data_dict__(self):
         self._data_dict[DC.EQUITY_TYPE] = self.sys_config.runtime.actual_ticker_equity_type
         self._data_dict[DC.EQUITY_TYPE_ID] = EQUITY_TYPE.get_id(self._data_dict[DC.EQUITY_TYPE])
-        self._data_dict[DC.PERIOD] = self.sys_config.config.api_period
-        self._data_dict[DC.PERIOD_ID] = PRD.get_id(self.sys_config.config.api_period)
-        if self.sys_config.config.api_period == PRD.INTRADAY:
-            self._data_dict[DC.PERIOD_AGGREGATION] = self.sys_config.config.api_period_aggregation
+        self._data_dict[DC.PERIOD] = self.sys_config.period
+        self._data_dict[DC.PERIOD_ID] = PRD.get_id(self.sys_config.period)
+        if self.sys_config.period == PRD.INTRADAY:
+            self._data_dict[DC.PERIOD_AGGREGATION] = self.sys_config.period_aggregation
         else:
             self._data_dict[DC.PERIOD_AGGREGATION] = 1
         self._data_dict[DC.TICKER_ID] = self.sys_config.runtime.actual_ticker

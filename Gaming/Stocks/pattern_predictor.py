@@ -21,6 +21,15 @@ from pattern_database import stock_database
 from sertl_analytics.mymath import EntropyHandler
 
 
+class PatternPredictorApi:
+    def __init__(self, config: PatternConfiguration, db_stock: StockDatabase,
+                 pattern_table: PatternTable, trade_table: TradeTable):
+        self.config = config
+        self.db_stock = db_stock
+        self.pattern_table = pattern_table
+        self.trade_table = trade_table
+
+
 class PatternFeaturesSelector:
     def __init__(self, _df_features_with_label: pd.DataFrame, label_columns: list, features_columns_orig: list):
         self._df_features_with_label = _df_features_with_label
@@ -47,6 +56,7 @@ class PatternFeaturesSelector:
 class PatternPredictor:
     def __init__(self, db_stock: StockDatabase, pattern_type: str, skip_condition_list=None):
         # print('Loading Predictor: {}'.format(self.__class__.__name__))
+        self._predictor = self.__class__.__name__
         self.db_stock = db_stock
         self.pattern_type = pattern_type
         self.skip_condition_list = skip_condition_list
@@ -63,7 +73,14 @@ class PatternPredictor:
             self._df_labels = self._df_features_with_labels_and_id[self.label_columns]
             self._x_data = np.array(self._df_features)
             self.__train_models__(True)
+        # self.__print_details__()
         # print('self.x_data.shape={}'.format(self._x_data.shape))
+
+    def __print_details__(self):
+        pos_where = self._query_for_feature_and_label_data.find('WHERE')
+        where_clause = self._query_for_feature_and_label_data[pos_where:]
+        elements = self._df_features_with_labels_and_id.shape[0]
+        print('Loading Predictor {}: {} elements found for {}'.format(self._predictor, elements, where_clause))
 
     @property
     def feature_columns(self):
@@ -300,13 +317,14 @@ class PatternPredictorForTrades(PatternPredictor):
 
 
 class PatternMasterPredictor:
-    def __init__(self, config: PatternConfiguration):
-        self.config = config
-        self.pattern_table = stock_database.PatternTable()
-        self.trade_table = stock_database.TradeTable()
-        self.db_stock = stock_database.StockDatabase()
+    def __init__(self, api: PatternPredictorApi):
+        self.config = api.config
+        self.db_stock = api.db_stock
+        self.pattern_table = api.pattern_table
+        self.trade_table = api.trade_table
+
         self.predictor_dict = {}
-        self.__init_predictor_dict__()
+        # self.__init_predictor_dict__()  # currently we don't need this - we'll do that later per ticker id
 
     def get_feature_columns(self, pattern_type: str):
         predictor = self.predictor_dict[pattern_type]
@@ -320,15 +338,15 @@ class PatternMasterPredictor:
         predictor = self.predictor_dict[pattern_type]
         return predictor.get_sorted_nearest_neighbor_entry_list_for_previous_prediction()
 
-    def init_without_condition_list(self, ticker_id: str):
-        self.__init_predictor_dict__(self.__get_skip_condition_list__(ticker_id))
+    def init_without_condition_list(self, ticker_id: str, and_clause: str):
+        self.__init_predictor_dict__(self.__get_skip_condition_list__(ticker_id, and_clause))
 
     def __init_predictor_dict__(self, skip_condition_list=None):
         for pattern_type in FT.get_all():
             self.predictor_dict[pattern_type] = \
                 self.__get_predictor_for_pattern_type__(pattern_type, skip_condition_list)
 
-    def __get_skip_condition_list__(self, ticker_id: str) -> list:
+    def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         pass
 
     def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
@@ -336,48 +354,47 @@ class PatternMasterPredictor:
 
 
 class PatternMasterPredictorTouchPoints(PatternMasterPredictor):
-    def __get_skip_condition_list__(self, ticker_id: str) -> list:
-        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
+    def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
     def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
         return PatternPredictorTouchPoints(self.db_stock, pattern_type, skip_condition_list)
 
 
 class PatternMasterPredictorBeforeBreakout(PatternMasterPredictor):
-    def __get_skip_condition_list__(self, ticker_id: str) -> list:
-        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
+    def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
     def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
         return PatternPredictorBeforeBreakout(self.db_stock, pattern_type, skip_condition_list)
 
 
 class PatternMasterPredictorAfterBreakout(PatternMasterPredictor):
-    def __get_skip_condition_list__(self, ticker_id: str) -> list:
-        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_pattern]
+    def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
     def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
         return PatternPredictorAfterBreakout(self.db_stock, pattern_type, skip_condition_list)
 
 
 class PatternMasterPredictorForTrades(PatternMasterPredictor):
-    def __get_skip_condition_list__(self, ticker_id: str) -> list:
-        return ["Ticker_ID = '{}'".format(ticker_id), self.config.and_clause_for_trade]
+    def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
+        return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
     def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
         return PatternPredictorForTrades(self.db_stock, pattern_type, skip_condition_list)
 
 
 class PatternMasterPredictorHandler:
-    def __init__(self, config: PatternConfiguration):
-        self.config = config
-        self.master_predictor_touch_points = PatternMasterPredictorTouchPoints(self.config)
-        self.master_predictor_before_breakout = PatternMasterPredictorBeforeBreakout(self.config)
-        self.master_predictor_after_breakout = PatternMasterPredictorAfterBreakout(self.config)
-        self.master_predictor_for_trades = PatternMasterPredictorForTrades(self.config)
+    def __init__(self, api: PatternPredictorApi):
+        self.master_predictor_touch_points = PatternMasterPredictorTouchPoints(api)
+        self.master_predictor_before_breakout = PatternMasterPredictorBeforeBreakout(api)
+        self.master_predictor_after_breakout = PatternMasterPredictorAfterBreakout(api)
+        self.master_predictor_for_trades = PatternMasterPredictorForTrades(api)
 
-    def init_predictors_without_condition_list(self, ticker_id: str):
-        self.master_predictor_touch_points.init_without_condition_list(ticker_id)
-        self.master_predictor_before_breakout.init_without_condition_list(ticker_id)
-        self.master_predictor_after_breakout.init_without_condition_list(ticker_id)
-        self.master_predictor_for_trades.init_without_condition_list(ticker_id)
+    def init_predictors_without_condition_list(self, ticker_id: str, and_clause_pattern: str, and_clause_trades: str):
+        self.master_predictor_touch_points.init_without_condition_list(ticker_id, and_clause_pattern)
+        self.master_predictor_before_breakout.init_without_condition_list(ticker_id, and_clause_pattern)
+        self.master_predictor_after_breakout.init_without_condition_list(ticker_id, and_clause_pattern)
+        self.master_predictor_for_trades.init_without_condition_list(ticker_id, and_clause_trades)
 

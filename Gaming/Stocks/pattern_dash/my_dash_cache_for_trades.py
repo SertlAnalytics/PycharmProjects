@@ -20,7 +20,7 @@ class MyReplayCacheObjectApi(MyCacheObjectApi):
         self.detector = None
         self.pattern_data = None
         self.last_refresh_ts = None
-        self.period_aggregation_ts = self.sys_config.config.api_period_aggregation * 60
+        self.period_aggregation_ts = self.sys_config.period_aggregation * 60
         self.trade_test = TradeTest(TP.TRADE_REPLAY, self.sys_config, self.exchange_config)
         self._selected_row_index = -1
         self.detector_for_replay = None
@@ -38,7 +38,7 @@ class MyReplayCacheObject(MyCacheObject):
         self.detector = cache_api.detector
         self.pattern_data = cache_api.pattern_data
         self.last_refresh_ts = cache_api.last_refresh_ts
-        self.period_aggregation_ts = self.sys_config.config.api_period_aggregation * 60
+        self.period_aggregation_ts = self.sys_config.period_aggregation * 60
         self.adjusted_last_refresh_ts = \
             self.sys_config.config.get_time_stamp_before_one_period_aggregation(self.last_refresh_ts)
         self.cached_before_breakout = self.__was_cached_before_breakout__()

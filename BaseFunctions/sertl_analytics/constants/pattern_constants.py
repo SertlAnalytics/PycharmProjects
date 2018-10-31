@@ -553,7 +553,6 @@ class PSC:  # Pattern Statistics Columns
     CON_COMBINED_PARTS_APPLICABLE = FCC.COMBINED_PARTS_APPLICABLE
     CON_BREAKOUT_WITH_BUY_SIGNAL = FCC.BREAKOUT_WITH_BUY_SIGNAL
 
-    NUMBER = 'Number'
     STATUS = 'Status'
     TICKER = 'Ticker'
     NAME = 'Name'

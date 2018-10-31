@@ -19,7 +19,7 @@ class MyGraphCacheObjectApi(MyCacheObjectApi):
         self.detector = None
         self.pattern_data = None
         self.last_refresh_ts = None
-        self.period_aggregation_ts = self.sys_config.config.api_period_aggregation * 60
+        self.period_aggregation_ts = self.sys_config.period_aggregation * 60
 
 
 class MyGraphCacheObject(MyCacheObject):
@@ -29,9 +29,8 @@ class MyGraphCacheObject(MyCacheObject):
         self.detector = cache_api.detector
         self.pattern_data = cache_api.pattern_data
         self.last_refresh_ts = cache_api.last_refresh_ts
-        self.period_aggregation_ts = self.sys_config.config.api_period_aggregation * 60
-        self.adjusted_last_refresh_ts = \
-            self.sys_config.config.get_time_stamp_before_one_period_aggregation(self.last_refresh_ts)
+        self.period_aggregation_ts = self.sys_config.period_aggregation * 60
+        self.adjusted_last_refresh_ts = self.sys_config.get_time_stamp_before_one_period_aggregation(self.last_refresh_ts)
         self.cached_before_breakout = self.__was_cached_before_breakout__()
         self.breakout_since_last_data_update = self.__was_breakout_since_last_data_update__()
         self.fibonacci_finished_since_last_data_update = self.__was_fibonacci_finished_since_last_data_update__()

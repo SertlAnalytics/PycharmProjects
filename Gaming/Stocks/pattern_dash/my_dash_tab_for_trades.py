@@ -15,7 +15,6 @@ from pattern_dash.my_dash_header_tables import MyHTMLTabTradeHeaderTable
 from pattern_dash.my_dash_tab_dd_for_trades import TradeDropDownHandler, TDD
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
-from pattern_data_provider import PatternDataProviderApi
 from pattern_trade import PatternTrade
 from pattern_database.stock_tables import TradeTable, PatternTable
 from pattern_database.stock_database import StockDatabaseDataFrame
@@ -33,8 +32,13 @@ from pattern_news_handler import NewsHandler
 class ReplayHandler:
     def __init__(self, trade_process: str, sys_config: SystemConfiguration, exchange_config: ExchangeConfiguration):
         self.trade_process = trade_process
-        self.sys_config = sys_config.get_semi_deep_copy_for_new_pattern_data_provider_api(
-            PatternDataProviderApi(True, PRD.DAILY, 1))
+        if self.trade_process == TP.ONLINE:
+            self.sys_config = sys_config
+        else:
+            self.sys_config = sys_config.get_semi_deep_copy()
+            self.sys_config.data_provider.from_db = False
+            self.sys_config.data_provider.period = PRD.DAILY
+            self.sys_config.data_provider.aggregation = 1
         self.sys_config.runtime.actual_trade_process = self.trade_process
         self.exchange_config = deepcopy(exchange_config)  # we change the simulation mode...
         self.trade_handler = PatternTradeHandler(self.sys_config, self.exchange_config)
@@ -58,7 +62,7 @@ class ReplayHandler:
     def graph_title(self):
         return '{}: {}-{}-{}-{}'.format(self.trade_test_api.symbol,
                                         self.trade_test_api.buy_trigger, self.trade_test_api.trade_strategy,
-                                        self.trade_test_api.pattern_type, self.sys_config.config.api_period)
+                                        self.trade_test_api.pattern_type, self.sys_config.period)
 
     @property
     def pattern_trade(self) -> PatternTrade:
@@ -73,8 +77,9 @@ class ReplayHandler:
             self.trade_test_api.period_aggregation = selected_row[DC.PERIOD_AGGREGATION]
         else:
             self.trade_test_api.from_db = False
-            self.trade_test_api.period = self.sys_config.config.api_period
-            self.trade_test_api.period_aggregation = self.sys_config.config.api_period_aggregation
+            self.trade_test_api.period = self.sys_config.period
+            # print('set_trade_test_api_by_selected_trade_row: period = {}'.format(self.sys_config.period))
+            self.trade_test_api.period_aggregation = self.sys_config.period_aggregation
             self.trade_test_api.trade_id = selected_row[DC.ID]
 
     def is_another_wave_tick_available(self):
@@ -124,8 +129,8 @@ class ReplayHandler:
             self.graph_api.df = self.detector.pdh.pattern_data.df
         else:
             self.set_selected_trade_to_api()
-            print('set_graph_api: trade_id={}, pattern_trade.id={}'.format(self.trade_test_api.trade_id,
-                                                                           self.graph_api.pattern_trade.id))
+            # print('set_graph_api: trade_id={}, pattern_trade.id={}'.format(self.trade_test_api.trade_id,
+            #                                                                self.graph_api.pattern_trade.id))
             self.graph_api.ticker_id = self.trade_test_api.symbol
             self.graph_api.df = self.graph_api.pattern_trade.get_data_frame_for_replay()
         self.graph_api.period = self.trade_test_api.period

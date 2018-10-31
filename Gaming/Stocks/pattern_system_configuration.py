@@ -5,39 +5,80 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import Indices, EQUITY_TYPE, PRD
+from sertl_analytics.constants.pattern_constants import Indices, EQUITY_TYPE, PRD, FT
 from sertl_analytics.pybase.loop_list import LL
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
+from sertl_analytics.mydates import MyDate
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from pattern_data_container import PatternDataHandler
 from pattern_configuration import PatternConfiguration, RuntimeConfiguration
 from pattern_configuration import PatternDebugger
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
 from copy import deepcopy
-# from bitfinex import Bitfinex
-from pattern_predictor import PatternMasterPredictorBeforeBreakout, PatternMasterPredictorAfterBreakout
-from pattern_predictor import PatternMasterPredictorTouchPoints, PatternMasterPredictorForTrades
-from pattern_predictor import PatternMasterPredictorHandler
-import numpy as np
-from pattern_data_provider import PatternDataProviderApi, PatternDataProvider
+from pattern_predictor import PatternMasterPredictorHandler, PatternPredictorApi
+from pattern_data_provider import PatternDataProvider
 
 
 class SystemConfiguration:
-    def __init__(self, data_provider_api: PatternDataProviderApi, for_semi_deep_copy=False):
-        self.data_provider_api = data_provider_api
-        self.config = PatternConfiguration(self.data_provider_api)
+    def __init__(self, for_semi_deep_copy=False):
+        self.config = PatternConfiguration()
         self.runtime = RuntimeConfiguration()
         self.trading = BitfinexConfiguration()
-        self.pdh = None  # for the pattern data handler - for a dedicated ticker_id later
         if for_semi_deep_copy:
             return
         self.crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
-        # self.pdh = PatternDataHandler(self.config)
+        self.db_stock = StockDatabase()
         self.pattern_table = PatternTable()
         self.trade_table = TradeTable()
-        self.db_stock = StockDatabase()
-        self.data_provider = self.get_data_provider_by_api()
-        self.master_predictor_handler = PatternMasterPredictorHandler(self.config)
+        self.data_provider = PatternDataProvider(self.config, self.db_stock, self.crypto_ccy_dic)
+        self.master_predictor_handler = PatternMasterPredictorHandler(
+            PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)
+        )
+
+    @property
+    def pdh(self):
+        return self.data_provider.pdh
+
+    @property
+    def ticker_dict(self) -> dict:
+        return self.data_provider.ticker_dict
+
+    @property
+    def from_db(self) -> bool:
+        return self.data_provider.from_db
+
+    @property
+    def period(self) -> str:
+        return self.data_provider.period
+
+    @property
+    def period_aggregation(self) -> int:
+        return self.data_provider.aggregation
+
+    def get_value_categorizer_tolerance_pct(self):
+        if self.period == PRD.INTRADAY:
+            if self.period_aggregation < 5:
+                return 0.0002
+            elif self.period_aggregation == 5:
+                return 0.0005
+            else:
+                return 0.001
+        return 0.005  # orig: 0.005
+
+    def get_value_categorizer_tolerance_pct_equal(self):
+        if self.period == PRD.INTRADAY:
+            if self.period_aggregation <= 5:
+                return 0.001
+            else:
+                return 0.002
+        return 0.005  # orig: 0.005
+
+    @property
+    def expected_win_pct(self):
+        if self.data_provider.equity_type == EQUITY_TYPE.CRYPTO:
+            return 1
+        else:
+            return 1.0 if self.period == PRD.INTRADAY else 1.0
 
     @property
     def master_predictor_touch_points(self):
@@ -55,63 +96,99 @@ class SystemConfiguration:
     def master_predictor_for_trades(self):
         return self.master_predictor_handler.master_predictor_for_trades
 
-    def init_predictors_without_condition_list(self, ticker_id: str):
-        self.master_predictor_handler.init_predictors_without_condition_list(ticker_id)
+    def init_predictors_without_condition_list(self):
+        ticker_id = self.data_provider.ticker_id
+        ac_pattern = self.data_provider.and_clause_for_pattern
+        ac_trades = self.data_provider.and_clause_for_trade
+        self.master_predictor_handler.init_predictors_without_condition_list(ticker_id, ac_pattern, ac_trades)
 
-    def init_pattern_data_handler_for_ticker_id(self, ticker_id: str, and_clause: str, limit=300) -> bool:
-        df_data = self.data_provider.get_df_for_ticker(ticker_id, and_clause, limit)
-        if df_data is None:
-            return False
-        self.pdh = PatternDataHandler(self.config, df_data)
-        return True
-
-    def get_data_provider_by_api(self) -> PatternDataProvider:
-        return PatternDataProvider(self.db_stock, self.crypto_ccy_dic, self.data_provider_api)
+    def init_pattern_data_handler_for_ticker_id(self, ticker_id: str, and_clause: str, limit=300):
+        self.data_provider.init_pattern_data_handler_for_ticker_id(ticker_id, and_clause, limit)
+        self.__update_runtime_parameters__()
 
     def update_data_provider_api(self, from_db: bool=None, period: str=None, aggregation: int=None):
         if from_db is not None:
-            self.data_provider_api.from_db = from_db
+            self.data_provider.from_db = from_db
         if period is not None:
-            self.data_provider_api.period = period
+            self.data_provider.period = period
         if aggregation is not None:
-            self.data_provider_api.period_aggregation = aggregation
+            self.data_provider.aggregation = aggregation
 
-    def get_semi_deep_copy_for_new_pattern_data_provider_api(self, data_provider_api: PatternDataProviderApi=None):
+    def get_semi_deep_copy(self):
         """
         This function is necessary since db_stock can't be deeply copied - I don't know the reason...
         All other components don't make any problems. But nevertheless with this function we have control
         about which part has to be deeply copied and which can be used by reference.
         """
-        if data_provider_api is None:
-            data_provider_api = deepcopy(self.config.data_provider_api)
-        sys_config_copy = SystemConfiguration(data_provider_api, True)
-        sys_config_copy.config.ticker_dic = self.config.ticker_dic
+        sys_config_copy = SystemConfiguration(True)
         sys_config_copy.crypto_ccy_dic = self.crypto_ccy_dic
         sys_config_copy.pattern_table = self.pattern_table
         sys_config_copy.db_stock = self.db_stock
         sys_config_copy.trade_table = self.trade_table
         sys_config_copy.pattern_table = self.pattern_table
-        sys_config_copy.data_provider = sys_config_copy.get_data_provider_by_api()
-        sys_config_copy.master_predictor_handler = self.master_predictor_handler
+        sys_config_copy.data_provider = PatternDataProvider(sys_config_copy.config, self.db_stock, self.crypto_ccy_dic)
+        sys_config_copy.data_provider.ticker_dict = self.data_provider.ticker_dict  # we have to copy this as well
+        sys_config_copy.master_predictor_handler = PatternMasterPredictorHandler(
+            PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)
+        )
         return sys_config_copy
 
-    def update_runtime_parameters_by_dict_values(self, entry_dic: dict):
-        self.runtime.actual_ticker = entry_dic[LL.TICKER]
-        if self.runtime.actual_ticker in self.crypto_ccy_dic:
-            self.runtime.actual_ticker_equity_type = EQUITY_TYPE.CRYPTO
-            if self.config.api_period == PRD.INTRADAY:
-                self.runtime.actual_expected_win_pct = 1
-            else:
-                self.runtime.actual_expected_win_pct = 1
+    def __update_runtime_parameters__(self):
+        self.runtime.actual_ticker = self.data_provider.ticker_id
+        self.runtime.actual_ticker_name = self.data_provider.ticker_name
+        self.runtime.actual_ticker_equity_type = self.data_provider.equity_type
+        self.runtime.actual_expected_win_pct = self.expected_win_pct
+        self.runtime.actual_and_clause = self.data_provider.and_clause
+
+    def print(self):
+        source = 'DB' if self.from_db else 'Api'
+        pattern_type = self.config.pattern_type_list
+        and_clause = self.data_provider.and_clause
+        period = self.period
+        output_size = self.data_provider.output_size
+        bound_upper_v = self.config.bound_upper_value
+        bound_lower_v = self.config.bound_lower_value
+        breakout_over_big_range = self.config.breakout_over_congestion_range
+
+        print('\nConfiguration settings:')
+        if self.from_db:
+            print('Formation: {} \nSource: {} \nAnd clause: {} \nUpper/Lower Bound Value: {}/{}'
+                  ' \nBreakout big range: {}\n'.format(
+                    pattern_type, source, and_clause, bound_upper_v, bound_lower_v, breakout_over_big_range))
         else:
-            self.runtime.actual_ticker_equity_type = EQUITY_TYPE.SHARE
-            self.runtime.actual_expected_win_pct = 1
-        self.runtime.actual_and_clause = entry_dic[LL.AND_CLAUSE]
-        self.runtime.actual_number = entry_dic[LL.NUMBER]
-        if self.db_stock is not None:
-            self.runtime.actual_ticker_name = self.db_stock.get_name_for_symbol(entry_dic[LL.TICKER])
-        if self.runtime.actual_ticker_name == '':
-            self.runtime.actual_ticker_name = self.config.ticker_dic[entry_dic[LL.TICKER]]
+            print('Formation: {} \nSource: {} \n\nPeriod/Output size: {}/{} \nUpper/Lower Bound Value: {}/{}'
+                  ' \nBreakout big range: {}\n'.format(
+                    pattern_type, source, period, output_size, bound_upper_v, bound_lower_v, breakout_over_big_range))
+
+    def get_time_stamp_before_one_period_aggregation(self, time_stamp: float):
+        return time_stamp - self.get_seconds_for_one_period()
+
+    def get_time_stamp_after_ticks(self, tick_number: int, ts_set_off = MyDate.get_epoch_seconds_from_datetime()):
+        return int(ts_set_off + tick_number * self.get_seconds_for_one_period())
+
+    def get_seconds_for_one_period(self):
+        return PRD.get_seconds_for_period(self.period, self.period_aggregation)
+
+    def init_by_nearest_neighbor_id(self, nn_id: str):  # example: 128#1_1_1_AAPL_12_2015-12-03_00:00_2016-01-07_00:00
+        id_components = nn_id.split('#')
+        self.init_by_pattern_id_str(id_components[1])
+
+    def init_by_pattern_id_str(self, pattern_id: str):  # example: 1_1_1_AAPL_12_2015-12-03_00:00_2016-01-07_00:00
+        id_parts = pattern_id.split('_')
+        symbol = id_parts[3]
+        self.data_provider.from_db = True
+        self.data_provider.period = PRD.get_period(int(id_parts[1]))
+        self.data_provider.aggregation = int(id_parts[2])
+        self.data_provider.use_own_dic({symbol: symbol})
+        self.config.pattern_type_list = [FT.get_pattern_type(int(id_parts[4]))]
+        date_from = MyDate.get_datetime_object(id_parts[5])
+        date_to = MyDate.get_datetime_object(id_parts[7])
+        date_from_adjusted = MyDate.adjust_by_days(date_from, -60)
+        date_to_adjusted = MyDate.adjust_by_days(date_to, +60)
+        self.data_provider.and_clause = "Date BETWEEN '{}' AND '{}'".format(date_from_adjusted, date_to_adjusted)
+        self.runtime.actual_pattern_range = None
+        self.runtime.actual_pattern_range_from_time_stamp = MyDate.get_epoch_seconds_from_datetime(date_from)
+        self.runtime.actual_pattern_range_to_time_stamp = MyDate.get_epoch_seconds_from_datetime(date_to)
 
 
 debugger = PatternDebugger()

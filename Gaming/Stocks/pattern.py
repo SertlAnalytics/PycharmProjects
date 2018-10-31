@@ -12,18 +12,17 @@ import math
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_trade_result import TradeResult
 from pattern_breakout import PatternBreakout, PatternBreakoutApi
-from pattern_part import PatternPart, PatternEntryPart, PatternWatchPart, PatternTradePart
+from pattern_part import PatternPart, PatternEntryPart, PatternTradePart
 import pattern_constraints as cstr
 from sertl_analytics.myexceptions import MyException
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.models.nn_collector import NearestNeighborCollector
-from pattern_wave_tick import WaveTick, WaveTickList
+from pattern_wave_tick import WaveTick
 from pattern_function_container import PatternFunctionContainerFactoryApi
 from pattern_value_categorizer import ValueCategorizer
 from pattern_data_dictionary import PatternDataDictionary
 from pattern_predictor import PatternMasterPredictor
-from pattern_range import PatternRange
-from pattern_data_container import PatternDataHandler
+from pattern_id import PatternID
 
 
 class PatternApi:
@@ -66,61 +65,6 @@ class PatternConditionHandler:
         return self.dic[FCC.COMBINED_PARTS_APPLICABLE]
 
     combined_parts_applicable = property(__get_combined_parts_applicable__, __set_combined_parts_applicable__)
-
-
-class PatternID:
-    def __init__(self, equity_type_id: int, ticker_id: str, pattern_type: str, period: str,
-                 aggregation: int, pattern_range: PatternRange):
-        self.equity_type_id = equity_type_id
-        self.ticker_id = ticker_id
-        self.pattern_type = pattern_type
-        self.pattern_type_id = FT.get_id(self.pattern_type)
-        self.period = period
-        self.period_id = PRD.get_id(period)
-        self.aggregation = aggregation
-        self.pattern_range = pattern_range
-        self.range_id = pattern_range.id
-        self.and_clause = self.__get_search_and_clause__()
-
-    @property
-    def id(self):
-        return '{}_{}_{}_{}_{}_{}'.format(self.equity_type_id, self.period_id, self.aggregation, self.ticker_id,
-                                          self.pattern_type_id, self.range_id)
-
-    @property
-    def id_readable(self):
-        return '{}_{}_{}_{}'.format(self.period, self.ticker_id, self.pattern_type, self.range_id)
-
-    def __get_search_and_clause__(self):
-        date_from = MyDate.get_datetime_object(self.pattern_range.tick_first.date_str)
-        date_to = MyDate.get_datetime_object(self.pattern_range.tick_last.date_str)
-        date_from = MyDate.adjust_by_days(date_from, -self.pattern_range.length)
-        date_to = MyDate.adjust_by_days(date_to, self.pattern_range.length)
-        return "Date BETWEEN '{}' AND '{}'".format(date_from, date_to)
-
-
-class PatternIdFactory:
-    def __init__(self, sys_config: SystemConfiguration):
-        self.sys_config = sys_config
-        self.pdh = self.sys_config.pdh
-
-    def get_pattern_id_from_pattern_id_string(self, pattern_id_str: str):
-        # Example: 1_1_1_AAPL_12_2015-12-03_00:00_2016-01-07_00:00
-        parts = pattern_id_str.split('_')
-        equity_type_id = int(parts[0])
-        pattern_type = FT.get_pattern_type(int(parts[4]))
-        period = PRD.get_period(int(parts[1]))
-        aggregation = int(parts[2])
-        wave_tick = self.__get_wave_tick_start_for_pattern_range__()
-        pattern_range = PatternRange(self.sys_config, wave_tick, 12)
-        pattern_range.add_tick(self.__get_wave_tick_end_for_pattern_range__(), 0)
-        return PatternID(equity_type_id, parts[3], pattern_type, period, aggregation, pattern_range)
-
-    def __get_wave_tick_start_for_pattern_range__(self):
-        return WaveTick(self.pdh.pattern_data.df[0])
-
-    def __get_wave_tick_end_for_pattern_range__(self):
-        return WaveTick(self.pdh.pattern_data.df[1])
 
 
 class Pattern:
@@ -263,7 +207,7 @@ class Pattern:
         breakout_api.volume_forecast = tick_breakout.volume
         if online:
             breakout_api.volume_forecast = tick_breakout.get_forecast_volume(
-                self.sys_config.config.get_seconds_for_one_period())
+                self.sys_config.get_seconds_for_one_period())
         else:
             breakout_api.volume_forecast = tick_breakout.volume
         return PatternBreakout(breakout_api)
@@ -297,7 +241,7 @@ class Pattern:
         return return_list
 
     def __get_time_stamp_list_for_back_testing_value_pairs__(self, time_stamp: int, numbers: int):
-        return PRD.get_time_stamp_list_for_time_stamp(time_stamp, numbers, self.sys_config.config.api_period)
+        return PRD.get_time_stamp_list_for_time_stamp(time_stamp, numbers, self.sys_config.period)
 
     def __calculate_predictions_after_breakout__(self):
         self.__calculate_y_predict__(PT.AFTER_BREAKOUT)
@@ -520,7 +464,7 @@ class Pattern:
         self.data_dict_obj.add(DC.FC_BREAKOUT_DIRECTION,
                                FD.ASC if self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID) == 1 else FD.DESC)
         self.data_dict_obj.add(DC.FC_FALSE_BREAKOUT_ID, self.y_predict_before_breakout[DC.FALSE_BREAKOUT])
-        ts = self.sys_config.config.get_time_stamp_after_ticks(self.data_dict_obj.get(DC.FC_TICKS_TILL_BREAKOUT))
+        ts = self.sys_config.get_time_stamp_after_ticks(self.data_dict_obj.get(DC.FC_TICKS_TILL_BREAKOUT))
         self.data_dict_obj.add(DC.FC_BUY_DT, MyDate.get_date_from_epoch_seconds(ts))
         self.data_dict_obj.add(DC.FC_BUY_TIME, str(MyDate.get_time_from_epoch_seconds(ts)))
 
@@ -537,7 +481,7 @@ class Pattern:
                                self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF])
         self.data_dict_obj.add(DC.FC_TICKS_TO_NEGATIVE_FULL,
                                self.y_predict_after_breakout[DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL])
-        ts = self.sys_config.config.get_time_stamp_after_ticks(self.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_FULL))
+        ts = self.sys_config.get_time_stamp_after_ticks(self.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_FULL))
         self.data_dict_obj.add(DC.FC_SELL_DT, MyDate.get_date_from_epoch_seconds(ts))
         self.data_dict_obj.add(DC.FC_SELL_TIME, str(MyDate.get_time_from_epoch_seconds(ts)))
 
@@ -731,7 +675,7 @@ class Pattern:
         self.data_dict_obj.add(DC.SLOPE_BREAKOUT_PCT, self.data_dict_obj.get_slope_breakout(pos_brk))
         self.data_dict_obj.add(DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT,
                                    self.data_dict_obj.get_slope_breakout(pos_brk, CN.VOL))
-        vc = [SVC.U_on, SVC.L_on] if self.sys_config.config.api_period == PRD.INTRADAY else [SVC.U_in, SVC.L_in]
+        vc = [SVC.U_on, SVC.L_on] if self.sys_config.period == PRD.INTRADAY else [SVC.U_in, SVC.L_in]
         time_stamp_end = time_stamp_brk if tick_breakout else time_stamp_last
         touches_top = self.value_categorizer.count_value_category(vc[0], time_stamp_first, time_stamp_end)
         touches_bottom = self.value_categorizer.count_value_category(vc[1], time_stamp_first, time_stamp_end)

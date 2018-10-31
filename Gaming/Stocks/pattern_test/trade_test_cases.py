@@ -8,8 +8,8 @@ Date: 2018-05-14
 from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC, DC, PRD
 from pattern import Pattern
 from sertl_analytics.mydates import MyDate
-from pattern_configuration import PatternConfiguration
-from pattern_wave_tick import WaveTick, TickerWaveTickConverter
+from pattern_data_provider import PatternDataProvider
+from pattern_wave_tick import TickerWaveTickConverter
 
 
 class TradeTestApi:
@@ -67,8 +67,8 @@ class TradeTestCaseFactory:
         api.symbol = row[DC.TICKER_ID]
         api.dt_start = str(row[DC.PATTERN_RANGE_BEGIN_DT])
         api.dt_end = MyDate.adjust_by_days(row[DC.PATTERN_RANGE_END_DT], -1)  # we need this correction for a smooth cont.
-        api.and_clause = PatternConfiguration.get_and_clause(api.dt_start, api.dt_end)
-        api.and_clause_unlimited = PatternConfiguration.get_and_clause(api.dt_start)
+        api.and_clause = PatternDataProvider.get_and_clause(api.dt_start, api.dt_end)
+        api.and_clause_unlimited = PatternDataProvider.get_and_clause(api.dt_start)
         return api
 
     @staticmethod

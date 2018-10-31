@@ -10,20 +10,23 @@ from sertl_analytics.constants.pattern_constants import FT, Indices, CN, BT, TST
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_dash.my_dash_for_pattern import MyDash4Pattern
 from pattern_bitfinex import BitfinexConfiguration
-from pattern_data_provider import PatternDataProviderApi
 
 
 my_profiler = MyProfiler()
-data_provider_api = PatternDataProviderApi(False, PRD.INTRADAY, aggregation=15, output_size=OPS.COMPACT, limit=200)
+sys_config = SystemConfiguration()
 
-sys_config = SystemConfiguration(data_provider_api)
+sys_config.data_provider.from_db = False
+sys_config.data_provider.period = PRD.INTRADAY
+sys_config.data_provider.aggregation = 15
+sys_config.data_provider.output_size = OPS.COMPACT
+sys_config.data_provider.limit = 200
+
 bitfinex_config = BitfinexConfiguration()
 bitfinex_config.is_simulation = True
 bitfinex_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP],
                                        BT.TOUCH_POINT: [TSTR.LIMIT, TSTR.TRAILING_STOP]}
 
 # debugger.pattern_range_position_list = [217, 224, 242]
-
 
 sys_config.config.pattern_type_list = FT.get_all()
 sys_config.prediction_mode_active = True
@@ -43,12 +46,11 @@ sys_config.config.bound_upper_value = CN.CLOSE
 sys_config.config.bound_lower_value = CN.CLOSE
 sys_config.config.breakout_over_congestion_range = False
 sys_config.config.show_final_statistics = True
-sys_config.config.max_number_securities = 1000
 sys_config.config.breakout_range_pct = 0.05  # default is 0.05
 sys_config.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
 sys_config.config.fibonacci_detail_print = True
 # sys_config.config.use_index(Indices.DOW_JONES)
-sys_config.config.use_index(Indices.CRYPTO_CCY)
+sys_config.data_provider.use_index(Indices.CRYPTO_CCY)
 my_dash = MyDash4Pattern(sys_config, bitfinex_config)
 my_dash.get_pattern()
 my_dash.run_on_server()

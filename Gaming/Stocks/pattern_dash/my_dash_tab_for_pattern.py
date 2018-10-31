@@ -31,7 +31,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         MyDashBaseTab.__init__(self, app, sys_config)
         self.bitfinex_config = bitfinex_config
         self.trade_handler_online = trade_handler_online
-        self.sys_config_second = sys_config.get_semi_deep_copy_for_new_pattern_data_provider_api()
+        self.sys_config_second = sys_config.get_semi_deep_copy()
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None
         self._ticker_options = []
@@ -66,10 +66,10 @@ class MyDashTab4Pattern(MyDashBaseTab):
         li = [MyHTMLTabPatternHeaderTable().get_table()]
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.STOCK_SYMBOL)))
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
-            PDD.PERIOD_AGGREGATION, default_value=self.sys_config.config.api_period_aggregation)))
+            PDD.PERIOD_AGGREGATION, default_value=self.sys_config.period_aggregation)))
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.REFRESH_INTERVAL)))
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.SECOND_GRAPH_RANGE)))
-        if self.sys_config.config.api_from_db:
+        if self.sys_config.from_db:
             li.append(self.__get_html_div_with_date_picker_range__())
         li.append(MyHTML.div_with_html_button_submit('my_refresh_button', 'Refresh'))
         li.append(MyHTML.div('my_graph_first_div'))
@@ -276,13 +276,11 @@ class MyDashTab4Pattern(MyDashBaseTab):
             return self.__get_ticker_label__(ticker_selected)
 
     def __set_period_aggregation_to_sys_configs__(self, selected_period_aggregation: int):
-        self.sys_config.update_data_provider_api(aggregation=selected_period_aggregation)
-
-        aggregation = self.__get_period_aggregation_for_second_graph__()
-        self.sys_config_second.update_data_provider_api(aggregation=aggregation)
+        self.sys_config.data_provider.aggregation = selected_period_aggregation
+        self.sys_config_second.data_provider.aggregation = self.__get_period_aggregation_for_second_graph__()
 
     def __get_period_aggregation_for_second_graph__(self):
-        return {5: 15, 15: 30, 30: 15}.get(self.sys_config.config.api_period_aggregation)
+        return {5: 15, 15: 30, 30: 15}.get(self.sys_config.period_aggregation)
 
     def __init_hover_over_callback__(self):
         @self.app.callback(
@@ -301,8 +299,8 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
     def __get_graph_first__(self, ticker: str, and_clause='', for_caching=False):
         graph_id = 'my_graph_first'
-        aggregation = self.sys_config.config.api_period_aggregation
-        graph_title = self.__get_graph_title__(ticker, self.sys_config.config.api_period, aggregation)
+        aggregation = self.sys_config.period_aggregation
+        graph_title = self.__get_graph_title__(ticker, self.sys_config.period, aggregation)
         print('title for my_graph_first: {}'.format(graph_title))
         graph_key = MyGraphCache.get_cache_key(graph_id, ticker, 0)
         cached_graph = self._graph_first_cache.get_cached_object_by_key(graph_key)
@@ -342,10 +340,9 @@ class MyDashTab4Pattern(MyDashBaseTab):
         if cached_graph is not None:
             # print('...return cached graph_second: {}'.format(graph_key))
             return cached_graph, graph_key
+        self.__update_data_provider_parameters_for_graph_second__(days, period, aggregation_second_graph)
         if days == 1:
-            self.sys_config.update_data_provider_api(
-                from_db=False, period=PRD.INTRADAY, aggregation=aggregation_second_graph)
-            detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker, '')
+            detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker)
             graph_api = DccGraphSecondApi(graph_id, graph_title)
             graph_api.ticker_id = ticker
             graph_api.df = detector.pdh.pattern_data.df
@@ -353,10 +350,9 @@ class MyDashTab4Pattern(MyDashBaseTab):
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
             self._graph_second_cache.add_cache_object(cache_api)
         else:
-            self.sys_config.update_data_provider_api(from_db=True, period=PRD.DAILY, aggregation=1)
             date_from = datetime.today() - timedelta(days=days)
             date_to = datetime.today() + timedelta(days=5)
-            and_clause = self.sys_config.config.get_and_clause(date_from, date_to)
+            and_clause = self.sys_config.data_provider.get_and_clause(date_from, date_to)
             detector = self._pattern_controller.get_detector_for_dash(self.sys_config_second, ticker, and_clause)
             graph_api = DccGraphSecondApi(graph_id, graph_title)
             graph_api.ticker_id = ticker
@@ -365,6 +361,16 @@ class MyDashTab4Pattern(MyDashBaseTab):
             cache_api = self.__get_cache_api__(graph_key, graph, detector, None)
             self._graph_second_cache.add_cache_object(cache_api)
         return graph, graph_key
+
+    def __update_data_provider_parameters_for_graph_second__(self, days: int, period: str, aggregation: int=1):
+        if days == 1:
+            self.sys_config_second.data_provider.from_db = False
+            self.sys_config_second.data_provider.period = period
+            self.sys_config_second.data_provider.aggregation = aggregation
+        else:
+            self.sys_config_second.data_provider.from_db = True
+            self.sys_config_second.data_provider.period = period
+            self.sys_config_second.data_provider.aggregation = 1
 
     def __get_cache_api__(self, graph_key, graph, detector, pattern_data):
         cache_api = MyGraphCacheObjectApi(self.sys_config)
@@ -377,8 +383,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         return cache_api
 
     def __fill_ticker_options__(self):
-        print('__fill_ticker_options__:')
-        for symbol, name in self.sys_config.config.ticker_dic.items():
+        for symbol, name in self.sys_config.data_provider.ticker_dict.items():
             self._ticker_options.append({'label': '{}'.format(name), 'value': symbol})
 
     def __get_ticker_label__(self, ticker_value: str):

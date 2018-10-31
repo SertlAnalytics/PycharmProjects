@@ -197,7 +197,7 @@ class PatternPart:
     def get_annotation_text_as_dict(self, prediction_text_list: list) -> dict:
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_percent, f_lower_percent, f_reg_percent = self.get_slope_values()
-        if self.sys_config.config.api_period == PRD.INTRADAY:
+        if self.sys_config.period == PRD.INTRADAY:
             date_str_first = self.tick_first.time_str_for_f_var
             date_str_last = self.tick_last.time_str_for_f_var
         else:
@@ -232,7 +232,7 @@ class PatternPart:
     def __add_expected_trading_end_to_dict__(self, return_dict: dict):
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
             date_forecast = MyDate.get_date_time_from_epoch_seconds(self.function_cont.f_var_cross_f_upper_f_lower)
-            if self.sys_config.config.api_period == PRD.INTRADAY:
+            if self.sys_config.period == PRD.INTRADAY:
                 return_dict['Expected trading end'] = str(date_forecast.time())[:5]
             else:
                 return_dict['Expected trading end'] = str(date_forecast.date())

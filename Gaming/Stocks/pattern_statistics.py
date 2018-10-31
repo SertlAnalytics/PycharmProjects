@@ -18,7 +18,6 @@ class PatternStatistics:
         self.list = []
         self.column_list = []
 
-        self.column_list.append(PSC.NUMBER)
         self.column_list.append(PSC.TICKER)
         self.column_list.append(PSC.NAME)
         self.column_list.append(PSC.STATUS)
@@ -82,14 +81,13 @@ class PatternStatistics:
         self.dic[PSC.C_BREAKOUT_OVER_CONGESTION] = self.sys_config.config.breakout_over_congestion_range
         self.dic[PSC.C_TOLERANCE_PCT] = pattern.tolerance_pct
         self.dic[PSC.C_BREAKOUT_RANGE_PCT] = self.sys_config.config.breakout_range_pct
-        self.dic[PSC.C_AND_CLAUSE] = self.sys_config.config.and_clause
+        self.dic[PSC.C_AND_CLAUSE] = self.sys_config.data_provider.and_clause
 
         self.dic[PSC.CON_PREVIOUS_PERIOD_CHECK_OK] = pattern.condition_handler.previous_period_check_ok
         self.dic[PSC.CON_COMBINED_PARTS_APPLICABLE] = pattern.condition_handler.combined_parts_applicable
         self.dic[PSC.CON_BREAKOUT_WITH_BUY_SIGNAL] = pattern.condition_handler.breakout_with_buy_signal
 
         self.dic[PSC.STATUS] = 'Finished' if pattern.was_breakout_done() else 'Open'
-        self.dic[PSC.NUMBER] = self.sys_config.runtime.actual_number
         self.dic[PSC.TICKER] = self.sys_config.runtime.actual_ticker
         self.dic[PSC.NAME] = self.sys_config.runtime.actual_ticker_name
         self.dic[PSC.PATTERN] = pattern.pattern_type
@@ -194,10 +192,10 @@ class DetectorStatistics:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
         self.list = []
-        self.column_list = ['Number', 'Ticker', 'Name', 'Investment', 'Result', 'Change%', 'SL', 'F_OK', 'F_NOK', 'Ticks']
+        self.column_list = ['Ticker', 'Name', 'Investment', 'Result', 'Change%', 'SL', 'F_OK', 'F_NOK', 'Ticks']
 
     def add_entry(self, api: PatternDetectorStatisticsApi):
-        new_entry = [self.sys_config.runtime.actual_number, self.sys_config.runtime.actual_ticker,
+        new_entry = [self.sys_config.runtime.actual_ticker,
                      self.sys_config.runtime.actual_ticker_name
             , api.investment_start, api.investment_working, api.diff_pct
             , api.counter_stop_loss, api.counter_formation_OK, api.counter_formation_NOK, api.counter_actual_ticks]

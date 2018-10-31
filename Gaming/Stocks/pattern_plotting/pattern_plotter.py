@@ -68,8 +68,8 @@ class PatternPlotter:
         self.__plot_patterns__()
         self.__plot_fibonacci_waves__()
 
-        plt.title('{}. {} ({}) for {}'.format(
-            self.sys_config.runtime.actual_number, self.sys_config.runtime.actual_ticker,
+        plt.title('{} ({}) for {}'.format(
+            self.sys_config.runtime.actual_ticker,
             self.sys_config.runtime.actual_ticker_name, self.__get_date_range_for_title__()))
         plt.tight_layout()
         # plt.xticks(rotation=45)
@@ -82,7 +82,7 @@ class PatternPlotter:
         plt.show()
 
     def __get_y_dlim_for_candlestick_plot__(self):
-        range_pct = [0.99, 1.005] if self.sys_config.config.api_period == PRD.INTRADAY else [0.95, 1.02]
+        range_pct = [0.99, 1.005] if self.sys_config.period == PRD.INTRADAY else [0.95, 1.02]
         return self.pdh.pattern_data.min_value * range_pct[0], \
                self.pdh.pattern_data.max_value * range_pct[1]
 
@@ -101,7 +101,7 @@ class PatternPlotter:
     def __get_date_range_for_title__(self):
         tick_first = self.pdh.pattern_data.tick_list[0]
         tick_last = self.pdh.pattern_data.tick_list[-1]
-        if self.sys_config.config.api_period == PRD.INTRADAY:
+        if self.sys_config.period == PRD.INTRADAY:
             return 'Date between "{} {}" AND "{} {}"'.format(tick_first.date_str, tick_first.time_str_for_f_var,
                                                              tick_last.date_str, tick_last.time_str_for_f_var)
         else:
@@ -113,7 +113,7 @@ class PatternPlotter:
         if tick is None:
             return ''
         else:
-            if self.sys_config.config.api_period == PRD.INTRADAY:
+            if self.sys_config.period == PRD.INTRADAY:
                 date_obj = MyDate.get_date_time_from_epoch_seconds(tick.f_var)
                 date_time_str = '{} {}'.format(date_obj.date(), str(date_obj.time())[:5])
             else:
@@ -216,7 +216,7 @@ class PatternPlotter:
         axis.legend(loc='upper left')
 
     def __plot_candlesticks__(self):
-        if self.sys_config.config.api_period == PRD.INTRADAY:
+        if self.sys_config.period == PRD.INTRADAY:
             ohlc_list = [[t.date_num, t.open, t.high, t.low, t.close] for t in self.pdh.pattern_data.tick_list]
             width = 0.4 * (ohlc_list[1][0] - ohlc_list[0][0])
             candlestick_ohlc(self.axes_for_candlesticks, ohlc_list, width=width, colorup='g')
@@ -330,8 +330,8 @@ class PatternPlotter:
 class PlotterInterface:
     @staticmethod
     def get_tick_distance_in_date_as_number(sys_config: SystemConfiguration):
-        if sys_config.config.api_period == PRD.INTRADAY:
-            return MyDate.get_date_as_number_difference_from_epoch_seconds(0, sys_config.config.api_period_aggregation * 60)
+        if sys_config.period == PRD.INTRADAY:
+            return MyDate.get_date_as_number_difference_from_epoch_seconds(0, sys_config.period_aggregation * 60)
         return 1
 
     @staticmethod
@@ -340,10 +340,10 @@ class PlotterInterface:
 
     @staticmethod
     def get_ellipse_width_height_for_plot_min_max(sys_config: SystemConfiguration, wave_tick_list: WaveTickList):
-        if sys_config.config.api_period == PRD.DAILY:
+        if sys_config.period == PRD.DAILY:
             width_value = 0.6
         else:
-            width_value = 0.6 / (sys_config.config.api_period_aggregation * 60)
+            width_value = 0.6 / (sys_config.period_aggregation * 60)
         height_value = wave_tick_list.value_range / 100
         return width_value, height_value
 
@@ -372,10 +372,10 @@ class PlotterInterface:
 
     @staticmethod
     def get_pattern_center_shape(pattern: Pattern):
-        if pattern.sys_config.config.api_period == PRD.DAILY:
+        if pattern.sys_config.period == PRD.DAILY:
             ellipse_breadth = 10
         else:
-            ellipse_breadth = 2 / (pattern.sys_config.config.api_period_aggregation * 60)
+            ellipse_breadth = 2 / (pattern.sys_config.period_aggregation * 60)
         ellipse_height = pattern.part_entry.height / 6
         xy_center = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern.xy_center)
         return Ellipse(np.array(xy_center), ellipse_breadth, ellipse_height)

@@ -81,9 +81,9 @@ class MyDate:
         return date_time_object.strftime('%Y-%m-%d')
 
     @staticmethod
-    def get_date_from_datetime(date_time):
+    def get_date_from_datetime(date_time=None):
         if date_time is None:
-            return None
+            return datetime.now().date()
         if date_time.__class__.__name__ == 'date':  # no change
             return date_time
         if len(str(date_time)) == 10:

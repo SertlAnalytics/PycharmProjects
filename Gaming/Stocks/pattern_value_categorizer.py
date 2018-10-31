@@ -19,8 +19,8 @@ class ValueCategorizer:
 
     def __init__(self, sys_config: SystemConfiguration, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower):
         self.sys_config = sys_config
-        self._tolerance_pct = self.sys_config.config.value_categorizer_tolerance_pct
-        self._tolerance_pct_equal = self.sys_config.config.value_categorizer_tolerance_pct_equal
+        self._tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
+        self._tolerance_pct_equal = self.sys_config.get_value_categorizer_tolerance_pct_equal()
         self.df = df
         self.df_length = self.df.shape[0]
         self._f_upper = f_upper

@@ -11,8 +11,8 @@ import collections
 
 class LL:
     AND_CLAUSE = 'and_clause'
-    NUMBER = 'Number'
     TICKER = 'Ticker'
+    NUMBER = 'Number'
 
 
 class LoopList:

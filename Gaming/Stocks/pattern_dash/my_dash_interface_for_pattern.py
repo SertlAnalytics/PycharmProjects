@@ -30,8 +30,8 @@ class DashInterface:
 
     @staticmethod
     def get_tick_distance_in_date_as_number(sys_config: SystemConfiguration):
-        if sys_config.config.api_period == PRD.INTRADAY:
-            return MyDate.get_date_as_number_difference_from_epoch_seconds(0, sys_config.config.api_period_aggregation * 60)
+        if sys_config.period == PRD.INTRADAY:
+            return MyDate.get_date_as_number_difference_from_epoch_seconds(0, sys_config.period_aggregation * 60)
         return 1
 
     @staticmethod
@@ -40,10 +40,10 @@ class DashInterface:
 
     @staticmethod
     def get_ellipse_width_height_for_plot_min_max(sys_config: SystemConfiguration, wave_tick_list: WaveTickList):
-        if sys_config.config.api_period == PRD.DAILY:
+        if sys_config.period == PRD.DAILY:
             width_value = 0.6
         else:
-            width_value = 0.6 / (sys_config.config.api_period_aggregation * 60)
+            width_value = 0.6 / (sys_config.period_aggregation * 60)
         height_value = wave_tick_list.value_range / 100
         return width_value, height_value
 
@@ -115,7 +115,7 @@ class DashInterface:
 
     @staticmethod
     def get_xy_separated_from_timestamp(sys_config: SystemConfiguration, xy):
-        if sys_config.config.api_period == PRD.INTRADAY:
+        if sys_config.period == PRD.INTRADAY:
             xy_new = DashInterface.get_xy_from_timestamp_to_date_time_str(xy)
         else:
             xy_new = DashInterface.get_xy_from_timestamp_to_date_str(xy)
@@ -123,10 +123,10 @@ class DashInterface:
 
     @staticmethod
     def get_pattern_center_shape(sys_config: SystemConfiguration, pattern: Pattern):
-        if sys_config.config.api_period == PRD.DAILY:
+        if sys_config.period == PRD.DAILY:
             ellipse_breadth = 10
         else:
-            ellipse_breadth = 2 / (sys_config.config.api_period_aggregation * 60)
+            ellipse_breadth = 2 / (sys_config.period_aggregation * 60)
         ellipse_height = pattern.part_entry.height / 6
         xy_center = DashInterface.get_xy_from_timestamp_to_date(pattern.xy_center)
         return Ellipse(np.array(xy_center), ellipse_breadth, ellipse_height)

@@ -10,7 +10,8 @@ from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
 from pattern_part import PatternPart, PatternEntryPart, PatternWatchPart, PatternTradePart
-from pattern import Pattern, PatternFactory, PatternID
+from pattern import Pattern, PatternFactory
+from pattern_id import PatternID, PatternIdFactory
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
     , PatternRangeDetectorHeadShoulderBottom, PatternRange
 from pattern_range_fibonacci import PatternRangeDetectorFibonacciAsc, PatternRangeDetectorFibonacciDesc
@@ -31,6 +32,7 @@ class PatternDetector:
         self.df_length = self.df.shape[0]
         self.df_min_max = self.pdh.pattern_data.df_min_max
         self.df_min_max_length = self.df_min_max.shape[0]
+        self.pattern_id_factory = PatternIdFactory(self.sys_config)
         self.range_detector_max = None
         self.range_detector_min = None
         self.range_detector_h_s = None  # Head_Shoulder
@@ -50,27 +52,24 @@ class PatternDetector:
     def _set_data_dict_(self):
         self.data_dict[DC.EQUITY_TYPE] = self.sys_config.runtime.actual_ticker_equity_type
         self.data_dict[DC.EQUITY_TYPE_ID] = EQUITY_TYPE.get_id(self.data_dict[DC.EQUITY_TYPE])
-        self.data_dict[DC.PERIOD] = self.sys_config.config.api_period
-        self.data_dict[DC.PERIOD_ID] = PRD.get_id(self.sys_config.config.api_period)
-        self.data_dict[DC.PERIOD_AGGREGATION] = self.sys_config.config.api_period_aggregation
+        self.data_dict[DC.PERIOD] = self.sys_config.period
+        self.data_dict[DC.PERIOD_ID] = PRD.get_id(self.sys_config.period)
+        self.data_dict[DC.PERIOD_AGGREGATION] = self.sys_config.period_aggregation
         self.data_dict[DC.TICKER_ID] = self.sys_config.runtime.actual_ticker
         self.data_dict[DC.TICKER_NAME] = self.sys_config.runtime.actual_ticker_name
 
-    def parse_for_pattern(self, pattern_id_to_find: PatternID = None):
-        possible_pattern_range_list_dict = self.__get_possible_pattern_range_list_dict__(pattern_id_to_find)
+    def parse_for_pattern(self):
+        possible_pattern_range_list_dict = self.__get_possible_pattern_range_list_dict__()
         for pattern_type in self.pattern_type_list:
             for pattern_range in possible_pattern_range_list_dict[pattern_type]:
                 # print('parsing for pattern: {}'.format(pattern_type))
                 self.__check_pattern_range_for_pattern_type__(pattern_type, pattern_range)
 
-    def __get_possible_pattern_range_list_dict__(self, pattern_id_to_find: PatternID) -> dict:
-        if pattern_id_to_find is None:
-            self.__fill_possible_pattern_ranges__()
-            self.__adjust_possible_pattern_ranges_to_constraints__()
-            possible_pattern_range_list = self.__get_combined_possible_pattern_ranges__()
-            return self.__get_pattern_range_list_dict__(possible_pattern_range_list)
-        else:
-            return {pattern_id_to_find.pattern_type: [pattern_id_to_find.pattern_range]}
+    def __get_possible_pattern_range_list_dict__(self) -> dict:
+        self.__fill_possible_pattern_ranges__()
+        self.__adjust_possible_pattern_ranges_to_constraints__()
+        possible_pattern_range_list = self.__get_combined_possible_pattern_ranges__()
+        return self.__get_pattern_range_list_dict__(possible_pattern_range_list)
 
     def __check_pattern_range_for_pattern_type__(self, pattern_type: str, pattern_range: PatternRange):
         self.sys_config.runtime.actual_pattern_type = pattern_type
@@ -178,6 +177,8 @@ class PatternDetector:
                 pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
                 self.__add_part_trade__(pattern)
             # pattern.print_nearest_neighbor_collection()
+            # for nn_entry in pattern.nearest_neighbor_entry_list:
+            #     pattern_id = self.pattern_id_factory.get_pattern_id_from_pattern_id_string(nn_entry.id)
             self.pattern_list.append(pattern)
 
     def __add_part_trade__(self, pattern: Pattern):
@@ -330,9 +331,9 @@ class PatternDetector:
         if len(dict_diff) > 0:
             print('Difference for Pattern {} [{}, {}]:'.format(
                 feature_dict[DC.PATTERN_TYPE],
-                feature_dict[DC.PATTERN_BEGIN_TIME] if self.sys_config.config.api_period == PRD.INTRADAY
+                feature_dict[DC.PATTERN_BEGIN_TIME] if self.sys_config.period == PRD.INTRADAY
                 else feature_dict[DC.PATTERN_BEGIN_DT],
-                feature_dict[DC.PATTERN_END_TIME] if self.sys_config.config.api_period == PRD.INTRADAY
+                feature_dict[DC.PATTERN_END_TIME] if self.sys_config.period == PRD.INTRADAY
                 else feature_dict[DC.PATTERN_END_DT]
             ))
             for key, values in dict_diff.items():

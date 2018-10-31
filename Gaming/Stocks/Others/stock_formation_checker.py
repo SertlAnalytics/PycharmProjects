@@ -85,7 +85,6 @@ class FormationConfiguration:
         self.accuracy_pct = 0.05  # the high/low values can be this percentage over the upper bounds w.r.t breadth
         self.breakout_range_pct = 0.01
         self.investment = 1000
-        self.max_number_securities = 1000
         self.show_final_statistics = True
         self.and_clause = "Date BETWEEN '2017-12-01' AND '2019-12-31'"
         self.actual_list = []
@@ -1923,9 +1922,6 @@ class FormationController:
 
             counter += 1
 
-            if counter >= self.config.max_number_securities:
-                break
-
         if config.show_final_statistics:
             self.config.print()
             if self.config.statistics_excel_file_name == '':
@@ -1989,7 +1985,6 @@ config.max_length_of_a_formation_part = 15
 config.min_length_of_a_formation_part = 5
 config.breakout_over_congestion_range = False
 # config.show_final_statistics = True
-config.max_number_securities = 1000
 config.accuracy_pct = 0.03  # default is 0.05
 config.breakout_range_pct = 0.1  # default is 0.01
 config.use_index(Indices.DOW_JONES)

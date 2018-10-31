@@ -40,10 +40,11 @@ class CountConstraint:
 class Constraints:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
-        self.api_period = self.sys_config.config.api_period
-        self.period_related_divisor = 10 if self.api_period == PRD.INTRADAY else 1
-        self.tolerance_pct = self.sys_config.config.value_categorizer_tolerance_pct
-        self.tolerance_pct_equal = self.sys_config.config.value_categorizer_tolerance_pct_equal
+        self.period = self.sys_config.period
+        self.period_aggregation = self.sys_config.period_aggregation
+        self.period_related_divisor = 10 if self.period == PRD.INTRADAY else 1
+        self.tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
+        self.tolerance_pct_equal = self.sys_config.get_value_categorizer_tolerance_pct_equal()
         self.global_all_in = []
         self.global_count = []
         self.global_series = []

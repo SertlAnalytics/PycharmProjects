@@ -12,17 +12,16 @@ from pattern_detector import PatternDetector
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from pattern_test.trade_test_cases import TradeTestCase, TradeTestCaseFactory, TradeTestApi
-from pattern_data_provider import PatternDataProviderApi
 
 
 class TradeTest:
     def __init__(self, api: TradeTestApi, sys_config=None, exchange_config=None):
         self.api = api
         self.trade_process = api.test_process
-        data_provider_api = PatternDataProviderApi(api.from_db, api.period, api.period_aggregation)
-        self.sys_config = sys_config if sys_config else SystemConfiguration(data_provider_api)
+        self.sys_config = sys_config if sys_config else SystemConfiguration()
         self.exchange_config = exchange_config if exchange_config else ExchangeConfiguration()
         self.__adjust_sys_config__()
+        self.__adjust_data_provider_parameters__()
         self.__adjust_exchange_config__()
 
     def __adjust_exchange_config__(self):
@@ -33,15 +32,18 @@ class TradeTest:
         self.sys_config.runtime.actual_trade_process = self.trade_process
         if self.trade_process == TP.BACK_TESTING:
             self.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
-        self.sys_config.update_data_provider_api(
-            from_db=self.api.from_db, period=self.api.period, aggregation=self.api.period_aggregation)
         self.sys_config.config.plot_data = False
         self.sys_config.prediction_mode_active = True
         self.sys_config.config.save_pattern_data = False
         self.sys_config.config.save_trade_data = False
 
+    def __adjust_data_provider_parameters__(self):
+        self.sys_config.data_provider.from_db = self.api.from_db
+        self.sys_config.data_provider.period = self.api.period
+        self.sys_config.data_provider.aggregation = self.api.period_aggregation
+
     def run_back_testing(self, api: TradeTestApi):
-        self.sys_config.init_predictors_without_condition_list(api.symbol)
+        self.sys_config.init_predictors_without_condition_list()
         tc_list = self.__get_test_case_list__(api)  # we need this list since the config will be changed for each entry
         for tc in tc_list:
             self.run_test_case(tc)
@@ -86,7 +88,7 @@ class TradeTest:
     def __adjust_sys_config_for_replay__(self, api: TradeTestApi):
         self.exchange_config.trade_strategy_dict = {api.buy_trigger: [api.trade_strategy]}
         self.sys_config.config.pattern_type_list = [api.pattern_type]
-        self.sys_config.config.use_own_dic({api.symbol: api.symbol})
+        self.sys_config.data_provider.use_own_dic({api.symbol: api.symbol})
         self.sys_config.config.and_clause = api.and_clause
         self.sys_config.config.with_trade_part = False
 

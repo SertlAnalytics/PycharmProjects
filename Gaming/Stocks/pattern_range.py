@@ -321,7 +321,7 @@ class PatternRangeDetector:
         self.pdh = self.sys_config.pdh
         self.tick_list = tick_list
         self._elements = len(self.tick_list)
-        self._tolerance_pct = self.sys_config.config.value_categorizer_tolerance_pct
+        self._tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
         self._max_pattern_range_length = self.sys_config.config.max_pattern_range_length
         self._pattern_range_list = []
         self.__parse_tick_list__()
@@ -361,7 +361,8 @@ class PatternRangeDetector:
         return True
 
     def __parse_tick_list__(self):
-        for i in range(0, self._elements - self.number_required_ticks + 1):
+        range_start, range_end = self.__get_tick_list_start_end_for_parsing__()
+        for i in range(range_start, range_end):
             tick_i = self.tick_list[i]
             pattern_range = self.__get_pattern_range_by_tick__(tick_i)
             next_list, next_linear_f_params, pos_list = self.__get_pattern_range_next_position_candidates__(i, tick_i)
@@ -379,12 +380,23 @@ class PatternRangeDetector:
                     pattern_range.add_tick(tick_k, None)
             self.__add_pattern_range_to_list_after_check__(pattern_range)  # for the latest...
 
+    def __get_tick_list_start_end_for_parsing__(self):
+        ts_start = self.sys_config.runtime.actual_pattern_range_from_time_stamp
+        if ts_start > 0:  # we have to find a dedicated ranges for a specific pattern
+            li = [index for index, tick in enumerate(self.tick_list) if tick.time_stamp == ts_start]
+            if len(li) == 0:
+                return -1, 0  # we don't want to loop in the next step
+            return li[0], li[0] + 1
+        else:
+            return 0, self._elements - self.number_required_ticks + 1
+
     def __get_pattern_range_next_position_candidates__(self, i: int, tick_i: WaveTick):
         f_param = None
         next_position_candidates_list = []
         next_position_list = []
         next_position_linear_f_params = []
-        for k in range(i + 1, self._elements):
+        range_end = self.__get_next_position_candidates_range_end__()
+        for k in range(i + 1, range_end):
             tick_k = self.tick_list[k]
             if tick_k.position - tick_i.position > self._max_pattern_range_length:
                 break
@@ -407,6 +419,16 @@ class PatternRangeDetector:
                         next_position_linear_f_params.append(f_param)
                         next_position_list.append(tick_k.position)
         return next_position_candidates_list, next_position_linear_f_params, next_position_list
+
+    def __get_next_position_candidates_range_end__(self):
+        ts_end = self.sys_config.runtime.actual_pattern_range_to_time_stamp
+        if ts_end > 0:  # we have to find a dedicated ranges for a specific pattern
+            li = [index for index, tick in enumerate(self.tick_list) if tick.time_stamp == ts_end]
+            if len(li) == 0:
+                return -1  # we don't want to loop in the next step
+            return li[0] + 1
+        else:
+            return self._elements
 
     def __is_slope_correctly_changing__(self, f_param: np.poly1d, tick_new: WaveTick, f_param_new_tick: np.poly1d):
         pass

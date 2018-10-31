@@ -94,7 +94,7 @@ class PatternTradeHandler:
     def get_latest_tickers_as_wave_tick_list(self, ticker_id: str) -> WaveTickList:
         if self.trade_client:
             return self.trade_client.get_latest_tickers_as_wave_tick_list(
-                ticker_id, self.sys_config.config.api_period, self.sys_config.config.api_period_aggregation)
+                ticker_id, self.sys_config.period, self.sys_config.period_aggregation)
 
     def get_rows_for_dash_data_table(self):
         return_list = []
@@ -180,8 +180,8 @@ class PatternTradeHandler:
         if self._last_wave_tick_for_test:
             return self._last_wave_tick_for_test
         else:
-            return self.trade_client.get_current_wave_tick(ticker_id, self.sys_config.config.api_period,
-                                                           self.sys_config.config.api_period_aggregation)
+            return self.trade_client.get_current_wave_tick(ticker_id, self.sys_config.period,
+                                                           self.sys_config.period_aggregation)
 
     def __get_balance_by_symbol__(self, symbol: str):
         return self.trade_client.get_balance(symbol)
@@ -281,7 +281,7 @@ class PatternTradeHandler:
         if self.trade_client is None:
             return pattern_trade.wave_tick_list
         return self.trade_client.get_latest_tickers_as_wave_tick_list(
-            ticker_id, self.sys_config.config.api_period, self.sys_config.config.api_period_aggregation)
+            ticker_id, self.sys_config.period, self.sys_config.period_aggregation)
 
     def __calculate_xy_values__(self):
         for pattern_trade in self.pattern_trade_dict.values():

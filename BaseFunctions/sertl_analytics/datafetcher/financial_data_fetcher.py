@@ -305,7 +305,8 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         df = df[[0, 1, 3, 4, 2, 5]]
         df.set_index(0, drop=True, inplace=True)
         df.columns = CN.get_standard_column_names()
-        df.sort_index(inplace=True)
+        df = df.sort_index()
+        # df.sort_index(inplace=True)
         return df
 
     def _get_url_(self):  # the symbol has the structure tsymbolCCY like tBTCUSD

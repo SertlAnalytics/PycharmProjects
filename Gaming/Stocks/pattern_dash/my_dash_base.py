@@ -26,7 +26,7 @@ from pattern_news_handler import NewsHandler
 class MyDashBaseTab:
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         self.app = app
-        self.sys_config = sys_config.get_semi_deep_copy_for_new_pattern_data_provider_api()
+        self.sys_config = sys_config
         self._color_handler = PatternColorHandler()
         self._news_handler = self.__get_news_handler__()
         self._time_stamp_last_refresh = MyDate.time_stamp_now()
@@ -45,8 +45,10 @@ class MyDashBaseTab:
         pattern_df = graph_api.df
         pattern_list = detector.pattern_list if detector else [graph_api.pattern_trade.pattern]
         # print('Pattern_list={}'.format(pattern_list))
-        period = detector.sys_config.config.api_period if detector else graph_api.period
+        period = detector.sys_config.period if detector else graph_api.period
+        # print('period={} from detector:{}'.format(period, detector is None))
         candlestick = self.__get_candlesticks_trace__(pattern_df, graph_api.ticker_id, period)
+        # print(candlestick)
         bollinger_traces = self.__get_bollinger_band_trace__(pattern_df, graph_api.ticker_id, period)
         shapes = self.__get_pattern_shape_list__(pattern_list)
         shapes += self.__get_pattern_regression_shape_list__(pattern_list)

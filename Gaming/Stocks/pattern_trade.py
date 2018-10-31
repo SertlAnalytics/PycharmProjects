@@ -402,8 +402,8 @@ class PatternTrade:
             self.__save_to_database__()
 
     def __save_to_database__(self):
-        period = self.sys_config.config.api_period
-        aggregation = self.sys_config.config.api_period_aggregation
+        period = self.sys_config.period
+        aggregation = self.sys_config.period_aggregation
         self.sys_config.db_stock.save_tick_list(self._wave_tick_list.tick_list, self.ticker_id, period, aggregation)
 
     def print_trade(self, prefix=''):
@@ -449,8 +449,8 @@ class PatternTrade:
         return sma
 
     def __get_ticker_wave_tick_converter__(self) -> TickerWaveTickConverter:
-        period = self.sys_config.config.api_period
-        aggregation = self.sys_config.config.api_period_aggregation
+        period = self.sys_config.period
+        aggregation = self.sys_config.period_aggregation
         wave_tick_last = self._wave_tick_list.tick_list[-1]
         return TickerWaveTickConverter(period, aggregation, wave_tick_last.position, wave_tick_last.time_stamp)
 
@@ -606,7 +606,7 @@ class PatternTrade:
         # if self.ticker_actual is None:
         if self.ticker_actual is None:
             return ''
-        period = self.sys_config.config.api_period
+        period = self.sys_config.period
         last_price = self.ticker_actual.last_price
         text_list = [self.__get_header_line_for_markdown_text__(last_price, ts_ticker_refresh, ticker_refresh),
                      self._wave_tick_list.get_markdown_text_for_second_last_wave_tick(period),

@@ -65,7 +65,7 @@ class PatternBreakout:
         return MyMath.divide(self.volume_forecast, self.volume_mean_part_entry) > (100 + min_percentage) / 100
 
     def get_details_for_annotations(self):
-        if self.sys_config.config.api_period == PRD.INTRADAY:
+        if self.sys_config.period == PRD.INTRADAY:
             date_str = self.tick_breakout.time_str_for_f_var
         else:
             date_str = self.tick_breakout.date_str_for_f_var
