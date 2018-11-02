@@ -77,7 +77,9 @@ class PatternTrade:
 
     @property
     def id(self):
-        return '{}-{}-{}_{}'.format(self.buy_trigger, self.trade_box_type, self.trade_strategy, self.pattern.id_readable)
+        mean_aggregation = 'mean{:02d}'.format(self.sys_config.config.trading_last_price_mean_aggregation)
+        return '{}-{}-{}-{}_{}'.format(
+            self.buy_trigger, self.trade_box_type, self.trade_strategy, mean_aggregation, self.pattern.id_readable)
 
     @property
     def is_winner(self) -> bool:
@@ -438,7 +440,7 @@ class PatternTrade:
 
     def get_trade_meta_data(self):
         details = '; '.join('{}: {}'.format(key, value) for key, value in self.__get_value_dict__().items())
-        return '{}: {}'.format(self.id, details)
+        return '{}: \n{}'.format(self.id, details)
 
     def __get_value_dict__(self) -> dict:
         return {'Status': self.status, 'Buy_trigger': self.buy_trigger, 'Trade_box': self.trade_box_type,
@@ -484,6 +486,7 @@ class PatternTrade:
         api.trade_strategy = self.trade_strategy
         api.height = height
         api.distance_bottom = distance_bottom
+        api.last_price_mean_aggregation = self.sys_config.config.trading_last_price_mean_aggregation
         if self.trade_box_type == TBT.EXPECTED_WIN:
             return ExpectedWinTradingBox(api)
         elif self.trade_box_type == TBT.TOUCH_POINT:
@@ -586,12 +589,17 @@ class PatternTrade:
             self.data_dict_obj.add(DC.SELL_TRIGGER, order_status.order_trigger)
             self.data_dict_obj.add(DC.SELL_TRIGGER_ID, ST.get_id(order_status.order_trigger))
             self.data_dict_obj.add(DC.SELL_COMMENT, order_status.order_comment)
-            if self.data_dict_obj.get(DC.BUY_TOTAL_COSTS) < self.data_dict_obj.get(DC.SELL_TOTAL_VALUE):
+            buy_total_costs = self.data_dict_obj.get(DC.BUY_TOTAL_COSTS)
+            sell_total_value = self.data_dict_obj.get(DC.SELL_TOTAL_VALUE)
+            trade_result_amount = sell_total_value - buy_total_costs
+            if trade_result_amount > 0:
                 trade_result = TR.WINNER
             else:
                 trade_result = TR.LOSER
             self.data_dict_obj.add(DC.TRADE_REACHED_PRICE, self._trade_box.max_ticker_last_price)
             self.data_dict_obj.add(DC.TRADE_REACHED_PRICE_PCT, self._trade_box.max_ticker_last_price_pct)
+            self.data_dict_obj.add(DC.TRADE_RESULT_AMOUNT, trade_result_amount)
+            self.data_dict_obj.add(DC.TRADE_RESULT_PCT, round(trade_result_amount/buy_total_costs*100,1))
             self.data_dict_obj.add(DC.TRADE_RESULT, trade_result)
             self.data_dict_obj.add(DC.TRADE_RESULT_ID, TR.get_id(trade_result))
         else:

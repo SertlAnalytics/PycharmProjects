@@ -16,6 +16,7 @@ sys_config.config.plot_data = True
 # sys_config.config.with_trade_part = False
 sys_config.prediction_mode_active = True
 sys_config.config.with_trading = True
+sys_config.config.trading_last_price_mean_aggregation = 24
 sys_config.config.save_pattern_data = False
 sys_config.config.save_trade_data = False
 sys_config.config.plot_only_pattern_with_fibonacci_waves = False
@@ -49,7 +50,6 @@ pattern_type_list_to_test = [FT.HEAD_SHOULDER_BOTTOM_DESC]
 
 for pattern_type in pattern_type_list_to_test:
     sys_config.config.pattern_ids_to_find = pattern_type_pattern_id_dict[pattern_type]
-
 
     for trade_strategy_dict in trade_strategy_dict_list:
         sys_config.exchange_config.trade_strategy_dict = trade_strategy_dict

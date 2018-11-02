@@ -23,6 +23,7 @@ class TradingBoxApi:
         self.trade_strategy = ''
         self.height = 0  # is used for touch point
         self.distance_bottom = 0  # is used for touch point
+        self.last_price_mean_aggregation = 16
 
 
 class TradingBox:
@@ -154,7 +155,8 @@ class TradingBox:
         return stop_loss_changed or limit_changed
 
     def __adjust_stop_loss_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
-        ticker_last_price = statistics.mean(self._ticker_last_price_list[-16:])  # ToDo this list number can be smarter...
+        ticker_last_price = statistics.mean(self._ticker_last_price_list[-self._api.last_price_mean_aggregation:])
+        # ToDo this list number can be smarter...
         if self._trade_strategy == TSTR.LIMIT:  # with trailing stop
             if self._stop_loss < ticker_last_price - self._distance_bottom:
                 self._stop_loss = ticker_last_price - self._distance_bottom

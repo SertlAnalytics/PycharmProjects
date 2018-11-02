@@ -132,6 +132,9 @@ class TradeTable(MyTable, PredictionFeatureTable):
         self._columns.append(MyTableColumn(DC.TRADE_REACHED_PRICE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.TRADE_REACHED_PRICE_PCT, CDT.INTEGER))
 
+        self._columns.append(MyTableColumn(DC.TRADE_RESULT_AMOUNT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.TRADE_RESULT_PCT, CDT.FLOAT))
+
         self._columns.append(MyTableColumn(DC.TRADE_RESULT, CDT.STRING, 10))
         self._columns.append(MyTableColumn(DC.TRADE_RESULT_ID, CDT.INTEGER))
 

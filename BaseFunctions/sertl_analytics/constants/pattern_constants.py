@@ -733,6 +733,9 @@ class DC:  # Data Columns
     TRADE_REACHED_PRICE = 'Trade_Reached_Price'
     TRADE_REACHED_PRICE_PCT = 'Trade_Reached_Price_PCT'
 
+    TRADE_RESULT_AMOUNT = 'Trade_Result_Amount'
+    TRADE_RESULT_PCT = 'Trade_Result_PCT'
+
     TRADE_RESULT = 'Trade_Result'
     TRADE_RESULT_ID = 'Trade_Result_ID'
 

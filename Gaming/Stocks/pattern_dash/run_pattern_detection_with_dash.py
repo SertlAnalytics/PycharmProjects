@@ -33,6 +33,7 @@ sys_config.config.pattern_type_list = FT.get_all()
 sys_config.prediction_mode_active = True
 sys_config.config.with_trading = True
 sys_config.config.save_pattern_data = True
+sys_config.config.save_trade_data = False
 # sys_config.config.pattern_type_list = [FT.TRIANGLE]
 # sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN, FT.TRIANGLE_UP, FT.TRIANGLE_BOTTOM]
 sys_config.config.plot_data = True

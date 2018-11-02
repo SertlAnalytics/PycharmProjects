@@ -58,6 +58,7 @@ class PatternConfiguration:
     def __init__(self):
         self.with_trade_part = True  # we need this configuration for testing touch strategy
         self.with_trading = False
+        self.trading_last_price_mean_aggregation = 16  # the number of ticker.last_price which are used for stop loss
         self.pattern_type_list = [FT.CHANNEL]
         self.pattern_ids_to_find = []
         self.simple_moving_average_number = 10
