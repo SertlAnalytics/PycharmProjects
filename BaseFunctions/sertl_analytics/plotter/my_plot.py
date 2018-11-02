@@ -30,3 +30,4 @@ class MyPlotHelper:
             y.append(round(tick.wrong_breakout_value, 4) if for_buying else round(tick.stop_loss_value, 4))
         # print('list(zip(x, y))={}'.format(list(zip(x, y))))
         return list(zip(x, y))
+

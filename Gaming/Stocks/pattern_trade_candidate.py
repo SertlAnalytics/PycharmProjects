@@ -53,7 +53,7 @@ class TradeCandidate:
 class TradeCandidateCollection:
     """
         controls the trade candidates for one equity. The rule is that only one pattern per entity will be processed
-        we try to get the one with the highest success probability for real trading the others for that pattern run
+        we try to get the one with the highest success probability for real exchange_config the others for that pattern run
         in simulation mode
     """
     def __init__(self, exchange_config: ExchangeConfiguration, symbol: str):

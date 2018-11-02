@@ -381,7 +381,7 @@ class PatternRangeDetector:
             self.__add_pattern_range_to_list_after_check__(pattern_range)  # for the latest...
 
     def __get_tick_list_start_end_for_parsing__(self):
-        ts_start = self.sys_config.runtime.actual_pattern_range_from_time_stamp
+        ts_start = self.sys_config.runtime_config.actual_pattern_range_from_time_stamp
         if ts_start > 0:  # we have to find a dedicated ranges for a specific pattern
             li = [index for index, tick in enumerate(self.tick_list) if tick.time_stamp == ts_start]
             if len(li) == 0:
@@ -421,7 +421,7 @@ class PatternRangeDetector:
         return next_position_candidates_list, next_position_linear_f_params, next_position_list
 
     def __get_next_position_candidates_range_end__(self):
-        ts_end = self.sys_config.runtime.actual_pattern_range_to_time_stamp
+        ts_end = self.sys_config.runtime_config.actual_pattern_range_to_time_stamp
         if ts_end > 0:  # we have to find a dedicated ranges for a specific pattern
             li = [index for index, tick in enumerate(self.tick_list) if tick.time_stamp == ts_end]
             if len(li) == 0:

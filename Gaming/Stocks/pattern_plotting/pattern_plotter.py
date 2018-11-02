@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, FD, PRD
+from sertl_analytics.constants.pattern_constants import CN, FD, PRD, BT, TSTR
 from sertl_analytics.mydates import MyDate
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,6 +15,7 @@ from pattern_system_configuration import SystemConfiguration
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_detector import PatternDetector
 from pattern import Pattern
+from pattern_trade import PatternTrade
 from pattern_part import PatternPart
 from mpl_finance import candlestick_ohlc
 from pattern_range import PatternRange
@@ -32,8 +33,9 @@ class PatternPlotter:
         self.pdh = self.detector.pdh
         self.df = self.pdh.pattern_data.df
         self.tick_list = self.pdh.pattern_data.tick_list
-        self.symbol = self.sys_config.runtime.actual_ticker
+        self.symbol = self.sys_config.runtime_config.actual_ticker
         self.pattern_plot_container_loop_list = PatternPlotContainerLoopList()
+        self.pattern_trade_plot_container_loop_list = PatternPlotContainerLoopList()
         self.ranges_polygon_dic_list = {}
         self.ranges_opposite_polygon_dic_list = {}
         self.fibonacci_patch_container = None
@@ -66,11 +68,13 @@ class PatternPlotter:
             self.__plot_min_max__()
             self.__plot_ranges__()
         self.__plot_patterns__()
+        if self.sys_config.config.with_trading and self.detector.trade_handler is not None:
+            self.__plot_pattern_trades__()
         self.__plot_fibonacci_waves__()
 
         plt.title('{} ({}) for {}'.format(
-            self.sys_config.runtime.actual_ticker,
-            self.sys_config.runtime.actual_ticker_name, self.__get_date_range_for_title__()))
+            self.sys_config.runtime_config.actual_ticker,
+            self.sys_config.runtime_config.actual_ticker_name, self.__get_date_range_for_title__()))
         plt.tight_layout()
         # plt.xticks(rotation=45)
         fig.canvas.mpl_connect('button_press_event', self.__on_click__)
@@ -231,6 +235,10 @@ class PatternPlotter:
         self.__fill_plot_container_list__()
         self.__add_pattern_shapes_to_plot__()
 
+    def __plot_pattern_trades__(self):
+        self.__fill_trade_plot_container_list__()
+        self.__add_pattern_trade_shapes_to_plot__()
+
     def __plot_min_max__(self):
         wave_tick_list = WaveTickList(self.pdh.pattern_data.df_min_max)
         width, height = PlotterInterface.get_ellipse_width_height_for_plot_min_max(self.sys_config, wave_tick_list)
@@ -321,10 +329,25 @@ class PatternPlotter:
                 plot_container.add_regression_line_shape(PlotterInterface.get_f_regression_shape(pattern.part_entry))
                 self.pattern_plot_container_loop_list.append(plot_container)
 
+    def __fill_trade_plot_container_list__(self):
+        color_handler = PatternColorHandler()
+        for pattern_trade in self.detector.trade_handler.pattern_trade_dict.values():
+            color_buying, color_selling, color_after = color_handler.get_colors_for_pattern_trade(pattern_trade)
+            plot_container = PatternPlotContainer(
+                PlotterInterface.get_pattern_trade_shape_for_buying(pattern_trade), color_buying)
+            if pattern_trade.xy_for_selling is not None:
+                plot_container.add_trade_shape(
+                    PlotterInterface.get_pattern_trade_shape_for_selling(pattern_trade), color_selling)
+            self.pattern_trade_plot_container_loop_list.append(plot_container)
+
     def __add_pattern_shapes_to_plot__(self):
         for pattern_plot_container in self.pattern_plot_container_loop_list.value_list:
             pattern_plot_container.add_elements_as_patches(self.axes_for_candlesticks)
             pattern_plot_container.add_annotation(self.axes_for_candlesticks)
+
+    def __add_pattern_trade_shapes_to_plot__(self):
+        for pattern_trade_plot_container in self.pattern_trade_plot_container_loop_list.value_list:
+            pattern_trade_plot_container.add_elements_as_patches(self.axes_for_candlesticks)
 
 
 class PlotterInterface:
@@ -349,7 +372,8 @@ class PlotterInterface:
 
     @staticmethod
     def get_xy_from_timestamp_to_date_number(xy):
-        if type(xy) == list:
+        # print('get_xy_from_timestamp_to_date_number={}'.format(xy))
+        if type(xy) is list:
             return [(MyDate.get_date_as_number_from_epoch_seconds(t_val[0]), t_val[1]) for t_val in xy]
         return MyDate.get_date_as_number_from_epoch_seconds(xy[0]), xy[1]
 
@@ -368,6 +392,16 @@ class PlotterInterface:
     @staticmethod
     def get_pattern_shape_part_trade(pattern: Pattern):
         xy_trade = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern.xy_trade)
+        return Polygon(np.array(xy_trade), True)
+
+    @staticmethod
+    def get_pattern_trade_shape_for_buying(pattern_trade: PatternTrade):
+        xy_trade = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern_trade.xy_for_buying)
+        return Polygon(np.array(xy_trade), True)
+
+    @staticmethod
+    def get_pattern_trade_shape_for_selling(pattern_trade: PatternTrade):
+        xy_trade = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern_trade.xy_for_selling)
         return Polygon(np.array(xy_trade), True)
 
     @staticmethod

@@ -103,7 +103,7 @@ class PatternRangeDetectorFibonacciBase:
     def __init__(self, sys_config: SystemConfiguration, wave_list: list):
         self.sys_config = sys_config
         self.pdh = self.sys_config.pdh
-        self.for_back_testing = self.sys_config.runtime.actual_trade_process == TP.BACK_TESTING
+        self.for_back_testing = self.sys_config.runtime_config.actual_trade_process == TP.BACK_TESTING
         self.wave_list = wave_list
         self.start_end_position_dict = self.__get_start_end_position_dict__()
 

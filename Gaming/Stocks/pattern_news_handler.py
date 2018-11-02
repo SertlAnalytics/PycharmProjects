@@ -10,7 +10,7 @@ from datetime import datetime
 
 
 class NewsHandler:
-    def __init__(self, delimiter=' ;', default=''):
+    def __init__(self, delimiter='  \n  - ', default=''):
         self._news_dict = {}
         self._delimiter = delimiter
         self._default = default

@@ -1,5 +1,5 @@
 """
-Description: This module contains the test cases for Bitfinex trading tests
+Description: This module contains the test cases for Bitfinex exchange_config tests
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
@@ -46,7 +46,7 @@ class TradeTestCase:
         if api.pattern is None:
             self.test_process = api.test_process
         else:
-            self.test_process = api.pattern.sys_config.runtime.actual_trade_process
+            self.test_process = api.pattern.sys_config.runtime_config.actual_trade_process
         self.symbol = ''
         self.and_clause = ''
         self.time_stamp_start = 0

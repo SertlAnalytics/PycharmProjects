@@ -21,15 +21,17 @@ sys_config.data_provider.aggregation = 15
 sys_config.data_provider.output_size = OPS.COMPACT
 sys_config.data_provider.limit = 200
 
-bitfinex_config = BitfinexConfiguration()
-bitfinex_config.is_simulation = True
-bitfinex_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP],
-                                       BT.TOUCH_POINT: [TSTR.LIMIT, TSTR.TRAILING_STOP]}
+sys_config.exchange_config = BitfinexConfiguration()
+sys_config.exchange_config.is_simulation = True
+sys_config.exchange_config.trade_strategy_dict = {
+    BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP],
+    BT.TOUCH_POINT: [TSTR.LIMIT, TSTR.TRAILING_STOP]}
 
 # debugger.pattern_range_position_list = [217, 224, 242]
 
 sys_config.config.pattern_type_list = FT.get_all()
 sys_config.prediction_mode_active = True
+sys_config.config.with_trading = True
 sys_config.config.save_pattern_data = True
 # sys_config.config.pattern_type_list = [FT.TRIANGLE]
 # sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN, FT.TRIANGLE_UP, FT.TRIANGLE_BOTTOM]
@@ -51,7 +53,7 @@ sys_config.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
 sys_config.config.fibonacci_detail_print = True
 # sys_config.config.use_index(Indices.DOW_JONES)
 sys_config.data_provider.use_index(Indices.CRYPTO_CCY)
-my_dash = MyDash4Pattern(sys_config, bitfinex_config)
+my_dash = MyDash4Pattern(sys_config)
 my_dash.get_pattern()
 my_dash.run_on_server()
 my_profiler.disable(False)

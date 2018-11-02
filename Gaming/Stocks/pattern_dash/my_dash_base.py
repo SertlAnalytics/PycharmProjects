@@ -39,7 +39,8 @@ class MyDashBaseTab:
 
     @staticmethod
     def __get_news_handler__():
-        return NewsHandler(' ;', '- no news -')
+        delimiter = '  \n  - '  # news are a list in markdown
+        return NewsHandler(delimiter, '- no news -')
 
     def __get_dcc_graph_element__(self, detector, graph_api: DccGraphApi):
         pattern_df = graph_api.df

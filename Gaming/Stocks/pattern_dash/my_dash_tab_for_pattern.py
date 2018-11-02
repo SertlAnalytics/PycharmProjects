@@ -26,12 +26,12 @@ from pattern_wave_tick import WaveTick, WaveTickList
 
 
 class MyDashTab4Pattern(MyDashBaseTab):
-    def __init__(self, app: Dash, sys_config: SystemConfiguration, bitfinex_config: BitfinexConfiguration,
-                 trade_handler_online: PatternTradeHandler):
+    def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
         MyDashBaseTab.__init__(self, app, sys_config)
-        self.bitfinex_config = bitfinex_config
+        self.bitfinex_config = self.sys_config.exchange_config
         self.trade_handler_online = trade_handler_online
         self.sys_config_second = sys_config.get_semi_deep_copy()
+        self.sys_config_fibonacci = self.sys_config.get_semi_deep_copy()
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None
         self._ticker_options = []
@@ -94,6 +94,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
             Output('my_position_markdown', 'children'),
             [Input('my_interval', 'n_intervals')])
         def handle_callback_for_position_markdown(n_intervals: int):
+            self.__add_fibonacci_waves_to_news__()
             return self.__get_position_markdown__(n_intervals)
 
     def __init_callback_for_dashboard_markdown__(self):
@@ -107,7 +108,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         news = self.__get_markdown_news__()
         trades = self.__get_markdown_trades__()
         statistics = self.__get_markdown_statistics__()
-        text = '- _**News**_: {}\n - _**Trades**_: {}\n - _**Daily statistics**_: {}'.format(news, trades, statistics)
+        text = '- _**News**_: {}\n- _**Trades**_: {}\n - _**Daily statistics**_: {}'.format(news, trades, statistics)
         return text
 
     def __get_position_markdown__(self, n_intervals: int):
@@ -131,6 +132,22 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
     def __get_markdown_news__(self):
         return self._news_handler.get_news_for_markdown_since_last_refresh(self._time_stamp_last_refresh)
+
+    def __add_fibonacci_waves_to_news__(self):
+        sys_config = self.sys_config_fibonacci
+        indicator_list = self.bitfinex_config.get_fibonacci_indicators()
+        result_list = []
+        # indicator_list = [['XMRUSD', 15]]
+        for indicators in indicator_list:
+            sys_config.init_by_fibonacci_indicator(indicators)
+            detector = self._pattern_controller.get_detector_for_fibonacci(sys_config, indicators[0])
+            fib_wave_list = detector.fib_wave_tree.fibonacci_wave_list
+            for fib_wave in fib_wave_list:
+                if fib_wave.is_wave_indicator_for_dash(indicators[1]):
+                    result_list.append('{}: {}'.format(indicators[0], fib_wave.get_details_as_dash_indicator()))
+        if len(result_list) > 0:
+            playsound('../pattern_sounds/alarm_fibonacci.wav')
+            self._news_handler.add_news('Fibonacci', ', '.join(result_list))
 
     def __get_markdown_trades__(self):
         return '- none -'
@@ -241,7 +258,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
             pattern_list = self._graph_first_cache.get_pattern_list_for_buy_trigger(BT.BREAKOUT)
             self.trade_handler_online.add_pattern_list_for_trade(pattern_list)
             if self._graph_first_cache.number_of_finished_fibonacci_waves_since_last_refresh > 2:
-                self._news_handler.add_news('Fibonacci alert', 'More than 2 waves finished since last refresh !!!!')
+                self._news_handler.add_news('Fibonacci numbers', 'More than 2 waves finished since last refresh !!!!')
                 play_sound = True
             if play_sound:
                 playsound('Ring08.wav')  # C:/Windows/media/...
@@ -301,7 +318,6 @@ class MyDashTab4Pattern(MyDashBaseTab):
         graph_id = 'my_graph_first'
         aggregation = self.sys_config.period_aggregation
         graph_title = self.__get_graph_title__(ticker, self.sys_config.period, aggregation)
-        print('title for my_graph_first: {}'.format(graph_title))
         graph_key = MyGraphCache.get_cache_key(graph_id, ticker, 0)
         cached_graph = self._graph_first_cache.get_cached_object_by_key(graph_key)
         if cached_graph is not None:

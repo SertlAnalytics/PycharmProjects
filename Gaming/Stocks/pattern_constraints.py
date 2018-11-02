@@ -57,15 +57,16 @@ class Constraints:
         self._fill_global_constraints__()
 
     def get_value_dict(self):
-        return dict(tolerance_pct = self.tolerance_pct,
-                    tolerance_pct_equal =self.tolerance_pct_equal,
-                    global_all_in = self.global_all_in,
-                    global_count = self.__get_global_count_details__(),
-                    global_series = self.global_series,
-                    f_upper_percentage_bounds = self.f_upper_percentage_bounds,
-                    f_lower_percentage_bounds = self.f_lower_percentage_bounds,
-                    height_end_start_relation_bounds = self.height_end_start_relation_bounds,
-                    f_regression_percentage_bounds = self.f_regression_percentage_bounds)
+        return dict(tolerance_pct=self.tolerance_pct,
+                    tolerance_pct_equal=self.tolerance_pct_equal,
+                    global_all_in=self.global_all_in,
+                    global_count=self.__get_global_count_details__(),
+                    global_series=self.global_series,
+                    f_upper_percentage_bounds=self.f_upper_percentage_bounds,
+                    f_lower_percentage_bounds=self.f_lower_percentage_bounds,
+                    height_end_start_relation_bounds=self.height_end_start_relation_bounds,
+                    f_regression_percentage_bounds=self.f_regression_percentage_bounds,
+                    is_breakout_required_after_certain_ticks=self.__is_breakout_required_after_certain_ticks__())
 
     def are_pre_constraints_fulfilled(self, data_dict: dict) -> bool:
         if len(self.previous_period_top_out_pct_bounds) > 0:

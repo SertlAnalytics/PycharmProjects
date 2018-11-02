@@ -13,16 +13,17 @@ from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.mydates import MyDate
 from datetime import timedelta
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
-from sertl_analytics.constants.pattern_constants import PSC, PRD
+from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
+from sertl_analytics.constants.pattern_constants import PSC, PRD, TP, BT
 from pattern_system_configuration import SystemConfiguration
 from pattern_statistics import PatternStatistics, DetectorStatistics, ConstraintsStatistics
 from pattern_constraints import ConstraintsFactory
 from pattern_detector import PatternDetector
 from pattern_plotting.pattern_plotter import PatternPlotter
+from pattern_trade_handler import PatternTradeHandler
 from datetime import datetime
 from time import sleep
 from sertl_analytics.mycache import MyCache
-from pattern_id import PatternIdFactory, PatternID
 
 
 """
@@ -66,6 +67,7 @@ class PatternDataFetcherCacheKey(DataFetcherCacheKey):
 class PatternDetectionController:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
+        self.sys_config.runtime_config.actual_trade_process = TP.BACK_TESTING
         self.detector_statistics = DetectorStatistics(self.sys_config)
         self.pattern_statistics = PatternStatistics(self.sys_config)
         self.constraints_statistics = ConstraintsStatistics()
@@ -98,7 +100,7 @@ class PatternDetectionController:
             if self.sys_config.pdh is None:
                 print('No data available for: {} and {}'.format(ticker, and_clause))
                 continue
-            print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime.actual_ticker_name))
+            print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime_config.actual_ticker_name))
             self.sys_config.init_predictors_without_condition_list()
             detector = PatternDetector(self.sys_config)
             detector.parse_for_fibonacci_waves()
@@ -106,6 +108,8 @@ class PatternDetectionController:
             # self.check_for_optimal_trading_strategy(detector)  # ToDo error with deepcopy in the called module
             detector.check_for_intersections_and_endings()
             detector.save_pattern_data()
+            if self.sys_config.config.with_trading:
+                self.__simulate_trading__(detector)
             self.__handle_statistics__(detector)
             self._number_pattern_total += len(detector.pattern_list)
             if self.sys_config.config.plot_data:
@@ -117,10 +121,14 @@ class PatternDetectionController:
             elif self.sys_config.period == PRD.INTRADAY:
                 sleep(15)
 
-    @staticmethod
-    def __get_pattern_id_from_pattern_id_str__(sys_config: SystemConfiguration, pattern_id_str: str) -> PatternID:
-        if pattern_id_str != '':
-            return PatternIdFactory(sys_config).get_pattern_id_from_pattern_id_string(pattern_id_str)
+    def __simulate_trading__(self, detector: PatternDetector):
+        pattern_list = detector.get_pattern_list_for_back_testing()
+        for pattern in pattern_list:
+            # we need for each pattern a new pattern trade handler...
+            detector.trade_handler = PatternTradeHandler(self.sys_config)
+            detector.trade_handler.add_pattern_list_for_trade([pattern])
+            detector.trade_handler.simulate_trading_for_one_pattern(pattern)
+            # print('self.trade_handler: Trades = {}'.format(len(detector.trade_handler.pattern_trade_dict)))
 
     def check_for_optimal_trading_strategy(self, detector: PatternDetector):
         pattern_list_filtered = [pattern for pattern in detector.pattern_list if pattern.was_breakout_done()]
@@ -136,7 +144,8 @@ class PatternDetectionController:
     @staticmethod
     def get_detector_for_dash(sys_config: SystemConfiguration, ticker: str, and_clause='') -> PatternDetector:
         sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, 200)
-        print('\nProcessing {} ({}) for {} ...\n'.format(ticker, sys_config.runtime.actual_ticker_name, and_clause))
+        print('\nProcessing {} ({}){}...\n'.format(
+            ticker, sys_config.runtime_config.actual_ticker_name, '' if and_clause == '' else ' for {}'.format(and_clause)))
         sys_config.init_predictors_without_condition_list()
         detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()
@@ -146,17 +155,25 @@ class PatternDetectionController:
         return detector
 
     @staticmethod
+    def get_detector_for_fibonacci(sys_config: SystemConfiguration, ticker: str) -> PatternDetector:
+        and_clause = sys_config.data_provider.and_clause
+        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, 200)
+        print('\nProcessing for Fibonacci {} ({})\n'.format(ticker, sys_config.runtime_config.actual_ticker_name))
+        detector = PatternDetector(sys_config)
+        detector.parse_for_fibonacci_waves()
+        return detector
+
+    @staticmethod
     def get_detector_for_pattern_id(sys_config: SystemConfiguration, pattern_id_str: str) -> PatternDetector:
         sys_config.init_by_pattern_id_str(pattern_id_str)
-        ticker = sys_config.runtime.actual_ticker
-        and_clause = sys_config.runtime.actual_and_clause
+        ticker = sys_config.runtime_config.actual_ticker
+        and_clause = sys_config.runtime_config.actual_and_clause
         print('\nDetector_for_pattern_id - processing {} ({}) for {} ...\n'.format(
-            ticker, sys_config.runtime.actual_ticker_name, and_clause))
+            ticker, sys_config.runtime_config.actual_ticker_name, and_clause))
         sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, 200)
         sys_config.init_predictors_without_condition_list()
         detector = PatternDetector(sys_config)
-        pattern_id = PatternDetectionController.__get_pattern_id_from_pattern_id_str__(sys_config, pattern_id_str)
-        detector.parse_for_pattern(pattern_id)
+        detector.parse_for_pattern()
         return detector
 
     @property

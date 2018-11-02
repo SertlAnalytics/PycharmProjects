@@ -1,5 +1,5 @@
 """
-Description: This module contains the Trading box classes. They represent the trading range.
+Description: This module contains the Trading box classes. They represent the exchange_config range.
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-10
@@ -10,6 +10,7 @@ from pattern_wave_tick import WaveTick, WaveTickList
 from sertl_analytics.mydates import MyDate
 import math
 from scipy import stats
+import statistics
 import numpy as np
 import pandas as pd
 
@@ -153,6 +154,7 @@ class TradingBox:
         return stop_loss_changed or limit_changed
 
     def __adjust_stop_loss_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
+        ticker_last_price = statistics.mean(self._ticker_last_price_list[-16:])  # ToDo this list number can be smarter...
         if self._trade_strategy == TSTR.LIMIT:  # with trailing stop
             if self._stop_loss < ticker_last_price - self._distance_bottom:
                 self._stop_loss = ticker_last_price - self._distance_bottom

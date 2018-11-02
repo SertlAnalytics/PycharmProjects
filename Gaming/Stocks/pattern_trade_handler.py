@@ -1,5 +1,5 @@
 """
-Description: This module contains the PatternTradeContainer class - central data container for stock data trading
+Description: This module contains the PatternTradeContainer class - central data container for stock data exchange_config
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
@@ -16,13 +16,14 @@ from pattern_wave_tick import WaveTick, WaveTickList
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, OrderStatusApi
 from pattern_news_handler import NewsHandler
 from pattern_trade_candidate import TradeCandidateController, TradeCandidate
+from pattern import Pattern
 
 
 class PatternTradeHandler:
-    def __init__(self, sys_config: SystemConfiguration, exchange_config: ExchangeConfiguration):
+    def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
-        self.exchange_config = exchange_config
-        self.trade_process = self.sys_config.runtime.actual_trade_process
+        self.exchange_config = self.sys_config.exchange_config
+        self.trade_process = self.sys_config.runtime_config.actual_trade_process
         self.trade_client = self.__get_trade_client__()
         self.stock_db = self.sys_config.db_stock
         self.ticker_id_list = []
@@ -58,11 +59,18 @@ class PatternTradeHandler:
         self.__process_trade_candidates__()
         self._pattern_trade_for_replay = self.__get_pattern_trade_for_replay__()
 
+    def simulate_trading_for_one_pattern(self, pattern: Pattern):
+        tick_list = pattern.get_back_testing_wave_ticks()
+        for wave_tick in tick_list:
+            self.check_actual_trades(wave_tick)  # wave_tick
+        self.enforce_sell_at_end(tick_list[-1])
+
     def check_actual_trades(self, last_wave_tick=None):
         if last_wave_tick is not None:
             self._last_wave_tick_for_test = last_wave_tick
         self._time_stamp_for_actual_check = MyDate.get_epoch_seconds_from_datetime()
-        self.__remove_finished_pattern_trades__()
+        if self.trade_process == TP.ONLINE:
+            self.__remove_finished_pattern_trades__()
         self.__process_trade_candidates__()  # take care of old patterns in queue
         if self.trade_numbers == 0:
             return
@@ -161,7 +169,7 @@ class PatternTradeHandler:
 
     @staticmethod
     def __print_details_after_adding_to_trade_dict(pattern_trade: PatternTrade, scope: str):
-        prefix = 'Adding to trading list' if scope == 'Add' else 'Replacing in trading list'
+        prefix = 'Adding to exchange_config list' if scope == 'Add' else 'Replacing in exchange_config list'
         suffix = ' (simulation)' if pattern_trade.is_simulation else ' (REAL)'
         print('{}{}...: {}'.format(prefix, suffix, pattern_trade.id))
 
@@ -211,13 +219,14 @@ class PatternTradeHandler:
 
     def __handle_sell_trigger__(self, pattern_trade: PatternTrade, sell_trigger: str):
         ticker = pattern_trade.ticker_actual
-        sell_comment = 'Sell_{} at {:.2f} on {}'.format(sell_trigger, ticker.last_price, ticker.date_time_str)
+        sell_price = pattern_trade.get_actual_sell_price(sell_trigger, ticker.last_price)
+        sell_comment = 'Sell_{} at {:.2f} on {}'.format(sell_trigger, sell_price, ticker.date_time_str)
         print('Sell: {}'.format(sell_comment))
         ticker_id = pattern_trade.ticker_id
         if self.trade_process == TP.ONLINE:
             order_status = self.trade_client.create_sell_market_order(ticker_id, pattern_trade.executed_amount)
         else:
-            order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade)
+            order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, sell_trigger)
         pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
         pattern_trade.save_trade()
 
@@ -260,9 +269,9 @@ class PatternTradeHandler:
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.SMA_PROBLEM)
 
     def __get_pattern_entry_part(self, pattern_trade: PatternTrade):
-        self.sys_config.runtime.actual_pattern_type = pattern_trade.pattern.pattern_type
-        self.sys_config.runtime.actual_breakout = pattern_trade.pattern.breakout
-        self.sys_config.runtime.actual_pattern_range = pattern_trade.pattern.pattern_range
+        self.sys_config.runtime_config.actual_pattern_type = pattern_trade.pattern.pattern_type
+        self.sys_config.runtime_config.actual_breakout = pattern_trade.pattern.breakout
+        self.sys_config.runtime_config.actual_pattern_range = pattern_trade.pattern.pattern_range
         return PatternEntryPart(self.sys_config, pattern_trade.pattern.function_cont)
 
     def __set_breakout_after_checks__(self, pattern_trade: PatternTrade):
@@ -300,13 +309,16 @@ class PatternTradeHandler:
         pattern_trade.set_order_status_buy(order_status, buy_comment, ticker)
         pattern_trade.save_trade()
 
-    def __get_order_status_testing__(self, process: str, pattern_trade: PatternTrade):
+    def __get_order_status_testing__(self, process: str, pattern_trade: PatternTrade, sell_trigger=''):
         ticker = pattern_trade.ticker_actual
         api = OrderStatusApi()
         api.order_id = ticker.time_stamp
         api.symbol = ticker.ticker_id
         api.exchange = 'Test'
-        api.price = ticker.last_price
+        if process == PTHP.HANDLE_BUY_TRIGGERS:
+            api.price = ticker.last_price
+        else:
+            api.price = pattern_trade.get_actual_sell_price(sell_trigger, ticker.last_price)
         api.avg_execution_price = ticker.last_price
         api.side = OS.BUY if process == PTHP.HANDLE_BUY_TRIGGERS else OS.SELL
         api.type = OT.EXCHANGE_MARKET

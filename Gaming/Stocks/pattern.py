@@ -73,7 +73,7 @@ class Pattern:
         self.pdh = api.pdh
         self.pattern_type = api.pattern_type
         self.data_dict_obj = PatternDataDictionary(self.sys_config, self.pdh)
-        self.ticker_id = self.sys_config.runtime.actual_ticker
+        self.ticker_id = self.sys_config.runtime_config.actual_ticker
         self.df = self.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
         self.df_min_max = self.pdh.pattern_data.df_min_max
@@ -150,10 +150,15 @@ class Pattern:
         return self._nearest_neighbor_collector.get_sorted_entry_list()
 
     def __get_pattern_id__(self) -> PatternID:
-        equity_type_id = self.data_dict_obj.get(DC.EQUITY_TYPE_ID)
-        period = self.data_dict_obj.get(DC.PERIOD)
-        aggregation = self.data_dict_obj.get(DC.PERIOD_AGGREGATION)
-        return PatternID(equity_type_id, self.ticker_id, self.pattern_type, period, aggregation, self.pattern_range)
+        kwargs = {
+            'equity_type_id': self.data_dict_obj.get(DC.EQUITY_TYPE_ID),
+            'period': self.data_dict_obj.get(DC.PERIOD),
+            'aggregation': self.data_dict_obj.get(DC.PERIOD_AGGREGATION),
+            'ticker_id': self.ticker_id,
+            'pattern_type': self.pattern_type,
+            'pattern_range_id': self.pattern_range.id
+        }
+        return PatternID(**kwargs)
 
     def add_part_entry(self, part_entry: PatternEntryPart):
         self._part_entry = part_entry
@@ -169,7 +174,7 @@ class Pattern:
     def calculate_predictions_after_part_entry(self):
         self.__calculate_predictions_after_part_entry__()
         self.__add_predictions_before_breakout_to_data_dict__()
-        # The next call is done to have the necessary columns for a online trading prediction
+        # The next call is done to have the necessary columns for a online exchange_config prediction
         self.__calculate_predictions_after_breakout__()
 
     def __calculate_predictions_after_part_entry__(self):
@@ -373,7 +378,7 @@ class Pattern:
                 self.id, self.expected_breakout_direction))
         # elif not check_dict['Expected_win_sufficient']:
         #     print('\n{}: No trade possible: expected win {:.2f} not sufficient ({:.2f} required)'.format(
-        #         self.id, self.get_expected_win(), self.sys_config.runtime.actual_expected_win_pct))
+        #         self.id, self.get_expected_win(), self.sys_config.runtime_config.actual_expected_win_pct))
         return False if False in [check_dict[key] for key in check_dict] else True
 
     def are_conditions_for_buy_trigger_fulfilled(self, buy_trigger: str) -> bool:
@@ -537,13 +542,13 @@ class Pattern:
 
     def __is_expected_win_sufficient__(self) -> bool:
         ref_value = self._part_entry.tick_last.close
-        min_expected_win_pct = self.sys_config.runtime.actual_expected_win_pct
+        min_expected_win_pct = self.sys_config.runtime_config.actual_expected_win_pct
         expected_win_pct = round(((self.get_expected_win() + ref_value) / ref_value - 1)*100, 1)
         return expected_win_pct >= min_expected_win_pct
 
     def __is_expected_win_for_touch_point_sufficient__(self) -> bool:
         ref_value = self._part_entry.tick_last.close
-        min_expected_win_pct = self.sys_config.runtime.actual_expected_win_pct
+        min_expected_win_pct = self.sys_config.runtime_config.actual_expected_win_pct
         expected_win = self.get_expected_win_for_touch_point()
         expected_win_pct = round(((expected_win + ref_value) / ref_value - 1) * 100, 1)
         print('expected_win_for_touch_point={} / {}% - min={}%'.format(expected_win, expected_win_pct, min_expected_win_pct))

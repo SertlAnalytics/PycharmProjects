@@ -15,11 +15,11 @@ from pattern_test.trade_test_cases import TradeTestCase, TradeTestCaseFactory, T
 
 
 class TradeTest:
-    def __init__(self, api: TradeTestApi, sys_config=None, exchange_config=None):
+    def __init__(self, api: TradeTestApi, sys_config=None):
         self.api = api
         self.trade_process = api.test_process
         self.sys_config = sys_config if sys_config else SystemConfiguration()
-        self.exchange_config = exchange_config if exchange_config else ExchangeConfiguration()
+        self.exchange_config = self.sys_config.exchange_config
         self.__adjust_sys_config__()
         self.__adjust_data_provider_parameters__()
         self.__adjust_exchange_config__()
@@ -29,7 +29,7 @@ class TradeTest:
         self.exchange_config.is_simulation = True
 
     def __adjust_sys_config__(self):
-        self.sys_config.runtime.actual_trade_process = self.trade_process
+        self.sys_config.runtime_config.actual_trade_process = self.trade_process
         if self.trade_process == TP.BACK_TESTING:
             self.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
         self.sys_config.config.plot_data = False
@@ -51,14 +51,14 @@ class TradeTest:
     def run_test_case(self, tc: TradeTestCase):
         self.exchange_config.trade_strategy_dict = {tc.buy_trigger: [tc.trade_strategy]}
         self.sys_config.config.pattern_type_list = [tc.pattern_type]
-        self.sys_config.config.use_own_dic({tc.symbol: tc.symbol})
-        self.sys_config.config.and_clause = tc.and_clause
+        self.sys_config.data_provider.use_own_dic({tc.symbol: tc.symbol})
+        self.sys_config.data_provider.and_clause = tc.and_clause
         self.sys_config.config.with_trade_part = False if tc.buy_trigger == BT.TOUCH_POINT else True
 
         pattern_controller = PatternDetectionController(self.sys_config)
         detector = pattern_controller.get_detector_for_dash(self.sys_config, tc.symbol, tc.and_clause)
         pattern_list = detector.get_pattern_list_for_buy_trigger(tc.buy_trigger)
-        trade_handler = PatternTradeHandler(self.sys_config, self.exchange_config)  # we need a new one for each
+        trade_handler = PatternTradeHandler(self.sys_config)  # we need a new one for each
         trade_handler.add_pattern_list_for_trade(pattern_list)
         self.__print_frame_information__(tc.buy_trigger, tc.trade_strategy, tc.test_process)
         for wave_tick in tc.wave_tick_list:
@@ -89,7 +89,7 @@ class TradeTest:
         self.exchange_config.trade_strategy_dict = {api.buy_trigger: [api.trade_strategy]}
         self.sys_config.config.pattern_type_list = [api.pattern_type]
         self.sys_config.data_provider.use_own_dic({api.symbol: api.symbol})
-        self.sys_config.config.and_clause = api.and_clause
+        self.sys_config.data_provider.and_clause = api.and_clause
         self.sys_config.config.with_trade_part = False
 
     @staticmethod

@@ -63,10 +63,18 @@ class BitfinexConfiguration(ExchangeConfiguration):
                                     BT.TOUCH_POINT: [TSTR.LIMIT]}
         self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP,
                                     BT.TOUCH_POINT: TSTR.LIMIT}
+        self.fibonacci_indicators = {'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
 
     def print_actual_mode(self):
         text = 'Bitfinex running in {} mode.'.format('SIMULATION' if self.is_simulation else 'TRADING (!!!)')
         print(MyString.surround(text))
+
+    def get_fibonacci_indicators(self):
+        li = []
+        for key, key_list in self.fibonacci_indicators.items():
+            for numbers in key_list:
+                li.append([key, numbers])
+        return li
 
 
 class BitfinexOrder(Order):

@@ -30,18 +30,17 @@ from pattern_news_handler import NewsHandler
 
 
 class ReplayHandler:
-    def __init__(self, trade_process: str, sys_config: SystemConfiguration, exchange_config: ExchangeConfiguration):
+    def __init__(self, trade_process: str, sys_config: SystemConfiguration):
+        self.sys_config = sys_config.get_semi_deep_copy()
         self.trade_process = trade_process
         if self.trade_process == TP.ONLINE:
             self.sys_config = sys_config
         else:
-            self.sys_config = sys_config.get_semi_deep_copy()
             self.sys_config.data_provider.from_db = False
             self.sys_config.data_provider.period = PRD.DAILY
             self.sys_config.data_provider.aggregation = 1
-        self.sys_config.runtime.actual_trade_process = self.trade_process
-        self.exchange_config = deepcopy(exchange_config)  # we change the simulation mode...
-        self.trade_handler = PatternTradeHandler(self.sys_config, self.exchange_config)
+        self.sys_config.runtime_config.actual_trade_process = self.trade_process
+        self.trade_handler = PatternTradeHandler(self.sys_config)
         self.trade_test_api = None
         self.trade_test = None
         self.detector = None
@@ -99,7 +98,7 @@ class ReplayHandler:
         return wave_tick
 
     def set_trade_test(self):
-        self.trade_test = TradeTest(self.trade_test_api, self.sys_config, self.exchange_config)
+        self.trade_test = TradeTest(self.trade_test_api, self.sys_config)
 
     def set_detector(self):
         self.detector = self.trade_test.get_pattern_detector_for_replay(self.trade_test_api)
@@ -150,10 +149,9 @@ class ReplayHandler:
 class MyDashTab4Trades(MyDashBaseTab):
     _data_table_name = 'actual_trade_table'
 
-    def __init__(self, app: Dash, sys_config: SystemConfiguration, exchange_config: ExchangeConfiguration,
-                 trade_handler_online: PatternTradeHandler):
+    def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
         MyDashBaseTab.__init__(self, app, sys_config)
-        self.exchange_config = exchange_config
+        self.exchange_config = self.sys_config.exchange_config
         self._trade_handler_online = trade_handler_online
         self._df_trade = self.sys_config.db_stock.get_trade_records_for_replay_as_dataframe()
         self._df_trade_for_replay = self._df_trade[TradeTable.get_columns_for_replay()]
@@ -190,9 +188,9 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._selected_pattern_trade = None
 
     def __init_replay_handlers__(self):
-        self._trade_replay_handler = ReplayHandler(TP.TRADE_REPLAY, self.sys_config, self.exchange_config)
-        self._pattern_replay_handler = ReplayHandler(TP.PATTERN_REPLAY, self.sys_config, self.exchange_config)
-        self._trade_replay_handler_online = ReplayHandler(TP.ONLINE, self.sys_config, self.exchange_config)
+        self._trade_replay_handler = ReplayHandler(TP.TRADE_REPLAY, self.sys_config)
+        self._pattern_replay_handler = ReplayHandler(TP.PATTERN_REPLAY, self.sys_config)
+        self._trade_replay_handler_online = ReplayHandler(TP.ONLINE, self.sys_config)
         self._trade_replay_handler_online.trade_handler = self._trade_handler_online
 
     @property

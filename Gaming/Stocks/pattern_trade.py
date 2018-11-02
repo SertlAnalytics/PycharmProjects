@@ -1,5 +1,5 @@
 """
-Description: This module contains the PatternTrade class - central data container for stock data trading
+Description: This module contains the PatternTrade class - central data container for stock data exchange_config
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-10
@@ -34,14 +34,14 @@ class PatternTrade:
         self.sys_config = api.pattern.sys_config
         self.pdh = api.pattern.pdh
         self.bitfinex_config = api.bitfinex_config
-        self.trade_process = self.sys_config.runtime.actual_trade_process
+        self.trade_process = self.sys_config.runtime_config.actual_trade_process
         self.buy_trigger = api.buy_trigger
         self.trade_box_type = api.box_type
         self.trade_strategy = api.trade_strategy
         self.pattern = api.pattern
         self.news_handler = NewsHandler()
         self._volume_mean_for_breakout = self.pattern.volume_mean_for_breakout
-        self._wave_tick_list = WaveTickList(self.pattern.part_entry.tick_list)
+        self._wave_tick_list = self.__get_wave_tick_list_for_start__()
         if self.trade_process == TP.TRADE_REPLAY:
             self.__initialize_breakout_values_for_tick_list__()
         self._wave_tick_at_start = self._wave_tick_list.tick_list[-1]
@@ -69,6 +69,11 @@ class PatternTrade:
         self._xy_for_buying = None
         self._xy_for_selling = None
         self._xy_after_selling = None
+
+    def __get_wave_tick_list_for_start__(self):
+        off_set_time_stamp = self.pattern.pattern_range.tick_last.time_stamp
+        tick_list = [tick for tick in self.pattern.part_entry.tick_list if tick.time_stamp <= off_set_time_stamp]
+        return WaveTickList(tick_list)
 
     @property
     def id(self):
@@ -195,6 +200,13 @@ class PatternTrade:
         self.__set_ticker_actual__()  # we need this to work with a ticker alone in some cases
         self._df_for_replay = self._wave_tick_list.get_tick_list_as_data_frame_for_replay()
 
+    def get_actual_sell_price(self, sell_trigger: str, last_price: float):
+        if sell_trigger == ST.LIMIT:
+            return round(self.limit_current, 2)
+        if sell_trigger == ST.STOP_LOSS:
+            return round(self.stop_loss_current, 2)
+        return last_price
+
     def __set_ticker_actual__(self):
         tick = self.wave_tick_actual
         ts = MyDate.get_epoch_seconds_from_datetime() if self.trade_process == TP.ONLINE else tick.time_stamp
@@ -272,6 +284,8 @@ class PatternTrade:
         return self._breakout_counter >= self._counter_required  # we need a second confirmation
 
     def __print_details_for_actual_value_category__(self, process: str, l_value: float, u_value: float, vc: str):
+        if self.trade_process != TP.ONLINE:
+            return
         date_time = MyDate.get_date_time_from_epoch_seconds(self.ticker_actual.time_stamp)
         ticker_id = self.ticker_actual.ticker_id
         if process == PTHP.VERIFY_TOUCH_POINT:
@@ -340,6 +354,8 @@ class PatternTrade:
                 break
 
     def print_state_details_for_actual_wave_tick(self, process: str):
+        if self.trade_process != TP.ONLINE:
+            return
         wave_tick = self.wave_tick_actual
         ticker_id = self.pattern.ticker_id
         if self.status == PTS.NEW:
@@ -357,17 +373,20 @@ class PatternTrade:
                     counter = self.wrong_breakout_counter
                 else:
                     counter = self.breakout_counter
-            print('{}: {} for {}-{}-{} ({}/{}): ticker.last_price={:.2f}, breakout value={:.2f}'.format(
+            print('{}: {} for {}-{}-{} ({}/{}): ticker.last_price={:.2f}, date_time={}, breakout value={:.2f}'.format(
                 self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
-                counter, counter_required, wave_tick.close, breakout_value))
+                counter, counter_required, wave_tick.close, wave_tick.date_time_str, breakout_value))
         else:
             print(
-                '{}: {} for {}-{}-{}: _limit={:.2f}, ticker.last_price={:.2f}, stop_loss={:.2f}, bought_at={:.2f}'.format(
+                '{}: {} for {}-{}-{}: _limit={:.2f}, ticker.last_price={:.2f}, date_time={}, stop_loss={:.2f}, '
+                'bought_at={:.2f}'.format(
                     self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
-                    self.limit_current, wave_tick.close, self.stop_loss_current,
+                    self.limit_current, wave_tick.close, wave_tick.date_time_str, self.stop_loss_current,
                     self.order_status_buy.avg_execution_price))
 
     def print_state_details_for_actual_ticker(self, process: str):
+        if self.trade_process != TP.ONLINE:
+            return
         ticker = self.ticker_actual
         if self.status == PTS.NEW:
             counter_required = self.counter_required
@@ -388,9 +407,11 @@ class PatternTrade:
                 self.trade_process, process, ticker.ticker_id, self.buy_trigger, self.trade_strategy,
                 counter, counter_required, ticker.last_price, breakout_value))
         else:
-            print('{}: {} for {}-{}-{}: _limit={:.2f}, ticker.last_price={:.2f}, stop_loss={:.2f}, bought_at={:.2f}'.format(
+            print('{}: {} for {}-{}-{}: _limit={:.2f}, ticker.last_price={:.2f}, date_time={}, '
+                  'stop_loss={:.2f}, bought_at={:.2f}'.format(
                 self.trade_process, process, ticker.ticker_id, self.buy_trigger, self.trade_strategy,
-                self.limit_current, ticker.last_price, self.stop_loss_current, self.order_status_buy.avg_execution_price))
+                self.limit_current, ticker.last_price, ticker.date_time_str, self.stop_loss_current,
+                self.order_status_buy.avg_execution_price))
 
     def save_trade(self):
         if not self.sys_config.config.save_trade_data:
@@ -422,20 +443,21 @@ class PatternTrade:
     def __get_value_dict__(self) -> dict:
         return {'Status': self.status, 'Buy_trigger': self.buy_trigger, 'Trade_box': self.trade_box_type,
                 'Trade_strategy': self.trade_strategy, 'Pattern_Type': self.pattern.pattern_type,
-                'Expected_win (per unit):': round(self.expected_win, 4), 'Result (resp. amount)': self.get_trade_result_text()
+                'Expected_win (per unit):': round(self.expected_win, 4),
+                'Result (resp. amount)': self.get_trade_result_text()
         }
 
     def get_trade_result_text(self):
         if not self._order_status_sell:
             return '-'
-        return '{:0.2f} from {:0.2f}'.format(
-            self._order_status_sell.value_total - self._order_status_buy.value_total, self._order_status_buy.value_total
-        )
+        amount = self._order_status_sell.value_total - self._order_status_buy.value_total
+        result_percentage = round(amount/self._order_status_buy.value_total * 100, 1)
+        return '{:0.2f} from {:0.2f} ({:2.1f}%)'.format(amount, self._order_status_buy.value_total, result_percentage)
 
     def adjust_trade_box_to_actual_ticker(self):
         sma = self.__get_simple_moving_average_value__() if self.trade_strategy == TSTR.SMA else 0
         was_adjusted = self._trade_box.adjust_to_next_ticker_last_price(self.wave_tick_actual.close, sma)
-        if was_adjusted:
+        if was_adjusted and self.trade_process == TP.ONLINE:
             self.print_state_details_for_actual_wave_tick(PTHP.ADJUST_STOPS_AND_LIMITS)
 
     def __get_simple_moving_average_value__(self) -> float:
@@ -472,6 +494,7 @@ class PatternTrade:
         order_status.order_trigger = self.buy_trigger
         order_status.trade_strategy = self.trade_strategy
         order_status.order_comment = buy_comment
+        order_status.set_fee_amount(self.bitfinex_config.buy_fee_pct, True)
         self._order_status_buy = order_status
         self.pattern.data_dict_obj.add_buy_order_status_data_to_pattern_data_dict(order_status, self.trade_strategy)
         self.__set_properties_after_buy__(ticker)
@@ -499,6 +522,7 @@ class PatternTrade:
         order_status.order_trigger = sell_trigger
         order_status.trade_strategy = self.trade_strategy
         order_status.order_comment = sell_comment
+        order_status.set_fee_amount(self.bitfinex_config.sell_fee_pct, True)
         self._order_status_sell = order_status
         self.pattern.data_dict_obj.add_sell_order_status_data_to_pattern_data_dict(order_status)
         self.__set_properties_after_sell__()

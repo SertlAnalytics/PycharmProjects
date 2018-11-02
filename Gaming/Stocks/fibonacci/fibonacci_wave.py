@@ -8,6 +8,7 @@ Date: 2018-05-14
 import numpy as np
 from sertl_analytics.constants.pattern_constants import FD, FR, CM, FWST
 from sertl_analytics.mymath import MyPoly1d
+from sertl_analytics.mydates import MyDate
 from fibonacci.fibonacci_wave_component import FibonacciWaveComponent, FibonacciRegressionComponent, \
     FibonacciRetracementComponent
 from fibonacci.fibonacci_wave_component import FibonacciAscendingRegressionComponent
@@ -79,6 +80,13 @@ class FibonacciWave:
 
     def __is_neckline_without_intersection__(self) -> bool:
         return True
+
+    def is_wave_indicator_for_dash(self, period_aggregation: int) -> bool:
+        ts_last_tick = self.w_5.tick_end.time_stamp
+        ts_now = MyDate.get_epoch_seconds_from_datetime()
+        number_ticks = int(30/period_aggregation)  # we want to be reminded for 1/2 hour
+        # number_ticks = 100
+        return ts_now - ts_last_tick < period_aggregation * 60 * number_ticks
 
     @property
     def w_1(self) -> FibonacciWaveComponent:
@@ -385,6 +393,9 @@ class FibonacciWave:
     def print_detailed(self):
         for wave_id in self.comp_id_list:
             print(self.comp_dic[wave_id].get_details())
+
+    def get_details_as_dash_indicator(self):
+        return '{} - last tick at {}'.format(self.wave_type, self.w_5.tick_end.time)
 
     def get_annotation_details(self):
         ret_reg_list = self.comp_reg_ret_pct_list

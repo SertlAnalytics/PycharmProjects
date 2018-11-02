@@ -57,6 +57,7 @@ class RuntimeConfiguration:
 class PatternConfiguration:
     def __init__(self):
         self.with_trade_part = True  # we need this configuration for testing touch strategy
+        self.with_trading = False
         self.pattern_type_list = [FT.CHANNEL]
         self.pattern_ids_to_find = []
         self.simple_moving_average_number = 10
@@ -81,9 +82,9 @@ class PatternConfiguration:
         self.breakout_range_pct = 0.05
         self.investment = 1000
         self.max_pattern_range_length = 50
-        self.show_final_statistics = True
+        self.show_final_statistics = False
         self.statistics_excel_file_name = ''
-        self.statistics_constraints_excel_file_name = 'pattern_statistics/constraints.xlsx'
+        self.statistics_constraints_excel_file_name = ''  # ''../pattern_statistics/constraints.xlsx'
         self.__previous_period_length = 0
 
     def __get_previous_period_length__(self):

@@ -11,7 +11,6 @@ from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
 from pattern_part import PatternPart, PatternEntryPart, PatternWatchPart, PatternTradePart
 from pattern import Pattern, PatternFactory
-from pattern_id import PatternID, PatternIdFactory
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
     , PatternRangeDetectorHeadShoulderBottom, PatternRange
 from pattern_range_fibonacci import PatternRangeDetectorFibonacciAsc, PatternRangeDetectorFibonacciDesc
@@ -32,7 +31,6 @@ class PatternDetector:
         self.df_length = self.df.shape[0]
         self.df_min_max = self.pdh.pattern_data.df_min_max
         self.df_min_max_length = self.df_min_max.shape[0]
-        self.pattern_id_factory = PatternIdFactory(self.sys_config)
         self.range_detector_max = None
         self.range_detector_min = None
         self.range_detector_h_s = None  # Head_Shoulder
@@ -41,6 +39,7 @@ class PatternDetector:
         self.range_detector_fib_desc = None  # Fibonacci descending
         self.pattern_list = []
         self.fib_wave_tree = None
+        self.trade_handler = None
         self.data_dict = {}
         self._set_data_dict_()
 
@@ -50,13 +49,13 @@ class PatternDetector:
                or self.range_detector_min.are_pattern_ranges_available
 
     def _set_data_dict_(self):
-        self.data_dict[DC.EQUITY_TYPE] = self.sys_config.runtime.actual_ticker_equity_type
+        self.data_dict[DC.EQUITY_TYPE] = self.sys_config.runtime_config.actual_ticker_equity_type
         self.data_dict[DC.EQUITY_TYPE_ID] = EQUITY_TYPE.get_id(self.data_dict[DC.EQUITY_TYPE])
         self.data_dict[DC.PERIOD] = self.sys_config.period
         self.data_dict[DC.PERIOD_ID] = PRD.get_id(self.sys_config.period)
         self.data_dict[DC.PERIOD_AGGREGATION] = self.sys_config.period_aggregation
-        self.data_dict[DC.TICKER_ID] = self.sys_config.runtime.actual_ticker
-        self.data_dict[DC.TICKER_NAME] = self.sys_config.runtime.actual_ticker_name
+        self.data_dict[DC.TICKER_ID] = self.sys_config.runtime_config.actual_ticker
+        self.data_dict[DC.TICKER_NAME] = self.sys_config.runtime_config.actual_ticker_name
 
     def parse_for_pattern(self):
         possible_pattern_range_list_dict = self.__get_possible_pattern_range_list_dict__()
@@ -72,8 +71,8 @@ class PatternDetector:
         return self.__get_pattern_range_list_dict__(possible_pattern_range_list)
 
     def __check_pattern_range_for_pattern_type__(self, pattern_type: str, pattern_range: PatternRange):
-        self.sys_config.runtime.actual_pattern_type = pattern_type
-        self.sys_config.runtime.actual_pattern_range = pattern_range
+        self.sys_config.runtime_config.actual_pattern_type = pattern_type
+        self.sys_config.runtime_config.actual_pattern_range = pattern_range
 
         pfcf_api = PatternFunctionContainerFactoryApi(self.sys_config, pattern_type)
         pfcf_api.pattern_type = pattern_type
@@ -168,7 +167,7 @@ class PatternDetector:
             can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)
             if pattern.breakout is None and not can_be_added:
                 return
-        self.sys_config.runtime.actual_breakout = pattern.breakout
+        self.sys_config.runtime_config.actual_breakout = pattern.breakout
         pattern.add_part_entry(PatternEntryPart(self.sys_config, pattern.function_cont))
         pattern.add_data_dict_entries_after_part_entry()
         if pattern.are_pre_conditions_fulfilled():
@@ -227,6 +226,8 @@ class PatternDetector:
 
     @staticmethod
     def __check_for_loop_break__(pattern: Pattern, counter: int, number_of_positions: int, tick: WaveTick) -> bool:
+        if pattern.breakout is not None:
+            return True
         if counter > number_of_positions:  # maximal number for the whole pattern (from start)
             return True
         if pattern.function_cont.is_tick_breakout_on_wrong_side(tick):

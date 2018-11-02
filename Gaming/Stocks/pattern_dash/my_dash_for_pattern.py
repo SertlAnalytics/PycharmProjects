@@ -24,14 +24,14 @@ from pattern_trade_handler import PatternTradeHandler
 
 
 class MyDash4Pattern(MyDashBase):
-    def __init__(self, sys_config: SystemConfiguration, bitfinex_config: BitfinexConfiguration):
+    def __init__(self, sys_config: SystemConfiguration):
         MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH())
         self.sys_config = sys_config
-        self.bitfinex_config = bitfinex_config
-        self.trade_handler_online = PatternTradeHandler(sys_config, self.bitfinex_config)
+        self.bitfinex_config = self.sys_config.exchange_config
+        self.trade_handler_online = PatternTradeHandler(sys_config)
         self.color_handler = DashColorHandler()
-        self.tab_pattern = MyDashTab4Pattern(self.app, self.sys_config, self.bitfinex_config, self.trade_handler_online)
-        self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.bitfinex_config, self.trade_handler_online)
+        self.tab_pattern = MyDashTab4Pattern(self.app, self.sys_config, self.trade_handler_online)
+        self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.trade_handler_online)
         self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config, self.color_handler)
 

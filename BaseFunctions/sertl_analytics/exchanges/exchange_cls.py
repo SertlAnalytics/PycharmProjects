@@ -16,7 +16,7 @@ class ExchangeConfiguration:
         self.is_simulation = True
         self.default_currency = 'USD'
         self.hodl_dict = {}  # currency in upper characters
-        self.buy_order_value_max = 0
+        self.buy_order_value_max = 100
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
         self.ticker_refresh_rate_in_seconds = 5

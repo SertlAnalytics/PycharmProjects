@@ -36,9 +36,9 @@ class PatternPart:
         self.function_cont = function_cont
         self.df = self.pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
         self.tick_list = []
-        self.pattern_type = self.sys_config.runtime.actual_pattern_type
-        self.breakout = self.sys_config.runtime.actual_breakout
-        self.pattern_range = self.sys_config.runtime.actual_pattern_range
+        self.pattern_type = self.sys_config.runtime_config.actual_pattern_type
+        self.breakout = self.sys_config.runtime_config.actual_breakout
+        self.pattern_range = self.sys_config.runtime_config.actual_pattern_range
         self.tick_first = None
         self.tick_last = None
         self.tick_high = None
@@ -76,18 +76,21 @@ class PatternPart:
         return self.tick_last.position - self.tick_first.position
 
     def __get_annotation_offset_x__(self):
-        width = 25 * self.pdh.pattern_data.tick_f_var_distance
-        if self.__xy_center[0] - self.pdh.pattern_data.tick_first.f_var <= width:
-            return -width
-        else:
-            return -2 * width
+        x_center = self.__xy_center[0]
+        distance_x_center_to_pattern_left_edge = abs(x_center - self.tick_first.f_var)
+        distance_x_center_to_left_edge = abs(x_center - self.pdh.pattern_data.tick_first.f_var)
+        distance_x_center_to_right_edge = abs(x_center - self.pdh.pattern_data.tick_list[-1].f_var)
+        if distance_x_center_to_left_edge < distance_x_center_to_right_edge:  # i.e. the pattern is in the left part
+            return 0
+        return -3*distance_x_center_to_pattern_left_edge
 
     def __get_annotation_offset_y__(self):
-        c_value = self.__xy_center[1]
-        offset = min(self.tick_high.high - c_value, c_value - self.tick_low.low)
-        if self.pdh.pattern_data.max_value - c_value > c_value - self.pdh.pattern_data.min_value:
-            return offset
-        return - offset
+        y_center = self.__xy_center[1]
+        distance_y_center_to_top = abs(y_center - self.pdh.pattern_data.max_value)
+        distance_y_center_to_bottom = abs(y_center - self.pdh.pattern_data.min_value)
+        if distance_y_center_to_top > distance_y_center_to_bottom:  # i.e. the pattern is in the lower area
+            return (self.tick_high.high - y_center)/3
+        return -2*abs(self.tick_low.low - y_center)
 
     def __calculate_values__(self):
         self.tick_list = [self.pdh.pattern_data.tick_list[k] for k in range(self.function_cont.position_first,
@@ -233,9 +236,9 @@ class PatternPart:
         if self.function_cont.f_var_cross_f_upper_f_lower > 0:
             date_forecast = MyDate.get_date_time_from_epoch_seconds(self.function_cont.f_var_cross_f_upper_f_lower)
             if self.sys_config.period == PRD.INTRADAY:
-                return_dict['Expected trading end'] = str(date_forecast.time())[:5]
+                return_dict['Expected exchange_config end'] = str(date_forecast.time())[:5]
             else:
-                return_dict['Expected trading end'] = str(date_forecast.date())
+                return_dict['Expected exchange_config end'] = str(date_forecast.date())
 
     def __get_slopes_by_f_param__(self) -> str:
         multiplier = 1000000

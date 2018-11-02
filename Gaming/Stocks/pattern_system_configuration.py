@@ -6,24 +6,23 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import Indices, EQUITY_TYPE, PRD, FT
-from sertl_analytics.pybase.loop_list import LL
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
-from pattern_data_container import PatternDataHandler
 from pattern_configuration import PatternConfiguration, RuntimeConfiguration
 from pattern_configuration import PatternDebugger
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
-from copy import deepcopy
+from pattern_id import PatternID
 from pattern_predictor import PatternMasterPredictorHandler, PatternPredictorApi
 from pattern_data_provider import PatternDataProvider
+from copy import deepcopy
 
 
 class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
         self.config = PatternConfiguration()
-        self.runtime = RuntimeConfiguration()
-        self.trading = BitfinexConfiguration()
+        self.runtime_config = RuntimeConfiguration()
+        self.exchange_config = BitfinexConfiguration()
         if for_semi_deep_copy:
             return
         self.crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
@@ -121,6 +120,7 @@ class SystemConfiguration:
         about which part has to be deeply copied and which can be used by reference.
         """
         sys_config_copy = SystemConfiguration(True)
+        sys_config_copy.exchange_config = deepcopy(self.exchange_config)  # we change the simulation mode...
         sys_config_copy.crypto_ccy_dic = self.crypto_ccy_dic
         sys_config_copy.pattern_table = self.pattern_table
         sys_config_copy.db_stock = self.db_stock
@@ -134,11 +134,11 @@ class SystemConfiguration:
         return sys_config_copy
 
     def __update_runtime_parameters__(self):
-        self.runtime.actual_ticker = self.data_provider.ticker_id
-        self.runtime.actual_ticker_name = self.data_provider.ticker_name
-        self.runtime.actual_ticker_equity_type = self.data_provider.equity_type
-        self.runtime.actual_expected_win_pct = self.expected_win_pct
-        self.runtime.actual_and_clause = self.data_provider.and_clause
+        self.runtime_config.actual_ticker = self.data_provider.ticker_id
+        self.runtime_config.actual_ticker_name = self.data_provider.ticker_name
+        self.runtime_config.actual_ticker_equity_type = self.data_provider.equity_type
+        self.runtime_config.actual_expected_win_pct = self.expected_win_pct
+        self.runtime_config.actual_and_clause = self.data_provider.and_clause
 
     def print(self):
         source = 'DB' if self.from_db else 'Api'
@@ -173,22 +173,28 @@ class SystemConfiguration:
         id_components = nn_id.split('#')
         self.init_by_pattern_id_str(id_components[1])
 
-    def init_by_pattern_id_str(self, pattern_id: str):  # example: 1_1_1_AAPL_12_2015-12-03_00:00_2016-01-07_00:00
-        id_parts = pattern_id.split('_')
-        symbol = id_parts[3]
-        self.data_provider.from_db = True
-        self.data_provider.period = PRD.get_period(int(id_parts[1]))
-        self.data_provider.aggregation = int(id_parts[2])
+    def init_by_fibonacci_indicator(self, indicator: list):  # example: ['BTCUSD', 15]
+        symbol = indicator[0]
+        self.data_provider.from_db = False
+        self.data_provider.period = PRD.INTRADAY
+        self.data_provider.aggregation = indicator[1]
         self.data_provider.use_own_dic({symbol: symbol})
-        self.config.pattern_type_list = [FT.get_pattern_type(int(id_parts[4]))]
-        date_from = MyDate.get_datetime_object(id_parts[5])
-        date_to = MyDate.get_datetime_object(id_parts[7])
-        date_from_adjusted = MyDate.adjust_by_days(date_from, -60)
-        date_to_adjusted = MyDate.adjust_by_days(date_to, +60)
+
+    def init_by_pattern_id_str(self, pattern_id: str):  # example: 1_1_1_AAPL_12_2015-12-03_00:00_2016-01-07_00:00
+        pattern_id_obj = PatternID(**{'pattern_id': pattern_id})
+        symbol = pattern_id_obj.ticker_id
+        self.data_provider.from_db = True
+        self.data_provider.period = pattern_id_obj.period
+        self.data_provider.aggregation = pattern_id_obj.aggregation
+        self.data_provider.use_own_dic({symbol: symbol})
+        self.config.pattern_type_list = [pattern_id_obj.pattern_type]
+        range_adjusting = max(60, pattern_id_obj.range_length)
+        date_from_adjusted = MyDate.adjust_by_days(pattern_id_obj.date_start, -range_adjusting)
+        date_to_adjusted = MyDate.adjust_by_days(pattern_id_obj.date_end, 2*range_adjusting)
         self.data_provider.and_clause = "Date BETWEEN '{}' AND '{}'".format(date_from_adjusted, date_to_adjusted)
-        self.runtime.actual_pattern_range = None
-        self.runtime.actual_pattern_range_from_time_stamp = MyDate.get_epoch_seconds_from_datetime(date_from)
-        self.runtime.actual_pattern_range_to_time_stamp = MyDate.get_epoch_seconds_from_datetime(date_to)
+        self.runtime_config.actual_pattern_range = None
+        self.runtime_config.actual_pattern_range_from_time_stamp = pattern_id_obj.ts_from
+        self.runtime_config.actual_pattern_range_to_time_stamp = pattern_id_obj.ts_to
 
 
 debugger = PatternDebugger()

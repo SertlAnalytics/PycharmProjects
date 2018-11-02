@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 from sertl_analytics.myexceptions import MyException
 from pattern_system_configuration import SystemConfiguration
-from pattern_data_container import PatternDataHandler
 
 
 class PatternFunctionContainer:
