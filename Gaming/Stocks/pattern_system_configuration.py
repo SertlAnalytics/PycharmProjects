@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import Indices, EQUITY_TYPE, PRD, FT
+from sertl_analytics.constants.pattern_constants import Indices, EQUITY_TYPE, PRD, PDP, CN, BT, TSTR, FT, DC
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
@@ -16,6 +16,48 @@ from pattern_id import PatternID
 from pattern_predictor import PatternMasterPredictorHandler, PatternPredictorApi
 from pattern_data_provider import PatternDataProvider
 from copy import deepcopy
+import numpy as np
+import math
+
+
+class TradeStrategyOptimizer:
+    def __init__(self, db_stock: StockDatabase):
+        self.db_stock = db_stock
+        self.df_trades = self.db_stock.get_trade_records_for_trading_optimizer_dataframe()
+
+    def get_optimal_strategy_for_pattern_id_list(self, pattern_id_list: list, buy_trigger: str, strategy_list: list):
+        strategy_opt = ''
+        result_pct_opt = -math.inf
+        for pattern_id in pattern_id_list:
+            df_pattern_id = self.df_trades.loc[np.logical_and(
+                    self.df_trades[DC.PATTERN_ID] == pattern_id,
+                    self.df_trades[DC.BUY_TRIGGER] == buy_trigger)]
+            for index, rows in df_pattern_id.iterrows():
+                strategy = rows[DC.TRADE_STRATEGY]
+                if strategy in strategy_list:
+                    result_pct = float(rows[DC.TRADE_RESULT_PCT])
+                    if result_pct > result_pct_opt:
+                        result_pct_opt = result_pct
+                        strategy_opt = strategy
+        print('Best trade strategy: {} - expected: {:0.2f}%'.format(strategy_opt, result_pct_opt))
+        return strategy_opt, result_pct_opt
+
+    def get_optimal_pattern_type_list_for_long_trading(self):
+        pattern_type_list_opt = []
+        for pattern_type in FT.get_long_trade_able_types():
+            df_trades_pos = self.df_trades.loc[np.logical_and(
+                    self.df_trades[DC.PATTERN_TYPE] == pattern_type,
+                    self.df_trades[DC.TRADE_RESULT_PCT] > 1)]
+            df_trades_neg = self.df_trades.loc[np.logical_and(
+                self.df_trades[DC.PATTERN_TYPE] == pattern_type,
+                self.df_trades[DC.TRADE_RESULT_PCT] < -1)]
+            if df_trades_neg.shape[0] == 0:
+                if df_trades_pos.shape[0] > 10:
+                    pattern_type_list_opt.append(pattern_type)
+            elif df_trades_pos.shape[0]/df_trades_neg.shape[0] > 2.5:
+                pattern_type_list_opt.append(pattern_type)
+        print('Best pattern types today: {}'.format(pattern_type_list_opt))
+        return pattern_type_list_opt
 
 
 class SystemConfiguration:
@@ -33,6 +75,7 @@ class SystemConfiguration:
         self.master_predictor_handler = PatternMasterPredictorHandler(
             PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)
         )
+        self.trade_strategy_optimizer = TradeStrategyOptimizer(self.db_stock)
 
     @property
     def pdh(self):
@@ -53,6 +96,28 @@ class SystemConfiguration:
     @property
     def period_aggregation(self) -> int:
         return self.data_provider.aggregation
+
+    def init_detection_process_for_automated_trade_update(self, mean: int):
+        self.config.detection_process = PDP.UPDATE_TRADE_DATA
+        self.config.pattern_type_list = FT.get_long_trade_able_types()
+        self.exchange_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX,
+                                                                  TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP]}
+        self.exchange_config.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.LIMIT}
+        self.config.detection_process = PDP.UPDATE_TRADE_DATA
+        self.config.plot_data = False
+        self.config.with_trading = True
+        self.config.trading_last_price_mean_aggregation = mean
+        self.config.save_pattern_data = False
+        self.config.save_trade_data = True
+        self.config.replace_existing_trade_data_on_db = False  # default = False
+        self.config.plot_only_pattern_with_fibonacci_waves = False
+        self.config.plot_min_max = True
+        self.config.plot_volume = False
+        self.config.length_for_local_min_max = 2
+        self.config.length_for_local_min_max_fibonacci = 1
+        self.config.bound_upper_value = CN.CLOSE
+        self.config.bound_lower_value = CN.CLOSE
+        self.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
 
     def get_value_categorizer_tolerance_pct(self):
         if self.period == PRD.INTRADAY:
@@ -131,6 +196,7 @@ class SystemConfiguration:
         sys_config_copy.master_predictor_handler = PatternMasterPredictorHandler(
             PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)
         )
+        sys_config_copy.trade_strategy_optimizer = self.trade_strategy_optimizer
         return sys_config_copy
 
     def __update_runtime_parameters__(self):

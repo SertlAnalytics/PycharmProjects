@@ -499,7 +499,8 @@ class Pattern:
         if self.pattern_type in [FT.TKE_TOP, FT.TKE_BOTTOM] and self.function_cont.f_var_cross_f_upper_f_lower != 0:
             return self.function_cont.position_cross_f_upper_f_lower - self.function_cont.tick_for_helper.position
         else:
-            return self.pattern_range.length
+            # print('get_maximal_trade_position_size: breakout.ts = {}'.format(self.breakout.tick_breakout.time_stamp))
+            return self.pattern_range.length * 3  # ToDo - something with length start till breakout...
 
     def __get_constraint__(self):
         return cstr.Constraints(self.sys_config)

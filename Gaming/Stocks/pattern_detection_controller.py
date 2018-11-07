@@ -14,7 +14,7 @@ from sertl_analytics.mydates import MyDate
 from datetime import timedelta
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
-from sertl_analytics.constants.pattern_constants import PSC, PRD, TP, BT
+from sertl_analytics.constants.pattern_constants import PSC, PRD, TP, PDP
 from pattern_system_configuration import SystemConfiguration
 from pattern_statistics import PatternStatistics, DetectorStatistics, ConstraintsStatistics
 from pattern_constraints import ConstraintsFactory
@@ -78,10 +78,14 @@ class PatternDetectionController:
         self._df_source_cache = MyCache()
 
     def run_pattern_detector(self, excel_file_test_data: PatternExcelFile = None):
-        if len(self.sys_config.config.pattern_ids_to_find) > 0:
-            for pattern_id_str in self.sys_config.config.pattern_ids_to_find:
-                self.sys_config.init_by_pattern_id_str(pattern_id_str)
-                self.__run_pattern_detector__()
+        len_pattern_id = len(self.sys_config.config.pattern_ids_to_find)
+        if len_pattern_id > 0:
+            for ind, pattern_id_str in enumerate(self.sys_config.config.pattern_ids_to_find):
+                if len_pattern_id > 1:
+                    print('\nProcessing pattern_id ({:03d} of {:03d}: {}'.format(ind+1, len_pattern_id, pattern_id_str))
+                if self.__has_pattern_id_to_be_processed__(pattern_id_str):
+                    self.sys_config.init_by_pattern_id_str(pattern_id_str)
+                    self.__run_pattern_detector__()
         else:
             self._excel_file_with_test_data = excel_file_test_data
             self.__init_test_data__()
@@ -90,6 +94,22 @@ class PatternDetectionController:
         if self.sys_config.config.show_final_statistics and self._number_pattern_total > 0:
             self.__show_statistics__()
         self.__write_constraints_statistics__()
+
+    def __has_pattern_id_to_be_processed__(self, pattern_id: str) -> bool:
+        if self.sys_config.config.detection_process == PDP.UPDATE_TRADE_DATA:
+            if self.sys_config.config.replace_existing_trade_data_on_db:
+                return True
+            mean = self.sys_config.config.trading_last_price_mean_aggregation
+            # trade_strategy_dict_list = [{BT.BREAKOUT: [TSTR.LIMIT_FIX]}]
+            for buy_trigger in self.sys_config.exchange_config.trade_strategy_dict:
+                for trade_strategy in self.sys_config.exchange_config.trade_strategy_dict[buy_trigger]:
+                    if not self.sys_config.db_stock.is_trade_already_available_for_pattern_id(
+                            pattern_id, buy_trigger, trade_strategy, mean):
+                        return True
+            print("...already available in db: Pattern_ID={}, Mean={}, Strategies={}".format(
+                pattern_id, mean, self.sys_config.exchange_config.trade_strategy_dict))
+            return False
+        return True
 
     def __run_pattern_detector__(self):
         self.__init_loop_list_for_ticker__()
@@ -105,21 +125,32 @@ class PatternDetectionController:
             detector = PatternDetector(self.sys_config)
             detector.parse_for_fibonacci_waves()
             detector.parse_for_pattern()
-            # self.check_for_optimal_trading_strategy(detector)  # ToDo error with deepcopy in the called module
-            detector.check_for_intersections_and_endings()
-            detector.save_pattern_data()
-            if self.sys_config.config.with_trading:
-                self.__simulate_trading__(detector)
-            self.__handle_statistics__(detector)
-            self._number_pattern_total += len(detector.pattern_list)
-            if self.sys_config.config.plot_data:
-                if len(detector.pattern_list) == 0 and False:  # and not detector.possible_pattern_ranges_available:
-                    print('...no formations found.')
+            if self.sys_config.config.detection_process == PDP.UPDATE_TRADE_DATA:
+                if len(detector.pattern_list) == 0:
+                    self.__delete_pattern_without_actual_pattern_from_database__()
                 else:
-                    plotter = PatternPlotter(self.sys_config, detector)
-                    plotter.plot_data_frame()
-            elif self.sys_config.period == PRD.INTRADAY:
-                sleep(15)
+                    self.__simulate_trading__(detector)
+            else:
+                # self.check_for_optimal_trading_strategy(detector)  # ToDo error with deepcopy in the called module
+                detector.check_for_intersections_and_endings()
+                detector.save_pattern_data()
+                if self.sys_config.config.with_trading:
+                    self.__simulate_trading__(detector)
+                self.__handle_statistics__(detector)
+                self._number_pattern_total += len(detector.pattern_list)
+                if self.sys_config.config.plot_data:
+                    if len(detector.pattern_list) == 0 and False:  # and not detector.possible_pattern_ranges_available:
+                        print('...no formations found.')
+                    else:
+                        plotter = PatternPlotter(self.sys_config, detector)
+                        plotter.plot_data_frame()
+                elif self.sys_config.period == PRD.INTRADAY:
+                    sleep(15)
+
+    def __delete_pattern_without_actual_pattern_from_database__(self):
+        pattern_id = self.sys_config.config.pattern_ids_to_find[0]
+        query = "DELETE FROM pattern WHERE id = '{}';".format(pattern_id)
+        self.sys_config.db_stock.delete_records(query)
 
     def __simulate_trading__(self, detector: PatternDetector):
         pattern_list = detector.get_pattern_list_for_back_testing()

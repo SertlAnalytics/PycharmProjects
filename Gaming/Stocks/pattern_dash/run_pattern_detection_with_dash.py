@@ -24,18 +24,18 @@ sys_config.data_provider.limit = 200
 sys_config.exchange_config = BitfinexConfiguration()
 sys_config.exchange_config.is_simulation = True
 sys_config.exchange_config.trade_strategy_dict = {
-    BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP],
-    BT.TOUCH_POINT: [TSTR.LIMIT, TSTR.TRAILING_STOP]}
+    BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP]
+}
 
 # debugger.pattern_range_position_list = [217, 224, 242]
 
 sys_config.config.pattern_type_list = FT.get_all()
-sys_config.prediction_mode_active = True
 sys_config.config.with_trading = True
-sys_config.config.save_pattern_data = True
+sys_config.config.save_pattern_data = False
 sys_config.config.save_trade_data = False
 # sys_config.config.pattern_type_list = [FT.TRIANGLE]
-# sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN, FT.TRIANGLE_UP, FT.TRIANGLE_BOTTOM]
+sys_config.config.pattern_type_list = sys_config.trade_strategy_optimizer.\
+    get_optimal_pattern_type_list_for_long_trading()
 sys_config.config.plot_data = True
 sys_config.config.plot_only_pattern_with_fibonacci_waves = False
 sys_config.config.plot_min_max = True

@@ -20,8 +20,12 @@ class TradeTest:
         self.trade_process = api.test_process
         self.sys_config = sys_config if sys_config else SystemConfiguration()
         self.exchange_config = self.sys_config.exchange_config
-        self.__adjust_sys_config__()
-        self.__adjust_data_provider_parameters__()
+        if self.api.pattern_id == '':
+            self.__adjust_sys_config__()
+            self.__adjust_data_provider_parameters__()
+        else:
+            self.sys_config.init_by_pattern_id_str(self.api.pattern_id)
+            self.sys_config.data_provider.and_clause = self.api.and_clause
         self.__adjust_exchange_config__()
 
     def __adjust_exchange_config__(self):
@@ -33,7 +37,6 @@ class TradeTest:
         if self.trade_process == TP.BACK_TESTING:
             self.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
         self.sys_config.config.plot_data = False
-        self.sys_config.prediction_mode_active = True
         self.sys_config.config.save_pattern_data = False
         self.sys_config.config.save_trade_data = False
 
@@ -91,6 +94,7 @@ class TradeTest:
         self.sys_config.data_provider.use_own_dic({api.symbol: api.symbol})
         self.sys_config.data_provider.and_clause = api.and_clause
         self.sys_config.config.with_trade_part = False
+        print('api.and_clause for 1_1_1_CSCO_10_2018-02-22_00:00_2018-03-19_00:00: {}'.format(api.and_clause))
 
     @staticmethod
     def __print_frame_information__(trigger: str, strategy: str, expected=''):

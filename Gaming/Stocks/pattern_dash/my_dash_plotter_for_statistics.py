@@ -40,18 +40,22 @@ class MyDashTabStatisticsPlotter:
             graph_api.figure_data = self.__get_scatter_figure_data_for_predictor__()
             return [MyDCC.graph(graph_api)]
         elif self.chart_type == CHT.PIE:
-            graph_api = DccGraphApi(self._chart_id + '_winner', self._chart_name + ' (winner)')
-            graph_api.figure_data = self.__get_pie_figure_data__(True)
+            graph_api_all = DccGraphApi(self._chart_id + '_all', self._chart_name + ' (all)')
+            graph_api_all.figure_data = self.__get_pie_figure_data__('all')
+            graph_api_winner = DccGraphApi(self._chart_id + '_winner', self._chart_name + ' (winner)')
+            graph_api_winner.figure_data = self.__get_pie_figure_data__('winner')
             graph_api_loser = DccGraphApi(self._chart_id + '_loser', self._chart_name + ' (loser)')
-            graph_api_loser.figure_data = self.__get_pie_figure_data__(False)
-            w_h, l_h = self.__get_winner_loser_heights__(graph_api.values_total, graph_api_loser.values_total)
+            graph_api_loser.figure_data = self.__get_pie_figure_data__('loser')
+            w_h, l_h = self.__get_winner_loser_heights__(graph_api_winner.values_total, graph_api_loser.values_total)
+            graph_api_all.figure_layout_height = 800
+            graph_api_winner.figure_layout_height = 800
+            graph_api_loser.figure_layout_height = 800
             graph_api_loser.figure_layout_height *= w_h
             graph_api_loser.figure_layout_height *= l_h
-            graph_api.figure_layout_height = 800
-            graph_api_loser.figure_layout_height = 800
-            graph_api.figure_layout_margin = {'b': 300, 'r': 50, 'l': 50, 't': 50}
-            graph_api_loser.figure_layout_margin = {'b': 300, 'r': 50, 'l': 50, 't': 50}
-            return [MyDCC.graph(graph_api), MyDCC.graph(graph_api_loser)]
+            graph_api_all.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
+            graph_api_winner.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
+            graph_api_loser.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
+            return [MyDCC.graph(graph_api_all), MyDCC.graph(graph_api_winner), MyDCC.graph(graph_api_loser)]
         elif self.chart_type == CHT.AREA_WINNER_LOSER:
             graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
             graph_api.figure_data = self.__get_area_winner_loser_figure_data__()
@@ -109,22 +113,28 @@ class MyDashTabStatisticsPlotter:
             ) for pattern_type in df[DC.PATTERN_TYPE].unique()
         ]
 
-    def __get_pie_figure_data__(self, for_winner: bool):
-        labels, values, colors, text = self.__get_data_for_pie_figure__(for_winner)
+    def __get_pie_figure_data__(self, scope: str):
+        labels, values, colors, text, pull = self.__get_data_for_pie_figure__(scope)
         return [
             go.Pie(labels=labels,
                    values=values,
                    text=text,
-                   marker=dict(colors=colors)
+                   marker=dict(colors=colors),
+                   pull=pull
                    )]
 
-    def __get_data_for_pie_figure__(self, for_winner: bool):
+    def __get_data_for_pie_figure__(self, scope: str):
+        pull_distance = 0.1
         df = self.__get_df_for_selection__()
         sorted_categories_orig = sorted(df[self.category].unique())
-        if for_winner:
-            sorted_category_list = ['{}_{}'.format(cat, 'winner') for cat in sorted_categories_orig]
+        sorted_category_list_winner = ['{}_{}'.format(cat, 'winner') for cat in sorted_categories_orig]
+        sorted_category_list_loser = ['{}_{}'.format(cat, 'loser') for cat in sorted_categories_orig]
+        if scope == 'winner':
+            sorted_category_list = sorted_category_list_winner
+        elif scope == 'loser':
+            sorted_category_list = sorted_category_list_loser
         else:
-            sorted_category_list = ['{}_{}'.format(cat, 'loser') for cat in sorted_categories_orig]
+            sorted_category_list = sorted_category_list_winner + sorted_category_list_loser
         y_value_dict = {cat: 0 for cat in sorted_category_list}
         for index, row in df.iterrows():
             cat = row[self.category]
@@ -134,8 +144,12 @@ class MyDashTabStatisticsPlotter:
                 y_value_dict[cat_result] += 1
         y_values = [y_value_dict[cat_result] for cat_result in sorted_category_list]
         colors = [self._color_handler.get_color_for_category(cat) for cat in sorted_category_list]
-        text = [cat for cat in sorted_categories_orig]
-        return sorted_category_list, y_values, colors, text
+        text = [cat for cat in sorted_category_list]
+        pull = []
+        for cat in sorted_category_list:
+            pull.append(pull_distance if cat.find('_winner') > 0 and scope == 'all' else 0)
+        print('colors={}, pull={}'.format(colors, pull))
+        return sorted_category_list, y_values, colors, text, pull
 
     def __get_area_winner_loser_figure_data__(self):
         x_values, y_value_dict = self.__get_data_for_area_winner_loser_figure__()

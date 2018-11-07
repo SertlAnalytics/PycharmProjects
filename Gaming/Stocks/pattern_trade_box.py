@@ -23,7 +23,7 @@ class TradingBoxApi:
         self.trade_strategy = ''
         self.height = 0  # is used for touch point
         self.distance_bottom = 0  # is used for touch point
-        self.last_price_mean_aggregation = 16
+        self.last_price_mean_aggregation = 16  # will be overwritten by config data
 
 
 class TradingBox:
@@ -107,7 +107,7 @@ class TradingBox:
 
     @property
     def limit_for_graph(self):
-        if self._trade_strategy == TSTR.LIMIT:
+        if self._trade_strategy in [TSTR.LIMIT, TSTR.LIMIT_FIX]:
             return self.limit
         return self.round(self.max_ticker_last_price + 2 * self._distance_top)
 
@@ -131,7 +131,8 @@ class TradingBox:
 
     def __get_time_stamp_end__(self):
         ts_now = MyDate.get_epoch_seconds_from_datetime()
-        return ts_now + (self._data_dict.get(DC.TS_PATTERN_TICK_LAST) - self._data_dict.get(DC.TS_PATTERN_TICK_FIRST))
+        # return ts_now + (self._data_dict.get(DC.TS_PATTERN_TICK_LAST) - self._data_dict.get(DC.TS_PATTERN_TICK_FIRST))
+        return ts_now + (self._data_dict.get(DC.BUY_TIME_STAMP) - self._data_dict.get(DC.TS_PATTERN_TICK_FIRST))
 
     def __get_value_dict__(self) -> dict:
         dist_top_str = '{:.2f} ({:.2f})' if self._round_decimals == 2 else '{:.4f} ({:.4f})'
@@ -161,6 +162,8 @@ class TradingBox:
             if self._stop_loss < ticker_last_price - self._distance_bottom:
                 self._stop_loss = ticker_last_price - self._distance_bottom
                 return True
+        elif self._trade_strategy == TSTR.LIMIT_FIX:
+            pass  # no change in stop loss
         elif self._trade_strategy == TSTR.TRAILING_STOP:  # ToDo trailing stop closer after some time...
             if self._stop_loss < ticker_last_price - self._distance_bottom:
                 self._stop_loss = ticker_last_price - self._distance_bottom
@@ -177,7 +180,7 @@ class TradingBox:
         return False
 
     def __adjust_limit_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
-        if self._trade_strategy == TSTR.LIMIT:  # _limit doesn't change
+        if self._trade_strategy in [TSTR.LIMIT, TSTR.LIMIT_FIX]:  # _limit doesn't change
             return False
         else:
             # if self._sell_limit < ticker_last_price + self._distance_top:
@@ -191,7 +194,7 @@ class TradingBox:
     def __calculate_stops_and_limits__(self):
         self._stop_loss_orig = self._off_set_value - self._distance_bottom
         self._stop_loss = self._stop_loss_orig
-        if self._trade_strategy == TSTR.LIMIT:
+        if self._trade_strategy in [TSTR.LIMIT, TSTR.LIMIT_FIX]:
             self._sell_limit_orig = self._off_set_value + self._distance_top
         else:
             self._sell_limit_orig = math.inf
@@ -212,7 +215,7 @@ class ExpectedWinTradingBox(TradingBox):
         self.box_type = TBT.EXPECTED_WIN
         self._height = self.round(self._data_dict[DC.EXPECTED_WIN])
         self._distance_top = self.round(self._height * self.multiplier_positive)
-        self._distance_bottom = self.round(self._height * self.multiplier_negative)
+        # self._distance_bottom = self.round(self._height * self.multiplier_negative)
 
 
 class TouchPointTradingBox(TradingBox):

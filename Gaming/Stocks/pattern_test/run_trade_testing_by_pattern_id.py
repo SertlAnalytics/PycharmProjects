@@ -14,11 +14,10 @@ sys_config.exchange_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT]}
 sys_config.exchange_config.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.LIMIT}
 sys_config.config.plot_data = True
 # sys_config.config.with_trade_part = False
-sys_config.prediction_mode_active = True
 sys_config.config.with_trading = True
-sys_config.config.trading_last_price_mean_aggregation = 24
+sys_config.config.trading_last_price_mean_aggregation = 16
 sys_config.config.save_pattern_data = False
-sys_config.config.save_trade_data = False
+sys_config.config.save_trade_data = True
 sys_config.config.plot_only_pattern_with_fibonacci_waves = False
 sys_config.config.plot_min_max = True
 sys_config.config.plot_volume = False
@@ -31,7 +30,7 @@ sys_config.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
 trade_strategy_dict_list = [{BT.BREAKOUT: [TSTR.LIMIT]}, {BT.BREAKOUT: [TSTR.TRAILING_STOP]},
                             {BT.BREAKOUT: [TSTR.TRAILING_STEPPED_STOP]}]
 
-# trade_strategy_dict_list = [{BT.BREAKOUT: [TSTR.LIMIT]}]
+trade_strategy_dict_list = [{BT.BREAKOUT: [TSTR.LIMIT_FIX]}]
 
 pattern_type_pattern_id_dict = {
     FT.CHANNEL: ['1_1_1_AXP_10_2018-05-22_00:00_2018-07-12_00:00'],
@@ -46,7 +45,7 @@ pattern_type_pattern_id_dict = {
     FT.HEAD_SHOULDER_BOTTOM_DESC: ['1_1_1_MMM_46_2015-11-20_00:00_2016-02-24_00:00']
 }
 
-pattern_type_list_to_test = [FT.HEAD_SHOULDER_BOTTOM_DESC]
+pattern_type_list_to_test = [FT.CHANNEL]
 
 for pattern_type in pattern_type_list_to_test:
     sys_config.config.pattern_ids_to_find = pattern_type_pattern_id_dict[pattern_type]
@@ -55,5 +54,7 @@ for pattern_type in pattern_type_list_to_test:
         sys_config.exchange_config.trade_strategy_dict = trade_strategy_dict
         pattern_controller = PatternDetectionController(sys_config)
         pattern_controller.run_pattern_detector()
+
+
 
 

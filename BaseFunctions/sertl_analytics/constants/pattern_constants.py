@@ -8,6 +8,12 @@ Date: 2018-05-14
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
+class PDP:  # Pattern Detection Process
+    UPDATE_TRADE_DATA = 'Update_Trade_Data'
+    UPDATE_PATTERN_DATA = 'Update_Pattern_Data'
+    ALL = 'All'
+
+
 class PRED:  # Predictors
     TOUCH_POINT = 'Touch_Point'
     BEFORE_BREAKOUT = 'Before_Breakout'
@@ -429,6 +435,14 @@ class TP:  # TradeProcess
         return [{'label': trade_process.replace('_', ' '), 'value': trade_process} for trade_process in li]
 
 
+class TSP:  # TradeSubProcess
+    WATCHING = 'watching'
+    BUYING = 'buying'
+    SELLING = 'selling'
+    RE_BUYING = 'Re_Buying'
+    NONE = 'None'
+
+
 class BT:  # Buy Trigger
     BREAKOUT = 'Breakout'
     TOUCH_POINT = 'Touch_point'
@@ -454,17 +468,19 @@ class BT:  # Buy Trigger
 
 class TSTR:  # Trading Strategy
     LIMIT = 'Limit'
+    LIMIT_FIX = 'Limit_fix'
     TRAILING_STOP = 'Trailing_stop'
     TRAILING_STEPPED_STOP = 'Trailing_stepped_stop'
     SMA = 'Simple_moving_average'
 
     @staticmethod
     def get_id(key: str):
-        return {TSTR.LIMIT: 10, TSTR.TRAILING_STOP: 20, TSTR.TRAILING_STEPPED_STOP: 30, TSTR.SMA: 40}.get(key)
+        return {TSTR.LIMIT: 10, TSTR.LIMIT_FIX: 15, TSTR.TRAILING_STOP: 20,
+                TSTR.TRAILING_STEPPED_STOP: 30, TSTR.SMA: 40}.get(key)
 
     @staticmethod
     def get_as_list():
-        return [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP, TSTR.SMA]
+        return [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP, TSTR.SMA]
 
     @staticmethod
     def get_as_options():
@@ -480,6 +496,12 @@ class TTC:  # Trade test cases
     BUY_SELL_STOP_LOSS = 'buy & sell at stop loss'
     ACTIVATE_BREAKOUT = 'activate breakout for touch'
     BACK_TESTING = 'back testing'
+
+
+class RST:  # ReplayStatus
+    REPLAY = 'replay'
+    STOP = 'stop'
+    CANCEL = 'cancel'
 
 
 class PTS:  # PatternTradeStatus
@@ -498,7 +520,7 @@ class PTHP:  # Pattern Trade Handler Processes
     HANDLE_SELL_TRIGGERS = 'HANDLE_SELL_TRIGGERS'
     HANDLE_WRONG_BREAKOUT = 'HANDLE_WRONG_BREAKOUT'
     HANDLE_BUY_TRIGGERS = 'HANDLE_BUY_TRIGGERS'
-    VERIFY_TOUCH_POINT = 'VERIFY_TOUCH_POINT'
+    HANDLE_WATCHING = 'HANDLE_WATCHING'
 
 
 class TBT:  # TradingBoxType
@@ -611,6 +633,7 @@ class DC:  # Data Columns
     SAVINGS = 'Savings'
     FORECAST_GROWTH = 'ForcastGrowth'  # writing error...
     # for pattern
+    OID = 'oid'  # the default rowid column in each SQLITE table - unless excluded
     ID = 'ID'  # Ticker_ID-Pattern_Type_ID-Pattern_Range_Begin_DT-Pattern_Range_End_DT
     EQUITY_TYPE = 'Equity_Type'  # Share, Commodities, Crypto Currency
     EQUITY_TYPE_ID = 'Equity_Type_ID'  # Share, Commodities, Crypto Currency
@@ -619,6 +642,7 @@ class DC:  # Data Columns
     PERIOD_AGGREGATION = 'Aggregation'
     TICKER_ID = 'Ticker_ID'
     TICKER_NAME = 'Ticker_Name'
+    PATTERN_ID = 'Pattern_ID'
     PATTERN_TYPE = 'Pattern_Type'
     PATTERN_TYPE_ID = 'Pattern_Type_ID'
     TS_PATTERN_TICK_FIRST = 'Timestamp_Pattern_Tick_First'
@@ -672,6 +696,8 @@ class DC:  # Data Columns
     FALSE_BREAKOUT = 'False_Breakout'
     EXPECTED_WIN_REACHED = 'Expected_Win_Reached'
     # and additional for Trades
+    TRADE_ID = 'Trade_ID'
+    TRADE_MEAN_AGGREGATION = 'Trade_Mean_Aggregation'
     TRADE_PROCESS = 'Trade_Process'  #  TP.ONLINE = 'Online', TEST_SINGLE = 'Test_single', BACK_TESTING = 'Back_testing'
     TRADE_READY_ID = 'Trade_Ready_ID'  # for a real trade = 1, 0 else
     TRADE_STRATEGY = 'Trade_Strategy'
@@ -690,6 +716,7 @@ class DC:  # Data Columns
     BUY_ORDER_ID = 'Buy_Order_ID'
     BUY_ORDER_TPYE = 'Buy_Order_Type'
     BUY_ORDER_TPYE_ID = 'Buy_Order_Type_ID'
+    BUY_TIME_STAMP = 'Buy_Time_Stamp'
     BUY_DT = 'Buy_Date'
     BUY_TIME = 'Buy_Time'
     BUY_AMOUNT = 'Buy_Amount'
@@ -721,6 +748,7 @@ class DC:  # Data Columns
     SELL_ORDER_ID = 'Sell_Order_ID'
     SELL_ORDER_TPYE = 'Sell_Order_Type'
     SELL_ORDER_TPYE_ID = 'Sell_Order_Type_ID'
+    SELL_TIME_STAMP = 'Sell_Time_Stamp'
     SELL_DT = 'Sell_Date'
     SELL_TIME = 'Sell_Time'
     SELL_AMOUNT = 'Sell_Amount'

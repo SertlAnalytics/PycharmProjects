@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Wedge, Polygon, Rectangle, Arrow, Ellipse
+from sertl_analytics.constants.pattern_constants import TSP
 
 
 class MyPlotHelper:
@@ -22,12 +23,21 @@ class MyPlotHelper:
         return list(zip(x, y))
 
     @staticmethod
-    def get_xy_parameter_for_replay_list(tick_list: list, for_buying: bool):
+    def get_xy_parameter_for_replay_list(tick_list: list, replay_process: str):
         x = [tick.time_stamp for tick in tick_list]
-        y = [round(tick.breakout_value, 4) if for_buying else round(tick.limit_value, 4) for tick in tick_list]
+        y = []
+        for tick in tick_list:
+            y_value_dict = {TSP.WATCHING: tick.watch_breakout_value, TSP.BUYING: tick.breakout_value,
+                            TSP.SELLING: tick.limit_value, TSP.RE_BUYING: tick.limit_value}
+            y.append(round(y_value_dict[replay_process], 4))
+
+        # y = [round(tick.breakout_value, 4) if for_buying else round(tick.limit_value, 4) for tick in tick_list]
         for tick in reversed(tick_list):
             x.append(tick.time_stamp)
-            y.append(round(tick.wrong_breakout_value, 4) if for_buying else round(tick.stop_loss_value, 4))
+            y_value_dict = {TSP.WATCHING: tick.watch_wrong_breakout_value, TSP.BUYING: tick.wrong_breakout_value,
+                            TSP.SELLING: tick.stop_loss_value, TSP.RE_BUYING: tick.stop_loss_value}
+            y.append(round(y_value_dict[replay_process], 4))
+            # y.append(round(tick.wrong_breakout_value, 4) if for_buying else round(tick.stop_loss_value, 4))
         # print('list(zip(x, y))={}'.format(list(zip(x, y))))
         return list(zip(x, y))
 

@@ -332,12 +332,12 @@ class PatternPlotter:
     def __fill_trade_plot_container_list__(self):
         color_handler = PatternColorHandler()
         for pattern_trade in self.detector.trade_handler.pattern_trade_dict.values():
-            color_buying, color_selling, color_after = color_handler.get_colors_for_pattern_trade(pattern_trade)
+            c_watching, c_buying, c_selling, c_after = color_handler.get_colors_for_pattern_trade(pattern_trade)
             plot_container = PatternPlotContainer(
-                PlotterInterface.get_pattern_trade_shape_for_buying(pattern_trade), color_buying)
+                PlotterInterface.get_pattern_trade_shape_for_buying(pattern_trade), c_buying)
             if pattern_trade.xy_for_selling is not None:
                 plot_container.add_trade_shape(
-                    PlotterInterface.get_pattern_trade_shape_for_selling(pattern_trade), color_selling)
+                    PlotterInterface.get_pattern_trade_shape_for_selling(pattern_trade), c_selling)
             self.pattern_trade_plot_container_loop_list.append(plot_container)
 
     def __add_pattern_shapes_to_plot__(self):

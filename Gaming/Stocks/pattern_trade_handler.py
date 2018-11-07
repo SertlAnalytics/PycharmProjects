@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT
+from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern_part import PatternEntryPart
@@ -23,18 +23,24 @@ class PatternTradeHandler:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
         self.exchange_config = self.sys_config.exchange_config
+        self.trade_optimizer = self.sys_config.trade_strategy_optimizer
         self.trade_process = self.sys_config.runtime_config.actual_trade_process
         self.trade_client = self.__get_trade_client__()
         self.stock_db = self.sys_config.db_stock
         self.ticker_id_list = []
         self.pattern_trade_dict = {}
         self.process = ''
-        self.trade_candidate_controller = TradeCandidateController(self.exchange_config)
+        self.trade_candidate_controller = TradeCandidateController(self.exchange_config, self.trade_optimizer)
         self.news_handler = NewsHandler()
         self.value_total_start = 0
         self._last_wave_tick_for_test = None
         self._time_stamp_for_actual_check = 0
         self._pattern_trade_for_replay = None
+        self._replay_status = RST.REPLAY
+
+    @property
+    def replay_status(self):
+        return self._replay_status
 
     def __get_trade_client__(self):
         if self.trade_process == TP.ONLINE:
@@ -77,9 +83,10 @@ class PatternTradeHandler:
         self.process = 'Ticker'
         self.__add_tickers_for_actual_time_stamp_to_pattern_trades__()
         self.__adjust_stops_and_limits__()
+        self.__calculate_wave_tick_values_for_trade_subprocess__()
         self.__handle_sell_triggers__()
         self.__handle_wrong_breakout__()
-        self.__handle_buy_triggers__()
+        self.__handle_buy_triggers__()  # ToDo - what if _calculate_xy_values is before???
         self.__calculate_xy_values__()
         self.__update_ticker_lists__()  # some entries could be deleted
         self.process = ''
@@ -92,11 +99,13 @@ class PatternTradeHandler:
         self.process = 'Replay'
         self.__add_tickers_for_actual_time_stamp_to_pattern_trades__()
         self.__adjust_stops_and_limits__()
+        self.__calculate_wave_tick_values_for_trade_subprocess__()
         self.__handle_sell_triggers__()
         self.__set_limit_stop_loss_to_replay_values__()
         self.__handle_wrong_breakout__()
         self.__handle_buy_triggers__()
-        self.__calculate_xy_values__()
+        self.__calculate_xy_values__()  # ToDo - what if _calculate_xy_values is before???
+        self.__calculate_replay_status__()
         self.process = ''
 
     def get_latest_tickers_as_wave_tick_list(self, ticker_id: str) -> WaveTickList:
@@ -109,6 +118,11 @@ class PatternTradeHandler:
         for pattern_trade in self.pattern_trade_dict.values():
             return_list.append(pattern_trade.get_row_for_dash_data_table())
         return return_list
+
+    def __calculate_replay_status__(self):
+        for pattern_trade in self.pattern_trade_dict.values():
+            if pattern_trade.is_wrong_breakout:
+                self._replay_status = RST.STOP
 
     def __set_limit_stop_loss_to_replay_values__(self):
         for pattern_trade in self.pattern_trade_dict.values():
@@ -138,6 +152,9 @@ class PatternTradeHandler:
 
     def __process_trade_candidate__(self, trade_candidate: TradeCandidate):
         pattern_trade = trade_candidate.pattern_trade
+        if self.__is_similar_trade_already_available__(pattern_trade):
+            self.trade_candidate_controller.add_pattern_trade_to_black_buy_trigger_list(pattern_trade)
+            return
         pattern_trade.was_candidate_for_real_trading = trade_candidate.is_candidate_for_real_trading
         if not self.exchange_config.is_simulation:
             if trade_candidate.is_candidate_for_real_trading:
@@ -153,6 +170,13 @@ class PatternTradeHandler:
     @staticmethod
     def __print_details_after_setting_to_real_trade__(self, prefix: str, pattern_trade: PatternTrade):
         print('Trade was initiated by default_trade_strategy for {}'.format(pattern_trade.id))
+
+    def __is_similar_trade_already_available__(self, trade_comp: PatternTrade) -> bool:
+        for pattern_trade in self.pattern_trade_dict.values():
+            if pattern_trade.pattern.pattern_type == trade_comp.pattern.pattern_type:
+                if pattern_trade.pattern.ticker_id == trade_comp.pattern.ticker_id:
+                    return True
+        return False
 
     def __add_pattern_trade_to_trade_dict__(self, pattern_trade: PatternTrade):
         if pattern_trade.pattern.ticker_id not in self.ticker_id_list:
@@ -235,6 +259,9 @@ class PatternTradeHandler:
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
             if pattern_trade.is_actual_ticker_wrong_breakout(PTHP.HANDLE_WRONG_BREAKOUT):
                 deletion_key_list.append(key)
+                self.news_handler.add_news('Wrong breakout', 'at {} on {}'.format(
+                    pattern_trade.ticker_actual.last_price, pattern_trade.ticker_actual.date_time_str
+                ))
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.WRONG_BREAKOUT)
 
     def __remove_finished_pattern_trades__(self):
@@ -265,7 +292,7 @@ class PatternTradeHandler:
                     else:
                         deletion_key_list.append(key)
             else:
-                pattern_trade.verify_touch_point()
+                pattern_trade.verify_watching()
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.SMA_PROBLEM)
 
     def __get_pattern_entry_part(self, pattern_trade: PatternTrade):
@@ -292,6 +319,10 @@ class PatternTradeHandler:
         return self.trade_client.get_latest_tickers_as_wave_tick_list(
             ticker_id, self.sys_config.period, self.sys_config.period_aggregation)
 
+    def __calculate_wave_tick_values_for_trade_subprocess__(self):
+        for pattern_trade in self.pattern_trade_dict.values():
+            pattern_trade.calculate_wave_tick_values_for_trade_subprocess()
+
     def __calculate_xy_values__(self):
         for pattern_trade in self.pattern_trade_dict.values():
             pattern_trade.calculate_xy_for_replay()
@@ -316,7 +347,7 @@ class PatternTradeHandler:
         api.symbol = ticker.ticker_id
         api.exchange = 'Test'
         if process == PTHP.HANDLE_BUY_TRIGGERS:
-            api.price = ticker.last_price
+            api.price = pattern_trade.get_actual_buy_price(pattern_trade.buy_trigger, ticker.last_price)
         else:
             api.price = pattern_trade.get_actual_sell_price(sell_trigger, ticker.last_price)
         api.avg_execution_price = ticker.last_price

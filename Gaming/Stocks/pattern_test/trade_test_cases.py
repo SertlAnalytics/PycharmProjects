@@ -10,6 +10,7 @@ from pattern import Pattern
 from sertl_analytics.mydates import MyDate
 from pattern_data_provider import PatternDataProvider
 from pattern_wave_tick import TickerWaveTickConverter
+from pattern_system_configuration import SystemConfiguration
 
 
 class TradeTestApi:
@@ -19,6 +20,7 @@ class TradeTestApi:
         self.period_aggregation = 1
         self.volume_increase = 10
         self.trade_id = ''
+        self.pattern_id = ''
         self.pattern_type = ''
         self.pattern = None
         self.buy_trigger = ''
@@ -59,20 +61,23 @@ class TradeTestCaseFactory:
     @staticmethod
     def get_trade_test_api_by_selected_trade_row(row, test_process: str) -> TradeTestApi:
         api = TradeTestApi()
-        api.trade_id = row[DC.ID]
+        api.trade_id = row[DC.TRADE_ID] if DC.TRADE_ID in row else row[DC.ID]
+        api.pattern_id = row[DC.PATTERN_ID] if DC.PATTERN_ID in row else ''
         api.test_process = test_process  # e.g. TP.TRADE_REPLAY
         api.pattern_type = row[DC.PATTERN_TYPE]
         api.buy_trigger = row[DC.BUY_TRIGGER]
         api.trade_strategy = row[DC.TRADE_STRATEGY]
         api.symbol = row[DC.TICKER_ID]
-        api.dt_start = str(row[DC.PATTERN_RANGE_BEGIN_DT])
-        api.dt_end = MyDate.adjust_by_days(row[DC.PATTERN_RANGE_END_DT], -1)  # we need this correction for a smooth cont.
+        api.dt_start = MyDate.adjust_by_days(row[DC.PATTERN_RANGE_BEGIN_DT], -30)
+        api.dt_end = MyDate.adjust_by_days(row[DC.PATTERN_RANGE_END_DT], 30)  # we need this correction for a smooth cont.
         api.and_clause = PatternDataProvider.get_and_clause(api.dt_start, api.dt_end)
         api.and_clause_unlimited = PatternDataProvider.get_and_clause(api.dt_start)
         return api
 
     @staticmethod
     def get_test_case(api: TradeTestApi) -> TradeTestCase:
+        # print('\nget_test_case:')
+        # api.print_test_api()
         tc = TradeTestCase(api)
         TradeTestCaseFactory.fill_test_data_for_pattern_type(tc)
         return tc

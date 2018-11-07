@@ -86,7 +86,9 @@ class PatternDetector:
             pfcf_api.function_container = PatternFunctionContainerFactory.get_function_container_by_api(pfcf_api)
             if pfcf_api.constraints.are_constraints_fulfilled(pfcf_api.pattern_range, pfcf_api.function_container):
                 pattern = PatternFactory.get_pattern(self.sys_config, pfcf_api)
-                self.__handle_single_pattern_when_parsing__(pattern)
+                if len(self.sys_config.config.pattern_ids_to_find) == 0 \
+                        or pattern.id in self.sys_config.config.pattern_ids_to_find:
+                    self.__handle_single_pattern_when_parsing__(pattern)
 
     def __adjust_possible_pattern_ranges_to_constraints__(self):
         pass

@@ -21,6 +21,8 @@ class WaveTick:
         self.tick = tick
         self.is_asc_fibonacci_end = False
         self.is_desc_fibonacci_end = False
+        self.watch_breakout_value = 0  # used for watching periods - currently used for touch_point
+        self.watch_wrong_breakout_value = 0  # used for watching periods - currently used for touch_point
         self.breakout_value = 0
         self.wrong_breakout_value = 0
         self.limit_value = 0

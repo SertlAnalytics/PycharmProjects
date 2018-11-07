@@ -8,142 +8,24 @@ Date: 2018-09-26
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
 import pandas as pd
-from pattern_dash.my_dash_base import MyDashBase, MyDashBaseTab
+from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_replay_handler import ReplayHandler
 from pattern_system_configuration import SystemConfiguration
 from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi
 from pattern_dash.my_dash_header_tables import MyHTMLTabTradeHeaderTable
 from pattern_dash.my_dash_tab_dd_for_trades import TradeDropDownHandler, TDD
-from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from pattern_trade import PatternTrade
 from pattern_database.stock_tables import TradeTable, PatternTable
 from pattern_database.stock_database import StockDatabaseDataFrame
 from dash import Dash
-from sertl_analytics.constants.pattern_constants import DC, TP, PRD, TSTR
+from sertl_analytics.constants.pattern_constants import DC, TP, PRD, RST
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_test.trade_test_cases import TradeTestCaseFactory
 from pattern_test.trade_test import TradeTest
 from pattern_data_container import PatternData
 from sertl_analytics.mydates import MyDate
-from copy import deepcopy
 from pattern_news_handler import NewsHandler
-
-
-class ReplayHandler:
-    def __init__(self, trade_process: str, sys_config: SystemConfiguration):
-        self.sys_config = sys_config.get_semi_deep_copy()
-        self.trade_process = trade_process
-        if self.trade_process == TP.ONLINE:
-            self.sys_config = sys_config
-        else:
-            self.sys_config.data_provider.from_db = False
-            self.sys_config.data_provider.period = PRD.DAILY
-            self.sys_config.data_provider.aggregation = 1
-        self.sys_config.runtime_config.actual_trade_process = self.trade_process
-        self.trade_handler = PatternTradeHandler(self.sys_config)
-        self.trade_test_api = None
-        self.trade_test = None
-        self.detector = None
-        self.test_case = None
-        self.test_case_wave_tick_list_index = -1
-        self.graph_api = None
-        self.graph = None
-
-    @property
-    def graph_id(self):
-        if self.trade_process == TP.TRADE_REPLAY:
-            return 'my_graph_trade_replay'
-        if self.trade_process == TP.PATTERN_REPLAY:
-            return 'my_graph_pattern_replay'
-        return 'my_graph_trade_online'
-
-    @property
-    def graph_title(self):
-        return '{}: {}-{}-{}-{}'.format(self.trade_test_api.symbol,
-                                        self.trade_test_api.buy_trigger, self.trade_test_api.trade_strategy,
-                                        self.trade_test_api.pattern_type, self.sys_config.period)
-
-    @property
-    def pattern_trade(self) -> PatternTrade:
-        return self.graph_api.pattern_trade
-
-    def set_trade_test_api_by_selected_trade_row(self, selected_row):
-        self.trade_test_api = TradeTestCaseFactory.get_trade_test_api_by_selected_trade_row(
-            selected_row, self.trade_process)
-        if self.trade_process in [TP.TRADE_REPLAY, TP.PATTERN_REPLAY]:
-            self.trade_test_api.from_db = True
-            self.trade_test_api.period = selected_row[DC.PERIOD]
-            self.trade_test_api.period_aggregation = selected_row[DC.PERIOD_AGGREGATION]
-        else:
-            self.trade_test_api.from_db = False
-            self.trade_test_api.period = self.sys_config.period
-            # print('set_trade_test_api_by_selected_trade_row: period = {}'.format(self.sys_config.period))
-            self.trade_test_api.period_aggregation = self.sys_config.period_aggregation
-            self.trade_test_api.trade_id = selected_row[DC.ID]
-
-    def is_another_wave_tick_available(self):
-        return self.get_remaining_tick_number() > 0
-
-    def get_remaining_tick_number(self):
-        return len(self.test_case.wave_tick_list) - 1 - self.test_case_wave_tick_list_index
-
-    def get_next_wave_tick(self) -> WaveTick:
-        self.test_case_wave_tick_list_index += 1
-        wave_tick = self.test_case.wave_tick_list[self.test_case_wave_tick_list_index]
-        time_stamp = wave_tick.time_stamp
-        date_time = MyDate.get_date_time_from_epoch_seconds(time_stamp)
-        value = wave_tick.close
-        print('{}: {}-new value pair to check: [{} ({}), {}]'.format(
-            self.trade_process, self.trade_test_api.symbol, date_time, time_stamp, value))
-        return wave_tick
-
-    def set_trade_test(self):
-        self.trade_test = TradeTest(self.trade_test_api, self.sys_config)
-
-    def set_detector(self):
-        self.detector = self.trade_test.get_pattern_detector_for_replay(self.trade_test_api)
-
-    def set_pattern_to_api(self):
-        self.trade_test_api.pattern = self.detector.get_pattern_for_replay()
-
-    def set_tick_list_to_api(self):
-        api = self.trade_test_api
-        stock_db_df_obj = StockDatabaseDataFrame(self.sys_config.db_stock, api.symbol, api.and_clause_unlimited)
-        # print('api.symbol={}, api.and_clause_unlimited={}, stock_db_df_obj.df_data.shape={}'.format(
-        #     api.symbol, api.and_clause_unlimited, stock_db_df_obj.df_data.shape))
-        pattern_data = PatternData(self.sys_config.config, stock_db_df_obj.df_data)
-        self.trade_test_api.tick_list_for_replay = pattern_data.tick_list
-
-    def set_test_case(self):
-        self.test_case = TradeTestCaseFactory.get_test_case_from_pattern(self.trade_test_api)
-
-    def add_pattern_list_for_trade(self):
-        self.trade_handler.add_pattern_list_for_trade([self.trade_test_api.pattern])
-
-    def set_graph_api(self):
-        self.graph_api = DccGraphApi(self.graph_id, self.graph_title)
-        if self.trade_process in [TP.TRADE_REPLAY, TP.PATTERN_REPLAY]:
-            self.graph_api.pattern_trade = self.trade_handler.pattern_trade_for_replay
-            self.graph_api.ticker_id = self.trade_test_api.symbol
-            self.graph_api.df = self.detector.pdh.pattern_data.df
-        else:
-            self.set_selected_trade_to_api()
-            # print('set_graph_api: trade_id={}, pattern_trade.id={}'.format(self.trade_test_api.trade_id,
-            #                                                                self.graph_api.pattern_trade.id))
-            self.graph_api.ticker_id = self.trade_test_api.symbol
-            self.graph_api.df = self.graph_api.pattern_trade.get_data_frame_for_replay()
-        self.graph_api.period = self.trade_test_api.period
-
-    def set_selected_trade_to_api(self):
-        self.graph_api.pattern_trade = self.trade_handler.get_pattern_trade_by_id(self.trade_test_api.trade_id)
-
-    def check_actual_trades_for_replay(self, wave_tick: WaveTick):
-        self.trade_handler.check_actual_trades_for_replay(wave_tick)
-        self.graph_api.df = self.trade_handler.get_pattern_trade_data_frame_for_replay()
-
-    def refresh_api_df_from_pattern_trade(self):
-        # self.set_selected_trade_to_api()
-        self.graph_api.df = self.graph_api.pattern_trade.get_data_frame_for_replay()
 
 
 class MyDashTab4Trades(MyDashBaseTab):
@@ -484,6 +366,8 @@ class MyDashTab4Trades(MyDashBaseTab):
             else:
                 wave_tick = replay_handler.get_next_wave_tick()
                 replay_handler.check_actual_trades_for_replay(wave_tick)
+            if replay_handler.replay_status in [RST.STOP, RST.CANCEL]:
+                self._stop_trade = True
             replay_handler.graph = self.__get_dcc_graph_element__(replay_handler.detector, replay_handler.graph_api)
         return replay_handler.graph
 
@@ -494,12 +378,13 @@ class MyDashTab4Trades(MyDashBaseTab):
             self._time_stamp_last_ticker_refresh = MyDate.get_epoch_seconds_from_datetime()
             self.trade_handler_online.check_actual_trades()
         self._trade_replay_handler_online.refresh_api_df_from_pattern_trade()
+        self._trade_replay_handler_online.graph_api.pattern_trade.calculate_wave_tick_values_for_trade_subprocess()
         self._trade_replay_handler_online.graph_api.pattern_trade.calculate_xy_for_replay()
         return self.__get_dcc_graph_element__(None, self._trade_replay_handler_online.graph_api)
 
     def __get_graph_for_replay__(self):
         replay_handler = self.__get_trade_handler_for_selected_trade_type__()
-        self.__adjust_selected_row_to_pattern_replay__()
+        self.__adjust_selected_pattern_row_to_trade_row__()
         replay_handler.set_trade_test_api_by_selected_trade_row(self._selected_row)
         replay_handler.set_trade_test()
         replay_handler.set_detector()
@@ -515,22 +400,29 @@ class MyDashTab4Trades(MyDashBaseTab):
         replay_handler.graph = self.__get_dcc_graph_element__(replay_handler.detector, replay_handler.graph_api)
         return replay_handler.graph, replay_handler.graph_id
 
+    def __adjust_selected_pattern_row_to_trade_row__(self):
+        """
+        There are differences between the rows for pattern and trades - we need trades structure
+        """
+        if self._selected_trade_type == TP.TRADE_REPLAY:
+            self._selected_row[DC.TRADE_ID] = self._selected_row[DC.ID]
+            self._selected_row[DC.PATTERN_ID] = self.sys_config.db_stock.get_pattern_id_for_trade_id(
+                self._selected_row[DC.TRADE_ID]
+            )
+        elif self._selected_trade_type == TP.PATTERN_REPLAY:
+            self._selected_row[DC.TRADE_ID] = ''
+            self._selected_row[DC.PATTERN_ID] = self._selected_row[DC.ID]
+            self._selected_row[DC.BUY_TRIGGER] = self._selected_buy_trigger
+            self._selected_row[DC.TRADE_STRATEGY] = self._selected_trade_strategy
+            self._selected_row[DC.PATTERN_RANGE_BEGIN_DT] = self._selected_row[DC.PATTERN_BEGIN_DT]
+            self._selected_row[DC.PATTERN_RANGE_END_DT] = self._selected_row[DC.PATTERN_END_DT]
+
     def __get_trade_handler_for_selected_trade_type__(self):
         if self._selected_trade_type == TP.TRADE_REPLAY:
             return self._trade_replay_handler
         elif self._selected_trade_type == TP.PATTERN_REPLAY:
             return self._pattern_replay_handler
         return self._trade_handler_online
-
-    def __adjust_selected_row_to_pattern_replay__(self):
-        """
-        There are differences between the rows for pattern and trades - we need trades structure
-        """
-        if self._selected_trade_type == TP.PATTERN_REPLAY:
-            self._selected_row[DC.BUY_TRIGGER] = self._selected_buy_trigger
-            self._selected_row[DC.TRADE_STRATEGY] = self._selected_trade_strategy
-            self._selected_row[DC.PATTERN_RANGE_BEGIN_DT] = self._selected_row[DC.PATTERN_BEGIN_DT]
-            self._selected_row[DC.PATTERN_RANGE_END_DT] = self._selected_row[DC.PATTERN_END_DT]
 
     def __get_graph_for_trade_online__(self):
         self._trade_replay_handler_online.set_trade_test_api_by_selected_trade_row(self._selected_row)

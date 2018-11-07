@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, TP, CN, EQUITY_TYPE, PRD
+from sertl_analytics.constants.pattern_constants import FT, TP, CN, EQUITY_TYPE, PRD, PDP
 from sertl_analytics.mydates import MyDate
 
 
@@ -56,6 +56,7 @@ class RuntimeConfiguration:
 
 class PatternConfiguration:
     def __init__(self):
+        self.detection_process = PDP.ALL
         self.with_trade_part = True  # we need this configuration for testing touch strategy
         self.with_trading = False
         self.trading_last_price_mean_aggregation = 16  # the number of ticker.last_price which are used for stop loss
@@ -64,6 +65,7 @@ class PatternConfiguration:
         self.simple_moving_average_number = 10
         self.save_pattern_data = True
         self.save_trade_data = True
+        self.replace_existing_trade_data_on_db = False
         self.show_differences_to_stored_features = False
         self.bound_upper_value = CN.HIGH
         self.bound_lower_value = CN.LOW

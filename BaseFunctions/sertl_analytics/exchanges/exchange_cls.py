@@ -28,6 +28,7 @@ class ExchangeConfiguration:
                                     BT.TOUCH_POINT: [TSTR.LIMIT]}
         self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP,
                                     BT.TOUCH_POINT: TSTR.LIMIT}
+        self.ticker_id_excluded_from_trade_list = ['NEOUSD']  # in case we have some issues the datas...
         self.__set_values__()
 
     def __set_values__(self):

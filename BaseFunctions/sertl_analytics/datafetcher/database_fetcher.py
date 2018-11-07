@@ -30,8 +30,8 @@ class MyTable:
         self._query_select_all = self.query_select_all
 
     @property
-    def id_columns(self) -> list:
-        pass
+    def name(self) -> str:
+        return self._name
 
     @property
     def column_name_list(self) -> list:
@@ -45,14 +45,22 @@ class MyTable:
     def query_select_all(self):
         return 'SELECT * from {}'.format(self._name)
 
-    def get_query_for_unique_record_by_id(self, id: str) -> str:
-        return "SELECT * FROM {} where ID='{}'".format(self._name, id)
+    @property
+    def query_duplicate_id(self) -> str:
+        return "select id, count(*) from {} group by id having count(*) > 1;".format(self._name)
+
+    @property
+    def query_id_oid(self) -> str:
+        return "select id, oid from {};".format(self._name)
+
+    def get_query_for_unique_record_by_id(self, record_id: str) -> str:
+        return "SELECT * FROM {} where ID='{}'".format(self._name, record_id)
 
     def get_query_for_records(self, where_clause='') -> str:
         return "SELECT * FROM {}".format(self._name) + ('' if where_clause == '' else " WHERE {}".format(where_clause))
 
-    def get_query_for_delete_by_id(self, trade_id: str) -> str:
-        return "DELETE FROM {} where ID='{}'".format(self._name, trade_id)
+    def get_query_for_delete_by_id(self, id: str) -> str:
+        return "DELETE FROM {} where ID='{}'".format(self._name, id)
 
     def __get_column_name_list__(self) -> list:
         return [columns.name for columns in self._columns]

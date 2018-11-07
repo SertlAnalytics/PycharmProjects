@@ -15,6 +15,7 @@ import pandas as pd
 import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
+from sertl_analytics.datafetcher.database_fetcher import MyTable
 from sertl_analytics.constants.pattern_constants import Indices, CN, DC, PRD, OPS, FT
 import os
 import time
@@ -301,18 +302,32 @@ class StockDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
-    def get_pattern_records_as_dataframe(self) -> pd.DataFrame:
-        query = self._pattern_table.get_query_for_records()
+    def get_pattern_records_as_dataframe(self, where_clause='') -> pd.DataFrame:
+        query = self._pattern_table.get_query_for_records(where_clause)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
+
+    def is_trade_already_available_for_pattern_id(self, pattern_id, buy_trigger: str, strategy: str, mean: int) -> bool:
+        where_clause = "Pattern_ID = '{}' and Trade_Mean_Aggregation = {} " \
+                       "and Buy_Trigger = '{}' and Trade_Strategy = '{}'".format(
+            pattern_id, mean, buy_trigger, strategy
+        )
+        query = self._trade_table.get_query_for_records(where_clause)
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.shape[0] > 0
 
     def is_trade_already_available(self, trade_id: str) -> bool:
         query = self._trade_table.get_query_for_unique_record_by_id(trade_id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
-    def get_trade_records_as_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_for_records()
+    def get_trade_records_as_dataframe(self, where_clause='') -> pd.DataFrame:
+        query = self._trade_table.get_query_for_records(where_clause)
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df
+
+    def get_trade_records_for_trading_optimizer_dataframe(self) -> pd.DataFrame:
+        query = self._trade_table.get_query_for_trading_optimizer()
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
@@ -326,6 +341,11 @@ class StockDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
+    def get_pattern_id_for_trade_id(self, trade_id: str) -> str:
+        query = "SELECT id, pattern_id FROM trade WHERE id = '{}'".format(trade_id)
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.iloc[0][DC.PATTERN_ID]
+
     def get_pattern_records_for_replay_as_dataframe(self) -> pd.DataFrame:
         query = self._pattern_table.get_query_for_records("Period = 'DAILY'")
         db_df = DatabaseDataFrame(self, query)
@@ -334,6 +354,48 @@ class StockDatabase(BaseDatabase):
     def delete_existing_trade(self, trade_id: str):
         if self.is_trade_already_available(trade_id):
             self.delete_records(self._trade_table.get_query_for_delete_by_id(trade_id))
+
+    def delete_duplicate_records(self, table: MyTable):
+        db_df_duplicate_id = DatabaseDataFrame(self, table.query_duplicate_id)
+        if db_df_duplicate_id.df.shape[0] == 0:
+            return
+        id_oid_keep_dict = {}
+        row_id_delete_list = []
+        db_df_id_oid = DatabaseDataFrame(self, table.query_id_oid)
+        duplicate_id_list = list(db_df_duplicate_id.df[DC.ID])
+        for index, row in db_df_id_oid.df.iterrows():
+            record_id = row[DC.ID]
+            if record_id in duplicate_id_list:
+                row_id = row['rowid']
+                if record_id in id_oid_keep_dict:
+                    row_id_delete_list.append(str(row_id))
+                else:
+                    id_oid_keep_dict[record_id] = row_id
+        row_id_delete_concatenated = ','.join(row_id_delete_list)
+        query = 'DELETE FROM {} WHERE oid in ({});'.format(table.name, row_id_delete_concatenated)
+        print(query)
+        self.delete_records(query)
+
+    def get_missing_trade_strategies_for_pattern_id(self, pattern_id: str, check_against_strategy_dict: dict) -> dict:
+        query = "SELECT ID, Pattern_id, Buy_Trigger, Trade_Strategy FROM trade where pattern_id = '{}'".format(
+            pattern_id)
+        db_df = DatabaseDataFrame(self, query)
+        return_dict = {}
+        strategy_dict_exist = {}
+        for index, row in db_df.df.iterrows():
+            buy_trigger = row[DC.BUY_TRIGGER]
+            trade_strategy = row[DC.TRADE_STRATEGY]
+            if buy_trigger not in strategy_dict_exist:
+                strategy_dict_exist[buy_trigger] = [trade_strategy]
+            else:
+                strategy_dict_exist[buy_trigger].append(trade_strategy)
+        for buy_trigger, trade_strategy_list in check_against_strategy_dict.items():
+            if buy_trigger not in strategy_dict_exist:
+                return_dict[buy_trigger] = trade_strategy_list
+            else:
+                exist_list = strategy_dict_exist[buy_trigger]
+                return_dict[buy_trigger] = [strategy for strategy in trade_strategy_list if strategy not in exist_list]
+        return return_dict
 
     def get_pattern_differences_to_saved_version(self, pattern_dict: dict) -> dict:
         query = self._pattern_table.get_query_for_unique_record_by_id(pattern_dict[DC.ID])

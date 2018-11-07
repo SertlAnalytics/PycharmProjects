@@ -128,6 +128,8 @@ class ValueCategorizer:
             return row[CN.F_UPPER] * lower_pct, row[CN.F_UPPER] * upper_pct
         elif value_category == SVC.M_in:
             return row[CN.F_LOWER] * upper_pct, row[CN.F_UPPER] * lower_pct
+        elif value_category == SVC.L_in:
+            return row[CN.F_LOWER] * lower_pct, row[CN.F_LOWER] * upper_pct
         elif value_category == SVC.L_on:
             return row[CN.F_LOWER] * lower_pct, row[CN.F_LOWER] * upper_pct
         elif value_category == SVC.L_out:

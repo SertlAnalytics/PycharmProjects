@@ -75,9 +75,12 @@ class MyDashBaseTab:
     def __get_pattern_trade_shape_list__(self, pattern_trade: PatternTrade):
         return_list = []
         colors = self._color_handler.get_colors_for_pattern_trade(pattern_trade)
-        shape_buying = DashInterface.get_pattern_trade_buying_shape(pattern_trade, colors[0])
-        shape_selling = DashInterface.get_pattern_trade_selling_shape(pattern_trade, colors[1])
-        shape_after_selling = DashInterface.get_pattern_trade_after_selling_shape(pattern_trade, colors[2])
+        shape_watching = DashInterface.get_pattern_trade_watching_shape(pattern_trade, colors[0])
+        shape_buying = DashInterface.get_pattern_trade_buying_shape(pattern_trade, colors[1])
+        shape_selling = DashInterface.get_pattern_trade_selling_shape(pattern_trade, colors[2])
+        shape_after_selling = DashInterface.get_pattern_trade_after_selling_shape(pattern_trade, colors[3])
+        if shape_watching:
+            return_list.append(shape_watching)
         if shape_buying:
             return_list.append(shape_buying)
         if shape_selling:

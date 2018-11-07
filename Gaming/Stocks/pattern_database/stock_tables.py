@@ -51,7 +51,9 @@ class TradeTable(MyTable, PredictionFeatureTable):
         return STBL.TRADE
 
     def _add_columns_(self):
-        self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 200))
+        self._columns.append(MyTableColumn(DC.PATTERN_ID, CDT.STRING, 100))  # foreign key
+        self._columns.append(MyTableColumn(DC.TRADE_MEAN_AGGREGATION, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.TRADE_PROCESS, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
@@ -143,8 +145,15 @@ class TradeTable(MyTable, PredictionFeatureTable):
         return [DC.BUY_TRIGGER_ID, DC.TRADE_STRATEGY_ID, DC.TRADE_BOX_TYPE_ID]
 
     @staticmethod
+    def get_query_for_trading_optimizer():
+        return "SELECT {}, {}, {}, {}, {}, {}, {} FROM trade WHERE {}='DAILY'".format(
+            DC.ID, DC.TICKER_ID, DC.PATTERN_TYPE, DC.BUY_TRIGGER, DC.TRADE_STRATEGY,
+            DC.TRADE_RESULT_PCT, DC.PATTERN_ID, DC.PERIOD
+        )
+
+    @staticmethod
     def get_feature_columns_for_trades_statistics():
-        return [DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.TRADE_BOX_TYPE]
+        return [DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.TRADE_BOX_TYPE, DC.TRADE_MEAN_AGGREGATION]
 
     @staticmethod
     def __get_label_columns_for_trades__():
@@ -172,14 +181,14 @@ class TradeTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def get_columns_for_statistics_x_variable() -> list:
-        return [DC.PATTERN_RANGE_BEGIN_DT,
+        return [DC.TRADE_MEAN_AGGREGATION, DC.PATTERN_RANGE_BEGIN_DT,
                 DC.FC_FULL_POSITIVE_PCT, DC.FC_FULL_NEGATIVE_PCT,
                 DC.FC_TICKS_TO_POSITIVE_FULL, DC.FC_TICKS_TO_NEGATIVE_FULL,
                 DC.FC_BREAKOUT_DIRECTION, DC.FC_FALSE_BREAKOUT_ID]
 
     @staticmethod
     def get_columns_for_statistics_y_variable() -> list:
-        return [DC.TRADE_REACHED_PRICE_PCT, DC.EXPECTED_WIN, DC.EXPECTED_WIN_REACHED, DC.TRADE_RESULT]
+        return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_PCT]
 
     @staticmethod
     def get_columns_for_statistics_text_variable() -> list:

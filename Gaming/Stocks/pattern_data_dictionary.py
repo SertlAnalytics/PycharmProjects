@@ -102,6 +102,7 @@ class PatternDataDictionary:
         self._data_dict[DC.BUY_ORDER_ID] = order_status.order_id
         self._data_dict[DC.BUY_ORDER_TPYE] = order_status.type
         self._data_dict[DC.BUY_ORDER_TPYE_ID] = OT.get_id(order_status.type)
+        self._data_dict[DC.BUY_TIME_STAMP] = int(order_status.time_stamp)
         self._data_dict[DC.BUY_DT] = MyDate.get_date_from_epoch_seconds(order_status.time_stamp)
         self._data_dict[DC.BUY_TIME] = str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp))
         self._data_dict[DC.BUY_AMOUNT] = order_status.original_amount
@@ -117,6 +118,7 @@ class PatternDataDictionary:
         self._data_dict[DC.SELL_ORDER_ID] = order_status.order_id
         self._data_dict[DC.SELL_ORDER_TPYE] = order_status.type
         self._data_dict[DC.SELL_ORDER_TPYE_ID] = OT.get_id(order_status.type)
+        self._data_dict[DC.SELL_TIME_STAMP] = int(order_status.time_stamp)
         self._data_dict[DC.SELL_DT] = MyDate.get_date_from_epoch_seconds(order_status.time_stamp)
         self._data_dict[DC.SELL_TIME] = str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp))
         self._data_dict[DC.SELL_AMOUNT] = order_status.original_amount
