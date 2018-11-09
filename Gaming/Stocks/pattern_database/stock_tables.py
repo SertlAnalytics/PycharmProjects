@@ -271,10 +271,7 @@ class PatternTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def get_columns_for_statistics_category() -> list:
-        return [DC.PATTERN_TYPE,
-                DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT,
-                DC.VOLUME_CHANGE_AT_BREAKOUT_PCT, DC.SLOPE_VOLUME_REGRESSION_PCT,
-                DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT]
+        return [DC.PATTERN_TYPE]
 
     @staticmethod
     def get_columns_for_statistics_x_variable() -> list:
@@ -286,7 +283,7 @@ class PatternTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def get_columns_for_statistics_y_variable() -> list:
         return [DC.EXPECTED_WIN, DC.EXPECTED_WIN_REACHED, DC.FC_FULL_POSITIVE_PCT,
-                DC.FC_FULL_NEGATIVE_PCT, DC.FC_TRADE_RESULT_ID]
+                DC.FC_FULL_NEGATIVE_PCT, DC.FC_FALSE_BREAKOUT_ID]
 
     @staticmethod
     def get_columns_for_statistics_text_variable() -> list:

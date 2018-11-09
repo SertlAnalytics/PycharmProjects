@@ -9,7 +9,6 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State, Event
 from datetime import datetime, timedelta
 import json
-from playsound import playsound
 from pattern_detection_controller import PatternDetectionController
 from sertl_analytics.constants.pattern_constants import CN, FD, BT, PRD
 from pattern_system_configuration import SystemConfiguration
@@ -22,6 +21,7 @@ from pattern_bitfinex import BitfinexConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from textwrap import dedent
 from pattern_dash.my_dash_base import MyDashBaseTab, Dash
+from pattern_dash.my_dash_configuration_tables import MyHTMLSystemConfigurationTable
 from pattern_wave_tick import WaveTick, WaveTickList
 
 
@@ -60,6 +60,15 @@ class MyDashTab4Pattern(MyDashBaseTab):
         self.__init_hover_over_callback__()
         self.__init_selection_callback__()
         self.__init_ticker_selection_callback__()
+        # self.__init_callback_for_system_configuration_table__()
+
+    def __init_callback_for_system_configuration_table__(self):
+        @self.app.callback(
+            Output('my_table_SystemConfiguration', 'children'),
+            [Input('my_period_aggregation', 'value')])
+        def handle_callback_for_system_configuration_table(aggregation: str):
+            print('aggregation = {}, children={}'.format(aggregation, ''))
+            return MyHTMLSystemConfigurationTable(self.sys_config).get_table()
 
     def get_div_for_tab(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
@@ -146,7 +155,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
                 if fib_wave.is_wave_indicator_for_dash(indicators[1]):
                     result_list.append('{}: {}'.format(indicators[0], fib_wave.get_details_as_dash_indicator()))
         if len(result_list) > 0:
-            playsound('../pattern_sounds/alarm_fibonacci.wav')
+            self.sys_config.sound_machine.play_alarm_fibonacci()
             self._news_handler.add_news('Fibonacci', ', '.join(result_list))
 
     def __get_markdown_trades__(self):
@@ -155,10 +164,9 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def __get_markdown_statistics__(self):
         return '- none -'
 
-    @staticmethod
-    def __play_sound__(n_intervals):
+    def __play_sound__(self, n_intervals):
         if n_intervals % 10 == 0:
-            playsound('ring08.wav')  # C:/Windows/media/...
+            self.sys_config.sound_machine.play_alarm_new_pattern()
 
     def __init_interval_callback_for_interval_details__(self):
         @self.app.callback(
@@ -219,10 +227,10 @@ class MyDashTab4Pattern(MyDashBaseTab):
             self.__cache_others_ticker_values__(n_intervals, ticker)
             if self._graph_first_cache.was_breakout_since_last_data_update(graph_key):
                 self._news_handler.add_news(ticker, 'Breakout since last data refresh !!!!')
-                playsound('alarm01.wav')
+                self.sys_config.sound_machine.play_alarm_new_pattern()
             elif self._graph_first_cache.was_touch_since_last_data_update(graph_key):
                 self._news_handler.add_news(ticker, 'Touch since last data refresh !!!!')
-                playsound('alarm01.wav')
+                self.sys_config.sound_machine.play_alarm_touch_point()
             return graph
 
     def __cache_others_ticker_values__(self, n_intervals: int, ticker_selected: str):
@@ -261,7 +269,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
                 self._news_handler.add_news('Fibonacci numbers', 'More than 2 waves finished since last refresh !!!!')
                 play_sound = True
             if play_sound:
-                playsound('Ring08.wav')  # C:/Windows/media/...
+                self.sys_config.sound_machine.play_alarm_new_pattern()
             return graphs
 
     def __init_selection_callback__(self):
@@ -278,6 +286,8 @@ class MyDashTab4Pattern(MyDashBaseTab):
             self.__set_period_aggregation_to_sys_configs__(period_aggregation)
             pa_change = self._state_handler.change_for_my_period_aggregation_selection(period_aggregation)
             i_change = self._state_handler.change_for_my_interval_selection(interval_selected)
+            if pa_change:
+                self.config_was_changed = True
             if pa_change or i_change:
                 self._graph_first_cache.clear()
             if self._state_handler.change_for_my_interval(n_intervals):  # hide button after interval refresh

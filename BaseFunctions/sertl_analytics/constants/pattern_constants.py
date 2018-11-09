@@ -535,11 +535,12 @@ class TBT:  # TradingBoxType
 class PDR:  # Pattern Deletion Reasons
     PATTERN_VANISHED = 'Pattern_vanished'
     WRONG_BREAKOUT = 'Wrong_breakout'
+    BUYING_PROBLEM = 'Buying_problem'
     TRADE_FINISHED = 'Trade_finished'
     SMA_PROBLEM = 'Simple_moving_average_problem'
 
     def get_id(key: str):
-        return {PDR.PATTERN_VANISHED: 10, PDR.WRONG_BREAKOUT: 20, PDR.TRADE_FINISHED: 40}.get(key)
+        return {PDR.PATTERN_VANISHED: 10, PDR.WRONG_BREAKOUT: 20, PDR.BUYING_PROBLEM: 25, PDR.TRADE_FINISHED: 40}.get(key)
 
 
 class ST:  # Sell Trigger

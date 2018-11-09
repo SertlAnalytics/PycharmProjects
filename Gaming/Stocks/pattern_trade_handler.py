@@ -39,6 +39,10 @@ class PatternTradeHandler:
         self._replay_status = RST.REPLAY
 
     @property
+    def is_simulation(self):
+        return self.exchange_config.is_simulation
+
+    @property
     def replay_status(self):
         return self._replay_status
 
@@ -61,9 +65,11 @@ class PatternTradeHandler:
         return self._pattern_trade_for_replay
 
     def add_pattern_list_for_trade(self, pattern_list: list):
-        self.trade_candidate_controller.add_new_pattern_list(pattern_list)
-        self.__process_trade_candidates__()
-        self._pattern_trade_for_replay = self.__get_pattern_trade_for_replay__()
+        trade_able_pattern_list = self.trade_optimizer.get_trade_able_pattern_from_pattern_list(pattern_list)
+        if len(trade_able_pattern_list) > 0:
+            self.trade_candidate_controller.add_new_pattern_list(pattern_list)
+            self.__process_trade_candidates__()
+            self._pattern_trade_for_replay = self.__get_pattern_trade_for_replay__()
 
     def simulate_trading_for_one_pattern(self, pattern: Pattern):
         tick_list = pattern.get_back_testing_wave_ticks()
@@ -86,7 +92,7 @@ class PatternTradeHandler:
         self.__calculate_wave_tick_values_for_trade_subprocess__()
         self.__handle_sell_triggers__()
         self.__handle_wrong_breakout__()
-        self.__handle_buy_triggers__()  # ToDo - what if _calculate_xy_values is before???
+        self.__handle_buy_triggers__()
         self.__calculate_xy_values__()
         self.__update_ticker_lists__()  # some entries could be deleted
         self.process = ''
@@ -248,7 +254,8 @@ class PatternTradeHandler:
         print('Sell: {}'.format(sell_comment))
         ticker_id = pattern_trade.ticker_id
         if self.trade_process == TP.ONLINE:
-            order_status = self.trade_client.create_sell_market_order(ticker_id, pattern_trade.executed_amount)
+            order_status = self.trade_client.create_sell_market_order(
+                ticker_id, pattern_trade.executed_amount, self.is_simulation)
         else:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, sell_trigger)
         pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
@@ -281,6 +288,7 @@ class PatternTradeHandler:
 
     def __handle_buy_triggers__(self):
         deletion_key_list = []
+        buying_deletion_key_list = []
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
             if pattern_trade.is_breakout_active:
                 if pattern_trade.is_actual_ticker_breakout(PTHP.HANDLE_BUY_TRIGGERS):
@@ -289,11 +297,14 @@ class PatternTradeHandler:
                         if pattern_trade.pattern.breakout is not None:
                             pattern_trade.pattern.add_part_entry(self.__get_pattern_entry_part(pattern_trade))
                             self.__handle_buy_trigger_for_pattern_trade__(pattern_trade)
+                            if pattern_trade.order_status_buy is None:  # there were problems with buying...
+                                buying_deletion_key_list.append(key)
                     else:
                         deletion_key_list.append(key)
             else:
                 pattern_trade.verify_watching()
-        self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.SMA_PROBLEM)
+        self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.WRONG_BREAKOUT)
+        self.__delete_entries_from_pattern_trade_dict__(buying_deletion_key_list, PDR.BUYING_PROBLEM)
 
     def __get_pattern_entry_part(self, pattern_trade: PatternTrade):
         self.sys_config.runtime_config.actual_pattern_type = pattern_trade.pattern.pattern_type
@@ -334,7 +345,9 @@ class PatternTradeHandler:
                                                         ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
         if self.trade_process == TP.ONLINE:
-            order_status = self.trade_client.buy_available(ticker.ticker_id, ticker.last_price)
+            order_status = self.trade_client.buy_available(ticker.ticker_id, ticker.last_price, self.is_simulation)
+            if order_status is None:  # e.g. not enough money available...
+                return
         else:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_BUY_TRIGGERS, pattern_trade)
         pattern_trade.set_order_status_buy(order_status, buy_comment, ticker)

@@ -5,59 +5,20 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import Indices, EQUITY_TYPE, PRD, PDP, CN, BT, TSTR, FT, DC
+from sertl_analytics.constants.pattern_constants import Indices, EQUITY_TYPE, PRD, PDP, CN, BT, TSTR, FT
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
-from pattern_configuration import PatternConfiguration, RuntimeConfiguration
-from pattern_configuration import PatternDebugger
+from pattern_configuration import PatternConfiguration
+from pattern_runtime_configuration import RuntimeConfiguration
+from pattern_debugger import PatternDebugger
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
 from pattern_id import PatternID
 from pattern_predictor import PatternMasterPredictorHandler, PatternPredictorApi
 from pattern_data_provider import PatternDataProvider
+from pattern_trade_optimizer import TradeStrategyOptimizer
 from copy import deepcopy
-import numpy as np
-import math
-
-
-class TradeStrategyOptimizer:
-    def __init__(self, db_stock: StockDatabase):
-        self.db_stock = db_stock
-        self.df_trades = self.db_stock.get_trade_records_for_trading_optimizer_dataframe()
-
-    def get_optimal_strategy_for_pattern_id_list(self, pattern_id_list: list, buy_trigger: str, strategy_list: list):
-        strategy_opt = ''
-        result_pct_opt = -math.inf
-        for pattern_id in pattern_id_list:
-            df_pattern_id = self.df_trades.loc[np.logical_and(
-                    self.df_trades[DC.PATTERN_ID] == pattern_id,
-                    self.df_trades[DC.BUY_TRIGGER] == buy_trigger)]
-            for index, rows in df_pattern_id.iterrows():
-                strategy = rows[DC.TRADE_STRATEGY]
-                if strategy in strategy_list:
-                    result_pct = float(rows[DC.TRADE_RESULT_PCT])
-                    if result_pct > result_pct_opt:
-                        result_pct_opt = result_pct
-                        strategy_opt = strategy
-        print('Best trade strategy: {} - expected: {:0.2f}%'.format(strategy_opt, result_pct_opt))
-        return strategy_opt, result_pct_opt
-
-    def get_optimal_pattern_type_list_for_long_trading(self):
-        pattern_type_list_opt = []
-        for pattern_type in FT.get_long_trade_able_types():
-            df_trades_pos = self.df_trades.loc[np.logical_and(
-                    self.df_trades[DC.PATTERN_TYPE] == pattern_type,
-                    self.df_trades[DC.TRADE_RESULT_PCT] > 1)]
-            df_trades_neg = self.df_trades.loc[np.logical_and(
-                self.df_trades[DC.PATTERN_TYPE] == pattern_type,
-                self.df_trades[DC.TRADE_RESULT_PCT] < -1)]
-            if df_trades_neg.shape[0] == 0:
-                if df_trades_pos.shape[0] > 10:
-                    pattern_type_list_opt.append(pattern_type)
-            elif df_trades_pos.shape[0]/df_trades_neg.shape[0] > 2.5:
-                pattern_type_list_opt.append(pattern_type)
-        print('Best pattern types today: {}'.format(pattern_type_list_opt))
-        return pattern_type_list_opt
+from pattern_sound.pattern_sound_machine import PatternSoundMachine
 
 
 class SystemConfiguration:
@@ -65,6 +26,7 @@ class SystemConfiguration:
         self.config = PatternConfiguration()
         self.runtime_config = RuntimeConfiguration()
         self.exchange_config = BitfinexConfiguration()
+        self.sound_machine = PatternSoundMachine()
         if for_semi_deep_copy:
             return
         self.crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)

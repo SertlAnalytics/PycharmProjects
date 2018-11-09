@@ -264,7 +264,6 @@ class BitfinexBalanceCache(MyCache):
 class MyBitfinex(ExchangeInterface):
     def __init__(self, api_key: str, api_secret_key: str, exchange_config: BitfinexConfiguration):
         self.exchange_config = exchange_config
-        self._is_simulation_by_config = self.exchange_config.is_simulation
         self.base_currency = self.exchange_config.default_currency
         self.http_timeout = 5.0 # HTTP request timeout in seconds
         self.url = 'https://api.bitfinex.com/v1'
@@ -281,7 +280,7 @@ class MyBitfinex(ExchangeInterface):
 
     def get_simulation_text(self, is_simulation=True):
         if is_simulation is None:
-            is_simulation = self._is_simulation_by_config
+            is_simulation = self.exchange_config.is_simulation
         return ' (simulation)' if is_simulation else ''
 
     def get_available_money_balance(self) -> Balance:
@@ -365,7 +364,7 @@ class MyBitfinex(ExchangeInterface):
             order_buy_all = BuyMarketOrder(symbol, amount)
             order_buy_all.actual_money_available = available_money
             order_buy_all.actual_ticker = ticker
-            return self.create_order(order_buy_all, 'Buy available')
+            return self.create_order(order_buy_all, 'Buy available', is_simulation=is_simulation)
 
     def get_balance_for_symbol(self, symbol: str) -> Balance:
         balance_from_cache = self.balance_cache.get_cached_object_by_key(symbol)

@@ -52,7 +52,7 @@ class MyDashTab4PatternStatistics(MyDashTab4StatisticsBase):
                 return PatternTable.get_feature_columns_after_breakout_for_statistics()
             else:
                 return PatternTable.get_feature_columns_touch_points_for_statistics()
-        return PatternTable.get_columns_for_statistics_category()
+        return PatternTable.get_columns_for_statistics_x_variable()
 
     @staticmethod
     def __get_value_list_for_y_variable_options__(chart_type: str, predictor: str):

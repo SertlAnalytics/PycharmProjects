@@ -157,7 +157,7 @@ class OrderStatus:
         self.symbol = api.symbol
         self.exchange = api.exchange
         self.price = api.price
-        self.avg_execution_price = api.avg_execution_price
+        self.avg_execution_price = api.price if api.avg_execution_price == 0 else api.avg_execution_price
         self.side = api.side
         self.type = api.type
         self.time_stamp = round(api.time_stamp)

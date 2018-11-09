@@ -12,6 +12,7 @@ from pattern_detector import PatternDetector
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from pattern_test.trade_test_cases import TradeTestCase, TradeTestCaseFactory, TradeTestApi
+import pattern_sound
 
 
 class TradeTest:

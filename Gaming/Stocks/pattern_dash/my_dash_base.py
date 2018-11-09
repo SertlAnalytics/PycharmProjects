@@ -30,6 +30,15 @@ class MyDashBaseTab:
         self._color_handler = PatternColorHandler()
         self._news_handler = self.__get_news_handler__()
         self._time_stamp_last_refresh = MyDate.time_stamp_now()
+        self._config_was_changed = False
+
+    @property
+    def config_was_changed(self) -> bool:
+        return self._config_was_changed
+
+    @config_was_changed.setter
+    def config_was_changed(self, value: bool):
+        self._config_was_changed = value
 
     def init_callbacks(self):
         pass

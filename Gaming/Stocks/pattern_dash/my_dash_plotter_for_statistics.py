@@ -10,6 +10,8 @@ from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
 from pattern_dash.my_dash_colors import DashColorHandler
 import pandas as pd
+import itertools
+import numpy as np
 
 
 class MyDashTabStatisticsPlotter:
@@ -34,6 +36,8 @@ class MyDashTabStatisticsPlotter:
         if self.chart_type == CHT.SCATTER:
             graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
             graph_api.figure_data = self.__get_scatter_figure_data__()
+            graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+            graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
             return [MyDCC.graph(graph_api)]
         elif self.chart_type == CHT.PREDICTOR:
             graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'predictor'))
@@ -87,31 +91,31 @@ class MyDashTabStatisticsPlotter:
 
     def __get_scatter_figure_data__(self):
         df = self.__get_df_for_selection__()
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[self.category].unique()}
+        if DC.TRADE_RESULT_ID in df.columns:
+            combined_list = list(itertools.product(df[self.category].unique(), df[DC.TRADE_RESULT_ID].unique()))
+            col = DC.TRADE_RESULT_ID
+        else:
+            combined_list = list(itertools.product(df[self.category].unique(), df[DC.EXPECTED_WIN_REACHED].unique()))
+            col = DC.EXPECTED_WIN_REACHED
         return [
             go.Scatter(
-                x=df[df[self.category] == category][self.x_variable],
-                y=df[df[self.category] == category][self.y_variable],
-                text=df[df[self.category] == category][self.text_variable],
+                x=df[np.logical_and(df[self.category] == element[0], df[col] == element[1])][self.x_variable],
+                y=df[np.logical_and(df[self.category] == element[0], df[col] == element[1])][self.y_variable],
+                text=df[np.logical_and(df[self.category] == element[0], df[col] == element[1])][self.text_variable],
                 mode='markers',
                 opacity=0.7,
-                marker={'size': 15, 'line': {'width': 0.5, 'color': 'white'}},
-                name=category
-            ) for category in df[self.category].unique()
+                marker={'symbol': 'diamond' if int(element[1]) == 1 else 'circle',
+                        'size': 15,
+                        'color': color_dict[element[0]],
+                        'line': {'width': 0.5, 'color': 'white' if int(element[1]) == 1 else 'red'}},
+                name=element[0]
+            ) for element in combined_list
         ]
 
     def __get_scatter_figure_data_for_predictor__(self):
-        df = self.__get_df_for_selection__()
-        return [
-            go.Scatter(
-                x=df[df[DC.PATTERN_TYPE] == pattern_type][self.x_variable],
-                y=df[df[DC.PATTERN_TYPE] == pattern_type][self.y_variable],
-                text=df[df[DC.PATTERN_TYPE] == pattern_type][self.text_variable],
-                mode='markers',
-                opacity=0.7,
-                marker={'size': 15, 'line': {'width': 0.5, 'color': 'white'}},
-                name=pattern_type
-            ) for pattern_type in df[DC.PATTERN_TYPE].unique()
-        ]
+        self.category = DC.PATTERN_TYPE
+        return self.__get_scatter_figure_data__()
 
     def __get_pie_figure_data__(self, scope: str):
         labels, values, colors, text, pull = self.__get_data_for_pie_figure__(scope)
@@ -148,7 +152,7 @@ class MyDashTabStatisticsPlotter:
         pull = []
         for cat in sorted_category_list:
             pull.append(pull_distance if cat.find('_winner') > 0 and scope == 'all' else 0)
-        print('colors={}, pull={}'.format(colors, pull))
+        # print('colors={}, pull={}'.format(colors, pull))
         return sorted_category_list, y_values, colors, text, pull
 
     def __get_area_winner_loser_figure_data__(self):
@@ -206,6 +210,21 @@ class MyDashTabStatisticsPlotter:
     @staticmethod
     def __get_result_id_from_row__(row) -> int:
         pass
+
+    def __get_figure_layout_y_axis_dict__(self, graph_api: DccGraphApi):
+        if self.__can_axis_be_scaled_log_for_selected_variable__(self.y_variable):
+            return {'title': graph_api.figure_layout_yaxis_title, 'type': 'log', 'autorange': True}
+
+    def __get_figure_layout_x_axis_dict__(self):
+        if self.__can_axis_be_scaled_log_for_selected_variable__(self.x_variable):
+            return {'type': 'log', 'autorange': True}
+
+    def __can_axis_be_scaled_log_for_selected_variable__(self, variable_for_axis: str) -> bool:
+        min_value = self._df_base[variable_for_axis].min()
+        if type(min_value) is not str:  # to avoid problems with dates, etc.
+            unique_value_list = self._df_base[variable_for_axis].unique()
+            return min_value >= 0 and len(unique_value_list) > 2
+        return False
 
     @staticmethod
     def __get_area_figure_data_test__():

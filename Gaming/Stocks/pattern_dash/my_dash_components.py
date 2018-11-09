@@ -140,9 +140,10 @@ class DccGraphSecondApi(DccGraphApi):
 
 
 class MyHTMLTable:
-    def __init__(self, rows: int, cols: int):
+    def __init__(self, rows: int, cols: int, header_title=''):
         self._rows = rows
         self._cols = cols
+        self._header_title = header_title
         self._row_range = range(1, self._rows + 1)
         self._col_range = range(1, self._cols + 1)
         self._list = [['' for col in self._col_range] for row in self._row_range]
@@ -164,6 +165,7 @@ class MyHTMLTable:
 
     def get_table(self):
         rows = []
+        self.__add_header_row__(rows)
         for row_number in self._row_range:
             row = []
             for col_number in self._col_range:
@@ -171,10 +173,28 @@ class MyHTMLTable:
                 cell_style = self._get_cell_style_(row_number, col_number)
                 row.append(html.Td(value, style=cell_style))
             rows.append(html.Tr(row))
-        return html.Table(rows, style=self._get_table_style_())
+        if self._header_title == '':
+            return html.Table(rows, style=self._get_table_style_())
+        return html.Table(rows, style=self._get_table_style_(), id='my_table_{}'.format(self._header_title))
+
+    def __add_header_row__(self, rows):
+        if self._header_title == '':
+            return
+        row = []
+        cell_style = self._get_cell_style_header_row_()
+        row.append(html.Td(self._header_title, style=cell_style, colSpan=self._cols))
+        rows.append(html.Tr(row))
 
     def _init_cells_(self):
         pass
+
+    def _get_cell_style_header_row_(self):
+        bg_color = COLORS[2]['background']
+        color = COLORS[2]['text']
+        text_align = 'center'
+        v_align = 'top'
+        return {'background-color': bg_color, 'color': color, 'text-align': text_align,
+                'vertical-align': v_align, 'padding': self.padding_cell, 'font-weight': 'bold'}
 
     def _get_cell_style_(self, row: int, col: int):
         pass
@@ -189,15 +209,21 @@ class MyHTML:
         return html.Button
 
     @staticmethod
-    def button_submit(element_id: str, children='Submit'):
-        return html.Button(id=element_id, n_clicks=0, children=children, hidden='hidden',
+    def button_submit(element_id: str, children='Submit', hidden='hidden'):
+        return html.Button(id=element_id, n_clicks=0, children=children, hidden=hidden,
                 style={'fontSize': 24, 'margin-left': '30px'})
 
     @staticmethod
-    def div_with_html_button_submit(element_id: str, children='Submit'):
+    def div_with_html_button_submit(element_id: str, children='Submit', hidden='hidden'):
+        if len(children) > 20:
+            width = '30%'
+        elif len(children) > 10:
+            width = '20%'
+        else:
+            width = '10%'
         return html.Div(
-            [MyHTML.button_submit(element_id, children)],
-            style={'width': '10%', 'display': 'inline-block', 'vertical-align': 'bottom', 'padding-bottom': 20,
+            [MyHTML.button_submit(element_id, children, hidden)],
+            style={'width': width, 'display': 'inline-block', 'vertical-align': 'bottom', 'padding-bottom': 20,
                    'padding-left': 10}
         )
 
@@ -206,8 +232,8 @@ class MyHTML:
         return html.Div(embedded_element_list)
 
     @staticmethod
-    def div(element_id: str, children='', bold=False, inline=True):
-        style = {'font-weight': 'bold' if bold else 'normal'}
+    def div(element_id: str, children='', bold=False, inline=True, color='black'):
+        style = {'font-weight': 'bold' if bold else 'normal', 'color': color}
         if inline:
             style['display'] = 'inline-block'
         return html.Div(id=element_id, children=children, style=style)
@@ -307,7 +333,7 @@ class MyDCC:
             x_axis_dict = graph_api.figure_layout_x_axis_dict
         else:
             # x_axis_dict = {'title': 'ticker-x', 'type': 'date'}
-            x_axis_dict = {}
+            x_axis_dict = {}  # 'type': 'log'
 
         if graph_api.figure_layout_y_axis_dict:
             y_axis_dict = graph_api.figure_layout_y_axis_dict

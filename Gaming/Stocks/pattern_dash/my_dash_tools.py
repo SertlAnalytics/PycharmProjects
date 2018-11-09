@@ -5,8 +5,6 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
-
-from playsound import playsound
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mycache import MyCache, MyCacheObject, MyCacheObjectApi
 from copy import deepcopy

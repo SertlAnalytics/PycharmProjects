@@ -8,6 +8,10 @@ Date: 2018-10-03
 from datetime import datetime
 from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_components import MyHTMLTable, COLORS, MyHTML, MyDCC
+from pattern_system_configuration import SystemConfiguration
+from pattern_configuration import PatternConfiguration
+from pattern_runtime_configuration import RuntimeConfiguration
+from pattern_bitfinex import BitfinexConfiguration
 
 
 class MyHTMLHeaderTable(MyHTMLTable):
@@ -22,6 +26,9 @@ class MyHTMLHeaderTable(MyHTMLTable):
         login_time_div = MyHTML.div('my_login_div', '{}'.format(time_str), False)
         my_user_div = MyHTML.div_embedded([user_label_div, MyHTML.span(' '), user_div])
         my_login_div = MyHTML.div_embedded([login_label_div, MyHTML.span(' '), login_time_div])
+
+        dash_board_title_div = MyHTML.div('my_dashboard_title_div', 'Pattern Detection Dashboard', inline=False)
+        dash_board_sub_title_div = MyHTML.div('my_dashboard_sub_title_div', '', bold=False, color='red')
 
         time_label_div = MyHTML.div('my_time_label_div', 'Time:', True)
         time_value_div = MyHTML.div('my_time_div', '', False)
@@ -45,7 +52,7 @@ class MyHTMLHeaderTable(MyHTMLTable):
         pattern_div = MyHTML.div_embedded([stored_pattern_label_div, MyHTML.span(' '), stored_pattern_div])
 
         self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div]))
-        self.set_value(1, 2, 'Pattern Detection Dashboard')
+        self.set_value(1, 2, MyHTML.div_embedded([dash_board_title_div, dash_board_sub_title_div]))
         self.set_value(1, 3, MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div]))
         self.set_value(2, 1, MyDCC.markdown('my_position_markdown'))
         self.set_value(2, 2, MyDCC.markdown('my_dashboard_markdown'))
@@ -124,3 +131,6 @@ class MyHTMLTabPatternStatisticsHeaderTable(MyHTMLTabHeaderTable):
         self.set_value(1, 1, MyHTML.div_embedded([chart_label_div, MyHTML.span(' '), chart_div]))
         self.set_value(1, 2, MyDCC.markdown('my_pattern_statistics_markdown'))
         self.set_value(1, 3, MyHTML.div_embedded([statistics_summary_div]))
+
+
+

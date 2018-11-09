@@ -1,6 +1,7 @@
 """
 Description: This module contains the main function for parsing XML - with some applications
 Author: Josef Sertl
+Link to BeautifulSoup docu: https://wiki.python.org/moin/beautiful%20soup
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-05
 """
@@ -9,13 +10,25 @@ import requests
 from sertl_analytics.myexceptions import MyException
 
 
+class XMLParserApi:
+    def __init__(self):
+        self.url = ''
+        self.parent_tag = ''
+        self.parent_tag_attribute_dic = {}
+        self.tag = ''
+        self.tag_attribute_dic = {}
+        self.sub_tag = ''
+        self.sub_tag_dic = {}
+
 class XMLParser:
-    def __init__(self, url: str, tag: str, tag_attribute_dic: dict, sub_tag: str, sub_tag_dic: dict):
-        self.__url = url
-        self.__tag = tag
-        self.__tag_attribute_dic = tag_attribute_dic
-        self.__sub_tag = sub_tag
-        self.__sub_tag_dic = sub_tag_dic
+    def __init__(self, api: XMLParserApi):
+        self.__url = api.url
+        self.__parent_tag = api.parent_tag
+        self.__parent_tag_attribute_dic = api.parent_tag_attribute_dic
+        self.__tag = api.tag
+        self.__tag_attribute_dic = api.tag_attribute_dic
+        self.__sub_tag = api.sub_tag
+        self.__sub_tag_dic = api.sub_tag_dic
         self.__result_list = []
         self.__fill_result_list__()
 
@@ -28,8 +41,13 @@ class XMLParser:
     def __fill_result_list__(self):
         resp = requests.get(self.__url)
         soup = bs.BeautifulSoup(resp.text, 'lxml')
-        tag_object = soup.find(self.__tag, self.__tag_attribute_dic)
-        if self.__tag == 'ol':
+        if self.__parent_tag != '':
+            parent_tag_object = soup.find(self.__parent_tag, self.__parent_tag_attribute_dic)
+            tag_object = parent_tag_object.findNext(self.__tag, self.__tag_attribute_dic)
+        else:
+            tag_object = soup.find(self.__tag, self.__tag_attribute_dic)
+
+        if self.__tag in ['ol', 'ul']:
             for li in tag_object.findAll(self.__sub_tag):
                 anchor = li.find('a')
                 ticker = li.text.replace('(', ' ').replace(')', '').split()[-1]
@@ -50,32 +68,37 @@ class XMLParser:
 
 class XMLParser4SP500(XMLParser):
     def __init__(self):
-        self.url = 'http://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-        self.tag = 'table'
-        self.tag_attribute_dic = {'class': 'wikitable sortable'}
-        self.sub_tag = 'tr'
-        self.sub_tag_dic = {'ticker': 0, 'name': 1}
-        XMLParser.__init__(self, self.url, self.tag, self.tag_attribute_dic, self.sub_tag, self.sub_tag_dic)
+        api = XMLParserApi()
+        api.url = 'http://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+        api.tag = 'table'
+        api.tag_attribute_dic = {'class': 'wikitable sortable'}
+        api.sub_tag = 'tr'
+        api.sub_tag_dic = {'ticker': 0, 'name': 1}
+        XMLParser.__init__(self, api)
 
 
 class XMLParser4DowJones(XMLParser):
     def __init__(self):
-        self.url = 'https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average'
-        self.tag = 'table'
-        self.tag_attribute_dic = {'class': 'wikitable sortable'}
-        self.sub_tag = 'tr'
-        self.sub_tag_dic = {'ticker': 2, 'name': 0}
-        XMLParser.__init__(self, self.url, self.tag, self.tag_attribute_dic, self.sub_tag, self.sub_tag_dic)
+        api = XMLParserApi()
+        api.url = 'https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average'
+        api.tag = 'table'
+        api.tag_attribute_dic = {'class': 'wikitable sortable'}
+        api.sub_tag = 'tr'
+        api.sub_tag_dic = {'ticker': 2, 'name': 0}
+        XMLParser.__init__(self, api)
 
 
 class XMLParser4Nasdaq100(XMLParser):
     def __init__(self):
-        self.url = 'https://en.wikipedia.org/wiki/NASDAQ-100'
-        self.tag = 'ol'
-        self.tag_attribute_dic = {}
-        self.sub_tag = 'li'
-        self.sub_tag_dic = {'ticker': 2, 'name': 0}
-        XMLParser.__init__(self, self.url, self.tag, self.tag_attribute_dic, self.sub_tag, self.sub_tag_dic)
+        api = XMLParserApi()
+        api.url = 'https://en.wikipedia.org/wiki/NASDAQ-100'
+        api.parent_tag = 'div'
+        api.parent_tag_attribute_dic = {'class': 'div-col columns column-width'}
+        api.tag = 'ul'
+        api.tag_attribute_dic = {}
+        api.sub_tag = 'li'
+        api.sub_tag_dic = {'ticker': 2, 'name': 0}
+        XMLParser.__init__(self, api)
 
 
 def save_sp500_tickers():

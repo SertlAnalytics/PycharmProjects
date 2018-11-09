@@ -163,7 +163,7 @@ class TradeCandidateController:
                 self.__add_to_black_buy_strategy_pattern_id_readable_list__(key_buy_and_strategy)
 
     def __get_best_trade_strategy_for_pattern__(self, buy_trigger: str, pattern: Pattern, strategy_list: list):
-        if len(strategy_list) == 1:
+        if len(strategy_list) == 1:  # we don't need to check alternatives
             return strategy_list[0]
         nn_entry_list = pattern.nearest_neighbor_entry_list
         if len(nn_entry_list) == 0:
@@ -171,7 +171,7 @@ class TradeCandidateController:
         nn_pattern_id_list = [nn_entry.id for nn_entry in nn_entry_list]
         strategy_opt, result_pct_opt = self.trade_strategy_optimizer.get_optimal_strategy_for_pattern_id_list(
             nn_pattern_id_list, buy_trigger, strategy_list)
-        if result_pct_opt < 0:
+        if result_pct_opt < 0:  # there were trades but not successful
             return ''
         if strategy_opt == '':
             return self.exchange_config.default_trade_strategy_dict[buy_trigger]

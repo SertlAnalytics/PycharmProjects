@@ -5,17 +5,6 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
-from dash import Dash
-import dash_auth
-from sertl_analytics.mypasswords import MyPasswordHandler
-
-"""
-Description: This module is the main module for Dash.
-Author: Josef Sertl
-Copyright: SERTL Analytics, https://sertl-analytics.com
-Date: 2018-06-17
-"""
-
 import colorlover as cl
 import dash_core_components as dcc
 import dash_html_components as html
@@ -25,16 +14,26 @@ from datetime import datetime
 import pandas as pd
 import datetime as dt
 import json
-from playsound import playsound
 from pattern_dash.pattern_shapes import MyPolygonShape, MyCircleShape, MyLineShape
 from sertl_analytics.myconstants import MyAPPS
 from pattern_dash.my_dash_base import MyDashBase
+from pattern_sound.pattern_sound_machine import PatternSoundMachine
+
+"""
+Description: This module is the main module for Dash.
+Author: Josef Sertl
+Copyright: SERTL Analytics, https://sertl-analytics.com
+Date: 2018-06-17
+"""
+
+
 
 
 class MyDash4Nasdaq(MyDashBase):
     def __init__(self):
         MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH)
         self.options = self.__get_option_entries__()
+        self.sound_machine = PatternSoundMachine()
 
     def __get_option_entries__(self) -> list:
         nsdq = pd.read_csv('NASDAQcompanylist.csv')
@@ -103,7 +102,7 @@ class MyDash4Nasdaq(MyDashBase):
             [Input('interval-component', 'n_intervals')])
         def callback_interval(n_intervals):
             if n_intervals % 10 == 0:
-                playsound('alarm01.wav')  # C:/Windows/media/...
+                self.sound_machine.play_alarm_new_pattern()
             return 'Interval-updates: {} at {}'.format(n_intervals, dt.datetime.now())
 
     @staticmethod

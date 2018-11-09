@@ -18,6 +18,7 @@ from pattern_wave_tick import WaveTick, WaveTickList, TickerWaveTickConverter
 from sertl_analytics.plotter.my_plot import MyPlotHelper
 import math
 from pattern_news_handler import NewsHandler
+
 from textwrap import dedent
 
 
@@ -318,14 +319,8 @@ class PatternTrade:
     def is_actual_ticker_breakout(self, process: str):
         if not self._is_breakout_active:
             return False
-        ts = self.ticker_actual.time_stamp
-        vc = self.__get_value_category_for_breakout__()
-        l_value, u_value = self.pattern.value_categorizer.get_value_range_for_category(ts, vc)
-        # self.__print_details_for_actual_value_category__('Check breakout', l_value, u_value, vc)
-        # if l_value < self.ticker_actual.last_price < u_value:
-        if l_value < self.wave_tick_actual.close < u_value:
+        if self.limit_current < self.wave_tick_actual.close:
             self._breakout_counter += 1 if self.buy_trigger == BT.BREAKOUT else 2  # touch point => immediate buy
-        self._wave_tick_list.last_wave_tick.breakout_value = l_value
         self.print_state_details_for_actual_wave_tick(process)
         return self._breakout_counter >= self._counter_required  # we need a second confirmation
 
@@ -436,10 +431,10 @@ class PatternTrade:
             counter_required = self.counter_required
             if self.buy_trigger == BT.BREAKOUT:
                 if process == PTHP.HANDLE_WRONG_BREAKOUT:
-                    breakout_value = self.pattern.get_lower_value(wave_tick.time_stamp)
+                    breakout_value = self.stop_loss_current
                     counter = self.wrong_breakout_counter
                 else:
-                    breakout_value = self.pattern.get_upper_value(wave_tick.time_stamp)
+                    breakout_value = self.limit_current
                     counter = self.breakout_counter
             else:
                 breakout_value = self.pattern.get_lower_value(wave_tick.time_stamp)
@@ -447,15 +442,15 @@ class PatternTrade:
                     counter = self.wrong_breakout_counter
                 else:
                     counter = self.breakout_counter
-            print('{}: {} for {}-{}-{} ({}/{}): ticker.last_price={:.2f}, date_time={}, breakout value={:.2f}'.format(
+            print('{}: {} for {}-{}-{} ({}/{}): ticker.last_price={:.2f}, breakout value={:.2f}, date_time={}'.format(
                 self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
-                counter, counter_required, wave_tick.close, wave_tick.date_time_str, breakout_value))
+                counter, counter_required, wave_tick.close, breakout_value, wave_tick.date_time_str))
         else:
             print(
-                '{}: {} for {}-{}-{}: _limit={:.2f}, ticker.last_price={:.2f}, date_time={}, stop_loss={:.2f}, '
+                '{}: {} for {}-{}-{}: _limit={:.2f}, ticker.last_price={:.2f}, stop_loss={:.2f}, date_time={}, '
                 'bought_at={:.2f}'.format(
                     self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
-                    self.limit_current, wave_tick.close, wave_tick.date_time_str, self.stop_loss_current,
+                    self.limit_current, wave_tick.close, self.stop_loss_current, wave_tick.date_time_str,
                     self.order_status_buy.avg_execution_price))
 
     def print_state_details_for_actual_ticker(self, process: str):
@@ -741,7 +736,7 @@ class PatternTrade:
             text_list.append('**Process**: {} **Breakout**: {:2.2f} **Current**: {:2.2f} **Wrong breakout**: {:2.2f}'.
                              format(self.current_trade_process, limit, last_price, stop_loss))
         elif self._status == PTS.EXECUTED:
-            bought_at = self._order_status_buy.price
+            bought_at = self._order_status_buy.avg_execution_price
             trailing_stop_distance = self.trailing_stop_distance
             current_win_pct = round(((last_price - bought_at) / bought_at * 100), 2)
             text_list.append('**Process**: {} **Bought at**: {:2.2f} **Limit**: {:2.2f} **Current**: {:2.2f}'
@@ -749,8 +744,8 @@ class PatternTrade:
                                 self.current_trade_process, bought_at, limit, last_price, stop_loss,
                                 trailing_stop_distance, current_win_pct))
         else:
-            bought_at = self._order_status_buy.price
-            sold_at = self._order_status_sell.price
+            bought_at = self._order_status_buy.avg_execution_price
+            sold_at = self._order_status_sell.avg_execution_price
             win_pct = round(((sold_at - bought_at) / bought_at * 100), 2)
             text_list.append('**Bought at**: {:2.2f} **Sold at**: {:2.2f} **Result**: {:2.2f}%'.format(
                 bought_at, sold_at, win_pct))

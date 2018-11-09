@@ -108,17 +108,20 @@ class MyBitfinexTradeClient:
         self.print_active_balances('After "Sell all assets"')
         return order_status_list
 
-    def create_buy_market_order(self, trading_pair: str, amount: float):
-        return self._bitfinex.create_order(BuyMarketOrder(trading_pair, amount))
+    def create_buy_market_order(self, trading_pair: str, amount: float, is_simulation=True):
+        return self._bitfinex.create_order(BuyMarketOrder(trading_pair, amount),
+                                           is_simulation=is_simulation)
 
-    def create_buy_stop_order(self, trading_pair: str, amount: float, buy_stop_price: float):
-        return self._bitfinex.create_order(BuyStopOrder(trading_pair, amount, buy_stop_price))
+    def create_buy_stop_order(self, trading_pair: str, amount: float, buy_stop_price: float, is_simulation=True):
+        return self._bitfinex.create_order(BuyStopOrder(trading_pair, amount, buy_stop_price),
+                                           is_simulation=is_simulation)
 
-    def create_buy_limit_order(self, trading_pair: str, amount: float, limit_price: float):
-        return self._bitfinex.create_order(BuyLimitOrder(trading_pair, amount, limit_price))
+    def create_buy_limit_order(self, trading_pair: str, amount: float, limit_price: float, is_simulation=True):
+        return self._bitfinex.create_order(BuyLimitOrder(trading_pair, amount, limit_price),
+                                           is_simulation=is_simulation)
 
-    def create_sell_market_order(self, trading_pair: str, amount: float):
-        return self._bitfinex.create_order(SellMarketOrder(trading_pair, amount))
+    def create_sell_market_order(self, trading_pair: str, amount: float, is_simulation=True):
+        return self._bitfinex.create_order(SellMarketOrder(trading_pair, amount), is_simulation=is_simulation)
 
     def create_sell_stop_loss_order(self, trading_pair: str, amount: float, stop_price: float):
         return self._bitfinex.create_order(SellStopLossOrder(trading_pair, amount, stop_price))

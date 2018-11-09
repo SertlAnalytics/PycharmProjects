@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from datetime import datetime
 import json
 from sertl_analytics.myconstants import MyAPPS
@@ -18,8 +18,10 @@ from pattern_dash.my_dash_tab_for_pattern import MyDashTab4Pattern
 from pattern_dash.my_dash_tab_for_trades import MyDashTab4Trades
 from pattern_dash.my_dash_tab_for_statistics_trade import MyDashTab4TradeStatistics
 from pattern_dash.my_dash_tab_for_statistics_pattern import MyDashTab4PatternStatistics
+from pattern_dash.my_dash_tab_for_configuration import MyDashTab4Configuration
 from pattern_dash.my_dash_colors import DashColorHandler
-from pattern_bitfinex import BitfinexConfiguration
+from pattern_dash.my_dash_configuration_tables import MyHTMLBitfinexConfigurationTable, \
+    MyHTMLPatternConfigurationTable, MyHTMLSystemConfigurationTable
 from pattern_trade_handler import PatternTradeHandler
 
 
@@ -34,6 +36,7 @@ class MyDash4Pattern(MyDashBase):
         self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.trade_handler_online)
         self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config, self.color_handler)
+        self.tab_configuration = MyDashTab4Configuration(self.app, self.sys_config, self.trade_handler_online)
 
     def get_pattern(self):
         self.__set_app_layout__()
@@ -43,6 +46,7 @@ class MyDash4Pattern(MyDashBase):
         self.tab_trades.init_callbacks()
         self.tab_trade_statistics.init_callbacks()
         self.tab_pattern_statistics.init_callbacks()
+        self.tab_configuration.init_callbacks()
 
     @staticmethod
     def __create_callback__():
@@ -86,4 +90,5 @@ class MyDash4Pattern(MyDashBase):
         tab_02 = MyDCC.tab('Trades', [self.tab_trades.get_div_for_tab()])
         tab_03 = MyDCC.tab('Trade statistics', [self.tab_trade_statistics.get_div_for_tab()])
         tab_04 = MyDCC.tab('Pattern statistics', [self.tab_pattern_statistics.get_div_for_tab()])
-        return MyDCC.tabs('my_app_tabs', [tab_01, tab_02, tab_03, tab_04])
+        tab_05 = MyDCC.tab('Configuration', [self.tab_configuration.get_div_for_tab()])
+        return MyDCC.tabs('my_app_tabs', [tab_01, tab_02, tab_03, tab_04, tab_05])

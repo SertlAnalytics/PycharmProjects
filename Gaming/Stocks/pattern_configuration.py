@@ -5,53 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, TP, CN, EQUITY_TYPE, PRD, PDP
-from sertl_analytics.mydates import MyDate
-
-
-class PatternDebugger:
-    def __init__(self):
-        self.__process_dic = {}
-        self.pattern_range_position_list = []
-
-    @property
-    def is_active(self):
-        for process in self.__process_dic:
-            if self.__process_dic[process]:
-                return True
-        return False
-
-    def check_range_position_list(self, position_list: list):
-        process = 'position_list'
-        self.__init_process__(process)
-        min_len = min(len(position_list), len(self.pattern_range_position_list))
-        if min_len > 0:
-            intersect = set(position_list).intersection(set(self.pattern_range_position_list))
-            if len(intersect) == len(self.pattern_range_position_list):
-                self.__activate_process__(process)
-
-    def __init_process__(self, process: str):
-        self.__process_dic[process] = False
-
-    def __activate_process__(self, process: str):
-        self.__process_dic[process] = True
-
-
-class RuntimeConfiguration:
-    actual_list = []
-    actual_position = 0
-    actual_tick_position = 0
-    actual_ticker = ''
-    actual_ticker_equity_type = EQUITY_TYPE.NONE
-    actual_ticker_name = ''
-    actual_and_clause = ''
-    actual_pattern_type = FT.NONE
-    actual_breakout = None
-    actual_pattern_range = None
-    actual_expected_win_pct = 0  # pct in this case is 10 for 10%
-    actual_trade_process = TP.ONLINE
-    actual_pattern_range_from_time_stamp = 0
-    actual_pattern_range_to_time_stamp = 0
+from sertl_analytics.constants.pattern_constants import FT, CN, PDP
 
 
 class PatternConfiguration:

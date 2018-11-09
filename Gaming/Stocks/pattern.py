@@ -360,8 +360,7 @@ class Pattern:
         check_dict = {
             'Pre_constraints': self.__are_pre_constraints_fulfilled__(),
             'Established': self.__is_formation_established__(),
-            'Expected_win': self.__is_expected_win_sufficient__() or self.pattern_type in [FT.CHANNEL, FT.CHANNEL_DOWN]
-            # sometimes channels are used to have a strong breakout - we want to follow them...
+            'Expected_win': self.__is_expected_win_sufficient__()
         }
         return False if False in [check_dict[key] for key in check_dict] else True
 
@@ -545,7 +544,12 @@ class Pattern:
         ref_value = self._part_entry.tick_last.close
         min_expected_win_pct = self.sys_config.runtime_config.actual_expected_win_pct
         expected_win_pct = round(((self.get_expected_win() + ref_value) / ref_value - 1)*100, 1)
-        return expected_win_pct >= min_expected_win_pct
+        if expected_win_pct >= min_expected_win_pct:
+            return True
+        else:  # check the previous period if there was a big change - there are sometimes big moves afterwards...
+            previous_top_pct = self.data_dict_obj.get(DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT)
+            previous_bottom_pct = self.data_dict_obj.get(DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT)
+            return previous_top_pct + previous_bottom_pct > 100
 
     def __is_expected_win_for_touch_point_sufficient__(self) -> bool:
         ref_value = self._part_entry.tick_last.close

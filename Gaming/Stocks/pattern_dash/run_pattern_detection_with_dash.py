@@ -34,8 +34,7 @@ sys_config.config.with_trading = True
 sys_config.config.save_pattern_data = False
 sys_config.config.save_trade_data = False
 # sys_config.config.pattern_type_list = [FT.TRIANGLE]
-sys_config.config.pattern_type_list = sys_config.trade_strategy_optimizer.\
-    get_optimal_pattern_type_list_for_long_trading()
+sys_config.config.pattern_type_list = FT.get_all()
 sys_config.config.plot_data = True
 sys_config.config.plot_only_pattern_with_fibonacci_waves = False
 sys_config.config.plot_min_max = True

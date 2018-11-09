@@ -5,11 +5,11 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
-from playsound import playsound
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mycache import MyCache, MyCacheObject, MyCacheObjectApi
 from sertl_analytics.constants.pattern_constants import TP
 from pattern_test.trade_test import TradeTest
+from pattern_sound.pattern_sound_machine import PatternSoundMachine
 from copy import deepcopy
 
 
@@ -21,7 +21,7 @@ class MyReplayCacheObjectApi(MyCacheObjectApi):
         self.pattern_data = None
         self.last_refresh_ts = None
         self.period_aggregation_ts = self.sys_config.period_aggregation * 60
-        self.trade_test = TradeTest(TP.TRADE_REPLAY, self.sys_config, self.exchange_config)
+        self.trade_test = TradeTest(TP.TRADE_REPLAY, self.sys_config)
         self._selected_row_index = -1
         self.detector_for_replay = None
         self.graph_api_for_replay = None
@@ -66,6 +66,7 @@ class MyReplayCacheObject(MyCacheObject):
 class MyReplayCache(MyCache):
     def __init__(self):
         MyCache.__init__(self)
+        self._sound_machine = PatternSoundMachine()
         self.__cached_and_under_observation_play_sound_list = []
 
     @property
@@ -109,7 +110,7 @@ class MyReplayCache(MyCache):
                 if key in self.__cached_and_under_observation_play_sound_list:
                     self.__cached_and_under_observation_play_sound_list.remove(key)
         if play_sound:
-            playsound('ring08.wav')  # C:/Windows/media/...
+            self._sound_machine.play_alarm_new_pattern()
         return graphs
 
     def get_pattern_list_for_buy_trigger(self, buy_trigger: str) -> list:

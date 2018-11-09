@@ -1,5 +1,5 @@
 """
-Description: This module starts the pattern detection application. It is NOT stored on git hub.
+Description: This job updates the trade records for all pattern without that trade type.
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-10
@@ -15,7 +15,7 @@ sys_config.init_detection_process_for_automated_trade_update(16)
 trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP]}
 pattern_id_deletion_list = []
 # sys_config.config.pattern_type_list = [FT.TRIANGLE]
-for pattern_type in sys_config.config.pattern_type_list:
+for pattern_type in FT.get_long_trade_able_types():
     where_clause = "pattern_type = '{}' and period = '{}'".format(pattern_type, PRD.DAILY)
     df_pattern_for_pattern_type = sys_config.db_stock.get_pattern_records_as_dataframe(where_clause)
     pattern_id_list = sorted(np.unique([row[DC.ID] for index, row in df_pattern_for_pattern_type.iterrows()]))
