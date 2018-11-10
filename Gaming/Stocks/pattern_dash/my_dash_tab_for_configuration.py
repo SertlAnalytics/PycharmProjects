@@ -98,13 +98,11 @@ class MyDashTab4Configuration(MyDashBaseTab):
             if n_clicks == 0:
                 return button_text
             if button_text == SSBT.SWITCH_TO_SIMULATION:
-                self.config_was_changed = True
-                self.exchange_config.is_simulation = True
+                self.sys_config.start_simulation_trading()
                 self._trade_handler_online.trade_client.exchange_config.print_actual_mode()
                 return SSBT.SWITCH_TO_TRADING
             elif button_text == SSBT.SWITCH_TO_TRADING:
-                self.config_was_changed = True
-                self.exchange_config.is_simulation = False
+                self.sys_config.start_automated_trading()
                 self._trade_handler_online.trade_client.exchange_config.print_actual_mode()
                 return SSBT.SWITCH_TO_SIMULATION
             return button_text

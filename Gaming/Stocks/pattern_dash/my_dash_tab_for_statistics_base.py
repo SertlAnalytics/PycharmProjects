@@ -9,7 +9,7 @@ from dash.dependencies import Input, Output, State
 from pattern_dash.my_dash_base import MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
 from dash import Dash
-from sertl_analytics.constants.pattern_constants import CHT, PRED
+from sertl_analytics.constants.pattern_constants import CHT, FT, DC
 from pattern_dash.my_dash_components import MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLTabPatternStatisticsHeaderTable
 from pattern_dash.my_dash_drop_down import DDT, PatternStatisticsDropDownHandler
@@ -30,6 +30,10 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         self.__init_dash_element_ids__()
         self.__init_dd_handler__()
         self.__init_plotter__()
+
+    @property
+    def column_result(self):
+        pass
 
     def get_div_for_tab(self):
         children_list = [
@@ -65,6 +69,8 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         self._my_statistics_chart_type_div = 'my_{}_statistics_chart_type_div'.format(self._tab)
         self._my_statistics_markdown = 'my_{}_statistics_markdown'.format(self._tab)
         self._my_statistics_div = 'my_{}_statistics_div'.format(self._tab)
+        self._my_statistics_detail_label_div = 'my_{}_statistics_detail_label_div'.format(self._tab)
+        self._my_statistics_detail_div = 'my_{}_statistics_detail_div'.format(self._tab)
         self._my_statistics_chart_type_selection = 'my_{}_statistics_chart_type_selection'.format(self._tab)
         self._my_statistics_predictor_selection = 'my_{}_statistics_predictor_selection'.format(self._tab)
         self._my_statistics_category_selection = 'my_{}_statistics_category_selection'.format(self._tab)
@@ -75,8 +81,10 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         self._my_statistics_chart_div = 'my_{}_statistics_chart_div'.format(self._tab)
         self._my_statistics = 'my_{}_statistics'.format(self._tab)
 
-    def __fill_df_base__(self):
+    def __fill_df_base__(self, pattern_type=''):
         self._df_base = self.__get_df_base__()
+        if pattern_type != '':
+            self._df_base = self._df_base[self._df_base[DC.PATTERN_TYPE] == pattern_type]
         self.__manipulate_ptc_columns__()
 
     def __get_df_base__(self) -> pd.DataFrame:
@@ -95,6 +103,8 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
 
     def init_callbacks(self):
         self.__init_callback_for_numbers__()
+        self.__init_callback_for_pattern_type_label__()
+        self.__init_callback_for_pattern_type_numbers__()
         self.__init_callbacks_for_drop_down_visibility__()
         self.__init_callbacks_for_chart__()
         self.__init_callback_for_markdown__()
@@ -102,7 +112,35 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         self.__init_callback_for_y_variable_options__()
 
     def __init_callback_for_numbers__(self):
-        pass
+        @self.app.callback(
+            Output(self._my_statistics_div, 'children'),
+            [Input('my_interval', 'n_intervals')])
+        def handle_callback_for_pattern_numbers(n_intervals: int):
+            self.__fill_df_base__()
+            return self.__get_numbers_for_callback__()
+
+    def __get_numbers_for_callback__(self):
+        number_all = self._df_base.shape[0]
+        number_pos = self._df_base[self._df_base[self.column_result] == 1].shape[0]
+        number_neg = self._df_base[self._df_base[self.column_result] != 1].shape[0]
+        return '{} (+{}/-{})'.format(number_all, number_pos, number_neg)
+
+    def __init_callback_for_pattern_type_label__(self):
+        @self.app.callback(
+            Output(self._my_statistics_detail_label_div, 'children'),
+            [Input(self._my_statistics_pattern_type_selection, 'value')])
+        def handle_callback_for_pattern_type_label(pattern_type: str):
+            return '' if pattern_type == FT.ALL else '{}:'.format(pattern_type)
+
+    def __init_callback_for_pattern_type_numbers__(self):
+        @self.app.callback(
+            Output(self._my_statistics_detail_div, 'children'),
+            [Input(self._my_statistics_pattern_type_selection, 'value')])
+        def handle_callback_for_pattern_pattern_type_numbers(pattern_type: str):
+            if pattern_type == FT.ALL:
+                return ''
+            self.__fill_df_base__(pattern_type)
+            return self.__get_numbers_for_callback__()
 
     def __init_callback_for_x_variable_options__(self):
         @self.app.callback(

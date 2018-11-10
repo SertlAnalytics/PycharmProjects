@@ -165,6 +165,21 @@ class BaseDatabase:
             connection.close()
         return return_value
 
+    def update_table_column(self, table_name: str, column: str, value, where_clause: str):
+        return_value = True
+        connection = self.engine.connect()
+        value = "'{}'".format(value) if type(value) is str else value
+        stmt = "UPDATE {} SET {}={} WHERE {}".format(table_name, column, value, where_clause)
+        try:
+            results = connection.execute(stmt)
+            print('Updated in {}: {} records.'.format(table_name, results.rowcount))
+        except exc.OperationalError:
+            print('Problem with updating...')
+            return_value = False
+        finally:
+            connection.close()
+        return return_value
+
 """
 Example for a derived class - connecting to a SQLite database
 

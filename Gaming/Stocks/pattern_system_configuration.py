@@ -59,6 +59,14 @@ class SystemConfiguration:
     def period_aggregation(self) -> int:
         return self.data_provider.aggregation
 
+    def start_automated_trading(self):
+        self.exchange_config.is_simulation = False
+        self.config.save_trade_data = True
+
+    def start_simulation_trading(self):
+        self.exchange_config.is_simulation = True
+        self.config.save_trade_data = False
+
     def init_detection_process_for_automated_trade_update(self, mean: int):
         self.config.detection_process = PDP.UPDATE_TRADE_DATA
         self.config.pattern_type_list = FT.get_long_trade_able_types()
@@ -80,6 +88,7 @@ class SystemConfiguration:
         self.config.bound_upper_value = CN.CLOSE
         self.config.bound_lower_value = CN.CLOSE
         self.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
+        self.sound_machine.is_active = False
 
     def get_value_categorizer_tolerance_pct(self):
         if self.period == PRD.INTRADAY:

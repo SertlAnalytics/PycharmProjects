@@ -138,6 +138,8 @@ class MyDashTab4Trades(MyDashBaseTab):
     def __get_markdown_news__(self):
         actual_replay_handler = self.__get_actual_replay_handler__()
         # collecting all news from dependent sources
+        if actual_replay_handler is None or actual_replay_handler.pattern_trade is None:
+            return ''
         self._news_handler.add_news_dict(actual_replay_handler.pattern_trade.news_handler.news_dict)
         self._news_handler.add_news_dict(actual_replay_handler.trade_handler.news_handler.news_dict)
         return self._news_handler.get_news_for_markdown_since_last_refresh(self._time_stamp_last_refresh)

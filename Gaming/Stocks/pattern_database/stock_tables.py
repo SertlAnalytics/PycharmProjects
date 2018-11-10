@@ -167,7 +167,7 @@ class TradeTable(MyTable, PredictionFeatureTable):
     def get_columns_for_replay() -> list:
         return [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
                 DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_BEGIN_TIME,
-                DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.TRADE_RESULT,
+                DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.TRADE_RESULT, DC.TRADE_RESULT_PCT,
                 DC.PERIOD, DC.PERIOD_AGGREGATION, DC.ID]
 
     @staticmethod
@@ -361,6 +361,8 @@ class PatternTable(MyTable, PredictionFeatureTable):
         self._columns.append(MyTableColumn(DC.FC_TICKS_TO_POSITIVE_FULL, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.FC_TICKS_TO_NEGATIVE_HALF, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.FC_TICKS_TO_NEGATIVE_FULL, CDT.INTEGER))
+
+        self._columns.append(MyTableColumn(DC.TRADE_TYPE, CDT.STRING, 10))  # new since 10.11.2018
 
     @staticmethod
     def _get_name_():

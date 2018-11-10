@@ -16,6 +16,7 @@ class TradeStrategyOptimizer:
     def __init__(self, db_stock: StockDatabase):
         self.db_stock = db_stock
         self.df_trades = self.db_stock.get_trade_records_for_trading_optimizer_dataframe()
+        self.expected_relation_pos_neg = 1.8
         self._pattern_type_pos_neg_result_dict = self.__get_pattern_type_pos_neg_result_relation_as_dict__()
         self._optimal_pattern_type_dict_for_long_trading = self.__get_optimal_pattern_type_dict_for_long_trading__()
         self._optimal_pattern_type_list_for_long_trading = \
@@ -69,7 +70,7 @@ class TradeStrategyOptimizer:
     def __get_optimal_pattern_type_dict_for_long_trading__(self):
         opt_dict = {}
         for pattern_type in FT.get_long_trade_able_types():
-            if self._pattern_type_pos_neg_result_dict[pattern_type] > 2.5:
+            if self._pattern_type_pos_neg_result_dict[pattern_type] > self.expected_relation_pos_neg:
                 opt_dict[pattern_type] = self._pattern_type_pos_neg_result_dict[pattern_type]
         return opt_dict
 

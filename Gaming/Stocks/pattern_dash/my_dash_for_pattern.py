@@ -57,7 +57,7 @@ class MyDash4Pattern(MyDashBase):
     def __init_interval_callback_for_user_name__(self):
         @self.app.callback(
             Output('my_user_name_div', 'children'),
-            [Input('my_interval_timer', 'n_intervals')])
+            [Input('my_interval', 'n_intervals')])
         def handle_interval_callback_for_user_name(n_intervals):
             if self._user_name == '':
                 self._user_name = self._get_user_name_()

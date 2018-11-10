@@ -67,7 +67,7 @@ class PatternTradeHandler:
     def add_pattern_list_for_trade(self, pattern_list: list):
         trade_able_pattern_list = self.trade_optimizer.get_trade_able_pattern_from_pattern_list(pattern_list)
         if len(trade_able_pattern_list) > 0:
-            self.trade_candidate_controller.add_new_pattern_list(pattern_list)
+            self.trade_candidate_controller.add_new_pattern_list(trade_able_pattern_list)
             self.__process_trade_candidates__()
             self._pattern_trade_for_replay = self.__get_pattern_trade_for_replay__()
 
@@ -260,7 +260,7 @@ class PatternTradeHandler:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, sell_trigger)
         pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
         pattern_trade.save_trade()
-        self.sys_config.sound_machine.play_alarm_sell_ok()  # ToDo different sounds for ok - nok
+        self.sys_config.sound_machine.play_alarm_after_sell(pattern_trade.data_dict_obj.get(DC.TRADE_RESULT_PCT))
 
     def __handle_wrong_breakout__(self):
         deletion_key_list = []

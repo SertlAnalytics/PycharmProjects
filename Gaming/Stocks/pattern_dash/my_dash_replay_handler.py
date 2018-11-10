@@ -85,6 +85,8 @@ class ReplayHandler:
         return self.get_remaining_tick_number() > 0
 
     def get_remaining_tick_number(self):
+        if self.test_case is None:
+            return 0
         return len(self.test_case.wave_tick_list) - 1 - self.test_case_wave_tick_list_index
 
     def get_next_wave_tick(self) -> WaveTick:

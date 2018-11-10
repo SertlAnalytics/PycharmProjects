@@ -79,6 +79,7 @@ class MyHTMLSystemConfigurationTable(MyHTMLConfigurationTable):
         self.__add_key_value_pair__('from_db', self.config.from_db)
         self.__add_key_value_pair__('period', self.config.period)
         self.__add_key_value_pair__('period_aggregation', self.config.period_aggregation)
+        self.__add_key_value_pair__('sound_machine.is_active', self.config.sound_machine.is_active)
 
 
 class MyHTMLPatternConfigurationTable(MyHTMLConfigurationTable):

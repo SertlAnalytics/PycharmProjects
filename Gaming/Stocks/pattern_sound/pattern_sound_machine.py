@@ -24,6 +24,9 @@ class PatternSoundMachine:
     def play_alarm_buy(self):
         self.__play__('alarm_buy.wav')
 
+    def play_alarm_after_sell(self, trade_result_pct: float):
+        self.play_alarm_sell_ok() if trade_result_pct > 0 else self.play_alarm_sell_nok()
+
     def play_alarm_sell_ok(self):
         self.__play__('alarm_sell_ok.wav')
 
@@ -41,4 +44,6 @@ class PatternSoundMachine:
 
     def __play__(self, file: str):
         if self._is_active:
-            playsound('{}{}'.format('pattern_sound/', file))
+            directory = '../pattern_sound/'
+            playsound('{}{}'.format(directory, file))
+

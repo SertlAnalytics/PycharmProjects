@@ -720,6 +720,7 @@ class Pattern:
         self.data_dict_obj.add(DC.AVAILABLE_FIBONACCI_TYPE, self.available_fibonacci_end_type)
         self.data_dict_obj.add(DC.AVAILABLE_FIBONACCI_TYPE_ID, EXTREMA.get_id(self.available_fibonacci_end_type))
         self.data_dict_obj.add(DC.EXPECTED_WIN, self.get_expected_win())
+        self.data_dict_obj.add(DC.TRADE_TYPE, '')  # this will be changed by a backend process
 
     def __add_data_dict_entries_after_filling_trade_result__(self):
         self.data_dict_obj.add(DC.EXPECTED_WIN, self.trade_result.expected_win)

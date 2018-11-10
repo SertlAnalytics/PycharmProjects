@@ -116,9 +116,13 @@ class MyHTMLTabTradeStatisticsHeaderTable(MyHTMLTabHeaderTable):
         statistics_label_div = MyHTML.div('my_trade_statistics_label_div', 'Trades:', True)
         statistics_div = MyHTML.div('my_trade_statistics_div', '0 (+0/-0)')
         statistics_summary_div = MyHTML.div_embedded([statistics_label_div, MyHTML.span(' '), statistics_div])
+        statistics_detail_label_div = MyHTML.div('my_trade_statistics_detail_label_div', 'Type:', True)
+        statistics_detail_div = MyHTML.div('my_trade_statistics_detail_div', '0')
+        statistics_detail_summary_div = MyHTML.div_embedded([statistics_detail_label_div, MyHTML.span(' '),
+                                                             statistics_detail_div])
         self.set_value(1, 1, MyHTML.div_embedded([chart_label_div, MyHTML.span(' '), chart_div]))
         self.set_value(1, 2, MyDCC.markdown('my_trade_statistics_markdown'))
-        self.set_value(1, 3, MyHTML.div_embedded([statistics_summary_div]))
+        self.set_value(1, 3, MyHTML.div_embedded([statistics_summary_div, statistics_detail_summary_div]))
 
 
 class MyHTMLTabPatternStatisticsHeaderTable(MyHTMLTabHeaderTable):
@@ -128,9 +132,13 @@ class MyHTMLTabPatternStatisticsHeaderTable(MyHTMLTabHeaderTable):
         statistics_label_div = MyHTML.div('my_pattern_statistics_label_div', 'Pattern:', True)
         statistics_div = MyHTML.div('my_pattern_statistics_div', '0')
         statistics_summary_div = MyHTML.div_embedded([statistics_label_div, MyHTML.span(' '), statistics_div])
+        statistics_detail_label_div = MyHTML.div('my_pattern_statistics_detail_label_div', 'Type:', True)
+        statistics_detail_div = MyHTML.div('my_pattern_statistics_detail_div', '0')
+        statistics_detail_summary_div = MyHTML.div_embedded([statistics_detail_label_div, MyHTML.span(' '),
+                                                             statistics_detail_div])
         self.set_value(1, 1, MyHTML.div_embedded([chart_label_div, MyHTML.span(' '), chart_div]))
         self.set_value(1, 2, MyDCC.markdown('my_pattern_statistics_markdown'))
-        self.set_value(1, 3, MyHTML.div_embedded([statistics_summary_div]))
+        self.set_value(1, 3, MyHTML.div_embedded([statistics_summary_div, statistics_detail_summary_div]))
 
 
 

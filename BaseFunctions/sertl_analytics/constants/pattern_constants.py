@@ -330,6 +330,15 @@ class TT:  # Tick types
     DOJI = 'Doji'
 
 
+class TRT:  # Trade types
+    UNKNOWN = ''
+    LONG = 'long'
+    SHORT = 'short'
+    NONE = 'none'
+    NOT_LONG = 'not long'
+    NOT_SHORT = 'not short'
+
+
 class FCC:  # Formation Condition Columns
     BREAKOUT_WITH_BUY_SIGNAL = 'breakout had a buy signal'
     PREVIOUS_PERIOD_CHECK_OK = 'previous period check OK'  # eg. CN.LOW
@@ -696,6 +705,7 @@ class DC:  # Data Columns
     EXPECTED_WIN = 'Expected_Win'
     FALSE_BREAKOUT = 'False_Breakout'
     EXPECTED_WIN_REACHED = 'Expected_Win_Reached'
+    TRADE_TYPE = 'Trade_Type'  # long, short, .... see TRT
     # and additional for Trades
     TRADE_ID = 'Trade_ID'
     TRADE_MEAN_AGGREGATION = 'Trade_Mean_Aggregation'

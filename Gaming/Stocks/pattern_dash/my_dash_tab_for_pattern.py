@@ -164,10 +164,6 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def __get_markdown_statistics__(self):
         return '- none -'
 
-    def __play_sound__(self, n_intervals):
-        if n_intervals % 10 == 0:
-            self.sys_config.sound_machine.play_alarm_new_pattern()
-
     def __init_interval_callback_for_interval_details__(self):
         @self.app.callback(
             Output('my_last_refresh_time_div', 'children'),
@@ -286,8 +282,6 @@ class MyDashTab4Pattern(MyDashBaseTab):
             self.__set_period_aggregation_to_sys_configs__(period_aggregation)
             pa_change = self._state_handler.change_for_my_period_aggregation_selection(period_aggregation)
             i_change = self._state_handler.change_for_my_interval_selection(interval_selected)
-            if pa_change:
-                self.config_was_changed = True
             if pa_change or i_change:
                 self._graph_first_cache.clear()
             if self._state_handler.change_for_my_interval(n_intervals):  # hide button after interval refresh

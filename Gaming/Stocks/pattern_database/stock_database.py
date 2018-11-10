@@ -16,7 +16,7 @@ import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import Indices, CN, DC, PRD, OPS, FT
+from sertl_analytics.constants.pattern_constants import Indices, CN, DC, PRD, OPS, FT, TRT
 import os
 import time
 
@@ -301,6 +301,14 @@ class StockDatabase(BaseDatabase):
         query = self._pattern_table.get_query_for_unique_record_by_id(pattern_id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
+
+    def update_trade_type_for_pattern(self, pattern_id: str, trade_type: str):
+        where_clause = "Pattern_ID = '{}'".format(pattern_id)
+        query = self._trade_table.get_query_for_records(where_clause)
+        db_df = DatabaseDataFrame(self, query)
+        trade_type_not = TRT.NOT_SHORT if trade_type == TRT.SHORT else TRT.NOT_LONG
+        trade_type_new = trade_type_not if db_df.df.shape[0] == 0 else trade_type
+        self.update_table_column(STBL.PATTERN, DC.TRADE_TYPE, trade_type_new, "ID = '{}'".format(pattern_id))
 
     def get_pattern_records_as_dataframe(self, where_clause='') -> pd.DataFrame:
         query = self._pattern_table.get_query_for_records(where_clause)
