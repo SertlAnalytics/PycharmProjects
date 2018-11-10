@@ -419,7 +419,7 @@ class MyBitfinex(ExchangeInterface):
             if 'error' in json_resp:
                 pass
             else:
-                if round(float(json_resp['amount'])) > 0:
+                if round(float(json_resp['amount']), 1) > 0:
                     balance_list.append(BitfinexFactory.get_balance_by_json_dict(json_resp))
         return balance_list
 

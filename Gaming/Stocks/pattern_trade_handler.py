@@ -260,6 +260,7 @@ class PatternTradeHandler:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, sell_trigger)
         pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
         pattern_trade.save_trade()
+        self.sys_config.sound_machine.play_alarm_sell_ok()  # ToDo different sounds for ok - nok
 
     def __handle_wrong_breakout__(self):
         deletion_key_list = []
@@ -352,6 +353,7 @@ class PatternTradeHandler:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_BUY_TRIGGERS, pattern_trade)
         pattern_trade.set_order_status_buy(order_status, buy_comment, ticker)
         pattern_trade.save_trade()
+        self.sys_config.sound_machine.play_alarm_buy()
 
     def __get_order_status_testing__(self, process: str, pattern_trade: PatternTrade, sell_trigger=''):
         ticker = pattern_trade.ticker_actual
