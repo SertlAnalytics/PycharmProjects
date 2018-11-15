@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 import numpy as np
-from sertl_analytics.constants.pattern_constants import FD, FR, CM, FWST
+from sertl_analytics.constants.pattern_constants import FD, FR, CM, FWST, DC
 from sertl_analytics.mymath import MyPoly1d
 from sertl_analytics.mydates import MyDate
 from fibonacci.fibonacci_wave_component import FibonacciWaveComponent, FibonacciRegressionComponent, \
@@ -16,17 +16,20 @@ from fibonacci.fibonacci_wave_component import FibonacciDescendingRegressionComp
 from fibonacci.fibonacci_wave_component import FibonacciAscendingRetracementComponent
 from fibonacci.fibonacci_wave_component import FibonacciDescendingRetracementComponent
 from fibonacci.fibonacci_helper import fibonacci_helper, FibonacciHelperApi
+from pattern_database.stock_tables_data_dictionary import WaveDataDictionary
 from pattern_wave_tick import WaveTick
 import math
 from copy import deepcopy
 
 
 class FibonacciWave:
+    # class properties
     comp_id_list_reg = ['w_1', 'w_3', 'w_5']
     comp_id_list_ret = ['w_2', 'w_4']
     comp_id_list = ['w_1', 'w_2', 'w_3', 'w_4', 'w_5']
 
     def __init__(self, tick_distance: float):
+        self.data_dict_obj = WaveDataDictionary()
         self.tick_distance = tick_distance
         self.comp_dic = {}
         self.comp_forecast_parameter_list = []
@@ -71,6 +74,12 @@ class FibonacciWave:
             if f_lower_temp(self.w_1.tick_start.f_var) > self.w_1.tick_start.low:
                 tick_01 = self.w_1.tick_start
         return MyPoly1d.get_poly1d(tick_01.f_var, tick_01.low, tick_02.f_var, tick_02.low)
+
+    def is_wave_ready_for_wave_table(self) -> bool:
+        return self.data_dict_obj.is_data_dict_ready_for_target_table()
+
+    def inherit_data_dict_values(self, data_dict: dict):
+        self.data_dict_obj.inherit_values(data_dict)
 
     def is_closing_triangle_criteria_fulfilled(self):
         return self.wave_structure == FWST.S_M_L or self.f_upper[1] < self.f_lower[1]
@@ -305,12 +314,44 @@ class FibonacciWave:
 
     def add_regression(self, reg_comp: FibonacciRegressionComponent):
         self.comp_dic[reg_comp.comp_id] = reg_comp
+        self.__add_component_data_to_data_dict__(reg_comp)
 
     def add_retracement(self, ret_comp: FibonacciRetracementComponent):
         self.comp_dic[ret_comp.comp_id] = ret_comp
+        self.__add_component_data_to_data_dict__(ret_comp)
         if ret_comp.comp_id == 'w_4':
             if self.is_wave_fibonacci_wave(True):
                 self.__fill_comp_forecast_parameter_list__()
+
+    def __add_component_data_to_data_dict__(self, component: FibonacciWaveComponent):
+        if component.comp_id == 'w_1':
+            self.data_dict_obj.add(DC.W1_BEGIN_TS, component.tick_start.time_stamp)
+            self.data_dict_obj.add(DC.W1_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W1_RANGE, component.range_max)
+        elif component.comp_id == 'w_2':
+            self.data_dict_obj.add(DC.W2_BEGIN_TS, component.tick_start.time_stamp)
+            self.data_dict_obj.add(DC.W2_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W2_RANGE, component.range_max)
+        elif component.comp_id == 'w_3':
+            self.data_dict_obj.add(DC.W3_BEGIN_TS, component.tick_start.time_stamp)
+            self.data_dict_obj.add(DC.W3_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W3_RANGE, component.range_max)
+        elif component.comp_id == 'w_4':
+            self.data_dict_obj.add(DC.W4_BEGIN_TS, component.tick_start.time_stamp)
+            self.data_dict_obj.add(DC.W4_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W4_RANGE, component.range_max)
+        elif component.comp_id == 'w_5':
+            self.data_dict_obj.add(DC.W5_BEGIN_TS, component.tick_start.time_stamp)
+            self.data_dict_obj.add(DC.W5_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W5_RANGE, component.range_max)
+            # add wave specific data
+            self.data_dict_obj.add(DC.WAVE_END_TS, component.tick_end.time_stamp)
+            self.data_dict_obj.add(DC.WAVE_END_DT, component.tick_end.date_time_str)
+            self.data_dict_obj.add(DC.WAVE_TYPE, self.wave_type)
+            self.data_dict_obj.add(DC.WAVE_TYPE_ID, FD.get_id(self.wave_type))
+            self.data_dict_obj.add(DC.WAVE_STRUCTURE, self.wave_structure)
+            self.data_dict_obj.add(DC.WAVE_STRUCTURE_ID, FWST.get_id(self.wave_structure))
+
 
     def __fill_comp_forecast_parameter_list__(self):
         comp_previous = self.comp_dic['w_4']

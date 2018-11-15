@@ -55,8 +55,9 @@ class PatternDataFrame:
         y = [f_regression(x_val) for x_val in x]
         return list(zip(x, y))
 
-    def get_xy_parameter(self, function_cont: PatternFunctionContainer):
-        tick_list, function_list = function_cont.get_tick_function_list_for_xy_parameter(self.tick_first, self.tick_last)
+    def get_xy_parameter(self, function_cont: PatternFunctionContainer, tick_last:WaveTick=None):
+        tick_last = self.tick_last if tick_last is None else tick_last
+        tick_list, function_list = function_cont.get_tick_function_list_for_xy_parameter(self.tick_first, tick_last)
         return MyPlotHelper.get_xy_parameter_for_tick_function_list(tick_list, function_list)
 
     def get_xy_center(self, f_regression: np.poly1d = None):

@@ -11,7 +11,7 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
-from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher, CryptoCompareCryptoFetcher
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.user_input.confirmation import UserInput
 from sertl_analytics.constants.pattern_constants import CN, PRD, OPS, EQUITY_TYPE, Indices, DC
@@ -25,6 +25,14 @@ from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from pattern_data_container import PatternDataHandler
 from pattern_configuration import PatternConfiguration
+from pattern_dash.my_dash_caches import MyDataFrameCache
+import time
+
+
+class DP:  # DataProvider
+    ALPHAVANTAGE = 'Alphavantage'
+    BITFINEX = 'Bitfinex'
+    CRYPTO_COMPARE = 'CryptoCompare'
 
 
 class PatternDataFetcherCacheKey(DataFetcherCacheKey):
@@ -42,11 +50,14 @@ class PatternDataFetcherCacheKey(DataFetcherCacheKey):
 
 
 class PatternDataProvider:
-    def __init__(self, config: PatternConfiguration, db_stock: StockDatabase, crypto_ccy_dic: dict):
+    def __init__(self, config: PatternConfiguration, db_stock: StockDatabase, crypto_ccy_dic: dict,
+                 df_cache: MyDataFrameCache):
         self.config = config
+        self.provider_crypto = DP.BITFINEX
+        self.provider_stocks = DP.ALPHAVANTAGE
         self._db_stock = db_stock
         self._crypto_ccy_dic = crypto_ccy_dic
-        self._df_source_cache = MyCache()
+        self._df_cache = df_cache
         self.from_db = True
         self.period = PRD.DAILY
         self.aggregation = 1
@@ -114,6 +125,16 @@ class PatternDataProvider:
             if name_from_db != '':
                 self.ticker_dict[symbol] = name_from_db
 
+    def get_index_members_as_dict(self, index: str):
+        if index == Indices.CRYPTO_CCY:
+            return IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+        elif index == Indices.DOW_JONES:
+            return IndicesComponentList.get_ticker_name_dic(Indices.DOW_JONES)
+            # return {'MMM': '3M', 'KO': 'Coca Cola'}
+        elif index == Indices.NASDAQ100:
+            return IndicesComponentList.get_ticker_name_dic(Indices.NASDAQ100)
+            # return {'TSLA': 'Tesla', 'FCEL': 'Full Cell'}
+
     @staticmethod
     def get_mixed_dic():
         return {"TSLA": "Tesla", "FCEL": "Full Cell", "ONVO": "Organovo", "MRAM": "MRAM"}
@@ -135,10 +156,9 @@ class PatternDataProvider:
         self.ticker_name = self.__get_ticker_name__()
         self.and_clause = and_clause
         self.limit = limit
-        data_fetcher_cache_key = self.__get_data_fetcher_cache_key__()
-        df_from_cache = self._df_source_cache.get_cached_object_by_key(data_fetcher_cache_key.key)
+        data_fetcher_cache_key = self.__get_data_fetcher_cache_key__()  # ToDo replace this kind of cache key...
+        df_from_cache = self._df_cache.get_cached_object_by_key(data_fetcher_cache_key.key)
         if df_from_cache is not None:
-            print('df_source from cache: {}'.format(data_fetcher_cache_key.key))
             return df_from_cache
         df = self.__get_df_from_original_source__(data_fetcher_cache_key)
         self.__add_data_frame_to_cache__(df, data_fetcher_cache_key)
@@ -147,7 +167,9 @@ class PatternDataProvider:
     def __get_ticker_name__(self):
         ticker_name = self._db_stock.get_name_for_symbol(self.ticker_id)
         if ticker_name == '':
-            return self.ticker_dict[self.ticker_id]
+            if self.ticker_id in self.ticker_dict:
+                return self.ticker_dict[self.ticker_id]
+            return self.ticker_id
         return ticker_name
 
     def __add_data_frame_to_cache__(self, df: pd.DataFrame, data_fetcher_cache_key: DataFetcherCacheKey):
@@ -155,7 +177,7 @@ class PatternDataProvider:
         cache_api.key = data_fetcher_cache_key.key
         cache_api.object = df
         cache_api.valid_until_ts = data_fetcher_cache_key.valid_until_ts
-        self._df_source_cache.add_cache_object(cache_api)
+        self._df_cache.add_cache_object(cache_api)
 
     def __get_df_from_original_source__(self, data_fetcher_cache_key: PatternDataFetcherCacheKey):
         ticker = data_fetcher_cache_key.ticker_id
@@ -168,16 +190,15 @@ class PatternDataProvider:
             self.__handle_not_available_symbol__(data_fetcher_cache_key.ticker_id)
             stock_db_df_obj = stock_database.StockDatabaseDataFrame(self._db_stock, ticker, and_clause)
             return stock_db_df_obj.df_data
-        elif ticker in self._crypto_ccy_dic:
-            if period == PRD.INTRADAY:
-                # fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, run_on_dash)
+        elif ticker in self._crypto_ccy_dic or ticker[-3:] == 'USD':
+            if self.provider_crypto == DP.BITFINEX:
                 fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, 'hist', limit)
-                # fetcher_last = BitfinexCryptoFetcher(ticker, period, aggregation, 'last')
-                # self.__handle_difference_of_exchanges(fetcher.df_data, fetcher_bit.df_data)
-                return fetcher.df_data
+            elif self.provider_crypto == DP.CRYPTO_COMPARE:
+                fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, limit)
             else:
                 fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
-                return fetcher.df_data
+                time.sleep(10)  # to avoid problems with the data provider restrictions (requests per minute)
+            return fetcher.df_data
         else:
             fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
             if self.period == PRD.INTRADAY:

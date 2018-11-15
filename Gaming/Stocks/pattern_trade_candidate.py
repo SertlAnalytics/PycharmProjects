@@ -9,7 +9,7 @@ Date: 2018-05-14
 from sertl_analytics.constants.pattern_constants import DC
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
-from pattern_system_configuration import TradeStrategyOptimizer
+from pattern_system_configuration import TradeOptimizer
 from pattern_trade import PatternTrade, PatternTradeApi
 
 
@@ -93,9 +93,9 @@ class TradeCandidateController:
     """
         controls which trade is put into the trade process - this process is handled by PatternTradeHandler
     """
-    def __init__(self, exchange_config: ExchangeConfiguration, trade_strategy_optimizer: TradeStrategyOptimizer):
+    def __init__(self, exchange_config: ExchangeConfiguration, trade_optimizer: TradeOptimizer):
         self.exchange_config = exchange_config
-        self.trade_strategy_optimizer = trade_strategy_optimizer
+        self.trade_optimizer = trade_optimizer
         self._actual_pattern_id_list = []  # this list contains all pattern_ids for actual trade candidates
         self._black_pattern_id_readable_list = []
         self._black_buy_pattern_id_readable_list = []
@@ -134,8 +134,11 @@ class TradeCandidateController:
                 # print('Already in black_buy_trigger_list: {}'.format(key_buy))
             else:
                 print('Add_to_candidate_list: Checking buy trigger: {}'.format(key_buy))
+                trade_strategy_list = self.trade_optimizer.adjust_strategy_list_for_expected_win(
+                    trade_strategies, pattern.get_expected_win())
                 if pattern.are_conditions_for_buy_trigger_fulfilled(buy_trigger):
-                    self.__add_pattern_to_trade_candidate_list_for_buy_trigger__(pattern, buy_trigger, trade_strategies)
+                    self.__add_pattern_to_trade_candidate_list_for_buy_trigger__(
+                        pattern, buy_trigger, trade_strategy_list)
                 else:
                     self.__add_to_black_buy_pattern_id_readable_list__(key_buy)
 
@@ -169,7 +172,7 @@ class TradeCandidateController:
         if len(nn_entry_list) == 0:
             return self.exchange_config.default_trade_strategy_dict[buy_trigger]
         nn_pattern_id_list = [nn_entry.id for nn_entry in nn_entry_list]
-        strategy_opt, result_pct_opt = self.trade_strategy_optimizer.get_optimal_strategy_for_pattern_id_list(
+        strategy_opt, result_pct_opt = self.trade_optimizer.get_optimal_strategy_for_pattern_id_list(
             nn_pattern_id_list, buy_trigger, strategy_list)
         if result_pct_opt < 0:  # there were trades but not successful
             return ''

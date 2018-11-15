@@ -10,13 +10,13 @@ from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, Dat
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.mydates import MyDate
-from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, CompanyTable, STBL
+from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, CompanyTable, STBL, WaveTable
 import pandas as pd
 import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import Indices, CN, DC, PRD, OPS, FT, TRT
+from sertl_analytics.constants.pattern_constants import Indices, CN, DC, PRD, OPS, FT, TRT, TSTR
 import os
 import time
 
@@ -92,18 +92,21 @@ class StockDatabase(BaseDatabase):
     def __init__(self):
         BaseDatabase.__init__(self)
         self._crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
-        self._sleep_seconds = 20
+        self._sleep_seconds = 5
         self._dt_now_time_stamp = int(datetime.now().timestamp())
         self._stocks_table = StocksTable()
         self._company_table = CompanyTable()
         self._pattern_table = PatternTable()
         self._trade_table = TradeTable()
+        self._wave_table = WaveTable()
 
     def is_symbol_loaded(self, symbol: str):
         last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
         return len(last_loaded_time_stamp_dic) == 1
 
     def get_name_for_symbol(self, symbol: str):
+        if symbol[-3:] == 'USD':
+            return symbol
         company_dic = self.__get_company_dict__(symbol)
         return '' if len(company_dic) == 0 else company_dic[symbol].Name
 
@@ -171,11 +174,14 @@ class StockDatabase(BaseDatabase):
         last_loaded_dict = self.__get_last_loaded_time_stamp_dic__(symbol)
         self.__update_stock_data_for_single_value__(period, aggregation, symbol, name, company_dic, last_loaded_dict)
 
-    def insert_pattern_features(self, input_dict_list: list):
+    def insert_pattern_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.PATTERN, input_dict_list)
 
     def insert_trade_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.TRADE, input_dict_list)
+
+    def insert_wave_data(self, input_dict_list: list):
+        self.__insert_data_into_table__(STBL.WAVE, input_dict_list)
 
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
@@ -285,6 +291,9 @@ class StockDatabase(BaseDatabase):
     def create_trade_table(self):
         self.__create_table__(STBL.TRADE)
 
+    def create_wave_table(self):
+        self.__create_table__(STBL.WAVE)
+
     def __insert_pattern_in_pattern_table__(self, ticker: str, input_dic: dict):
         try:
             self.__insert_data_into_table__(STBL.PATTERN, [input_dic])
@@ -302,6 +311,11 @@ class StockDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
+    def is_wave_already_available(self, wave_data_dict: dict) -> bool:
+        query = self._wave_table.get_query_for_unique_record_by_dict(wave_data_dict)
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.shape[0] > 0
+
     def update_trade_type_for_pattern(self, pattern_id: str, trade_type: str):
         where_clause = "Pattern_ID = '{}'".format(pattern_id)
         query = self._trade_table.get_query_for_records(where_clause)
@@ -314,6 +328,11 @@ class StockDatabase(BaseDatabase):
         query = self._pattern_table.get_query_for_records(where_clause)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
+
+    def get_wave_counter_dict(self, period: str, limit: int=0):
+        query = self._wave_table.get_query_for_wave_counter(period, limit)
+        db_df = DatabaseDataFrame(self, query)
+        return {row[0]: row[1] for index, row in db_df.df.iterrows()}
 
     def is_trade_already_available_for_pattern_id(self, pattern_id, buy_trigger: str, strategy: str, mean: int) -> bool:
         where_clause = "Pattern_ID = '{}' and Trade_Mean_Aggregation = {} " \
@@ -384,19 +403,29 @@ class StockDatabase(BaseDatabase):
         print(query)
         self.delete_records(query)
 
-    def get_missing_trade_strategies_for_pattern_id(self, pattern_id: str, check_against_strategy_dict: dict) -> dict:
-        query = "SELECT ID, Pattern_id, Buy_Trigger, Trade_Strategy FROM trade where pattern_id = '{}'".format(
-            pattern_id)
+    def get_missing_trade_strategies_for_pattern_id(self, pattern_id: str, check_against_strategy_dict: dict,
+                                                    mean: int, sma_number: int) -> dict:
+        query = "SELECT ID, Pattern_id, Buy_Trigger, Trade_Strategy, Trade_Mean_Aggregation " \
+                "FROM trade where pattern_id = '{}'".format(pattern_id)
         db_df = DatabaseDataFrame(self, query)
         return_dict = {}
         strategy_dict_exist = {}
         for index, row in db_df.df.iterrows():
             buy_trigger = row[DC.BUY_TRIGGER]
             trade_strategy = row[DC.TRADE_STRATEGY]
-            if buy_trigger not in strategy_dict_exist:
-                strategy_dict_exist[buy_trigger] = [trade_strategy]
-            else:
-                strategy_dict_exist[buy_trigger].append(trade_strategy)
+            mean_aggregation = row[DC.TRADE_MEAN_AGGREGATION]
+
+            is_combination_existing = False
+            if trade_strategy == TSTR.SMA and mean_aggregation == sma_number:
+                is_combination_existing = True
+            elif trade_strategy != TSTR.SMA and mean_aggregation == mean:
+                is_combination_existing = True
+
+            if is_combination_existing:
+                if buy_trigger not in strategy_dict_exist:
+                    strategy_dict_exist[buy_trigger] = [trade_strategy]
+                else:
+                    strategy_dict_exist[buy_trigger].append(trade_strategy)
         for buy_trigger, trade_strategy_list in check_against_strategy_dict.items():
             if buy_trigger not in strategy_dict_exist:
                 return_dict[buy_trigger] = trade_strategy_list
@@ -421,8 +450,8 @@ class StockDatabase(BaseDatabase):
         print(repr(table_obj))
 
     def __get_table_by_name__(self, table_name: str):
-        return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table,
-                STBL.PATTERN: self._pattern_table, STBL.TRADE: self._trade_table}.get(table_name, None)
+        return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table, STBL.PATTERN: self._pattern_table,
+                STBL.TRADE: self._trade_table, STBL.WAVE: self._wave_table}.get(table_name, None)
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):

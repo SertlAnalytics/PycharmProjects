@@ -20,8 +20,8 @@ from pattern_dash.my_dash_tab_for_statistics_trade import MyDashTab4TradeStatist
 from pattern_dash.my_dash_tab_for_statistics_pattern import MyDashTab4PatternStatistics
 from pattern_dash.my_dash_tab_for_configuration import MyDashTab4Configuration
 from pattern_dash.my_dash_colors import DashColorHandler
-from pattern_dash.my_dash_configuration_tables import MyHTMLBitfinexConfigurationTable, \
-    MyHTMLPatternConfigurationTable, MyHTMLSystemConfigurationTable
+from pattern_dash.my_dash_tab_for_portfolio import MyDashTab4Portfolio
+from pattern_dash.my_dash_tab_for_recommender import MyDashTab4Recommender
 from pattern_trade_handler import PatternTradeHandler
 
 
@@ -33,6 +33,8 @@ class MyDash4Pattern(MyDashBase):
         self.trade_handler_online = PatternTradeHandler(sys_config)
         self.color_handler = DashColorHandler()
         self.tab_pattern = MyDashTab4Pattern(self.app, self.sys_config, self.trade_handler_online)
+        self.tab_portfolio = MyDashTab4Portfolio(self.app, self.sys_config, self.trade_handler_online)
+        self.tab_recommender = MyDashTab4Recommender(self.app, self.sys_config, self.trade_handler_online)
         self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.trade_handler_online)
         self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config, self.color_handler)
@@ -41,8 +43,10 @@ class MyDash4Pattern(MyDashBase):
     def get_pattern(self):
         self.__set_app_layout__()
         self.__init_interval_callback_for_user_name__()
-        self.__init_interval_callback_for_timer__()
+        self.__init_interval_callback_for_time_div__()
         self.tab_pattern.init_callbacks()
+        self.tab_portfolio.init_callbacks()
+        self.tab_recommender.init_callbacks()
         self.tab_trades.init_callbacks()
         self.tab_trade_statistics.init_callbacks()
         self.tab_pattern_statistics.init_callbacks()
@@ -57,19 +61,17 @@ class MyDash4Pattern(MyDashBase):
     def __init_interval_callback_for_user_name__(self):
         @self.app.callback(
             Output('my_user_name_div', 'children'),
-            [Input('my_interval', 'n_intervals')])
+            [Input('my_interval_refresh', 'n_intervals')])
         def handle_interval_callback_for_user_name(n_intervals):
             if self._user_name == '':
                 self._user_name = self._get_user_name_()
             return self._user_name
 
-    def __init_interval_callback_for_timer__(self):
+    def __init_interval_callback_for_time_div__(self):
         @self.app.callback(
             Output('my_time_div', 'children'),
             [Input('my_interval_timer', 'n_intervals')])
-        def handle_interval_callback_for_timer(n_intervals):
-            # if n_intervals % self.bitfinex_config.check_ticker_after_timer_intervals == 0:
-            #     self.tab_trades.trade_handler_online.check_actual_trades()
+        def handle_interval_callback_for_time_div(n_intervals):
             return '{}'.format(MyDate.get_time_from_datetime(datetime.now()))
 
     def __set_app_layout__(self):
@@ -80,15 +82,19 @@ class MyDash4Pattern(MyDashBase):
         children_list = [
             MyHTMLHeaderTable().get_table(),
             MyDCC.interval('my_interval_timer', self.bitfinex_config.ticker_refresh_rate_in_seconds),
-            MyDCC.interval('my_interval', 120),
+            MyDCC.interval('my_interval_refresh', 120),
             self.__get_tabs_for_app__()
         ]
         return MyHTML.div('my_app', children_list)
 
     def __get_tabs_for_app__(self):
-        tab_01 = MyDCC.tab('Pattern Detector', [self.tab_pattern.get_div_for_tab()])
-        tab_02 = MyDCC.tab('Trades', [self.tab_trades.get_div_for_tab()])
-        tab_03 = MyDCC.tab('Trade statistics', [self.tab_trade_statistics.get_div_for_tab()])
-        tab_04 = MyDCC.tab('Pattern statistics', [self.tab_pattern_statistics.get_div_for_tab()])
-        tab_05 = MyDCC.tab('Configuration', [self.tab_configuration.get_div_for_tab()])
-        return MyDCC.tabs('my_app_tabs', [tab_01, tab_02, tab_03, tab_04, tab_05])
+        tab_list = [
+            MyDCC.tab('Pattern Detector', [self.tab_pattern.get_div_for_tab()]),
+            MyDCC.tab('Portfolio', [self.tab_portfolio.get_div_for_tab()]),
+            MyDCC.tab('Recommender', [self.tab_recommender.get_div_for_tab()]),
+            MyDCC.tab('Trades', [self.tab_trades.get_div_for_tab()]),
+            MyDCC.tab('Trade statistics', [self.tab_trade_statistics.get_div_for_tab()]),
+            MyDCC.tab('Pattern statistics', [self.tab_pattern_statistics.get_div_for_tab()]),
+            MyDCC.tab('Configuration', [self.tab_configuration.get_div_for_tab()])
+        ]
+        return MyDCC.tabs('my_app_tabs', tab_list)

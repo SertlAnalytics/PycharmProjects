@@ -228,6 +228,19 @@ class MyHTML:
         )
 
     @staticmethod
+    def div_with_slider(element_id: str, min_value=0, max_value=20, step=1, value=0, show=True):
+        if (max_value - min_value)/step > 3:
+            width = '30%'
+        else:
+            width = '20%'
+        style = {'width': width, 'display': 'inline-block', 'vertical-align': 'bottom', 'padding-bottom': 20,
+                 'padding-left': 10} if show else {'display': 'none'}
+        return html.Div(
+            [MyDCC.slider(element_id, min_value=min_value, max_value=max_value, step=step, value=value)],
+            style=style, id='{}_div'.format(element_id)
+        )
+
+    @staticmethod
     def div_embedded(embedded_element_list: list):
         return html.Div(embedded_element_list)
 
@@ -285,6 +298,7 @@ class MyHTML:
 
     @staticmethod
     def div_with_dcc_drop_down(div_text: str, element_id: str, options: list, default='', width=20, for_multi=False):
+        # print('element_id={}, options={}, default={}'.format(element_id, options, default))
         div_element_list = []
         if div_text != '':
             div_element_list.append(MyHTML.div_drop_down('{}:'.format(div_text)))
@@ -322,10 +336,10 @@ class MyDCC:
         )
 
     @staticmethod
-    def drop_down(element_id, options: list, default='', multi=False, clearable=False):
+    def drop_down(element_id, options: list, default_value='', multi=False, clearable=False):
         # {'label': '{} {}'.format(symbol, name), 'value': symbol}
-        default = options[0]['value'] if default == '' else default
-        return dcc.Dropdown(id=element_id, options=options, value=default, multi=multi, clearable=clearable)
+        default_value = options[0]['value'] if default_value == '' else default_value
+        return dcc.Dropdown(id=element_id, options=options, value=default_value, multi=multi, clearable=clearable)
 
     @staticmethod
     def graph(graph_api: DccGraphApi):
@@ -411,6 +425,20 @@ class MyDCC:
     @staticmethod
     def markdown(element_id: str, children=''):
         return dcc.Markdown(id=element_id, children=children)
+
+    @staticmethod
+    def slider(element_id: str, min_value=0, max_value=20, step=1, value=0):
+        return dcc.Slider(id=element_id,
+                          min=min_value,
+                          max=max_value,
+                          step=step,
+                          value=value,
+                          marks={
+                                min_value: {'label': 'min', 'style': {'color': 'green'}},
+                                max_value: {'label': 'max', 'style': {'color': 'red'}}
+                          },
+                          included=False
+                          )
 
     @staticmethod
     def RangeSlider():

@@ -76,13 +76,19 @@ class PatternTrade:
         self._xy_after_selling = None
 
     def __get_wave_tick_list_for_start__(self):
-        off_set_time_stamp = self.pattern.pattern_range.tick_last.time_stamp
+        if self.trade_process == TP.ONLINE:
+            off_set_time_stamp = MyDate.time_stamp_now()
+        else:
+            off_set_time_stamp = self.pattern.pattern_range.tick_last.time_stamp
         tick_list = [tick for tick in self.pattern.part_entry.tick_list if tick.time_stamp <= off_set_time_stamp]
         return WaveTickList(tick_list)
 
     @property
     def id(self):
-        mean_aggregation = 'mean{:02d}'.format(self.sys_config.config.trading_last_price_mean_aggregation)
+        if self.trade_strategy == TSTR.SMA:
+            mean_aggregation = 'mean{:02d}'.format(self.sys_config.config.simple_moving_average_number)
+        else:
+            mean_aggregation = 'mean{:02d}'.format(self.sys_config.config.trading_last_price_mean_aggregation)
         return '{}-{}-{}-{}_{}'.format(
             self.buy_trigger, self.trade_box_type, self.trade_strategy, mean_aggregation, self.pattern.id_readable)
 
@@ -120,7 +126,7 @@ class PatternTrade:
 
     @property
     def executed_amount(self):
-        return self._order_status_buy.executed_amount if self._order_status_buy else 0
+        return 0 if self._order_status_buy is None else self._order_status_buy.executed_amount
 
     @property
     def order_status_buy(self):
@@ -534,10 +540,13 @@ class PatternTrade:
         breakout_bound_lower = self.pattern.function_cont.get_lower_value(self._wave_tick_at_buying.f_var)
         time_stamp_breakout = self._wave_tick_at_buying.time_stamp
         sma = self._wave_tick_list.get_simple_moving_average(elements, time_stamp_breakout, breakout_bound_lower)
+        # self.__print_sma_details__(elements, sma)
+        return sma
+
+    def __print_sma_details__(self, elements: int, sma: float):
         print('__get_simple_moving_average_value__: elements={}, sma={}, last_tick.low={}'.format(
             elements, sma, self._wave_tick_list.last_wave_tick.low
         ))
-        return sma
 
     def __get_ticker_wave_tick_converter__(self) -> TickerWaveTickConverter:
         period = self.sys_config.period
@@ -611,7 +620,10 @@ class PatternTrade:
     def __add_trade_basis_data_to_data_dict__(self):
         self.data_dict_obj.add(DC.ID, self.id)
         self.data_dict_obj.add(DC.PATTERN_ID, self.pattern.id)
-        self.data_dict_obj.add(DC.TRADE_MEAN_AGGREGATION, self.sys_config.config.trading_last_price_mean_aggregation)
+        if self.trade_strategy == TSTR.SMA:
+            self.data_dict_obj.add(DC.TRADE_MEAN_AGGREGATION, self.sys_config.config.simple_moving_average_number)
+        else:
+            self.data_dict_obj.add(DC.TRADE_MEAN_AGGREGATION, self.sys_config.config.trading_last_price_mean_aggregation)
         self.data_dict_obj.add(DC.TRADE_PROCESS, self.trade_process)
         self.data_dict_obj.add(DC.TRADE_READY_ID, 1 if self._was_candidate_for_real_trading else 0)
         self.data_dict_obj.add(DC.TRADE_STRATEGY, self.trade_strategy)

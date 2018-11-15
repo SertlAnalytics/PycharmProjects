@@ -10,7 +10,6 @@ from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern_part import PatternEntryPart
 from pattern_bitfinex import MyBitfinexTradeClient
-from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_trade import PatternTrade
 from pattern_wave_tick import WaveTick, WaveTickList
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, OrderStatusApi
@@ -29,6 +28,7 @@ class PatternTradeHandler:
         self.stock_db = self.sys_config.db_stock
         self.ticker_id_list = []
         self.pattern_trade_dict = {}
+        self.balances = None  # list of actual balances
         self.process = ''
         self.trade_candidate_controller = TradeCandidateController(self.exchange_config, self.trade_optimizer)
         self.news_handler = NewsHandler()
@@ -139,7 +139,8 @@ class PatternTradeHandler:
             return pattern_trade
 
     def get_pattern_trade_data_frame_for_replay(self):
-        return self._pattern_trade_for_replay.get_data_frame_for_replay()
+        if self._pattern_trade_for_replay is not None:
+            return self._pattern_trade_for_replay.get_data_frame_for_replay()
 
     def enforce_sell_at_end(self, last_wave_tick: WaveTick):  # it is used for back-testing
         self._last_wave_tick_for_test = last_wave_tick
@@ -199,7 +200,7 @@ class PatternTradeHandler:
 
     @staticmethod
     def __print_details_after_adding_to_trade_dict(pattern_trade: PatternTrade, scope: str):
-        prefix = 'Adding to exchange_config list' if scope == 'Add' else 'Replacing in exchange_config list'
+        prefix = 'Adding to trade_dict' if scope == 'Add' else 'Replacing in trade_dict'
         suffix = ' (simulation)' if pattern_trade.is_simulation else ' (REAL)'
         print('{}{}...: {}'.format(prefix, suffix, pattern_trade.id))
 
@@ -254,8 +255,7 @@ class PatternTradeHandler:
         print('Sell: {}'.format(sell_comment))
         ticker_id = pattern_trade.ticker_id
         if self.trade_process == TP.ONLINE:
-            order_status = self.trade_client.create_sell_market_order(
-                ticker_id, pattern_trade.executed_amount, self.is_simulation)
+            order_status = self.trade_client.create_sell_market_order(ticker_id, pattern_trade.executed_amount)
         else:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, sell_trigger)
         pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
@@ -290,6 +290,7 @@ class PatternTradeHandler:
     def __handle_buy_triggers__(self):
         deletion_key_list = []
         buying_deletion_key_list = []
+        print('handle_buy_triggers: is_simulation={}/{}'.format(self.exchange_config.is_simulation, self.is_simulation))
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
             if pattern_trade.is_breakout_active:
                 if pattern_trade.is_actual_ticker_breakout(PTHP.HANDLE_BUY_TRIGGERS):
@@ -346,7 +347,7 @@ class PatternTradeHandler:
                                                         ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
         if self.trade_process == TP.ONLINE:
-            order_status = self.trade_client.buy_available(ticker.ticker_id, ticker.last_price, self.is_simulation)
+            order_status = self.trade_client.buy_available(ticker.ticker_id, ticker.last_price)
             if order_status is None:  # e.g. not enough money available...
                 return
         else:

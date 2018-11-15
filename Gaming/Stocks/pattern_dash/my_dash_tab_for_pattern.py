@@ -6,23 +6,21 @@ Date: 2018-06-17
 """
 
 import dash_html_components as html
-from dash.dependencies import Input, Output, State, Event
+from dash.dependencies import Input, Output, State
 from datetime import datetime, timedelta
 import json
 from pattern_detection_controller import PatternDetectionController
-from sertl_analytics.constants.pattern_constants import CN, FD, BT, PRD
+from sertl_analytics.constants.pattern_constants import BT, PRD
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_tools import MyGraphCache, MyDashStateHandler, MyGraphCacheObjectApi
 from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi
 from pattern_dash.my_dash_tab_dd_for_pattern import PatternTabDropDownHandler, PDD
 from pattern_dash.my_dash_header_tables import MyHTMLTabPatternHeaderTable
-from pattern_bitfinex import BitfinexConfiguration
 from pattern_trade_handler import PatternTradeHandler
 from textwrap import dedent
 from pattern_dash.my_dash_base import MyDashBaseTab, Dash
 from pattern_dash.my_dash_configuration_tables import MyHTMLSystemConfigurationTable
-from pattern_wave_tick import WaveTick, WaveTickList
 
 
 class MyDashTab4Pattern(MyDashBaseTab):
@@ -101,7 +99,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def __init_callback_for_position_markdown__(self):
         @self.app.callback(
             Output('my_position_markdown', 'children'),
-            [Input('my_interval', 'n_intervals')])
+            [Input('my_interval_refresh', 'n_intervals')])
         def handle_callback_for_position_markdown(n_intervals: int):
             self.__add_fibonacci_waves_to_news__()
             return self.__get_position_markdown__(n_intervals)
@@ -126,6 +124,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
     def __get_position_markdown_for_active_positions__(self):
         balances = self.trade_handler_online.trade_client.get_balances_with_current_values()
+        self.trade_handler_online.balances = balances
         text_list = ['_**{}**_: {:.2f} ({:.2f}): {:.2f}$'.format(
                 b.asset, b.amount, b.amount_available, b.current_value) for b in balances]
         total_value = sum([balance.current_value for balance in balances])
@@ -167,7 +166,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def __init_interval_callback_for_interval_details__(self):
         @self.app.callback(
             Output('my_last_refresh_time_div', 'children'),
-            [Input('my_interval', 'n_intervals')])
+            [Input('my_interval_refresh', 'n_intervals')])
         def handle_interval_callback_for_last_refresh(n_intervals):
             # self._news_handler.clear()
             self._time_stamp_last_refresh = MyDate.time_stamp_now()
@@ -176,7 +175,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
         @self.app.callback(
             Output('my_next_refresh_time_div', 'children'),
-            [Input('my_interval', 'n_intervals'), Input('my_interval', 'interval')])
+            [Input('my_interval_refresh', 'n_intervals'), Input('my_interval_refresh', 'interval')])
         def handle_interval_callback_for_next_refresh(n_intervals, interval_ms):
             dt_next = datetime.now() + timedelta(milliseconds=interval_ms)
             self._time_stamp_next_refresh = int(dt_next.timestamp())
@@ -184,10 +183,10 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
     def __init_interval_setting_callback__(self):
         @self.app.callback(
-            Output('my_interval', 'interval'),
+            Output('my_interval_refresh', 'interval'),
             [Input('my_interval_selection', 'value')])
         def handle_interval_setting_callback(interval_selected):
-            print('Interval set to: {}'.format(interval_selected))
+            print('Refresh interval set to: {}'.format(interval_selected))
             return interval_selected * 1000
 
     def __init_callback_for_pattern_markdown__(self):
@@ -213,7 +212,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def __init_callback_for_graph_first__(self):
         @self.app.callback(
             Output('my_graph_first_div', 'children'),
-            [Input('my_interval', 'n_intervals'),
+            [Input('my_interval_refresh', 'n_intervals'),
              Input('my_refresh_button', 'n_clicks')],
             [State('my_ticker_selection', 'value')])
         def handle_callback_for_graph_first(n_intervals, n_clicks, ticker):
@@ -274,7 +273,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
             [Input('my_ticker_selection', 'value'),
              Input('my_period_aggregation', 'value'),
              Input('my_interval_selection', 'value'),
-             Input('my_interval', 'n_intervals'),
+             Input('my_interval_refresh', 'n_intervals'),
              Input('my_refresh_button', 'n_clicks')],
             [State('my_interval_timer', 'n_intervals')])
         def handle_selection_callback(ticker_selected, period_aggregation: int, interval_selected: int,

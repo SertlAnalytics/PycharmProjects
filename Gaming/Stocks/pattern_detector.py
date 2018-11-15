@@ -98,7 +98,7 @@ class PatternDetector:
         min_max_tick_list = self.pdh.pattern_data_fibonacci.wave_tick_list_min_max.tick_list
         self.fib_wave_tree = FibonacciWaveTree(df, min_max_tick_list,
                                                self.sys_config.config.max_pattern_range_length,
-                                               self.pdh.pattern_data.tick_f_var_distance)
+                                               self.pdh.pattern_data.tick_f_var_distance, self.data_dict)
         self.fib_wave_tree.parse_tree()
 
     def check_for_intersections_and_endings(self):
@@ -317,15 +317,29 @@ class PatternDetector:
         input_list = []
         for pattern in self.pattern_list:
             if pattern.is_pattern_ready_for_pattern_table():
-                feature_dict = pattern.data_dict_obj.get_data_dict_for_features_table()
-                if feature_dict is not None:
+                pattern_dict = pattern.data_dict_obj.get_data_dict_for_features_table()
+                if pattern_dict is not None:
                     # print('save_pattern_data: {}'.format(feature_dict))
-                    if self.sys_config.db_stock.is_pattern_already_available(feature_dict[DC.ID]):
-                        self.__print_difference_to_stored_version__(feature_dict)
+                    if self.sys_config.db_stock.is_pattern_already_available(pattern_dict[DC.ID]):
+                        self.__print_difference_to_stored_version__(pattern_dict)
                     else:
-                        input_list.append(feature_dict)
+                        input_list.append(pattern_dict)
         if len(input_list) > 0:
-            self.sys_config.db_stock.insert_pattern_features(input_list)
+            self.sys_config.db_stock.insert_pattern_data(input_list)
+
+    def save_wave_data(self):
+        if not self.sys_config.config.save_wave_data:
+            return
+        input_list = []
+        for fib_wave in self.fib_wave_tree.fibonacci_wave_list:
+            if fib_wave.is_wave_ready_for_wave_table():
+                data_dict = fib_wave.data_dict_obj.get_data_dict_for_target_table()
+                if data_dict is not None:
+                    # print('save_wave_data: {}'.format(data_dict))
+                    if not self.sys_config.db_stock.is_wave_already_available(data_dict):
+                        input_list.append(data_dict)
+        if len(input_list) > 0:
+            self.sys_config.db_stock.insert_wave_data(input_list)
 
     def __print_difference_to_stored_version__(self, feature_dict: dict):
         if not self.sys_config.config.show_differences_to_stored_features:

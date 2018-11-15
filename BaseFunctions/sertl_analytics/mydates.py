@@ -19,9 +19,9 @@ class MyDate:
         return '{} {}'.format(MyDate.get_date_from_datetime(dt_now), MyDate.get_time_from_datetime(dt_now))
 
     @staticmethod
-    def get_datetime_object(date_time):
+    def get_datetime_object(date_time=None):
         if date_time is None:
-            return None
+            return datetime.now()
         if date_time.__class__.__name__ == 'datetime':  # no change
             return date_time
         if len(str(date_time)) == 10:

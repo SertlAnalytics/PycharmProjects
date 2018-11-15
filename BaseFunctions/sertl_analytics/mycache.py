@@ -43,11 +43,12 @@ class MyCache:
 
     def get_cached_object_by_key(self, cache_key):
         if cache_key in self._cached_object_dict:
-            if self._cached_object_dict[cache_key].is_valid():
-                # print('Object from cache: {}'.format(cache_key))
-                return self._cached_object_dict[cache_key].object
+            cache_object = self._cached_object_dict[cache_key]
+            if cache_object.is_valid():
+                print('Object from cache: {} (valid until: {})'.format(cache_key, cache_object.valid_until_time))
+                return cache_object.object
             else:
-                del self._cached_object_dict[cache_key]
+                del cache_object
         return None
 
     def clear(self):

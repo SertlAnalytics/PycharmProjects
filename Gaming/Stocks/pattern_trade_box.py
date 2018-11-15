@@ -146,6 +146,8 @@ class TradingBox:
         }
 
     def adjust_to_next_ticker_last_price(self, ticker_last_price: float, sma_value=0) -> bool:
+        if ticker_last_price <= self._ticker_last_price_list[-1]:  # no adjustments necessary
+            return False
         self._ticker_last_price_list.append(ticker_last_price)
         self._sma_value = sma_value
         return self.__adjust_to_next_ticker_last_price__(ticker_last_price)

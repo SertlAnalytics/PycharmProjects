@@ -74,7 +74,7 @@ class DashInterface:
 
     @staticmethod
     def get_pattern_part_main_shape(pattern: Pattern, color: str):
-        x, y = DashInterface.get_xy_separated_from_timestamp(pattern.sys_config, pattern.xy)
+        x, y = DashInterface.get_xy_separated_from_timestamp(pattern.sys_config, pattern.xy_pattern_range)
         # print('get_pattern_part_main_shape: x= {}, y={}'.format(x, y))
         return MyPolygonShape(x, y, color)
 

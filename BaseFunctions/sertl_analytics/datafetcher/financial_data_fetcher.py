@@ -11,24 +11,57 @@ import os
 import io
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import CN, PRD, OPS
-# from sertl_analytics.exchanges.bitfinex import MyBitfinex
+import time
 import seaborn as sns
 
 
 class APIBaseFetcher:
-    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):
+    _last_request_ts = 0
+    _request_interval_required = 0  # seconds - will be overwritten in sub classes if required
+
+    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT, limit=400):
+        self.__sleep__()
         self.api_key = self._get_api_key_()
         self.symbol = symbol  # like the symbol of a stock, e.g. MSFT
         self.period = period
         self.aggregation = aggregation
         self.output_size = output_size
+        self.limit = limit
         self.url = self._get_url_()
-        print(self.url)
+        self.__print_details__()
         self.request = requests.get(self.url)
         self.df = self.__get_data_frame__()
         self.column_list = list(self.df.columns.values)
         self.__format_column__()
         self.__round_df_column_values__()
+
+    def __print_details__(self):
+        request_time = MyDate.get_time_from_epoch_seconds(self.class_last_request_ts)
+        print('{}: {}'.format(request_time, self.url))
+
+    def __sleep__(self):
+        request_interval_required = self.class_request_interval_required
+        if request_interval_required > 0:
+            ts_now = MyDate.time_stamp_now()
+            ts_last_request = self.class_last_request_ts
+            diff_ts = ts_now - ts_last_request
+            if diff_ts < request_interval_required:
+                sleep_seconds = request_interval_required - diff_ts
+                print('{}: Sleeping for {} seconds. Please wait...'.format(self.__class__.__name__, sleep_seconds))
+                time.sleep(sleep_seconds)
+        self.class_last_request_ts = MyDate.time_stamp_now()
+
+    @property
+    def class_last_request_ts(self):
+        return APIBaseFetcher._last_request_ts
+
+    @class_last_request_ts.setter
+    def class_last_request_ts(self, value):
+        APIBaseFetcher._last_request_ts = value
+
+    @property
+    def class_request_interval_required(self):
+        return APIBaseFetcher._request_interval_required
 
     def __get_data_frame__(self):
         pass
@@ -66,6 +99,8 @@ class APIBaseFetcher:
 
 
 class AlphavantageJSONFetcher (APIBaseFetcher):
+    _request_interval_required = 15  # we have only 5 request per minute for free api-key, 15 instead of 12 for security
+
     def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):
         self.api_symbol = ''
         APIBaseFetcher.__init__(self, symbol, period, aggregation, output_size)
@@ -74,6 +109,18 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
         self.column_volume = self.get_column_volume()
         self.df_data = self.df[self.column_list_data]
         self.df_volume = self.df[self.column_volume]
+
+    @property
+    def class_last_request_ts(self):
+        return AlphavantageJSONFetcher._last_request_ts
+
+    @class_last_request_ts.setter
+    def class_last_request_ts(self, value):
+        AlphavantageJSONFetcher._last_request_ts = value
+
+    @property
+    def class_request_interval_required(self):
+        return AlphavantageJSONFetcher._request_interval_required
 
     def get_column_list_data(self):
         pass
@@ -218,9 +265,9 @@ class AlphavantageCSVFetcher (APIBaseFetcher):
 
 
 class CryptoCompareJSONFetcher (APIBaseFetcher):
-    def __init__(self, symbol: str, period: str, aggregation: int):
+    def __init__(self, symbol: str, period: str, aggregation: int, limit: int):
         self.api_symbol = ''
-        APIBaseFetcher.__init__(self, symbol, period, aggregation)
+        APIBaseFetcher.__init__(self, symbol, period, aggregation, limit=limit)
         self.column_list_data = self.get_column_list_data()
         self.df_data = self.df[self.column_list_data]
 
@@ -238,9 +285,8 @@ class CryptoCompareJSONFetcher (APIBaseFetcher):
 
 
 class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
-    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, run_on_dash=False):
-        self._run_on_dash = run_on_dash
-        CryptoCompareJSONFetcher.__init__(self, symbol, period, aggregation)
+    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, limit=200):
+        CryptoCompareJSONFetcher.__init__(self, symbol, period, aggregation, limit)
 
     def get_column_list_data(self):
         return self.column_list
@@ -272,7 +318,7 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
 
     def _get_url_limit_parameter_(self) -> int:
         if self.period == PRD.INTRADAY:
-            return 200 if self._run_on_dash else 300
+            return self.limit
         return 400
 
 
@@ -324,6 +370,8 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         symbol = 't{}'.format(self.symbol)
         if self._section == 'last':
             url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/last'.format(url_t_f, symbol)
+        elif self._limit == 0:
+            url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/hist'.format(url_t_f, symbol)
         else:
             url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/hist?limit={}'.format(url_t_f, symbol, self._limit)
         return url

@@ -124,6 +124,7 @@ class PatternDetectionController:
             self.sys_config.init_predictors_without_condition_list()
             detector = PatternDetector(self.sys_config)
             detector.parse_for_fibonacci_waves()
+            detector.save_wave_data()
             detector.parse_for_pattern()
             if self.sys_config.config.detection_process == PDP.UPDATE_TRADE_DATA:
                 if len(detector.pattern_list) == 0:
@@ -173,23 +174,23 @@ class PatternDetectionController:
                 print('check_for_optimal_trading_strategy for {}'.format(nn_entry.id))
 
     @staticmethod
-    def get_detector_for_dash(sys_config: SystemConfiguration, ticker: str, and_clause='') -> PatternDetector:
-        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, 200)
+    def get_detector_for_dash(
+            sys_config: SystemConfiguration, ticker: str, and_clause='', limit=200) -> PatternDetector:
+        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit)
         print('\nProcessing {} ({}){}...\n'.format(
             ticker, sys_config.runtime_config.actual_ticker_name, '' if and_clause == '' else ' for {}'.format(and_clause)))
         sys_config.init_predictors_without_condition_list()
         detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()
         detector.parse_for_pattern()
-        detector.check_for_intersections_and_endings()
         detector.save_pattern_data()
         return detector
 
     @staticmethod
-    def get_detector_for_fibonacci(sys_config: SystemConfiguration, ticker: str) -> PatternDetector:
-        and_clause = sys_config.data_provider.and_clause
-        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, 200)
-        print('\nProcessing for Fibonacci {} ({})\n'.format(ticker, sys_config.runtime_config.actual_ticker_name))
+    def get_detector_for_fibonacci(
+            sys_config: SystemConfiguration, ticker: str, and_clause='', limit=200) -> PatternDetector:
+        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit)
+        print('\nProcessing for Fibonacci: {} ({})\n'.format(ticker, sys_config.runtime_config.actual_ticker_name))
         detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()
         return detector

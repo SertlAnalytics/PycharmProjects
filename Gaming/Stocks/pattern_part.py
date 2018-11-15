@@ -50,12 +50,14 @@ class PatternPart:
         self.distance_min = 0
         self.distance_max = 0
         self.__xy = None
+        self.__xy_pattern_range = None
         self.__xy_regression = None
         self.__xy_center = ()
         if self.df.shape[0] > 0:
             self.stock_df = PatternDataFrame(self.df)
             self.__calculate_values__()
             self.__set_xy_parameter__()
+            self.__set_xy_pattern_range_parameter__()
             self.__set_xy_center__()
             self.__set_xy_regression__()
 
@@ -121,6 +123,9 @@ class PatternPart:
     def __set_xy_parameter__(self):
         self.__xy = self.stock_df.get_xy_parameter(self.function_cont)
 
+    def __set_xy_pattern_range_parameter__(self):
+        self.__xy_pattern_range = self.stock_df.get_xy_parameter(self.function_cont, self.pattern_range.tick_last)
+
     def __set_xy_regression__(self):
         self.__xy_regression = self.stock_df.get_xy_regression(self.function_cont)
 
@@ -130,6 +135,10 @@ class PatternPart:
     @property
     def xy(self):
         return self.__xy
+
+    @property
+    def xy_pattern_range(self):
+        return self.__xy_pattern_range
 
     @property
     def xy_center(self):

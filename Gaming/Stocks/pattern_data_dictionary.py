@@ -7,43 +7,23 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import FD, DC, CN, EQUITY_TYPE, BT, ST, TR, TSTR, OT, PRD
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.pybase.data_dictionary import DataDictionary
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
 from sertl_analytics.mymath import MyMath
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.exchanges.exchange_cls import Order, OrderStatus
 from pattern_data_container import PatternDataHandler
-import numpy as np
 
 
-class PatternDataDictionary:
+class PatternDataDictionary(DataDictionary):
     def __init__(self, sys_config: SystemConfiguration, pdh: PatternDataHandler):
         self.sys_config = sys_config
         self.pdh = pdh
         self.df = self.pdh.pattern_data.df
         self.df_length = self.df.shape[0]
         self.df_min_max = self.pdh.pattern_data.df_min_max
-        self._data_dict = {}
-        self.__init_data_dict__()
-
-    @property
-    def data_dict(self) -> dict:
-        return self._data_dict
-
-    def add(self, key: str, value):
-        value = self.__get_manipulated_value__(key, value)
-        self._data_dict[key] = value
-
-    def inherit_values(self, data_dict: dict):
-        for key, values in data_dict.items():
-            self.data_dict[key] = values
-
-    @staticmethod
-    def __get_manipulated_value__(key: str, value):
-        if type(value) in [np.float64, float]:
-            if value == -0.0:
-                value = 0.0
-        return PatternDataDictionary.__get_rounded_value__(key, value)
+        DataDictionary.__init__(self)
 
     @staticmethod
     def __get_rounded_value__(key, value):
@@ -55,9 +35,6 @@ class PatternDataDictionary:
         elif key in [DC.SLOPE_UPPER_PCT, DC.SLOPE_LOWER_PCT, DC.SLOPE_REGRESSION_PCT, DC.SLOPE_BREAKOUT_PCT]:
             return 1000 if value > 1000 else round(value, 0)
         return value
-
-    def get(self, key: str, default_value=None):
-        return self._data_dict.get(key, None)
 
     def __init_data_dict__(self):
         self._data_dict[DC.EQUITY_TYPE] = self.sys_config.runtime_config.actual_ticker_equity_type

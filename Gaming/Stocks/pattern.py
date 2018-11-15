@@ -91,6 +91,7 @@ class Pattern:
         self.tolerance_pct = self.constraints.tolerance_pct
         self.condition_handler = PatternConditionHandler()
         self.xy = None
+        self.xy_pattern_range = None
         self.xy_center = None
         self.xy_trade = None
         self.date_first = None
@@ -164,6 +165,7 @@ class Pattern:
         self._part_entry = part_entry
         self.value_categorizer = self._get_value_categorizer_for_part_entry_()
         self.xy = self._part_entry.xy
+        self.xy_pattern_range = self._part_entry.xy_pattern_range
         self.xy_center = self._part_entry.xy_center
         self.date_first = self._part_entry.date_first
         self.date_last = self._part_entry.date_last

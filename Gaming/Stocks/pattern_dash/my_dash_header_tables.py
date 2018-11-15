@@ -99,6 +99,26 @@ class MyHTMLTabPatternHeaderTable(MyHTMLTabHeaderTable):
         self.set_value(1, 3, '')
 
 
+class MyHTMLTabPortfolioHeaderTable(MyHTMLTabHeaderTable):
+    def _init_cells_(self):
+        ticker_label_div = MyHTML.div('my_portfolio_position_label_div', 'Position:', True)
+        ticker_div = MyHTML.div('my_portfolio_position_div', '', False)
+
+        self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
+        self.set_value(1, 2, MyDCC.markdown('my_portfolio_markdown'))
+        self.set_value(1, 3, MyDCC.markdown('my_portfolio_news_markdown'))
+
+
+class MyHTMLTabRecommenderHeaderTable(MyHTMLTabHeaderTable):
+    def _init_cells_(self):
+        ticker_label_div = MyHTML.div('my_recommender_position_label_div', 'Position:', True)
+        ticker_div = MyHTML.div('my_recommender_position_div', '', False)
+
+        self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
+        self.set_value(1, 2, MyDCC.markdown('my_recommender_markdown'))
+        self.set_value(1, 3, MyDCC.markdown('my_recommender_news_markdown'))
+
+
 class MyHTMLTabTradeHeaderTable(MyHTMLTabHeaderTable):
     def _init_cells_(self):
         ticker_label_div = MyHTML.div('my_trade_ticker_label_div', 'Ticker:', True)

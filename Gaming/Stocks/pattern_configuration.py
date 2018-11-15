@@ -14,11 +14,12 @@ class PatternConfiguration:
         self.with_trade_part = True  # we need this configuration for testing touch strategy
         self.with_trading = False
         self.trading_last_price_mean_aggregation = 16  # the number of ticker.last_price which are used for stop loss
+        self.simple_moving_average_number = 8
         self.pattern_type_list = [FT.CHANNEL]
         self.pattern_ids_to_find = []
-        self.simple_moving_average_number = 10
         self.save_pattern_data = True
         self.save_trade_data = True
+        self.save_wave_data = True
         self.replace_existing_trade_data_on_db = False
         self.show_differences_to_stored_features = False
         self.bound_upper_value = CN.HIGH

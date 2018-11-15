@@ -45,6 +45,7 @@ class IndicesComponentList:
                 'ETH': 'Ethereum',
                 'LTC': 'Litecoin',
                 'NEO': 'NEO',
-                'XMR': 'XMR'
+                'XMR': 'XMR',
+                'ZEC': 'ZEC'
                 # , 'XRP': 'Ripple'
                 }

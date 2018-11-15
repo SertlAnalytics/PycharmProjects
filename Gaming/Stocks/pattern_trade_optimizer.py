@@ -5,16 +5,17 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, DC
+from sertl_analytics.constants.pattern_constants import FT, DC, TSTR
 from pattern_database.stock_database import StockDatabase
 import numpy as np
 import statistics
 import math
 
 
-class TradeStrategyOptimizer:
-    def __init__(self, db_stock: StockDatabase):
+class TradeOptimizer:
+    def __init__(self, db_stock: StockDatabase, expected_win_pct: float):
         self.db_stock = db_stock
+        self._expected_win_pct = expected_win_pct
         self.df_trades = self.db_stock.get_trade_records_for_trading_optimizer_dataframe()
         self.expected_relation_pos_neg = 1.8
         self._pattern_type_pos_neg_result_dict = self.__get_pattern_type_pos_neg_result_relation_as_dict__()
@@ -37,6 +38,18 @@ class TradeStrategyOptimizer:
     def get_trade_able_pattern_from_pattern_list(self, pattern_list: list) -> list:
         return [pattern for pattern in pattern_list
                 if pattern.pattern_type in self._optimal_pattern_type_list_for_long_trading]
+
+    def adjust_strategy_list_for_expected_win(self, strategy_list: list, actual_expected_win_pct: float):
+        return_list = []
+        for strategy in strategy_list:
+            if strategy in [TSTR.LIMIT_FIX, TSTR.LIMIT]:
+                if actual_expected_win_pct < self._expected_win_pct:
+                    print('Removed {} from trade strategy list since expected win is too low: {:.2f}%'.format(
+                        strategy, actual_expected_win_pct
+                    ))
+                    continue
+            return_list.append(strategy)
+        return return_list
 
     def get_optimal_strategy_for_pattern_id_list(self, pattern_id_list: list, buy_trigger: str, strategy_list: list):
         """

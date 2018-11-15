@@ -64,7 +64,8 @@ class ReplayHandler:
 
     @property
     def pattern_trade(self) -> PatternTrade:
-        return self.graph_api.pattern_trade
+        if self.graph_api is not None:
+            return self.graph_api.pattern_trade
 
     def set_trade_test_api_by_selected_trade_row(self, selected_row):
         self.trade_test_api = TradeTestCaseFactory.get_trade_test_api_by_selected_trade_row(
@@ -133,15 +134,17 @@ class ReplayHandler:
             # print('set_graph_api: trade_id={}, pattern_trade.id={}'.format(self.trade_test_api.trade_id,
             #                                                                self.graph_api.pattern_trade.id))
             self.graph_api.ticker_id = self.trade_test_api.symbol
-            self.graph_api.df = self.graph_api.pattern_trade.get_data_frame_for_replay()
+            self.graph_api.df = self.graph_api.pattern_trade.get_data_frame_for_replay()  # ToDo - old (this) or new
+            # self.graph_api.df = self.detector.pdh.pattern_data.df
         self.graph_api.period = self.trade_test_api.period
 
     def set_selected_trade_to_api(self):
         self.graph_api.pattern_trade = self.trade_handler.get_pattern_trade_by_id(self.trade_test_api.trade_id)
 
     def check_actual_trades_for_replay(self, wave_tick: WaveTick):
-        self.trade_handler.check_actual_trades_for_replay(wave_tick)
-        self.graph_api.df = self.trade_handler.get_pattern_trade_data_frame_for_replay()
+        if self.graph_api is not None:
+            self.trade_handler.check_actual_trades_for_replay(wave_tick)
+            self.graph_api.df = self.trade_handler.get_pattern_trade_data_frame_for_replay()
 
     def refresh_api_df_from_pattern_trade(self):
         # self.set_selected_trade_to_api()

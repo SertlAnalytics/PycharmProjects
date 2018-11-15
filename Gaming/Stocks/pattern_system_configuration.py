@@ -12,13 +12,14 @@ from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from pattern_configuration import PatternConfiguration
 from pattern_runtime_configuration import RuntimeConfiguration
 from pattern_debugger import PatternDebugger
-from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
+from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable, WaveTable
 from pattern_id import PatternID
 from pattern_predictor import PatternMasterPredictorHandler, PatternPredictorApi
 from pattern_data_provider import PatternDataProvider
-from pattern_trade_optimizer import TradeStrategyOptimizer
+from pattern_trade_optimizer import TradeOptimizer
 from copy import deepcopy
 from pattern_sound.pattern_sound_machine import PatternSoundMachine
+from pattern_dash.my_dash_caches import MyGraphCache, MyDataFrameCache
 
 
 class SystemConfiguration:
@@ -33,11 +34,15 @@ class SystemConfiguration:
         self.db_stock = StockDatabase()
         self.pattern_table = PatternTable()
         self.trade_table = TradeTable()
-        self.data_provider = PatternDataProvider(self.config, self.db_stock, self.crypto_ccy_dic)
+        self.wave_table = WaveTable()
+        self.df_cache = MyDataFrameCache()
+        self.graph_cache = MyGraphCache()
+        self.data_provider = PatternDataProvider(self.config, self.db_stock, self.crypto_ccy_dic, self.df_cache)
         self.master_predictor_handler = PatternMasterPredictorHandler(
             PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)
         )
-        self.trade_strategy_optimizer = TradeStrategyOptimizer(self.db_stock)
+        self.trade_strategy_optimizer = TradeOptimizer(self.db_stock, self.expected_win_pct)
+
 
     @property
     def pdh(self):
@@ -67,7 +72,7 @@ class SystemConfiguration:
         self.exchange_config.is_simulation = True
         self.config.save_trade_data = False
 
-    def init_detection_process_for_automated_trade_update(self, mean: int):
+    def init_detection_process_for_automated_trade_update(self, mean: int, sma_number: int):
         self.config.detection_process = PDP.UPDATE_TRADE_DATA
         self.config.pattern_type_list = FT.get_long_trade_able_types()
         self.exchange_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX,
@@ -77,6 +82,7 @@ class SystemConfiguration:
         self.config.plot_data = False
         self.config.with_trading = True
         self.config.trading_last_price_mean_aggregation = mean
+        self.config.simple_moving_average_number = sma_number  # default = 8
         self.config.save_pattern_data = False
         self.config.save_trade_data = True
         self.config.replace_existing_trade_data_on_db = False  # default = False
@@ -111,7 +117,7 @@ class SystemConfiguration:
     @property
     def expected_win_pct(self):
         if self.data_provider.equity_type == EQUITY_TYPE.CRYPTO:
-            return 1
+            return 1.0
         else:
             return 1.0 if self.period == PRD.INTRADAY else 1.0
 
@@ -161,8 +167,12 @@ class SystemConfiguration:
         sys_config_copy.pattern_table = self.pattern_table
         sys_config_copy.db_stock = self.db_stock
         sys_config_copy.trade_table = self.trade_table
+        sys_config_copy.wave_table = self.wave_table
         sys_config_copy.pattern_table = self.pattern_table
-        sys_config_copy.data_provider = PatternDataProvider(sys_config_copy.config, self.db_stock, self.crypto_ccy_dic)
+        sys_config_copy.df_cache = self.df_cache
+        sys_config_copy.graph_cache = self.graph_cache
+        sys_config_copy.data_provider = PatternDataProvider(
+            sys_config_copy.config, self.db_stock, self.crypto_ccy_dic, self.df_cache)
         sys_config_copy.data_provider.ticker_dict = self.data_provider.ticker_dict  # we have to copy this as well
         sys_config_copy.master_predictor_handler = PatternMasterPredictorHandler(
             PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)

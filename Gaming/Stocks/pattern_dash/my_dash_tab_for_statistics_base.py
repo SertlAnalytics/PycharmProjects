@@ -114,7 +114,7 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
     def __init_callback_for_numbers__(self):
         @self.app.callback(
             Output(self._my_statistics_div, 'children'),
-            [Input('my_interval', 'n_intervals')])
+            [Input('my_interval_refresh', 'n_intervals')])
         def handle_callback_for_pattern_numbers(n_intervals: int):
             self.__fill_df_base__()
             return self.__get_numbers_for_callback__()
@@ -202,7 +202,7 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
              Input(self._my_statistics_y_variable_selection, 'value'),
              Input(self._my_statistics_text_variable_selection, 'value'),
              Input(self._my_statistics_pattern_type_selection, 'value'),
-             Input('my_interval', 'n_intervals')])
+             Input('my_interval_refresh', 'n_intervals')])
         def handle_interval_callback_with_date_picker(ct: str, predictor: str, category: str, x: str, y: str,
                                                       text_column: str, pt: str, n_intervals: int):
             self._plotter.predictor = predictor

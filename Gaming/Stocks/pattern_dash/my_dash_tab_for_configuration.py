@@ -107,13 +107,8 @@ class MyDashTab4Configuration(MyDashBaseTab):
                 return SSBT.SWITCH_TO_SIMULATION
             return button_text
 
-    def __init_callback_for_config_markdown__(self):
-        @self.app.callback(
-            Output('my_config_markdown', 'children'),
-            [Input('my_graph_trade_replay_div', 'children'),
-             Input('my_interval_timer', 'n_intervals')])
-        def handle_callback_for_ticket_markdown(children, n_intervals: int):
-            return 'TEST config'
+
+
 
 
 

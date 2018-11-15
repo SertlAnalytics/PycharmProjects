@@ -8,6 +8,7 @@ Date: 2018-05-14
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
 from sertl_analytics.constants.pattern_constants import DC, PRD
+from sertl_analytics.mydates import MyDate
 
 
 class STBL:  # stocks tables
@@ -15,12 +16,63 @@ class STBL:  # stocks tables
     COMPANY = 'Company'
     PATTERN = 'Pattern'
     TRADE = 'Trade'
+    WAVE = 'Wave'
 
 
 class PredictionFeatureTable:
     @staticmethod
     def is_label_column_for_regression(label_column: str):
         return label_column[-4:] == '_PCT'
+
+
+class WaveTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return STBL.WAVE
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.PERIOD, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.PERIOD_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.PERIOD_AGGREGATION, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKER_ID, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.TICKER_NAME, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(DC.WAVE_TYPE, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.WAVE_TYPE_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.WAVE_STRUCTURE, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.WAVE_STRUCTURE_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.W1_BEGIN_TS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.W1_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W2_BEGIN_TS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.W2_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W3_BEGIN_TS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.W3_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W4_BEGIN_TS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.W4_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W5_BEGIN_TS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.W5_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.WAVE_END_TS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.WAVE_END_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W1_RANGE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.W2_RANGE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.W3_RANGE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.W4_RANGE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.W5_RANGE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.PARENT_WAVE_OID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.WAVE_IN_PARENT, CDT.STRING, 10))
+
+    def get_query_for_unique_record_by_dict(self, data_dict: dict) -> str:
+        col_list = [DC.W1_BEGIN_TS, DC.W2_BEGIN_TS, DC.W3_BEGIN_TS, DC.W4_BEGIN_TS, DC.W5_BEGIN_TS]
+        additional_and_clauses = ['{}={}'.format(col, data_dict[col]) for col in col_list]
+        return "SELECT * FROM {} WHERE {}='{}' and {}".format(
+            self._name, DC.TICKER_ID, data_dict[DC.TICKER_ID], ' and '.join(additional_and_clauses))
+
+    def get_query_for_wave_counter(self, period: str, limit: int=0) -> str:
+        limit = 2 if period == PRD.INTRADAY else limit  # to get only the waves of the last 2 days for intraday
+        ts_from = MyDate.time_stamp_now() - (60 * 60 * 24 * limit)
+        return "Select Ticker_ID, count(*) FROM {} WHERE Period = '{}' and W1_Begin_Timestamp >= {} " \
+               "GROUP BY Ticker_ID".format(self._name, period, ts_from)
 
 
 class TradeTable(MyTable, PredictionFeatureTable):

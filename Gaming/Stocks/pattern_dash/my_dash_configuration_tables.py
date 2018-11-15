@@ -10,7 +10,7 @@ from pattern_system_configuration import SystemConfiguration
 from pattern_configuration import PatternConfiguration
 from pattern_runtime_configuration import RuntimeConfiguration
 from pattern_bitfinex import BitfinexConfiguration
-from pattern_trade_optimizer import TradeStrategyOptimizer
+from pattern_trade_optimizer import TradeOptimizer
 
 
 class MyHTMLConfigurationTable(MyHTMLTable):
@@ -110,7 +110,7 @@ class MyHTMLBitfinexConfigurationTable(MyHTMLConfigurationTable):
 
 
 class MyHTMLTradeOptimizerTable(MyHTMLConfigurationTable):
-    def __init__(self, config: TradeStrategyOptimizer):
+    def __init__(self, config: TradeOptimizer):
         self.config = config
         MyHTMLConfigurationTable.__init__(self, config)
 
