@@ -16,7 +16,7 @@ import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import Indices, CN, DC, PRD, OPS, FT, TRT, TSTR
+from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, OPS, FT, TRT, TSTR
 import os
 import time
 
@@ -91,7 +91,7 @@ class StockInsertHandler:
 class StockDatabase(BaseDatabase):
     def __init__(self):
         BaseDatabase.__init__(self)
-        self._crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+        self._crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
         self._sleep_seconds = 5
         self._dt_now_time_stamp = int(datetime.now().timestamp())
         self._stocks_table = StocksTable()
@@ -151,8 +151,8 @@ class StockDatabase(BaseDatabase):
     def update_crypto_currencies(self, period=PRD.DAILY, aggregation=1):
         company_dic = self.__get_company_dict__(like_input='USD')
         last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(like_input='USD', period=period)
-        print('\nUpdating {}...\n'.format(Indices.CRYPTO_CCY))
-        ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+        print('\nUpdating {}...\n'.format(INDICES.CRYPTO_CCY))
+        ticker_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
         for ticker in ticker_dic:
             self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
                                                         company_dic, last_loaded_date_stamp_dic)
@@ -258,7 +258,7 @@ class StockDatabase(BaseDatabase):
 
     @staticmethod
     def __get_index_list__(index: str):
-        return [Indices.DOW_JONES, Indices.NASDAQ100, Indices.SP500] if index == Indices.ALL else [index]
+        return [INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.SP500] if index == INDICES.ALL else [index]
 
     def get_input_values_for_stock_table(self, period, symbol: str, output_size: OPS):
         stock_fetcher = AlphavantageStockFetcher(symbol, period, output_size)
@@ -333,6 +333,11 @@ class StockDatabase(BaseDatabase):
         query = self._wave_table.get_query_for_wave_counter(period, limit)
         db_df = DatabaseDataFrame(self, query)
         return {row[0]: row[1] for index, row in db_df.df.iterrows()}
+
+    def get_wave_records_for_recommender_as_dataframe(self, limit: int) -> pd.DataFrame:
+        query = self._wave_table.get_query_for_recommender_records(limit)
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df
 
     def is_trade_already_available_for_pattern_id(self, pattern_id, buy_trigger: str, strategy: str, mean: int) -> bool:
         where_clause = "Pattern_ID = '{}' and Trade_Mean_Aggregation = {} " \

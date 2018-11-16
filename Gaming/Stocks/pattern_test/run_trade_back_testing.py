@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC, TP, Indices
+from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC, TP, INDICES
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from pattern_test.trade_test import TradeTest, TradeTestApi
 

@@ -327,31 +327,44 @@ class FibonacciWave:
         if component.comp_id == 'w_1':
             self.data_dict_obj.add(DC.W1_BEGIN_TS, component.tick_start.time_stamp)
             self.data_dict_obj.add(DC.W1_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W1_BEGIN_VALUE, self.__get_begin_value__(component))
             self.data_dict_obj.add(DC.W1_RANGE, component.range_max)
         elif component.comp_id == 'w_2':
             self.data_dict_obj.add(DC.W2_BEGIN_TS, component.tick_start.time_stamp)
             self.data_dict_obj.add(DC.W2_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W2_BEGIN_VALUE, self.__get_begin_value__(component))
             self.data_dict_obj.add(DC.W2_RANGE, component.range_max)
         elif component.comp_id == 'w_3':
             self.data_dict_obj.add(DC.W3_BEGIN_TS, component.tick_start.time_stamp)
             self.data_dict_obj.add(DC.W3_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W3_BEGIN_VALUE, self.__get_begin_value__(component))
             self.data_dict_obj.add(DC.W3_RANGE, component.range_max)
         elif component.comp_id == 'w_4':
             self.data_dict_obj.add(DC.W4_BEGIN_TS, component.tick_start.time_stamp)
             self.data_dict_obj.add(DC.W4_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W4_BEGIN_VALUE, self.__get_begin_value__(component))
             self.data_dict_obj.add(DC.W4_RANGE, component.range_max)
         elif component.comp_id == 'w_5':
             self.data_dict_obj.add(DC.W5_BEGIN_TS, component.tick_start.time_stamp)
             self.data_dict_obj.add(DC.W5_BEGIN_DT, component.tick_start.date_time_str)
+            self.data_dict_obj.add(DC.W5_BEGIN_VALUE, self.__get_begin_value__(component))
             self.data_dict_obj.add(DC.W5_RANGE, component.range_max)
             # add wave specific data
             self.data_dict_obj.add(DC.WAVE_END_TS, component.tick_end.time_stamp)
             self.data_dict_obj.add(DC.WAVE_END_DT, component.tick_end.date_time_str)
+            if self.wave_type == FD.ASC:
+                self.data_dict_obj.add(DC.WAVE_END_VALUE, component.tick_start.high)
+            else:
+                self.data_dict_obj.add(DC.WAVE_END_VALUE, component.tick_start.low)
             self.data_dict_obj.add(DC.WAVE_TYPE, self.wave_type)
             self.data_dict_obj.add(DC.WAVE_TYPE_ID, FD.get_id(self.wave_type))
             self.data_dict_obj.add(DC.WAVE_STRUCTURE, self.wave_structure)
             self.data_dict_obj.add(DC.WAVE_STRUCTURE_ID, FWST.get_id(self.wave_structure))
 
+    def __get_begin_value__(self, component: FibonacciWaveComponent):
+        if component.comp_id in ['w_1', 'w_3', 'w_5']:
+            return component.tick_start.low if self.wave_type == FD.ASC else component.tick_start.high
+        return component.tick_start.high if self.wave_type == FD.ASC else component.tick_start.low
 
     def __fill_comp_forecast_parameter_list__(self):
         comp_previous = self.comp_dic['w_4']

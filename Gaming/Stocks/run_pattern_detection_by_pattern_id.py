@@ -6,7 +6,7 @@ Date: 2018-06-10
 """
 
 from sertl_analytics.myprofiler import MyProfiler
-from sertl_analytics.constants.pattern_constants import FT, Indices, CN, PRD, OPS, TP, BT, TSTR
+from sertl_analytics.constants.pattern_constants import FT, INDICES, CN, PRD, OPS, TP, BT, TSTR
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_detection_controller import PatternDetectionController
 from pattern_test.trade_test import TradeTest, TradeTestApi

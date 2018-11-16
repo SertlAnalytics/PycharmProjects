@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import Indices, EQUITY_TYPE, PRD, PDP, CN, BT, TSTR, FT
+from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, PRD, PDP, CN, BT, TSTR, FT
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
@@ -30,7 +30,7 @@ class SystemConfiguration:
         self.sound_machine = PatternSoundMachine()
         if for_semi_deep_copy:
             return
-        self.crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
+        self.crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
         self.db_stock = StockDatabase()
         self.pattern_table = PatternTable()
         self.trade_table = TradeTable()

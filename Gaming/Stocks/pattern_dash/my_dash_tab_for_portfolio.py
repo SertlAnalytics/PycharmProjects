@@ -195,7 +195,8 @@ class MyDashTab4Portfolio(MyDashBaseTab):
         date_start = MyDate.adjust_by_days(MyDate.get_datetime_object().date(), -limit)
         and_clause = "Date > '{}'".format(date_start)
         graph_title = self.sys_config.graph_cache.get_cache_title(ticker_id, period, aggregation, limit)
-        detector = self._pattern_controller.get_detector_for_dash(self.sys_config, ticker_id, and_clause, limit)
+        detector = self._pattern_controller.get_detector_for_fibonacci_and_pattern(
+            self.sys_config, ticker_id, and_clause, limit)
         graph_api = DccGraphApi(graph_cache_id, graph_title)
         graph_api.ticker_id = ticker_id
         graph_api.df = detector.pdh.pattern_data.df

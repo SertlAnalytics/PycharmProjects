@@ -44,16 +44,22 @@ class WaveTable(MyTable):
         self._columns.append(MyTableColumn(DC.WAVE_STRUCTURE_ID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.W1_BEGIN_TS, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.W1_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W1_BEGIN_VALUE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.W2_BEGIN_TS, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.W2_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W2_BEGIN_VALUE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.W3_BEGIN_TS, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.W3_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W3_BEGIN_VALUE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.W4_BEGIN_TS, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.W4_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W4_BEGIN_VALUE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.W5_BEGIN_TS, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.W5_BEGIN_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.W5_BEGIN_VALUE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.WAVE_END_TS, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.WAVE_END_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.WAVE_END_VALUE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.W1_RANGE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.W2_RANGE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.W3_RANGE, CDT.FLOAT))
@@ -69,10 +75,21 @@ class WaveTable(MyTable):
             self._name, DC.TICKER_ID, data_dict[DC.TICKER_ID], ' and '.join(additional_and_clauses))
 
     def get_query_for_wave_counter(self, period: str, limit: int=0) -> str:
-        limit = 2 if period == PRD.INTRADAY else limit  # to get only the waves of the last 2 days for intraday
-        ts_from = MyDate.time_stamp_now() - (60 * 60 * 24 * limit)
+        ts_from = self.__get_from_time_stamp__(period, limit)
         return "Select Ticker_ID, count(*) FROM {} WHERE Period = '{}' and W1_Begin_Timestamp >= {} " \
                "GROUP BY Ticker_ID".format(self._name, period, ts_from)
+
+    def get_query_for_recommender_records(self, limit: int):
+        ts_from_daily = self.__get_from_time_stamp__(PRD.DAILY, limit)
+        ts_from_intraday = self.__get_from_time_stamp__(PRD.INTRADAY)
+        where_intraday = "Period = '{}' and W1_Begin_Timestamp >= {}".format(PRD.INTRADAY, ts_from_intraday)
+        where_daily = "Period = '{}' and W1_Begin_Timestamp >= {}".format(PRD.DAILY, ts_from_daily)
+        return "Select * FROM {} WHERE ({}) OR ({})".format(self._name, where_daily, where_intraday)
+
+    @staticmethod
+    def __get_from_time_stamp__(period: str, limit: int=0):
+        limit = 2 if period == PRD.INTRADAY else limit  # to get only the waves of the last 2 days for intraday
+        return MyDate.time_stamp_now() - (60 * 60 * 24 * limit)
 
 
 class TradeTable(MyTable, PredictionFeatureTable):

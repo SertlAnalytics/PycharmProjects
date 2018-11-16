@@ -14,7 +14,7 @@ from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStock
 from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher, CryptoCompareCryptoFetcher
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.user_input.confirmation import UserInput
-from sertl_analytics.constants.pattern_constants import CN, PRD, OPS, EQUITY_TYPE, Indices, DC
+from sertl_analytics.constants.pattern_constants import CN, PRD, OPS, EQUITY_TYPE, INDICES, DC
 from pattern_database import stock_database
 from sertl_analytics.mycache import MyCacheObjectApi
 from sertl_analytics.mydates import MyDate
@@ -111,9 +111,9 @@ class PatternDataProvider:
         self.aggregation = 1
 
     def use_index(self, index: str):
-        if index == Indices.ALL_DATABASE:
+        if index == INDICES.ALL_DATABASE:
             self.ticker_dict = self.get_all_in_database()
-        elif index == Indices.MIXED:
+        elif index == INDICES.MIXED:
             self.ticker_dict = self.get_mixed_dic()
         else:
             self.ticker_dict = IndicesComponentList.get_ticker_name_dic(index)
@@ -126,13 +126,13 @@ class PatternDataProvider:
                 self.ticker_dict[symbol] = name_from_db
 
     def get_index_members_as_dict(self, index: str):
-        if index == Indices.CRYPTO_CCY:
-            return IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
-        elif index == Indices.DOW_JONES:
-            return IndicesComponentList.get_ticker_name_dic(Indices.DOW_JONES)
+        if index == INDICES.CRYPTO_CCY:
+            return IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
+        elif index == INDICES.DOW_JONES:
+            return IndicesComponentList.get_ticker_name_dic(INDICES.DOW_JONES)
             # return {'MMM': '3M', 'KO': 'Coca Cola'}
-        elif index == Indices.NASDAQ100:
-            return IndicesComponentList.get_ticker_name_dic(Indices.NASDAQ100)
+        elif index == INDICES.NASDAQ100:
+            return IndicesComponentList.get_ticker_name_dic(INDICES.NASDAQ100)
             # return {'TSLA': 'Tesla', 'FCEL': 'Full Cell'}
 
     @staticmethod

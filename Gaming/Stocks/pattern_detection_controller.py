@@ -14,7 +14,7 @@ from sertl_analytics.mydates import MyDate
 from datetime import timedelta
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
-from sertl_analytics.constants.pattern_constants import PSC, PRD, TP, PDP
+from sertl_analytics.constants.pattern_constants import PSC, PRD, TP, PDP, FT
 from pattern_system_configuration import SystemConfiguration
 from pattern_statistics import PatternStatistics, DetectorStatistics, ConstraintsStatistics
 from pattern_constraints import ConstraintsFactory
@@ -193,6 +193,19 @@ class PatternDetectionController:
         print('\nProcessing for Fibonacci: {} ({})\n'.format(ticker, sys_config.runtime_config.actual_ticker_name))
         detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()
+        return detector
+
+    @staticmethod
+    def get_detector_for_fibonacci_and_pattern(
+            sys_config: SystemConfiguration, ticker: str, and_clause='', limit=200) -> PatternDetector:
+        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit)
+        sys_config.config.pattern_type_list = FT.get_all()
+        sys_config.init_predictors_without_condition_list()
+        # sys_config.config.save_wave_data
+        print('\nProcessing for Fib & Pattern: {} ({})\n'.format(ticker, sys_config.runtime_config.actual_ticker_name))
+        detector = PatternDetector(sys_config)
+        detector.parse_for_fibonacci_waves()
+        detector.parse_for_pattern()
         return detector
 
     @staticmethod

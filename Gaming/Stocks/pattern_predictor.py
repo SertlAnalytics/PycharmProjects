@@ -322,7 +322,6 @@ class PatternMasterPredictor:
         self.db_stock = api.db_stock
         self.pattern_table = api.pattern_table
         self.trade_table = api.trade_table
-
         self.predictor_dict = {}
         # self.__init_predictor_dict__()  # currently we don't need this - we'll do that later per ticker id
 

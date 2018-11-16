@@ -293,6 +293,11 @@ class PRD:  # Periods
         return 'Hallo'
 
 
+class SCORING:
+    ALL = 'all'
+    BEST = 'best'
+
+
 class OPS:  # Outputsize
     COMPACT = 'compact'
     FULL = 'full'
@@ -307,7 +312,7 @@ class PT:  # PredictorType
         return {PT.TOUCH_POINTS: 1, PT.BEFORE_BREAKOUT: 2, PT.AFTER_BREAKOUT: 3}.get(key)
 
 
-class Indices:
+class INDICES:
     DOW_JONES = 'Dow Jones'
     NASDAQ100 = 'Nasdaq 100'
     NASDAQ = 'Nasdaq (all)'
@@ -792,16 +797,22 @@ class DC:  # Data Columns
     WAVE_STRUCTURE_ID = 'Wave_Structure_ID'
     W1_BEGIN_TS = 'W1_Begin_Timestamp'
     W1_BEGIN_DT = 'W1_Begin_Datetime'
+    W1_BEGIN_VALUE = 'W1_Begin_Value'
     W2_BEGIN_TS = 'W2_Begin_Timestamp'
     W2_BEGIN_DT = 'W2_Begin_Datetime'
+    W2_BEGIN_VALUE = 'W2_Begin_Value'
     W3_BEGIN_TS = 'W3_Begin_Timestamp'
     W3_BEGIN_DT = 'W3_Begin_Datetime'
+    W3_BEGIN_VALUE = 'W3_Begin_Value'
     W4_BEGIN_TS = 'W4_Begin_Timestamp'
     W4_BEGIN_DT = 'W4_Begin_Datetime'
+    W4_BEGIN_VALUE = 'W4_Begin_Value'
     W5_BEGIN_TS = 'W5_Begin_Timestamp'
     W5_BEGIN_DT = 'W5_Begin_Datetime'
+    W5_BEGIN_VALUE = 'W5_Begin_Value'
     WAVE_END_TS = 'Wave_End_Timestamp'
     WAVE_END_DT = 'Wave_End_Datetime'
+    WAVE_END_VALUE = 'Wave_End_Value'
     W1_RANGE = 'W1_Range'
     W2_RANGE = 'W2_Range'
     W3_RANGE = 'W3_Range'
