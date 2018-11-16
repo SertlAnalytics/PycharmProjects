@@ -26,7 +26,6 @@ class SSBT:  # SwitchSimulationButtonText
 class MyDashTab4Configuration(MyDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
         MyDashBaseTab.__init__(self, app, sys_config)
-        self.exchange_config = self.sys_config.exchange_config
         self._trade_handler_online = trade_handler_online
 
     @staticmethod
@@ -70,14 +69,14 @@ class MyDashTab4Configuration(MyDashBaseTab):
         # self.__init_callback_for_config_markdown__()
 
     def __get_switch_mode_button_text__(self):
-        return SSBT.SWITCH_TO_TRADING if self.exchange_config.is_simulation else SSBT.SWITCH_TO_SIMULATION
+        return SSBT.SWITCH_TO_TRADING if self._trade_handler_online.is_simulation else SSBT.SWITCH_TO_SIMULATION
 
     def __init_callback_for_dash_board_sub_title__(self):
         @self.app.callback(
             Output('my_dashboard_sub_title_div', 'children'),
             [Input('my_switch_trading_mode_button', 'children')])
         def handle_callback_for_dash_board_title(button_text: str):
-            if self.exchange_config.is_simulation:
+            if self._trade_handler_online.is_simulation:
                 return 'simulation'
             return 'active!!!'
 
@@ -98,11 +97,11 @@ class MyDashTab4Configuration(MyDashBaseTab):
             if n_clicks == 0:
                 return button_text
             if button_text == SSBT.SWITCH_TO_SIMULATION:
-                self.sys_config.start_simulation_trading()
+                self._trade_handler_online.deactivate_trading_mode()
                 self._trade_handler_online.trade_client.exchange_config.print_actual_mode()
                 return SSBT.SWITCH_TO_TRADING
             elif button_text == SSBT.SWITCH_TO_TRADING:
-                self.sys_config.start_automated_trading()
+                self._trade_handler_online.activate_trading_mode()
                 self._trade_handler_online.trade_client.exchange_config.print_actual_mode()
                 return SSBT.SWITCH_TO_SIMULATION
             return button_text

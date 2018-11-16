@@ -41,16 +41,57 @@ class RDC:  # RecommenderDataColumn
     PORTFOLIO = 'Portfolio'
 
 
+class RecommenderRow:
+    sort_column = RDC.NAME
+
+    def __init__(self):
+        self._columns = [RDC.INDEX, RDC.SYMBOL, RDC.NAME, RDC.PRICE, RDC.PRICE_CHANGE,
+                         RDC.FIBONACCI_SHORT, RDC.FIBONACCI_MID, RDC.FIBONACCI_LONG, RDC.SCORING_POINTS,
+                         RDC.PORTFOLIO]
+        self._value_dict = {col: '' for col in self._columns}
+
+    @property
+    def value_dict(self):
+        return self._value_dict
+
+    @property
+    def columns(self):
+        return self._columns
+
+    @property
+    def index(self):
+        return self._value_dict[RDC.INDEX]
+
+    @property
+    def symbol(self):
+        return self._value_dict[RDC.SYMBOL]
+
+    @property
+    def scoring_points(self):
+        return self._value_dict[RDC.SCORING_POINTS]
+
+    def add_value(self, column: str, value):
+        self._value_dict[column] = value
+
+    def get_row_as_dict(self):
+        return self._value_dict
+
+    def __eq__(self, other):
+        return self._value_dict[self.sort_column] == other.value_dict[self.sort_column]
+
+    def __lt__(self, other):
+        return self._value_dict[self.sort_column] < other.value_dict[self.sort_column]
+
+    def __gt__(self, other):
+        return self._value_dict[self.sort_column] < other.value_dict[self.sort_column]
+
+
 class RecommenderTable:
     def __init__(self, db_stock: StockDatabase, data_provider: PatternDataProvider):
         self._db_stock = db_stock
         self._data_provider = data_provider
-        self._columns = [RDC.INDEX, RDC.SYMBOL, RDC.NAME, RDC.PRICE, RDC.PRICE_CHANGE,
-                         RDC.FIBONACCI_SHORT, RDC.FIBONACCI_MID, RDC.FIBONACCI_LONG, RDC.SCORING_POINTS,
-                         RDC.PORTFOLIO]
         self._indices = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
         self._exchange_dict = self.__get_exchange_dict__()
-        self._wave_counter_dict = {}
         self._wave_df = None
         self._wave_for_ticker_dict = {}
         self._rows_from_db = []
@@ -82,8 +123,11 @@ class RecommenderTable:
     @property
     def rows_for_selected_indices(self):
         if len(self._rows_selected_indices) == 0:
-            return self.__get_empty_data_row__()
-        return self._rows_selected_indices
+            return [RecommenderRow().get_row_as_dict()]
+        RecommenderRow.sort_column = RDC.SYMBOL if self._selected_scoring == SCORING.ALL else RDC.SCORING_POINTS
+        sort_reverse = False if self._selected_scoring == SCORING.ALL else True
+        sorted_list = sorted(self._rows_selected_indices, reverse=sort_reverse)
+        return [row.get_row_as_dict() for row in sorted_list]
 
     @property
     def height_for_display(self):
@@ -91,10 +135,6 @@ class RecommenderTable:
         if height > 400:
             return 400
         return max(100, height)
-
-    @property
-    def columns(self):
-        return self._columns
 
     def init_selected_row(self, table_rows: list, selected_row_indices: list=None):
         if selected_row_indices is None or len(selected_row_indices) != 1:
@@ -114,11 +154,9 @@ class RecommenderTable:
             self.__init_data_from_database__(initialize=False)
 
     def __init_data_from_database__(self, initialize: bool):
-        self._wave_counter_dict = self.__get_wave_counter_dict__()
         self._wave_df = self._db_stock.get_wave_records_for_recommender_as_dataframe(400)
         self.__fill_wave_for_ticker_dict__()
-        # print('wave_df: {}\n {}'.format(self._wave_df.shape[0], self._wave_df.head()))
-        self.__fill_rows_from_db__(initialize)
+        self.__fill_rows_from_wave_for_ticker_dict__(initialize)
         self.__fill_rows_for_selected_indices__()
 
     def __fill_wave_for_ticker_dict__(self):
@@ -150,18 +188,17 @@ class RecommenderTable:
 
     def __fill_rows_for_selected_indices__(self):
         self._rows_selected_indices = []
-        if len(self._selected_indices) == 0:
-            return
-        for row in self._rows_from_db:
-            if row[RDC.INDEX] in self._selected_indices:
-                if self._selected_scoring == SCORING.ALL or row[RDC.SCORING_POINTS] > 2:
-                    self._rows_selected_indices.append(row)
+        if len(self._selected_indices) > 0:
+            for row in self._rows_from_db:
+                if row.index in self._selected_indices:
+                    if self._selected_scoring == SCORING.ALL or row.scoring_points > 2:
+                        self._rows_selected_indices.append(row)
 
-    def __append_row_to_rows_from_db__(self, row: dict):
+    def __append_row_to_rows_from_db__(self, row: RecommenderRow):
         self._rows_from_db.append(row)
-        self._symbols.append(row[RDC.SYMBOL])
+        self._symbols.append(row.symbol)
 
-    def __fill_rows_from_db__(self, initialize: bool):
+    def __fill_rows_from_wave_for_ticker_dict__(self, initialize: bool):
         index_list = self._indices if initialize else self._selected_indices
         for index in index_list:
             index_member_dict = self._exchange_dict[index]
@@ -170,11 +207,11 @@ class RecommenderTable:
                     row_new = self.__get_new_row_for_data_table__(index, symbol, name)
                     self.__append_row_to_rows_from_db__(row_new)
 
-    def __get_empty_data_row__(self) -> list:
-        return [{column: '' for column in self._columns}]
-
-    def __get_new_row_for_data_table__(self, index: str, symbol: str, name: str) -> dict:
-        return {col: self.__get_column_value__(index, symbol, name, col) for col in self._columns}
+    def __get_new_row_for_data_table__(self, index: str, symbol: str, name: str) -> RecommenderRow:
+        row = RecommenderRow()
+        for column in row.columns:
+            row.add_value(column, self.__get_column_value__(index, symbol, name, column))
+        return row
 
     def __get_column_value__(self, index: str, symbol: str, name: str, column: str):
         if column == RDC.INDEX: return index
@@ -224,8 +261,3 @@ class RecommenderTable:
     def __get_exchange_dict__(self) -> dict:
         return {index: self._data_provider.get_index_members_as_dict(index) for index in self._indices}
 
-    def __get_wave_counter_dict__(self) -> dict:
-        return {200: self._db_stock.get_wave_counter_dict(PRD.DAILY, 200),
-                400: self._db_stock.get_wave_counter_dict(PRD.DAILY, 400),
-                30: self._db_stock.get_wave_counter_dict(PRD.INTRADAY),
-                }

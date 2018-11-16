@@ -46,6 +46,12 @@ class PatternTradeHandler:
     def replay_status(self):
         return self._replay_status
 
+    def activate_trading_mode(self):
+        self.trade_client.exchange_config.is_simulation = False
+
+    def deactivate_trading_mode(self):
+        self.trade_client.exchange_config.is_simulation = True
+
     def __get_trade_client__(self):
         if self.trade_process == TP.ONLINE:
             return MyBitfinexTradeClient(self.exchange_config)
