@@ -2,8 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7606fc5c-fb0c-4c55-828d-6a7e7df44d0f" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/../Courses/edX_AI/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Courses/edX_AI/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/bitfinex_trade_client.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/interactive_broker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/bitfinex.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/exchange_cls.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/exchange_cls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/.idea/Stocks.iml" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/.idea/Stocks.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_bitfinex.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_for_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_for_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_database/run_daily_tasks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_system_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_trade_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_trade_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/run_bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/run_bitfinex.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -17,8 +29,8 @@
       <file leaf-file-name="run_fifa_world_cup_2018_prediction.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="451" column="46" lean-forward="true" selection-start-line="451" selection-start-column="46" selection-end-line="451" selection-end-column="46" />
+            <state relative-caret-position="1099">
+              <caret line="443" selection-start-line="443" selection-end-line="443" />
             </state>
           </provider>
         </entry>
@@ -164,6 +176,13 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7225">
+          <caret line="443" lean-forward="true" selection-start-line="443" selection-end-line="443" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5457">
           <caret line="326" column="38" selection-start-line="326" selection-start-column="38" selection-end-line="326" selection-end-column="38" />
         </state>
@@ -185,8 +204,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="451" column="46" lean-forward="true" selection-start-line="451" selection-start-column="46" selection-end-line="451" selection-end-column="46" />
+        <state relative-caret-position="1099">
+          <caret line="443" selection-start-line="443" selection-end-line="443" />
         </state>
       </provider>
     </entry>

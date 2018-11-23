@@ -8,10 +8,6 @@ Date: 2018-10-03
 from datetime import datetime
 from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_components import MyHTMLTable, COLORS, MyHTML, MyDCC
-from pattern_system_configuration import SystemConfiguration
-from pattern_configuration import PatternConfiguration
-from pattern_runtime_configuration import RuntimeConfiguration
-from pattern_bitfinex import BitfinexConfiguration
 
 
 class MyHTMLHeaderTable(MyHTMLTable):
@@ -42,12 +38,15 @@ class MyHTMLHeaderTable(MyHTMLTable):
         next_refresh_div = MyHTML.div_embedded([next_refresh_label_div, MyHTML.span(' '), next_refresh_time_div])
 
         online_trade_label_div = MyHTML.div('my_online_trade_label_div', 'Trades - Online:', True)
-        online_trade_div = MyHTML.div('my_online_trade_div', '0')
+        online_trade_active_div = MyHTML.div('my_online_trade_active_div', '0')
+        online_trade_all_div = MyHTML.div('my_online_trade_all_div', '0')
         stored_trade_label_div = MyHTML.div('my_stored_trade_label_div', 'Trades - Replay:', True)
         stored_trade_div = MyHTML.div('my_stored_trade_div', '0')
         stored_pattern_label_div = MyHTML.div('my_stored_pattern_label_div', 'Pattern - Replay:', True)
         stored_pattern_div = MyHTML.div('my_stored_pattern_div', '0')
-        online_div = MyHTML.div_embedded([online_trade_label_div, MyHTML.span(' '), online_trade_div])
+        online_div = MyHTML.div_embedded([
+            online_trade_label_div, MyHTML.span(' '),
+            online_trade_active_div, MyHTML.span('/'), online_trade_all_div], inline=True)
         trade_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
         pattern_div = MyHTML.div_embedded([stored_pattern_label_div, MyHTML.span(' '), stored_pattern_div])
 

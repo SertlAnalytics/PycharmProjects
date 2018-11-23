@@ -8,6 +8,13 @@ Date: 2018-05-14
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
+class BLR:  # BlackListReason
+    SIMILAR_AVAILABLE = 'Similar trade available'
+    BUY_TRIGGER_CONDITIONS = 'Buy trigger conditions violated'
+    TRADE_STRATEGY_CONDITIONS = 'Trade strategy conditions violated'
+    NO_BEST_STRATEGY = 'No best strategy found'
+
+
 class PDP:  # Pattern Detection Process
     UPDATE_TRADE_DATA = 'Update_Trade_Data'
     UPDATE_PATTERN_DATA = 'Update_Pattern_Data'
@@ -128,6 +135,24 @@ class FR:  # Fibonnaci Retracements
     R_000 = 0.000
 
 
+class INDI:  # Indicators
+    NONE = 'None'
+    BOLLINGER = 'Bollinger Band'
+    PATTERN = 'Pattern'
+
+    @staticmethod
+    def get_id(key: str):
+        return {INDI.BOLLINGER: 10, INDI.PATTERN: 90}.get(key, 0)
+
+    @staticmethod
+    def get_as_options():
+        return [{'label': indicator, 'value': indicator} for indicator in INDI.get_all()]
+
+    @staticmethod
+    def get_all() -> list:
+        return [INDI.NONE, INDI.BOLLINGER, INDI.PATTERN]
+
+
 class FWST:   # Fibonacci Wave Structure
     S_M_L = 'Short_medium_long'
     S_L_S = 'Short_long_short'
@@ -137,6 +162,7 @@ class FWST:   # Fibonacci Wave Structure
     @staticmethod
     def get_id(key: str):
         return {FWST.L_M_S: 1, FWST.S_L_S: 2, FWST.S_M_L: 3}.get(key, 0)
+
 
 class EQUITY_TYPE:
     NONE = 'None'
@@ -554,8 +580,10 @@ class PDR:  # Pattern Deletion Reasons
     PATTERN_VANISHED = 'Pattern_vanished'
     WRONG_BREAKOUT = 'Wrong_breakout'
     BUYING_PROBLEM = 'Buying_problem'
+    BUYING_PRECONDITION_PROBLEM = 'Buying_precondition_problem'
     TRADE_FINISHED = 'Trade_finished'
     SMA_PROBLEM = 'Simple_moving_average_problem'
+    TRADE_CANCELLED = 'Trade manually cancelled'
 
     def get_id(key: str):
         return {PDR.PATTERN_VANISHED: 10, PDR.WRONG_BREAKOUT: 20, PDR.BUYING_PROBLEM: 25, PDR.TRADE_FINISHED: 40}.get(key)
@@ -564,11 +592,12 @@ class PDR:  # Pattern Deletion Reasons
 class ST:  # Sell Trigger
     LIMIT = 'Limit'
     STOP_LOSS = 'Stop_loss'
+    CANCEL = 'Cancellation'
     PATTERN_VANISHED = 'Pattern_vanished'
     PATTERN_END = 'Pattern_end'
 
     def get_id(key: str):
-        return {ST.LIMIT: 10, ST.STOP_LOSS: 20, ST.PATTERN_END: 40, ST.PATTERN_END: 50}.get(key)
+        return {ST.LIMIT: 10, ST.STOP_LOSS: 20, ST.CANCEL: 25, ST.PATTERN_END: 40, ST.PATTERN_END: 50}.get(key)
 
 
 class TR:  # Trade Result
@@ -717,6 +746,7 @@ class DC:  # Data Columns
     TRADE_TYPE = 'Trade_Type'  # long, short, .... see TRT
     # and additional for Trades
     TRADE_ID = 'Trade_ID'
+    TRADE_STATUS = 'Trade_Status'
     TRADE_MEAN_AGGREGATION = 'Trade_Mean_Aggregation'
     TRADE_PROCESS = 'Trade_Process'  #  TP.ONLINE = 'Online', TEST_SINGLE = 'Test_single', BACK_TESTING = 'Back_testing'
     TRADE_READY_ID = 'Trade_Ready_ID'  # for a real trade = 1, 0 else

@@ -9,6 +9,7 @@ from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, PR
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
+from sertl_analytics.exchanges.interactive_broker import IBKRConfiguration
 from pattern_configuration import PatternConfiguration
 from pattern_runtime_configuration import RuntimeConfiguration
 from pattern_debugger import PatternDebugger
@@ -20,28 +21,36 @@ from pattern_trade_optimizer import TradeOptimizer
 from copy import deepcopy
 from pattern_sound.pattern_sound_machine import PatternSoundMachine
 from pattern_dash.my_dash_caches import MyGraphCache, MyDataFrameCache
+from pattern_index_configuration import IndexConfiguration
+from sertl_analytics.exchanges.bitfinex_trade_client import MyBitfinexTradeClient
 
 
 class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
         self.config = PatternConfiguration()
         self.runtime_config = RuntimeConfiguration()
-        self.exchange_config = BitfinexConfiguration()
+        self.crypto_config = BitfinexConfiguration()
+        self.exchange_config = self.crypto_config
+        self.shares_config = IBKRConfiguration()
         self.sound_machine = PatternSoundMachine()
         if for_semi_deep_copy:
             return
-        self.crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
+        self.index_config = IndexConfiguration([INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100])
         self.db_stock = StockDatabase()
         self.pattern_table = PatternTable()
         self.trade_table = TradeTable()
         self.wave_table = WaveTable()
         self.df_cache = MyDataFrameCache()
         self.graph_cache = MyGraphCache()
-        self.data_provider = PatternDataProvider(self.config, self.db_stock, self.crypto_ccy_dic, self.df_cache)
+        self.data_provider = PatternDataProvider(self.config, self.index_config, self.db_stock, self.df_cache)
         self.master_predictor_handler = PatternMasterPredictorHandler(
             PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)
         )
         self.trade_strategy_optimizer = TradeOptimizer(self.db_stock, self.expected_win_pct)
+
+    def __init_index_value_dict__(self):
+        for index in self.index_list:
+            self.index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
 
 
     @property
@@ -63,14 +72,6 @@ class SystemConfiguration:
     @property
     def period_aggregation(self) -> int:
         return self.data_provider.aggregation
-
-    def start_automated_trading(self):
-        self.exchange_config.is_simulation = False
-        self.config.save_trade_data = True
-
-    def start_simulation_trading(self):
-        self.exchange_config.is_simulation = True
-        self.config.save_trade_data = False
 
     def init_detection_process_for_automated_trade_update(self, mean: int, sma_number: int):
         self.config.detection_process = PDP.UPDATE_TRADE_DATA
@@ -162,8 +163,8 @@ class SystemConfiguration:
         about which part has to be deeply copied and which can be used by reference.
         """
         sys_config_copy = SystemConfiguration(True)
-        sys_config_copy.exchange_config = deepcopy(self.exchange_config)  # we change the simulation mode...
-        sys_config_copy.crypto_ccy_dic = self.crypto_ccy_dic
+        sys_config_copy.exchange_config = deepcopy(self.exchange_config)  # we change the simulation mode... ToDo ???
+        sys_config_copy.index_config = self.index_config
         sys_config_copy.pattern_table = self.pattern_table
         sys_config_copy.db_stock = self.db_stock
         sys_config_copy.trade_table = self.trade_table
@@ -172,7 +173,7 @@ class SystemConfiguration:
         sys_config_copy.df_cache = self.df_cache
         sys_config_copy.graph_cache = self.graph_cache
         sys_config_copy.data_provider = PatternDataProvider(
-            sys_config_copy.config, self.db_stock, self.crypto_ccy_dic, self.df_cache)
+            sys_config_copy.config, sys_config_copy.index_config, self.db_stock, self.df_cache)
         sys_config_copy.data_provider.ticker_dict = self.data_provider.ticker_dict  # we have to copy this as well
         sys_config_copy.master_predictor_handler = PatternMasterPredictorHandler(
             PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)

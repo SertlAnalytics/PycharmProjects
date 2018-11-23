@@ -111,6 +111,7 @@ class DccGraphApi:
         self.id = graph_id
         self.ticker_id = ''
         self.df = None
+        self.indicator = None
         self.pattern_trade = None
         self.figure_data = None
         self.figure_layout_auto_size = False
@@ -241,8 +242,9 @@ class MyHTML:
         )
 
     @staticmethod
-    def div_embedded(embedded_element_list: list):
-        return html.Div(embedded_element_list)
+    def div_embedded(embedded_element_list: list, inline=False):
+        style = {'display': 'inline-block'} if inline else {}
+        return html.Div(embedded_element_list, style=style)
 
     @staticmethod
     def div(element_id: str, children='', bold=False, inline=True, color='black'):

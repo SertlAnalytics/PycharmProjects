@@ -192,7 +192,7 @@ class Pattern:
         self._nearest_neighbor_collector.print_sorted_list(5)
 
     def is_ready_for_back_testing(self):
-        pos_last = self.part_entry.tick_last.position + self.get_maximal_trade_position_size()
+        pos_last = self.part_entry.tick_last.position + self.get_minimal_trade_position_size()
         return self.df_length > pos_last and FT.is_pattern_type_long_trade_able(self.pattern_type)
 
     def set_breakout_after_checks(self, last_tick: WaveTick, next_tick: WaveTick, online=False) -> dict:
@@ -227,21 +227,23 @@ class Pattern:
         off_set_time_stamp = self.pattern_range.tick_last.time_stamp
         counter = 0
         max_ticks = self.get_maximal_trade_position_size()
-        col_list = [CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.VOL, CN.TIMESTAMP, CN.POSITION, CN.TIME]
+        col_list = [CN.OPEN, CN.CLOSE, CN.LOW, CN.HIGH, CN.VOL, CN.TIMESTAMP, CN.POSITION, CN.TIME, CN.DATE]
         return_list = []
 
         for tick in tick_list:
             if off_set_time_stamp < tick.time_stamp:
                 counter += 1
                 ts_list = self.__get_time_stamp_list_for_back_testing_value_pairs__(int(tick.time_stamp), 4)
+                pos = tick.position
                 time = MyDate.get_time_from_epoch_seconds(tick.time_stamp)
-                value_list = [tick.open, tick.open, tick.low, tick.high, tick.volume, ts_list[0], tick.position, time]
+                date = MyDate.get_date_from_epoch_seconds(tick.time_stamp)
+                value_list = [tick.open, tick.open, tick.low, tick.high, tick.volume, ts_list[0], pos, time, date]
                 return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
-                value_list = [tick.open, tick.high, tick.low, tick.high, tick.volume, ts_list[0], tick.position, time]
+                value_list = [tick.open, tick.high, tick.low, tick.high, tick.volume, ts_list[0], pos, time, date]
                 return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
-                value_list = [tick.open, tick.low, tick.low, tick.high, tick.volume, ts_list[0], tick.position, time]
+                value_list = [tick.open, tick.low, tick.low, tick.high, tick.volume, ts_list[0], pos, time, date]
                 return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
-                value_list = [tick.open, tick.close, tick.low, tick.high, tick.volume, ts_list[0], tick.position, time]
+                value_list = [tick.open, tick.close, tick.low, tick.high, tick.volume, ts_list[0], pos, time, date]
                 return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
             if counter >= max_ticks:
                 break
@@ -502,6 +504,9 @@ class Pattern:
         else:
             # print('get_maximal_trade_position_size: breakout.ts = {}'.format(self.breakout.tick_breakout.time_stamp))
             return self.pattern_range.length * 3  # ToDo - something with length start till breakout...
+
+    def get_minimal_trade_position_size(self) -> int:
+        return self.pattern_range.length
 
     def __get_constraint__(self):
         return cstr.Constraints(self.sys_config)

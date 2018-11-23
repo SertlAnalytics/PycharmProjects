@@ -81,6 +81,11 @@ class MyDate:
         return date_time_object.strftime('%Y-%m-%d')
 
     @staticmethod
+    def get_date_time_as_string_from_date_time(date_time, dt_format='%Y-%m-%d %H:%M:%S') -> str:  # '2018-07-18 hh:mm:ss'
+        date_time_object = MyDate.get_datetime_object(date_time)
+        return date_time_object.strftime(dt_format)
+
+    @staticmethod
     def get_date_from_datetime(date_time=None):
         if date_time is None:
             return datetime.now().date()

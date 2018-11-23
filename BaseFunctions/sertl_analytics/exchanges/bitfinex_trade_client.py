@@ -7,10 +7,10 @@ import os
 from sertl_analytics.exchanges.bitfinex import MyBitfinex, BitfinexConfiguration
 from sertl_analytics.exchanges.bitfinex import Ticker, Balance
 from sertl_analytics.exchanges.bitfinex import BuyMarketOrder, BuyLimitOrder, BuyStopOrder
-from sertl_analytics.exchanges.bitfinex import SellMarketOrder, SellLimitOrder, SellStopLossOrder, SellTrailingStopOrder
-from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
-from sertl_analytics.constants.pattern_constants import CN
+from sertl_analytics.exchanges.bitfinex import SellMarketOrder, SellStopLossOrder, SellTrailingStopOrder
+from sertl_analytics.constants.pattern_constants import CN, TP
 from pattern_wave_tick import WaveTick, WaveTickList
+
 
 # log = logging.getLogger(__name__)
 #
@@ -25,12 +25,12 @@ from pattern_wave_tick import WaveTick, WaveTickList
 
 
 class MyBitfinexTradeClient:
-    def __init__(self, exchange_config: ExchangeConfiguration):
+    def __init__(self, exchange_config: BitfinexConfiguration):
         self.exchange_config = exchange_config
         self.exchange_config.print_actual_mode()
         self._api_key = os.environ['bitfinex_apikey']
         self._api_key_secret = os.environ['bitfinex_apikeysecret']
-        self._bitfinex = MyBitfinex(self._api_key, self._api_key_secret, exchange_config)
+        self._bitfinex = MyBitfinex(self._api_key, self._api_key_secret, self.exchange_config)
         self._trading_pairs = self._bitfinex.trading_pairs
 
     def get_ticker(self, symbol: str) -> Ticker:
@@ -81,18 +81,18 @@ class MyBitfinexTradeClient:
     def print_order_status(self, order_id: int):
         self._bitfinex.print_order_status(order_id)
 
-    def delete_order(self, order_id: int):
-        self._bitfinex.delete_order(order_id)
+    def delete_order(self, order_id: int, is_trade_simulation: bool):
+        self._bitfinex.delete_order(order_id, is_trade_simulation)
 
-    def update_order(self, order_id: int, price_new: float):
-        self._bitfinex.update_order(order_id, price_new)
+    def update_order(self, order_id: int, price_new: float, is_order_simulation: bool):
+        self._bitfinex.update_order(order_id, price_new, is_order_simulation)
 
     def delete_all_orders(self):
         self._bitfinex.delete_all_orders()
 
-    def buy_available(self, trading_pair: str, last_price=0):
+    def buy_available(self, trading_pair: str, last_price=0.0, is_order_simulation=False):
         self.print_active_balances('Before "Buy available {}"'.format(trading_pair))
-        order_status = self._bitfinex.buy_available(trading_pair, last_price)
+        order_status = self._bitfinex.buy_available(trading_pair, last_price, is_order_simulation)
         self.print_active_balances('After "Buy available {}"'.format(trading_pair))
         return order_status
 
@@ -108,20 +108,20 @@ class MyBitfinexTradeClient:
         self.print_active_balances('After "Sell all assets"')
         return order_status_list
 
-    def create_buy_market_order(self, trading_pair: str, amount: float):
-        return self._bitfinex.create_order(BuyMarketOrder(trading_pair, amount))
+    def create_buy_market_order(self, trading_pair: str, amount: float, is_order_simulation: bool):
+        return self._bitfinex.create_order(BuyMarketOrder(trading_pair, amount), is_order_simulation)
 
-    def create_buy_stop_order(self, trading_pair: str, amount: float, buy_stop_price: float):
-        return self._bitfinex.create_order(BuyStopOrder(trading_pair, amount, buy_stop_price))
+    def create_buy_stop_order(self, trading_pair: str, amount: float, buy_stop_price: float, is_order_simulation: bool):
+        return self._bitfinex.create_order(BuyStopOrder(trading_pair, amount, buy_stop_price), is_order_simulation)
 
-    def create_buy_limit_order(self, trading_pair: str, amount: float, limit_price: float):
-        return self._bitfinex.create_order(BuyLimitOrder(trading_pair, amount, limit_price))
+    def create_buy_limit_order(self, trading_pair: str, amount: float, limit_price: float, is_order_simulation: bool):
+        return self._bitfinex.create_order(BuyLimitOrder(trading_pair, amount, limit_price), is_order_simulation)
 
-    def create_sell_market_order(self, trading_pair: str, amount: float):
-        return self._bitfinex.create_order(SellMarketOrder(trading_pair, amount))
+    def create_sell_market_order(self, trading_pair: str, amount: float, is_order_simulation: bool):
+        return self._bitfinex.create_order(SellMarketOrder(trading_pair, amount), is_order_simulation)
 
-    def create_sell_stop_loss_order(self, trading_pair: str, amount: float, stop_price: float):
-        return self._bitfinex.create_order(SellStopLossOrder(trading_pair, amount, stop_price))
+    def create_sell_stop_loss_order(self, trading_pair: str, amount: float, stop_price: float, is_order_simulation: bool):
+        return self._bitfinex.create_order(SellStopLossOrder(trading_pair, amount, stop_price), is_order_simulation)
 
-    def create_sell_trailing_stop_order(self, trading_pair: str, amount: float, distance: float):
-        return self._bitfinex.create_order(SellTrailingStopOrder(trading_pair, amount, distance))
+    def create_sell_trailing_stop_order(self, trading_pair: str, amount: float, distance: float, is_order_simulation: bool):
+        return self._bitfinex.create_order(SellTrailingStopOrder(trading_pair, amount, distance), is_order_simulation)

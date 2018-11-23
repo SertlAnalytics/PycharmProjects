@@ -10,16 +10,7 @@ from playsound import playsound
 
 
 class PatternSoundMachine:
-    def __init__(self):
-        self._is_active = True
-
-    @property
-    def is_active(self):
-        return self._is_active
-
-    @is_active.setter
-    def is_active(self, value: bool):
-        self._is_active = value
+    is_active = True
 
     def play_alarm_buy(self):
         self.__play__('alarm_buy.wav')
@@ -43,7 +34,7 @@ class PatternSoundMachine:
         self.__play__('alarm_touchpoint.wav')
 
     def __play__(self, file: str):
-        if self._is_active:
+        if self.is_active:
             directory = '../pattern_sound/'
             playsound('{}{}'.format(directory, file))
 

@@ -123,7 +123,14 @@ class MyDashStateHandler:
         self._my_interval_n_intervals = 0
         self._my_interval_selection = 0
         self._my_period_aggregation = 0
+        self._my_selected_indices = []
         self._ticker_dict = {dict_element['value']: 0 for dict_element in ticker_list}
+
+    def change_for_my_selected_indices(self, selected_indices: list) -> bool:
+        if set(selected_indices) != set(self._my_selected_indices):
+            self._my_selected_indices = selected_indices
+            return True
+        return False
 
     def change_for_my_period_aggregation_selection(self, period_aggregation: int) -> bool:
         if period_aggregation != self._my_period_aggregation:

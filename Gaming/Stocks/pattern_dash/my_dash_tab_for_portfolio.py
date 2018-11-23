@@ -16,7 +16,7 @@ from pattern_detection_controller import PatternDetectionController
 from pattern_trade_handler import PatternTradeHandler
 from dash import Dash
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.pattern_constants import PRD
+from sertl_analytics.constants.pattern_constants import PRD, INDI
 from pattern_news_handler import NewsHandler
 
 
@@ -44,6 +44,7 @@ class MyDashTab4Portfolio(MyDashBaseTab):
         self.exchange_config = self.sys_config.exchange_config
         self._table_rows = []
         self._active_manage_button_clicks = 0
+        self._selected_indicator = INDI.NONE
         self._selected_row_index = -1
         self._selected_row = None
         self._selected_ticker_id = ''
@@ -83,9 +84,9 @@ class MyDashTab4Portfolio(MyDashBaseTab):
                 PODD.PERIOD_AGGREGATION, default_value=self.sys_config.period_aggregation)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
                 PODD.REFRESH_INTERVAL, default_value=900)),
-            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
-                PODD.SECOND_GRAPH_RANGE)),
-            MyHTML.div_with_html_button_submit('my_portfolio_refresh_button', 'Refresh', hidden=''),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PODD.SECOND_GRAPH_RANGE)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PODD.INDICATOR)),
+            MyHTML.div_with_html_button_submit('my_portfolio_refresh_button', 'Refresh'),
             MyHTML.div_with_html_button_submit('my_portfolio_active_manage_button',
                                                self.__get_position_manage_button_text__()),
             MyHTML.div(self._data_table_div, self.__get_table_for_portfolio__(), False),
@@ -95,11 +96,26 @@ class MyDashTab4Portfolio(MyDashBaseTab):
         return MyHTML.div('my_portfolio_div', children_list)
 
     def init_callbacks(self):
+        self.__init_callbacks_for_portfolio_refresh_button__()
         self.__init_callbacks_for_position_manage_button__()
         self.__init_callback_for_portfolio_markdown__()
         self.__init_callback_for_portfolio_table__()
         self.__init_callback_for_graph_for_selected_position__()
         self.__init_callback_for_selected_row_indices__()
+
+    def __init_callbacks_for_portfolio_refresh_button__(self):
+        @self.app.callback(
+            Output('my_portfolio_refresh_button', 'hidden'),
+            [Input('my_graph_portfolio_position_div', 'children'),
+             Input('my_portfolio_aggregation', 'value'),
+             Input('my_portfolio_refresh_interval_selection', 'value'),
+             Input('my_portfolio_graph_second_days_selection', 'value'),
+             Input('my_portfolio_indicator_selection', 'value')])
+        def handle_callback_for_portfolio_refresh_button_hidden(graph, aggregation, interval, second_days, indicator):
+            if indicator != self._selected_indicator:
+                self._selected_indicator = indicator
+                return ''
+            return 'hidden'
 
     def __init_callbacks_for_position_manage_button__(self):
         @self.app.callback(
@@ -120,16 +136,19 @@ class MyDashTab4Portfolio(MyDashBaseTab):
         @self.app.callback(
             Output('my_graph_portfolio_position_div', 'children'),
             [Input(self._data_table_name, 'rows'),
-             Input(self._data_table_name, 'selected_row_indices')],
+             Input(self._data_table_name, 'selected_row_indices'),
+             Input('my_portfolio_refresh_button', 'n_clicks')],
             [State('my_portfolio_aggregation', 'value'),
-             State('my_portfolio_refresh_interval_selection', 'value')])
-        def handle_callback_for_graph_first(rows: list, selected_row_indices: list, aggregation: int, refresh_interval: int):
+             State('my_portfolio_refresh_interval_selection', 'value'),
+             State('my_portfolio_indicator_selection', 'value')])
+        def handle_callback_for_graph_first(rows: list, selected_row_indices: list, refresh_n_clicks: int,
+                                            aggregation: int, refresh_interval: int, indicator: str):
             self.__init_selected_row__(selected_row_indices)
             if self._selected_ticker_id == '':
                 return ''
             self.sys_config.data_provider.period = PRD.INTRADAY
             self.sys_config.data_provider.aggregation = aggregation
-            graph, graph_key = self.__get_graph__(self._selected_ticker_id, refresh_interval)
+            graph, graph_key = self.__get_graph__(self._selected_ticker_id, refresh_interval, indicator=indicator)
             return graph
 
         @self.app.callback(
@@ -137,9 +156,10 @@ class MyDashTab4Portfolio(MyDashBaseTab):
             [Input('my_graph_portfolio_position_div', 'children')],
             [State('my_portfolio_aggregation', 'value'),
              State('my_portfolio_refresh_interval_selection', 'value'),
-             State('my_portfolio_graph_second_days_selection', 'value')])
+             State('my_portfolio_graph_second_days_selection', 'value'),
+             State('my_portfolio_indicator_selection', 'value')])
         def handle_callback_for_graph_second(graph_first, aggregation_first: int,
-                                             refresh_interval: int, range_list: list):
+                                             refresh_interval: int, range_list: list, indicator: str):
             if self._selected_ticker_id == '' or len(range_list) == 0:
                 return ''
             graph_list = []
@@ -148,10 +168,10 @@ class MyDashTab4Portfolio(MyDashBaseTab):
                 if graph_range == 1:
                     self.sys_config.data_provider.period = PRD.INTRADAY
                     self.sys_config.data_provider.aggregation = {5: 15, 15: 30, 30: 15}.get(aggregation_first, 30)
-                    graph, key = self.__get_graph__(self._selected_ticker_id, refresh_interval)
+                    graph, key = self.__get_graph__(self._selected_ticker_id, refresh_interval, indicator=indicator)
                 else:
                     self.sys_config.data_provider.period = PRD.DAILY
-                    graph, key = self.__get_graph__(self._selected_ticker_id, refresh_interval, graph_range)
+                    graph, key = self.__get_graph__(self._selected_ticker_id, refresh_interval, graph_range, indicator)
                 graph_list.append(graph)
             return graph_list
 
@@ -184,10 +204,11 @@ class MyDashTab4Portfolio(MyDashBaseTab):
             self.__update_selected_row_number_after_refresh__(rows)
             return [self._selected_row_index]
 
-    def __get_graph__(self, ticker_id: str, refresh_interval: int, limit: int=0):
+    def __get_graph__(self, ticker_id: str, refresh_interval: int, limit=0, indicator=INDI.NONE):
         period = self.sys_config.period
         aggregation = self.sys_config.period_aggregation
-        graph_cache_id = self.sys_config.graph_cache.get_cache_id(ticker_id, period, aggregation, limit)
+        kwargs = {} if indicator != INDI.NONE else {'Aggregation': aggregation, 'Indicator': indicator}
+        graph_cache_id = self.sys_config.graph_cache.get_cache_id(ticker_id, period, aggregation, limit, **kwargs)
         graph = self.sys_config.graph_cache.get_cached_object_by_key(graph_cache_id)
         if graph is not None:
             return graph, graph_cache_id
@@ -199,6 +220,7 @@ class MyDashTab4Portfolio(MyDashBaseTab):
             self.sys_config, ticker_id, and_clause, limit)
         graph_api = DccGraphApi(graph_cache_id, graph_title)
         graph_api.ticker_id = ticker_id
+        graph_api.indicator = None if indicator == INDI.NONE else indicator
         graph_api.df = detector.pdh.pattern_data.df
         graph = self.__get_dcc_graph_element__(detector, graph_api)
         cache_api = self.sys_config.graph_cache.get_cache_object_api(graph_cache_id, graph, period, refresh_interval)

@@ -38,3 +38,4 @@ class UserInput:
     @staticmethod
     def __is_answer_yes_or_no__(answer: str) -> bool:
         return UserInput.__is_answer_yes__(answer) or UserInput.__is_answer_no__(answer)
+

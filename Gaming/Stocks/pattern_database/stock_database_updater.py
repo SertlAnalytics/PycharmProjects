@@ -19,7 +19,7 @@ class StockDatabaseUpdater:
         self.pattern_controller = PatternDetectionController(self.sys_config)
 
     def update_trade_records(self, mean: int, sma_number: int, trade_strategies: dict=None):
-        self.sys_config.init_detection_process_for_automated_trade_update(16, 16)
+        self.sys_config.init_detection_process_for_automated_trade_update(mean, sma_number)
         if trade_strategies is None:
             trade_strategies = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP]}
         for pattern_type in FT.get_long_trade_able_types():

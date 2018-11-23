@@ -45,7 +45,7 @@ class MyCache:
         if cache_key in self._cached_object_dict:
             cache_object = self._cached_object_dict[cache_key]
             if cache_object.is_valid():
-                print('Object from cache: {} (valid until: {})'.format(cache_key, cache_object.valid_until_time))
+                # print('Object from cache: {} (valid until: {})'.format(cache_key, cache_object.valid_until_time))
                 return cache_object.object
             else:
                 del cache_object

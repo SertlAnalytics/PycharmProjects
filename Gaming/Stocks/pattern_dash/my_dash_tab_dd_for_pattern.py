@@ -6,9 +6,11 @@ Date: 2018-10-17
 """
 
 from pattern_dash.my_dash_components import DropDownHandler
+from sertl_analytics.constants.pattern_constants import INDICES
 
 
 class PDD:  # pattern drop down
+    INDEX = 'Index'
     STOCK_SYMBOL = 'Stock_Symbol'
     PERIOD_AGGREGATION = 'Period_Aggregation'
     REFRESH_INTERVAL = 'Refresh_Interval'
@@ -16,12 +18,14 @@ class PDD:  # pattern drop down
 
 
 class PatternTabDropDownHandler(DropDownHandler):
-    def __init__(self, ticker_options: list):
+    def __init__(self, index_options: list, ticker_options: list):
+        self._index_options = index_options
         self._ticker_options = ticker_options
         DropDownHandler.__init__(self)
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
+            PDD.INDEX: 'Indices',
             PDD.STOCK_SYMBOL: 'Stock symbol',
             PDD.PERIOD_AGGREGATION: 'Aggregation',
             PDD.REFRESH_INTERVAL: 'Refresh interval',
@@ -31,7 +35,8 @@ class PatternTabDropDownHandler(DropDownHandler):
 
     def __get_element_id__(self, drop_down_type: str):
         value_dict = {
-            PDD.STOCK_SYMBOL: 'my_ticker_selection',
+            PDD.INDEX: 'my_pattern_index_selection',
+            PDD.STOCK_SYMBOL: 'my_pattern_ticker_selection',
             PDD.PERIOD_AGGREGATION: 'my_period_aggregation',
             PDD.REFRESH_INTERVAL: 'my_interval_selection',
             PDD.SECOND_GRAPH_RANGE: 'my_graph_second_days_selection'
@@ -40,7 +45,8 @@ class PatternTabDropDownHandler(DropDownHandler):
 
     def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
         default_dict = {
-            PDD.STOCK_SYMBOL: self._ticker_options[1]['value'],
+            PDD.INDEX: self._index_options[0]['value'],
+            PDD.STOCK_SYMBOL: self._ticker_options[0]['value'],
             PDD.PERIOD_AGGREGATION: default_value if default_value else 5,
             PDD.REFRESH_INTERVAL: 300,
             PDD.SECOND_GRAPH_RANGE: 1
@@ -49,6 +55,7 @@ class PatternTabDropDownHandler(DropDownHandler):
 
     def __get_width__(self, drop_down_type: str):
         value_dict = {
+            PDD.INDEX: 180,
             PDD.STOCK_SYMBOL: 200,
             PDD.PERIOD_AGGREGATION: 100,
             PDD.REFRESH_INTERVAL: 120,
@@ -58,6 +65,7 @@ class PatternTabDropDownHandler(DropDownHandler):
 
     def __get_drop_down_value_dict__(self) -> dict:
         return {
+            PDD.INDEX: self._index_options,
             PDD.STOCK_SYMBOL: self._ticker_options,
             PDD.PERIOD_AGGREGATION: self.__get_refresh_aggregation_options__(),
             PDD.REFRESH_INTERVAL: self.__get_refresh_interval_options__(),
@@ -65,6 +73,8 @@ class PatternTabDropDownHandler(DropDownHandler):
         }
 
     def __get_for_multi__(self, drop_down_type: str):
+        if drop_down_type in [PDD.INDEX]:
+            return False
         return False
 
     @staticmethod

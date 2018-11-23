@@ -14,7 +14,7 @@ import base64
 import flask
 from pattern_system_configuration import SystemConfiguration
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
-from sertl_analytics.constants.pattern_constants import CN, PRD, FD
+from sertl_analytics.constants.pattern_constants import CN, PRD, FD, INDI
 from sertl_analytics.mydates import MyDate
 from pattern_detector import PatternDetector
 from pattern_dash.my_dash_interface_for_pattern import DashInterface
@@ -50,7 +50,6 @@ class MyDashBaseTab:
         # print('period={} from detector:{}'.format(period, detector is None))
         candlestick = self.__get_candlesticks_trace__(pattern_df, graph_api.ticker_id, period)
         # print(candlestick)
-        bollinger_traces = self.__get_bollinger_band_trace__(pattern_df, graph_api.ticker_id, period)
         shapes = self.__get_pattern_shape_list__(pattern_list)
         shapes += self.__get_pattern_regression_shape_list__(pattern_list)
         if detector:
@@ -58,7 +57,13 @@ class MyDashBaseTab:
         if graph_api.pattern_trade:
             # graph_api.pattern_trade.ticker_actual.print_ticker('__get_pattern_trade_shape_list__...: last ticker')
             shapes += self.__get_pattern_trade_shape_list__(graph_api.pattern_trade)
+        if graph_api.indicator == INDI.BOLLINGER:
+            indicator_shape = self.__get_indicator_shape_list__(detector, graph_api.indicator)
+            print('indicator_shape={}'.format(indicator_shape))
+            bollinger_band = self.__get_bollinger_band_trace__(pattern_df, graph_api.ticker_id, period)
+            print('bollinger_band:\n{}'.format(bollinger_band))
         graph_api.figure_layout_shapes = [my_shapes.shape_parameters for my_shapes in shapes]
+        # print(' graph_api.figure_layout_shapes: {}'.format( graph_api.figure_layout_shapes))
         graph_api.figure_layout_annotations = [my_shapes.annotation_parameters for my_shapes in shapes]
         graph_api.figure_data = [candlestick]
         return MyDCC.graph(graph_api)
@@ -105,7 +110,17 @@ class MyDashBaseTab:
             # print('Fibonacci: {}'.format(return_list[-1].shape_parameters))
         return return_list
 
+    @staticmethod
+    def __get_indicator_shape_list__(detector: PatternDetector, indicator: str):
+        return_list = []
+        for fib_waves in detector.fib_wave_tree.fibonacci_wave_list:
+            color = 'green' if fib_waves.wave_type == FD.ASC else 'red'
+            return_list.append(DashInterface.get_fibonacci_wave_shape(detector.sys_config, fib_waves, color))
+            # print('Fibonacci: {}'.format(return_list[-1].shape_parameters))
+        return return_list
+
     def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str, period: str):
+        # print(df.head())
         if period == PRD.INTRADAY:
             x_value = df[CN.DATETIME]
             # print('{}: __get_candlesticks_trace__: x_value={}'.format(ticker, x_value))
@@ -132,7 +147,6 @@ class MyDashBaseTab:
     def __get_bollinger_band_trace__(self, df: pd.DataFrame, ticker: str, period: str):
         color_scale = cl.scales['9']['qual']['Paired']
         bb_bands = self.__get_bollinger_band_values__(df[CN.CLOSE])
-
         bollinger_traces = [{
             'x': df[CN.TIME] if period == PRD.INTRADAY else df[CN.DATE],
             'y': y,

@@ -9,7 +9,8 @@ from pattern_dash.my_dash_components import MyHTMLTable, COLORS, MyHTML
 from pattern_system_configuration import SystemConfiguration
 from pattern_configuration import PatternConfiguration
 from pattern_runtime_configuration import RuntimeConfiguration
-from pattern_bitfinex import BitfinexConfiguration
+from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
+from sertl_analytics.exchanges.interactive_broker import IBKRConfiguration
 from pattern_trade_optimizer import TradeOptimizer
 
 
@@ -106,7 +107,18 @@ class MyHTMLBitfinexConfigurationTable(MyHTMLConfigurationTable):
         MyHTMLConfigurationTable.__init__(self, config)
 
     def __add_class_specific_entries__(self):
-        pass
+        self.__add_key_value_pair__('buy_order_value_max', self.config.buy_order_value_max)
+        self.__add_key_value_pair__('automatic_trading_on', self.config.automatic_trading_on)
+
+
+class MyIBRKConfigurationTable(MyHTMLConfigurationTable):
+    def __init__(self, config: IBKRConfiguration):
+        self.config = config
+        MyHTMLConfigurationTable.__init__(self, config)
+
+    def __add_class_specific_entries__(self):
+        self.__add_key_value_pair__('buy_order_value_max', self.config.buy_order_value_max)
+        self.__add_key_value_pair__('automatic_trading_on', self.config.automatic_trading_on)
 
 
 class MyHTMLTradeOptimizerTable(MyHTMLConfigurationTable):

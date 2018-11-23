@@ -14,7 +14,7 @@ from sertl_analytics.pybase.df_base import PyBaseDataFrame
 
 class IndicesComponentList:
     @staticmethod
-    def get_ticker_name_dic(index: str, currency: str = 'USD'):
+    def get_ticker_name_dic(index: str, currency: str = 'USD') -> dict:
         if index == INDICES.DOW_JONES:
             parser = XMLParser4DowJones()
             return parser.get_result_dic()
@@ -39,8 +39,7 @@ class IndicesComponentList:
     @staticmethod
     def __get_crypto_currency_base_dic__() -> dict:
         # not currently , 'XRP': 'Ripple',  'IOTA': 'IOTA', 'ETC': 'Ethereum-Classic',
-        return {'BCH': 'Bitcoin-Cash',
-                'BTC': 'Bitcoin',
+        return {'BTC': 'Bitcoin',
                 'EOS': 'EOS',
                 'ETH': 'Ethereum',
                 'LTC': 'Litecoin',

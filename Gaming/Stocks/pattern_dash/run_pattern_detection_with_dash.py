@@ -9,7 +9,6 @@ from sertl_analytics.myprofiler import MyProfiler
 from sertl_analytics.constants.pattern_constants import FT, INDICES, CN, BT, TSTR, PRD, OPS
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_dash.my_dash_for_pattern import MyDash4Pattern
-from pattern_bitfinex import BitfinexConfiguration
 
 
 my_profiler = MyProfiler()
@@ -21,11 +20,12 @@ sys_config.data_provider.aggregation = 15
 sys_config.data_provider.output_size = OPS.COMPACT
 sys_config.data_provider.limit = 200
 
-sys_config.exchange_config = BitfinexConfiguration()
-sys_config.exchange_config.is_simulation = True
+sys_config.exchange_config.deactivate_automatic_trading()
 sys_config.exchange_config.trade_strategy_dict = {
     BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP]
 }
+sys_config.config.simple_moving_average_number = 20
+sys_config.config.trading_last_price_mean_aggregation = 16
 
 # debugger.pattern_range_position_list = [217, 224, 242]
 

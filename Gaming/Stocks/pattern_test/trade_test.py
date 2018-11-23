@@ -30,8 +30,7 @@ class TradeTest:
         self.__adjust_exchange_config__()
 
     def __adjust_exchange_config__(self):
-        self.exchange_config.buy_order_value_max = 100
-        self.exchange_config.is_simulation = True
+        pass
 
     def __adjust_sys_config__(self):
         self.sys_config.runtime_config.actual_trade_process = self.trade_process

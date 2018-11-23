@@ -16,7 +16,7 @@ class ExchangeInterface:
     def version(cls): return 1.0
 
     @abstractmethod
-    def delete_order(self, order_id: int):
+    def delete_order(self, order_id: int, is_order_simulation: bool):
         raise NotImplementedError
 
     @abstractmethod
@@ -24,7 +24,7 @@ class ExchangeInterface:
         raise NotImplementedError
 
     @abstractmethod
-    def create_order(self, order: Order):
+    def create_order(self, order: Order, order_type: str, is_order_simulation: bool):
         raise NotImplementedError
 
     @abstractmethod
@@ -32,7 +32,7 @@ class ExchangeInterface:
         raise NotImplementedError
 
     @abstractmethod
-    def update_order(self, order_id: int, price_new: float):
+    def update_order(self, order_id: int, price_new: float, is_order_simulation: bool):
         raise NotImplementedError
 
     @abstractmethod

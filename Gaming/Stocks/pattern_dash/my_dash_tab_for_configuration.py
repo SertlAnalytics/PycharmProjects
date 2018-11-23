@@ -6,13 +6,19 @@ Date: 2018-11-09
 """
 
 from dash.dependencies import Input, Output, State
+from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
+from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
+from sertl_analytics.exchanges.interactive_broker import IBKRConfiguration
 from pattern_dash.my_dash_base import MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
 from pattern_dash.my_dash_components import MyHTML
+from pattern_dash.my_dash_tab_dd_for_configuration import ConfigurationTabDropDownHandler, CDD
 from pattern_dash.my_dash_configuration_tables import MyHTMLRuntimeConfigurationTable, MyHTMLBitfinexConfigurationTable
 from pattern_dash.my_dash_configuration_tables import MyHTMLSystemConfigurationTable, MyHTMLPatternConfigurationTable
-from pattern_dash.my_dash_configuration_tables import MyHTMLTradeOptimizerTable, MyHTMLConfigurationTable
+from pattern_dash.my_dash_configuration_tables import MyIBRKConfigurationTable
+from pattern_dash.my_dash_configuration_tables import MyHTMLTradeOptimizerTable
 from pattern_trade_handler import PatternTradeHandler
+from pattern_sound.pattern_sound_machine import PatternSoundMachine
 from dash import Dash
 from sertl_analytics.constants.pattern_constants import DC, TP, PRD, RST
 from pattern_news_handler import NewsHandler
@@ -27,14 +33,12 @@ class MyDashTab4Configuration(MyDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
         MyDashBaseTab.__init__(self, app, sys_config)
         self._trade_handler_online = trade_handler_online
+        self._dd_handler = ConfigurationTabDropDownHandler(
+            ExchangeConfiguration.buy_order_value_max, PatternSoundMachine.is_active)
 
     @staticmethod
     def __get_news_handler__():
         return NewsHandler('  \n', '')
-
-    def __init_dd_handler__(self):
-        # self._dd_handler = TradeDropDownHandler()
-        pass
 
     def __init_selected_row__(self, trade_type=''):
         self._selected_trade_type = trade_type
@@ -46,6 +50,8 @@ class MyDashTab4Configuration(MyDashBaseTab):
         children_list = [
             MyHTML.div_with_html_button_submit('my_switch_trading_mode_button',
                                                self.__get_switch_mode_button_text__(), hidden=''),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(CDD.ORDER_MAXIMUM)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(CDD.SOUND_MACHINE)),
             self.get_div_for_tables()
         ]
         return MyHTML.div('my_configuration_div', children_list)
@@ -57,6 +63,7 @@ class MyDashTab4Configuration(MyDashBaseTab):
         return [
             MyHTMLSystemConfigurationTable(self.sys_config).get_table(),
             MyHTMLBitfinexConfigurationTable(self.sys_config.exchange_config).get_table(),
+            MyIBRKConfigurationTable(self.sys_config.shares_config).get_table(),
             MyHTMLPatternConfigurationTable(self.sys_config.config).get_table(),
             MyHTMLTradeOptimizerTable(self.sys_config.trade_strategy_optimizer).get_table(),
             MyHTMLRuntimeConfigurationTable(self.sys_config.runtime_config).get_table(),
@@ -84,8 +91,14 @@ class MyDashTab4Configuration(MyDashBaseTab):
         @self.app.callback(
             Output('my_configuration_tables_div', 'children'),
             [Input('my_switch_trading_mode_button', 'children'),
-             Input('my_refresh_button', 'hidden')])
-        def handle_callback_for_configuration_tables(button_text: str, hidden: str):
+             Input('my_configuration_order_maximum', 'value'),
+             Input('my_configuration_sound_machine_state', 'value'),
+             Input('my_refresh_button', 'n_clicks')])
+        def handle_callback_for_configuration_tables(
+                button_text: str, order_max: int, sound_machine: str, n_clicks: int):
+            PatternSoundMachine.is_active = True if sound_machine == 'active' else False
+            BitfinexConfiguration.buy_order_value_max = order_max
+            IBKRConfiguration.buy_order_value_max = order_max
             return self.__get_tables_for_div__()
 
     def __init_callback_for_switch_trading_mode_button__(self):
@@ -97,12 +110,12 @@ class MyDashTab4Configuration(MyDashBaseTab):
             if n_clicks == 0:
                 return button_text
             if button_text == SSBT.SWITCH_TO_SIMULATION:
-                self._trade_handler_online.deactivate_trading_mode()
-                self._trade_handler_online.trade_client.exchange_config.print_actual_mode()
+                self.sys_config.exchange_config.deactivate_automatic_trading()
+                self.sys_config.shares_config.deactivate_automatic_trading()
                 return SSBT.SWITCH_TO_TRADING
             elif button_text == SSBT.SWITCH_TO_TRADING:
-                self._trade_handler_online.activate_trading_mode()
-                self._trade_handler_online.trade_client.exchange_config.print_actual_mode()
+                self.sys_config.exchange_config.activate_automatic_trading()
+                self.sys_config.shares_config.activate_automatic_trading()
                 return SSBT.SWITCH_TO_SIMULATION
             return button_text
 

@@ -236,16 +236,6 @@ class RecommenderTable:
             return '{}/{}'.format(ticker_dict[key], ticker_dict[key_actual])
         return '0'
 
-    def __get_fibonacci_wave_numbers_based_on_database__(self, index: str, symbol: str, limit: int) -> int:
-        if symbol in self._wave_counter_dict[limit]:
-            return self._wave_counter_dict[limit][symbol]
-        return 0
-
-    def __get_fibonacci_wave_numbers_from_online__(self, index: str, symbol: str, aggregation: int) -> int:
-        if symbol in self._wave_counter_dict[aggregation]:
-            return self._wave_counter_dict[aggregation][symbol]
-        return 0
-
     def __get_scoring_points_based_on_database__(self, index: str, symbol: str):
         points = 0
         if symbol in self._wave_for_ticker_dict:

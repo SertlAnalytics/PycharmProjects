@@ -5,14 +5,15 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST
+from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern_part import PatternEntryPart
-from pattern_bitfinex import MyBitfinexTradeClient
 from pattern_trade import PatternTrade
 from pattern_wave_tick import WaveTick, WaveTickList
-from sertl_analytics.exchanges.exchange_cls import OrderStatus, OrderStatusApi
+from sertl_analytics.exchanges.exchange_cls import OrderStatus
+from sertl_analytics.exchanges.bitfinex_trade_client import MyBitfinexTradeClient
+from sertl_analytics.exchanges.interactive_broker_trade_client import MyIBKRTradeClient
 from pattern_news_handler import NewsHandler
 from pattern_trade_candidate import TradeCandidateController, TradeCandidate
 from pattern import Pattern
@@ -24,7 +25,8 @@ class PatternTradeHandler:
         self.exchange_config = self.sys_config.exchange_config
         self.trade_optimizer = self.sys_config.trade_strategy_optimizer
         self.trade_process = self.sys_config.runtime_config.actual_trade_process
-        self.trade_client = self.__get_trade_client__()
+        self._trade_client_crypto = MyBitfinexTradeClient(self.exchange_config)
+        self._trade_client_shares = MyIBKRTradeClient(self.sys_config.shares_config)
         self.stock_db = self.sys_config.db_stock
         self.ticker_id_list = []
         self.pattern_trade_dict = {}
@@ -40,21 +42,17 @@ class PatternTradeHandler:
 
     @property
     def is_simulation(self):
-        return self.exchange_config.is_simulation
+        return not(self.trade_process == TP.ONLINE and self.exchange_config.automatic_trading_on)
 
     @property
     def replay_status(self):
         return self._replay_status
 
-    def activate_trading_mode(self):
-        self.trade_client.exchange_config.is_simulation = False
-
-    def deactivate_trading_mode(self):
-        self.trade_client.exchange_config.is_simulation = True
-
-    def __get_trade_client__(self):
+    def __get_trade_client_for_symbol__(self, symbol: str):
         if self.trade_process == TP.ONLINE:
-            return MyBitfinexTradeClient(self.exchange_config)
+            if self.sys_config.index_config.is_symbol_crypto(symbol):
+                return self._trade_client_crypto
+            return self._trade_client_shares
         return None
 
     def get_pattern_trade_by_id(self, trade_id: str) -> PatternTrade:
@@ -67,11 +65,21 @@ class PatternTradeHandler:
         return len(self.pattern_trade_dict)
 
     @property
+    def trade_numbers_active(self) -> int:
+        return len(self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED))
+
+    @property
     def pattern_trade_for_replay(self) -> PatternTrade:
         return self._pattern_trade_for_replay
 
+    def get_balances_with_current_values(self):
+        return self._trade_client_crypto.get_balances_with_current_values()
+
     def add_pattern_list_for_trade(self, pattern_list: list):
-        trade_able_pattern_list = self.trade_optimizer.get_trade_able_pattern_from_pattern_list(pattern_list)
+        if self.sys_config.runtime_config.actual_trade_process == TP.BACK_TESTING:
+            trade_able_pattern_list = pattern_list
+        else:
+            trade_able_pattern_list = self.trade_optimizer.get_trade_able_pattern_from_pattern_list(pattern_list)
         if len(trade_able_pattern_list) > 0:
             self.trade_candidate_controller.add_new_pattern_list(trade_able_pattern_list)
             self.__process_trade_candidates__()
@@ -121,8 +129,9 @@ class PatternTradeHandler:
         self.process = ''
 
     def get_latest_tickers_as_wave_tick_list(self, ticker_id: str) -> WaveTickList:
-        if self.trade_client:
-            return self.trade_client.get_latest_tickers_as_wave_tick_list(
+        trade_client = self.__get_trade_client_for_symbol__(ticker_id)
+        if trade_client:
+            return trade_client.get_latest_tickers_as_wave_tick_list(
                 ticker_id, self.sys_config.period, self.sys_config.period_aggregation)
 
     def get_rows_for_dash_data_table(self):
@@ -130,6 +139,12 @@ class PatternTradeHandler:
         for pattern_trade in self.pattern_trade_dict.values():
             return_list.append(pattern_trade.get_row_for_dash_data_table())
         return return_list
+
+    def remove_trade_from_dash_data_table(self, pattern_trade_id: str):
+        pattern_trade = self.pattern_trade_dict[pattern_trade_id]
+        if pattern_trade.status == PTS.EXECUTED:
+            self.__handle_trade_cancellation__(pattern_trade)
+        self.__delete_entries_from_pattern_trade_dict__([pattern_trade_id], PDR.TRADE_CANCELLED)
 
     def __calculate_replay_status__(self):
         for pattern_trade in self.pattern_trade_dict.values():
@@ -166,16 +181,18 @@ class PatternTradeHandler:
     def __process_trade_candidate__(self, trade_candidate: TradeCandidate):
         pattern_trade = trade_candidate.pattern_trade
         if self.__is_similar_trade_already_available__(pattern_trade):
-            self.trade_candidate_controller.add_pattern_trade_to_black_buy_trigger_list(pattern_trade)
+            self.trade_candidate_controller.add_pattern_trade_to_black_buy_trigger_list(
+                pattern_trade, BLR.SIMILAR_AVAILABLE)
             return
         pattern_trade.was_candidate_for_real_trading = trade_candidate.is_candidate_for_real_trading
-        if not self.exchange_config.is_simulation:
+        print('{}: candidate_for_real_trading: {}'.format(pattern_trade.id, pattern_trade.was_candidate_for_real_trading))
+        if self.exchange_config.automatic_trading_on:
             if trade_candidate.is_candidate_for_real_trading:
                 pattern_trade.is_simulation = False  # REAL Trading
                 print('Trade was initiated by is_candidate_for_real_trading: {}'.format(pattern_trade.id))
             elif pattern_trade.buy_trigger in self.exchange_config.default_trade_strategy_dict:
                 buy_trigger = pattern_trade.buy_trigger
-                if pattern_trade.trade_strategy == self.exchange_config.default_trade_strategy_dict(buy_trigger):
+                if pattern_trade.trade_strategy == self.exchange_config.default_trade_strategy_dict[buy_trigger]:
                     pattern_trade.is_simulation = False  # REAL Trading
                     print('Trade was initiated by default_trade_strategy: {}'.format(pattern_trade.id))
         self.__add_pattern_trade_to_trade_dict__(pattern_trade)
@@ -201,6 +218,7 @@ class PatternTradeHandler:
             #     self.pattern_trade_dict[pattern_trade.id] = pattern_trade
             #     self.__print_details_after_adding_to_trade_dict(pattern_trade, 'Replace')
         else:
+            pattern_trade.trade_client = self.__get_trade_client_for_symbol__(pattern_trade.ticker_id)
             self.pattern_trade_dict[pattern_trade.id] = pattern_trade
             self.__print_details_after_adding_to_trade_dict(pattern_trade, 'Add')
 
@@ -217,19 +235,21 @@ class PatternTradeHandler:
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.PATTERN_VANISHED)
 
     def sell_on_fibonacci_cluster_top(self):
-        self.trade_client.delete_all_orders()
-        self.trade_client.sell_all_assets()
+        self._trade_client_crypto.delete_all_orders()
+        self._trade_client_crypto.sell_all_assets()
         self.__clear_internal_lists__()
 
     def __get_current_wave_tick_for_ticker_id__(self, ticker_id: str) -> WaveTick:
         if self._last_wave_tick_for_test:
             return self._last_wave_tick_for_test
         else:
-            return self.trade_client.get_current_wave_tick(ticker_id, self.sys_config.period,
+            trade_client = self.__get_trade_client_for_symbol__(ticker_id)
+            return trade_client.get_current_wave_tick(ticker_id, self.sys_config.period,
                                                            self.sys_config.period_aggregation)
 
     def __get_balance_by_symbol__(self, symbol: str):
-        return self.trade_client.get_balance(symbol)
+        trade_client = self.__get_trade_client_for_symbol__(symbol)
+        return trade_client.get_balance(symbol)
 
     def __clear_internal_lists__(self):
         self.ticker_id_list = []
@@ -254,6 +274,22 @@ class PatternTradeHandler:
                 if self.exchange_config.finish_vanished_trades:
                     self.__handle_sell_trigger__(pattern_trade, ST.PATTERN_VANISHED)
 
+    def __handle_trade_cancellation__(self, pattern_trade: PatternTrade):
+        ticker = pattern_trade.ticker_actual
+        last_price = ticker.last_price
+        actual_stop_loss = pattern_trade.stop_loss_current
+        distance = round(abs(ticker.last_price - actual_stop_loss), 2)
+        comment = 'Trailing stop: distance={:.2f}, actual={:.2f} on {}'.format(distance, last_price, ticker.date_time_str)
+        print('Sell: {}'.format(comment))
+        ticker_id = pattern_trade.ticker_id
+        if self.trade_process == TP.ONLINE:
+            order_status = pattern_trade.trade_client.create_sell_trailing_stop_order(
+                ticker_id, pattern_trade.executed_amount, distance, pattern_trade.is_simulation)
+        else:
+            order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, ST.CANCEL)
+        pattern_trade.set_order_status_sell(order_status, ST.CANCEL, comment)
+        pattern_trade.save_trade()
+
     def __handle_sell_trigger__(self, pattern_trade: PatternTrade, sell_trigger: str):
         ticker = pattern_trade.ticker_actual
         sell_price = pattern_trade.get_actual_sell_price(sell_trigger, ticker.last_price)
@@ -261,7 +297,8 @@ class PatternTradeHandler:
         print('Sell: {}'.format(sell_comment))
         ticker_id = pattern_trade.ticker_id
         if self.trade_process == TP.ONLINE:
-            order_status = self.trade_client.create_sell_market_order(ticker_id, pattern_trade.executed_amount)
+            order_status = pattern_trade.trade_client.create_sell_market_order(
+                ticker_id, pattern_trade.executed_amount, pattern_trade.is_simulation)
         else:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, sell_trigger)
         pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
@@ -289,14 +326,15 @@ class PatternTradeHandler:
             pattern_trade = self.pattern_trade_dict[key]
             print('Removed from trade_dict ({}): {}'.format(deletion_reason, pattern_trade.get_trade_meta_data()))
             if deletion_reason != PDR.PATTERN_VANISHED:  # they have the trend to reappear
-                self.trade_candidate_controller.add_pattern_trade_to_black_buy_trigger_list(pattern_trade)
+                self.trade_candidate_controller.add_pattern_trade_to_black_buy_trigger_list(
+                    pattern_trade, deletion_reason)
             del self.pattern_trade_dict[key]
         self.__update_ticker_lists__()
 
     def __handle_buy_triggers__(self):
         deletion_key_list = []
         buying_deletion_key_list = []
-        print('handle_buy_triggers: is_simulation={}/{}'.format(self.exchange_config.is_simulation, self.is_simulation))
+        # print('handle_buy_triggers: is_simulation={}'.format(self.is_simulation))
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
             if pattern_trade.is_breakout_active:
                 if pattern_trade.is_actual_ticker_breakout(PTHP.HANDLE_BUY_TRIGGERS):
@@ -311,7 +349,7 @@ class PatternTradeHandler:
                         deletion_key_list.append(key)
             else:
                 pattern_trade.verify_watching()
-        self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.WRONG_BREAKOUT)
+        self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.BUYING_PRECONDITION_PROBLEM)
         self.__delete_entries_from_pattern_trade_dict__(buying_deletion_key_list, PDR.BUYING_PROBLEM)
 
     def __get_pattern_entry_part(self, pattern_trade: PatternTrade):
@@ -333,9 +371,10 @@ class PatternTradeHandler:
             self.news_handler.add_news('Breakout', 'OK')
 
     def __get_latest_tickers_as_wave_ticks__(self, ticker_id, pattern_trade: PatternTrade):
-        if self.trade_client is None:
+        trade_client = self.__get_trade_client_for_symbol__(ticker_id)
+        if trade_client is None:
             return pattern_trade.wave_tick_list
-        return self.trade_client.get_latest_tickers_as_wave_tick_list(
+        return trade_client.get_latest_tickers_as_wave_tick_list(
             ticker_id, self.sys_config.period, self.sys_config.period_aggregation)
 
     def __calculate_wave_tick_values_for_trade_subprocess__(self):
@@ -353,7 +392,8 @@ class PatternTradeHandler:
                                                         ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
         if self.trade_process == TP.ONLINE:
-            order_status = self.trade_client.buy_available(ticker.ticker_id, ticker.last_price)
+            order_status = pattern_trade.trade_client.buy_available(
+                ticker.ticker_id, ticker.last_price, pattern_trade.is_simulation)
             if order_status is None:  # e.g. not enough money available...
                 return
         else:
@@ -364,25 +404,25 @@ class PatternTradeHandler:
 
     def __get_order_status_testing__(self, process: str, pattern_trade: PatternTrade, sell_trigger=''):
         ticker = pattern_trade.ticker_actual
-        api = OrderStatusApi()
-        api.order_id = ticker.time_stamp
-        api.symbol = ticker.ticker_id
-        api.exchange = 'Test'
+        order_status = OrderStatus()
+        order_status.order_id = ticker.time_stamp
+        order_status.symbol = ticker.ticker_id
+        order_status.exchange = 'Test'
         if process == PTHP.HANDLE_BUY_TRIGGERS:
-            api.price = pattern_trade.get_actual_buy_price(pattern_trade.buy_trigger, ticker.last_price)
+            order_status.price = pattern_trade.get_actual_buy_price(pattern_trade.buy_trigger, ticker.last_price)
         else:
-            api.price = pattern_trade.get_actual_sell_price(sell_trigger, ticker.last_price)
-        api.avg_execution_price = ticker.last_price
-        api.side = OS.BUY if process == PTHP.HANDLE_BUY_TRIGGERS else OS.SELL
-        api.type = OT.EXCHANGE_MARKET
-        api.time_stamp = ticker.time_stamp
+            order_status.price = pattern_trade.get_actual_sell_price(sell_trigger, ticker.last_price)
+        order_status.avg_execution_price = ticker.last_price
+        order_status.side = OS.BUY if process == PTHP.HANDLE_BUY_TRIGGERS else OS.SELL
+        order_status.type = OT.EXCHANGE_TRAILING_STOP if sell_trigger == ST.CANCEL else OT.EXCHANGE_MARKET
+        order_status.time_stamp = ticker.time_stamp
         if process == PTHP.HANDLE_BUY_TRIGGERS:
-            api.executed_amount = round(self.exchange_config.buy_order_value_max/ticker.last_price, 2)
+            order_status.executed_amount = round(self.exchange_config.buy_order_value_max/ticker.last_price, 2)
         else:
-            api.executed_amount = pattern_trade.data_dict_obj.get(DC.BUY_AMOUNT)
-        api.remaining_amount = 0
-        api.original_amount = api.executed_amount
-        return OrderStatus(api)
+            order_status.executed_amount = pattern_trade.data_dict_obj.get(DC.BUY_AMOUNT)
+        order_status.remaining_amount = 0
+        order_status.original_amount = order_status.executed_amount
+        return order_status
 
     def __adjust_stops_and_limits__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
@@ -393,8 +433,8 @@ class PatternTradeHandler:
             ticker_id = pattern_trade.ticker_id
             amount = pattern_trade.order_status_buy.executed_amount
             distance = pattern_trade.trailing_stop_distance
-            pattern_trade.order_status_sell = self.trade_client.create_sell_trailing_stop_order(
-                ticker_id, amount, distance)
+            pattern_trade.order_status_sell = pattern_trade.trade_client.create_sell_trailing_stop_order(
+                ticker_id, amount, distance, pattern_trade.is_simulation)
 
     def __update_ticker_lists__(self):
         self.ticker_id_list = []

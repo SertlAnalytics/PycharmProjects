@@ -10,7 +10,6 @@ from sertl_analytics.constants.pattern_constants import INDICES, SCORING
 
 
 class REDD:  # recommender drop down
-    TEST = 'Test'
     INDEX = 'Index'
     PERIOD_AGGREGATION = 'Period_Aggregation'
     REFRESH_INTERVAL = 'Refresh_Interval'
@@ -43,7 +42,7 @@ class RecommenderTabDropDownHandler(DropDownHandler):
         }
         return value_dict.get(drop_down_type, None)
 
-    def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
+    def __get_default_value__(self, drop_down_type: str, default_value=None):
         default_dict = {
             REDD.INDEX: [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100],
             REDD.PERIOD_AGGREGATION: default_value if default_value else 5,
@@ -74,7 +73,7 @@ class RecommenderTabDropDownHandler(DropDownHandler):
         }
 
     def __get_for_multi__(self, drop_down_type: str):
-        if drop_down_type in [REDD.TEST, REDD.INDEX, REDD.SECOND_GRAPH_RANGE]:
+        if drop_down_type in [REDD.INDEX, REDD.SECOND_GRAPH_RANGE]:
             return True
         return False
 

@@ -48,9 +48,11 @@ class MyDashTab4Trades(MyDashBaseTab):
         self._selected_buy_trigger = None
         self._selected_trade_strategy = None
         self._n_click_restart = 0
+        self._n_click_cancel_trade = 0
         self._replay_speed = 4
         self._trades_stored_number = 0
-        self._trades_online_number = 0
+        self._trades_online_active_number = 0
+        self._trades_online_all_number = 0
         self._pattern_stored_number = 0
         self._cached_trade_table = None
         self._time_stamp_last_ticker_refresh = MyDate.time_stamp_now()
@@ -84,7 +86,8 @@ class MyDashTab4Trades(MyDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(TDD.TRADE_TYPE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(TDD.BUY_TRIGGER)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(TDD.TRADE_STRATEGY)),
-            MyHTML.div_with_html_button_submit('my_replay_restart_button', 'Restart'),
+            MyHTML.div_with_html_button_submit('my_trades_cancel_trade_button', 'Cancel Trade'),
+            MyHTML.div_with_html_button_submit('my_replay_restart_button', 'Restart Trade'),
             MyHTML.div_with_slider('my_replay_speed_slider', 0, 20, 1, self._replay_speed, show=False),
             MyHTML.div('my_trade_table_div', self.__get_table_for_trades__(), False),
             MyHTML.div('my_graph_trade_replay_div', '', False)
@@ -100,6 +103,7 @@ class MyDashTab4Trades(MyDashBaseTab):
         self.__init_callback_for_trade_news_markdown__()
         self.__init_callbacks_for_drop_down_visibility__()
         self.__init_callback_for_trade_selection__()
+        self.__init_callback_for_cancel_trade_button__()
         self.__init_callback_for_replay_restart_button__()
         self.__init_callback_for_replay_speed_slider_style__()
         self.__init_callback_for_replay_speed_slider_value__()
@@ -159,11 +163,18 @@ class MyDashTab4Trades(MyDashBaseTab):
         When my_graphs_before_breakout_div is calculated all new trades are known.
         """
         @self.app.callback(
-            Output('my_online_trade_div', 'children'),
+            Output('my_online_trade_all_div', 'children'),
             # [Input('my_interval_refresh', 'n_intervals')])
             [Input('my_graphs_before_breakout_div', 'children')])
-        def handle_callback_for_online_trade_numbers(children):
-            return str(len(self._trade_replay_handler_online.trade_handler.pattern_trade_dict))
+        def handle_callback_for_online_trade_all_numbers(children):
+            return str(self._trade_replay_handler_online.trade_handler.trade_numbers)
+
+        @self.app.callback(
+            Output('my_online_trade_active_div', 'children'),
+            # [Input('my_interval_refresh', 'n_intervals')])
+            [Input('my_graphs_before_breakout_div', 'children')])
+        def handle_callback_for_online_trade_active_numbers(children):
+            return str(self._trade_replay_handler_online.trade_handler.trade_numbers_active)
 
         @self.app.callback(
             Output('my_stored_trade_div', 'children'),
@@ -181,19 +192,31 @@ class MyDashTab4Trades(MyDashBaseTab):
         @self.app.callback(
             Output('my_trade_table_div', 'children'),
             [Input('my_trade_type_selection', 'value'),
-             Input('my_online_trade_div', 'children'),
+             Input('my_online_trade_active_div', 'children'),
+             Input('my_online_trade_all_div', 'children'),
              Input('my_stored_trade_div', 'children'),
-             Input('my_stored_pattern_div', 'children')])
-        def handle_callback_for_trade_table(trade_type: str, online: int, trades: int, pattern: int):
+             Input('my_stored_pattern_div', 'children'),
+             Input('my_trades_cancel_trade_button', 'n_clicks')])
+        def handle_callback_for_trade_table(trade_type: str, online_active: int, online_all: int,
+                                            trades: int, pattern: int, n_clicks: int):
             if self._selected_trade_type != trade_type:
-                self._trades_online_number = online
+                self._trades_online_active_number = online_active
+                self._trades_online_all_number = online_all
                 self._trades_stored_number = trades
                 self._pattern_stored_number = pattern
                 self.__init_selected_row__(trade_type)
                 self.__init_replay_handlers__()
                 return self.__get_table_for_trades__()
-            elif self._selected_trade_type == TP.ONLINE and self._trades_online_number != online:
-                self._trades_online_number = online
+            elif self._selected_trade_type == TP.ONLINE and self._n_click_cancel_trade != n_clicks:
+                self._n_click_cancel_trade = n_clicks
+                pattern_trade_id = self._selected_row[DC.ID]
+                self._trade_handler_online.remove_trade_from_dash_data_table(pattern_trade_id)
+                self.__init_selected_row__(trade_type)
+                return self.__get_table_for_trades__()
+            elif self._selected_trade_type == TP.ONLINE and \
+                    (self._trades_online_active_number != online_active or self._trades_online_all_number != online_all):
+                self._trades_online_active_number = online_active
+                self._trades_online_all_number = online_all
                 return self.__get_table_for_trades__()
             elif self._selected_trade_type == TP.TRADE_REPLAY and self._trades_stored_number != trades:
                 self._trades_stored_number = trades
@@ -263,6 +286,15 @@ class MyDashTab4Trades(MyDashBaseTab):
                     self._selected_trade_strategy = trade_strategy
                     return ''
             return 'hidden'
+
+    def __init_callback_for_cancel_trade_button__(self):
+        @self.app.callback(
+            Output('my_trades_cancel_trade_button', 'hidden'),
+            [Input('my_trade_type_selection', 'value'),
+             Input(self._data_table_name, 'selected_row_indices')],
+            [State(self._data_table_name, 'rows')])
+        def handle_callback_for_trades_remove_button(trade_type: str, selected_row_indices: list, rows: list):
+            return '' if trade_type == TP.ONLINE and len(selected_row_indices) > 0 and len(rows) > 0 else 'hidden'
 
     def __init_callback_for_replay_speed_slider_style__(self):
         @self.app.callback(
@@ -459,8 +491,10 @@ class MyDashTab4Trades(MyDashBaseTab):
             return self._trade_replay_handler_online.trade_handler.get_rows_for_dash_data_table()
         return []
 
-    @staticmethod
-    def __get_empty_data_row__():
-        columns = TradeTable.get_columns_for_replay()
+    def __get_empty_data_row__(self):
+        if self._selected_trade_type in [TP.ONLINE, '']:
+            columns = TradeTable.get_columns_for_online_trades()
+        else:
+            columns = TradeTable.get_columns_for_replay()
         return [{column: '' for column in columns}]
 

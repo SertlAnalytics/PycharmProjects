@@ -24,7 +24,7 @@ from textwrap import dedent
 
 class PatternTradeApi:
     def __init__(self, pattern: Pattern, buy_trigger: str, trade_strategy: str):
-        self.bitfinex_config = None
+        self.exchange_config = None
         self.pattern = pattern
         self.buy_trigger = buy_trigger
         self.box_type = TBT.TOUCH_POINT if buy_trigger == BT.TOUCH_POINT else TBT.EXPECTED_WIN
@@ -35,7 +35,7 @@ class PatternTrade:
     def __init__(self, api: PatternTradeApi):
         self.sys_config = api.pattern.sys_config
         self.pdh = api.pattern.pdh
-        self.bitfinex_config = api.bitfinex_config
+        self.bitfinex_config = api.exchange_config
         self.trade_process = self.sys_config.runtime_config.actual_trade_process
         self.buy_trigger = api.buy_trigger
         self.trade_box_type = api.box_type
@@ -74,6 +74,7 @@ class PatternTrade:
         self._xy_for_buying = None
         self._xy_for_selling = None
         self._xy_after_selling = None
+        self._trade_client = None
 
     def __get_wave_tick_list_for_start__(self):
         if self.trade_process == TP.ONLINE:
@@ -161,6 +162,10 @@ class PatternTrade:
         return self._status
 
     @property
+    def status_upper(self):
+        return self._status.upper()
+
+    @property
     def trade_sub_process(self):
         if self._status == PTS.NEW:
             return TSP.BUYING if self.is_breakout_active else TSP.WATCHING
@@ -212,6 +217,14 @@ class PatternTrade:
     def xy_after_selling(self):
         return self._xy_after_selling
 
+    @property
+    def trade_client(self):
+        return self._trade_client
+
+    @trade_client.setter
+    def trade_client(self, value):
+        self._trade_client = value
+
     def get_data_frame_for_replay(self):
         # return self.pattern.df
         if len(self._wave_tick_list.tick_list) > self.pattern.df_length:
@@ -237,7 +250,9 @@ class PatternTrade:
     def get_actual_sell_price(self, sell_trigger: str, last_price: float):
         if sell_trigger == ST.LIMIT:
             return round(self.limit_current, 2)
-        if sell_trigger == ST.STOP_LOSS:
+        elif sell_trigger == ST.STOP_LOSS:
+            return round(self.stop_loss_current, 2)
+        elif sell_trigger == ST.CANCEL:
             return round(self.stop_loss_current, 2)
         return last_price
 
@@ -345,7 +360,8 @@ class PatternTrade:
 
     def are_preconditions_for_breakout_buy_fulfilled(self):
         check_dict = {
-            'SMA': self.__is_precondition_for_sma_fulfilled__()
+            'SMA': self.__is_precondition_for_sma_fulfilled__(),
+            'Breakout_counter < 20': self.__get_breakout_counter__(PTHP.HANDLE_BUY_TRIGGERS) < 20
         }
         return False not in check_dict.values()
 
@@ -435,19 +451,8 @@ class PatternTrade:
         ticker_id = self.pattern.ticker_id
         if self.status == PTS.NEW:
             counter_required = self.counter_required
-            if self.buy_trigger == BT.BREAKOUT:
-                if process == PTHP.HANDLE_WRONG_BREAKOUT:
-                    breakout_value = self.stop_loss_current
-                    counter = self.wrong_breakout_counter
-                else:
-                    breakout_value = self.limit_current
-                    counter = self.breakout_counter
-            else:
-                breakout_value = self.pattern.get_lower_value(wave_tick.time_stamp)
-                if process == PTHP.HANDLE_WRONG_BREAKOUT:
-                    counter = self.wrong_breakout_counter
-                else:
-                    counter = self.breakout_counter
+            counter = self.__get_breakout_counter__(process)
+            breakout_value = self.__get_breakout_value__(process, wave_tick)
             print('{}: {} for {}-{}-{} ({}/{}): ticker.last_price={:.2f}, breakout value={:.2f}, date_time={}'.format(
                 self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
                 counter, counter_required, wave_tick.close, breakout_value, wave_tick.date_time_str))
@@ -458,6 +463,15 @@ class PatternTrade:
                     self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
                     self.limit_current, wave_tick.close, self.stop_loss_current, wave_tick.date_time_str,
                     self.order_status_buy.avg_execution_price))
+
+    def __get_breakout_counter__(self, process: str):
+        return self.wrong_breakout_counter if process == PTHP.HANDLE_WRONG_BREAKOUT else self.breakout_counter
+
+    def __get_breakout_value__(self, process: str, wave_tick: WaveTick):
+        if self.buy_trigger == BT.BREAKOUT:
+            return self.stop_loss_current if process == PTHP.HANDLE_WRONG_BREAKOUT else self.limit_current
+        else:
+            return self.pattern.get_lower_value(wave_tick.time_stamp)
 
     def print_state_details_for_actual_ticker(self, process: str):
         if self.trade_process != TP.ONLINE:
@@ -584,17 +598,17 @@ class PatternTrade:
 
     def __set_properties_after_buy__(self, ticker: Ticker):
         self._status = PTS.EXECUTED
+        self.data_dict_obj.add(DC.TRADE_STATUS, self.status_upper)
         self._wave_tick_at_buying = self._wave_tick_list.tick_list[-1]
         buy_price = ticker.last_price
-        height = 0
-        distance_bottom = 0
+        upper_value = self.pattern.get_upper_value(ticker.time_stamp)
+        lower_value = self.pattern.get_lower_value(ticker.time_stamp)
+        off_set_value = buy_price
+        height = abs(upper_value - lower_value)
         if self.buy_trigger == BT.TOUCH_POINT:
-            off_set_value = buy_price
-            height = self.pattern.get_upper_value(ticker.time_stamp) - self.pattern.get_lower_value(ticker.time_stamp)
-            distance_bottom = round(buy_price - self.pattern.get_lower_value(ticker.time_stamp), 4)
+            distance_bottom = round(buy_price - lower_value, 4)
         else:
-            off_set_value = self.pattern.get_upper_value(ticker.time_stamp)
-            distance_bottom = round(off_set_value - self.pattern.get_lower_value(ticker.time_stamp), 4)
+            distance_bottom = round(height, 4)
         self._trade_box = self.__get_trade_box__(off_set_value, buy_price, height, distance_bottom)
         self._trade_box.print_box()
 
@@ -611,15 +625,17 @@ class PatternTrade:
 
     def __set_properties_after_sell__(self):
         self._status = PTS.FINISHED
+        self.data_dict_obj.add(DC.TRADE_STATUS, self.status_upper)
         self._wave_tick_at_selling = self._wave_tick_list.tick_list[-1]
 
     def get_row_for_dash_data_table(self):
-        columns = TradeTable.get_columns_for_replay()
+        columns = TradeTable.get_columns_for_online_trades()
         return {column: self.data_dict_obj.get(column) for column in columns}
 
     def __add_trade_basis_data_to_data_dict__(self):
         self.data_dict_obj.add(DC.ID, self.id)
         self.data_dict_obj.add(DC.PATTERN_ID, self.pattern.id)
+        self.data_dict_obj.add(DC.TRADE_STATUS, self.status_upper)
         if self.trade_strategy == TSTR.SMA:
             self.data_dict_obj.add(DC.TRADE_MEAN_AGGREGATION, self.sys_config.config.simple_moving_average_number)
         else:

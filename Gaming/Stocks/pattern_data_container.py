@@ -203,3 +203,21 @@ class PatternDataHandler:
         self.pattern_data = PatternData(self.config, df)
         self.pattern_data_fibonacci = PatternDataFibonacci(self.config, df)
 
+    def get_bollinger_band_boundary_values(self, distance=10, window_size=10, num_of_std=5):
+        range_end = int((self.pattern_data.df_length + distance - 1)/distance)
+        position_list = [1 + i * distance for i in range(0, range_end)]
+        if (self.pattern_data.df_length - 1) not in position_list:
+            position_list.append(self.pattern_data.df_length - 1)
+        df_time_stamp = self.pattern_data.df[CN.TIMESTAMP]
+        df_base = self.pattern_data.df[CN.CLOSE]
+        rolling_mean = df_base.rolling(window=window_size, min_periods=1).mean()
+        rolling_std = df_base.rolling(window=window_size, min_periods=1).std()
+        upper_band = rolling_mean + (rolling_std * num_of_std)
+        lower_band = rolling_mean - (rolling_std * num_of_std)
+        time_stamp_reduced = [df_time_stamp[pos] for pos in position_list]
+        upper_band_reduced = [upper_band[pos] for pos in position_list]
+        lower_band_reduced = [lower_band[pos] for pos in position_list]
+        x = time_stamp_reduced + time_stamp_reduced[::-1]
+        y = upper_band_reduced + lower_band_reduced[::-1]
+        return list(zip(x, y))
+        # return [rolling_mean, upper_band, lower_band]

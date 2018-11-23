@@ -15,8 +15,10 @@ api.test_process = TP.BACK_TESTING
 back_testing = TradeTest(api)
 
 back_testing.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
-back_testing.sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN]
-back_testing.sys_config.config.save_trade_data = False
+# back_testing.sys_config.config.pattern_type_list = [FT.TRIANGLE_DOWN]
+back_testing.sys_config.config.save_trade_data = True
+back_testing.sys_config.config.simple_moving_average_number = 20
+back_testing.sys_config.config.trading_last_price_mean_aggregation = 16
 
 # ******** START setup **********
 api.buy_trigger = BT.BREAKOUT
@@ -24,10 +26,10 @@ api.trade_strategy = TSTR.SMA
 
 # ******** END setup **********
 
-# ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.DOW_JONES)
-# ticker_dic = IndicesComponentList.get_ticker_name_dic(Indices.CRYPTO_CCY)
-ticker_dic = {'ETHUSD': 'a'}
-api.and_clause = "Date BETWEEN '2018-06-07' AND '2018-09-04'"
+ticker_dic = IndicesComponentList.get_ticker_name_dic(INDICES.DOW_JONES)
+# ticker_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
+# ticker_dic = {'CVX': 'a'}
+api.and_clause = "Date BETWEEN '2018-06-07' AND '2019-09-04'"
 
 # 2018-02-09_00:00_2018-04-03
 for symbol in ticker_dic:

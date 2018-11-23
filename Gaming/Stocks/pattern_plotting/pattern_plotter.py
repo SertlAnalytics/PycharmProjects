@@ -71,6 +71,7 @@ class PatternPlotter:
         if self.sys_config.config.with_trading and self.detector.trade_handler is not None:
             self.__plot_pattern_trades__()
         self.__plot_fibonacci_waves__()
+        self.__plot_bollinger_band__(distance=5, window=5, sum_std=2)
 
         plt.title('{} ({}) for {}'.format(
             self.sys_config.runtime_config.actual_ticker,
@@ -308,6 +309,17 @@ class PatternPlotter:
         fib_wave_patch = FibonacciWavePatch(fib_wave, fib_polygon)
         self.fibonacci_patch_container.add_patch(fib_wave_patch)
         fib_wave_patch.add_retracement_patch_list_to_axis(self.axes_for_candlesticks)
+
+    def __plot_bollinger_band__(self, distance=1, window=10, sum_std=5, color='lightgreen'):
+        xy = self.detector.pdh.get_bollinger_band_boundary_values(distance, window, sum_std)
+        xy = PlotterInterface.get_xy_from_timestamp_to_date_number(xy)
+        polygon = Polygon(np.array(xy), closed=True, fill=True)
+        polygon.set_visible(True)
+        polygon.set_color(color)
+        polygon.set_alpha(0.2)
+        # polygon.set_facecolor(color)
+        polygon.set_linewidth(1)
+        self.axes_for_candlesticks.add_patch(polygon)
 
     def __plot_volume__(self, axis):
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.VOL])

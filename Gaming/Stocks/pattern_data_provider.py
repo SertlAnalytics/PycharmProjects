@@ -25,6 +25,7 @@ from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from pattern_data_container import PatternDataHandler
 from pattern_configuration import PatternConfiguration
+from pattern_index_configuration import IndexConfiguration
 from pattern_dash.my_dash_caches import MyDataFrameCache
 import time
 
@@ -50,13 +51,13 @@ class PatternDataFetcherCacheKey(DataFetcherCacheKey):
 
 
 class PatternDataProvider:
-    def __init__(self, config: PatternConfiguration, db_stock: StockDatabase, crypto_ccy_dic: dict,
-                 df_cache: MyDataFrameCache):
+    def __init__(self, config: PatternConfiguration, index_config: IndexConfiguration,
+                 db_stock: StockDatabase, df_cache: MyDataFrameCache):
         self.config = config
+        self.index_config = index_config
         self.provider_crypto = DP.BITFINEX
         self.provider_stocks = DP.ALPHAVANTAGE
         self._db_stock = db_stock
-        self._crypto_ccy_dic = crypto_ccy_dic
         self._df_cache = df_cache
         self.from_db = True
         self.period = PRD.DAILY
@@ -81,7 +82,7 @@ class PatternDataProvider:
 
     @property
     def equity_type(self) -> str:
-        return EQUITY_TYPE.CRYPTO if self.ticker_id in self._crypto_ccy_dic else EQUITY_TYPE.SHARE
+        return self.index_config.get_equity_type_for_symbol(self.ticker_id)
 
     @property
     def and_clause_for_pattern(self):
@@ -118,6 +119,11 @@ class PatternDataProvider:
         else:
             self.ticker_dict = IndicesComponentList.get_ticker_name_dic(index)
 
+    def use_indices(self, indices: list):
+        self.ticker_dict = {}
+        for index in indices:
+            self.ticker_dict.update(IndicesComponentList.get_ticker_name_dic(index))
+
     def use_own_dic(self, dic: dict):
         self.ticker_dict = dic
         for symbol in self.ticker_dict:
@@ -125,7 +131,8 @@ class PatternDataProvider:
             if name_from_db != '':
                 self.ticker_dict[symbol] = name_from_db
 
-    def get_index_members_as_dict(self, index: str):
+    @staticmethod
+    def get_index_members_as_dict(index: str):
         if index == INDICES.CRYPTO_CCY:
             return IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
         elif index == INDICES.DOW_JONES:
@@ -186,11 +193,12 @@ class PatternDataProvider:
         and_clause = data_fetcher_cache_key.and_clause
         limit = data_fetcher_cache_key.limit
         output_size = data_fetcher_cache_key.output_size
+        # print('__get_df_from_original_source__: ticker={}'.format(ticker))
         if self.from_db:
             self.__handle_not_available_symbol__(data_fetcher_cache_key.ticker_id)
             stock_db_df_obj = stock_database.StockDatabaseDataFrame(self._db_stock, ticker, and_clause)
             return stock_db_df_obj.df_data
-        elif ticker in self._crypto_ccy_dic or ticker[-3:] == 'USD':
+        elif self.index_config.is_symbol_crypto(ticker) or ticker[-3:] == 'USD':
             if self.provider_crypto == DP.BITFINEX:
                 fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, 'hist', limit)
             elif self.provider_crypto == DP.CRYPTO_COMPARE:

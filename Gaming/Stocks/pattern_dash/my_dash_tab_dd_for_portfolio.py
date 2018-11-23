@@ -6,24 +6,27 @@ Date: 2018-10-17
 """
 
 from pattern_dash.my_dash_components import DropDownHandler
+from sertl_analytics.constants.pattern_constants import INDI
 
 
 class PODD:  # portfolio drop down
     PERIOD_AGGREGATION = 'Period_Aggregation'
     REFRESH_INTERVAL = 'Refresh_Interval'
     SECOND_GRAPH_RANGE = 'Second_Graph_Range'
+    INDICATOR = 'Indicator'
 
 
 class PortfolioTabDropDownHandler(DropDownHandler):
     def __init__(self):
-        self._position_options = []
+        self._indicator_options = INDI.get_as_options()
         DropDownHandler.__init__(self)
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
             PODD.PERIOD_AGGREGATION: 'Aggregation',
             PODD.REFRESH_INTERVAL: 'Refresh interval',
-            PODD.SECOND_GRAPH_RANGE: 'Second graph range'
+            PODD.SECOND_GRAPH_RANGE: 'Second graph range',
+            PODD.INDICATOR: 'Indicator'
         }
         return value_dict.get(drop_down_type, None)
 
@@ -31,7 +34,8 @@ class PortfolioTabDropDownHandler(DropDownHandler):
         value_dict = {
             PODD.PERIOD_AGGREGATION: 'my_portfolio_aggregation',
             PODD.REFRESH_INTERVAL: 'my_portfolio_refresh_interval_selection',
-            PODD.SECOND_GRAPH_RANGE: 'my_portfolio_graph_second_days_selection'
+            PODD.SECOND_GRAPH_RANGE: 'my_portfolio_graph_second_days_selection',
+            PODD.INDICATOR: 'my_portfolio_indicator_selection',
         }
         return value_dict.get(drop_down_type, None)
 
@@ -39,7 +43,8 @@ class PortfolioTabDropDownHandler(DropDownHandler):
         default_dict = {
             PODD.PERIOD_AGGREGATION: default_value if default_value else 5,
             PODD.REFRESH_INTERVAL: default_value if default_value else 300,
-            PODD.SECOND_GRAPH_RANGE: [1, 200]
+            PODD.SECOND_GRAPH_RANGE: [1, 200],
+            PODD.INDICATOR: self._indicator_options[0]['value'],
         }
         # print('__get_default_value__: {}: {}'.format(drop_down_type, default_dict.get(drop_down_type, None)))
         return default_dict.get(drop_down_type, None)
@@ -48,7 +53,8 @@ class PortfolioTabDropDownHandler(DropDownHandler):
         value_dict = {
             PODD.PERIOD_AGGREGATION: 100,
             PODD.REFRESH_INTERVAL: 120,
-            PODD.SECOND_GRAPH_RANGE: 140
+            PODD.SECOND_GRAPH_RANGE: 140,
+            PODD.INDICATOR: 160
         }
         return value_dict.get(drop_down_type, None)
 
@@ -57,6 +63,7 @@ class PortfolioTabDropDownHandler(DropDownHandler):
             PODD.PERIOD_AGGREGATION: self.__get_refresh_aggregation_options__(),
             PODD.REFRESH_INTERVAL: self.__get_refresh_interval_options__(),
             PODD.SECOND_GRAPH_RANGE: self.__get_second_graph_range_options__(),
+            PODD.INDICATOR: self._indicator_options,
         }
 
     def __get_for_multi__(self, drop_down_type: str):
@@ -88,3 +95,4 @@ class PortfolioTabDropDownHandler(DropDownHandler):
             {'label': '200 days', 'value': 200},
             {'label': '400 days', 'value': 400}
         ]
+

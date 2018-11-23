@@ -32,10 +32,11 @@ class MyDashTab4Pattern(MyDashBaseTab):
         self.sys_config_fibonacci = self.sys_config.get_semi_deep_copy()
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self.detector = None
+        self._index_options = self.sys_config.index_config.get_indices_as_options()
         self._ticker_options = []
         self._ticker_selected = ''
         self.__fill_ticker_options__()
-        self._dd_handler = PatternTabDropDownHandler(self._ticker_options)
+        self._dd_handler = PatternTabDropDownHandler(self._index_options, self._ticker_options)
         self._time_stamp_next_refresh = None
         self._graph_first_data_provider_api = None
         self._graph_second_data_provider_api = None
@@ -49,6 +50,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def init_callbacks(self):
         self.__init_interval_callback_for_interval_details__()
         self.__init_interval_setting_callback__()
+        self.__init_callback_for_stock_symbol_options__()
         self.__init_callback_for_position_markdown__()
         self.__init_callback_for_dashboard_markdown__()
         self.__init_callback_for_pattern_markdown__()
@@ -71,6 +73,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def get_div_for_tab(self):
         # print('MyHTMLHeaderTable.get_table={}'.format(MyHTMLHeaderTable().get_table()))
         li = [MyHTMLTabPatternHeaderTable().get_table()]
+        li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.INDEX))),
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PDD.STOCK_SYMBOL)))
         li.append(MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
             PDD.PERIOD_AGGREGATION, default_value=self.sys_config.period_aggregation)))
@@ -123,7 +126,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         return text
 
     def __get_position_markdown_for_active_positions__(self):
-        balances = self.trade_handler_online.trade_client.get_balances_with_current_values()
+        balances = self.trade_handler_online.get_balances_with_current_values()
         self.trade_handler_online.balances = balances
         text_list = ['_**{}**_: {:.2f} ({:.2f}): {:.2f}$'.format(
                 b.asset, b.amount, b.amount_available, b.current_value) for b in balances]
@@ -142,6 +145,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         return self._news_handler.get_news_for_markdown_since_last_refresh(self._time_stamp_last_refresh)
 
     def __add_fibonacci_waves_to_news__(self):
+        # example: Fibonacci: BTCUSD (15min): descending - last tick at 10:30:00
         sys_config = self.sys_config_fibonacci
         indicator_list = self.bitfinex_config.get_fibonacci_indicators()
         result_list = []
@@ -151,8 +155,10 @@ class MyDashTab4Pattern(MyDashBaseTab):
             detector = self._pattern_controller.get_detector_for_fibonacci(sys_config, indicators[0])
             fib_wave_list = detector.fib_wave_tree.fibonacci_wave_list
             for fib_wave in fib_wave_list:
-                if fib_wave.is_wave_indicator_for_dash(indicators[1]):
-                    result_list.append('{}: {}'.format(indicators[0], fib_wave.get_details_as_dash_indicator()))
+                aggregation = indicators[1]
+                if fib_wave.is_wave_indicator_for_dash(aggregation):
+                    result_list.append('{} ({}min): {}'.format(
+                        indicators[0], aggregation, fib_wave.get_details_as_dash_indicator()))
         if len(result_list) > 0:
             self.sys_config.sound_machine.play_alarm_fibonacci()
             self._news_handler.add_news('Fibonacci', ', '.join(result_list))
@@ -189,6 +195,17 @@ class MyDashTab4Pattern(MyDashBaseTab):
             print('Refresh interval set to: {}'.format(interval_selected))
             return interval_selected * 1000
 
+    def __init_callback_for_stock_symbol_options__(self):
+        @self.app.callback(
+            Output('my_pattern_ticker_selection', 'options'),
+            [Input('my_pattern_index_selection', 'value')])
+        def handle_callback_for_stock_symbol_options(selected_index: str):
+            # print('__init_callback_for_stock_symbol_options__: selected_index={}'.format(selected_index))
+            self.sys_config.data_provider.use_index(selected_index)
+            self.__fill_ticker_options__()
+            # print('__init_callback_for_stock_symbol_options__: options={}'.format(self._ticker_options))
+            return self._ticker_options
+
     def __init_callback_for_pattern_markdown__(self):
         @self.app.callback(
             Output('my_pattern_markdown', 'children'),
@@ -214,7 +231,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
             Output('my_graph_first_div', 'children'),
             [Input('my_interval_refresh', 'n_intervals'),
              Input('my_refresh_button', 'n_clicks')],
-            [State('my_ticker_selection', 'value')])
+            [State('my_pattern_ticker_selection', 'value')])
         def handle_callback_for_graph_first(n_intervals, n_clicks, ticker):
             self._ticker_selected = ticker
             graph, graph_key = self.__get_graph_first__(ticker)
@@ -240,7 +257,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
             Output('my_graph_second_div', 'children'),
             [Input('my_graph_second_days_selection', 'value'),
              Input('my_graph_first_div', 'children')],
-            [State('my_ticker_selection', 'value'),
+            [State('my_pattern_ticker_selection', 'value'),
              State('my_period_aggregation', 'value')])
         def handle_callback_for_graph_second(days_selected, graph_first_div, ticker_selected: str, aggregation: int):
             if days_selected == 0 or ticker_selected is None:
@@ -270,15 +287,20 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def __init_selection_callback__(self):
         @self.app.callback(
             Output('my_refresh_button', 'hidden'),
-            [Input('my_ticker_selection', 'value'),
+            [Input('my_pattern_ticker_selection', 'value'),
              Input('my_period_aggregation', 'value'),
              Input('my_interval_selection', 'value'),
              Input('my_interval_refresh', 'n_intervals'),
              Input('my_refresh_button', 'n_clicks')],
-            [State('my_interval_timer', 'n_intervals')])
+            [State('my_interval_timer', 'n_intervals'),
+             State('my_pattern_index_selection', 'value')])
         def handle_selection_callback(ticker_selected, period_aggregation: int, interval_selected: int,
-                                      n_intervals, n_clicks, n_intervals_sec):
+                                      n_intervals, n_clicks, n_intervals_sec, selected_indices: list):
+            print('selected_indizes: {}'.format(selected_indices))
             self.__set_period_aggregation_to_sys_configs__(period_aggregation)
+            indices_change = self._state_handler.change_for_my_selected_indices(selected_indices)
+            if indices_change:
+                return ''
             pa_change = self._state_handler.change_for_my_period_aggregation_selection(period_aggregation)
             i_change = self._state_handler.change_for_my_interval_selection(interval_selected)
             if pa_change or i_change:
@@ -291,7 +313,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
         @self.app.callback(
             Output('my_ticker_div', 'children'),
-            [Input('my_ticker_selection', 'value')])
+            [Input('my_pattern_ticker_selection', 'value')])
         def handle_ticker_selection_callback_for_ticker_label(ticker_selected):
             return self.__get_ticker_label__(ticker_selected)
 
@@ -312,7 +334,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def __init_ticker_selection_callback__(self):
         @self.app.callback(
             Output('my_graph_second_days_selection', 'value'),
-            [Input('my_ticker_selection', 'value')],
+            [Input('my_pattern_ticker_selection', 'value')],
             [State('my_graph_second_days_selection', 'value')])
         def handle_ticker_selection_callback_for_days_selection(ticker_selected, second_days_selection):
             return second_days_selection if second_days_selection == 1 else 0  # we want to keep Intraday
@@ -402,6 +424,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         return cache_api
 
     def __fill_ticker_options__(self):
+        self._ticker_options = []
         for symbol, name in self.sys_config.data_provider.ticker_dict.items():
             self._ticker_options.append({'label': '{}'.format(name), 'value': symbol})
 

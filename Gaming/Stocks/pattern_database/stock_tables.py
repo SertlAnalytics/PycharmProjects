@@ -240,6 +240,13 @@ class TradeTable(MyTable, PredictionFeatureTable):
                 DC.PERIOD, DC.PERIOD_AGGREGATION, DC.ID]
 
     @staticmethod
+    def get_columns_for_online_trades() -> list:
+        return [DC.TRADE_STATUS, DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
+                DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_BEGIN_TIME,
+                DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.TRADE_RESULT, DC.TRADE_RESULT_PCT,
+                DC.PERIOD, DC.PERIOD_AGGREGATION, DC.ID]
+
+    @staticmethod
     def get_columns_for_statistics() -> list:
         return [DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER, DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
                 DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_END_DT, DC.TRADE_BOX_TYPE, DC.SELL_TRIGGER, DC.TRADE_RESULT]
