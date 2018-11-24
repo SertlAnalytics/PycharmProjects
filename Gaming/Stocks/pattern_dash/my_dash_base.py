@@ -110,7 +110,7 @@ class MyDashBaseTab:
 
     @staticmethod
     def __get_indicator_shape_list__(detector: PatternDetector, indicator: str):
-        return_list = [DashInterface.get_indicator_wave_shape(detector, indicator, 'green')]
+        return_list = DashInterface.get_indicator_wave_shape_list(detector, indicator, 'deeppink')
         return return_list
 
     def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str, period: str):

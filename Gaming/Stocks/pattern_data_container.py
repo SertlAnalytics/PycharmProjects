@@ -204,7 +204,7 @@ class PatternDataHandler:
         self.pattern_data = PatternData(self.config, df)
         self.pattern_data_fibonacci = PatternDataFibonacci(self.config, df)
 
-    def get_bollinger_band_boundary_values(self):
+    def get_bollinger_band_xy_upper_lower_boundaries(self):
         distance = self.config.bollinger_band_settings['distance']
         window_size = self.config.bollinger_band_settings['window_size']
         num_of_std = self.config.bollinger_band_settings['num_of_std']
@@ -214,9 +214,10 @@ class PatternDataHandler:
         time_stamp_reduced = [df_time_stamp[pos] for pos in reduced_position_list]
         upper_band_reduced = [upper_band[pos] for pos in reduced_position_list]
         lower_band_reduced = [lower_band[pos] for pos in reduced_position_list]
-        x = time_stamp_reduced + time_stamp_reduced[::-1]
-        y = upper_band_reduced + lower_band_reduced[::-1]
-        return list(zip(x, y))
+        x = time_stamp_reduced
+        y_upper = upper_band_reduced
+        y_lower = lower_band_reduced
+        return list(zip(x, y_upper)), list(zip(x, y_lower))
 
     def get_bollinger_band_boundary_break_direction(self) -> str:
         window_size = self.config.bollinger_band_settings['window_size']

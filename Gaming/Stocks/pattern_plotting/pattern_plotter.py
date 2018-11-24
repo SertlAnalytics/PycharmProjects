@@ -310,15 +310,18 @@ class PatternPlotter:
         self.fibonacci_patch_container.add_patch(fib_wave_patch)
         fib_wave_patch.add_retracement_patch_list_to_axis(self.axes_for_candlesticks)
 
-    def __plot_bollinger_band__(self, color='lightgreen'):
-        xy = self.detector.pdh.get_bollinger_band_boundary_values()
+    def __plot_bollinger_band__(self):
+        xy_upper, xy_lower = self.detector.pdh.get_bollinger_band_xy_upper_lower_boundaries()
+        self.__add_xy_values_as_polygon__(xy_upper, 'deeppink')
+        self.__add_xy_values_as_polygon__(xy_lower, 'deeppink')
+
+    def __add_xy_values_as_polygon__(self, xy: list, color: str):
         xy = PlotterInterface.get_xy_from_timestamp_to_date_number(xy)
-        polygon = Polygon(np.array(xy), closed=True, fill=True)
+        polygon = Polygon(np.array(xy), closed=False, fill=False)
         polygon.set_visible(True)
         polygon.set_color(color)
         polygon.set_alpha(0.2)
-        # polygon.set_facecolor(color)
-        polygon.set_linewidth(1)
+        polygon.set_linewidth(2)
         self.axes_for_candlesticks.add_patch(polygon)
 
     def __plot_volume__(self, axis):

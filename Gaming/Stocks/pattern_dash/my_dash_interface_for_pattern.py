@@ -114,10 +114,11 @@ class DashInterface:
         return MyPolygonLineShape(x, y, color)
 
     @staticmethod
-    def get_indicator_wave_shape(detector: PatternDetector, indicator: str, color):
-        xy_parameter = detector.pdh.get_bollinger_band_boundary_values()
-        x, y = DashInterface.get_xy_separated_from_timestamp(detector.sys_config, xy_parameter)
-        return MyPolygonLineShape(x, y, color)
+    def get_indicator_wave_shape_list(detector: PatternDetector, indicator: str, color):
+        xy_upper, xy_lower = detector.pdh.get_bollinger_band_xy_upper_lower_boundaries()
+        x_upper, y_upper = DashInterface.get_xy_separated_from_timestamp(detector.sys_config, xy_upper)
+        x_lower, y_lower = DashInterface.get_xy_separated_from_timestamp(detector.sys_config, xy_lower)
+        return [MyPolygonLineShape(x_upper, y_upper, color), MyPolygonLineShape(x_lower, y_lower, color)]
 
     @staticmethod
     def get_f_regression_shape(pattern_part: PatternPart, color: str):
