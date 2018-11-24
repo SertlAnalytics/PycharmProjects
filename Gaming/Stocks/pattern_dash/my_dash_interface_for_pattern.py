@@ -15,6 +15,7 @@ from pattern_trade import PatternTrade
 from pattern_part import PatternPart
 from pattern_range import PatternRange
 from pattern_wave_tick import WaveTickList
+from pattern_detector import PatternDetector
 from fibonacci.fibonacci_wave import FibonacciWave
 
 
@@ -110,6 +111,12 @@ class DashInterface:
     @staticmethod
     def get_fibonacci_wave_shape(sys_config: SystemConfiguration, fib_wave: FibonacciWave, color: str):
         x, y = DashInterface.get_xy_separated_from_timestamp(sys_config, fib_wave.get_xy_parameter())
+        return MyPolygonLineShape(x, y, color)
+
+    @staticmethod
+    def get_indicator_wave_shape(detector: PatternDetector, indicator: str, color):
+        xy_parameter = detector.pdh.get_bollinger_band_boundary_values()
+        x, y = DashInterface.get_xy_separated_from_timestamp(detector.sys_config, xy_parameter)
         return MyPolygonLineShape(x, y, color)
 
     @staticmethod

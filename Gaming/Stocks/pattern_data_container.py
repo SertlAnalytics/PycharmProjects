@@ -12,6 +12,7 @@ from sertl_analytics.constants.pattern_constants import CN, DIR, FT
 from sertl_analytics.mydates import MyDate
 from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks, WaveTickList
 from pattern_configuration import PatternConfiguration
+from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 
 
 class PatternData:
@@ -203,21 +204,46 @@ class PatternDataHandler:
         self.pattern_data = PatternData(self.config, df)
         self.pattern_data_fibonacci = PatternDataFibonacci(self.config, df)
 
-    def get_bollinger_band_boundary_values(self, distance=10, window_size=10, num_of_std=5):
-        range_end = int((self.pattern_data.df_length + distance - 1)/distance)
-        position_list = [1 + i * distance for i in range(0, range_end)]
-        if (self.pattern_data.df_length - 1) not in position_list:
-            position_list.append(self.pattern_data.df_length - 1)
+    def get_bollinger_band_boundary_values(self):
+        distance = self.config.bollinger_band_settings['distance']
+        window_size = self.config.bollinger_band_settings['window_size']
+        num_of_std = self.config.bollinger_band_settings['num_of_std']
+        upper_band, lower_band = self.__get_bollinger_band_boundaries_series__(window_size, num_of_std)
+        reduced_position_list = self.__get_reduced_position_list__(distance)
         df_time_stamp = self.pattern_data.df[CN.TIMESTAMP]
+        time_stamp_reduced = [df_time_stamp[pos] for pos in reduced_position_list]
+        upper_band_reduced = [upper_band[pos] for pos in reduced_position_list]
+        lower_band_reduced = [lower_band[pos] for pos in reduced_position_list]
+        x = time_stamp_reduced + time_stamp_reduced[::-1]
+        y = upper_band_reduced + lower_band_reduced[::-1]
+        return list(zip(x, y))
+
+    def get_bollinger_band_boundary_break_direction(self) -> str:
+        window_size = self.config.bollinger_band_settings['window_size']
+        num_of_std = self.config.bollinger_band_settings['num_of_std']
+        last_elements = self.config.bollinger_band_settings['last_elements']
+        upper_band, lower_band = self.__get_bollinger_band_boundaries_series__(window_size, num_of_std)
+        high_series = self.pattern_data.df[CN.HIGH]
+        low_series = self.pattern_data.df[CN.LOW]
+        for k in range(-last_elements, 0):
+            if low_series.values[k] < lower_band.values[k]:
+                return DIR.DOWN
+            elif high_series.values[k] > upper_band.values[k]:
+                return DIR.UP
+        return ''
+
+    def __get_reduced_position_list__(self, distance: int):
+        pos_last_element = self.pattern_data.df_length - 1
+        range_end = int((pos_last_element + distance - 1)/distance)
+        position_list = [1 + i * distance for i in range(0, range_end)]  # we don't want the first position (=n/a)
+        if (pos_last_element) not in position_list:
+            position_list.append(pos_last_element)
+        return position_list
+
+    def __get_bollinger_band_boundaries_series__(self, window_size: int, num_of_std: int):
         df_base = self.pattern_data.df[CN.CLOSE]
         rolling_mean = df_base.rolling(window=window_size, min_periods=1).mean()
         rolling_std = df_base.rolling(window=window_size, min_periods=1).std()
         upper_band = rolling_mean + (rolling_std * num_of_std)
         lower_band = rolling_mean - (rolling_std * num_of_std)
-        time_stamp_reduced = [df_time_stamp[pos] for pos in position_list]
-        upper_band_reduced = [upper_band[pos] for pos in position_list]
-        lower_band_reduced = [lower_band[pos] for pos in position_list]
-        x = time_stamp_reduced + time_stamp_reduced[::-1]
-        y = upper_band_reduced + lower_band_reduced[::-1]
-        return list(zip(x, y))
-        # return [rolling_mean, upper_band, lower_band]
+        return upper_band, lower_band

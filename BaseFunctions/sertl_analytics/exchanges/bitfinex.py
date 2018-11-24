@@ -62,6 +62,7 @@ class BitfinexConfiguration(ExchangeConfiguration):
         self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP, BT.TOUCH_POINT: TSTR.LIMIT}
         self.ticker_id_excluded_from_trade_list = ['NEOUSD', 'BTCUSD']  # in case we have some issues with the data...
         self.fibonacci_indicators = {'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
+        self.bollinger_band_indicators = {'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
 
     def get_exchange_name(self):
         return 'Bitfinex'

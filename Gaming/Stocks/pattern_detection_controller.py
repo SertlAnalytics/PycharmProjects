@@ -126,6 +126,9 @@ class PatternDetectionController:
             detector.parse_for_fibonacci_waves()
             detector.save_wave_data()
             detector.parse_for_pattern()
+            bollinger_bound_break_direction = detector.pdh.get_bollinger_band_boundary_break_direction()
+            if bollinger_bound_break_direction != '':
+                print('Caution: Bollinger Band {} broken'.format(bollinger_bound_break_direction))
             if self.sys_config.config.detection_process == PDP.UPDATE_TRADE_DATA:
                 if len(detector.pattern_list) == 0:
                     self.__delete_pattern_without_actual_pattern_from_database__()
@@ -193,6 +196,14 @@ class PatternDetectionController:
         print('\nProcessing for Fibonacci: {} ({})\n'.format(ticker, sys_config.runtime_config.actual_ticker_name))
         detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()
+        return detector
+
+    @staticmethod
+    def get_detector_for_bollinger_band(
+            sys_config: SystemConfiguration, ticker: str, and_clause='', limit=200) -> PatternDetector:
+        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit)
+        print('\nProcessing for Bollinger Band: {} ({})\n'.format(ticker, sys_config.runtime_config.actual_ticker_name))
+        detector = PatternDetector(sys_config)
         return detector
 
     @staticmethod

@@ -35,6 +35,7 @@ class PatternConfiguration:
         self.length_for_local_min_max_fibonacci = self.length_for_local_min_max  # fibonacci
         self.fibonacci_tolerance_pct = 0.20  # it works great for 0.20 = 20% tolerance for retracement and regression
         self.fibonacci_detail_print = False
+        self.bollinger_band_settings = {'distance': 3, 'window_size': 10, 'num_of_std': 3, 'last_elements': 3}
         self.check_previous_period = False   # default
         self.breakout_over_congestion_range = False
         self.breakout_range_pct = 0.05

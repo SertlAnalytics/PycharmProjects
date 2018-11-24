@@ -105,6 +105,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
             [Input('my_interval_refresh', 'n_intervals')])
         def handle_callback_for_position_markdown(n_intervals: int):
             self.__add_fibonacci_waves_to_news__()
+            self.__add_bollinger_band_breaks_to_news__()
             return self.__get_position_markdown__(n_intervals)
 
     def __init_callback_for_dashboard_markdown__(self):
@@ -151,7 +152,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         result_list = []
         # indicator_list = [['XMRUSD', 15]]
         for indicators in indicator_list:
-            sys_config.init_by_fibonacci_indicator(indicators)
+            sys_config.init_by_indicator(indicators)
             detector = self._pattern_controller.get_detector_for_fibonacci(sys_config, indicators[0])
             fib_wave_list = detector.fib_wave_tree.fibonacci_wave_list
             for fib_wave in fib_wave_list:
@@ -162,6 +163,24 @@ class MyDashTab4Pattern(MyDashBaseTab):
         if len(result_list) > 0:
             self.sys_config.sound_machine.play_alarm_fibonacci()
             self._news_handler.add_news('Fibonacci', ', '.join(result_list))
+
+    def __add_bollinger_band_breaks_to_news__(self):
+        # example: Bollinger break: BTCUSD (15min): last tick at 10:30:00
+        sys_config = self.sys_config_fibonacci
+        indicator_list = self.bitfinex_config.get_bollinger_band_indicators()
+        result_list = []
+        # indicator_list = [['XMRUSD', 15]]
+        for indicators in indicator_list:
+            sys_config.init_by_indicator(indicators)
+            detector = self._pattern_controller.get_detector_for_bollinger_band(sys_config, indicators[0])
+            bollinger_bound_break_direction = detector.pdh.get_bollinger_band_boundary_break_direction()
+            if bollinger_bound_break_direction != '':
+                aggregation = indicators[1]
+                msg = '{} broken'.format(bollinger_bound_break_direction)
+                result_list.append('{} ({}min): {}'.format(indicators[0], aggregation, msg))
+        if len(result_list) > 0:
+            self.sys_config.sound_machine.play_alarm_bollinger_band_break()
+            self._news_handler.add_news('Bollinger Band', ', '.join(result_list))
 
     def __get_markdown_trades__(self):
         return '- none -'

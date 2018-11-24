@@ -221,7 +221,7 @@ class SystemConfiguration:
         id_components = nn_id.split('#')
         self.init_by_pattern_id_str(id_components[1])
 
-    def init_by_fibonacci_indicator(self, indicator: list):  # example: ['BTCUSD', 15]
+    def init_by_indicator(self, indicator: list):  # example: ['BTCUSD', 15]
         symbol = indicator[0]
         self.data_provider.from_db = False
         self.data_provider.period = PRD.INTRADAY

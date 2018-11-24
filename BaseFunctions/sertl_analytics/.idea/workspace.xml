@@ -20,23 +20,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="interactive_broker_trade_client.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/exchanges/interactive_broker_trade_client.py">
+      <file leaf-file-name="exchange_cls.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="442">
-              <caret line="32" column="25" selection-start-line="32" selection-start-column="25" selection-end-line="32" selection-end-column="25" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="bitfinex.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="515" column="46" lean-forward="true" selection-start-line="515" selection-start-column="46" selection-end-line="515" selection-end-column="46" />
-              <folding>
-                <element signature="e#287#325#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="340">
+              <caret line="32" column="38" lean-forward="true" selection-start-line="32" selection-start-column="38" selection-end-line="32" selection-end-column="38" />
             </state>
           </provider>
         </entry>
@@ -80,7 +68,6 @@
         <option value="$PROJECT_DIR$/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/mycache.py" />
         <option value="$PROJECT_DIR$/searches/smart_searches.py" />
-        <option value="$PROJECT_DIR$/exchanges/exchange_cls.py" />
         <option value="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" />
         <option value="$PROJECT_DIR$/datafetcher/data_fetcher_cache.py" />
         <option value="$PROJECT_DIR$/pybase/loop_list.py" />
@@ -93,6 +80,7 @@
         <option value="$PROJECT_DIR$/mydates.py" />
         <option value="$PROJECT_DIR$/exchanges/interactive_broker_test.py" />
         <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
+        <option value="$PROJECT_DIR$/exchanges/exchange_cls.py" />
       </list>
     </option>
   </component>
@@ -106,6 +94,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -164,7 +153,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -234,9 +222,9 @@
     <frame x="1273" y="0" width="1287" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25140113" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25140113" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.501201" side_tool="true" visible="true" weight="0.3262745" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.501201" side_tool="true" visible="true" weight="0.3258786" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49559647" weight="0.32862744" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49959967" weight="0.32784313" />
@@ -575,20 +563,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/nn_collector.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1207">
-          <caret line="74" selection-start-line="74" selection-end-line="74" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-952">
-          <caret line="15" column="32" lean-forward="true" selection-start-line="15" selection-start-column="32" selection-end-line="15" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/bitfinex_trade_client.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
@@ -603,6 +577,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="50" column="40" lean-forward="true" selection-start-line="50" selection-start-column="40" selection-end-line="50" selection-end-column="40" />
+          <folding>
+            <element signature="e#287#325#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/interactive_broker_trade_client.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="442">
@@ -610,13 +594,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
+    <entry file="file://$PROJECT_DIR$/models/nn_collector.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="515" column="46" lean-forward="true" selection-start-line="515" selection-start-column="46" selection-end-line="515" selection-end-column="46" />
-          <folding>
-            <element signature="e#287#325#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="1207">
+          <caret line="74" selection-start-line="74" selection-end-line="74" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="32" column="38" lean-forward="true" selection-start-line="32" selection-start-column="38" selection-end-line="32" selection-end-column="38" />
         </state>
       </provider>
     </entry>

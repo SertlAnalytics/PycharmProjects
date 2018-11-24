@@ -179,7 +179,7 @@ class OT:  # order type
     EXCHANGE_MARKET = 'exchange market'
     EXCHANGE_LIMIT = 'exchange limit'
     EXCHANGE_STOP = 'exchange stop'
-    EXCHANGE_TRAILING_STOP = 'exchange trailing - stop'
+    EXCHANGE_TRAILING_STOP = 'exchange trailing-stop'
 
     def get_id(key: str):
         return {OT.EXCHANGE_MARKET: 1, OT.EXCHANGE_LIMIT: 2, OT.EXCHANGE_STOP: 3, OT.EXCHANGE_TRAILING_STOP: 4}.get(key)
@@ -747,6 +747,7 @@ class DC:  # Data Columns
     # and additional for Trades
     TRADE_ID = 'Trade_ID'
     TRADE_STATUS = 'Trade_Status'
+    TRADE_IS_SIMULATION = 'Trade_Simulation'
     TRADE_MEAN_AGGREGATION = 'Trade_Mean_Aggregation'
     TRADE_PROCESS = 'Trade_Process'  #  TP.ONLINE = 'Online', TEST_SINGLE = 'Test_single', BACK_TESTING = 'Back_testing'
     TRADE_READY_ID = 'Trade_Ready_ID'  # for a real trade = 1, 0 else

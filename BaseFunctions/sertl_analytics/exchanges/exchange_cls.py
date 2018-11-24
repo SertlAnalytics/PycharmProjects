@@ -31,6 +31,7 @@ class ExchangeConfiguration:
         self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP,
                                     BT.TOUCH_POINT: TSTR.LIMIT}
         self.fibonacci_indicators = {}
+        self.bollinger_band_indicators = {}
         self.ticker_id_excluded_from_trade_list = []  # in case we have some issues the datas...
         self.__set_values__()
 
@@ -56,6 +57,13 @@ class ExchangeConfiguration:
     def get_fibonacci_indicators(self):
         li = []
         for key, key_list in self.fibonacci_indicators.items():
+            for numbers in key_list:
+                li.append([key, numbers])
+        return li
+
+    def get_bollinger_band_indicators(self):
+        li = []
+        for key, key_list in self.bollinger_band_indicators.items():
             for numbers in key_list:
                 li.append([key, numbers])
         return li

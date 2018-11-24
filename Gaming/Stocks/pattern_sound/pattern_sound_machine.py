@@ -30,6 +30,9 @@ class PatternSoundMachine:
     def play_alarm_fibonacci(self):
         self.__play__('alarm_fibonacci.wav')
 
+    def play_alarm_bollinger_band_break(self):
+        self.__play__('alarm_fibonacci.wav')
+
     def play_alarm_touch_point(self):
         self.__play__('alarm_touchpoint.wav')
 

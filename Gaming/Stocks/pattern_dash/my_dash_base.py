@@ -57,11 +57,9 @@ class MyDashBaseTab:
         if graph_api.pattern_trade:
             # graph_api.pattern_trade.ticker_actual.print_ticker('__get_pattern_trade_shape_list__...: last ticker')
             shapes += self.__get_pattern_trade_shape_list__(graph_api.pattern_trade)
-        if graph_api.indicator == INDI.BOLLINGER:
-            indicator_shape = self.__get_indicator_shape_list__(detector, graph_api.indicator)
-            print('indicator_shape={}'.format(indicator_shape))
-            bollinger_band = self.__get_bollinger_band_trace__(pattern_df, graph_api.ticker_id, period)
-            print('bollinger_band:\n{}'.format(bollinger_band))
+        if (graph_api.indicator == INDI.BOLLINGER or True) and detector is not None:
+            indicator_shape_list = self.__get_indicator_shape_list__(detector, graph_api.indicator)
+            shapes += indicator_shape_list
         graph_api.figure_layout_shapes = [my_shapes.shape_parameters for my_shapes in shapes]
         # print(' graph_api.figure_layout_shapes: {}'.format( graph_api.figure_layout_shapes))
         graph_api.figure_layout_annotations = [my_shapes.annotation_parameters for my_shapes in shapes]
@@ -112,11 +110,7 @@ class MyDashBaseTab:
 
     @staticmethod
     def __get_indicator_shape_list__(detector: PatternDetector, indicator: str):
-        return_list = []
-        for fib_waves in detector.fib_wave_tree.fibonacci_wave_list:
-            color = 'green' if fib_waves.wave_type == FD.ASC else 'red'
-            return_list.append(DashInterface.get_fibonacci_wave_shape(detector.sys_config, fib_waves, color))
-            # print('Fibonacci: {}'.format(return_list[-1].shape_parameters))
+        return_list = [DashInterface.get_indicator_wave_shape(detector, indicator, 'green')]
         return return_list
 
     def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str, period: str):

@@ -629,6 +629,7 @@ class PatternTrade:
         self._wave_tick_at_selling = self._wave_tick_list.tick_list[-1]
 
     def get_row_for_dash_data_table(self):
+        self.data_dict_obj.add(DC.TRADE_IS_SIMULATION, self.is_simulation)
         columns = TradeTable.get_columns_for_online_trades()
         return {column: self.data_dict_obj.get(column) for column in columns}
 
@@ -636,6 +637,7 @@ class PatternTrade:
         self.data_dict_obj.add(DC.ID, self.id)
         self.data_dict_obj.add(DC.PATTERN_ID, self.pattern.id)
         self.data_dict_obj.add(DC.TRADE_STATUS, self.status_upper)
+        self.data_dict_obj.add(DC.TRADE_IS_SIMULATION, self.is_simulation)
         if self.trade_strategy == TSTR.SMA:
             self.data_dict_obj.add(DC.TRADE_MEAN_AGGREGATION, self.sys_config.config.simple_moving_average_number)
         else:

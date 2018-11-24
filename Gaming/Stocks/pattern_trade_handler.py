@@ -334,8 +334,9 @@ class PatternTradeHandler:
     def __handle_buy_triggers__(self):
         deletion_key_list = []
         buying_deletion_key_list = []
-        # print('handle_buy_triggers: is_simulation={}'.format(self.is_simulation))
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
+            print('handle_buy_triggers: pattern_trade.is_simulation={}, auto={}'.format(
+                pattern_trade.is_simulation, self.exchange_config.automatic_trading_on))
             if pattern_trade.is_breakout_active:
                 if pattern_trade.is_actual_ticker_breakout(PTHP.HANDLE_BUY_TRIGGERS):
                     if pattern_trade.are_preconditions_for_breakout_buy_fulfilled():
