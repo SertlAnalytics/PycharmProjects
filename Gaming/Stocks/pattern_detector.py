@@ -335,9 +335,8 @@ class PatternDetector:
             if fib_wave.is_wave_ready_for_wave_table():
                 data_dict = fib_wave.data_dict_obj.get_data_dict_for_target_table()
                 if data_dict is not None:
-                    # print('save_wave_data: {}'.format(data_dict))
-                    if not self.sys_config.db_stock.is_wave_already_available(data_dict):
-                        input_list.append(data_dict)
+                    self.sys_config.db_stock.delete_existing_wave(data_dict)
+                    input_list.append(data_dict)
         if len(input_list) > 0:
             self.sys_config.db_stock.insert_wave_data(input_list)
 

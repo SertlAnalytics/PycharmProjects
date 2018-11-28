@@ -327,14 +327,20 @@ class WaveTickList:
         return '**{}:** open={:0.3f}, close={:0.3f}, volume={:0.1f}'.format(
             prefix, prev_tick.open, prev_tick.close, prev_tick.volume)
 
-    def get_markdown_text_for_last_wave_tick(self, period=PRD.INTRADAY):
+    def get_markdown_text_for_last_wave_tick(self, volume_mean=0, period=PRD.INTRADAY):
         prev_tick = self.tick_list[-2]
         actual_tick = self.tick_list[-1]
         prefix = actual_tick.time if period == PRD.INTRADAY else actual_tick.date
         forecast = actual_tick.get_forecast_volume(self.tick_distance_in_seconds)
-        volume_change = round(forecast / prev_tick.volume * 100 - 100)
-        return '**{}:** open={:0.3f}, close={:0.3f}, volume={:0.1f}, volume forecast={:0.1f} ({:+.0f}%)'. \
-            format(prefix, actual_tick.open, actual_tick.close, actual_tick.volume, forecast, volume_change)
+        volume_change_against_last = round(forecast / prev_tick.volume * 100 - 100)
+        if volume_mean == 0:
+            forecast_values = '{:0.1f} ({:+.0f} %)'.format(forecast, volume_change_against_last)
+        else:
+            volume_change_against_mean = round(forecast / volume_mean * 100 - 100)
+            forecast_values = '{:0.1f} ({:+.0f} % / {:+.0f} %)'.format(forecast, volume_change_against_mean,
+                                                                       volume_change_against_last)
+        return '**{}:** open={:0.3f}, close={:0.3f}, volume={:0.1f}, volume forecast={}'. \
+            format(prefix, actual_tick.open, actual_tick.close, actual_tick.volume, forecast_values)
 
     def get_list_without_hidden_ticks(self, for_high: bool, tolerance_pct: float):
         """

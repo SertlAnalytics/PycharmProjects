@@ -206,9 +206,9 @@ class MyDashTab4Recommender(MyDashBaseTab):
         # return RMBT.SWITCH_TO_ACTIVE_MANAGEMENT
 
     def __get_table_for_recommender__(self):
-        rows = self._recommender_table.rows_for_selected_indices
+        rows = self._recommender_table.get_rows_for_selected_indices()
         min_height = self._recommender_table.height_for_display
-        return MyDCC.data_table(self._data_table_name, rows, min_height=min_height)
+        return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
 
     def __toggle_flag_for_active_managed__(self):
         pass

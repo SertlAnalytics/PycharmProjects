@@ -501,10 +501,10 @@ class MyIBKR(ExchangeInterface):
         if order_status:
             order_status.print_order_status('Order status{}'.format(self.get_simulation_suffix()))
 
-    def __create_order__(self, order: Order, trigger: str, is_order_simulation: bool) -> OrderStatus:
-        trigger = 'Normal' if trigger == '' else trigger
+    def __create_order__(self, order: Order, order_type: str, is_order_simulation: bool) -> OrderStatus:
+        order_type = 'Normal' if order_type == '' else order_type
         print_prefix = '{}: Order executed{} for {}:'.format(
-            trigger, self.get_simulation_suffix(is_order_simulation), order.symbol)
+            order_type, self.get_simulation_suffix(is_order_simulation), order.symbol)
         if self.is_transaction_simulation(is_order_simulation):
             if order.type == OT.EXCHANGE_MARKET:
                 order.price = order.actual_ticker.ask

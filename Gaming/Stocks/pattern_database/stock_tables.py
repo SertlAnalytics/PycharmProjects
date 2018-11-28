@@ -17,12 +17,41 @@ class STBL:  # stocks tables
     PATTERN = 'Pattern'
     TRADE = 'Trade'
     WAVE = 'Wave'
+    ASSET = 'Asset'
 
 
 class PredictionFeatureTable:
     @staticmethod
     def is_label_column_for_regression(label_column: str):
         return label_column[-4:] == '_PCT'
+
+
+class AssetTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return STBL.ASSET
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(DC.VALIDITY_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.VALIDITY_TS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.LOCATION, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.EQUITY_TYPE_ID, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.EQUITY_ID, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.EQUITY_NAME, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(DC.QUANTITY, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.VALUE_PER_UNIT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.VALUE_TOTAL, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.CURRENCY, CDT.STRING, 10))
+
+    def get_query_for_unique_record_by_dict(self, data_dict: dict) -> str:
+        col_list_str = [DC.LOCATION, DC.EQUITY_ID]
+        col_list_numbers = [DC.VALIDITY_TS, DC.EQUITY_TYPE_ID]
+        additional_and_clauses_str = ["{}='{}'".format(col, data_dict[col]) for col in col_list_str]
+        and_clauses_str = ' and '.join(additional_and_clauses_str)
+        additional_and_clauses_numbers = ['{}={}'.format(col, data_dict[col]) for col in col_list_numbers]
+        and_clauses_number = ' and '.join(additional_and_clauses_numbers)
+        return "SELECT rowid FROM {} WHERE {} and {}".format(self._name, and_clauses_str, and_clauses_number)
 
 
 class WaveTable(MyTable):
@@ -71,7 +100,7 @@ class WaveTable(MyTable):
     def get_query_for_unique_record_by_dict(self, data_dict: dict) -> str:
         col_list = [DC.W1_BEGIN_TS, DC.W2_BEGIN_TS, DC.W3_BEGIN_TS, DC.W4_BEGIN_TS, DC.W5_BEGIN_TS]
         additional_and_clauses = ['{}={}'.format(col, data_dict[col]) for col in col_list]
-        return "SELECT * FROM {} WHERE {}='{}' and {}".format(
+        return "SELECT rowid FROM {} WHERE {}='{}' and {}".format(
             self._name, DC.TICKER_ID, data_dict[DC.TICKER_ID], ' and '.join(additional_and_clauses))
 
     def get_query_for_wave_counter(self, period: str, limit: int=0) -> str:

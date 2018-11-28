@@ -237,17 +237,19 @@ class Pattern:
                 pos = tick.position
                 time = MyDate.get_time_from_epoch_seconds(tick.time_stamp)
                 date = MyDate.get_date_from_epoch_seconds(tick.time_stamp)
-                value_list = [tick.open, tick.open, tick.low, tick.high, tick.volume, ts_list[0], pos, time, date]
-                return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
-                value_list = [tick.open, tick.high, tick.low, tick.high, tick.volume, ts_list[0], pos, time, date]
-                return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
-                value_list = [tick.open, tick.low, tick.low, tick.high, tick.volume, ts_list[0], pos, time, date]
-                return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
-                value_list = [tick.open, tick.close, tick.low, tick.high, tick.volume, ts_list[0], pos, time, date]
-                return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
+                volume = tick.volume/4
+                for value in self.__get_ohlc_as_list_for_test_data__(tick):
+                    value_list = [tick.open, value, tick.low, tick.high, volume, ts_list[0], pos, time, date]
+                    return_list.append(WaveTick(pd.Series(value_list, index=col_list)))
             if counter >= max_ticks:
                 break
         return return_list
+
+    def __get_ohlc_as_list_for_test_data__(self, tick: WaveTick):
+        tick_is_up = True if tick.open < tick.close else False
+        tick_2nd = tick.low if tick_is_up else tick.high
+        tick_3rd = tick.high if tick_is_up else tick.low
+        return [tick.open, tick_2nd, tick_3rd, tick.close]
 
     def __get_time_stamp_list_for_back_testing_value_pairs__(self, time_stamp: int, numbers: int):
         return PRD.get_time_stamp_list_for_time_stamp(time_stamp, numbers, self.sys_config.period)

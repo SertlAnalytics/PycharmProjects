@@ -34,6 +34,61 @@ COLORS = [
 ]
 
 
+class ButtonHandler:
+    __metaclass__ = ABCMeta
+
+    @classmethod
+    def version(cls): return 1.0
+
+    def __init__(self):
+        self._button_value_dict = self.__get_button_value_dict__()
+
+    def get_element_id(self, button_type: str):
+        return self.__get_element_id__(button_type)
+
+    def get_embracing_div_id(self, button_type: str):
+        return '{}_div'.format(self.__get_element_id__(button_type))
+
+    def get_style_display(self, button_type: str):
+        return {
+            'display': 'inline-block',
+            'verticalAlign': 'bottom',
+            'width': self.__get_width__(button_type),
+            'padding-bottom': 20,
+            'padding-left': 10
+        }
+
+    def get_button_parameters(self, button_type: str):
+        return {
+            'element_id': self.__get_element_id__(button_type),
+            'text': self.__get_text__(button_type),
+            'width': self.__get_width__(button_type),
+            'show': False,
+        }
+
+    def get_button_type_by_embracing_div_id(self, div_id: str):
+        for button_type in self._button_value_dict:
+            if self.get_embracing_div_id(button_type) == div_id:
+                return button_type
+        return ''
+
+    @abstractmethod
+    def __get_element_id__(self, button_type: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __get_text__(self, button_type: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __get_width__(self, button_type: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __get_button_value_dict__(self) -> dict:
+        raise NotImplementedError
+
+
 class DropDownHandler:
     __metaclass__ = ABCMeta
 
@@ -216,26 +271,35 @@ class MyHTML:
 
     @staticmethod
     def div_with_html_button_submit(element_id: str, children='Submit', hidden='hidden'):
-        if len(children) > 20:
-            width = '30%'
-        elif len(children) > 10:
-            width = '20%'
-        else:
-            width = '10%'
+        width = str(max(100, 16 * len(children)))
         return html.Div(
             [MyHTML.button_submit(element_id, children, hidden)],
             style={'width': width, 'display': 'inline-block', 'vertical-align': 'bottom', 'padding-bottom': 20,
-                   'padding-left': 10}
+                   'padding-left': 10},
+            id='{}_div'.format(element_id)
+        )
+
+    @staticmethod
+    def div_with_button(element_id: str, text: str, width: int, show=True):
+        if show:
+            style = {'display': 'inline-block', 'verticalAlign': 'bottom', 'width': width, 'padding-bottom': 20}
+        else:
+            style = {'display': 'none'}
+        return html.Div(
+            [MyHTML.button_submit(element_id, text, '')],
+            style=style,
+            id='{}_div'.format(element_id)
         )
 
     @staticmethod
     def div_with_slider(element_id: str, min_value=0, max_value=20, step=1, value=0, show=True):
         if (max_value - min_value)/step > 3:
-            width = '30%'
+            width = '350'
         else:
-            width = '20%'
+            width = '300'
         style = {'width': width, 'display': 'inline-block', 'vertical-align': 'bottom', 'padding-bottom': 20,
                  'padding-left': 10} if show else {'display': 'none'}
+        # print('div_with_slider.style={}'.format(style))
         return html.Div(
             [MyDCC.slider(element_id, min_value=min_value, max_value=max_value, step=step, value=value)],
             style=style, id='{}_div'.format(element_id)
@@ -402,13 +466,13 @@ class MyDCC:
         return dcc.Interval(id=element_id, interval=seconds * 1000, n_intervals=0)
 
     @staticmethod
-    def data_table(element_id: str, rows: list, min_width=1200, min_height=1000):
+    def data_table(element_id: str, rows: list, selected_row_indices: list, min_width=1200, min_height=1000):
         return dte.DataTable(
             id=element_id,
             row_selectable=True,
             filterable=True,
             sortable=True,
-            selected_row_indices=[],
+            selected_row_indices=selected_row_indices,
             rows=rows,
             min_width=min_width,
             min_height=min_height

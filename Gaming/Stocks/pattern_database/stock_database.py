@@ -10,7 +10,8 @@ from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, Dat
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.mydates import MyDate
-from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, CompanyTable, STBL, WaveTable
+from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
+    CompanyTable, STBL, WaveTable, AssetTable
 import pandas as pd
 import math
 from datetime import datetime
@@ -99,6 +100,7 @@ class StockDatabase(BaseDatabase):
         self._pattern_table = PatternTable()
         self._trade_table = TradeTable()
         self._wave_table = WaveTable()
+        self._asset_table = AssetTable()
 
     def is_symbol_loaded(self, symbol: str):
         last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
@@ -182,6 +184,12 @@ class StockDatabase(BaseDatabase):
 
     def insert_wave_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.WAVE, input_dict_list)
+
+    def insert_asset_entry(self, input_dict: dict, replace=False):
+        if self.is_asset_already_available(input_dict):
+            pass
+        else:
+            self.__insert_data_into_table__(STBL.ASSET, [input_dict])
 
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
@@ -294,6 +302,9 @@ class StockDatabase(BaseDatabase):
     def create_wave_table(self):
         self.__create_table__(STBL.WAVE)
 
+    def create_asset_table(self):
+        self.__create_table__(STBL.ASSET)
+
     def __insert_pattern_in_pattern_table__(self, ticker: str, input_dic: dict):
         try:
             self.__insert_data_into_table__(STBL.PATTERN, [input_dic])
@@ -313,6 +324,19 @@ class StockDatabase(BaseDatabase):
 
     def is_wave_already_available(self, wave_data_dict: dict) -> bool:
         query = self._wave_table.get_query_for_unique_record_by_dict(wave_data_dict)
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.shape[0] > 0
+
+    def delete_existing_wave(self, wave_data_dict: dict):
+        query = self._wave_table.get_query_for_unique_record_by_dict(wave_data_dict)
+        db_df = DatabaseDataFrame(self, query)
+        if db_df.df.shape[0] > 0:
+            rowid = db_df.df['rowid'][0]
+            self.delete_records("DELETE from {} WHERE rowid = {}".format(STBL.WAVE, rowid))
+
+    def is_asset_already_available(self, input_data_dict: dict):
+        query = self._asset_table.get_query_for_unique_record_by_dict(input_data_dict)
+        # print('is_asset_already_available: query={}'.format(query))
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
@@ -455,8 +479,9 @@ class StockDatabase(BaseDatabase):
         print(repr(table_obj))
 
     def __get_table_by_name__(self, table_name: str):
-        return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table, STBL.PATTERN: self._pattern_table,
-                STBL.TRADE: self._trade_table, STBL.WAVE: self._wave_table}.get(table_name, None)
+        return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table,
+                STBL.PATTERN: self._pattern_table, STBL.TRADE: self._trade_table,
+                STBL.WAVE: self._wave_table, STBL.ASSET: self._asset_table}.get(table_name, None)
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):

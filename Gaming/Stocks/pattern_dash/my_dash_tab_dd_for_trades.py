@@ -42,8 +42,8 @@ class TradeDropDownHandler(DropDownHandler):
 
     def __get_width__(self, drop_down_type: str):
         value_dict = {
-            TDD.TRADE_TYPE: 170,
-            TDD.BUY_TRIGGER: 170,
+            TDD.TRADE_TYPE: 150,
+            TDD.BUY_TRIGGER: 150,
             TDD.TRADE_STRATEGY: 170,
         }
         return value_dict.get(drop_down_type, 200)

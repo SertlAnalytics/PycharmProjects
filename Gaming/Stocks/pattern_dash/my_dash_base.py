@@ -30,6 +30,8 @@ class MyDashBaseTab:
         self._color_handler = PatternColorHandler()
         self._news_handler = self.__get_news_handler__()
         self._time_stamp_last_refresh = MyDate.time_stamp_now()
+        self._dd_handler = None
+        self._button_handler = None
 
     def init_callbacks(self):
         pass

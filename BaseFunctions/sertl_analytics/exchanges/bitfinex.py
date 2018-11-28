@@ -50,7 +50,7 @@ class SYM:
 
 class BitfinexConfiguration(ExchangeConfiguration):
     def __set_values__(self):
-        self.hodl_dict = {'IOT': 7000}  # currency in upper characters
+        self.hodl_dict = {'IOT': 5000, 'ETH': 20}  # currency in upper characters
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
         self.ticker_refresh_rate_in_seconds = 5
@@ -60,7 +60,7 @@ class BitfinexConfiguration(ExchangeConfiguration):
         self.finish_vanished_trades = False  # True <=> if a pattern is vanished after buying sell the position (market)
         self.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP]}
         self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP, BT.TOUCH_POINT: TSTR.LIMIT}
-        self.ticker_id_excluded_from_trade_list = ['NEOUSD', 'BTCUSD']  # in case we have some issues with the data...
+        self.ticker_id_excluded_from_trade_list = ['NEOUSDx', 'BTCUSD']  # in case we have some issues with the data...
         self.fibonacci_indicators = {'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
         self.bollinger_band_indicators = {'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
 
@@ -358,7 +358,7 @@ class MyBitfinex(ExchangeInterface):
             last_price = ticker.last_price if ticker else last_price
             # the minus value in the next term is necessary to ensure that this amount is buyable
             last_price_modified = last_price * (1.02)  # the part 0.02 is for amount safety - we want to be below limit
-            amount = round(available_money / last_price_modified, 2)
+            amount = available_money / last_price_modified
             order_buy = BuyMarketOrder(symbol, amount)
             order_buy.actual_money_available = available_money
             order_buy.actual_ticker = ticker
@@ -529,7 +529,8 @@ class MyBitfinex(ExchangeInterface):
             amount_available = self.__get_amount_available_from_exchange__(symbol)
             if amount_available == 0:  # it is not updated in a specific time...
                 amount_available = order_status.executed_amount * (1 - self.exchange_config.buy_fee_pct/100)
-            if order_status.executed_amount > amount_available:
+            # if the actual number is close to the executed amount = > take all
+            if abs(order_status.executed_amount - amount_available)/amount_available < 0.05:
                 print('Corrected_executed_amount: {:.2f} -> {:.2f}'.format(order_status.executed_amount, amount_available))
                 order_status.executed_amount = amount_available
 

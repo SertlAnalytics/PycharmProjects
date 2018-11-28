@@ -5,11 +5,13 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
+from sertl_analytics.constants.pattern_constants import DC, EQUITY_TYPE
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from datetime import datetime, timedelta
 import json
 from pattern_detection_controller import PatternDetectionController
+from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.constants.pattern_constants import BT, PRD
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
@@ -21,6 +23,7 @@ from pattern_trade_handler import PatternTradeHandler
 from textwrap import dedent
 from pattern_dash.my_dash_base import MyDashBaseTab, Dash
 from pattern_dash.my_dash_configuration_tables import MyHTMLSystemConfigurationTable
+from sertl_analytics.mydates import MyDate
 
 
 class MyDashTab4Pattern(MyDashBaseTab):
@@ -106,7 +109,32 @@ class MyDashTab4Pattern(MyDashBaseTab):
         def handle_callback_for_position_markdown(n_intervals: int):
             self.__add_fibonacci_waves_to_news__()
             self.__add_bollinger_band_breaks_to_news__()
-            return self.__get_position_markdown__(n_intervals)
+            markdown_text = self.__get_position_markdown__(n_intervals)
+            print('handle_callback_for_position_markdown: n_intervals={}'.format(n_intervals))
+            if n_intervals == 0:
+                self.__save_balances_to_database__()
+            return markdown_text
+
+    def __save_balances_to_database__(self):
+        for position in self.trade_handler_online.balances:
+            asset_data_dict = AssetDataDictionary()
+            asset_data_dict.add(DC.CURRENCY, 'USD')
+            asset_data_dict.add(DC.VALIDITY_DT, MyDate.get_date_as_string_from_date_time(None))
+            asset_data_dict.add(DC.VALIDITY_TS, MyDate.get_epoch_seconds_for_date())
+            asset_data_dict.add(DC.LOCATION, 'Bitfinex')
+            if position.asset == 'USD':
+                asset_data_dict.add(DC.EQUITY_TYPE, EQUITY_TYPE.CASH)
+                asset_data_dict.add(DC.EQUITY_TYPE_ID, EQUITY_TYPE.get_id(EQUITY_TYPE.CASH))
+            else:
+                asset_data_dict.add(DC.EQUITY_TYPE, EQUITY_TYPE.CRYPTO)
+                asset_data_dict.add(DC.EQUITY_TYPE_ID, EQUITY_TYPE.get_id(EQUITY_TYPE.CRYPTO))
+            asset_data_dict.add(DC.EQUITY_ID, position.asset)
+            asset_data_dict.add(DC.EQUITY_NAME, position.asset)
+            asset_data_dict.add(DC.QUANTITY, position.amount)
+            asset_data_dict.add(DC.VALUE_PER_UNIT, 0)
+            asset_data_dict.add(DC.VALUE_TOTAL, position.current_value)
+            asset_data_dict.add(DC.CURRENCY, 'USD')
+            self.sys_config.db_stock.insert_asset_entry(asset_data_dict.get_data_dict_for_target_table())
 
     def __init_callback_for_dashboard_markdown__(self):
         @self.app.callback(

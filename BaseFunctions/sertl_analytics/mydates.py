@@ -5,6 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-21
 """
 from datetime import datetime, timedelta, date
+from time import mktime
 import matplotlib.dates as m_dates
 
 
@@ -35,6 +36,13 @@ class MyDate:
             return int(datetime.timestamp(datetime.now()))
         date_time_object = MyDate.get_datetime_object(date_time)
         return int(datetime.timestamp(date_time_object))
+
+    @staticmethod
+    def get_epoch_seconds_for_date(date_time=None) -> int:
+        if date_time is None:
+            return int(mktime(datetime.today().date().timetuple()))
+        date_time_object = MyDate.get_datetime_object(date_time)
+        return int(mktime(date_time_object.date().timetuple()))
 
     @staticmethod
     def get_epoch_number_from_datetime(date_time) -> float:

@@ -73,8 +73,8 @@ class Balance:
     def __init__(self, balance_type: str, asset: str, amount: float, amount_available: float):
         self.type = balance_type  # 'trading', 'deposit' or 'exchange'
         self.asset = asset.upper()  # currency or equity symbol
-        self.amount = round(amount, 2)
-        self.amount_available = round(amount_available, 2)
+        self.amount = amount
+        self.amount_available = amount_available
         self.current_value = 0  # is set later by another call
 
     def print_balance(self, prefix = ''):

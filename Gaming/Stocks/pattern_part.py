@@ -45,6 +45,7 @@ class PatternPart:
         self.tick_low = None
         self.height = 0
         self.height_at_first_position = 0
+        self.height_at_last_position = 0
         self.bound_upper = 0
         self.bound_lower = 0
         self.distance_min = 0
@@ -76,6 +77,12 @@ class PatternPart:
     @property
     def length(self) -> int:
         return self.tick_last.position - self.tick_first.position
+
+    @property
+    def distance_for_trading_box(self) -> float:
+        if self.height_at_last_position == 0 or True:
+            return self.std
+        return self.std / (self.height_at_first_position/self.height_at_last_position)
 
     def __get_annotation_offset_x__(self):
         x_center = self.__xy_center[0]
@@ -111,6 +118,7 @@ class PatternPart:
         else:
             f_upper_last = self.function_cont.get_upper_value(tick_breakout.f_var)
             f_lower_last = self.function_cont.get_lower_value(tick_breakout.f_var)
+        self.height_at_last_position = f_upper_last - f_lower_last
         self.bound_upper = f_upper_last
         self.bound_lower = f_lower_last
         if self.pattern_type in [FT.TKE_BOTTOM, FT.TKE_TOP, FT.FIBONACCI_ASC, FT.FIBONACCI_DESC]:

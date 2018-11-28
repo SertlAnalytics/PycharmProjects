@@ -6,7 +6,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import DC, BLR
+from sertl_analytics.constants.pattern_constants import DC, BLR, TP
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_system_configuration import TradeOptimizer
@@ -93,9 +93,10 @@ class TradeCandidateController:
     """
         controls which trade is put into the trade process - this process is handled by PatternTradeHandler
     """
-    def __init__(self, exchange_config: ExchangeConfiguration, trade_optimizer: TradeOptimizer):
+    def __init__(self, exchange_config: ExchangeConfiguration, trade_optimizer: TradeOptimizer, trade_process: str):
         self.exchange_config = exchange_config
         self.trade_optimizer = trade_optimizer
+        self._trade_process = trade_process
         self._actual_pattern_id_list = []  # this list contains all pattern_ids for actual trade candidates
         self._black_pattern_id_readable_list = []
         self._black_buy_pattern_id_readable_list = []
@@ -110,9 +111,14 @@ class TradeCandidateController:
         self._actual_pattern_id_list = []
         self._trade_candidates_for_ticker_id_dict = {}
         for pattern in pattern_list:
-            if pattern.ticker_id not in self.exchange_config.ticker_id_excluded_from_trade_list:
+            if not self.__is_ticker_excluded_from_processing__(pattern.ticker_id):
                 self._actual_pattern_id_list.append(pattern.id)
                 self.__add_pattern_to_candidates_after_check__(pattern)
+
+    def __is_ticker_excluded_from_processing__(self, ticker_id) -> bool:
+        if self._trade_process == TP.ONLINE:
+            return ticker_id in self.exchange_config.ticker_id_excluded_from_trade_list
+        return False
 
     def is_pattern_id_in_actual_pattern_id_list(self, pattern_id: str) -> bool:
         return pattern_id in self._actual_pattern_id_list

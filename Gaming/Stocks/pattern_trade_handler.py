@@ -32,7 +32,8 @@ class PatternTradeHandler:
         self.pattern_trade_dict = {}
         self.balances = None  # list of actual balances
         self.process = ''
-        self.trade_candidate_controller = TradeCandidateController(self.exchange_config, self.trade_optimizer)
+        self.trade_candidate_controller = TradeCandidateController(
+            self.exchange_config, self.trade_optimizer, self.trade_process)
         self.news_handler = NewsHandler()
         self.value_total_start = 0
         self._last_wave_tick_for_test = None

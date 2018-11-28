@@ -10,7 +10,7 @@ from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration, TP
 
 exchange_config = BitfinexConfiguration()
 exchange_config.buy_order_value_max = 101
-exchange_config.activate_automatic_trading()
+exchange_config.deactivate_automatic_trading()
 
 my_trade_client = MyBitfinexTradeClient(exchange_config)
 ticker = my_trade_client.get_ticker(TP.EOS_USD)
@@ -19,6 +19,7 @@ ticker = my_trade_client.get_ticker(TP.EOS_USD)
 # my_trade_client.sell_all(TP.EOS_USD)
 # my_trade_client.sell_all_assets()
 # my_trade_client.create_sell_stop_loss_order(TP.LTC_USD, 10, 31, False)
+my_trade_client.sell_all('ETHUSD')
 my_trade_client.create_sell_trailing_stop_order(TP.LTC_USD, 10, 2, False)
 # my_trade_client.create_buy_stop_order(TP.IOT_USD, 5000, 0.9)
 # my_trade_client.create_buy_limit_order(TP.NEO_USD, 2, 15.0)

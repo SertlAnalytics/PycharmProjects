@@ -251,7 +251,7 @@ class MyDashTab4Portfolio(MyDashBaseTab):
     def __get_table_for_portfolio__(self):
         self.__set_portfolio_rows_for_data_table__()
         min_height = max(100, 50 + len(self._table_rows) * 40)
-        return MyDCC.data_table(self._data_table_name, self._table_rows, min_height=min_height)
+        return MyDCC.data_table(self._data_table_name, self._table_rows, [], min_height=min_height)
 
     def __set_portfolio_rows_for_data_table__(self):
         if self._trade_handler_online.balances is None:

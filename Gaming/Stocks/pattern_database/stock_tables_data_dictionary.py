@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-11-14
 """
 from sertl_analytics.pybase.data_dictionary import DataDictionary
-from pattern_database.stock_tables import WaveTable
+from pattern_database.stock_tables import WaveTable, AssetTable
 from sertl_analytics.constants.pattern_constants import DC
 
 
@@ -36,3 +36,12 @@ class WaveDataDictionary(DataDictionaryWithTable):
     def __init_data_dict__(self):
         self.add(DC.PARENT_WAVE_OID, 0)
         self.add(DC.WAVE_IN_PARENT , '')
+
+
+class AssetDataDictionary(DataDictionaryWithTable):
+    @staticmethod
+    def __get_target_table_columns__() -> list:
+        return AssetTable().column_name_list
+
+    def __init_data_dict__(self):
+        self.add(DC.CURRENCY, 'USD')

@@ -596,7 +596,7 @@ class PatternTrade:
         if self.trade_process != TP.BACK_TESTING:
             self.print_trade('Details after buying')
 
-    def __set_properties_after_buy__(self, ticker: Ticker):
+    def __set_properties_after_buy__(self, ticker: Ticker):  # ToDo - like the normal trade area for pattern...
         self._status = PTS.EXECUTED
         self.data_dict_obj.add(DC.TRADE_STATUS, self.status_upper)
         self._wave_tick_at_buying = self._wave_tick_list.tick_list[-1]
@@ -608,6 +608,7 @@ class PatternTrade:
         if self.buy_trigger == BT.TOUCH_POINT:
             distance_bottom = round(buy_price - lower_value, 4)
         else:
+            distance_bottom = round(min(height, self.pattern.part_entry.distance_for_trading_box), 4)  # ToDo
             distance_bottom = round(height, 4)
         self._trade_box = self.__get_trade_box__(off_set_value, buy_price, height, distance_bottom)
         self._trade_box.print_box()
@@ -735,14 +736,13 @@ class PatternTrade:
         return None
 
     def get_markdown_text(self, ts_ticker_refresh: int, ticker_refresh: int, ticks_to_go: int):
-        # if self.ticker_actual is None:
         if self.ticker_actual is None:
             return ''
         period = self.sys_config.period
         last_price = self.ticker_actual.last_price
         text_list = [self.__get_header_line_for_markdown_text__(last_price, ts_ticker_refresh, ticker_refresh),
                      self._wave_tick_list.get_markdown_text_for_second_last_wave_tick(period),
-                     self._wave_tick_list.get_markdown_text_for_last_wave_tick(period)]
+                     self._wave_tick_list.get_markdown_text_for_last_wave_tick(self._volume_mean_for_breakout, period)]
         self.__add_process_data_to_markdown_text_list__(text_list, last_price, ticks_to_go)
         self.__add_annotation_text_to_markdown_text_list__(text_list)
         return '  \n'.join(text_list)

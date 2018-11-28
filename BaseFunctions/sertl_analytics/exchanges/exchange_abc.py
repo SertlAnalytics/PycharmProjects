@@ -24,7 +24,7 @@ class ExchangeInterface:
         raise NotImplementedError
 
     @abstractmethod
-    def create_order(self, order: Order, order_type: str, is_order_simulation: bool):
+    def create_order(self, order: Order, is_order_simulation: bool):
         raise NotImplementedError
 
     @abstractmethod

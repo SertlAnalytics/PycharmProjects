@@ -13,7 +13,7 @@ class PatternConfiguration:
         self.detection_process = PDP.ALL
         self.with_trade_part = True  # we need this configuration for testing touch strategy
         self.with_trading = False
-        self.trading_last_price_mean_aggregation = 16  # the number of ticker.last_price which are used for stop loss
+        self.trading_last_price_mean_aggregation = 4  # the number of ticker.last_price which are used for stop loss
         self.simple_moving_average_number = 8
         self.pattern_type_list = [FT.CHANNEL]
         self.pattern_ids_to_find = []
@@ -35,7 +35,7 @@ class PatternConfiguration:
         self.length_for_local_min_max_fibonacci = self.length_for_local_min_max  # fibonacci
         self.fibonacci_tolerance_pct = 0.20  # it works great for 0.20 = 20% tolerance for retracement and regression
         self.fibonacci_detail_print = False
-        self.bollinger_band_settings = {'distance': 3, 'window_size': 10, 'num_of_std': 3, 'last_elements': 3}
+        self.bollinger_band_settings = {'distance': 3, 'window_size': 10, 'num_of_std': 3, 'last_elements': 2}
         self.check_previous_period = False   # default
         self.breakout_over_congestion_range = False
         self.breakout_range_pct = 0.05

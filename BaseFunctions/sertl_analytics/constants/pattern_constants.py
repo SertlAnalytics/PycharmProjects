@@ -169,10 +169,11 @@ class EQUITY_TYPE:
     SHARE = 'Shares'
     COMMODITY = 'Commodity'
     CRYPTO = 'Crypto_Currencies'
+    CASH = 'CASH'
 
     @staticmethod
     def get_id(key: str):
-        return {EQUITY_TYPE.SHARE: 1, EQUITY_TYPE.COMMODITY: 10, EQUITY_TYPE.CRYPTO: 20}.get(key)
+        return {EQUITY_TYPE.SHARE: 1, EQUITY_TYPE.COMMODITY: 10, EQUITY_TYPE.CRYPTO: 20, EQUITY_TYPE.CASH: 30}.get(key)
 
 
 class OT:  # order type
@@ -570,10 +571,11 @@ class PTHP:  # Pattern Trade Handler Processes
 class TBT:  # TradingBoxType
     EXPECTED_WIN = 'Expected_win'
     TOUCH_POINT = 'Touchpoint'
+    BOLLINGER_BAND = 'Bollinger Band'
 
     @staticmethod
     def get_id(key: str):
-        return {TBT.EXPECTED_WIN: 10, TBT.TOUCH_POINT: 20}.get(key)
+        return {TBT.EXPECTED_WIN: 10, TBT.TOUCH_POINT: 20,  TBT.BOLLINGER_BAND: 30}.get(key)
 
 
 class PDR:  # Pattern Deletion Reasons
@@ -683,8 +685,10 @@ class DC:  # Data Columns
     # for pattern
     OID = 'oid'  # the default rowid column in each SQLITE table - unless excluded
     ID = 'ID'  # Ticker_ID-Pattern_Type_ID-Pattern_Range_Begin_DT-Pattern_Range_End_DT
-    EQUITY_TYPE = 'Equity_Type'  # Share, Commodities, Crypto Currency
-    EQUITY_TYPE_ID = 'Equity_Type_ID'  # Share, Commodities, Crypto Currency
+    EQUITY_TYPE = 'Equity_Type'  # Share, Commodities, Crypto Currency, Cash
+    EQUITY_TYPE_ID = 'Equity_Type_ID'  # Share, Commodities, Crypto Currency, Cash
+    EQUITY_ID = 'Equity_ID'  # e.g. USD, AAPL, ...
+    EQUITY_NAME = 'Equity_NAME'  # e.g. USD, Apple, ...
     PERIOD = 'Period'  # Daily, Intraday (min)
     PERIOD_ID = 'Period_ID'  # Intraday = 0, Daily = 1, Weekly = 2, Monthly = 3, Intraday (min)
     PERIOD_AGGREGATION = 'Aggregation'
@@ -851,3 +855,12 @@ class DC:  # Data Columns
     W5_RANGE = 'W5_Range'
     PARENT_WAVE_OID = 'Parent_Wave_OID'
     WAVE_IN_PARENT = 'Wave_in_parent'
+
+    # Additional Asset Columns
+    VALIDITY_DT = 'Validity_Datetime'
+    VALIDITY_TS = 'Validity_Timestamp'
+    LOCATION = 'Location'
+    QUANTITY = 'Quantity'
+    VALUE_PER_UNIT = 'Value_Unit'
+    VALUE_TOTAL = 'Value_Total'
+    CURRENCY = 'Currency'

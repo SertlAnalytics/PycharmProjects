@@ -23,7 +23,7 @@ class TradingBoxApi:
         self.trade_strategy = ''
         self.height = 0  # is used for touch point
         self.distance_bottom = 0  # is used for touch point
-        self.last_price_mean_aggregation = 16  # will be overwritten by config data
+        self.last_price_mean_aggregation = 8  # will be overwritten by config data
 
 
 class TradingBox:
@@ -159,19 +159,21 @@ class TradingBox:
 
     def __adjust_stop_loss_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
         ticker_last_price = statistics.mean(self._ticker_last_price_list[-self._api.last_price_mean_aggregation:])
+        # ticker_last_price = self._ticker_last_price_list[-1]  # ToDo...either of both or a smart solution...
         # ToDo this list number can be smarter...
+        distance_bottom_adjusted = self.__get_stopp_loss_adjusted_to_win__(ticker_last_price, self._distance_bottom)
         if self._trade_strategy == TSTR.LIMIT:  # with trailing stop
-            if self._stop_loss < ticker_last_price - self._distance_bottom:
-                self._stop_loss = ticker_last_price - self._distance_bottom
+            if self._stop_loss < ticker_last_price - distance_bottom_adjusted:
+                self._stop_loss = ticker_last_price - distance_bottom_adjusted
                 return True
         elif self._trade_strategy == TSTR.LIMIT_FIX:
             pass  # no change in stop loss
         elif self._trade_strategy == TSTR.TRAILING_STOP:  # ToDo trailing stop closer after some time...
-            if self._stop_loss < ticker_last_price - self._distance_bottom:
-                self._stop_loss = ticker_last_price - self._distance_bottom
+            if self._stop_loss < ticker_last_price - distance_bottom_adjusted:
+                self._stop_loss = ticker_last_price - distance_bottom_adjusted
                 return True
         elif self._trade_strategy == TSTR.TRAILING_STEPPED_STOP:  # ToDo trailing stop closer after some time...
-            if self._stop_loss < ticker_last_price - 2 * self.distance_stepping:
+            if self._stop_loss < ticker_last_price - self.distance_stepping:
                 multiplier = int((ticker_last_price - self._stop_loss) / self.distance_stepping) - 1
                 self._stop_loss = self._stop_loss + multiplier * self.distance_stepping
                 return True
@@ -180,6 +182,18 @@ class TradingBox:
                 self._stop_loss = self._sma_value
                 return True
         return False
+
+    def __get_stopp_loss_adjusted_to_win__(self, last_price: float, distance: float):
+        # the idea is to get closer to the curve when we are in a winning trade...
+        # but not closer than 1 %
+        distance_ptc = distance/last_price
+        current_result = (last_price - self._buy_price)/self._buy_price * 100  # we want to have full % numbers
+        if current_result > 2:
+            adjusted_distance = distance / (current_result - 1)
+            if adjusted_distance/self._buy_price > 0.01:
+                return adjusted_distance
+        return distance
+
 
     def __adjust_limit_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
         if self._trade_strategy in [TSTR.LIMIT, TSTR.LIMIT_FIX]:  # _limit doesn't change
@@ -215,6 +229,14 @@ class TradingBox:
 class ExpectedWinTradingBox(TradingBox):
     def _init_parameters_(self):
         self.box_type = TBT.EXPECTED_WIN
+        self._height = self.round(self._data_dict[DC.EXPECTED_WIN])
+        self._distance_top = self.round(self._height * self.multiplier_positive)
+        # self._distance_bottom = self.round(self._height * self.multiplier_negative)
+
+
+class BollingerBandTradingBox(TradingBox):
+    def _init_parameters_(self):
+        self.box_type = TBT.BOLLINGER_BAND
         self._height = self.round(self._data_dict[DC.EXPECTED_WIN])
         self._distance_top = self.round(self._height * self.multiplier_positive)
         # self._distance_bottom = self.round(self._height * self.multiplier_negative)

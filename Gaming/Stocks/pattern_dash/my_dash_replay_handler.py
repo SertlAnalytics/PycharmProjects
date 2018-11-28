@@ -83,6 +83,8 @@ class ReplayHandler:
             self.trade_test_api.pattern_id = ''
 
     def is_another_wave_tick_available(self):
+        if len(self.trade_handler.pattern_trade_dict) == 0:  # trade was removed...
+            return False
         return self.get_remaining_tick_number() > 0
 
     def get_remaining_tick_number(self):

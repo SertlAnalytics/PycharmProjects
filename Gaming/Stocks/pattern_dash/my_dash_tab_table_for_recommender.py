@@ -121,20 +121,19 @@ class RecommenderTable:
         return self._selected_row[RDC.INDEX]
 
     @property
-    def rows_for_selected_indices(self):
+    def height_for_display(self):
+        height = max(100, 50 + len(self._rows_selected_indices) * 40)
+        if height > 400:
+            return 400
+        return max(100, height)
+
+    def get_rows_for_selected_indices(self):
         if len(self._rows_selected_indices) == 0:
             return [RecommenderRow().get_row_as_dict()]
         RecommenderRow.sort_column = RDC.SYMBOL if self._selected_scoring == SCORING.ALL else RDC.SCORING_POINTS
         sort_reverse = False if self._selected_scoring == SCORING.ALL else True
         sorted_list = sorted(self._rows_selected_indices, reverse=sort_reverse)
         return [row.get_row_as_dict() for row in sorted_list]
-
-    @property
-    def height_for_display(self):
-        height = max(100, 50 + len(self._rows_selected_indices) * 40)
-        if height > 400:
-            return 400
-        return max(100, height)
 
     def init_selected_row(self, table_rows: list, selected_row_indices: list=None):
         if selected_row_indices is None or len(selected_row_indices) != 1:
@@ -162,8 +161,8 @@ class RecommenderTable:
     def __fill_wave_for_ticker_dict__(self):
         ts_now = MyDate.time_stamp_now()
         ts_from_daily_200 = ts_now - 60 * 60 * 24 * 200
-        ts_from_daily_actual = ts_now - 60 * 60 * 24 * 5
-        ts_from_intraday_actual = ts_now - 60 * 60 * 12
+        ts_from_daily_actual = ts_now - 60 * 60 * 24 * 5  # within the last 5 days
+        ts_from_intraday_actual = ts_now - 60 * 60 * 12  # within the last 12 hours
         for index, row in self._wave_df.iterrows():
             ticker_id = row[DC.TICKER_ID]
             if ticker_id not in self._wave_for_ticker_dict:
