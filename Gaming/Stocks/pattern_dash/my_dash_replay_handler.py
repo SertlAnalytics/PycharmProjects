@@ -77,7 +77,7 @@ class ReplayHandler:
         else:
             self.trade_test_api.from_db = False
             self.trade_test_api.period = self.sys_config.period
-            # print('set_trade_test_api_by_selected_trade_row: period = {}'.format(self.sys_config.period))
+            # print('set_trade_test_api_by_selected_trade_row: _period = {}'.format(self.sys_config._period))
             self.trade_test_api.period_aggregation = self.sys_config.period_aggregation
             self.trade_test_api.trade_id = selected_row[DC.ID]
             self.trade_test_api.pattern_id = ''
@@ -114,8 +114,8 @@ class ReplayHandler:
     def set_tick_list_to_api(self):
         api = self.trade_test_api
         stock_db_df_obj = StockDatabaseDataFrame(self.sys_config.db_stock, api.symbol, api.and_clause_unlimited)
-        # print('api.symbol={}, api.and_clause_unlimited={}, stock_db_df_obj.df_data.shape={}'.format(
-        #     api.symbol, api.and_clause_unlimited, stock_db_df_obj.df_data.shape))
+        # print('api._symbol={}, api.and_clause_unlimited={}, stock_db_df_obj.df_data.shape={}'.format(
+        #     api._symbol, api.and_clause_unlimited, stock_db_df_obj.df_data.shape))
         pattern_data = PatternData(self.sys_config.config, stock_db_df_obj.df_data)
         self.trade_test_api.tick_list_for_replay = pattern_data.tick_list
 
@@ -137,7 +137,7 @@ class ReplayHandler:
             #                                                                self.graph_api.pattern_trade.id))
             self.graph_api.ticker_id = self.trade_test_api.symbol
             self.graph_api.df = self.graph_api.pattern_trade.get_data_frame_for_replay()  # ToDo - old (this) or new
-            # self.graph_api.df = self.detector.pdh.pattern_data.df
+            # self.graph_api._df = self.detector.pdh.pattern_data._df
         self.graph_api.period = self.trade_test_api.period
 
     def set_selected_trade_to_api(self):

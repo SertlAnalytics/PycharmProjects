@@ -39,6 +39,20 @@ class MyDashTabStatisticsPlotter:
             graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
             graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
             return [MyDCC.graph(graph_api)]
+        elif self.chart_type == CHT.LINE:
+            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Assets'))
+            graph_api.figure_data = self.__get_line_figure_data__()
+            # print(graph_api.figure_data)
+            graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+            graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+            return [MyDCC.graph(graph_api)]
+        elif self.chart_type == CHT.STACK_GROUP:
+            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Assets'))
+            graph_api.figure_data = self.__get_stack_group_figure_data__()
+            # print(graph_api.figure_data)
+            graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+            graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+            return [MyDCC.graph(graph_api)]
         elif self.chart_type == CHT.PREDICTOR:
             graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'predictor'))
             graph_api.figure_data = self.__get_scatter_figure_data_for_predictor__()
@@ -110,6 +124,43 @@ class MyDashTabStatisticsPlotter:
                         'color': color_dict[element[0]],
                         'line': {'width': 0.5, 'color': 'white' if int(element[1]) == 1 else 'red'}},
                 name=element[0]
+            ) for element in combined_list
+        ]
+
+    def __get_line_figure_data__(self):
+        df_base = self.__get_df_for_selection__()
+        df = pd.DataFrame(df_base.groupby([self.x_variable, DC.LOCATION])[DC.VALUE_TOTAL].sum())
+        df.reset_index(inplace=True)
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[self.category].unique()}
+        combined_list = list(df[self.category].unique())
+        return [
+            go.Scatter(
+                x=df[df[self.category] == element][self.x_variable],
+                y=df[df[self.category] == element][self.y_variable],
+                text=df[df[self.category] == element][self.text_variable],
+                line={'color': color_dict[element], 'width': 2},
+                opacity=0.7,
+                name=element
+            ) for element in combined_list
+        ]
+
+    def __get_stack_group_figure_data__(self):
+        df_base = self.__get_df_for_selection__()
+        col = DC.EQUITY_NAME
+        df = pd.DataFrame(df_base.groupby([self.x_variable, DC.LOCATION, col])[DC.VALUE_TOTAL].sum())
+        df.reset_index(inplace=True)
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[col].unique()}
+        combined_list = list(itertools.product(df[self.category].unique(), df[col].unique()))
+        return [
+            dict(
+                x=df[np.logical_and(df[self.category] == element[0], df[col] == element[1])][self.x_variable],
+                y=df[np.logical_and(df[self.category] == element[0], df[col] == element[1])][self.y_variable],
+                text=df[np.logical_and(df[self.category] == element[0], df[col] == element[1])][self.text_variable],
+                line={'color': color_dict[element[1]], 'width': 2},
+                fill='tonexty',
+                opacity=0.7,
+                name='{}: {}'.format(element[0], element[1]),
+                stackgroup='one'
             ) for element in combined_list
         ]
 
@@ -220,6 +271,8 @@ class MyDashTabStatisticsPlotter:
             return {'type': 'log', 'autorange': True}
 
     def __can_axis_be_scaled_log_for_selected_variable__(self, variable_for_axis: str) -> bool:
+        if variable_for_axis in [DC.VALUE_TOTAL]:
+            return False
         min_value = self._df_base[variable_for_axis].min()
         if type(min_value) is not str:  # to avoid problems with dates, etc.
             unique_value_list = self._df_base[variable_for_axis].unique()
@@ -307,6 +360,23 @@ class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
     @staticmethod
     def __get_result_id_from_row__(row) -> int:
         return row[DC.TRADE_RESULT_ID]
+
+
+class MyDashTabStatisticsPlotter4Assets(MyDashTabStatisticsPlotter):
+    def __init_parameter__(self):
+        self._chart_id = 'asset_statistics_graph'
+        self._chart_name = 'Assets'
+        self.chart_type = CHT.AREA_WINNER_LOSER
+        self.category = DC.LOCATION
+        self.x_variable = DC.LOCATION
+        self.y_variable = DC.VALUE_TOTAL
+        self.z_variable = DC.VALUE_TOTAL
+        self.text_variable = DC.LOCATION
+        self.pattern_type = FT.ALL
+
+    @staticmethod
+    def __get_result_id_from_row__(row) -> int:
+        return row[DC.VALUE_TOTAL]
 
 
 class MyDashTabStatisticsPlotter4Pattern(MyDashTabStatisticsPlotter):

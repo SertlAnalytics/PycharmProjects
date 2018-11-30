@@ -18,6 +18,7 @@ from pattern_dash.my_dash_tab_for_pattern import MyDashTab4Pattern
 from pattern_dash.my_dash_tab_for_trades import MyDashTab4Trades
 from pattern_dash.my_dash_tab_for_statistics_trade import MyDashTab4TradeStatistics
 from pattern_dash.my_dash_tab_for_statistics_pattern import MyDashTab4PatternStatistics
+from pattern_dash.my_dash_tab_for_statistics_asset import MyDashTab4AssetStatistics
 from pattern_dash.my_dash_tab_for_configuration import MyDashTab4Configuration
 from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_dash.my_dash_tab_for_portfolio import MyDashTab4Portfolio
@@ -38,6 +39,8 @@ class MyDash4Pattern(MyDashBase):
         self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.trade_handler_online)
         self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config, self.color_handler)
+        self.tab_asset_statistics = MyDashTab4AssetStatistics(self.app, self.sys_config,
+                                                              self.color_handler, self.trade_handler_online)
         self.tab_configuration = MyDashTab4Configuration(self.app, self.sys_config, self.trade_handler_online)
 
     def get_pattern(self):
@@ -50,6 +53,7 @@ class MyDash4Pattern(MyDashBase):
         self.tab_trades.init_callbacks()
         self.tab_trade_statistics.init_callbacks()
         self.tab_pattern_statistics.init_callbacks()
+        self.tab_asset_statistics.init_callbacks()
         self.tab_configuration.init_callbacks()
 
     @staticmethod
@@ -89,12 +93,13 @@ class MyDash4Pattern(MyDashBase):
 
     def __get_tabs_for_app__(self):
         tab_list = [
-            MyDCC.tab('Pattern Detector', [self.tab_pattern.get_div_for_tab()]),
+            MyDCC.tab('Detector', [self.tab_pattern.get_div_for_tab()]),
             MyDCC.tab('Portfolio', [self.tab_portfolio.get_div_for_tab()]),
             MyDCC.tab('Recommender', [self.tab_recommender.get_div_for_tab()]),
-            MyDCC.tab('Trades', [self.tab_trades.get_div_for_tab()]),
-            MyDCC.tab('Trade statistics', [self.tab_trade_statistics.get_div_for_tab()]),
-            MyDCC.tab('Pattern statistics', [self.tab_pattern_statistics.get_div_for_tab()]),
+            MyDCC.tab('Trading', [self.tab_trades.get_div_for_tab()]),
+            MyDCC.tab('Trades', [self.tab_trade_statistics.get_div_for_tab()]),
+            MyDCC.tab('Patterns', [self.tab_pattern_statistics.get_div_for_tab()]),
+            MyDCC.tab('Assets', [self.tab_asset_statistics.get_div_for_tab()]),
             MyDCC.tab('Configuration', [self.tab_configuration.get_div_for_tab()])
         ]
         return MyDCC.tabs('my_app_tabs', tab_list)

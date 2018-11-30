@@ -20,10 +20,9 @@ from sertl_analytics.exchanges.exchange_abc import ExchangeInterface
 from sertl_analytics.exchanges.exchange_cls import Order, OrderApi, OrderStatus
 from sertl_analytics.exchanges.exchange_cls import OrderBook, Balance, Ticker
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.mystring import MyString
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher
 from sertl_analytics.mycache import MyCacheObjectApi, MyCacheObject, MyCache
 
 
@@ -166,7 +165,7 @@ class IBKRFactory:
     def get_order_status_by_json_dict(config: IBKRConfiguration, order_id: int, json: dict) -> IBKROrderStatus:
         order_status = IBKROrderStatus()
         order_status.order_id = order_id
-        order_status.symbol = json['symbol']
+        order_status.symbol = json['_symbol']
         order_status.exchange = json['exchange']
         order_status.price = float(json['price'])
         order_status.avg_execution_price = float(json['avg_execution_price'])
@@ -176,7 +175,7 @@ class IBKRFactory:
         order_status.original_amount = float(json['original_amount'])
         order_status.remaining_amount = float(json['remaining_amount'])
         if order_status.executed_amount == 0:  # ToDo: we have some problems with that property...
-            order_status.executed_amount = order_status_api.original_amount
+            order_status.executed_amount = order_status.original_amount
         order_status.is_cancelled = json['is_cancelled']
         order_status.time_stamp = float(json['timestamp'])
         order_status.set_fee_amount(config.buy_fee_pct if order_status.side == OS.BUY else config.sell_fee_pct, True)
@@ -253,13 +252,12 @@ class IBKRBalanceCache(MyCache):
 
 
 class MyIBKR(ExchangeInterface):
-    def __init__(self, api_key: str, api_secret_key: str, exchange_config: IBKRConfiguration):
+    def __init__(self, exchange_config: IBKRConfiguration):
         self.exchange_config = exchange_config
         self.base_currency = self.exchange_config.default_currency
-        self.http_timeout = 5.0 # HTTP request timeout in seconds
+        self.http_timeout = 5.0 # HTTP _request timeout in seconds
         self.url = 'https://api.bitfinex.com/v1'
-        self.api_key = api_key
-        self.api_secret_key = api_secret_key
+        self.alphavantage_stock_fetcher = AlphavantageStockFetcher()
         self._hodl_dict = self.exchange_config.hodl_dict
         self.trading_pairs = self.get_symbols()
         self.ticker_cache = IBKRTickerCache(self.exchange_config.cache_ticker_seconds)
@@ -289,12 +287,12 @@ class MyIBKR(ExchangeInterface):
     def get_available_money(self) -> float:
         return self.get_available_money_balance().amount_available
 
-    def create_order(self, order: IBKROrder, order_type: str, is_order_simulation: bool):
+    def create_order(self, order: IBKROrder, is_order_simulation: bool):
         self.__init_actual_order_properties__(order)
         if self.__is_enough_balance_available__(order):
             if not self.__is_order_affected_by_hodl_config__(order):
                 if self.__is_order_value_compliant__(order):
-                    return self.__create_order__(order, order_type, is_order_simulation)
+                    return self.__create_order__(order, is_order_simulation)
 
     def delete_order(self, order_id: int, is_order_simulation: bool):
         prefix = 'Delete order - executed{}'.format(self.get_simulation_suffix(is_order_simulation))
@@ -346,7 +344,7 @@ class MyIBKR(ExchangeInterface):
         order_sell_all = IBKRSellMarketOrder(trading_pair, balance.amount_available)
         order_sell_all.actual_balance_symbol = balance
         is_order_simulation = not self.is_automated_trading_on
-        return self.create_order(order_sell_all, 'Sell all', is_order_simulation)
+        return self.create_order(order_sell_all, is_order_simulation)
 
     def buy_available(self, symbol: str, last_price: float, is_order_simulation: bool):
         if is_order_simulation:
@@ -360,12 +358,12 @@ class MyIBKR(ExchangeInterface):
             ticker = self.get_ticker(symbol) if last_price == 0 else None
             last_price = ticker.last_price if ticker else last_price
             # the minus value in the next term is necessary to ensure that this amount is buyable
-            last_price_modified = last_price * (1.02)  # the part 0.02 is for amount safety - we want to be below limit
+            last_price_modified = last_price * (1.02)  # the part 0.02 is for amount safety - we want to be below _limit
             amount = round(available_money / last_price_modified, 2)
             order_buy_all = IBKRBuyMarketOrder(symbol, amount)
             order_buy_all.actual_money_available = available_money
             order_buy_all.actual_ticker = ticker
-            return self.create_order(order_buy_all, 'Buy available', is_order_simulation)
+            return self.create_order(order_buy_all, is_order_simulation)
 
     def get_balance_for_symbol(self, symbol: str) -> Balance:
         balance_from_cache = self.balance_cache.get_cached_object_by_key(symbol)
@@ -391,7 +389,7 @@ class MyIBKR(ExchangeInterface):
             return old_order_status
 
         payload_additional = {
-            'order_id': order_id, 'symbol': old_order_status.symbol.lower(),
+            'order_id': order_id, '_symbol': old_order_status.symbol.lower(),
             'amount': str(old_order_status.original_amount),
             'price': str(price_new), 'exchange': 'bitfinex', 'side': old_order_status.side,
             'type': old_order_status.type
@@ -410,7 +408,7 @@ class MyIBKR(ExchangeInterface):
         return self.__get_json__('/positions')
 
     def get_past_trades(self, symbol: str, from_time_stamp: float):
-        payload_additional = {"symbol": symbol, "timestamp": from_time_stamp}
+        payload_additional = {"_symbol": symbol, "timestamp": from_time_stamp}
         return self.__get_json__('/positions', payload_additional)
 
     def get_balances(self) -> list:
@@ -501,17 +499,15 @@ class MyIBKR(ExchangeInterface):
         if order_status:
             order_status.print_order_status('Order status{}'.format(self.get_simulation_suffix()))
 
-    def __create_order__(self, order: Order, order_type: str, is_order_simulation: bool) -> OrderStatus:
-        order_type = 'Normal' if order_type == '' else order_type
-        print_prefix = '{}: Order executed{} for {}:'.format(
-            order_type, self.get_simulation_suffix(is_order_simulation), order.symbol)
+    def __create_order__(self, order: Order, is_order_simulation: bool) -> OrderStatus:
+        print_prefix = 'Order executed{} for {}:'.format(self.get_simulation_suffix(is_order_simulation), order.symbol)
         if self.is_transaction_simulation(is_order_simulation):
             if order.type == OT.EXCHANGE_MARKET:
                 order.price = order.actual_ticker.ask
             return IBKRFactory.get_order_status_by_order_for_simulation(self.exchange_config, order)
         else:
             payload_additional = {
-                'symbol': order.symbol.lower(), 'amount': str(order.amount), 'price': str(order.price),
+                '_symbol': order.symbol.lower(), 'amount': str(order.amount), 'price': str(order.price),
                 'exchange': 'bitfinex', 'side': order.side, 'type': order.type
             }
             json_resp = self.__get_json__('/order/new', payload_additional)
@@ -551,7 +547,7 @@ class MyIBKR(ExchangeInterface):
         price = MyIBKR.__get_price_for_order__(order)
         order_value = order.amount * price
         if order_value > self.exchange_config.buy_order_value_max:
-            print('\nThe order value {:.2f} is over the limit of {:.2f}$:'.format(
+            print('\nThe order value {:.2f} is over the _limit of {:.2f}$:'.format(
                 order_value, self.exchange_config.buy_order_value_max), order.get_details())
             return False
         return True
@@ -578,7 +574,7 @@ class MyIBKR(ExchangeInterface):
 
     def __get_json__(self, path: str, payload_additional: dict = None):
         payload = {
-            'request': '/v1{}'.format(path),  # like /order/cancel
+            '_request': '/v1{}'.format(path),  # like /order/cancel
             'nonce': self.nonce
         }
         if payload_additional:

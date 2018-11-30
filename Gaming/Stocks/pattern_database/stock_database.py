@@ -12,6 +12,7 @@ from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStock
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
     CompanyTable, STBL, WaveTable, AssetTable
+from pattern_index_configuration import IndexConfiguration
 import pandas as pd
 import math
 from datetime import datetime
@@ -92,8 +93,7 @@ class StockInsertHandler:
 class StockDatabase(BaseDatabase):
     def __init__(self):
         BaseDatabase.__init__(self)
-        self._crypto_ccy_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
-        self._sleep_seconds = 5
+        self._index_config = IndexConfiguration([INDICES.CRYPTO_CCY])
         self._dt_now_time_stamp = int(datetime.now().timestamp())
         self._stocks_table = StocksTable()
         self._company_table = CompanyTable()
@@ -101,6 +101,9 @@ class StockDatabase(BaseDatabase):
         self._trade_table = TradeTable()
         self._wave_table = WaveTable()
         self._asset_table = AssetTable()
+        self._alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
+        self._alphavantage_stock_fetcher = AlphavantageStockFetcher()
+        self._sleep_seconds = 5
 
     def is_symbol_loaded(self, symbol: str):
         last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
@@ -200,38 +203,41 @@ class StockDatabase(BaseDatabase):
         if process_type == 'NONE':
             print('{} - {} is already up-to-date - no load required.'.format(ticker, name))
             return
-        if ticker not in company_dic or company_dic[ticker].ToBeLoaded:
-            output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
-            try:
-                if ticker in self._crypto_ccy_dic:
-                    stock_fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
-                else:
-                    stock_fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
-            except KeyError:
-                self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
-                self.error_handler.add_to_retry_dic(ticker, [name, period])
-                time.sleep(self._sleep_seconds)
-                return
-            except:
-                self.error_handler.catch_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
-                self.error_handler.add_to_retry_dic(ticker, [name, period])
-                time.sleep(self._sleep_seconds)
-                return
-            df = stock_fetcher.df
-            if ticker not in company_dic:
-                to_be_loaded = df[CN.VOL].mean() > 10000
-                self.__insert_company_in_company_table__(ticker, name, to_be_loaded)
-                company_dic[ticker] = to_be_loaded
-                if not to_be_loaded:
-                    time.sleep(self._sleep_seconds)
-                    return
-            if ticker in last_loaded_date_stamp_dic:
-                df = df.loc[last_loaded_time_stamp:].iloc[1:]
-            if df.shape[0] > 0:
-                input_list = self.__get_df_data_for_insert_statement__(df, period, ticker)
-                self.__insert_data_into_table__(STBL.STOCKS, input_list)
-                print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
+        if ticker in company_dic and not company_dic[ticker].ToBeLoaded:
+            return  # must not be loaded
+        output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
+        kw_args = {'symbol': ticker, 'period': period, 'aggregation': aggregation, 'output_size': output_size}
+        try:
+            if self._index_config.is_symbol_crypto(ticker):
+                fetcher = self._alphavantage_crypto_fetcher
+            else:
+                fetcher = self._alphavantage_stock_fetcher
+            fetcher.retrieve_data(**kw_args)
+        except KeyError:
+            self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
+            self.error_handler.add_to_retry_dic(ticker, [name, period])
             time.sleep(self._sleep_seconds)
+            return
+        except:
+            self.error_handler.catch_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
+            self.error_handler.add_to_retry_dic(ticker, [name, period])
+            time.sleep(self._sleep_seconds)
+            return
+        df = fetcher.df
+        if ticker not in company_dic:
+            to_be_loaded = df[CN.VOL].mean() > 10000
+            self.__insert_company_in_company_table__(ticker, name, to_be_loaded)
+            company_dic[ticker] = to_be_loaded
+            if not to_be_loaded:
+                time.sleep(self._sleep_seconds)
+                return
+        if ticker in last_loaded_date_stamp_dic:
+            df = df.loc[last_loaded_time_stamp:].iloc[1:]
+        if df.shape[0] > 0:
+            input_list = self.__get_df_data_for_insert_statement__(df, period, ticker)
+            self.__insert_data_into_table__(STBL.STOCKS, input_list)
+            print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
+        time.sleep(self._sleep_seconds)
 
     def __get_company_dict__(self, symbol_input: str = '', like_input: str = ''):
         company_dict = {}
@@ -268,10 +274,10 @@ class StockDatabase(BaseDatabase):
     def __get_index_list__(index: str):
         return [INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.SP500] if index == INDICES.ALL else [index]
 
-    def get_input_values_for_stock_table(self, period, symbol: str, output_size: OPS):
-        stock_fetcher = AlphavantageStockFetcher(symbol, period, output_size)
-        df = stock_fetcher.__get_data_frame__()
-        return self.__get_df_data_for_insert_statement__(df, period, symbol)
+    def get_input_values_for_stock_table(self, period, symbol: str, output_size: str):
+        kw_args = {'symbol': symbol, 'period': period, 'output_size': output_size}
+        self._alphavantage_stock_fetcher.retrieve_data(**kw_args)
+        return self.__get_df_data_for_insert_statement__(self._alphavantage_stock_fetcher.df, period, symbol)
 
     @staticmethod
     def __get_df_data_for_insert_statement__(df: pd.DataFrame, period: str, symbol: str, aggregation=1):
@@ -340,6 +346,11 @@ class StockDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
+    def is_any_asset_already_available_for_timestamp(self, time_stamp: int):
+        query = self._asset_table.get_query_for_records('Validity_Timestamp={}'.format(time_stamp))
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.shape[0] > 0
+
     def update_trade_type_for_pattern(self, pattern_id: str, trade_type: str):
         where_clause = "Pattern_ID = '{}'".format(pattern_id)
         query = self._trade_table.get_query_for_records(where_clause)
@@ -389,6 +400,17 @@ class StockDatabase(BaseDatabase):
 
     def get_trade_records_for_statistics_as_dataframe(self) -> pd.DataFrame:
         query = self._trade_table.get_query_for_records("Trade_Result_ID != 0")
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df
+
+    def get_trade_records_for_asset_statistics_as_dataframe(self) -> pd.DataFrame:
+        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0 and Trade_Process = 'Online'")
+        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0")
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df
+
+    def get_asset_records_for_statistics_as_dataframe(self) -> pd.DataFrame:
+        query = self._asset_table.get_query_for_records()
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 

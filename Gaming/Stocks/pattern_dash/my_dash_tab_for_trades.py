@@ -481,7 +481,7 @@ class MyDashTab4Trades(MyDashBaseTab):
 
     @staticmethod
     def __get_drop_down_for_trades__(drop_down_name='trades-selection_statistics'):
-        options = [{'label': 'df', 'value': 'df'}]
+        options = [{'label': '_df', 'value': '_df'}]
         return MyDCC.drop_down(drop_down_name, options)
 
     def __get_table_for_trades__(self, take_cached=False):

@@ -257,8 +257,9 @@ class BitfinexBalanceCache(MyCache):
 class MyBitfinex(ExchangeInterface):
     def __init__(self, api_key: str, api_secret_key: str, exchange_config: BitfinexConfiguration):
         self.exchange_config = exchange_config
+        self.bitfinex_crypto_fetcher = BitfinexCryptoFetcher()
         self.base_currency = self.exchange_config.default_currency
-        self.http_timeout = 5.0 # HTTP request timeout in seconds
+        self.http_timeout = 5.0 # HTTP _request timeout in seconds
         self.url = 'https://api.bitfinex.com/v1'
         self.api_key = api_key
         self.api_secret_key = api_secret_key
@@ -357,7 +358,7 @@ class MyBitfinex(ExchangeInterface):
             ticker = self.get_ticker(symbol) if last_price == 0 else None
             last_price = ticker.last_price if ticker else last_price
             # the minus value in the next term is necessary to ensure that this amount is buyable
-            last_price_modified = last_price * (1.02)  # the part 0.02 is for amount safety - we want to be below limit
+            last_price_modified = last_price * (1.02)  # the part 0.02 is for amount safety - we want to be below _limit
             amount = available_money / last_price_modified
             order_buy = BuyMarketOrder(symbol, amount)
             order_buy.actual_money_available = available_money
@@ -413,6 +414,7 @@ class MyBitfinex(ExchangeInterface):
     def get_balances(self) -> list:
         balance_list = []
         json_resp_list = self.__get_json__('/balances')
+        # print('get_balances.json_resp_list = {}'.format(json_resp_list))
         for json_resp in json_resp_list:
             if 'error' in json_resp:
                 pass
@@ -467,9 +469,11 @@ class MyBitfinex(ExchangeInterface):
         if df_from_cache is not None:
             # print('df_source from cache: {}'.format(data_fetcher_cache_key.key))
             return df_from_cache
-        fetcher = BitfinexCryptoFetcher(symbol, period, aggregation, section, limit)
-        self.__add_data_frame_to_cache__(fetcher.df_data, data_fetcher_cache_key)
-        return fetcher.df_data
+        kw_args = {'symbol': symbol, 'period': period, 'aggregation': aggregation, 'section': section}
+        self.bitfinex_crypto_fetcher.retrieve_data(**kw_args)
+        df_data = self.bitfinex_crypto_fetcher.df_data
+        self.__add_data_frame_to_cache__(df_data, data_fetcher_cache_key)
+        return df_data
 
     def __add_data_frame_to_cache__(self, df: pd.DataFrame, data_fetcher_cache_key: BitfinexDataFetcherCacheKey):
         cache_api = MyCacheObjectApi()
@@ -571,7 +575,7 @@ class MyBitfinex(ExchangeInterface):
         price = MyBitfinex.__get_price_for_order__(order)
         order_value = order.amount * price
         if order_value > self.exchange_config.buy_order_value_max:
-            print('\nThe order value {:.2f} is over the limit of {:.2f}$:'.format(
+            print('\nThe order value {:.2f} is over the _limit of {:.2f}$:'.format(
                 order_value, self.exchange_config.buy_order_value_max), order.get_details())
             return False
         return True
@@ -606,6 +610,7 @@ class MyBitfinex(ExchangeInterface):
                 payload[key] = values
 
         signed_payload = self.__get_signed_payload__(payload)
+        # print('self.url={}, path={}'.format(self.url, path))
         r = requests.post(self.url + path, headers=signed_payload, verify=True)
         return r.json()
 

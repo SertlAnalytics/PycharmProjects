@@ -153,8 +153,8 @@ class Pattern:
     def __get_pattern_id__(self) -> PatternID:
         kwargs = {
             'equity_type_id': self.data_dict_obj.get(DC.EQUITY_TYPE_ID),
-            'period': self.data_dict_obj.get(DC.PERIOD),
-            'aggregation': self.data_dict_obj.get(DC.PERIOD_AGGREGATION),
+            '_period': self.data_dict_obj.get(DC.PERIOD),
+            '_aggregation': self.data_dict_obj.get(DC.PERIOD_AGGREGATION),
             'ticker_id': self.ticker_id,
             'pattern_type': self.pattern_type,
             'pattern_range_id': self.pattern_range.id
@@ -555,7 +555,7 @@ class Pattern:
         expected_win_pct = round(((self.get_expected_win() + ref_value) / ref_value - 1)*100, 1)
         if expected_win_pct >= min_expected_win_pct:
             return True
-        else:  # check the previous period if there was a big change - there are sometimes big moves afterwards...
+        else:  # check the previous _period if there was a big change - there are sometimes big moves afterwards...
             previous_top_pct = self.data_dict_obj.get(DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT)
             previous_bottom_pct = self.data_dict_obj.get(DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT)
             return previous_top_pct + previous_bottom_pct > 100

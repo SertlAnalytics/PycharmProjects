@@ -226,7 +226,7 @@ class PatternTrade:
         self._trade_client = value
 
     def get_data_frame_for_replay(self):
-        # return self.pattern.df
+        # return self.pattern._df
         if len(self._wave_tick_list.tick_list) > self.pattern.df_length:
             return self._df_for_replay
         else:

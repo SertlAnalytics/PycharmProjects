@@ -15,8 +15,8 @@ stocks = Table('Stocks', metadata, autoload=True, autoload_with=engine)
 # Print table names
 print(engine.table_names())
 
-# Assign URL to variable: url
-url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=MBNAJ5C1NDPXER69'
+# Assign URL to variable: _url
+url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&_symbol=MSFT&apikey=MBNAJ5C1NDPXER69'
 # MBNAJ5C1NDPXER69
 # Package the request, send the request and catch the response: r
 r = requests.get(url)

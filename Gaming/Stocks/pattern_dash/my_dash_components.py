@@ -442,7 +442,8 @@ class MyDCC:
                     'shapes': graph_api.figure_layout_shapes,
                     'annotations': graph_api.figure_layout_annotations
                 }
-            })
+            }
+        )
 
     @staticmethod
     def add_properties_to_x_y_axis_dict(x_axis_dict: dict, y_axis_dict: dict):

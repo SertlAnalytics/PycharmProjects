@@ -49,6 +49,16 @@ class PatternDataFetcherCacheKey(DataFetcherCacheKey):
         return 'from_db={}_ticker={}_period={}_aggregation={}_output_size={}_limit={}_and_clause={}'.format(
             self.from_db, self.ticker_id, self.period, self.aggregation, self.output_size, self.limit, self.and_clause)
 
+    def get_kw_args(self):
+        return {
+            'symbol': self.ticker_id,
+            'period': self.period,
+            'aggregation': self.aggregation,
+            'section': 'hist',
+            'limit': self.limit,
+            'output_size': self.output_size
+        }
+
 
 class PatternDataProvider:
     def __init__(self, config: PatternConfiguration, index_config: IndexConfiguration,
@@ -187,28 +197,26 @@ class PatternDataProvider:
         self._df_cache.add_cache_object(cache_api)
 
     def __get_df_from_original_source__(self, data_fetcher_cache_key: PatternDataFetcherCacheKey):
-        ticker = data_fetcher_cache_key.ticker_id
-        period = data_fetcher_cache_key.period
-        aggregation = data_fetcher_cache_key.aggregation
-        and_clause = data_fetcher_cache_key.and_clause
-        limit = data_fetcher_cache_key.limit
-        output_size = data_fetcher_cache_key.output_size
+        kw_args = data_fetcher_cache_key.get_kw_args()
+        ticker_id = data_fetcher_cache_key.ticker_id
         # print('__get_df_from_original_source__: ticker={}'.format(ticker))
         if self.from_db:
-            self.__handle_not_available_symbol__(data_fetcher_cache_key.ticker_id)
-            stock_db_df_obj = stock_database.StockDatabaseDataFrame(self._db_stock, ticker, and_clause)
+            and_clause = data_fetcher_cache_key.and_clause
+            self.__handle_not_available_symbol__(ticker_id)
+            stock_db_df_obj = stock_database.StockDatabaseDataFrame(self._db_stock, ticker_id, and_clause)
             return stock_db_df_obj.df_data
-        elif self.index_config.is_symbol_crypto(ticker) or ticker[-3:] == 'USD':
+        elif self.index_config.is_symbol_crypto(ticker_id):
             if self.provider_crypto == DP.BITFINEX:
-                fetcher = BitfinexCryptoFetcher(ticker, period, aggregation, 'hist', limit)
+                fetcher = BitfinexCryptoFetcher()
             elif self.provider_crypto == DP.CRYPTO_COMPARE:
-                fetcher = CryptoCompareCryptoFetcher(ticker, period, aggregation, limit)
+                fetcher = CryptoCompareCryptoFetcher()
             else:
-                fetcher = AlphavantageCryptoFetcher(ticker, period, aggregation)
-                time.sleep(10)  # to avoid problems with the data provider restrictions (requests per minute)
+                fetcher = AlphavantageCryptoFetcher()
+            fetcher.retrieve_data(**kw_args)
             return fetcher.df_data
         else:
-            fetcher = AlphavantageStockFetcher(ticker, period, aggregation, output_size)
+            fetcher = AlphavantageStockFetcher()
+            fetcher.retrieve_data(**kw_args)
             if self.period == PRD.INTRADAY:
                 return self.__get_with_concatenated_intraday_data__(fetcher.df_data)
             return fetcher.df_data
@@ -224,7 +232,7 @@ class PatternDataProvider:
     def __handle_not_available_symbol__(self, ticker):
         if not self._db_stock.is_symbol_loaded(ticker):
             if UserInput.get_confirmation('{} is not available. Do you want to load it'.format(ticker)):
-                name = UserInput.get_input('Please enter the name for the symbol {}'.format(ticker))
+                name = UserInput.get_input('Please enter the name for the _symbol {}'.format(ticker))
                 if name == 'x':
                     exit()
                 self._db_stock.update_stock_data_for_symbol(ticker, name)
@@ -233,7 +241,7 @@ class PatternDataProvider:
 
     @staticmethod
     def __get_with_concatenated_intraday_data__(df: pd.DataFrame):
-        # df['time'] = df['time'].apply(datetime.fromtimestamp)
+        # _df['time'] = _df['time'].apply(datetime.fromtimestamp)
         df[CN.TIMESTAMP] = df.index.map(int)
         epoch_seconds_number = df.shape[0]
         epoch_seconds_max = df[CN.TIMESTAMP].max()

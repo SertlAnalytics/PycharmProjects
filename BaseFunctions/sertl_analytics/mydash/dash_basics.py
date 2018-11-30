@@ -47,7 +47,7 @@ class MyDash:
         self.df = pd.read_csv('salaries.csv')
         print(self.df.head())
         self.df.plot()
-        # self.df.boxplot()
+        # self._df.boxplot()
         # Dash.config
         plt.show()
 
@@ -133,7 +133,7 @@ class MyDash:
         #######
         # First Milestone Project: Develop a Stock Ticker
         # dashboard that either allows the user to enter
-        # a ticker symbol into an input box, or to select
+        # a ticker _symbol into an input box, or to select
         # item(s) from a dropdown list, and uses pandas_datareader
         # to look up and display stock data on a graph.
         ######
@@ -889,7 +889,7 @@ class MyDash:
                                                  marker={
                                                      'size': 12,
                                                      'color': 'rgb(51,204,153)',
-                                                     'symbol': 'pentagon',
+                                                     '_symbol': 'pentagon',
                                                      'line': {'width': 2}
                                                  }
                                              )],
@@ -905,7 +905,7 @@ class MyDash:
                                                  marker={
                                                      'size': 12,
                                                      'color': 'rgb(200,204,53)',
-                                                     'symbol': 'pentagon',
+                                                     '_symbol': 'pentagon',
                                                      'line': {'width': 2}
                                                  }
                                              )],

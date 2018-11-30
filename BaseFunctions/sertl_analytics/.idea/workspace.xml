@@ -11,20 +11,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="nn_collector.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="nn_collector.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/models/nn_collector.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1207">
+            <state relative-caret-position="757">
               <caret line="74" selection-start-line="74" selection-end-line="74" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="exchange_cls.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="340">
-              <caret line="32" column="38" selection-start-line="32" selection-start-column="38" selection-end-line="32" selection-end-column="38" />
             </state>
           </provider>
         </entry>
@@ -51,6 +42,9 @@
       <find>is_si</find>
       <find>= 100</find>
       <find>Corrected_executed_amount</find>
+      <find>_symbol</find>
+      <find>_request</find>
+      <find>test'</find>
     </findStrings>
   </component>
   <component name="IdeDocumentHistory">
@@ -68,19 +62,19 @@
         <option value="$PROJECT_DIR$/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/mycache.py" />
         <option value="$PROJECT_DIR$/searches/smart_searches.py" />
-        <option value="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" />
         <option value="$PROJECT_DIR$/datafetcher/data_fetcher_cache.py" />
         <option value="$PROJECT_DIR$/pybase/loop_list.py" />
         <option value="$PROJECT_DIR$/models/nn_collector.py" />
         <option value="$PROJECT_DIR$/exchanges/bitfinex_trade_client.py" />
         <option value="$PROJECT_DIR$/user_input/confirmation.py" />
-        <option value="$PROJECT_DIR$/exchanges/interactive_broker_trade_client.py" />
         <option value="$PROJECT_DIR$/mydates.py" />
         <option value="$PROJECT_DIR$/exchanges/interactive_broker_test.py" />
         <option value="$PROJECT_DIR$/exchanges/exchange_cls.py" />
-        <option value="$PROJECT_DIR$/exchanges/interactive_broker.py" />
         <option value="$PROJECT_DIR$/exchanges/exchange_abc.py" />
         <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
+        <option value="$PROJECT_DIR$/exchanges/interactive_broker_trade_client.py" />
+        <option value="$PROJECT_DIR$/exchanges/interactive_broker.py" />
+        <option value="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" />
       </list>
     </option>
   </component>
@@ -94,6 +88,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -105,6 +100,12 @@
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
               <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
               <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="datafetcher" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
@@ -152,7 +153,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -224,8 +224,8 @@
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25140113" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.5020016" side_tool="true" visible="true" weight="0.3290735" />
-      <window_info active="true" anchor="bottom" id="Find" order="1" sideWeight="0.4979984" visible="true" weight="0.3290735" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50280225" side_tool="true" visible="true" weight="0.32747602" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.4979984" weight="0.3290735" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49559647" weight="0.32862744" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49959967" weight="0.32784313" />
@@ -246,17 +246,10 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="1" />
+      <option name="time" value="4" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/exchanges/interactive_broker.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="9639">
-          <caret line="584" column="30" lean-forward="true" selection-start-line="584" selection-start-column="30" selection-end-line="584" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="323">
@@ -507,13 +500,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/datafetcher/financial_data_fetcher.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="269">
-          <caret line="100" column="6" selection-start-line="100" selection-start-column="6" selection-end-line="100" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/ibapi-9.73.7-py3.6.egg!/ibapi/wrapper.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="309">
@@ -563,34 +549,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exchanges/interactive_broker_trade_client.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="32" column="25" selection-start-line="32" selection-start-column="25" selection-end-line="32" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/nn_collector.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1207">
-          <caret line="74" selection-start-line="74" selection-end-line="74" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exchanges/interactive_broker.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="366">
-          <caret line="509" column="53" lean-forward="true" selection-start-line="509" selection-start-column="53" selection-end-line="509" selection-end-column="53" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="264">
-          <caret line="23" column="33" lean-forward="true" selection-start-line="23" selection-start-column="33" selection-end-line="23" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="637">
@@ -601,10 +559,55 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/datafetcher/database_fetcher.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-136">
+          <caret line="16" column="19" lean-forward="true" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/datafetcher/financial_data_fetcher.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="28" lean-forward="true" selection-start-line="28" selection-end-line="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="264">
+          <caret line="26" column="8" selection-start-line="26" selection-start-column="8" selection-end-line="26" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/interactive_broker.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="261" column="38" selection-start-line="261" selection-start-column="38" selection-end-line="261" selection-end-column="38" />
+          <folding>
+            <element signature="e#287#325#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/interactive_broker_trade_client.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="493">
+          <caret line="35" column="24" selection-start-line="35" selection-start-column="24" selection-end-line="35" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="340">
           <caret line="32" column="38" selection-start-line="32" selection-start-column="38" selection-end-line="32" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/nn_collector.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="757">
+          <caret line="74" selection-start-line="74" selection-end-line="74" />
         </state>
       </provider>
     </entry>

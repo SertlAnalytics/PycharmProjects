@@ -64,7 +64,7 @@ class FD:
 
 class FCC:  # Formation Condition Columns
     BREAKOUT_WITH_BUY_SIGNAL = 'breakout had a buy signal'
-    PREVIOUS_PERIOD_CHECK_OK = 'previous period check OK'  # eg. CN.LOW
+    PREVIOUS_PERIOD_CHECK_OK = 'previous _period check OK'  # eg. CN.LOW
     COMBINED_PARTS_APPLICABLE = 'combined parts are formation applicable'
 
 
@@ -1357,7 +1357,7 @@ class FSC:  # Formation Statistics Columns
     TICKER = 'Ticker'
     NAME = 'Name'
     FORMATION = 'Formation'
-    BEGIN_PREVIOUS = 'Begin previous period'
+    BEGIN_PREVIOUS = 'Begin previous _period'
     BEGIN = 'Begin'
     END = 'End'
     LOWER = 'Lower'
@@ -1709,7 +1709,7 @@ class FormationDetector:
             return self.position_actual + self.config.min_length_of_a_formation_part
         else:
             if formation.buy_after_breakout:
-                return self.position_actual + formation.ticks * 2 + 1  # no other formation check in the control period
+                return self.position_actual + formation.ticks * 2 + 1  # no other formation check in the control _period
             return self.position_actual + formation.ticks + 1  # formation established but no valid breakout signal
 
     @staticmethod

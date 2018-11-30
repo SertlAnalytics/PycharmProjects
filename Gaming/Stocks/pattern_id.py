@@ -15,8 +15,8 @@ class PatternID:
             self.__init_by_pattern_id__(kwargs['pattern_id'])
         else:
             self.equity_type_id = kwargs['equity_type_id']
-            self.period_id = PRD.get_id(kwargs['period'])
-            self.aggregation = kwargs['aggregation']
+            self.period_id = PRD.get_id(kwargs['_period'])
+            self.aggregation = kwargs['_aggregation']
             self.ticker_id = kwargs['ticker_id']
             self.pattern_type_id = FT.get_id(kwargs['pattern_type'])
             self.range_id = kwargs['pattern_range_id']

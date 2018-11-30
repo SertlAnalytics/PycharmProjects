@@ -45,6 +45,12 @@ class MyDate:
         return int(mktime(date_time_object.date().timetuple()))
 
     @staticmethod
+    def get_epoch_seconds_for_current_day_as_list(interval=4) -> list:
+        ts_base = MyDate.get_epoch_seconds_for_date()
+        increment = 60 * 60 * int(24/interval)
+        return [ts_base + k * increment for k in range(0, interval)]
+
+    @staticmethod
     def get_epoch_number_from_datetime(date_time) -> float:
         if date_time is None:
             return 0
@@ -62,6 +68,11 @@ class MyDate:
     @staticmethod
     def get_date_time_from_epoch_seconds(epoch_seconds: float) -> datetime:
        return datetime.fromtimestamp(epoch_seconds)
+
+    @staticmethod
+    def get_date_time_from_epoch_seconds_as_string(epoch_seconds: float) -> str:
+        return '{} {}'.format(MyDate.get_date_from_epoch_seconds(epoch_seconds),
+                              MyDate.get_time_from_epoch_seconds(epoch_seconds))
 
     @staticmethod
     def get_date_time_t_from_epoch_seconds(epoch_seconds: float) -> datetime:

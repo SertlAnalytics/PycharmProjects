@@ -26,7 +26,7 @@ class PatternTabDropDownHandler(DropDownHandler):
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
             PDD.INDEX: 'Indices',
-            PDD.STOCK_SYMBOL: 'Stock symbol',
+            PDD.STOCK_SYMBOL: 'Stock _symbol',
             PDD.PERIOD_AGGREGATION: 'Aggregation',
             PDD.REFRESH_INTERVAL: 'Refresh interval',
             PDD.SECOND_GRAPH_RANGE: 'Second graph range'

@@ -49,7 +49,7 @@ class MyDashBaseTab:
         pattern_list = detector.pattern_list if detector else [graph_api.pattern_trade.pattern]
         # print('Pattern_list={}'.format(pattern_list))
         period = detector.sys_config.period if detector else graph_api.period
-        # print('period={} from detector:{}'.format(period, detector is None))
+        # print('_period={} from detector:{}'.format(_period, detector is None))
         candlestick = self.__get_candlesticks_trace__(pattern_df, graph_api.ticker_id, period)
         # print(candlestick)
         shapes = self.__get_pattern_shape_list__(pattern_list)
@@ -116,15 +116,15 @@ class MyDashBaseTab:
         return return_list
 
     def __get_candlesticks_trace__(self, df: pd.DataFrame, ticker: str, period: str):
-        # print(df.head())
+        # print(_df.head())
         if period == PRD.INTRADAY:
             x_value = df[CN.DATETIME]
             # print('{}: __get_candlesticks_trace__: x_value={}'.format(ticker, x_value))
         else:
             x_value = df[CN.DATE]
         # columns = [CN.TIMESTAMP, CN.DATE, CN.TIME, CN.HIGH, CN.LOW, CN.DATETIME]
-        # print('__get_candlesticks_trace__: period={}, ticker={}, head={}, x_value={}'.format(
-        #     period, ticker, df[columns].head(-5), x_value))
+        # print('__get_candlesticks_trace__: _period={}, ticker={}, head={}, x_value={}'.format(
+        #     _period, ticker, _df[columns].head(-5), x_value))
         candlestick = {
             'x': x_value,
             'open': df[CN.OPEN],

@@ -72,7 +72,7 @@ class ExchangeConfiguration:
 class Balance:
     def __init__(self, balance_type: str, asset: str, amount: float, amount_available: float):
         self.type = balance_type  # 'trading', 'deposit' or 'exchange'
-        self.asset = asset.upper()  # currency or equity symbol
+        self.asset = asset.upper()  # currency or equity _symbol
         self.amount = amount
         self.amount_available = amount_available
         self.current_value = 0  # is set later by another call
@@ -167,13 +167,13 @@ class Order:
 class OrderStatus:
     def __init__(self):
         self.order_id = ''
-        self.symbol = ''            # The symbol name the order belongs to
+        self.symbol = ''            # The _symbol name the order belongs to
         self.exchange = ''          # “bitfinex”
         self.price = 0.0            # The price the order was issued at (can be null for market orders)
         self.avg_execution_price = 0.0  # The average price at which this order as been executed so far.
                                         # 0 if the order has not been executed at all
         self.side = ''              # Either “buy” or “sell”
-        self.type = ''              # Either “market” / “limit” / “stop” / “trailing-stop'
+        self.type = ''              # Either “market” / “_limit” / “stop” / “trailing-stop'
         self.time_stamp = 0         # The timestamp the order was submitted
         self.is_live = False        # Could the order still be filled?
         self.is_cancelled = False   # Has the order been cancelled?

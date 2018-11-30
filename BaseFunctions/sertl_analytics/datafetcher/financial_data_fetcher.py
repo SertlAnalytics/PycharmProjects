@@ -19,25 +19,59 @@ class APIBaseFetcher:
     _last_request_ts = 0
     _request_interval_required = 0  # seconds - will be overwritten in sub classes if required
 
-    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT, limit=400):
+    def __init__(self):
+        self._api_key = self._get_api_key_()
+        self._kwargs = {}
+        self._df = None
+        self._df_data = None
+        self._df_volume = None
+        self._df_columns = []
+
+    @property
+    def kw_symbol(self) -> str:
+        return self._kwargs.get('symbol', 'xxx')
+
+    @property
+    def kw_period(self) -> str:
+        return self._kwargs.get('period', PRD.DAILY)
+
+    @property
+    def kw_aggregation(self) -> int:
+        return self._kwargs.get('aggregation', 15)
+
+    @property
+    def kw_output_size(self) -> str:
+        return self._kwargs.get('output_size', OPS.COMPACT)
+
+    @property
+    def kw_limit(self) -> int:
+        return self._kwargs.get('limit', 0)
+
+    def retrieve_data(self, **kwargs): # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT, limit=400
         self.__sleep__()
-        self.api_key = self._get_api_key_()
-        self.symbol = symbol  # like the symbol of a stock, e.g. MSFT
-        self.period = period
-        self.aggregation = aggregation
-        self.output_size = output_size
-        self.limit = limit
-        self.url = self._get_url_()
-        self.__print_details__()
-        self.request = requests.get(self.url)
-        self.df = self.__get_data_frame__()
-        self.column_list = list(self.df.columns.values)
-        self.__format_column__()
+        self._kwargs = kwargs
+        url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
+        self.__print_request_details__(url)
+        self._df = self.__get_data_frame__(request_data=requests.get(url))
+        self._df_columns = list(self._df.columns.values)
+        self.__format_columns__()
         self.__round_df_column_values__()
 
-    def __print_details__(self):
+    @property
+    def df(self) -> pd.DataFrame:
+        return self._df
+
+    @property
+    def df_data(self) -> pd.DataFrame:
+        return self._df_data
+
+    @property
+    def df_volume(self) -> pd.DataFrame:
+        return self._df_volume
+
+    def __print_request_details__(self, url):
         request_time = MyDate.get_time_from_epoch_seconds(self.class_last_request_ts)
-        print('{}: {}'.format(request_time, self.url))
+        print('{}: {}'.format(request_time, url))
 
     def __sleep__(self):
         request_interval_required = self.class_request_interval_required
@@ -63,12 +97,12 @@ class APIBaseFetcher:
     def class_request_interval_required(self):
         return APIBaseFetcher._request_interval_required
 
-    def __get_data_frame__(self):
+    def __get_data_frame__(self, request_data):
         pass
 
-    def __format_column__(self):
-        for col in self.column_list:
-            self.df[col] = pd.to_numeric(self.df[col])
+    def __format_columns__(self):
+        for col in self._df_columns:
+            self._df[col] = pd.to_numeric(self._df[col])
 
     def _get_api_key_(self):
         pass
@@ -80,15 +114,15 @@ class APIBaseFetcher:
         pass
 
     def get_url_function(self):
-        return self.period  # may be overwritten
+        return self.kw_period  # may be overwritten
 
     def __round_df_column_values__(self):
         decimal = self.__get_decimals_for_df_column_rounding__()
         decimals = pd.Series([decimal, decimal, decimal, decimal, 0], index=CN.get_standard_column_names())
-        self.df = self.df.round(decimals)
+        self._df = self._df.round(decimals)
 
     def __get_decimals_for_df_column_rounding__(self):
-        high_mean = self.df[CN.HIGH].mean()
+        high_mean = self._df[CN.HIGH].mean()
         if high_mean < 1:
             return 4
         elif high_mean < 10:
@@ -99,16 +133,13 @@ class APIBaseFetcher:
 
 
 class AlphavantageJSONFetcher (APIBaseFetcher):
-    _request_interval_required = 15  # we have only 5 request per minute for free api-key, 15 instead of 12 for security
+    _request_interval_required = 15  # we have only 5 _request per minute for free api-key, 15 instead of 12 for security
 
-    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):
-        self.api_symbol = ''
-        APIBaseFetcher.__init__(self, symbol, period, aggregation, output_size)
-        self.column_list_data = self.get_column_list_data()
-        self.column_data = self.get_column_data()
-        self.column_volume = self.get_column_volume()
-        self.df_data = self.df[self.column_list_data]
-        self.df_volume = self.df[self.column_volume]
+    def retrieve_data(self, **kwargs):
+        # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):
+        APIBaseFetcher.retrieve_data(self, **kwargs)
+        self._df_data = self._df[self._get_column_list_for_data_()]
+        self._df_volume = self._df[self._get_column_for_volume_()]
 
     @property
     def class_last_request_ts(self):
@@ -122,13 +153,13 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
     def class_request_interval_required(self):
         return AlphavantageJSONFetcher._request_interval_required
 
-    def get_column_list_data(self):
+    def _get_column_list_for_data_(self):
         pass
 
-    def get_column_data(self):
+    def _get_column_for_data_(self):
         pass
 
-    def get_column_volume(self):
+    def _get_column_for_volume_(self):
         pass
 
     def get_json_data_key(self):
@@ -139,37 +170,37 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
 
     def plot_data_frame(self):
         fig, axes = plt.subplots(nrows=2, ncols=1)
-        plot_01 = self.df_data[[self.column_data]].plot(ax=axes[0], title=self.symbol)
+        plot_01 = self.df_data[[self._get_column_for_data_()]].plot(ax=axes[0], title=self.kw_symbol)
         plot_01.legend(loc='upper left')
         plt.tight_layout()
-        self.df_volume.plot(ax=axes[1], title = self.column_volume)
+        self.df_volume.plot(ax=axes[1], title = self._get_column_for_volume_())
         plt.show()
 
 
 class AlphavantageStockFetcher (AlphavantageJSONFetcher):
-    def get_column_list_data(self):
-        return self.column_list
+    def _get_column_list_for_data_(self):
+        return self._df_columns
 
-    def get_column_data(self):
-        return self.column_list[-2]
+    def _get_column_for_data_(self):
+        return self._df_columns[-2]
 
-    def get_column_volume(self):
-        return self.column_list[-1]
+    def _get_column_for_volume_(self):
+        return self._df_columns[-1]
 
     def get_url_function(self):
         dict = {PRD.WEEKLY: 'TIME_SERIES_WEEKLY',
                 PRD.DAILY: 'TIME_SERIES_DAILY',
                 PRD.INTRADAY: 'TIME_SERIES_INTRADAY'}
-        return dict[self.period]
+        return dict[self.kw_period]
 
     def get_json_data_key(self):
         dict = {PRD.DAILY: 'Time Series (Daily)',
                 PRD.WEEKLY: 'Time Series (Weekly)',
-                PRD.INTRADAY: 'Time Series ({}min)'.format(self.aggregation)}
-        return dict[self.period]
+                PRD.INTRADAY: 'Time Series ({}min)'.format(self.kw_aggregation)}
+        return dict[self.kw_period]
 
-    def __get_data_frame__(self) -> pd.DataFrame:
-        json_data = self.request.json()
+    def __get_data_frame__(self, request_data) -> pd.DataFrame:
+        json_data = request_data.json()
         meta_data = json_data["Meta Data"]
         self.api_symbol = meta_data["2. Symbol"]
         time_series = json_data[self.get_json_data_key()]  # e.g. Time Series (Daily)
@@ -181,40 +212,42 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         return df
 
     def _get_url_(self):
-        url = 'https://www.alphavantage.co/query?function={}&symbol={}'.format(self.get_url_function(), self.symbol)
-        if self.output_size == OPS.FULL:
+        symbol = self._kwargs['symbol']
+        url = 'https://www.alphavantage.co/query?function={}&symbol={}'.format(self.get_url_function(), symbol)
+        if self.kw_output_size == OPS.FULL:
             url = url + '&outputsize=full'
-        if self.period == PRD.INTRADAY:
-            url = url + '&interval={}min'.format(self.aggregation)
-        return url + '&apikey=' + self.api_key
+        if self.kw_period == PRD.INTRADAY:
+            url = url + '&interval={}min'.format(self.kw_aggregation)
+        return url + '&apikey=' + self._api_key
 
 
 class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
-    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1):
-        AlphavantageJSONFetcher.__init__(self, symbol, period, aggregation)
+    def retrieve_data(self, **kwargs):
+        # symbol: str, period=PRD.DAILY, aggregation=1):
+        AlphavantageJSONFetcher.retrieve_data(self, **kwargs)
 
-    def get_column_list_data(self):
-        return self.column_list
+    def _get_column_list_for_data_(self):
+        return self._df_columns
 
-    def get_column_data(self):
-        return self.column_list[-2]
+    def _get_column_for_data_(self):
+        return self._df_columns[-2]
 
-    def get_column_volume(self):
-        return self.column_list[-1]
+    def _get_column_for_volume_(self):
+        return self._df_columns[-1]
 
     def get_url_function(self):
         dict = {PRD.WEEKLY: 'DIGITAL_CURRENCY_WEEKLY',
                 PRD.DAILY: 'DIGITAL_CURRENCY_DAILY',
                 PRD.INTRADAY: 'DIGITAL_CURRENCY_INTRADAY'}
-        return dict[self.period]
+        return dict[self.kw_period]
 
     def get_json_data_key(self):
         dict = {PRD.DAILY: 'Time Series (Digital Currency Daily)',
                 PRD.INTRADAY: 'Time Series (Digital Currency Intraday)'}
-        return dict[self.period]
+        return dict[self.kw_period]
 
-    def __get_data_frame__(self) -> pd.DataFrame:
-        json_data = self.request.json()
+    def __get_data_frame__(self, request_data) -> pd.DataFrame:
+        json_data = request_data.json()
         meta_data = json_data["Meta Data"]
         self.api_symbol = meta_data["2. Digital Currency Code"]
         time_series = json_data[self.get_json_data_key()]
@@ -222,7 +255,7 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
         df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
         df[CN.TIMESTAMP] = df[CN.TIMESTAMP].apply(int)
         df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
-        if self.period == PRD.INTRADAY:
+        if self.kw_period == PRD.INTRADAY:
             df.drop([df.columns[0],  '3. market cap (USD)'], axis=1, inplace=True)
             df.columns = [CN.CLOSE, CN.VOL]
             df.insert(loc=1, column=CN.LOW, value = df[df.columns[0]])
@@ -237,11 +270,11 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
             df.columns = CN.get_standard_column_names()
         return df
 
-    def _get_url_(self):  # the symbol has the structure symbolCCY like BTCUSD
-        symbol = self.symbol[:-3]
-        market = self.symbol[-3:]
+    def _get_url_(self):  # the _symbol has the structure symbolCCY like BTCUSD
+        symbol = self.kw_symbol[:-3]
+        market = self.kw_symbol[-3:]
         url = 'https://www.alphavantage.co/query?function={}&symbol={}&market={}&apikey={}'.format(
-            self.get_url_function(), symbol, market, self.api_key
+            self.get_url_function(), symbol, market, self._api_key
         )
         return url
 
@@ -250,31 +283,29 @@ class AlphavantageCSVFetcher (APIBaseFetcher):
     """
     key = CRYPTO for Cryptocurrency list, NYSE for New York Stock Exchange, NAS for Nasdaq, CCY for currencies
     """
-    def __init__(self, symbol: str='CRYPTO'):
-        APIBaseFetcher.__init__(self, symbol)
+    def retrieve_data(self, **kwargs):  # symbol: str='CRYPTO'):
+        APIBaseFetcher.retrieve_data(self, **kwargs)
 
-    def __get_data_frame__(self):
-        content = self.request.content
+    def __get_data_frame__(self, request_data):
+        content = request_data.content
         return pd.read_csv(io.StringIO(content.decode('utf-8')))
 
     def _get_url_(self):
-        if self.symbol == 'CRYPTO':
+        if self.kw_symbol == 'CRYPTO':
             return 'https://www.alphavantage.co/digital_currency_list/'
-        elif self.symbol == 'CCY':
+        elif self.kw_symbol == 'CCY':
             return 'https://www.alphavantage.co/physical_currency_list/'
 
 
 class CryptoCompareJSONFetcher (APIBaseFetcher):
-    def __init__(self, symbol: str, period: str, aggregation: int, limit: int):
-        self.api_symbol = ''
-        APIBaseFetcher.__init__(self, symbol, period, aggregation, limit=limit)
-        self.column_list_data = self.get_column_list_data()
-        self.df_data = self.df[self.column_list_data]
+    def retrieve_data(self, **kwargs):  # symbol: str, period: str, aggregation: int, limit: int):
+        APIBaseFetcher.retrieve_data(self, **kwargs)
+        self._df_data = self._df[self.get_column_list_for_data()]
 
-    def get_column_list_data(self):
+    def get_column_list_for_data(self):
         pass
 
-    def __format_column__(self):
+    def __format_columns__(self):
         pass
 
     def get_json_data_key(self):
@@ -285,20 +316,20 @@ class CryptoCompareJSONFetcher (APIBaseFetcher):
 
 
 class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
-    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, limit=200):
-        CryptoCompareJSONFetcher.__init__(self, symbol, period, aggregation, limit)
+    def retrieve_data(self, **kwargs):  # symbol: str, period=PRD.DAILY, aggregation=1, limit=200):
+        CryptoCompareJSONFetcher.retrieve_data(self, **kwargs)
 
-    def get_column_list_data(self):
-        return self.column_list
+    def get_column_list_for_data(self):
+        return self._df_columns
 
     def get_json_data_key(self):
         return 'Data'
 
-    def __get_data_frame__(self) -> pd.DataFrame:
+    def __get_data_frame__(self, request_data) -> pd.DataFrame:
         # https://min-api.cryptocompare.com/data/histominute?fsym=BCH&tsym=USD&limit=300&aggregate=15
         # "time":1540070100,"close":448.07,"high":448.23,"low":447.44,"open":448.01,"volumefrom":184.81,"volumeto":81598.81
-        json_data = self.request.json()
-        self.api_symbol = self.symbol
+        json_data = request_data.json()
+        self.api_symbol = self._kwargs['symbol']
         time_series = json_data[self.get_json_data_key()]
         df = pd.DataFrame(time_series)
         df = df[['time', 'open', 'high', 'low', 'close', 'volumeto']]
@@ -306,39 +337,41 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
         df.columns = CN.get_standard_column_names()
         return df
 
-    def _get_url_(self):  # the symbol has the structure symbolCCY like BTCUSD
-        url_function = 'histominute' if self.period == PRD.INTRADAY else 'histoday'
+    def _get_url_(self):  # the _symbol has the structure symbolCCY like BTCUSD
+        url_function = 'histominute' if self.kw_period == PRD.INTRADAY else 'histoday'
         url_limit = self._get_url_limit_parameter_()
-        url_aggregate = self.aggregation if self.period == PRD.INTRADAY else 1
-        symbol = self.symbol[:-3]
-        market = self.symbol[-3:]
-        url = 'https://min-api.cryptocompare.com/data/{}?fsym={}&tsym={}&limit={}&aggregate={}'.\
+        url_aggregate = self.kw_aggregation if self.kw_period == PRD.INTRADAY else 1
+        symbol = self.kw_symbol[:-3]
+        market = self.kw_symbol[-3:]
+        url = 'https://min-api.cryptocompare.com/data/{}?fsym={}&tsym={}&_limit={}&aggregate={}'.\
             format(url_function, symbol, market, url_limit, url_aggregate)
         return url
 
     def _get_url_limit_parameter_(self) -> int:
-        if self.period == PRD.INTRADAY:
-            return self.limit
+        if self.kw_period == PRD.INTRADAY:
+            return self.kw_limit
         return 400
 
 
 class BitfinexCryptoFetcher(APIBaseFetcher):
-    def __init__(self, symbol: str, period=PRD.DAILY, aggregation=1, section='hist', limit=400):
-        self._limit = limit
-        self._section = section
-        APIBaseFetcher.__init__(self, symbol, period, aggregation)
-        self.column_list_data = self.get_column_list_data()
-        self.df_data = self.df[self.column_list_data]
+    @property
+    def kw_section(self) -> str:
+        return self._kwargs.get('section', 'hist')
+
+    def retrieve_data(self, **kwargs):  # symbol: str, period=PRD.DAILY, aggregation=1, section='hist', limit=400
+        APIBaseFetcher.retrieve_data(self, **kwargs)
+        column_list_data = self.get_column_list_data()
+        self._df_data = self._df[column_list_data]
 
     def get_column_list_data(self):
-        return self.column_list
+        return self._df_columns
 
     def _get_api_key_(self):
         return ''
 
-    def __get_data_frame__(self) -> pd.DataFrame:
-        json_data = self.request.json()
-        self.api_symbol = self.symbol
+    def __get_data_frame__(self, request_data) -> pd.DataFrame:
+        json_data = request_data.json()
+        self.api_symbol = self._kwargs['symbol']
         if type(json_data[0]) is list:
             df = pd.DataFrame(json_data)
         else:
@@ -352,12 +385,12 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         df.set_index(0, drop=True, inplace=True)
         df.columns = CN.get_standard_column_names()
         df = df.sort_index()
-        # df.sort_index(inplace=True)
+        # _df.sort_index(inplace=True)
         return df
 
-    def _get_url_(self):  # the symbol has the structure tsymbolCCY like tBTCUSD
+    def _get_url_(self):  # the _symbol has the structure tsymbolCCY like tBTCUSD
         # https://api.bitfinex.com/v2/candles/trade:5m:tBTCUSD/hist
-        # symbol: e.g. tBTCUSD
+        # _symbol: e.g. tBTCUSD
         # time_frame: '1m', '5m', '15m', '30m', '1h', '3h', '6h', '12h', '1D', '7D', '14D', '1M'
         # section = hist or last
         # return: MTS	int	millisecond time stamp
@@ -365,15 +398,15 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         # CLOSE	float	Last execution during the time frame
         # HIGH	float	Highest execution during the time frame
         # LOW	float	Lowest execution during the timeframe
-        # VOLUME	float	Quantity of symbol traded within the timeframe
-        url_t_f = '{}m'.format(self.aggregation) if self.period == PRD.INTRADAY else '1D'
-        symbol = 't{}'.format(self.symbol)
-        if self._section == 'last':
+        # VOLUME	float	Quantity of _symbol traded within the timeframe
+        url_t_f = '{}m'.format(self.kw_aggregation) if self.kw_period == PRD.INTRADAY else '1D'
+        symbol = 't{}'.format(self.kw_symbol)
+        if self.kw_section == 'last':
             url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/last'.format(url_t_f, symbol)
-        elif self._limit == 0:
+        elif self.kw_limit == 0:
             url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/hist'.format(url_t_f, symbol)
         else:
-            url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/hist?limit={}'.format(url_t_f, symbol, self._limit)
+            url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/hist?limit={}'.format(url_t_f, symbol, self.kw_limit)
         return url
 
 
@@ -392,8 +425,7 @@ class CorrelationHandler:
         self.__fill_df_dic_for_symbol_list__()
 
     def __fill_df_dic_for_symbol_list__(self):
-        for symbol in self.symbol_list:
-            self.df_dic[symbol] = AlphavantageCryptoFetcher(symbol).df_data
+        pass
 
     def show_correlation_heat_map(self, column: str, title: str):
         self.column = column
@@ -426,11 +458,15 @@ class CorrelationHandler:
 
 class StocksCorrelationHandler(CorrelationHandler):
     def __fill_df_dic_for_symbol_list__(self):
+        alphavantage_stock_fetcher = AlphavantageStockFetcher()
         for symbol in self.symbol_list:
-            self.df_dic[symbol] = AlphavantageStockFetcher(symbol).df_data
+            alphavantage_stock_fetcher.retrieve_data(**{'symbol': symbol})
+            self.df_dic[symbol] = alphavantage_stock_fetcher.df_data
 
 
 class CryptoCorrelationHandler(CorrelationHandler):
     def __fill_df_dic_for_symbol_list__(self):
+        alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
         for symbol in self.symbol_list:
-            self.df_dic[symbol] = AlphavantageCryptoFetcher(symbol).df_data
+            alphavantage_crypto_fetcher.retrieve_data(**{'symbol': symbol})
+            self.df_dic[symbol] = alphavantage_crypto_fetcher.df_data

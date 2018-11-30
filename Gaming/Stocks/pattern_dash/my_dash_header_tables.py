@@ -144,6 +144,33 @@ class MyHTMLTabTradeStatisticsHeaderTable(MyHTMLTabHeaderTable):
         self.set_value(1, 3, MyHTML.div_embedded([statistics_summary_div, statistics_detail_summary_div]))
 
 
+class MyHTMLTabAssetStatisticsHeaderTable(MyHTMLTabHeaderTable):
+    def _init_cells_(self):
+        crypto_client_label_div = MyHTML.div('my_asset_crypto_client_label_div', 'Bitfinex:', bold=True)
+        crypto_client_value_div = MyHTML.div('my_asset_crypto_client_div', '0', bold=False)
+        crypto_client_div = MyHTML.div_embedded([crypto_client_label_div, MyHTML.span(' '), crypto_client_value_div])
+
+        stock_client_label_div = MyHTML.div('my_asset_stock_client_label_div', 'IKBR:', bold=True)
+        stock_client_value_div = MyHTML.div('my_asset_stock_client_div', '0', bold=False)
+        stock_client_div = MyHTML.div_embedded([stock_client_label_div, MyHTML.span(' '), stock_client_value_div])
+
+        crypto_client_trades_label_div = MyHTML.div('my_asset_crypto_client_trades_label_div',
+                                                    'Trades (Bitfinex):', bold=True)
+        crypto_client_trades_value_div = MyHTML.div('my_asset_crypto_client_trades_div', '0', bold=False)
+        crypto_client_trades_div = MyHTML.div_embedded([
+            crypto_client_trades_label_div, MyHTML.span(' '), crypto_client_trades_value_div])
+
+        stock_client_trades_label_div = MyHTML.div('my_asset_stock_client_trades_label_div',
+                                                    'Trades (IBKR):', bold=True)
+        stock_client_trades_value_div = MyHTML.div('my_asset_stock_client_trades_div', '0', bold=False)
+        stock_client_trades_div = MyHTML.div_embedded([
+            stock_client_trades_label_div, MyHTML.span(' '), stock_client_trades_value_div])
+
+        self.set_value(1, 1, MyHTML.div_embedded([crypto_client_div, stock_client_div]))
+        self.set_value(1, 2, MyDCC.markdown('my_asset_statistics_markdown'))
+        self.set_value(1, 3, MyHTML.div_embedded([crypto_client_trades_div, stock_client_trades_div]))
+
+
 class MyHTMLTabPatternStatisticsHeaderTable(MyHTMLTabHeaderTable):
     def _init_cells_(self):
         chart_label_div = MyHTML.div('my_pattern_statistics_chart_label_div', 'Chart:', True)

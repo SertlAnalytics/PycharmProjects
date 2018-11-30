@@ -42,7 +42,7 @@ class MyDashTab4Recommender(MyDashBaseTab):
 
     @staticmethod
     def __get_adjusted_sys_config_copy__(sys_config: SystemConfiguration) -> SystemConfiguration:
-        sys_config_copy = sys_config.get_semi_deep_copy()  # we need some adjustments (period, etc...)
+        sys_config_copy = sys_config.get_semi_deep_copy()  # we need some adjustments (_period, etc...)
         sys_config_copy.data_provider.from_db = False
         sys_config_copy.data_provider.period = sys_config.period
         sys_config_copy.data_provider.aggregation = sys_config.period_aggregation

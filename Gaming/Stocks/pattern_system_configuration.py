@@ -6,14 +6,13 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, PRD, PDP, CN, BT, TSTR, FT
-from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from sertl_analytics.exchanges.interactive_broker import IBKRConfiguration
 from pattern_configuration import PatternConfiguration
 from pattern_runtime_configuration import RuntimeConfiguration
 from pattern_debugger import PatternDebugger
-from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable, WaveTable
+from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable, WaveTable, AssetTable
 from pattern_id import PatternID
 from pattern_predictor import PatternMasterPredictorHandler, PatternPredictorApi
 from pattern_data_provider import PatternDataProvider
@@ -22,7 +21,6 @@ from copy import deepcopy
 from pattern_sound.pattern_sound_machine import PatternSoundMachine
 from pattern_dash.my_dash_caches import MyGraphCache, MyDataFrameCache
 from pattern_index_configuration import IndexConfiguration
-from sertl_analytics.exchanges.bitfinex_trade_client import MyBitfinexTradeClient
 
 
 class SystemConfiguration:
@@ -40,6 +38,7 @@ class SystemConfiguration:
         self.pattern_table = PatternTable()
         self.trade_table = TradeTable()
         self.wave_table = WaveTable()
+        self.asset_table = AssetTable()
         self.df_cache = MyDataFrameCache()
         self.graph_cache = MyGraphCache()
         self.data_provider = PatternDataProvider(self.config, self.index_config, self.db_stock, self.df_cache)
@@ -169,6 +168,7 @@ class SystemConfiguration:
         sys_config_copy.db_stock = self.db_stock
         sys_config_copy.trade_table = self.trade_table
         sys_config_copy.wave_table = self.wave_table
+        sys_config_copy.asset_table = self.asset_table
         sys_config_copy.pattern_table = self.pattern_table
         sys_config_copy.df_cache = self.df_cache
         sys_config_copy.graph_cache = self.graph_cache

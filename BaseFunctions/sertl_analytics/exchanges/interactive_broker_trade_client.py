@@ -25,12 +25,15 @@ from pattern_wave_tick import WaveTick, WaveTickList
 
 
 class MyIBKRTradeClient:
+    """
+    We use Alphavantage as data provider. Interactive Broker TWS is used for trading....
+    """
     def __init__(self, exchange_config: IBKRConfiguration):
         self.exchange_config = exchange_config
         self.exchange_config.print_actual_mode()
-        self._api_key = os.environ['bitfinex_apikey']
-        self._api_key_secret = os.environ['bitfinex_apikeysecret']
-        self._ibkr = MyIBKR(self._api_key, self._api_key_secret, self.exchange_config)
+        self._api_key = os.environ['alphavantage_apikey']
+        self._api_key_secret = os.environ['alphavantage_apikey']
+        self._ibkr = MyIBKR(self.exchange_config)
         self._trading_pairs = self._ibkr.trading_pairs
 
     def get_ticker(self, symbol: str) -> Ticker:

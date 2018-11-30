@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-10-03
 """
 
-from pattern_database.stock_tables import TradeTable, PatternTable
+from pattern_database.stock_tables import TradeTable, PatternTable, AssetTable
 from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED
 from pattern_dash.my_dash_components import DropDownHandler
 
@@ -85,7 +85,7 @@ class TradeStatisticsDropDownHandler(StatisticsDropDownHandler):
 
     def __get_drop_down_value_dict__(self) -> dict:
         return {
-            DDT.CHART_TYPE: CHT.get_for_trade_statistics(),
+            DDT.CHART_TYPE: CHT.get_chart_types_for_trade_statistics(),
             DDT.PREDICTOR: PRED.get_for_trade_all(),
             DDT.CATEGORY: TradeTable.get_columns_for_statistics_category(),
             DDT.X_VARIABLE: TradeTable.get_columns_for_statistics_x_variable(),
@@ -96,6 +96,40 @@ class TradeStatisticsDropDownHandler(StatisticsDropDownHandler):
 
     def __get_for_multi__(self, drop_down_type: str):
         return False if drop_down_type == DDT.PATTERN_TYPE else False
+
+
+class AssetStatisticsDropDownHandler(StatisticsDropDownHandler):
+    def __get_element_id__(self, drop_down_type: str):
+        value_dict = {
+            DDT.CHART_TYPE: 'my_asset_statistics_chart_type_selection',
+            DDT.CATEGORY: 'my_asset_statistics_category_selection',
+            DDT.X_VARIABLE: 'my_asset_statistics_x_variable_selection',
+            DDT.Y_VARIABLE: 'my_asset_statistics_y_variable_selection',
+            DDT.CHART_TEXT_VARIABLE: 'my_asset_statistics_text_variable_selection',
+        }
+        return value_dict.get(drop_down_type, None)
+
+    def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
+        default_dict = {
+            DDT.CHART_TYPE: CHT.STACK_GROUP,
+            DDT.CATEGORY: DC.LOCATION,
+            DDT.X_VARIABLE: DC.VALIDITY_DT,
+            DDT.Y_VARIABLE: DC.VALUE_TOTAL,
+            DDT.CHART_TEXT_VARIABLE: DC.LOCATION,
+        }
+        return default_dict.get(drop_down_type, None)
+
+    def __get_drop_down_value_dict__(self) -> dict:
+        return {
+            DDT.CHART_TYPE: CHT.get_chart_types_for_asset_statistics(),
+            DDT.CATEGORY: AssetTable.get_columns_for_statistics_category(),
+            DDT.X_VARIABLE: AssetTable.get_columns_for_statistics_x_variable(),
+            DDT.Y_VARIABLE: AssetTable.get_columns_for_statistics_y_variable(),
+            DDT.CHART_TEXT_VARIABLE: AssetTable.get_columns_for_statistics_text_variable(),
+        }
+
+    def __get_for_multi__(self, drop_down_type: str):
+        return False
 
 
 class PatternStatisticsDropDownHandler(StatisticsDropDownHandler):
@@ -125,7 +159,7 @@ class PatternStatisticsDropDownHandler(StatisticsDropDownHandler):
 
     def __get_drop_down_value_dict__(self) -> dict:
         return {
-            DDT.CHART_TYPE: CHT.get_for_pattern_statistics(),
+            DDT.CHART_TYPE: CHT.get_chart_types_for_pattern_statistics(),
             DDT.PREDICTOR: PRED.get_for_pattern_all(),
             DDT.CATEGORY: PatternTable.get_columns_for_statistics_category(),
             DDT.X_VARIABLE: PatternTable.get_columns_for_statistics_x_variable(),

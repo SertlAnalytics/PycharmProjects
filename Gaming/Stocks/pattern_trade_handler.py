@@ -73,6 +73,11 @@ class PatternTradeHandler:
     def pattern_trade_for_replay(self) -> PatternTrade:
         return self._pattern_trade_for_replay
 
+    def get_balance_total(self):
+        if self.balances is None:
+            return 0
+        return sum([balance.current_value for balance in self.balances])
+
     def get_balances_with_current_values(self):
         return self._trade_client_crypto.get_balances_with_current_values()
 

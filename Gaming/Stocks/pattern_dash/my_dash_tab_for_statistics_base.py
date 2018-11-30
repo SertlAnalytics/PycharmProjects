@@ -25,6 +25,7 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         MyDashBaseTab.__init__(self, app, sys_config)
         self._color_handler = color_handler
         self.__fill_tab__()
+        self._df_base = None
         self.__fill_df_base__()
         self.__manipulate_ptc_columns__()
         self.__init_dash_element_ids__()
@@ -33,7 +34,7 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
 
     @property
     def column_result(self):
-        pass
+        return
 
     def get_div_for_tab(self):
         children_list = [
@@ -51,6 +52,7 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
 
     def __get_charts_from_plotter__(self):
         charts = self._plotter.get_chart_list()
+        # print('charts = {}'.format(charts))
         if len(charts) == 1:
             return charts[0]
         embedded_element_list = []

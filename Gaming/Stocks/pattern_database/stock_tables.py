@@ -53,6 +53,22 @@ class AssetTable(MyTable):
         and_clauses_number = ' and '.join(additional_and_clauses_numbers)
         return "SELECT rowid FROM {} WHERE {} and {}".format(self._name, and_clauses_str, and_clauses_number)
 
+    @staticmethod
+    def get_columns_for_statistics_category() -> list:
+        return [DC.LOCATION, DC.EQUITY_TYPE]
+
+    @staticmethod
+    def get_columns_for_statistics_x_variable() -> list:
+        return [DC.VALIDITY_DT]
+
+    @staticmethod
+    def get_columns_for_statistics_y_variable() -> list:
+        return [DC.VALUE_TOTAL]
+
+    @staticmethod
+    def get_columns_for_statistics_text_variable() -> list:
+        return [DC.LOCATION, DC.EQUITY_TYPE]
+
 
 class WaveTable(MyTable):
     @staticmethod

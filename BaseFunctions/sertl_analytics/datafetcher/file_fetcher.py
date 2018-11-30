@@ -45,7 +45,7 @@ class FileFetcher:
         self.df.head(rows)
 
     def __get_file_by_ftp__(self, args):
-        url = args['url']
+        url = args['_url']
         user = args['user'] if 'user' in args else self.__user
         email = args['email'] if 'user' in args else self.__email
         ftp = ftplib.FTP(url, user, email)
@@ -71,7 +71,7 @@ class NasdaqFtpFileFetcher:
         return file_fetcher.df
 
 
-# file_fetcher = FileFetcher('nasdaqlisted.txt', protocol='FTP', url='ftp.nasdaqtrader.com', dir='SymbolDirectory')
+# file_fetcher = FileFetcher('nasdaqlisted.txt', protocol='FTP', _url='ftp.nasdaqtrader.com', dir='SymbolDirectory')
 # file_fetcher.info()
 # file_fetcher.head()
 

@@ -80,6 +80,7 @@ class CHT:  # chart type
     HISTOGRAM = 'Histogram'
     D2_CONTOUR_HISTOGRAM = '2D Contour Histogram'
     POLAR_SCATTER = 'Polar Scatter'
+    STACK_GROUP = 'Stackgroup'
 
     @staticmethod
     def get_as_options():
@@ -95,12 +96,16 @@ class CHT:  # chart type
         return li
 
     @staticmethod
-    def get_for_trade_statistics():
+    def get_chart_types_for_trade_statistics():
         return [CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PREDICTOR, CHT.PIE]
 
     @staticmethod
-    def get_for_pattern_statistics():
+    def get_chart_types_for_pattern_statistics():
         return [CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PREDICTOR, CHT.PIE]
+
+    @staticmethod
+    def get_chart_types_for_asset_statistics():
+        return [CHT.STACK_GROUP, CHT.LINE, CHT.PIE]
 
 
 class CM:  # coverage mode
@@ -178,7 +183,7 @@ class EQUITY_TYPE:
 
 class OT:  # order type
     EXCHANGE_MARKET = 'exchange market'
-    EXCHANGE_LIMIT = 'exchange limit'
+    EXCHANGE_LIMIT = 'exchange _limit'
     EXCHANGE_STOP = 'exchange stop'
     EXCHANGE_TRAILING_STOP = 'exchange trailing-stop'
 
@@ -325,6 +330,11 @@ class SCORING:
     BEST = 'best'
 
 
+class TRC:  # Trade Clients
+    BITFINEX = 'Bitfinex'
+    IBKR = 'InteractiveBroker'
+
+
 class OPS:  # Outputsize
     COMPACT = 'compact'
     FULL = 'full'
@@ -377,7 +387,7 @@ class TRT:  # Trade types
 
 class FCC:  # Formation Condition Columns
     BREAKOUT_WITH_BUY_SIGNAL = 'breakout had a buy signal'
-    PREVIOUS_PERIOD_CHECK_OK = 'previous period check OK'  # eg. CN.LOW
+    PREVIOUS_PERIOD_CHECK_OK = 'previous _period check OK'  # eg. CN.LOW
     COMBINED_PARTS_APPLICABLE = 'combined parts are formation applicable'
 
 
@@ -536,7 +546,7 @@ class TSTR:  # Trading Strategy
 class TTC:  # Trade test cases
     FALSE_BREAKOUT = 'false breakout'
     NO_FALSE_BREAKOUT = 'no false breakout'
-    BUY_SELL_LIMIT = 'buy & sell at limit'
+    BUY_SELL_LIMIT = 'buy & sell at _limit'
     BUY_ADJUST_STOP_LOSS = 'buy & adjust stop loss'
     BUY_SELL_STOP_LOSS = 'buy & sell at stop loss'
     ACTIVATE_BREAKOUT = 'activate breakout for touch'
@@ -629,7 +639,7 @@ class PSC:  # Pattern Statistics Columns
     TICKER = 'Ticker'
     NAME = 'Name'
     PATTERN = 'Pattern'
-    BEGIN_PREVIOUS = 'Begin previous period'
+    BEGIN_PREVIOUS = 'Begin previous _period'
     BEGIN = 'Begin'
     END = 'End'
     LOWER = 'Lower'
@@ -655,7 +665,7 @@ class PSC:  # Pattern Statistics Columns
     STOP_LOSS_TRIGGERED = 'Stop loss triggered'
     RESULT_DF_MAX = 'Result DF max.'
     RESULT_DF_MIN = 'Result DF min.'
-    FIRST_LIMIT_REACHED = 'First limit reached'
+    FIRST_LIMIT_REACHED = 'First _limit reached'
     STOP_LOSS_MAX_REACHED = 'Max stop loss reached (bound of original range)'
 
 

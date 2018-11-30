@@ -49,6 +49,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
         self._graph_key_first = ''
         self._detector_first = None
         self._pattern_data_first = None
+        self._balance_saving_times = MyDate.get_epoch_seconds_for_current_day_as_list()
 
     def init_callbacks(self):
         self.__init_interval_callback_for_interval_details__()
@@ -70,7 +71,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
             Output('my_table_SystemConfiguration', 'children'),
             [Input('my_period_aggregation', 'value')])
         def handle_callback_for_system_configuration_table(aggregation: str):
-            print('aggregation = {}, children={}'.format(aggregation, ''))
+            print('_aggregation = {}, children={}'.format(aggregation, ''))
             return MyHTMLSystemConfigurationTable(self.sys_config).get_table()
 
     def get_div_for_tab(self):
@@ -110,17 +111,30 @@ class MyDashTab4Pattern(MyDashBaseTab):
             self.__add_fibonacci_waves_to_news__()
             self.__add_bollinger_band_breaks_to_news__()
             markdown_text = self.__get_position_markdown__(n_intervals)
-            print('handle_callback_for_position_markdown: n_intervals={}'.format(n_intervals))
-            if n_intervals == 0:
-                self.__save_balances_to_database__()
+            self.__save_balances_to_database__()  # this must be after __get_position_markdown__ !!!
             return markdown_text
 
     def __save_balances_to_database__(self):
+        if len(self._balance_saving_times) == 0:  # already all done
+            return
+        processed_list = []
+        ts_now = MyDate.get_epoch_seconds_from_datetime()
+        for ts_saving in self._balance_saving_times:
+            if ts_saving <= ts_now:
+                dt_saving = MyDate.get_date_time_from_epoch_seconds_as_string(ts_saving)
+                self.__save_balances__(ts_saving, dt_saving)
+                processed_list.append(ts_saving)
+        for values in processed_list:
+            self._balance_saving_times.remove(values)
+
+    def __save_balances__(self, ts_saving: int, dt_saving: str):
+        if self.sys_config.db_stock.is_any_asset_already_available_for_timestamp(ts_saving):
+            return
         for position in self.trade_handler_online.balances:
             asset_data_dict = AssetDataDictionary()
             asset_data_dict.add(DC.CURRENCY, 'USD')
-            asset_data_dict.add(DC.VALIDITY_DT, MyDate.get_date_as_string_from_date_time(None))
-            asset_data_dict.add(DC.VALIDITY_TS, MyDate.get_epoch_seconds_for_date())
+            asset_data_dict.add(DC.VALIDITY_DT, dt_saving)
+            asset_data_dict.add(DC.VALIDITY_TS, ts_saving)
             asset_data_dict.add(DC.LOCATION, 'Bitfinex')
             if position.asset == 'USD':
                 asset_data_dict.add(DC.EQUITY_TYPE, EQUITY_TYPE.CASH)
@@ -343,7 +357,7 @@ class MyDashTab4Pattern(MyDashBaseTab):
              State('my_pattern_index_selection', 'value')])
         def handle_selection_callback(ticker_selected, period_aggregation: int, interval_selected: int,
                                       n_intervals, n_clicks, n_intervals_sec, selected_indices: list):
-            print('selected_indizes: {}'.format(selected_indices))
+            # print('selected_indizes: {}'.format(selected_indices))
             self.__set_period_aggregation_to_sys_configs__(period_aggregation)
             indices_change = self._state_handler.change_for_my_selected_indices(selected_indices)
             if indices_change:

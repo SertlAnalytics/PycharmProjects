@@ -29,7 +29,7 @@ class MyPlotly:
         self.df = pd.read_csv('salaries.csv')
         print(self.df.head())
         self.df.plot()
-        # self.df.boxplot()
+        # self._df.boxplot()
         # Dash.config
         plt.show()
 
@@ -122,7 +122,7 @@ class MyPlotly:
         # Add a column to hold the hour:
         df['Hour'] = df['Date'].dt.time
 
-        # Let pandas perform the aggregation
+        # Let pandas perform the _aggregation
         df2 = df.groupby('Hour').sum()
 
         trace1 = go.Bar(
@@ -288,7 +288,7 @@ class MyPlotly:
     def bar_chart_with_csv_data(self):
         file = 'data/2018WinterOlympics.csv'
         df = pd.read_csv(file)
-        # df_2 = df[df['DIVISION'] == '1']
+        # df_2 = _df[_df['DIVISION'] == '1']
         # df_2.set_index('NAME', inplace=True)
         # df_3 = df_2[[col for col in df_2.columns if col.startswith('POP')]]
         print(df.head())
@@ -430,7 +430,7 @@ class MyPlotly:
         symbol = 'FRED/GDP'
         start = datetime(2015, 2, 9)
         end = datetime(2018, 5, 24)
-        # df = web.DataReader(symbol, 'quandl', '2017-01-01', '2018-06-22')
+        # _df = web.DataReader(_symbol, 'quandl', '2017-01-01', '2018-06-22')
         quandl.ApiConfig.api_key = os.environ["quandl_apikey"]
         mydata = quandl.get(symbol, start_date="2001-12-31", end_date="2018-12-31")
         mydata = quandl.get_table('MER/F1', compnumber="39102", paginate=True)

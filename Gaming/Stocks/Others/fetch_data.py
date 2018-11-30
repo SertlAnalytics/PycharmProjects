@@ -19,7 +19,7 @@ class APIBaseFetcher:
         self.symbol = symbol  # like the symbol of a stock, e.g. MSFT
         self.period = period
         self.url = self.get_url()
-        # print('APIBaseFetcher.url={}'.format(self.url))
+        # print('APIBaseFetcher._url={}'.format(self._url))
         self.request = requests.get(self.url)
         self.df = self.get_data_frame()
         self.column_list = list(self.df.columns.values)

@@ -63,9 +63,9 @@ class PatternBreakout:
 
     def is_volume_rising(self, min_percentage: int):
         # we check raising against mean volume and against last tick volume - either of both.
-        # print('is_volume_rising: volume_forecast={}, volume_meanPart_entry={}, min_percentage={}, p_volume={}'.format(
-        #     self.volume_forecast, self.volume_mean_part_entry, min_percentage, self.tick_previous.volume
-        # ))
+        print('is_volume_rising: volume_forecast={}, volume_meanPart_entry={}, min_percentage={}, p_volume={}'.format(
+            self.volume_forecast, self.volume_mean_part_entry, min_percentage, self.tick_previous.volume
+        ))
         against_mean = MyMath.divide(self.volume_forecast, self.volume_mean_part_entry) > (100 + min_percentage) / 100
         against_last = MyMath.divide(self.volume_forecast, self.tick_previous.volume) > (100 + min_percentage) / 100
         return against_mean or against_last

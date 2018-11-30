@@ -14,7 +14,7 @@ r = pd.read_csv('data/yahoofinance-SPY-20080101-20180101.csv',
 
 def moving_average(x, n, type='simple'):
     """
-    compute an n period moving average.
+    compute an n _period moving average.
 
     type is 'simple' | 'exponential'
 
@@ -34,7 +34,7 @@ def moving_average(x, n, type='simple'):
 
 def relative_strength(prices, n=14):
     """
-    compute the n period relative strength indicator
+    compute the n _period relative strength indicator
     http://stockcharts.com/school/doku.php?id=chart_school:glossary_r#relativestrengthindex
     http://www.investopedia.com/terms/r/rsi.asp
     """
