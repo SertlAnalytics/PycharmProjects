@@ -30,7 +30,7 @@ sys_config.config.bound_upper_value = CN.CLOSE
 sys_config.config.bound_lower_value = CN.CLOSE
 sys_config.config.breakout_range_pct = 0.05  # default is 0.05
 sys_config.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
-sys_config.config.pattern_ids_to_find = ['20_1_1_BTCUSD_22_2018-06-07_00:00_2018-06-25_00:00']
+sys_config.config.pattern_ids_to_find = ['1_1_1_KO_22_2016-07-22_00:00_2016-09-28_00:00']
 
 pattern_controller = PatternDetectionController(sys_config)
 pattern_controller.run_pattern_detector()

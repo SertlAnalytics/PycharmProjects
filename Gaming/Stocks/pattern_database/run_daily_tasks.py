@@ -16,6 +16,8 @@ trade_table = TradeTable()
 
 process_single_ticker_id = False
 
+stock_db_updater.update_trade_records(16, 16)
+
 if process_single_ticker_id:
     stock_db_updater.update_wave_records_for_daily_period('AAPL', 400)
 else:

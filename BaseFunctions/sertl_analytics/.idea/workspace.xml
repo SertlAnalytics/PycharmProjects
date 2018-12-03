@@ -11,11 +11,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="nn_collector.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="nn_collector.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/nn_collector.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="757">
               <caret line="74" selection-start-line="74" selection-end-line="74" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="exchange_cls.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="350">
+              <caret line="85" lean-forward="true" selection-start-line="85" selection-end-line="85" />
             </state>
           </provider>
         </entry>
@@ -69,12 +78,12 @@
         <option value="$PROJECT_DIR$/user_input/confirmation.py" />
         <option value="$PROJECT_DIR$/mydates.py" />
         <option value="$PROJECT_DIR$/exchanges/interactive_broker_test.py" />
-        <option value="$PROJECT_DIR$/exchanges/exchange_cls.py" />
         <option value="$PROJECT_DIR$/exchanges/exchange_abc.py" />
         <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
         <option value="$PROJECT_DIR$/exchanges/interactive_broker_trade_client.py" />
         <option value="$PROJECT_DIR$/exchanges/interactive_broker.py" />
         <option value="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" />
+        <option value="$PROJECT_DIR$/exchanges/exchange_cls.py" />
       </list>
     </option>
   </component>
@@ -88,7 +97,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -153,6 +161,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -222,10 +231,9 @@
     <frame x="1273" y="0" width="1287" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25140113" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25140113" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50280225" side_tool="true" visible="true" weight="0.32747602" />
-      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.4979984" weight="0.3290735" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50280225" side_tool="true" visible="true" weight="0.32667732" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49559647" weight="0.32862744" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49959967" weight="0.32784313" />
@@ -239,6 +247,7 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.4979984" weight="0.3290735" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -584,9 +593,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
           <caret line="261" column="38" selection-start-line="261" selection-start-column="38" selection-end-line="261" selection-end-column="38" />
-          <folding>
-            <element signature="e#287#325#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -597,17 +603,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="32" column="38" selection-start-line="32" selection-start-column="38" selection-end-line="32" selection-end-column="38" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/models/nn_collector.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="757">
           <caret line="74" selection-start-line="74" selection-end-line="74" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="350">
+          <caret line="85" lean-forward="true" selection-start-line="85" selection-end-line="85" />
         </state>
       </provider>
     </entry>

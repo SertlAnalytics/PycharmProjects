@@ -15,6 +15,7 @@ import hmac
 import hashlib
 import time
 import pandas as pd
+import math
 from sertl_analytics.constants.pattern_constants import OS, OT, TSTR, BT
 from sertl_analytics.exchanges.exchange_abc import ExchangeInterface
 from sertl_analytics.exchanges.exchange_cls import Order, OrderApi, OrderStatus
@@ -357,13 +358,19 @@ class MyBitfinex(ExchangeInterface):
         else:
             ticker = self.get_ticker(symbol) if last_price == 0 else None
             last_price = ticker.last_price if ticker else last_price
-            # the minus value in the next term is necessary to ensure that this amount is buyable
-            last_price_modified = last_price * (1.02)  # the part 0.02 is for amount safety - we want to be below _limit
-            amount = available_money / last_price_modified
+            amount = self.__get_rounded_amount_for_buying__(available_money, last_price)
             order_buy = BuyMarketOrder(symbol, amount)
             order_buy.actual_money_available = available_money
             order_buy.actual_ticker = ticker
             return self.create_order(order_buy, is_order_simulation)
+
+    def __get_rounded_amount_for_buying__(self, available_money: float, last_price: float):
+        last_price_modified = last_price * (1.02)  # the part 0.02 is for amount safety - we want to be below _limit
+        amount_before_rounding = available_money / last_price_modified
+        round_digits = 1 - math.floor(math.log10(amount_before_rounding))  # we have to round the number to 3 digits...
+        amount = round(amount_before_rounding, round_digits)
+        print('buy_available: amount-before rounding={}, after rounding={}'.format(amount_before_rounding, amount))
+        return amount
 
     def get_balance_for_symbol(self, symbol: str) -> Balance:
         balance_from_cache = self.balance_cache.get_cached_object_by_key(symbol)
@@ -557,6 +564,10 @@ class MyBitfinex(ExchangeInterface):
             order.actual_money_balance = self.get_available_money_balance()
         if order.actual_symbol_balance is None:
             order.actual_symbol_balance = self.get_balance_for_symbol(order.crypto)
+        if order.side == OS.SELL and order.actual_symbol_balance.amount < order.amount:
+            print('Sell {}: Amount {:.4f} adjusted to available balance: {:.4f}'.format(
+                order.actual_ticker, order.amount, order.actual_symbol_balance.amount))
+            order.amount = order.actual_symbol_balance.amount
 
     def __is_order_affected_by_hodl_config__(self, order: BitfinexOrder):
         if order.side == OS.BUY or order.crypto not in self._hodl_dict:
@@ -589,11 +600,10 @@ class MyBitfinex(ExchangeInterface):
                 print('\nNot enough balance ({:.2f}$) to buy {} of {} at {:.4f}$.'.format(
                     money_available, order.amount, order.crypto, price))
                 return False
-        else:
-            if order.actual_balance_symbol_amount < order.amount:
-                print('\nNot enough balance ({:.2f}) for {} to sell {:.2f}.'.format(
-                    order.actual_balance_symbol_amount, order.crypto, order.amount))
-                return False
+        elif order.actual_balance_symbol_amount < order.amount:
+            print('\nNot enough balance ({:.2f}) for {} to sell {:.2f}.'.format(
+                order.actual_balance_symbol_amount, order.crypto, order.amount))
+            return False
         return True
 
     @staticmethod

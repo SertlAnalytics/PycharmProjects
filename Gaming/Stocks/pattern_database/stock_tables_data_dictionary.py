@@ -6,7 +6,8 @@ Date: 2018-11-14
 """
 from sertl_analytics.pybase.data_dictionary import DataDictionary
 from pattern_database.stock_tables import WaveTable, AssetTable
-from sertl_analytics.constants.pattern_constants import DC
+from sertl_analytics.constants.pattern_constants import DC, EQUITY_TYPE
+from sertl_analytics.exchanges.exchange_cls import Balance
 
 
 class DataDictionaryWithTable(DataDictionary):
@@ -43,5 +44,21 @@ class AssetDataDictionary(DataDictionaryWithTable):
     def __get_target_table_columns__() -> list:
         return AssetTable().column_name_list
 
-    def __init_data_dict__(self):
+    def get_data_dict_for_target_table_for_balance(self, balance: Balance, validity_ts: int, validity_dt: str):
+        self._data_dict = {}
+        self.add(DC.VALIDITY_DT, validity_dt)
+        self.add(DC.VALIDITY_TS, validity_ts)
+        self.add(DC.LOCATION, 'Bitfinex')
+        if balance.asset == 'USD':
+            self.add(DC.EQUITY_TYPE, EQUITY_TYPE.CASH)
+            self.add(DC.EQUITY_TYPE_ID, EQUITY_TYPE.get_id(EQUITY_TYPE.CASH))
+        else:
+            self.add(DC.EQUITY_TYPE, EQUITY_TYPE.CRYPTO)
+            self.add(DC.EQUITY_TYPE_ID, EQUITY_TYPE.get_id(EQUITY_TYPE.CRYPTO))
+        self.add(DC.EQUITY_ID, balance.asset)
+        self.add(DC.EQUITY_NAME, balance.asset)
+        self.add(DC.QUANTITY, balance.amount)
+        self.add(DC.VALUE_PER_UNIT, 0)
+        self.add(DC.VALUE_TOTAL, balance.current_value)
         self.add(DC.CURRENCY, 'USD')
+        return self.get_data_dict_for_target_table()

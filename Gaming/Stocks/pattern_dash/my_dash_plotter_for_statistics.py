@@ -6,9 +6,10 @@ Date: 2018-06-17
 """
 
 import plotly.graph_objs as go
-from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, TRC, EQUITY_TYPE
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
 from pattern_dash.my_dash_colors import DashColorHandler
+from pattern_trade_handler import PatternTradeHandler
 import pandas as pd
 import itertools
 import numpy as np
@@ -32,54 +33,76 @@ class MyDashTabStatisticsPlotter:
     def __init_parameter__(self):
         pass
 
+    def __print_df_base__(self):
+        columns = self._df_base.columns[:2]
+        df_reduced = self._df_base[columns]
+        print('__print_df_base__: _df_base\n{}'.format(df_reduced.head(100)))
+
     def get_chart_list(self):
         if self.chart_type == CHT.SCATTER:
-            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
-            graph_api.figure_data = self.__get_scatter_figure_data__()
-            graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
-            graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
-            return [MyDCC.graph(graph_api)]
+            return self.__get_chart_type_scatter__()
         elif self.chart_type == CHT.LINE:
-            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Assets'))
-            graph_api.figure_data = self.__get_line_figure_data__()
-            # print(graph_api.figure_data)
-            graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
-            graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
-            return [MyDCC.graph(graph_api)]
+            return self.__get_chart_type_line__()
         elif self.chart_type == CHT.STACK_GROUP:
-            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Assets'))
-            graph_api.figure_data = self.__get_stack_group_figure_data__()
-            # print(graph_api.figure_data)
-            graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
-            graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
-            return [MyDCC.graph(graph_api)]
+            return self.__get_chart_type_stack_group__()
         elif self.chart_type == CHT.PREDICTOR:
-            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'predictor'))
-            graph_api.figure_data = self.__get_scatter_figure_data_for_predictor__()
-            return [MyDCC.graph(graph_api)]
+            return self.__get_chart_type_predictor__()
         elif self.chart_type == CHT.PIE:
-            graph_api_all = DccGraphApi(self._chart_id + '_all', self._chart_name + ' (all)')
-            graph_api_all.figure_data = self.__get_pie_figure_data__('all')
-            graph_api_winner = DccGraphApi(self._chart_id + '_winner', self._chart_name + ' (winner)')
-            graph_api_winner.figure_data = self.__get_pie_figure_data__('winner')
-            graph_api_loser = DccGraphApi(self._chart_id + '_loser', self._chart_name + ' (loser)')
-            graph_api_loser.figure_data = self.__get_pie_figure_data__('loser')
-            w_h, l_h = self.__get_winner_loser_heights__(graph_api_winner.values_total, graph_api_loser.values_total)
-            graph_api_all.figure_layout_height = 800
-            graph_api_winner.figure_layout_height = 800
-            graph_api_loser.figure_layout_height = 800
-            graph_api_loser.figure_layout_height *= w_h
-            graph_api_loser.figure_layout_height *= l_h
-            graph_api_all.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
-            graph_api_winner.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
-            graph_api_loser.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
-            return [MyDCC.graph(graph_api_all), MyDCC.graph(graph_api_winner), MyDCC.graph(graph_api_loser)]
+            return self.__get_chart_type_pie__()
         elif self.chart_type == CHT.AREA_WINNER_LOSER:
-            graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
-            graph_api.figure_data = self.__get_area_winner_loser_figure_data__()
-            graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
-            graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
-            return [MyDCC.graph(graph_api)]
+            return self.__get_chart_type_area_winner_loser__()
+
+    def __get_chart_type_area_winner_loser__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
+        graph_api.figure_data = self.__get_area_winner_loser_figure_data__()
+        graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
+        graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
+        return [MyDCC.graph(graph_api)]
+
+    def __get_chart_type_pie__(self):
+        graph_api_all = DccGraphApi(self._chart_id + '_all', self._chart_name + ' (all)')
+        graph_api_all.figure_data = self.__get_pie_figure_data__('all')
+        graph_api_winner = DccGraphApi(self._chart_id + '_winner', self._chart_name + ' (winner)')
+        graph_api_winner.figure_data = self.__get_pie_figure_data__('winner')
+        graph_api_loser = DccGraphApi(self._chart_id + '_loser', self._chart_name + ' (loser)')
+        graph_api_loser.figure_data = self.__get_pie_figure_data__('loser')
+        w_h, l_h = self.__get_winner_loser_heights__(graph_api_winner.values_total, graph_api_loser.values_total)
+        graph_api_all.figure_layout_height = 800
+        graph_api_winner.figure_layout_height = 800
+        graph_api_loser.figure_layout_height = 800
+        graph_api_loser.figure_layout_height *= w_h
+        graph_api_loser.figure_layout_height *= l_h
+        graph_api_all.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
+        graph_api_winner.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
+        graph_api_loser.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
+        return [MyDCC.graph(graph_api_all), MyDCC.graph(graph_api_winner), MyDCC.graph(graph_api_loser)]
+
+    def __get_chart_type_predictor__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'predictor'))
+        graph_api.figure_data = self.__get_scatter_figure_data_for_predictor__()
+        return [MyDCC.graph(graph_api)]
+
+    def __get_chart_type_stack_group__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Assets'))
+        graph_api.figure_data = self.__get_stack_group_figure_data__()
+        # print(graph_api.figure_data)
+        graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+        graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+        return [MyDCC.graph(graph_api)]
+
+    def __get_chart_type_line__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Assets'))
+        graph_api.figure_data = self.__get_line_figure_data__()
+        graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+        graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+        return [MyDCC.graph(graph_api)]
+
+    def __get_chart_type_scatter__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
+        graph_api.figure_data = self.__get_scatter_figure_data__()
+        graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+        graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+        return [MyDCC.graph(graph_api)]
 
     @staticmethod
     def __get_winner_loser_heights__(total_winner: int, total_loser: int):
@@ -128,41 +151,10 @@ class MyDashTabStatisticsPlotter:
         ]
 
     def __get_line_figure_data__(self):
-        df_base = self.__get_df_for_selection__()
-        df = pd.DataFrame(df_base.groupby([self.x_variable, DC.LOCATION])[DC.VALUE_TOTAL].sum())
-        df.reset_index(inplace=True)
-        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[self.category].unique()}
-        combined_list = list(df[self.category].unique())
-        return [
-            go.Scatter(
-                x=df[df[self.category] == element][self.x_variable],
-                y=df[df[self.category] == element][self.y_variable],
-                text=df[df[self.category] == element][self.text_variable],
-                line={'color': color_dict[element], 'width': 2},
-                opacity=0.7,
-                name=element
-            ) for element in combined_list
-        ]
+        pass
 
     def __get_stack_group_figure_data__(self):
-        df_base = self.__get_df_for_selection__()
-        col = DC.EQUITY_NAME
-        df = pd.DataFrame(df_base.groupby([self.x_variable, DC.LOCATION, col])[DC.VALUE_TOTAL].sum())
-        df.reset_index(inplace=True)
-        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[col].unique()}
-        combined_list = list(itertools.product(df[self.category].unique(), df[col].unique()))
-        return [
-            dict(
-                x=df[np.logical_and(df[self.category] == element[0], df[col] == element[1])][self.x_variable],
-                y=df[np.logical_and(df[self.category] == element[0], df[col] == element[1])][self.y_variable],
-                text=df[np.logical_and(df[self.category] == element[0], df[col] == element[1])][self.text_variable],
-                line={'color': color_dict[element[1]], 'width': 2},
-                fill='tonexty',
-                opacity=0.7,
-                name='{}: {}'.format(element[0], element[1]),
-                stackgroup='one'
-            ) for element in combined_list
-        ]
+        pass
 
     def __get_scatter_figure_data_for_predictor__(self):
         self.category = DC.PATTERN_TYPE
@@ -363,6 +355,11 @@ class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
 
 
 class MyDashTabStatisticsPlotter4Assets(MyDashTabStatisticsPlotter):
+    def __init__(self, df_base: pd.DataFrame, color_handler: DashColorHandler, trade_handler_online: PatternTradeHandler):
+        MyDashTabStatisticsPlotter.__init__(self, df_base, color_handler)
+        self._trade_handler_online = trade_handler_online
+        # self.__print_df_base__()
+
     def __init_parameter__(self):
         self._chart_id = 'asset_statistics_graph'
         self._chart_name = 'Assets'
@@ -374,9 +371,69 @@ class MyDashTabStatisticsPlotter4Assets(MyDashTabStatisticsPlotter):
         self.text_variable = DC.LOCATION
         self.pattern_type = FT.ALL
 
+    def __print_df_base__(self):
+        columns = [DC.VALIDITY_DT, DC.VALIDITY_TS, DC.EQUITY_NAME, DC.VALUE_TOTAL]
+        df_reduced = self._df_base[columns]
+        print('__print_df_base__: _df_base\n{}'.format(df_reduced.head(100)))
+
     @staticmethod
     def __get_result_id_from_row__(row) -> int:
         return row[DC.VALUE_TOTAL]
+
+    def __get_chart_type_pie__(self):
+        graph_api = DccGraphApi(self._chart_id, self._chart_name)
+        graph_api.figure_data = self.__get_pie_figure_data__('all')
+        graph_api.figure_layout_height = 800
+        graph_api.figure_layout_margin = {'b': 200, 'r': 50, 'l': 50, 't': 50}
+        return [MyDCC.graph(graph_api)]
+
+    def __get_line_figure_data__(self):
+        df_base = self.__get_df_for_selection__()
+        df = pd.DataFrame(df_base.groupby([self.x_variable, self.category])[DC.VALUE_TOTAL].sum())
+        df.reset_index(inplace=True)
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[self.category].unique()}
+        combined_list = list(df[self.category].unique())
+        return [
+            go.Scatter(
+                x=df[df[self.category] == element][self.x_variable],
+                y=df[df[self.category] == element][self.y_variable],
+                text=['{}: {:0.2f}'.format(element, y) for y in df[df[self.category] == element][self.y_variable]],
+                line={'color': color_dict[element], 'width': 2},
+                opacity=0.7,
+                name=element
+            ) for element in combined_list
+        ]
+
+    def __get_stack_group_figure_data__(self):
+        df_base = self.__get_df_for_selection__()
+        df = pd.DataFrame(df_base.groupby([self.x_variable, self.category])[DC.VALUE_TOTAL].sum())
+        df.reset_index(inplace=True)
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[self.category].unique()}
+        combined_list = list(df[self.category].unique())
+        return [
+            dict(
+                x=df[df[self.category] == element][self.x_variable],
+                y=df[df[self.category] == element][self.y_variable],
+                text=['{}: {:0.2f}'.format(element, y) for y in df[df[self.category] == element][self.y_variable]],
+                line={'color': color_dict[element], 'width': 2},
+                fill='tonexty',
+                opacity=0.7,
+                name='{}'.format(element),
+                stackgroup='one'
+            ) for element in combined_list
+        ]
+
+    def __get_data_for_pie_figure__(self, scope: str):
+        df = self.__get_df_for_selection__()
+        ts_sorted_list = sorted(df[DC.VALIDITY_TS].unique())
+        df = df[df[DC.VALIDITY_TS] == ts_sorted_list[-1]]
+        sorted_category_list = sorted(df[self.category].unique())
+        df = pd.DataFrame(df.groupby([self.category])[DC.VALUE_TOTAL].sum())
+        y_values = [df.loc[cat][DC.VALUE_TOTAL] for cat in sorted_category_list]
+        colors = [self._color_handler.get_color_for_category(cat) for cat in sorted_category_list]
+        text = ['{}: {:0.2f}'.format(cat, y_values[index]) for index, cat in enumerate(sorted_category_list)]
+        pull = [0 for cat in sorted_category_list]
+        return sorted_category_list, y_values, colors, text, pull
 
 
 class MyDashTabStatisticsPlotter4Pattern(MyDashTabStatisticsPlotter):

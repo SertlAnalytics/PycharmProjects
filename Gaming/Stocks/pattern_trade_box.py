@@ -216,7 +216,7 @@ class TradingBox:
         self.__print_values__('Initialize stop and _limit')
 
     def __print_values__(self, prefix: str):
-        print('...{} for {}-{}: _limit={:.2f}, buy={:.2f}, offset={:.2f}, stop_loss={:.2f} '
+        print('...{} for {}-{}: limit={:.2f}, buy={:.2f}, offset={:.2f}, stop_loss={:.2f} '
               '(dist_top={:.2f}, dist_bottom={:.2f})'.format(
             prefix, self._ticker_id, self._trade_strategy, self._sell_limit, self._buy_price,
             self.off_set_value, self._stop_loss, self._distance_top, self._distance_bottom))

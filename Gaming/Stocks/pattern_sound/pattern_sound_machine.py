@@ -38,6 +38,12 @@ class PatternSoundMachine:
 
     def __play__(self, file: str):
         if self.is_active:
-            directory = '../pattern_sound/'
-            playsound('{}{}'.format(directory, file))
+            try:
+                directory = '../pattern_sound/'
+                playsound('{}{}'.format(directory, file))
+            except:
+                directory = 'pattern_sound/'
+                playsound('{}{}'.format(directory, file))
+            finally:
+                pass
 

@@ -608,7 +608,9 @@ class PatternTrade:
         if self.buy_trigger == BT.TOUCH_POINT:
             distance_bottom = round(buy_price - lower_value, 4)
         else:
-            distance_bottom = round(min(height, self.pattern.part_entry.distance_for_trading_box), 4)  # ToDo
+            height = round(min(height, self.pattern.part_entry.distance_for_trading_box), 4)
+            if height < buy_price/100:
+                height = buy_price/100  # at least one percent
             distance_bottom = round(height, 4)
         self._trade_box = self.__get_trade_box__(off_set_value, buy_price, height, distance_bottom)
         self._trade_box.print_box()

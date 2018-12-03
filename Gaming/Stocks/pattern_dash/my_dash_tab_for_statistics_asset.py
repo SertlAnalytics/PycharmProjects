@@ -8,7 +8,6 @@ Date: 2018-09-26
 from dash.dependencies import Input, Output, State
 from sertl_analytics.constants.pattern_constants import DC, TRC, EQUITY_TYPE
 from sertl_analytics.mydates import MyDate
-from pattern_dash.my_dash_base import MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
 from dash import Dash
 from pattern_trade_handler import PatternTradeHandler
@@ -26,8 +25,8 @@ import numpy as np
 class MyDashTab4AssetStatistics(MyDashTab4StatisticsBase):
     def __init__(self, app: Dash, sys_config: SystemConfiguration,
                  color_handler: DashColorHandler, trade_handler_online: PatternTradeHandler):
-        MyDashTab4StatisticsBase.__init__(self, app, sys_config, color_handler)
         self._trade_handler_online = trade_handler_online
+        MyDashTab4StatisticsBase.__init__(self, app, sys_config, color_handler)
         self._total_assets_start_dict = {}
         self._total_assets_latest_dict = {}
         self._total_assets_start_timestamp_dict = {}
@@ -60,7 +59,7 @@ class MyDashTab4AssetStatistics(MyDashTab4StatisticsBase):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.CATEGORY)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.X_VARIABLE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.Y_VARIABLE)),
-            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.CHART_TEXT_VARIABLE)),
+            # MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.CHART_TEXT_VARIABLE)),
             MyHTML.div(self._my_statistics_chart_div, self.__get_charts_from_plotter__(), False),
         ]
         # print('self._my_statistics_chart_div={}'.format(self._my_statistics_chart_div))
@@ -102,14 +101,15 @@ class MyDashTab4AssetStatistics(MyDashTab4StatisticsBase):
              Input(self._my_statistics_category_selection, 'value'),
              Input(self._my_statistics_x_variable_selection, 'value'),
              Input(self._my_statistics_y_variable_selection, 'value'),
-             Input(self._my_statistics_text_variable_selection, 'value'),
+             # Input(self._my_statistics_text_variable_selection, 'value'),
              Input('my_interval_refresh', 'n_intervals')])
-        def handle_callbacks_for_asset_chart(ct: str, category: str, x: str, y: str, txt_col: str, n_intervals: int):
-            self._plotter.category = category
+        def handle_callbacks_for_asset_chart(ct: str, category: str, x: str, y: str, n_intervals: int):
+            self.__fill_df_base__()
+            self.__init_plotter__()
             self._plotter.chart_type = ct
+            self._plotter.category = category
             self._plotter.x_variable = x
             self._plotter.y_variable = y
-            self._plotter.text_variable = txt_col
             return self.__get_charts_from_plotter__()
 
     def __get_asset_numbers_for_trade_client__(self, trade_client: str):
@@ -160,13 +160,20 @@ class MyDashTab4AssetStatistics(MyDashTab4StatisticsBase):
         return MyHTMLTabAssetStatisticsHeaderTable().get_table()
 
     def __get_df_base__(self) -> pd.DataFrame:
-        return self.sys_config.db_stock.get_asset_records_for_statistics_as_dataframe()
+        df_from_db = self.sys_config.db_stock.get_asset_records_for_statistics_as_dataframe()
+        df_from_balance = self._trade_handler_online.get_balance_as_asset_data_frame()
+        if df_from_balance is None:
+            return df_from_db
+        df_concat = pd.concat([df_from_db, df_from_balance])
+        df_concat.reset_index(inplace=True)
+        return df_concat
 
     def __init_dd_handler__(self):
         self._dd_handler = AssetStatisticsDropDownHandler()
 
     def __init_plotter__(self):
-        self._plotter = MyDashTabStatisticsPlotter4Assets(self._df_base, self._color_handler)
+        self._plotter = MyDashTabStatisticsPlotter4Assets(
+            self._df_base, self._color_handler, self._trade_handler_online)
 
     @staticmethod
     def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):

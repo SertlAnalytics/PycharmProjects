@@ -25,7 +25,6 @@ from pattern_index_configuration import IndexConfiguration
 
 class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
-        self.config = PatternConfiguration()
         self.runtime_config = RuntimeConfiguration()
         self.crypto_config = BitfinexConfiguration()
         self.exchange_config = self.crypto_config
@@ -33,6 +32,7 @@ class SystemConfiguration:
         self.sound_machine = PatternSoundMachine()
         if for_semi_deep_copy:
             return
+        self.config = PatternConfiguration()
         self.index_config = IndexConfiguration([INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100])
         self.db_stock = StockDatabase()
         self.pattern_table = PatternTable()
@@ -162,6 +162,7 @@ class SystemConfiguration:
         about which part has to be deeply copied and which can be used by reference.
         """
         sys_config_copy = SystemConfiguration(True)
+        sys_config_copy.config = deepcopy(self.config)  # we change save modes... ToDo ???
         sys_config_copy.exchange_config = deepcopy(self.exchange_config)  # we change the simulation mode... ToDo ???
         sys_config_copy.index_config = self.index_config
         sys_config_copy.pattern_table = self.pattern_table

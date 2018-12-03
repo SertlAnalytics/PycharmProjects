@@ -7,11 +7,11 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import CN, FT, PRD
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mymath import MyMath
 from pattern_function_container import PatternFunctionContainer
 from pattern_wave_tick import WaveTick
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_data_frame import PatternDataFrame
-from pattern_data_container import PatternDataHandler
 import numpy as np
 
 
@@ -80,9 +80,9 @@ class PatternPart:
 
     @property
     def distance_for_trading_box(self) -> float:
-        if self.height_at_last_position == 0 or True:
-            return self.std
-        return self.std / (self.height_at_first_position/self.height_at_last_position)
+        if self.height_at_last_position == 0:
+            return self.std_regression
+        return self.std_regression / (self.height_at_first_position/self.height_at_last_position)
 
     def __get_annotation_offset_x__(self):
         x_center = self.__xy_center[0]
@@ -202,6 +202,12 @@ class PatternPart:
     def std(self):  # we need the standard deviation from the mean_HL for Low and High
         return ((self.df[CN.HIGH]-self.mean).std() + (self.df[CN.LOW]-self.mean).std())/2
 
+    @property
+    def std_regression(self):  # we need the standard deviation from the regression line
+        x = np.array(list(range(1, self.df.shape[0] + 1)))
+        y = (self.df[CN.HIGH] + self.df[CN.LOW])/2
+        return MyMath.get_standard_deviation_for_regression(x, y)
+
     def get_slope_values(self):
         f_upper_slope = self.function_cont.f_upper_percentage
         f_lower_slope = self.function_cont.f_lower_percentage
@@ -228,14 +234,14 @@ class PatternPart:
 
         if self.pattern_type in [FT.TKE_TOP, FT.HEAD_SHOULDER]:
             gradients = 'L={:.1f}%, Reg={:.1f}%'.format(f_lower_percent, f_reg_percent)
-            height = '{:.2f}, Std_dev={:.2f}'.format(self.height, std_dev)
+            height = '{:.2f}, Std_dev={:.2f}, Std_regression={:.2f}'.format(self.height, std_dev, self.std_regression)
         elif self.pattern_type in [FT.TKE_BOTTOM, FT.HEAD_SHOULDER_BOTTOM]:
             gradients = 'U={:.1f}%, Reg={:.1f}%'.format(f_upper_percent, f_reg_percent)
-            height = '{:.2f}, Std_dev={:.2f}'.format(self.height, std_dev)
+            height = '{:.2f}, Std_dev={:.2f}, Std_regression={:.2f}'.format(self.height, std_dev, self.std_regression)
         else:
             gradients = 'U={:.1f}%, L={:.1f}%, Reg={:.1f}%'.format(f_upper_percent, f_lower_percent, f_reg_percent)
-            height = '{:.2f}, Max={:.2f}, Min={:.2f}, Std_dev={:.2f}'.format(
-                self.height, self.distance_max, self.distance_min, std_dev)
+            height = '{:.2f}, Max={:.2f}, Min={:.2f}, Std_dev={:.2f}, Std_regression={:.2f}'.format(
+                self.height, self.distance_max, self.distance_min, std_dev, self.std_regression)
 
         return_dict = {'Pattern': pattern, 'Gradients': gradients, 'Height': height}
         if self.breakout is None:

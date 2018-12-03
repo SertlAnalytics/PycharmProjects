@@ -105,17 +105,15 @@ class AssetStatisticsDropDownHandler(StatisticsDropDownHandler):
             DDT.CATEGORY: 'my_asset_statistics_category_selection',
             DDT.X_VARIABLE: 'my_asset_statistics_x_variable_selection',
             DDT.Y_VARIABLE: 'my_asset_statistics_y_variable_selection',
-            DDT.CHART_TEXT_VARIABLE: 'my_asset_statistics_text_variable_selection',
         }
         return value_dict.get(drop_down_type, None)
 
     def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
         default_dict = {
             DDT.CHART_TYPE: CHT.STACK_GROUP,
-            DDT.CATEGORY: DC.LOCATION,
+            DDT.CATEGORY: DC.EQUITY_NAME,
             DDT.X_VARIABLE: DC.VALIDITY_DT,
             DDT.Y_VARIABLE: DC.VALUE_TOTAL,
-            DDT.CHART_TEXT_VARIABLE: DC.LOCATION,
         }
         return default_dict.get(drop_down_type, None)
 
@@ -125,7 +123,6 @@ class AssetStatisticsDropDownHandler(StatisticsDropDownHandler):
             DDT.CATEGORY: AssetTable.get_columns_for_statistics_category(),
             DDT.X_VARIABLE: AssetTable.get_columns_for_statistics_x_variable(),
             DDT.Y_VARIABLE: AssetTable.get_columns_for_statistics_y_variable(),
-            DDT.CHART_TEXT_VARIABLE: AssetTable.get_columns_for_statistics_text_variable(),
         }
 
     def __get_for_multi__(self, drop_down_type: str):

@@ -8,7 +8,9 @@ Date: 2018-03-11
 import pandas as pd
 from sqlalchemy import MetaData, Table, insert, exc
 import os
+import sys
 from sertl_analytics.myexceptions import ErrorHandler
+from time import sleep
 
 
 class CDT:  # Column Data Types
@@ -128,9 +130,26 @@ class BaseDatabase:
 
     def delete_records(self, query: str):
         connection = self.engine.connect()
-        results = connection.execute(query)
-        connection.close()
-        print('Deleted {} records for query {}'.format(results.rowcount, query))
+        done = False
+        counter = 0
+        while not done:
+            try:
+                results = connection.execute(query)
+                done = True
+                print('Deleted {} records for query {}'.format(results.rowcount, query))
+            except exc.OperationalError:
+                sleep(1)
+                counter += 1
+                if counter == 3:
+                    print('OperationalError - break retry: {}'.format(sys.exc_info()[0]))
+                    done = True
+            except:
+                done = True
+                print('Unexpected error: {}'.format(sys.exc_info()[0]))
+            finally:
+                done = True
+                connection.close()
+
 
     def get_result_set_for_table(self, table: str):
         connection = self.engine.connect()

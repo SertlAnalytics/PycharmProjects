@@ -55,7 +55,7 @@ class AssetTable(MyTable):
 
     @staticmethod
     def get_columns_for_statistics_category() -> list:
-        return [DC.LOCATION, DC.EQUITY_TYPE]
+        return [DC.LOCATION, DC.EQUITY_TYPE, DC.EQUITY_NAME]
 
     @staticmethod
     def get_columns_for_statistics_x_variable() -> list:
@@ -67,7 +67,7 @@ class AssetTable(MyTable):
 
     @staticmethod
     def get_columns_for_statistics_text_variable() -> list:
-        return [DC.LOCATION, DC.EQUITY_TYPE]
+        return [DC.LOCATION, DC.EQUITY_TYPE, DC.VALUE_TOTAL]
 
 
 class WaveTable(MyTable):

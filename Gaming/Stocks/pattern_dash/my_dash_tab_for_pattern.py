@@ -131,24 +131,8 @@ class MyDashTab4Pattern(MyDashBaseTab):
         if self.sys_config.db_stock.is_any_asset_already_available_for_timestamp(ts_saving):
             return
         for position in self.trade_handler_online.balances:
-            asset_data_dict = AssetDataDictionary()
-            asset_data_dict.add(DC.CURRENCY, 'USD')
-            asset_data_dict.add(DC.VALIDITY_DT, dt_saving)
-            asset_data_dict.add(DC.VALIDITY_TS, ts_saving)
-            asset_data_dict.add(DC.LOCATION, 'Bitfinex')
-            if position.asset == 'USD':
-                asset_data_dict.add(DC.EQUITY_TYPE, EQUITY_TYPE.CASH)
-                asset_data_dict.add(DC.EQUITY_TYPE_ID, EQUITY_TYPE.get_id(EQUITY_TYPE.CASH))
-            else:
-                asset_data_dict.add(DC.EQUITY_TYPE, EQUITY_TYPE.CRYPTO)
-                asset_data_dict.add(DC.EQUITY_TYPE_ID, EQUITY_TYPE.get_id(EQUITY_TYPE.CRYPTO))
-            asset_data_dict.add(DC.EQUITY_ID, position.asset)
-            asset_data_dict.add(DC.EQUITY_NAME, position.asset)
-            asset_data_dict.add(DC.QUANTITY, position.amount)
-            asset_data_dict.add(DC.VALUE_PER_UNIT, 0)
-            asset_data_dict.add(DC.VALUE_TOTAL, position.current_value)
-            asset_data_dict.add(DC.CURRENCY, 'USD')
-            self.sys_config.db_stock.insert_asset_entry(asset_data_dict.get_data_dict_for_target_table())
+            data_dict = AssetDataDictionary().get_data_dict_for_target_table_for_balance(position, ts_saving, dt_saving)
+            self.sys_config.db_stock.insert_asset_entry(data_dict)
 
     def __init_callback_for_dashboard_markdown__(self):
         @self.app.callback(

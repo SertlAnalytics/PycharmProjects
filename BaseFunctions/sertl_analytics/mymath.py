@@ -212,6 +212,15 @@ class MyMath:
         value_mean = (value_from + value_to) / 2
         return round(value_change / value_mean, decimal_round)
 
+    @staticmethod
+    def get_standard_deviation_for_regression(x, y, rounding=2):
+        np_array = np.polyfit(x, y, 1)
+        intercept, slope = np_array[1], np_array[0]
+        y_reg = np.array([intercept + x_value * slope for x_value in x])
+        y_changed_by_reg = y - y_reg
+        std_y_changed_by_reg = y_changed_by_reg.std()
+        return round(std_y_changed_by_reg, rounding)
+
 
 class MyPoly1d:
     @staticmethod

@@ -6,6 +6,8 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR
+from pattern_database.stock_tables import AssetTable
+from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern_part import PatternEntryPart
@@ -17,6 +19,7 @@ from sertl_analytics.exchanges.interactive_broker_trade_client import MyIBKRTrad
 from pattern_news_handler import NewsHandler
 from pattern_trade_candidate import TradeCandidateController, TradeCandidate
 from pattern import Pattern
+import pandas as pd
 
 
 class PatternTradeHandler:
@@ -77,6 +80,21 @@ class PatternTradeHandler:
         if self.balances is None:
             return 0
         return sum([balance.current_value for balance in self.balances])
+
+    def get_balance_as_asset_data_frame(self):
+        if self.balances is None:
+            return None
+        ts = MyDate.get_epoch_seconds_from_datetime()
+        dt_str = MyDate.get_date_time_from_epoch_seconds_as_string(ts)
+        dict_for_data_frame = {}
+        for balance in self.balances:
+            data_dict = AssetDataDictionary().get_data_dict_for_target_table_for_balance(balance, ts, dt_str)
+            for key, value in data_dict.items():
+                if key not in dict_for_data_frame:
+                    dict_for_data_frame[key] = [value]
+                else:
+                    dict_for_data_frame[key].append(value)
+        return pd.DataFrame.from_dict(dict_for_data_frame)
 
     def get_balances_with_current_values(self):
         return self._trade_client_crypto.get_balances_with_current_values()
