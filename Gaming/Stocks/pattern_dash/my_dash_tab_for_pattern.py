@@ -180,12 +180,15 @@ class MyDashTab4Pattern(MyDashBaseTab):
         for indicators in indicator_list:
             sys_config.init_by_indicator(indicators)
             detector = self._pattern_controller.get_detector_for_fibonacci(sys_config, indicators[0])
-            fib_wave_list = detector.fib_wave_tree.fibonacci_wave_list
-            for fib_wave in fib_wave_list:
+            for fib_wave in detector.fib_wave_tree.fibonacci_wave_list:
                 aggregation = indicators[1]
                 if fib_wave.is_wave_indicator_for_dash(aggregation):
                     result_list.append('{} ({}min): {}'.format(
                         indicators[0], aggregation, fib_wave.get_details_as_dash_indicator()))
+            for fib_wave in detector.fib_wave_tree.get_actual_forecast_wave_list():
+                aggregation = indicators[1]
+                result_list.append('{} ({}min): {}'.format(
+                    indicators[0], aggregation, fib_wave.get_details_as_dash_forecast_indicator()))
         if len(result_list) > 0:
             self.sys_config.sound_machine.play_alarm_fibonacci()
             self._news_handler.add_news('Fibonacci', ', '.join(result_list))

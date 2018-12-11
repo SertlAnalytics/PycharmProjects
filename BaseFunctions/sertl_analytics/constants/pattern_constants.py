@@ -8,6 +8,23 @@ Date: 2018-05-14
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
+class STBL:  # stocks tables
+    STOCKS = 'Stocks'
+    COMPANY = 'Company'
+    PATTERN = 'Pattern'
+    TRADE = 'Trade'
+    WAVE = 'Wave'
+    ASSET = 'Asset'
+
+    @staticmethod
+    def get_all():
+        return [STBL.STOCKS, STBL.COMPANY, STBL.PATTERN, STBL.TRADE, STBL.WAVE, STBL.ASSET]
+
+    @staticmethod
+    def get_for_model_statistics():
+        return [STBL.PATTERN, STBL.TRADE]
+
+
 class BLR:  # BlackListReason
     SIMILAR_AVAILABLE = 'Similar trade available'
     BUY_TRIGGER_CONDITIONS = 'Buy trigger conditions violated'
@@ -81,6 +98,8 @@ class CHT:  # chart type
     D2_CONTOUR_HISTOGRAM = '2D Contour Histogram'
     POLAR_SCATTER = 'Polar Scatter'
     STACK_GROUP = 'Stackgroup'
+    CONFUSION = 'Confusion Matrix'
+    ROC = 'ROC Curve'
 
     @staticmethod
     def get_as_options():
@@ -106,6 +125,10 @@ class CHT:  # chart type
     @staticmethod
     def get_chart_types_for_asset_statistics():
         return [CHT.STACK_GROUP, CHT.LINE, CHT.PIE]
+
+    @staticmethod
+    def get_chart_types_for_models_statistics():
+        return [CHT.CONFUSION, CHT.ROC]
 
 
 class CM:  # coverage mode
@@ -197,6 +220,47 @@ class OS:  # Order side
 
     def get_id(key: str):
         return {OS.BUY: 1, OS.SELL: -1}.get(key)
+
+
+class MT:  # Model Types
+    ALL = 'All'
+    LOGISTIC_REGRESSION = 'Logistic Regression'
+    K_NEAREST_NEIGHBORS = 'k-Nearest Neigbors'
+    LINEAR_REGRESSION = 'Linear Regression'
+    SVM = 'Support Vektor Machine'
+    DECISION_TREE = 'Decision Tree'
+    RANDOM_FOREST = 'Random Forest'
+    NN = 'Neural Network'
+
+    @staticmethod
+    def get_all():
+        return [MT.LOGISTIC_REGRESSION, MT.K_NEAREST_NEIGHBORS, MT.LINEAR_REGRESSION,
+                MT.SVM, MT.DECISION_TREE,
+                MT.RANDOM_FOREST, MT.NN]
+
+    @staticmethod
+    def get_all_classifiers():
+        return [MT.LOGISTIC_REGRESSION, MT.K_NEAREST_NEIGHBORS, MT.SVM, MT.DECISION_TREE,
+                MT.RANDOM_FOREST]
+
+    @staticmethod
+    def get_all_regressions():
+        return [MT.LINEAR_REGRESSION]
+
+    @staticmethod
+    def get_all_for_statistics():
+        return [MT.ALL] + sorted(MT.get_all_classifiers())
+
+
+class MTC:  # Metrics
+    ALL = 'All'
+    PRECISION = 'Precision'
+    RECALL = 'Recall'
+    F1_SCORE = 'F1 Score'
+
+    @staticmethod
+    def get_all():
+        return [MTC.PRECISION, MTC.RECALL, MTC.F1_SCORE]
 
 
 class FT:
@@ -592,6 +656,7 @@ class PDR:  # Pattern Deletion Reasons
     PATTERN_VANISHED = 'Pattern_vanished'
     WRONG_BREAKOUT = 'Wrong_breakout'
     BUYING_PROBLEM = 'Buying_problem'
+    SELL_PROBLEM = 'Sell_problem'
     BUYING_PRECONDITION_PROBLEM = 'Buying_precondition_problem'
     TRADE_FINISHED = 'Trade_finished'
     SMA_PROBLEM = 'Simple_moving_average_problem'
@@ -607,6 +672,7 @@ class ST:  # Sell Trigger
     CANCEL = 'Cancellation'
     PATTERN_VANISHED = 'Pattern_vanished'
     PATTERN_END = 'Pattern_end'
+    FORECAST_TICKS = 'Forecast_ticks_reached'
 
     def get_id(key: str):
         return {ST.LIMIT: 10, ST.STOP_LOSS: 20, ST.CANCEL: 25, ST.PATTERN_END: 40, ST.PATTERN_END: 50}.get(key)

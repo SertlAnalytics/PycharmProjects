@@ -49,11 +49,11 @@ pattern_type_pattern_id_dict = {
 }
 
 pattern_type_list_to_test = [FT.TRIANGLE_DOWN]
-trade_strategy_dict_list = [{BT.BREAKOUT: [TSTR.TRAILING_STEPPED_STOP]}]
+trade_strategy_dict_list = [{BT.BREAKOUT: [TSTR.LIMIT]}]
 
 for pattern_type in pattern_type_list_to_test:
     sys_config.config.pattern_ids_to_find = pattern_type_pattern_id_dict[pattern_type]
-    sys_config.config.pattern_ids_to_find = ['20_1_1_BTCUSD_22_2018-06-07_00:00_2018-06-25_00:00']
+    sys_config.config.pattern_ids_to_find = ['1_1_1_CAT_10_2017-10-31_00:00_2017-11-15_00:00']
 
     for trade_strategy_dict in trade_strategy_dict_list:
         sys_config.exchange_config.trade_strategy_dict = trade_strategy_dict

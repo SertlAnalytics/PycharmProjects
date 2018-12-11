@@ -19,6 +19,7 @@ import matplotlib.patches as mpatches
 from pattern_configuration import PatternConfiguration
 from pattern_database import stock_database
 from sertl_analytics.mymath import EntropyHandler
+from sertl_analytics.models.performance_measure import ModelPerformance
 
 
 class PatternPredictorApi:
@@ -153,7 +154,8 @@ class PatternPredictor:
         pass
 
     def __get_y_train_for_label_column__(self, label_column: str) -> np.array:
-        return np.array(self._df_labels[label_column])
+        y_train = np.array(self._df_labels[label_column])
+        return y_train.astype(np.int64) if y_train.dtype in ['float', 'float64'] else y_train
 
     def __get_df_features_with_labels__(self):
         return DatabaseDataFrame(self.db_stock, self._query_for_feature_and_label_data).df

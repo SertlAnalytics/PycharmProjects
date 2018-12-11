@@ -17,6 +17,7 @@ class PatternConfiguration:
         self.simple_moving_average_number = 8
         self.pattern_type_list = [FT.CHANNEL]
         self.pattern_ids_to_find = []
+        self.forecasting_group_size = 0  # any number larger than 0 generates forecasts
         self.save_pattern_data = True
         self.save_trade_data = True
         self.save_wave_data = True

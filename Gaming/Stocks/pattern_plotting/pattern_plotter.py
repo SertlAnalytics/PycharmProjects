@@ -290,7 +290,12 @@ class PatternPlotter:
                 self.__plot_single_fibonacci_wave__(fib_waves, 'g')
             else:
                 self.__plot_single_fibonacci_wave__(fib_waves, 'r')
-        for fib_waves in  self.detector.fib_wave_tree.fibonacci_wave_forecast_collector.get_forecast_wave_list():
+        # for unfinished_fib_waves in self.detector.fib_wave_tree.fibonacci_unfinished_wave_list:
+        #     if unfinished_fib_waves.wave_type == FD.ASC:
+        #         self.__plot_single_fibonacci_wave__(unfinished_fib_waves, 'g')
+        #     else:
+        #         self.__plot_single_fibonacci_wave__(unfinished_fib_waves, 'r')
+        for fib_waves in self.detector.fib_wave_tree.fibonacci_wave_forecast_collector.get_forecast_wave_list():
             if fib_waves.wave_type == FD.ASC:
                 self.__plot_single_fibonacci_wave__(fib_waves, 'yellowgreen', 'Forecast')
             else:

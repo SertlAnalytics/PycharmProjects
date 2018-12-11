@@ -6,10 +6,15 @@ Date: 2018-06-17
 """
 
 import plotly.graph_objs as go
-from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, TRC, EQUITY_TYPE
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC
+from sertl_analytics.models.performance_measure import ModelPerformance
+from sertl_analytics.models.learning_machine import LearningMachineFactory
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
 from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_trade_handler import PatternTradeHandler
+from pattern_database.stock_database import StockDatabase
+from pattern_database.stock_tables import PatternTable, TradeTable
+from pattern_database.stock_database import DatabaseDataFrame
 import pandas as pd
 import itertools
 import numpy as np
@@ -23,10 +28,12 @@ class MyDashTabStatisticsPlotter:
         self._chart_name = ''
         self.chart_type = ''
         self.category = ''
+        self.predictor = ''
         self.x_variable = ''
         self.y_variable = ''
         self.z_variable = ''
         self.text_variable = ''
+        self.model_type = ''
         self.pattern_type = ''
         self.__init_parameter__()
 
@@ -51,6 +58,10 @@ class MyDashTabStatisticsPlotter:
             return self.__get_chart_type_pie__()
         elif self.chart_type == CHT.AREA_WINNER_LOSER:
             return self.__get_chart_type_area_winner_loser__()
+        elif self.chart_type == CHT.CONFUSION:
+            return self.__get_chart_type_confusion_matrix__()
+        elif self.chart_type == CHT.ROC:
+            return self.__get_chart_type_roc__()
 
     def __get_chart_type_area_winner_loser__(self):
         graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
@@ -93,6 +104,20 @@ class MyDashTabStatisticsPlotter:
     def __get_chart_type_line__(self):
         graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Assets'))
         graph_api.figure_data = self.__get_line_figure_data__()
+        graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+        graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+        return [MyDCC.graph(graph_api)]
+
+    def __get_chart_type_confusion_matrix__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Models'))
+        graph_api.figure_data = self.__get_confusion_matrix_figure_data__()
+        graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+        graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+        return [MyDCC.graph(graph_api)]
+
+    def __get_chart_type_roc__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Models'))
+        graph_api.figure_data = self.__get_roc_figure_data__()
         graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
         graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
         return [MyDCC.graph(graph_api)]
@@ -154,6 +179,12 @@ class MyDashTabStatisticsPlotter:
         pass
 
     def __get_stack_group_figure_data__(self):
+        pass
+
+    def __get_confusion_matrix_figure_data__(self):
+        pass
+
+    def __get_roc_figure_data__(self):
         pass
 
     def __get_scatter_figure_data_for_predictor__(self):
@@ -263,11 +294,13 @@ class MyDashTabStatisticsPlotter:
             return {'type': 'log', 'autorange': True}
 
     def __can_axis_be_scaled_log_for_selected_variable__(self, variable_for_axis: str) -> bool:
-        if variable_for_axis in [DC.VALUE_TOTAL]:
+        if variable_for_axis in ['', DC.VALUE_TOTAL, DC.TOUCH_POINTS_TILL_BREAKOUT_TOP,
+                                 DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM]:
             return False
-        min_value = self._df_base[variable_for_axis].min()
+        df = self.__get_df_for_selection__()
+        min_value = df[variable_for_axis].min()
         if type(min_value) is not str:  # to avoid problems with dates, etc.
-            unique_value_list = self._df_base[variable_for_axis].unique()
+            unique_value_list = df[variable_for_axis].unique()
             return min_value >= 0 and len(unique_value_list) > 2
         return False
 
@@ -280,7 +313,7 @@ class MyDashTabStatisticsPlotter:
             mode='lines',
             line=dict(width=0.5, color='rgb(184, 247, 212)'),
             stackgroup='one',
-            groupnorm='percent'
+            # groupnorm='percent'
         )
         trace1 = dict(
             x=x,
@@ -352,6 +385,86 @@ class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
     @staticmethod
     def __get_result_id_from_row__(row) -> int:
         return row[DC.TRADE_RESULT_ID]
+
+
+class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
+    def __init__(self, df_base: pd.DataFrame, color_handler: DashColorHandler, db_stock: StockDatabase):
+        self.db_stock = db_stock
+        self.pattern_table = PatternTable()
+        self.trade_table = TradeTable()
+        MyDashTabStatisticsPlotter.__init__(self, df_base, color_handler)
+        self._df_base_cache_dict = {}
+
+    def __init_parameter__(self):
+        self._chart_id = 'models_statistics_graph'
+        self._chart_name = 'Models'
+        self.chart_type = CHT.CONFUSION
+        self.category = STBL.PATTERN
+        self.predictor = PRED.TOUCH_POINT
+        self.x_variable = DC.TOUCH_POINTS_TILL_BREAKOUT_TOP
+        self.model_type = MT.K_NEAREST_NEIGHBORS
+        self.text_variable = DC.TRADE_STRATEGY
+        self.pattern_type = FT.ALL
+
+    @staticmethod
+    def __get_result_id_from_row__(row) -> int:
+        return row[DC.TRADE_RESULT_ID]
+
+    def __get_confusion_matrix_figure_data__(self):
+        df_base = self.__get_df_for_selection__()
+        # print('__get_confusion_matrix_figure_data__: df_base.columns={}'.format(df_base.columns))
+        x_train = df_base[self.__get_feature_columns_for_selection__()]
+        y_train = df_base[self.x_variable]
+        model_list = MT.get_all_classifiers() if self.model_type == MT.ALL else [self.model_type]
+        predictor_dict = {model: LearningMachineFactory.get_model_by_model_type(model) for model in model_list}
+        model_performance_dict = {model: ModelPerformance(predictor, x_train, y_train, self.x_variable)
+                                  for model, predictor in predictor_dict.items()}
+        combined_list = list(itertools.product(model_list, MTC.get_all()))
+        x_dict = {model: [x_values for x_values in model_performance.f1_score_dict]
+                  for model, model_performance in model_performance_dict.items()}
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in model_list}
+        return [
+            go.Scatter(
+                x=x_dict[model],
+                y=model_performance_dict[model].get_metric_list(metric),
+                text=['{}-{}: {:0.2f}'.format(model, metric, y_value)
+                      for y_value in model_performance_dict[model].get_metric_list(metric)],
+                line={'color': color_dict[model], 'width': 2},
+                opacity=0.7,
+                name='{}-{}'.format(model, metric)
+            ) for model, metric in combined_list
+        ]
+
+    def __get_df_for_selection__(self) -> pd.DataFrame:
+        key = '{}-{}'.format(self.category, self.predictor)
+        if key not in self._df_base_cache_dict:
+            if self.category == STBL.PATTERN:
+                if self.predictor == PRED.TOUCH_POINT:
+                    query = self.pattern_table.query_for_feature_and_label_data_touch_points
+                elif self.predictor == PRED.BEFORE_BREAKOUT:
+                    query = self.pattern_table.query_for_feature_and_label_data_before_breakout
+                else:
+                    query = self.pattern_table.query_for_feature_and_label_data_after_breakout
+            else:
+                query = self.trade_table.query_for_feature_and_label_data_for_trades
+            self._df_base_cache_dict[key] = DatabaseDataFrame(self.db_stock, query).df
+
+        if self.pattern_type in [FT.ALL, '']:
+            return self._df_base_cache_dict[key]
+        else:
+            df = self._df_base_cache_dict[key]
+            return df[df[DC.PATTERN_TYPE] == self.pattern_type]
+
+    def __get_feature_columns_for_selection__(self):
+        if self.category == STBL.PATTERN:
+            if self.predictor == PRED.TOUCH_POINT:
+                return self.pattern_table.feature_columns_touch_points
+            elif self.predictor == PRED.BEFORE_BREAKOUT:
+                return self.pattern_table.features_columns_before_breakout
+            else:
+                return self.pattern_table.features_columns_after_breakout
+        else:
+            return self.trade_table.feature_columns_for_trades
 
 
 class MyDashTabStatisticsPlotter4Assets(MyDashTabStatisticsPlotter):

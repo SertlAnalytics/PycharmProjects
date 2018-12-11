@@ -32,7 +32,7 @@ class FibonacciWave:
         self.data_dict_obj = WaveDataDictionary()
         self.tick_distance = tick_distance
         self.comp_dic = {}
-        self.comp_forecast_parameter_list = []
+        self.comp_forecast_parameter_list = []  # structure example [[0.382, 213.26, 85], [0.5, 215.53, 88], ....]
         self.forecast_value_list = []
 
     @property
@@ -283,6 +283,14 @@ class FibonacciWave:
     def is_wave_complete(self):
         return len(self.comp_dic) == len(self.comp_id_list)
 
+    def is_wave_unfinished(self, last_position_in_data_frame: int):
+        if len(self.comp_dic) != len(self.comp_id_list) - 1 or len(self.comp_forecast_parameter_list) == 0:
+            return False
+        for param_list in self.comp_forecast_parameter_list:
+            if param_list[2] < last_position_in_data_frame:
+                return False
+        return True
+
     def is_wave_ready_for_next_retracement(self, tick_next: WaveTick, ret_comp_id_next: str):
         is_next_tick_retracement = self.__is_tick_next_retracement__(tick_next, ret_comp_id_next)
         are_all_previous_components_available = self.__are_all_components_filled_before_wave_id__(ret_comp_id_next)
@@ -320,7 +328,7 @@ class FibonacciWave:
         self.comp_dic[ret_comp.comp_id] = ret_comp
         self.__add_component_data_to_data_dict__(ret_comp)
         if ret_comp.comp_id == 'w_4':
-            if self.is_wave_fibonacci_wave(True):
+            if self.is_wave_fibonacci_wave(for_forecast=True):
                 self.__fill_comp_forecast_parameter_list__()
 
     def __add_component_data_to_data_dict__(self, component: FibonacciWaveComponent):
@@ -381,7 +389,7 @@ class FibonacciWave:
             elif self.wave_type == FD.DESC and value < comp_previous.min * 1.02:
                 self.comp_forecast_parameter_list.append(entry)
 
-    def is_wave_fibonacci_wave(self, for_forecast = False):
+    def is_wave_fibonacci_wave(self, for_forecast=False):
         # 1. check if the components are internally consistent
         internal_ok = self.__are_components_internally_consistent__()
         if not internal_ok:
@@ -397,7 +405,7 @@ class FibonacciWave:
                 return False
 
         # 4. check if the regressions are fibonacci regressions - the FIRST regression is always compliant !!!
-        if self.__get_number_of_fibonacci_compliant_regressions__(0.05 if for_forecast else 0.1) < 2:
+        if self.__get_number_of_fibonacci_compliant_regressions__(0.2 if for_forecast else 0.1) < 2:
                 return False
 
         # 5. verify that the middle regression is not the smallest one
@@ -407,7 +415,7 @@ class FibonacciWave:
                 return False
 
         # 6. Only certain relations for the 3 regressions are allowed...
-        if self.wave_structure == FWST.NONE:
+        if self.wave_structure == FWST.NONE and not for_forecast:
             return False
 
         return True
@@ -451,6 +459,12 @@ class FibonacciWave:
     def get_details_as_dash_indicator(self):
         return '{} - last tick at {}'.format(self.wave_type, self.w_5.tick_end.time)
 
+    def get_details_as_dash_forecast_indicator(self):
+        if self.wave_type == FD.ASC:
+            return '{} - FORECAST value: {} ({})'.format(self.wave_type, self.w_5.tick_end.high, self.w_5.tick_end.time_str)
+        else:
+            return '{} - FORECAST value: {} ({})'.format(self.wave_type, self.w_5.tick_end.low, self.w_5.tick_end.time_str)
+
     def get_annotation_details(self):
         ret_reg_list = self.comp_reg_ret_pct_list
         return '{:<12}: {:=5.1f}% / {:=5.1f}%\n{:<12}: {:=5.1f}% / {:=5.1f}%\n{}: {}'.format(
@@ -468,7 +482,7 @@ class FibonacciWave:
 
     def get_xy_parameter(self):
         if len(self.forecast_value_list) == 0:
-            return self.__get_xy_parameter_for_wave__(5)
+            return self.__get_xy_parameter_for_wave__(len(self.comp_dic))
         else:
             return self.__get_xy_parameter_for_forecast_wave__()
 

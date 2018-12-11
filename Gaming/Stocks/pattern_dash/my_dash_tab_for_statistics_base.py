@@ -29,8 +29,9 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         self.__fill_df_base__()
         self.__manipulate_ptc_columns__()
         self.__init_dash_element_ids__()
-        self.__init_dd_handler__()
+        self._plotter = None
         self.__init_plotter__()
+        self.__init_dd_handler__()
 
     @property
     def column_result(self):
@@ -79,6 +80,7 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         self._my_statistics_x_variable_selection = 'my_{}_statistics_x_variable_selection'.format(self._tab)
         self._my_statistics_y_variable_selection = 'my_{}_statistics_y_variable_selection'.format(self._tab)
         self._my_statistics_text_variable_selection = 'my_{}_statistics_text_variable_selection'.format(self._tab)
+        self._my_statistics_model_type_selection = 'my_{}_statistics_model_type_selection'.format(self._tab)
         self._my_statistics_pattern_type_selection = 'my_{}_statistics_pattern_type_selection'.format(self._tab)
         self._my_statistics_chart_div = 'my_{}_statistics_chart_div'.format(self._tab)
         self._my_statistics = 'my_{}_statistics'.format(self._tab)
@@ -144,16 +146,6 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
             self.__fill_df_base__(pattern_type)
             return self.__get_numbers_for_callback__()
 
-    def __init_callback_for_x_variable_options__(self):
-        @self.app.callback(
-            Output(self._my_statistics_x_variable_selection, 'options'),
-            [Input(self._my_statistics_chart_type_selection, 'value'),
-             Input(self._my_statistics_predictor_selection, 'value')]
-        )
-        def handle_callback_for_category_options(chart_type: str, predictor: str):
-            value_list = self.__get_value_list_for_x_variable_options__(chart_type, predictor)
-            return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
-
     def __init_callback_for_y_variable_options__(self):
         @self.app.callback(
             Output(self._my_statistics_y_variable_selection, 'options'),
@@ -162,6 +154,16 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         )
         def handle_callback_for_category_options(chart_type: str, predictor: str):
             value_list = self.__get_value_list_for_y_variable_options__(chart_type, predictor)
+            return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
+
+    def __init_callback_for_x_variable_options__(self):
+        @self.app.callback(
+            Output(self._my_statistics_x_variable_selection, 'options'),
+            [Input(self._my_statistics_chart_type_selection, 'value'),
+             Input(self._my_statistics_predictor_selection, 'value')]
+        )
+        def handle_callback_for_category_options(chart_type: str, predictor: str):
+            value_list = self.__get_value_list_for_x_variable_options__(chart_type, predictor)
             return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
 
     @staticmethod

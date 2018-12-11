@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR
+from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR, TSTR
 from pattern_database.stock_tables import AssetTable
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.mydates import MyDate
@@ -210,15 +210,14 @@ class PatternTradeHandler:
             return
         pattern_trade.was_candidate_for_real_trading = trade_candidate.is_candidate_for_real_trading
         print('{}: candidate_for_real_trading: {}'.format(pattern_trade.id, pattern_trade.was_candidate_for_real_trading))
-        if self.exchange_config.automatic_trading_on:
-            if trade_candidate.is_candidate_for_real_trading:
+        if trade_candidate.is_candidate_for_real_trading:
+            pattern_trade.is_simulation = False  # REAL Trading
+            print('Trade was initiated by is_candidate_for_real_trading: {}'.format(pattern_trade.id))
+        elif pattern_trade.buy_trigger in self.exchange_config.default_trade_strategy_dict:
+            buy_trigger = pattern_trade.buy_trigger
+            if pattern_trade.trade_strategy == self.exchange_config.default_trade_strategy_dict[buy_trigger]:
                 pattern_trade.is_simulation = False  # REAL Trading
-                print('Trade was initiated by is_candidate_for_real_trading: {}'.format(pattern_trade.id))
-            elif pattern_trade.buy_trigger in self.exchange_config.default_trade_strategy_dict:
-                buy_trigger = pattern_trade.buy_trigger
-                if pattern_trade.trade_strategy == self.exchange_config.default_trade_strategy_dict[buy_trigger]:
-                    pattern_trade.is_simulation = False  # REAL Trading
-                    print('Trade was initiated by default_trade_strategy: {}'.format(pattern_trade.id))
+                print('Trade was initiated by default_trade_strategy: {}'.format(pattern_trade.id))
         self.__add_pattern_trade_to_trade_dict__(pattern_trade)
 
     @staticmethod
@@ -288,6 +287,8 @@ class PatternTradeHandler:
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
             ticker_last_price = pattern_trade.ticker_actual.last_price
             pattern_trade.print_state_details_for_actual_ticker(PTHP.HANDLE_SELL_TRIGGERS)
+            if pattern_trade.are_forecast_ticks_sell_triggers(ticker_last_price):
+                self.__handle_sell_trigger__(pattern_trade, ST.FORECAST_TICKS)
             if pattern_trade.stop_loss_current > ticker_last_price:
                 self.__handle_sell_trigger__(pattern_trade, ST.STOP_LOSS)
             elif pattern_trade.limit_current < ticker_last_price:
@@ -325,9 +326,12 @@ class PatternTradeHandler:
                 ticker_id, pattern_trade.executed_amount, pattern_trade.is_simulation)
         else:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, sell_trigger)
-        pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
-        pattern_trade.save_trade()
-        self.sys_config.sound_machine.play_alarm_after_sell(pattern_trade.data_dict_obj.get(DC.TRADE_RESULT_PCT))
+        if order_status is None:
+            self.__delete_entries_from_pattern_trade_dict__([pattern_trade.id], PDR.SELL_PROBLEM)
+        else:
+            pattern_trade.set_order_status_sell(order_status, sell_trigger, sell_comment)
+            pattern_trade.save_trade()
+            self.sys_config.sound_machine.play_alarm_after_sell(pattern_trade.data_dict_obj.get(DC.TRADE_RESULT_PCT))
 
     def __handle_wrong_breakout__(self):
         deletion_key_list = []

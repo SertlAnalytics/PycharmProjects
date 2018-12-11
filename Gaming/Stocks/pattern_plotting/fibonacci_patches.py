@@ -34,19 +34,22 @@ class FibonacciWavePatch:
         for key, rectangle in self.__fib_retracement_rectangle_dic.items():
             axis.add_patch(rectangle)
             axis.add_artist(self.__fib_retracement_rectangle_text_dic[key])
-            axis.add_artist(self.__fib_retracement_spikes_text_dic[key])
+            if key in self.__fib_retracement_spikes_text_dic:  # we don't have this for unfinished waves
+                axis.add_artist(self.__fib_retracement_spikes_text_dic[key])
 
     def hide_retracement_patch_list(self):
         for key, rectangle in self.__fib_retracement_rectangle_dic.items():
             rectangle.set_visible(False)
             self.__fib_retracement_rectangle_text_dic[key].set_visible(False)
-            self.__fib_retracement_spikes_text_dic[key].set_visible(False)
+            if key in self.__fib_retracement_spikes_text_dic:  # we don't have this for unfinished waves
+                self.__fib_retracement_spikes_text_dic[key].set_visible(False)
 
     def show_retracement_patch_list(self):
         for key, rectangle in self.__fib_retracement_rectangle_dic.items():
             rectangle.set_visible(True)
             self.__fib_retracement_rectangle_text_dic[key].set_visible(True)
-            self.__fib_retracement_spikes_text_dic[key].set_visible(True)
+            if key in self.__fib_retracement_spikes_text_dic:  # we don't have this for unfinished waves
+                self.__fib_retracement_spikes_text_dic[key].set_visible(True)
 
     def select_fib_wave(self):
         self.polygon.set_linewidth(3)
@@ -92,6 +95,8 @@ class FibonacciWavePatch:
         self.__fib_retracement_rectangle_text_dic[ret] = annotation_box
 
     def __fill_retracement_spikes_text_annotations__(self, ret: str, position_in_wave: int):
+        if position_in_wave >= self.xy.shape[0]:  # we don't have this component for unfinished waves
+            return
         index = self.xy[position_in_wave, 0]
         value = self.xy[position_in_wave, 1]
         position = self.fib_wave.comp_position_list[position_in_wave]

@@ -16,7 +16,7 @@ trade_table = TradeTable()
 
 process_single_ticker_id = False
 
-stock_db_updater.update_trade_records(16, 16)
+# stock_db_updater.update_trade_records(16, 16)
 
 if process_single_ticker_id:
     stock_db_updater.update_wave_records_for_daily_period('AAPL', 400)
@@ -41,6 +41,11 @@ else:
     if is_weekday:
         stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.DOW_JONES, 400)
         stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.NASDAQ100, 400)
+
+    stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.CRYPTO_CCY)
+    if is_weekday:
+        stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.DOW_JONES)
+        stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.NASDAQ100)
 
     stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
     if is_weekday:

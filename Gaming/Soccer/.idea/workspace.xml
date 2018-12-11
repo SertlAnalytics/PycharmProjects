@@ -10,12 +10,12 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="SQLSoccerForcastByNNW.py" pinned="false" current-in-tab="true">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="SQLSoccerForcastByNNW.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SQLSoccerForcastByNNW.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="121" column="8" selection-start-line="121" selection-start-column="8" selection-end-line="121" selection-end-column="8" />
+            <state relative-caret-position="867">
+              <caret line="718" column="49" selection-start-line="718" selection-start-column="49" selection-end-line="718" selection-end-column="49" />
               <folding>
                 <element signature="e#281#300#0" expanded="true" />
               </folding>
@@ -23,7 +23,21 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="learning_machine.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/learning_machine.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="840">
+              <caret line="111" column="30" lean-forward="true" selection-start-line="111" selection-start-column="30" selection-end-line="111" selection-end-column="30" />
+            </state>
+          </provider>
+        </entry>
+      </file>
     </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>hidden</find>
+    </findStrings>
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="-7" />
@@ -35,6 +49,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -46,7 +61,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="RunDashboard">
@@ -81,6 +95,7 @@
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24840765" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" />
@@ -94,7 +109,6 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -103,11 +117,28 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/SQLSoccerForcastByNNW.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
+        <state relative-caret-position="1955">
           <caret line="121" column="8" selection-start-line="121" selection-start-column="8" selection-end-line="121" selection-end-column="8" />
           <folding>
             <element signature="e#281#300#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SQLSoccerForcastByNNW.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="867">
+          <caret line="718" column="49" selection-start-line="718" selection-start-column="49" selection-end-line="718" selection-end-column="49" />
+          <folding>
+            <element signature="e#281#300#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/learning_machine.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="840">
+          <caret line="111" column="30" lean-forward="true" selection-start-line="111" selection-start-column="30" selection-end-line="111" selection-end-column="30" />
         </state>
       </provider>
     </entry>

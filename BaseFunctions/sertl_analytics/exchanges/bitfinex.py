@@ -51,7 +51,7 @@ class SYM:
 
 class BitfinexConfiguration(ExchangeConfiguration):
     def __set_values__(self):
-        self.hodl_dict = {'IOT': 5000, 'ETH': 20}  # currency in upper characters
+        self.hodl_dict = {'IOT': 5000, 'ETH': 0}  # currency in upper characters
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
         self.ticker_refresh_rate_in_seconds = 5
@@ -291,9 +291,9 @@ class MyBitfinex(ExchangeInterface):
 
     def create_order(self, order: BitfinexOrder, is_order_simulation: bool):
         self.__init_actual_order_properties__(order)
-        if self.__is_enough_balance_available__(order):
-            if not self.__is_order_affected_by_hodl_config__(order):
-                if self.__is_order_value_compliant__(order):
+        if self.__is_enough_balance_available__(order) or is_order_simulation:
+            if not self.__is_order_affected_by_hodl_config__(order) or is_order_simulation:
+                if self.__is_order_value_compliant__(order) or is_order_simulation:
                     return self.__create_order__(order, is_order_simulation)
 
     def delete_order(self, order_id: int, is_order_simulation: bool):
@@ -585,6 +585,8 @@ class MyBitfinex(ExchangeInterface):
     def __is_buy_order_value_compliant__(self, order):
         price = MyBitfinex.__get_price_for_order__(order)
         order_value = order.amount * price
+        # ToDo: The order value 502.98 is over the _limit of 500.00$: Symbol: LTCUSD, Amount: 16.0, Price: 1.0, Side: buy, Type: exchange market
+        # To fast price change results in a negative response....
         if order_value > self.exchange_config.buy_order_value_max:
             print('\nThe order value {:.2f} is over the _limit of {:.2f}$:'.format(
                 order_value, self.exchange_config.buy_order_value_max), order.get_details())

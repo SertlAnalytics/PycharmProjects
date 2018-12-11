@@ -11,11 +11,15 @@ from keras.models import Sequential
 from keras.utils import to_categorical
 from sklearn import linear_model
 from sklearn import tree
+from sklearn.svm import SVC
+from sklearn import neighbors
+from sklearn import ensemble
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV
+from sertl_analytics.constants.pattern_constants import MT
 
 
 class Optimizer:
@@ -36,9 +40,27 @@ class ModelType:
     TREE_CLASSIFICATION = "Model: DecisionTree, Type: Classification"
 
 
+class LearningMachineFactory:
+    @staticmethod
+    def get_model_by_model_type(model_type: str):
+        if model_type == MT.K_NEAREST_NEIGHBORS:
+            return LmKNeighborsClassifier().get_model()
+        elif model_type == MT.LOGISTIC_REGRESSION:
+            return LmLogisticRegression().get_model()
+        elif model_type == MT.DECISION_TREE:
+            return LmDecisionTreeClassifier().get_model()
+        elif model_type == MT.RANDOM_FOREST:
+            return LmRandomForestClassifier().get_model()
+        elif model_type == MT.SVM:
+            return LmSVM().get_model()
+        elif model_type == MT.NN:
+            return LmSequentialClassification().get_model()
+        else:
+            return LmKNeighborsClassifier().get_model()
+
+
 class LearningMachine:
-    def __init__(self, hidden_layers, optimizer: Optimizer = Optimizer.ADAM
-                 , loss: LossFunction = LossFunction.MSE):
+    def __init__(self, hidden_layers=None, optimizer=Optimizer.ADAM, loss=LossFunction.MSE):
         self.hidden_layers = hidden_layers
         self.model = None
         self.model_type = None
@@ -87,7 +109,9 @@ class LearningMachine:
         pass
 
     def predict_proba(self, prediction_data: np.array):
-        pass
+        if self.model is None:
+            self.model = self.get_model()
+        return self.model.predict_proba(prediction_data)
 
     def compare_prediction_with_results(self, test_set_target: np.array):
         self.accuracy = accuracy_score(self.prediction, test_set_target )
@@ -104,37 +128,60 @@ class LearningMachine:
         pass
 
 
-class LmDecisionTreeClassifier(LearningMachine):
-    def __init__(self):  # is needed since we don't need any other parameters
-        pass
+class LmKNeighborsClassifier(LearningMachine):
+    def __init__(self, n_neighbors=7, weights='distance'):
+        self._n_neighbors = 7
+        self._weights = weights
+        LearningMachine.__init__(self)
 
     def get_model(self):
-        return tree.DecisionTreeClassifier()
+        return neighbors.KNeighborsClassifier(n_neighbors=self._n_neighbors, weights=self._weights)
 
-    def predict_proba(self, prediction_data: np.array):
-        return self.model.predict_proba(prediction_data)
+
+class LmSVM(LearningMachine):
+    def __init__(self, gamma='auto'):
+        self._gamma = gamma
+        LearningMachine.__init__(self)
+
+    def get_model(self):
+        return SVC(gamma=self._gamma)
+
+
+class LmDecisionTreeClassifier(LearningMachine):
+    def __init__(self, random_state=0):
+        self._random_state = random_state
+        LearningMachine.__init__(self)
+
+    def get_model(self):
+        return tree.DecisionTreeClassifier(random_state=self._random_state)
+
+
+class LmRandomForestClassifier(LearningMachine):
+    def __init__(self, n_estimators=100, max_depth=2, random_state=0):
+        self._n_estimators = n_estimators
+        self._max_depth = max_depth
+        self._random_state =random_state
+        LearningMachine.__init__(self)
+
+    def get_model(self):
+        return ensemble.RandomForestClassifier(
+            n_estimators=self._n_estimators, max_depth=self._max_depth, random_state=self._random_state)
 
 
 class LmLinearRegression(LearningMachine):
-    def __init__(self):  # is needed since we don't need any other parameters
-        pass
-
     def get_model(self):
         return linear_model.LinearRegression()
 
 
 class LmLogisticRegression(LearningMachine):
-    def __init__(self):  # is needed since we don't need any other parameters
-        pass
-
     def get_model(self):
         # Create the hyperparameter grid
         # c_space = np.logspace(-5, 8, 15)
         # param_grid = {'C': c_space, 'penalty': ['l1', 'l2']}
         # logreg_cv = GridSearchCV(linear_model.LogisticRegression(), param_grid, cv=5)
         # return logreg_cv
-        scaler = StandardScaler()
-        pipeline = make_pipeline(scaler, linear_model.LogisticRegression())
+        # scaler = StandardScaler()
+        # pipeline = make_pipeline(scaler, linear_model.LogisticRegression())
         return linear_model.LogisticRegression()
 
     def __print_statistical_data__(self, np_test_set_target : np.array):
@@ -164,8 +211,9 @@ class LmSequentialRegression(LearningMachine):
 
 
 class LmSequentialClassification(LearningMachine):
-    def __init__(self, hidden_layers, optimizer: Optimizer = Optimizer.ADAM
-                 , loss: LossFunction = LossFunction.CAT_CROSS):
+    def __init__(self, hidden_layers=None, optimizer=Optimizer.ADAM, loss=LossFunction.CAT_CROSS):
+        if hidden_layers is None:
+            hidden_layers = [1000, 1000, 1000, 1000]
         LearningMachine.__init__(self, hidden_layers, optimizer, loss)
 
     def get_model(self):

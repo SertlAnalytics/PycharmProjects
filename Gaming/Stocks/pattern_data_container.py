@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 import pandas as pd
 import numpy as np
+from copy import deepcopy
 import itertools
 from sertl_analytics.constants.pattern_constants import CN, DIR, FT
 from sertl_analytics.mydates import MyDate
@@ -25,7 +26,7 @@ class PatternData:
         self.config = config
         self.__length_for_global = self.config.length_for_global_min_max
         self.__length_for_local = self.config.length_for_local_min_max
-        self.df = df
+        self.df = self.__get_adjusted_df_for_wave_simulation__(df)
         self.df_length = self.df.shape[0]
         self.max_value = self.df[CN.HIGH].max()
         self.min_value = self.df[CN.HIGH].min()
@@ -45,6 +46,84 @@ class PatternData:
         self.tick_list_min_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_min, False)
         self.tick_list_max_without_hidden_ticks = self.__get_hidden_tick_list__(self.tick_list_max, True)
         self.tick_list_min_max_for_head_shoulder = self.__get_tick_list_min_max_for_head_shoulder__()
+        # self.__print_some_details__()
+
+    def __get_adjusted_df_for_wave_simulation__(self, df: pd.DataFrame):
+        if self.config.forecasting_group_size == 0:
+            return df
+        forecasting_group_size = self.config.forecasting_group_size
+        np.random.seed(42)
+        row_last = deepcopy(df.iloc[-1])
+        ts_diff = df.index.values[-1] - df.index.values[-2]
+        self.df = deepcopy(df)
+        self.df_length = self.df.shape[0]
+        self.__add_columns__()
+        self.__init_columns_for_ticks_distance__()
+        df_global_min_max = self.df[np.logical_or(self.df[CN.GLOBAL_MAX], self.df[CN.GLOBAL_MIN])]
+        row_latest_extrema = df_global_min_max.iloc[-2]
+        df_since_latest_global_extrema = self.df[self.df[CN.TIMESTAMP] >= row_latest_extrema[CN.TIMESTAMP]]
+        max_high_low = (df_since_latest_global_extrema[CN.HIGH] - df_since_latest_global_extrema[CN.LOW]).max() / 2
+        max_value = df_since_latest_global_extrema[CN.HIGH].max()
+        min_value = df_since_latest_global_extrema[CN.LOW].min()
+        df_length = df_since_latest_global_extrema.shape[0]
+        np_array = np.polyfit(range(0, df_length), df_since_latest_global_extrema[CN.CLOSE], 1)
+        groups = int(df_length / forecasting_group_size)
+        increment_sign = np.sign(np_array[0])
+        row_list = []
+        columns = list(df.columns).append([CN.TIMESTAMP])
+        row_new = deepcopy(row_last)  # our start point
+        row_new[CN.TIMESTAMP] = df.index.values[-1]
+        off_set_value_list = self.__get_off_set_value_list__(row_new[CN.LOW], 2*(max_value-min_value), groups, False)
+        group_increment = round(off_set_value_list[1] - off_set_value_list[0], 2)
+        for off_set_value in off_set_value_list:
+            random_group_size = int(forecasting_group_size + forecasting_group_size * np.random.random())
+            in_group_increment = - round(group_increment / random_group_size, 4)
+            random_off_set_in_group = int(random_group_size * np.random.random())
+            for k in range(1, random_group_size + 1):
+                row_new = deepcopy(row_new)
+                random_high_low = np.random.random()
+                random_open_close = np.random.random()
+                is_close_above_open = True if np.random.random() < 0.5 else False
+                random_high_low_value = round(max_high_low * random_high_low, 4)
+                random_open_close_value = round(random_high_low_value * random_open_close, 4)
+                random_open_close_distance = round(np.random.random()*(random_high_low_value-random_open_close_value), 4)
+
+                if increment_sign == -1:
+                    if k == random_off_set_in_group:
+                        row_new[CN.LOW] = off_set_value
+                    else:
+                        row_new[CN.LOW] = off_set_value + in_group_increment + np.random.random() * max_high_low
+                    row_new[CN.HIGH] = row_new[CN.LOW] + random_high_low_value
+                else:
+                    if k == random_off_set_in_group:
+                        row_new[CN.HIGH] = off_set_value
+                    else:
+                        row_new[CN.HIGH] = off_set_value + in_group_increment + np.random.random() * max_high_low
+                    row_new[CN.LOW] = row_new[CN.HIGH] - random_high_low_value
+
+                if is_close_above_open:
+                    row_new[CN.OPEN] = row_new[CN.LOW] + random_open_close_distance
+                    row_new[CN.CLOSE] = row_new[CN.OPEN] + random_open_close_value
+                else:
+                    row_new[CN.CLOSE] = row_new[CN.LOW] + random_open_close_distance
+                    row_new[CN.OPEN] = row_new[CN.CLOSE] + random_open_close_value
+
+                row_new[CN.TIMESTAMP] += ts_diff
+                row_list.append(row_new)
+        df_new = pd.DataFrame(row_list, columns=columns)
+        df_new.set_index(CN.TIMESTAMP, drop=True, inplace=True)
+        return pd.concat([df, df_new])
+
+    @staticmethod
+    def __get_off_set_value_list__(last_value: float, range_to_cover: float, elements: int, is_ascending: bool):
+        increment = range_to_cover / elements
+        if is_ascending:
+           return [round(last_value + k * increment, 2) for k in range(1, elements + 1)]
+        return [round(last_value - k * increment, 2) for k in range(1, elements + 1)]
+
+    def __print_some_details__(self):
+        df_global_min_max = self.df[np.logical_or(self.df[CN.GLOBAL_MAX], self.df[CN.GLOBAL_MIN])]
+        print(df_global_min_max.head())
 
     def __get_tick_list_min_max_for_head_shoulder__(self):
         position_tick_dict = {}

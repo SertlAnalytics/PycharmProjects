@@ -148,7 +148,8 @@ class MyDashTab4Portfolio(MyDashBaseTab):
                 return ''
             self.sys_config.data_provider.period = PRD.INTRADAY
             self.sys_config.data_provider.aggregation = aggregation
-            graph, graph_key = self.__get_graph__(self._selected_ticker_id, refresh_interval, indicator=indicator)
+            graph, graph_key = self.__get_graph__(self._selected_ticker_id, refresh_interval,
+                                                  limit=300, indicator=indicator)
             return graph
 
         @self.app.callback(
@@ -168,7 +169,8 @@ class MyDashTab4Portfolio(MyDashBaseTab):
                 if graph_range == 1:
                     self.sys_config.data_provider.period = PRD.INTRADAY
                     self.sys_config.data_provider.aggregation = {5: 15, 15: 30, 30: 15}.get(aggregation_first, 30)
-                    graph, key = self.__get_graph__(self._selected_ticker_id, refresh_interval, indicator=indicator)
+                    graph, key = self.__get_graph__(self._selected_ticker_id, refresh_interval,
+                                                    limit=300, indicator=indicator)
                 else:
                     self.sys_config.data_provider.period = PRD.DAILY
                     graph, key = self.__get_graph__(self._selected_ticker_id, refresh_interval, graph_range, indicator)

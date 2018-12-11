@@ -7,23 +7,14 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC, PRD
+from sertl_analytics.constants.pattern_constants import DC, PRD, STBL
 from sertl_analytics.mydates import MyDate
-
-
-class STBL:  # stocks tables
-    STOCKS = 'Stocks'
-    COMPANY = 'Company'
-    PATTERN = 'Pattern'
-    TRADE = 'Trade'
-    WAVE = 'Wave'
-    ASSET = 'Asset'
 
 
 class PredictionFeatureTable:
     @staticmethod
     def is_label_column_for_regression(label_column: str):
-        return label_column[-4:] == '_PCT'
+        return False   # label_column[-4:] == '_PCT'
 
 
 class AssetTable(MyTable):
@@ -275,7 +266,7 @@ class TradeTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def get_label_columns_for_trades_statistics():
-        return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT]
+        return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_ID]
 
     @staticmethod
     def get_columns_for_replay() -> list:

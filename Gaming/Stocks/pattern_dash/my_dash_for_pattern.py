@@ -20,6 +20,7 @@ from pattern_dash.my_dash_tab_for_statistics_trade import MyDashTab4TradeStatist
 from pattern_dash.my_dash_tab_for_statistics_pattern import MyDashTab4PatternStatistics
 from pattern_dash.my_dash_tab_for_statistics_asset import MyDashTab4AssetStatistics
 from pattern_dash.my_dash_tab_for_configuration import MyDashTab4Configuration
+from pattern_dash.my_dash_tab_for_statistics_models import MyDashTab4ModelStatistics
 from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_dash.my_dash_tab_for_portfolio import MyDashTab4Portfolio
 from pattern_dash.my_dash_tab_for_recommender import MyDashTab4Recommender
@@ -41,6 +42,7 @@ class MyDash4Pattern(MyDashBase):
         self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_asset_statistics = MyDashTab4AssetStatistics(self.app, self.sys_config,
                                                               self.color_handler, self.trade_handler_online)
+        self.tab_models_statistics = MyDashTab4ModelStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_configuration = MyDashTab4Configuration(self.app, self.sys_config, self.trade_handler_online)
 
     def get_pattern(self):
@@ -54,6 +56,7 @@ class MyDash4Pattern(MyDashBase):
         self.tab_trade_statistics.init_callbacks()
         self.tab_pattern_statistics.init_callbacks()
         self.tab_asset_statistics.init_callbacks()
+        self.tab_models_statistics.init_callbacks()
         self.tab_configuration.init_callbacks()
 
     @staticmethod
@@ -100,6 +103,7 @@ class MyDash4Pattern(MyDashBase):
             MyDCC.tab('Trades', [self.tab_trade_statistics.get_div_for_tab()]),
             MyDCC.tab('Patterns', [self.tab_pattern_statistics.get_div_for_tab()]),
             MyDCC.tab('Assets', [self.tab_asset_statistics.get_div_for_tab()]),
+            MyDCC.tab('Models', [self.tab_models_statistics.get_div_for_tab()]),
             MyDCC.tab('Configuration', [self.tab_configuration.get_div_for_tab()])
         ]
         return MyDCC.tabs('my_app_tabs', tab_list)

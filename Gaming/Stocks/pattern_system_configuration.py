@@ -96,6 +96,27 @@ class SystemConfiguration:
         self.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
         self.sound_machine.is_active = False
 
+    def init_detection_process_for_automated_pattern_update(self):
+        date_now = MyDate.get_date_from_datetime()
+        date_from = MyDate.adjust_by_days(date_now, -180)
+        self.data_provider.and_clause = "Date BETWEEN '{}' AND '{}'".format(str(date_from), str(date_now))
+        self.data_provider.from_db = True
+        self.data_provider.period = PRD.DAILY
+        self.config.pattern_type_list = FT.get_all()
+        self.config.detection_process = PDP.UPDATE_PATTERN_DATA
+        self.config.plot_data = False
+        self.config.with_trading = False
+        self.config.save_pattern_data = True
+        self.config.save_trade_data = False
+        self.config.save_wave_data = False
+        self.config.plot_only_pattern_with_fibonacci_waves = False
+        self.config.plot_min_max = False
+        self.config.plot_volume = False
+        self.config.length_for_local_min_max = 2
+        self.config.length_for_local_min_max_fibonacci = 1
+        self.config.bound_upper_value = CN.CLOSE
+        self.config.bound_lower_value = CN.CLOSE
+
     def get_value_categorizer_tolerance_pct(self):
         if self.period == PRD.INTRADAY:
             if self.period_aggregation < 5:

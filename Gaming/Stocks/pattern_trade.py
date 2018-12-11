@@ -608,12 +608,21 @@ class PatternTrade:
         if self.buy_trigger == BT.TOUCH_POINT:
             distance_bottom = round(buy_price - lower_value, 4)
         else:
-            height = round(min(height, self.pattern.part_entry.distance_for_trading_box), 4)
+            height = round(max(height, self.pattern.part_entry.distance_for_trading_box), 4)
             if height < buy_price/100:
                 height = buy_price/100  # at least one percent
             distance_bottom = round(height, 4)
+        distance_bottom = self.__get_corrected_distance_bottom__(distance_bottom, off_set_value)
         self._trade_box = self.__get_trade_box__(off_set_value, buy_price, height, distance_bottom)
         self._trade_box.print_box()
+
+    @staticmethod
+    def __get_corrected_distance_bottom__(distance_bottom: float, off_set_value: float) -> float:
+        if abs(distance_bottom/off_set_value) > 0.02:  # we accept only 2% distance...
+            distance_bottom_new = round(off_set_value * 0.02, 4)
+            print('Distance bottom changed: {} -> {}'.format(distance_bottom, distance_bottom_new))
+            return distance_bottom_new
+        return distance_bottom
 
     def set_order_status_sell(self, order_status: OrderStatus, sell_trigger: str, sell_comment: str):
         order_status.order_trigger = sell_trigger
@@ -634,7 +643,9 @@ class PatternTrade:
     def get_row_for_dash_data_table(self):
         self.data_dict_obj.add(DC.TRADE_IS_SIMULATION, self.is_simulation)
         columns = TradeTable.get_columns_for_online_trades()
-        return {column: self.data_dict_obj.get(column) for column in columns}
+        data_dict = {column: self.data_dict_obj.get(column) for column in columns}
+        data_dict = {column: str(value) if type(value) is bool else value for column, value in data_dict.items()}
+        return data_dict
 
     def __add_trade_basis_data_to_data_dict__(self):
         self.data_dict_obj.add(DC.ID, self.id)
@@ -768,9 +779,9 @@ class PatternTrade:
             text_list.append('**Process**: {} **Breakout**: {:2.2f} **Current**: {:2.2f} **Wrong breakout**: {:2.2f}'.
                              format(self.current_trade_process, limit, last_price, stop_loss))
         elif self._status == PTS.EXECUTED:
-            bought_at = self._order_status_buy.avg_execution_price
             trailing_stop_distance = self.trailing_stop_distance
-            current_win_pct = round(((last_price - bought_at) / bought_at * 100), 2)
+            bought_at = self._order_status_buy.avg_execution_price
+            current_win_pct = self.__get_current_win_pct__(last_price)
             text_list.append('**Process**: {} **Bought at**: {:2.2f} **Limit**: {:2.2f} **Current**: {:2.2f}'
                              ' **Stop**: {:2.2f} **Trailing**: {:2.2f} **Result**: {:.1f}%'.format(
                                 self.current_trade_process, bought_at, limit, last_price, stop_loss,
@@ -785,6 +796,31 @@ class PatternTrade:
                 format(self.current_trade_process, limit, last_price, stop_loss))
         if self.trade_process != TP.ONLINE:
             text_list.append('**Ticks to end**: {}'.format(ticks_to_go))
+
+    def are_forecast_ticks_sell_triggers(self, ticker_last_price: float):
+        if self.trade_strategy not in [TSTR.LIMIT_FIX, TSTR.LIMIT]:
+            return False
+        if not self.__is_last_price_sufficient_for_limit_strategy__(ticker_last_price):
+            return False
+        position_breakout = self.pattern.breakout.tick_breakout.position
+        position_latest_tick = self.wave_tick_list.last_wave_tick.position
+        fc_ticks_to_positive_full = self.pattern.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_FULL)
+        fc_ticks_to_positive_half = self.pattern.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_HALF)
+        if position_latest_tick - position_breakout > min(fc_ticks_to_positive_full, fc_ticks_to_positive_half):
+            return True
+        return False
+
+    def __is_last_price_sufficient_for_limit_strategy__(self, last_price: float) -> bool:
+        # we need a last price with either 1 % win or very close to actual limit
+        current_win_pct = self.__get_current_win_pct__(last_price)
+        distance_limit_pct = (self.limit_current - last_price) / last_price * 100
+        return current_win_pct > 1 or distance_limit_pct < 0.3
+
+    def __get_current_win_pct__(self, last_price) -> float:
+        if self._order_status_buy is None:
+            return 0
+        bought_at = self._order_status_buy.avg_execution_price
+        return round(((last_price - bought_at) / bought_at * 100), 2)
 
     def __add_annotation_text_to_markdown_text_list__(self, text_list: list):
         for title, values in self.pattern.get_annotation_text_as_dict().items():

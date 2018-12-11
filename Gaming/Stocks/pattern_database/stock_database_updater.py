@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-10
 """
 
-from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT
+from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, INDICES
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern_detection_controller import PatternDetectionController
@@ -44,6 +44,12 @@ class StockDatabaseUpdater:
                         pattern_controller.run_pattern_detector()
                 if trade_type == '':
                     self.db_stock.update_trade_type_for_pattern(pattern_id, TRT.LONG)
+
+    def update_pattern_data_by_index_for_daily_period(self, index: str):
+        self.sys_config.init_detection_process_for_automated_pattern_update()
+        self.sys_config.data_provider.use_index(index)
+        pattern_controller = PatternDetectionController(self.sys_config)
+        pattern_controller.run_pattern_detector()
 
     def update_wave_data_by_index_for_daily_period(self, index: str, limit: int):
         print('Update wave data for index: {} ({}days)'.format(index, limit))

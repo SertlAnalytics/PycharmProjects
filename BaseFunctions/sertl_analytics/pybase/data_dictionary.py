@@ -6,6 +6,7 @@ Date: 2018-11-15
 """
 
 import numpy as np
+from sertl_analytics.constants.pattern_constants import DC
 
 
 class DataDictionary:
@@ -18,6 +19,9 @@ class DataDictionary:
         return self._data_dict
 
     def add(self, key: str, value):
+        # if key == DC.TRADE_IS_SIMULATION:
+        #     value = str(value)
+        #     print('DataDictionary.add({}, {}'.format(key, value))
         value = self.__get_manipulated_value__(key, value)
         self._data_dict[key] = value
 
