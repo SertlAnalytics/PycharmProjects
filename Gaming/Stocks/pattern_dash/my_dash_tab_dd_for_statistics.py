@@ -6,7 +6,7 @@ Date: 2018-10-03
 """
 
 from pattern_database.stock_tables import TradeTable, PatternTable, AssetTable
-from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC
 from pattern_dash.my_dash_components import DropDownHandler
 
 
@@ -191,6 +191,7 @@ class ModelsStatisticsDropDownHandler(StatisticsDropDownHandler):
             DDT.CATEGORY: 'my_models_statistics_category_selection',
             DDT.PREDICTOR: 'my_models_statistics_predictor_selection',
             DDT.X_VARIABLE: 'my_models_statistics_x_variable_selection',
+            DDT.Y_VARIABLE: 'my_models_statistics_y_variable_selection',
             DDT.CHART_TEXT_VARIABLE: 'my_models_statistics_text_variable_selection',
             DDT.MODEL_TYPE: 'my_models_statistics_model_type_selection',
             DDT.PATTERN_TYPE: 'my_models_statistics_pattern_type_selection'
@@ -203,6 +204,7 @@ class ModelsStatisticsDropDownHandler(StatisticsDropDownHandler):
             DDT.CATEGORY: STBL.PATTERN,
             DDT.PREDICTOR: PRED.TOUCH_POINT,
             DDT.X_VARIABLE: PatternTable.get_label_columns_touch_points_for_statistics()[0],
+            DDT.Y_VARIABLE: MTC.PRECISION,
             DDT.CHART_TEXT_VARIABLE: DC.PATTERN_TYPE,
             DDT.MODEL_TYPE: MT.K_NEAREST_NEIGHBORS,
             DDT.PATTERN_TYPE: FT.ALL
@@ -215,6 +217,7 @@ class ModelsStatisticsDropDownHandler(StatisticsDropDownHandler):
             DDT.CATEGORY: STBL.get_for_model_statistics(),
             DDT.PREDICTOR: PRED.get_for_pattern_all(),
             DDT.X_VARIABLE: PatternTable.get_label_columns_touch_points_for_statistics(),
+            DDT.Y_VARIABLE: MTC.get_all_for_statistics(),
             DDT.CHART_TEXT_VARIABLE: PatternTable.get_columns_for_statistics_text_variable(),
             DDT.MODEL_TYPE: MT.get_all_for_statistics(),
             DDT.PATTERN_TYPE: FT.get_all_for_statistics()
@@ -226,12 +229,13 @@ class ModelsStatisticsDropDownHandler(StatisticsDropDownHandler):
             DDT.CATEGORY: 120,
             DDT.PREDICTOR: 150,
             DDT.X_VARIABLE: 260,
+            DDT.Y_VARIABLE: 150,
             DDT.CHART_TEXT_VARIABLE: 140,
-            DDT.MODEL_TYPE: 180,
+            DDT.MODEL_TYPE: 220,
             DDT.PATTERN_TYPE: 200
         }
         return value_dict.get(drop_down_type, 200)
 
     def __get_for_multi__(self, drop_down_type: str):
-        return False if drop_down_type in [DDT.MODEL_TYPE, DDT.PATTERN_TYPE] else False
+        return True if drop_down_type in [DDT.Y_VARIABLE, DDT.MODEL_TYPE] else False
 

@@ -356,6 +356,7 @@ class MyDashTab4Trades(MyDashBaseTab):
             self.__handle_trade_restart_selection__(n_click_restart)
             self._selected_buy_trigger = buy_trigger
             self._selected_trade_strategy = trade_strategy
+            self.__check_actual_trades_for_trade_handler_online__(n_intervals)
             if len(selected_row_indices) == 0:
                 self._selected_row_index = -1
                 return ''
@@ -391,13 +392,16 @@ class MyDashTab4Trades(MyDashBaseTab):
     def __get_graph_for_trade_online_refreshed__(self, n_intervals: int):
         if self._trade_replay_handler_online.trade_test is None:
             return ''
-        if n_intervals % self.exchange_config.check_ticker_after_timer_intervals == 0:
-            self._time_stamp_last_ticker_refresh = MyDate.get_epoch_seconds_from_datetime()
-            self.trade_handler_online.check_actual_trades()
         self._trade_replay_handler_online.refresh_api_df_from_pattern_trade()
         self._trade_replay_handler_online.graph_api.pattern_trade.calculate_wave_tick_values_for_trade_subprocess()
         self._trade_replay_handler_online.graph_api.pattern_trade.calculate_xy_for_replay()
         return self.__get_dcc_graph_element__(None, self._trade_replay_handler_online.graph_api)
+
+    def __check_actual_trades_for_trade_handler_online__(self, n_intervals: int):
+        if self._selected_trade_type == TP.ONLINE:
+            if n_intervals % self.exchange_config.check_ticker_after_timer_intervals == 0:
+                self._time_stamp_last_ticker_refresh = MyDate.get_epoch_seconds_from_datetime()
+                self.trade_handler_online.check_actual_trades()
 
     def __get_graph_for_replay__(self):
         replay_handler = self.__get_trade_handler_for_selected_trade_type__()

@@ -42,6 +42,11 @@ class ModelType:
 
 class LearningMachineFactory:
     @staticmethod
+    def get_classifier_model_dict():
+        model_type_list = MT.get_all_classifiers()
+        return {model: LearningMachineFactory.get_model_by_model_type(model) for model in model_type_list}
+
+    @staticmethod
     def get_model_by_model_type(model_type: str):
         if model_type == MT.K_NEAREST_NEIGHBORS:
             return LmKNeighborsClassifier().get_model()

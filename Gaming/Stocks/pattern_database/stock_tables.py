@@ -148,7 +148,7 @@ class TradeTable(MyTable, PredictionFeatureTable):
         return self._label_columns_for_trades
 
     @property
-    def query_for_feature_and_label_data_for_trades(self):
+    def query_for_feature_and_label_data_for_trades(self) -> str:
         return self._query_for_feature_and_label_data_for_trades
 
     @staticmethod

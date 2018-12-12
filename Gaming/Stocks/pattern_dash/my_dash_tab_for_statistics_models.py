@@ -13,7 +13,7 @@ from dash import Dash
 from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_database.stock_tables import TradeTable, PatternTable
 from pattern_dash.my_dash_header_tables import MyHTMLTabModelsStatisticsHeaderTable
-from pattern_dash.my_dash_drop_down import ModelsStatisticsDropDownHandler
+from pattern_dash.my_dash_tab_dd_for_statistics import ModelsStatisticsDropDownHandler
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Models
 from pattern_dash.my_dash_tab_for_statistics_base import MyDashTab4StatisticsBase, DDT
 from pattern_dash.my_dash_components import MyHTML
@@ -51,6 +51,7 @@ class MyDashTab4ModelStatistics(MyDashTab4StatisticsBase):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.CATEGORY)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.PREDICTOR)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.X_VARIABLE)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.Y_VARIABLE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.CHART_TEXT_VARIABLE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.MODEL_TYPE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(DDT.PATTERN_TYPE)),
@@ -116,13 +117,15 @@ class MyDashTab4ModelStatistics(MyDashTab4StatisticsBase):
             Output(self._my_statistics_chart_div, 'children'),
             [Input(self._my_statistics_chart_type_selection, 'value'),
              Input(self._my_statistics_x_variable_selection, 'value'),
+             Input(self._my_statistics_y_variable_selection, 'value'),
              Input(self._my_statistics_model_type_selection, 'value'),
              Input(self._my_statistics_text_variable_selection, 'value'),
              Input(self._my_statistics_pattern_type_selection, 'value'),
              Input('my_interval_refresh', 'n_intervals')],
             [State(self._my_statistics_category_selection, 'value'),
              State(self._my_statistics_predictor_selection, 'value')])
-        def handle_callbacks_for_models_chart(ct: str, x: str, model_type: str, text_variable: str, pattern_type: str,
+        def handle_callbacks_for_models_chart(ct: str, x: str, y: object,
+                                              model_type: object, text_variable: str, pattern_type: str,
                                               n_intervals: int, category: str, pred: str):
             self._category_selected = category
             self.__fill_df_base__()
@@ -131,7 +134,8 @@ class MyDashTab4ModelStatistics(MyDashTab4StatisticsBase):
             self._plotter.category = category
             self._plotter.predictor = pred
             self._plotter.x_variable = x
-            self._plotter.model_type = model_type
+            self._plotter.y_variable = [y] if type(y) is str else y
+            self._plotter.model_type = [model_type] if type(model_type) is str else model_type
             self._plotter.text_variable = text_variable
             self._plotter.pattern_type = pattern_type
             return self.__get_charts_from_plotter__()

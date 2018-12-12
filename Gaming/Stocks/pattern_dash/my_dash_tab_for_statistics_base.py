@@ -12,7 +12,7 @@ from dash import Dash
 from sertl_analytics.constants.pattern_constants import CHT, FT, DC
 from pattern_dash.my_dash_components import MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLTabPatternStatisticsHeaderTable
-from pattern_dash.my_dash_drop_down import DDT, PatternStatisticsDropDownHandler
+from pattern_dash.my_dash_tab_dd_for_statistics import DDT, PatternStatisticsDropDownHandler
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Pattern
 from pattern_dash.my_dash_colors import DashColorHandler
 from textwrap import dedent

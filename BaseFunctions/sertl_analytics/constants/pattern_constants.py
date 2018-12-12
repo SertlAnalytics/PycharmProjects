@@ -249,7 +249,7 @@ class MT:  # Model Types
 
     @staticmethod
     def get_all_for_statistics():
-        return [MT.ALL] + sorted(MT.get_all_classifiers())
+        return sorted(MT.get_all_classifiers())
 
 
 class MTC:  # Metrics
@@ -261,6 +261,10 @@ class MTC:  # Metrics
     @staticmethod
     def get_all():
         return [MTC.PRECISION, MTC.RECALL, MTC.F1_SCORE]
+
+    @staticmethod
+    def get_all_for_statistics():
+        return sorted(MTC.get_all())
 
 
 class FT:

@@ -109,10 +109,10 @@ class MyDashTabStatisticsPlotter:
         return [MyDCC.graph(graph_api)]
 
     def __get_chart_type_confusion_matrix__(self):
-        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Models'))
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self.predictor, self.x_variable))
         graph_api.figure_data = self.__get_confusion_matrix_figure_data__()
         graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
-        graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+        # graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
         return [MyDCC.graph(graph_api)]
 
     def __get_chart_type_roc__(self):
@@ -402,7 +402,8 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
         self.category = STBL.PATTERN
         self.predictor = PRED.TOUCH_POINT
         self.x_variable = DC.TOUCH_POINTS_TILL_BREAKOUT_TOP
-        self.model_type = MT.K_NEAREST_NEIGHBORS
+        self.y_variable = [MTC.PRECISION]
+        self.model_type = [MT.K_NEAREST_NEIGHBORS]
         self.text_variable = DC.TRADE_STRATEGY
         self.pattern_type = FT.ALL
 
@@ -415,14 +416,14 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
         # print('__get_confusion_matrix_figure_data__: df_base.columns={}'.format(df_base.columns))
         x_train = df_base[self.__get_feature_columns_for_selection__()]
         y_train = df_base[self.x_variable]
-        model_list = MT.get_all_classifiers() if self.model_type == MT.ALL else [self.model_type]
-        predictor_dict = {model: LearningMachineFactory.get_model_by_model_type(model) for model in model_list}
-        model_performance_dict = {model: ModelPerformance(predictor, x_train, y_train, self.x_variable)
-                                  for model, predictor in predictor_dict.items()}
-        combined_list = list(itertools.product(model_list, MTC.get_all()))
+        model_type_list = self.model_type
+        model_dict = {model: LearningMachineFactory.get_model_by_model_type(model) for model in model_type_list}
+        model_performance_dict = {model: ModelPerformance(model, x_train, y_train, self.x_variable)
+                                  for model, model in model_dict.items()}
+        combined_list = list(itertools.product(model_type_list, self.y_variable))
         x_dict = {model: [x_values for x_values in model_performance.f1_score_dict]
                   for model, model_performance in model_performance_dict.items()}
-        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in model_list}
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in model_type_list}
         return [
             go.Scatter(
                 x=x_dict[model],

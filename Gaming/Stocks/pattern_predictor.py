@@ -5,8 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-08-22
 """
 
-from sertl_analytics.constants.pattern_constants import FT
+from sertl_analytics.constants.pattern_constants import FT, PRED, STBL, MT
 from sertl_analytics.models.nn_collector import NearestNeighborCollector
+from sertl_analytics.models.learning_machine import LearningMachineFactory
 import numpy as np
 import pandas as pd
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
@@ -20,6 +21,7 @@ from pattern_configuration import PatternConfiguration
 from pattern_database import stock_database
 from sertl_analytics.mymath import EntropyHandler
 from sertl_analytics.models.performance_measure import ModelPerformance
+import math
 
 
 class PatternPredictorApi:
@@ -52,6 +54,155 @@ class PatternFeaturesSelector:
             for feature in self._features_columns_orig:
                 information_gain = self._entropy_handler.calculate_information_gain_for_label_and_feature(label, feature)
                 print('label={}, feature={}: information_gain={}'.format(label, feature, information_gain))
+
+
+class MP:  # Metric parameters
+    MODEL_NAME = 'Model'
+    TABLE = 'Table'
+    PREDICTOR = 'Predictor'
+    LABEL = 'Label'
+    VALUE = 'Value'
+    PRECISION = 'Precision'
+    RECALL = 'RECALL'
+    F1_SCORE = 'F1 Score'
+
+
+class PatternPredictorOptimizer:
+    def __init__(self, config: PatternConfiguration, db_stock: StockDatabase):
+        self.config = config
+        self._db_stock = db_stock
+        self._pattern_table = PatternTable()
+        self._trade_table = TradeTable()
+        self._model_dict = LearningMachineFactory.get_classifier_model_dict()
+        # self._table_predictor_dict = {STBL.PATTERN: PRED.get_for_pattern_all(), STBL.TRADE: PRED.get_for_trade_all()}
+        self._table_predictor_dict = {STBL.PATTERN: [PRED.TOUCH_POINT]}
+        self._df_features_and_labels_dict = {}
+        self._features_column_dict = {}
+        self._label_column_dict = {}
+        self.__fill_df_and_column_dict__()
+        self._df_metric = None
+        self.__calculate_class_metrics__()
+        self._trained_model_dict = {}
+        self.__train_models__()
+
+    def predict(self, table_name: str, predictor: str, label: str, x_data: list):
+        np_array = np.array(x_data)
+        np_array = np_array.reshape(1, np_array.size)
+        key_df = '{}-{}'.format(table_name, predictor)
+        prediction_precision_optimal = 0
+        prediction_optimal = - math.inf
+        for model_name in self._model_dict:
+            key_trained_model = '{}-{}-{}'.format(model_name, key_df, label)
+            trained_model = self._trained_model_dict[key_trained_model]
+            prediction = trained_model.predict(np_array)[0]
+            prediction_precision = self.__get_precision_for_model_value__(
+                model_name, table_name, predictor, label, prediction)
+            if prediction_precision > prediction_precision_optimal:
+                prediction_precision_optimal = prediction_precision
+                prediction_optimal = prediction
+        return prediction_optimal
+
+    def __get_precision_for_model_value__(self, model_name: str, table_name: str, predictor: str, label: str, value):
+        df = self._df_metric
+        row = df[np.logical_and(
+            df[MP.MODEL_NAME] == model_name, np.logical_and(
+                df[MP.TABLE] == table_name, np.logical_and(df[MP.PREDICTOR] == predictor,
+                                                       np.logical_and(df[MP.LABEL] == label, df[MP.VALUE] == value))))]
+        return row.iloc[0][MP.PRECISION]
+
+    def __fill_df_and_column_dict__(self):
+        for table_name, predictor_list in self._table_predictor_dict.items():
+            for predictor in predictor_list:
+                key_df = '{}-{}'.format(table_name, predictor)
+                self._df_features_and_labels_dict[key_df] = \
+                    self.__get_data_frame_for_features_and_labels__(table_name, predictor)
+                self._features_column_dict[key_df] = self.__get_feature_columns__(table_name, predictor)
+                self._label_column_dict[key_df] = self.__get_label_columns__(table_name, predictor)
+
+    def __train_models__(self):
+        for table_name, predictor_list in self._table_predictor_dict.items():
+            for predictor in predictor_list:
+                key_df = '{}-{}'.format(table_name, predictor)
+                df = self._df_features_and_labels_dict[key_df]
+                feature_columns = self._features_column_dict[key_df]
+                label_columns = self._label_column_dict[key_df]
+                x_train = df[feature_columns]
+                print('feature_columns={}'.format(','.join(feature_columns)))
+                print('label_columns={}'.format(','.join(label_columns)))
+                for label_column in label_columns:
+                    y_train = df[label_column]
+                    for model_name in self._model_dict:
+                        key_trained_model = '{}-{}-{}'.format(model_name, key_df, label_column)
+                        model = LearningMachineFactory.get_model_by_model_type(model_name)
+                        model.fit(x_train, y_train)
+                        self._trained_model_dict[key_trained_model] = model
+
+    def __calculate_class_metrics__(self):
+        class_dict = {MP.MODEL_NAME: [], MP.TABLE: [], MP.PREDICTOR: [], MP.LABEL: [],
+                      MP.VALUE: [], MP.PRECISION: [], MP.RECALL: [], MP.F1_SCORE: []}
+        for table_name, predictor_list in self._table_predictor_dict.items():
+            for predictor in predictor_list:
+                key_df = '{}-{}'.format(table_name, predictor)
+                df = self._df_features_and_labels_dict[key_df]
+                feature_columns = self._features_column_dict[key_df]
+                label_columns = self._label_column_dict[key_df]
+                x_train = df[feature_columns]
+                for label_column in label_columns:
+                    y_train = df[label_column]
+                    for model_name, model in self._model_dict.items():
+                        key_model = '{}-{}-{}'.format(model_name, key_df, label_column)
+                        print('calculate_class_metrics: {}'.format(key_model))
+                        model_performance = ModelPerformance(model, x_train, y_train, label_column)
+                        y_sorted_value_list = model_performance.y_sorted_value_list
+                        f1_score_dict = model_performance.f1_score_dict
+                        recall_dict = model_performance.recall_dict
+                        precision_dict = model_performance.precision_dict
+                        for y_value in y_sorted_value_list:
+                            class_dict[MP.MODEL_NAME].append(model_name)
+                            class_dict[MP.TABLE].append(table_name)
+                            class_dict[MP.PREDICTOR].append(predictor)
+                            class_dict[MP.LABEL].append(label_column)
+                            class_dict[MP.VALUE].append(y_value)
+                            class_dict[MP.F1_SCORE].append(f1_score_dict[y_value] if y_value in f1_score_dict else 0)
+                            class_dict[MP.PRECISION].append(precision_dict[y_value] if y_value in precision_dict else 0)
+                            class_dict[MP.RECALL].append(recall_dict[y_value] if y_value in recall_dict else 0)
+        self._df_metric = pd.DataFrame.from_dict(class_dict)
+        self._df_metric = self._df_metric[[key for key in class_dict]]
+        print('df_metric.shape={}, df_metric.head={}'.format(self._df_metric.shape, self._df_metric.head()))
+
+    def __get_data_frame_for_features_and_labels__(self, table_name: str, predictor: str) -> pd.DataFrame:
+        if table_name == STBL.PATTERN:
+            if predictor == PRED.TOUCH_POINT:
+                query = self._pattern_table.query_for_feature_and_label_data_touch_points
+            elif predictor == PRED.BEFORE_BREAKOUT:
+                query = self._pattern_table.query_for_feature_and_label_data_before_breakout
+            else:
+                query = self._pattern_table.query_for_feature_and_label_data_after_breakout
+        else:
+            query = self._trade_table.query_for_feature_and_label_data_for_trades
+        return DatabaseDataFrame(self._db_stock, query).df
+
+    def __get_feature_columns__(self, table_name: str, predictor: str):
+        if table_name == STBL.PATTERN:
+            if predictor == PRED.TOUCH_POINT:
+                return self._pattern_table.feature_columns_touch_points
+            elif predictor == PRED.BEFORE_BREAKOUT:
+                return self._pattern_table.features_columns_before_breakout
+            else:
+                return self._pattern_table.features_columns_after_breakout
+        else:
+            return self._trade_table.feature_columns_for_trades
+
+    def __get_label_columns__(self, table_name: str, predictor: str):
+        if table_name == STBL.PATTERN:
+            if predictor == PRED.TOUCH_POINT:
+                return self._pattern_table.get_label_columns_touch_points_for_statistics()
+            elif predictor == PRED.BEFORE_BREAKOUT:
+                return self._pattern_table.get_label_columns_before_breakout_for_statistics()
+            elif predictor == PRED.AFTER_BREAKOUT:
+                return self._pattern_table.get_label_columns_after_breakout_for_statistics()
+        else:
+            return self._trade_table.get_label_columns_for_trades_statistics()
 
 
 class PatternPredictor:

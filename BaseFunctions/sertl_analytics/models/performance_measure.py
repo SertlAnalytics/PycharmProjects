@@ -49,7 +49,7 @@ class ModelPerformance:
 
     @property
     def y_sorted_value_list(self):
-        return self._y_train_sorted_value_list
+        return self._y_predict_value_list
 
     @property
     def precision_dict(self):

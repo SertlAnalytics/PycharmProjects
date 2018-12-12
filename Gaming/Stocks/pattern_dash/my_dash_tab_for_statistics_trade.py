@@ -9,7 +9,7 @@ from dash.dependencies import Input, Output
 from sertl_analytics.constants.pattern_constants import DC, CHT, PRED, FT
 from pattern_database.stock_tables import TradeTable
 from pattern_dash.my_dash_header_tables import MyHTMLTabTradeStatisticsHeaderTable
-from pattern_dash.my_dash_drop_down import TradeStatisticsDropDownHandler
+from pattern_dash.my_dash_tab_dd_for_statistics import TradeStatisticsDropDownHandler
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Trades
 from pattern_dash.my_dash_tab_for_statistics_base import MyDashTab4StatisticsBase
 import pandas as pd
