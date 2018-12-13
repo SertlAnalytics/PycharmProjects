@@ -2,21 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/pattern_test/run_predictor_optimizer_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pattern_predictor_optimizer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/learning_machine.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/learning_machine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/performance_measure.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/performance_measure.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_drop_down.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_statistics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py" beforeDir="false" afterPath="$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_asset.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_asset.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_trade.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_database/stock_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/stock_tables.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_predictor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_test/run_predictor_optimizer_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_test/run_predictor_optimizer_test.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -32,41 +25,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="187">
-              <caret line="14" column="18" selection-start-line="14" selection-start-column="18" selection-end-line="14" selection-end-column="18" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="pattern_system_configuration.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pattern_system_configuration.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="323">
-              <caret line="34" column="44" lean-forward="true" selection-start-line="34" selection-start-column="22" selection-end-line="34" selection-end-column="44" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="run_predictor_optimizer_test.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pattern_test/run_predictor_optimizer_test.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="350">
-              <caret line="22" selection-start-line="22" selection-end-line="22" />
-              <folding>
-                <element signature="e#187#242#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="pattern_predictor.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pattern_predictor.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="400">
-              <caret line="173" column="38" lean-forward="true" selection-start-line="173" selection-start-column="38" selection-end-line="173" selection-end-column="38" />
+            <state relative-caret-position="452">
+              <caret line="60" column="79" selection-start-line="60" selection-start-column="79" selection-end-line="60" selection-end-column="79" />
             </state>
           </provider>
         </entry>
@@ -82,8 +45,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>break</find>
-      <find>mark</find>
       <find>TradingBox</find>
       <find>my_trades_cancel_trade_button</find>
       <find>REGR</find>
@@ -112,6 +73,8 @@
       <find>init_para</find>
       <find>'Models'</find>
       <find>type_mo</find>
+      <find>Forecast w_5</find>
+      <find>MyDashTabStatisticsPlotter4Models</find>
     </findStrings>
     <replaceStrings>
       <replace>MyPyDate</replace>
@@ -160,7 +123,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/exchanges/interactive_broker_trade_client.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/exchanges/interactive_broker.py" />
         <option value="$PROJECT_DIR$/alpha_vantage.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/financial_data_fetcher.py" />
@@ -191,7 +153,6 @@
         <option value="$PROJECT_DIR$/pattern_plotting/pattern_plotter.py" />
         <option value="$PROJECT_DIR$/fibonacci/fibonacci_wave.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py" />
-        <option value="$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py" />
         <option value="$PROJECT_DIR$/pattern_trade_handler.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/pybase/data_dictionary.py" />
         <option value="$PROJECT_DIR$/pattern_database/stock_database_updater.py" />
@@ -199,18 +160,20 @@
         <option value="$PROJECT_DIR$/pattern_database/run_daily_tasks.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_drop_down.py" />
-        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_statistics.py" />
-        <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_models.py" />
         <option value="$PROJECT_DIR$/pattern_trade.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py" />
-        <option value="$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/learning_machine.py" />
         <option value="$PROJECT_DIR$/pattern_database/stock_tables.py" />
-        <option value="$PROJECT_DIR$/run_pattern_detection.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/performance_measure.py" />
-        <option value="$PROJECT_DIR$/pattern_test/run_predictor_optimizer_test.py" />
+        <option value="$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py" />
         <option value="$PROJECT_DIR$/pattern_predictor.py" />
+        <option value="$PROJECT_DIR$/pattern_test/run_predictor_optimizer_test.py" />
+        <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_models.py" />
+        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" />
+        <option value="$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py" />
+        <option value="$PROJECT_DIR$/pattern_predictor_optimizer.py" />
+        <option value="$PROJECT_DIR$/run_pattern_detection.py" />
       </list>
     </option>
   </component>
@@ -224,13 +187,17 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
             <path>
               <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
               <item name="Stocks" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Stocks" type="462c0819:PsiDirectoryNode" />
+              <item name="pattern_dash" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
@@ -245,6 +212,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -262,19 +230,19 @@
     </option>
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_test" />
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_dash" />
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_sounds" />
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_database" />
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_sound" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_test" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_plotter" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_dash" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_test" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_dash" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_sounds" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\Gaming\Stocks\pattern_database" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -289,7 +257,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run_predictor_optimizer_test">
+  <component name="RunManager" selected="Python.run_pattern_detection">
     <configuration name="run_daily_tasks" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -408,8 +376,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.run_predictor_optimizer_test" />
         <item itemvalue="Python.run_pattern_detection_with_dash" />
+        <item itemvalue="Python.run_predictor_optimizer_test" />
         <item itemvalue="Python.run_daily_tasks" />
         <item itemvalue="Python.run_trade_testing_by_pattern_id" />
         <item itemvalue="Python.run_plot_test" />
@@ -442,17 +410,17 @@
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.664966" visible="true" weight="0.2571656" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6642857" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32313725" />
       <window_info anchor="bottom" id="Event Log" order="8" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.3419608" />
       <window_info anchor="bottom" id="Version Control" order="9" weight="0.32705882" />
       <window_info anchor="bottom" id="Python Console" order="10" weight="0.34745097" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.3419608" />
-      <window_info id="Structure" order="1" sideWeight="0.335034" side_tool="true" visible="true" weight="0.2571656" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.34117648" />
+      <window_info id="Structure" order="1" sideWeight="0.33571428" side_tool="true" visible="true" weight="0.2571656" />
       <window_info anchor="bottom" id="Terminal" order="11" weight="0.32" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.53882354" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.53882354" />
       <window_info anchor="bottom" id="SVN Repositories" order="7" weight="0.3298722" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -596,7 +564,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py</url>
-          <line>211</line>
+          <line>212</line>
           <option name="timeStamp" value="1766" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -624,6 +592,16 @@
           <line>123</line>
           <option name="timeStamp" value="1813" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_predictor_optimizer.py</url>
+          <line>168</line>
+          <option name="timeStamp" value="1866" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_test/run_predictor_optimizer_test.py</url>
+          <line>36</line>
+          <option name="timeStamp" value="1867" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
@@ -635,7 +613,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="1864" />
+      <option name="time" value="1868" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -749,6 +727,20 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/pattern_system_configuration.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="34" column="44" lean-forward="true" selection-start-line="34" selection-start-column="22" selection-end-line="34" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_predictor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2703">
+          <caret line="173" column="17" lean-forward="true" selection-start-line="173" selection-start-column="17" selection-end-line="173" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_function_container.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="374">
@@ -819,20 +811,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="402">
           <caret line="295" column="19" lean-forward="true" selection-start-line="295" selection-start-column="19" selection-end-line="295" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fibonacci/fibonacci_wave.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="317">
-          <caret line="461" column="8" selection-start-line="461" selection-start-column="8" selection-end-line="461" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="755">
-          <caret line="85" column="68" selection-start-line="85" selection-start-column="68" selection-end-line="85" selection-end-column="68" />
         </state>
       </provider>
     </entry>
@@ -927,16 +905,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1241">
-          <caret line="26" column="27" lean-forward="true" selection-start-line="26" selection-start-column="27" selection-end-line="26" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_pattern.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_portfolio.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-51" />
@@ -946,23 +914,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-51" />
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3689">
-          <caret line="217" column="15" lean-forward="true" selection-start-line="217" selection-start-column="15" selection-end-line="217" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_statistics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="203" column="39" lean-forward="true" selection-start-line="203" selection-start-column="39" selection-end-line="203" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_trades.py">
-      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -1013,19 +964,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_test/run_test_scripts.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="415">
-          <caret line="467" column="62" selection-start-line="458" selection-start-column="3" selection-end-line="467" selection-end-column="62" />
-          <folding>
-            <element signature="e#179#209#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/learning_machine.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="262">
@@ -1040,27 +978,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="253">
           <caret line="210" column="24" selection-start-line="210" selection-start-column="24" selection-end-line="210" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="261">
-          <caret line="139" column="53" selection-start-line="139" selection-start-column="53" selection-end-line="139" selection-end-column="53" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="14" column="18" selection-start-line="14" selection-start-column="18" selection-end-line="14" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_system_configuration.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="34" column="44" lean-forward="true" selection-start-line="34" selection-start-column="22" selection-end-line="34" selection-end-column="44" />
         </state>
       </provider>
     </entry>
@@ -1085,20 +1002,99 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_test/run_predictor_optimizer_test.py">
+    <entry file="file://$PROJECT_DIR$/pattern_system_configuration.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="350">
-          <caret line="22" selection-start-line="22" selection-end-line="22" />
-          <folding>
-            <element signature="e#187#242#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="323">
+          <caret line="34" column="44" selection-start-line="34" selection-start-column="22" selection-end-line="34" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fibonacci/fibonacci_wave.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="314">
+          <caret line="238" column="64" lean-forward="true" selection-start-line="238" selection-start-column="64" selection-end-line="238" selection-end-column="64" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fibonacci/fibonacci_wave_tree.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="126">
+          <caret line="156" column="47" lean-forward="true" selection-start-line="156" selection-start-column="47" selection-end-line="156" selection-end-column="47" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pattern_predictor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="400">
-          <caret line="173" column="38" lean-forward="true" selection-start-line="173" selection-start-column="38" selection-end-line="173" selection-end-column="38" />
+        <state relative-caret-position="119">
+          <caret line="7" selection-start-line="7" selection-end-line="7" />
+          <folding>
+            <element signature="e#194#252#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_test/run_predictor_optimizer_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="612">
+          <caret line="36" column="95" selection-start-line="36" selection-start-column="44" selection-end-line="36" selection-end-column="95" />
+          <folding>
+            <element signature="e#655#720#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="263">
+          <caret line="99" column="8" selection-start-line="99" selection-start-column="8" selection-end-line="99" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_statistics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="527">
+          <caret line="204" column="44" lean-forward="true" selection-start-line="204" selection-start-column="44" selection-end-line="204" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1486">
+          <caret line="124" column="68" lean-forward="true" selection-start-line="124" selection-start-column="68" selection-end-line="124" selection-end-column="68" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_predictor_optimizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1776">
+          <caret line="126" lean-forward="true" selection-start-line="126" selection-end-line="126" />
+          <folding>
+            <element signature="e#194#264#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="637">
+          <caret line="438" column="67" selection-start-line="438" selection-start-column="67" selection-end-line="438" selection-end-column="67" />
+          <folding>
+            <element signature="e#179#209#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="452">
+          <caret line="60" column="79" selection-start-line="60" selection-start-column="79" selection-end-line="60" selection-end-column="79" />
         </state>
       </provider>
     </entry>

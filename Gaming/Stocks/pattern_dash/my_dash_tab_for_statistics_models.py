@@ -128,8 +128,6 @@ class MyDashTab4ModelStatistics(MyDashTab4StatisticsBase):
                                               model_type: object, text_variable: str, pattern_type: str,
                                               n_intervals: int, category: str, pred: str):
             self._category_selected = category
-            self.__fill_df_base__()
-            self.__init_plotter__()
             self._plotter.chart_type = ct
             self._plotter.category = category
             self._plotter.predictor = pred

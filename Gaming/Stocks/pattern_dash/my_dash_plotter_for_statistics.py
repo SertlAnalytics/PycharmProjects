@@ -6,7 +6,7 @@ Date: 2018-06-17
 """
 
 import plotly.graph_objs as go
-from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC, MP
 from sertl_analytics.models.performance_measure import ModelPerformance
 from sertl_analytics.models.learning_machine import LearningMachineFactory
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
@@ -15,6 +15,7 @@ from pattern_trade_handler import PatternTradeHandler
 from pattern_database.stock_database import StockDatabase
 from pattern_database.stock_tables import PatternTable, TradeTable
 from pattern_database.stock_database import DatabaseDataFrame
+from pattern_predictor_optimizer import PatternPredictorOptimizer
 import pandas as pd
 import itertools
 import numpy as np
@@ -392,8 +393,10 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
         self.db_stock = db_stock
         self.pattern_table = PatternTable()
         self.trade_table = TradeTable()
+        self._predictor_optimizer = PatternPredictorOptimizer(self.db_stock)
         MyDashTabStatisticsPlotter.__init__(self, df_base, color_handler)
         self._df_base_cache_dict = {}
+        print('MyDashTabStatisticsPlotter4Models.__init__()')
 
     def __init_parameter__(self):
         self._chart_id = 'models_statistics_graph'
@@ -412,60 +415,39 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
         return row[DC.TRADE_RESULT_ID]
 
     def __get_confusion_matrix_figure_data__(self):
-        df_base = self.__get_df_for_selection__()
-        # print('__get_confusion_matrix_figure_data__: df_base.columns={}'.format(df_base.columns))
-        x_train = df_base[self.__get_feature_columns_for_selection__()]
-        y_train = df_base[self.x_variable]
         model_type_list = self.model_type
-        model_dict = {model: LearningMachineFactory.get_model_by_model_type(model) for model in model_type_list}
-        model_performance_dict = {model: ModelPerformance(model, x_train, y_train, self.x_variable)
-                                  for model, model in model_dict.items()}
         combined_list = list(itertools.product(model_type_list, self.y_variable))
-        x_dict = {model: [x_values for x_values in model_performance.f1_score_dict]
-                  for model, model_performance in model_performance_dict.items()}
+        x_dict, y_dict = self.__get_x_dict_and_y_dict__(model_type_list, self.y_variable)
         color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in model_type_list}
         return [
             go.Scatter(
-                x=x_dict[model],
-                y=model_performance_dict[model].get_metric_list(metric),
-                text=['{}-{}: {:0.2f}'.format(model, metric, y_value)
-                      for y_value in model_performance_dict[model].get_metric_list(metric)],
-                line={'color': color_dict[model], 'width': 2},
+                x=x_dict[model_type],
+                y=y_dict['{}-{}'.format(model_type, metric)],
+                text=['{}-{}: {:0.2f}'.format(model_type, metric, y_value)
+                      for y_value in y_dict['{}-{}'.format(model_type, metric)]],
+                line={'color': color_dict[model_type], 'width': 2},
                 opacity=0.7,
-                name='{}-{}'.format(model, metric)
-            ) for model, metric in combined_list
+                name='{}-{}'.format(model_type, metric)
+            ) for model_type, metric in combined_list
         ]
 
-    def __get_df_for_selection__(self) -> pd.DataFrame:
-        key = '{}-{}'.format(self.category, self.predictor)
-        if key not in self._df_base_cache_dict:
-            if self.category == STBL.PATTERN:
-                if self.predictor == PRED.TOUCH_POINT:
-                    query = self.pattern_table.query_for_feature_and_label_data_touch_points
-                elif self.predictor == PRED.BEFORE_BREAKOUT:
-                    query = self.pattern_table.query_for_feature_and_label_data_before_breakout
-                else:
-                    query = self.pattern_table.query_for_feature_and_label_data_after_breakout
-            else:
-                query = self.trade_table.query_for_feature_and_label_data_for_trades
-            self._df_base_cache_dict[key] = DatabaseDataFrame(self.db_stock, query).df
-
-        if self.pattern_type in [FT.ALL, '']:
-            return self._df_base_cache_dict[key]
-        else:
-            df = self._df_base_cache_dict[key]
-            return df[df[DC.PATTERN_TYPE] == self.pattern_type]
-
-    def __get_feature_columns_for_selection__(self):
-        if self.category == STBL.PATTERN:
-            if self.predictor == PRED.TOUCH_POINT:
-                return self.pattern_table.feature_columns_touch_points
-            elif self.predictor == PRED.BEFORE_BREAKOUT:
-                return self.pattern_table.features_columns_before_breakout
-            else:
-                return self.pattern_table.features_columns_after_breakout
-        else:
-            return self.trade_table.feature_columns_for_trades
+    def __get_x_dict_and_y_dict__(self, model_type_list: list, metric_list: list):
+        # both together since we need the same order....
+        x_dict = {}
+        y_dict = {}
+        for model_type in model_type_list:
+            df_with_metrics = self._predictor_optimizer.get_metrics_for_model_and_label_as_data_frame(
+                model_type, self.category, self.predictor, self.x_variable)
+            x_dict[model_type] = list(df_with_metrics[MP.VALUE])
+            for metric in metric_list:
+                key = '{}-{}'.format(model_type, metric)
+                if metric == MTC.PRECISION:
+                    y_dict[key] = list(df_with_metrics[MP.PRECISION])
+                elif metric == MTC.RECALL:
+                    y_dict[key] = list(df_with_metrics[MP.RECALL])
+                elif metric == MTC.F1_SCORE:
+                    y_dict[key] = list(df_with_metrics[MP.F1_SCORE])
+        return x_dict, y_dict
 
 
 class MyDashTabStatisticsPlotter4Assets(MyDashTabStatisticsPlotter):

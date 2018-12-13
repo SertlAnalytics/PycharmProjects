@@ -8,6 +8,17 @@ Date: 2018-05-14
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
+class MP:  # Metric parameters
+    MODEL_NAME = 'Model'
+    TABLE = 'Table'
+    PREDICTOR = 'Predictor'
+    LABEL = 'Label'
+    VALUE = 'Value'
+    PRECISION = 'Precision'
+    RECALL = 'RECALL'
+    F1_SCORE = 'F1 Score'
+
+
 class STBL:  # stocks tables
     STOCKS = 'Stocks'
     COMPANY = 'Company'

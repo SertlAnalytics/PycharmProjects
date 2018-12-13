@@ -180,7 +180,10 @@ class FibonacciWaveTree:
                     wave.add_retracement(ret_comp)
                     if wave.is_wave_unfinished(self.position_last):
                         self.fibonacci_unfinished_wave_list.append(wave.clone())
-                        print('Forecast w_5 (position_last={}: {}'.format(self.position_last, wave.comp_forecast_parameter_list))
+                        print('Forecast w_5-{} (position_last={}: {} -> {}'.format(
+                            wave.wave_type, self.position_last, wave.comp_position_list,
+                            wave.comp_forecast_parameter_list))
+                        # Forecast w_5 (position_last=299: [[1.781, 3595.51, 337], [2.219, 3634.49, 348]]
                     ret_comp_id_next = wave.reg_comp_id_next
                     if ret_comp_id_next != '':
                         self.__add_next_reg_comp__(wave, ret_comp_id_next, tick_next)

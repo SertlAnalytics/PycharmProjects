@@ -12,18 +12,32 @@ label_columns=Touch_Points_Till_Breakout_Top,Touch_Points_Till_Breakout_Bottom
 20,-1.0,-1.0,-1.0,10.0,50.0,50.0,0.0,20.0,0
 """
 
-from pattern_predictor import PatternPredictorOptimizer
+from pattern_predictor_optimizer import PatternPredictorOptimizer
 from pattern_system_configuration import SystemConfiguration
-from sertl_analytics.constants.pattern_constants import FT, PRED, STBL, MT
+from sertl_analytics.constants.pattern_constants import FT, PRED, STBL, MT, DC
 
+
+class OPTC:  # PredictorOptimizer test cases
+    OPTIMAL_PREDICTION = 'optimal prediction'
+    VALUE_LIST = 'value list'
+
+
+test_case = OPTC.VALUE_LIST
 sys_config = SystemConfiguration()
-optimizer = PatternPredictorOptimizer(sys_config.config, sys_config.db_stock)
+optimizer = PatternPredictorOptimizer(sys_config.db_stock)
 x_lists = [[26,-2.0,-1.0,-1.0,-190.0,0.0,0.0,40.0,70.0,0], [20,-1.0,-1.0,-1.0,10.0,50.0,50.0,0.0,20.0,0]]
 label_list = ['Touch_Points_Till_Breakout_Top' , 'Touch_Points_Till_Breakout_Bottom']
-for x_list in x_lists:
-    for label in label_list:
-        prediction = optimizer.predict(STBL.PATTERN, PRED.TOUCH_POINT, label, x_list)
-        print('optimal prediction for {}: {}'.format(label, prediction))
+
+if test_case == OPTC.OPTIMAL_PREDICTION:
+    for x_list in x_lists:
+        for label in label_list:
+            prediction = optimizer.predict(STBL.PATTERN, PRED.TOUCH_POINT, label, x_list)
+            print('optimal prediction for {}: {}'.format(label, prediction))
+else:
+    sorted_value_list_for_predictor_label = optimizer.get_sorted_value_list_for_predictor_label(
+        STBL.PATTERN, PRED.TOUCH_POINT, DC.TOUCH_POINTS_TILL_BREAKOUT_TOP
+    )
+    print(sorted_value_list_for_predictor_label)
 
 
 
