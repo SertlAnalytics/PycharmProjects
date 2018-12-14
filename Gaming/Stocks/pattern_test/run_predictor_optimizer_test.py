@@ -31,11 +31,11 @@ label_list = ['Touch_Points_Till_Breakout_Top' , 'Touch_Points_Till_Breakout_Bot
 if test_case == OPTC.OPTIMAL_PREDICTION:
     for x_list in x_lists:
         for label in label_list:
-            prediction = optimizer.predict(STBL.PATTERN, PRED.TOUCH_POINT, label, x_list)
+            prediction = optimizer.predict(STBL.PATTERN, PRED.TOUCH_POINT, FT.ALL, label, x_list)
             print('optimal prediction for {}: {}'.format(label, prediction))
 else:
     sorted_value_list_for_predictor_label = optimizer.get_sorted_value_list_for_predictor_label(
-        STBL.PATTERN, PRED.TOUCH_POINT, DC.TOUCH_POINTS_TILL_BREAKOUT_TOP
+        MT.DECISION_TREE, STBL.PATTERN, PRED.TOUCH_POINT, DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, FT.ALL
     )
     print(sorted_value_list_for_predictor_label)
 

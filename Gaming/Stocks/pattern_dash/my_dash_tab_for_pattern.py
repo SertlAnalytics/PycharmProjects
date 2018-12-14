@@ -474,7 +474,8 @@ class MyDashTab4Pattern(MyDashBaseTab):
     def __fill_ticker_options__(self):
         self._ticker_options = []
         for symbol, name in self.sys_config.data_provider.ticker_dict.items():
-            self._ticker_options.append({'label': '{}'.format(name), 'value': symbol})
+            if symbol not in self.sys_config.exchange_config.ticker_id_excluded_list:
+                self._ticker_options.append({'label': '{}'.format(name), 'value': symbol})
 
     def __get_ticker_label__(self, ticker_value: str):
         for elements in self._ticker_options:

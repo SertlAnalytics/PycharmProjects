@@ -10,7 +10,7 @@ import pandas as pd
 from sertl_analytics.constants.pattern_constants import CN, FD, FR
 from fibonacci.fibonacci_helper import fibonacci_helper
 from pattern_wave_tick import WaveTick
-
+from sertl_analytics.mymath import MyMath
 
 class FibonacciWaveComponent:
     def __init__(self, df_source: pd.DataFrame, tick_start: WaveTick, tick_end: WaveTick, comp_id: str):
@@ -164,7 +164,7 @@ class FibonacciRetracementComponent(FibonacciWaveComponent):
         return round(abs(range_ret_comp/range_reg_comp), 3)
 
     def get_retracement_value(self, reg_comp: FibonacciRegressionComponent):
-        return round(reg_comp.value_end - self.value_end, 2)
+        return MyMath.round_smart(reg_comp.value_end - self.value_end)
 
     def is_component_internally_consistent(self):
         return True

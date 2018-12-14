@@ -8,6 +8,7 @@ Date: 2018-07-24
 import numpy as np
 from scipy.stats import entropy
 import pandas as pd
+import math
 
 
 class MyEntropy:
@@ -220,6 +221,15 @@ class MyMath:
         y_changed_by_reg = y - y_reg
         std_y_changed_by_reg = y_changed_by_reg.std()
         return round(std_y_changed_by_reg, rounding)
+
+    @staticmethod
+    def round_smart(value: float) -> float:
+        decimals = math.ceil(math.log10(abs(value)))
+        if decimals > 3:
+            return round(value)
+        elif decimals > 0:
+            return round(value, 2)
+        return round(value, -decimals + 2)
 
 
 class MyPoly1d:

@@ -281,7 +281,7 @@ class PatternDetectionController:
                     break
         else:
             for ticker in self.sys_config.ticker_dict:
-                if ticker not in ['XRPUSD']:
+                if ticker not in self.sys_config.exchange_config.ticker_id_excluded_list:
                     and_clause = self.sys_config.data_provider.and_clause
                     self._loop_list_ticker.append({LL.TICKER: ticker, LL.AND_CLAUSE: and_clause})
 

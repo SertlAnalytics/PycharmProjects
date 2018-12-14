@@ -6,7 +6,8 @@ Date: 2018-03-11
 """
 
 import numpy as np
-from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score, roc_curve
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.model_selection import train_test_split, cross_val_predict
 from collections import Counter
 from sertl_analytics.constants.pattern_constants import MTC
@@ -32,6 +33,7 @@ class ModelPerformance:
             self._precision = zero_list
             self._recall = zero_list
             self._f1_score = zero_list
+            self._roc_auc = zero_list
             self._roc_fpr = None
             self._roc_tpr = None
             self._roc_threshold = None
@@ -42,6 +44,8 @@ class ModelPerformance:
             self._precision = precision_score(self._y_train, self._y_train_predict, average=None)
             self._recall = recall_score(self._y_train, self._y_train_predict, average=None)
             self._f1_score = f1_score(self._y_train, self._y_train_predict, average=None)
+            self._roc_auc = f1_score(self._y_train, self._y_train_predict, average=None)  # ToDo f1_score -> roc_auc_score
+            # but: roc_auc_score doesn't support multi-class "Error: multiclass format is not supported"
             self._roc_fpr = None
             self._roc_tpr = None
             self._roc_threshold = None
@@ -63,6 +67,11 @@ class ModelPerformance:
 
     @property
     def f1_score_dict(self):
+        return {self._y_predict_value_list[k]: self.__round__(self._f1_score[k])
+                for k in range(0, len(self._y_predict_value_list))}
+
+    @property
+    def roc_auc_dict(self):
         return {self._y_predict_value_list[k]: self.__round__(self._f1_score[k])
                 for k in range(0, len(self._y_predict_value_list))}
 

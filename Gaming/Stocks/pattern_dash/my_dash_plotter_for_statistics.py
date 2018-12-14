@@ -437,7 +437,7 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
         y_dict = {}
         for model_type in model_type_list:
             df_with_metrics = self._predictor_optimizer.get_metrics_for_model_and_label_as_data_frame(
-                model_type, self.category, self.predictor, self.x_variable)
+                model_type, self.category, self.predictor, self.x_variable, self.pattern_type)
             x_dict[model_type] = list(df_with_metrics[MP.VALUE])
             for metric in metric_list:
                 key = '{}-{}'.format(model_type, metric)

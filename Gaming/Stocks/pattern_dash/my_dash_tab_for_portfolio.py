@@ -30,7 +30,8 @@ class PDC:  # PortfolioDataColumn
     ASSET = 'Asset'
     AMOUNT = 'Amount'
     AMOUNT_AVAILABLE = 'Amount available'
-    CURRENT_VALUE = 'Current value'
+    CURRENT_PRICE = 'Current price'
+    CURRENT_TOTAL = 'Total value'
     ACTIVELY_MANAGED = 'Actively managed'
 
 
@@ -96,6 +97,7 @@ class MyDashTab4Portfolio(MyDashBaseTab):
         return MyHTML.div('my_portfolio_div', children_list)
 
     def init_callbacks(self):
+        self.__init_callback_for_portfolio_position__()
         self.__init_callbacks_for_portfolio_refresh_button__()
         self.__init_callbacks_for_position_manage_button__()
         self.__init_callback_for_portfolio_markdown__()
@@ -131,6 +133,17 @@ class MyDashTab4Portfolio(MyDashBaseTab):
             [Input('my_graph_portfolio_position_div', 'children')])
         def handle_callback_for_position_manage_button_text(graph):
             return self.__get_position_manage_button_text__()
+
+    def __init_callback_for_portfolio_position__(self):
+        @self.app.callback(
+            Output('my_portfolio_position_div', 'children'),
+            [Input(self._data_table_name, 'selected_row_indices')],
+            [State(self._data_table_name, 'rows')])
+        def handle_callback_for_portfolio_position(selected_row_indices: list, rows: list):
+            self.__init_selected_row__(selected_row_indices)
+            if self._selected_ticker_id == '':
+                return ''
+            return rows[self._selected_row_index][PDC.ASSET]
 
     def __init_callback_for_graph_for_selected_position__(self):
         @self.app.callback(
@@ -265,22 +278,31 @@ class MyDashTab4Portfolio(MyDashBaseTab):
         rows_new = []
         for balance in self._trade_handler_online.balances:
             if balance.asset != 'USD':
+                exchange, ticker_id = self.__get_exchange_and_ticker_id_for_row__(balance.asset)
                 rows_new.append(
-                    {PDC.EXCHANGE: 'Bitfinex',
+                    {PDC.EXCHANGE: exchange,
                      PDC.ASSET: balance.asset,
                      PDC.AMOUNT: balance.amount,
                      PDC.AMOUNT_AVAILABLE: balance.amount_available,
-                     PDC.CURRENT_VALUE: balance.current_value,
+                     PDC.CURRENT_PRICE: self._trade_handler_online.get_current_price_for_ticker_id(ticker_id),
+                     PDC.CURRENT_TOTAL: balance.current_value,
                      PDC.ACTIVELY_MANAGED: self.__get_flag_for_actively_managed__(balance.asset)}
                 )
         self._table_rows = rows_new
+
+    def __get_exchange_and_ticker_id_for_row__(self, asset: str):
+        if self.sys_config.index_config.is_symbol_crypto(asset):
+            return 'Bitfinex', '{}USD'.format(asset)
+        else:
+            return 'IBKR', asset
 
     def __init_table_rows__(self):
         self._table_rows = [{PDC.EXCHANGE: '',
                              PDC.ASSET: '',
                              PDC.AMOUNT: '',
                              PDC.AMOUNT_AVAILABLE: '',
-                             PDC.CURRENT_VALUE: '',
+                             PDC.CURRENT_PRICE: '',
+                             PDC.CURRENT_TOTAL: '',
                              PDC.ACTIVELY_MANAGED: ''}]
 
     def __get_flag_for_actively_managed__(self, asset: str) -> str:

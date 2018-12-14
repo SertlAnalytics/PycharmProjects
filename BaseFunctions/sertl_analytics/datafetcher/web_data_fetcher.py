@@ -46,7 +46,7 @@ class IndicesComponentList:
                 'NEO': 'NEO',
                 'XMR': 'XMR',
                 'ZEC': 'ZEC',
-                # 'IOT': 'IOTA',
-                'XRP': 'Ripple'
-                # , 'XRP': 'Ripple'
+                'IOT': 'IOTA',
+                'XRP': 'Ripple',
+                'BOX': 'Box'
                 }

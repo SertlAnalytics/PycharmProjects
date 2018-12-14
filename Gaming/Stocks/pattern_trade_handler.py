@@ -81,6 +81,9 @@ class PatternTradeHandler:
             return 0
         return sum([balance.current_value for balance in self.balances])
 
+    def get_current_price_for_ticker_id(self, ticker_id: str) -> float:
+        return self.__get_current_wave_tick_for_ticker_id__(ticker_id).close
+
     def get_balance_as_asset_data_frame(self):
         if self.balances is None:
             return None
@@ -415,6 +418,7 @@ class PatternTradeHandler:
             pattern_trade.calculate_xy_for_replay()
 
     def __handle_buy_trigger_for_pattern_trade__(self, pattern_trade: PatternTrade):
+        pattern_trade.set_status_in_execution()  # to avoid a second execution
         ticker = pattern_trade.ticker_actual
         buy_comment = '{}-{}-{} at {:.2f} on {}'.format(ticker.ticker_id,
                                                         pattern_trade.buy_trigger, pattern_trade.trade_strategy,

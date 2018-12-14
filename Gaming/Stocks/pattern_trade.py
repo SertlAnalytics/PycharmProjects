@@ -225,6 +225,9 @@ class PatternTrade:
     def trade_client(self, value):
         self._trade_client = value
 
+    def set_status_in_execution(self):  # to avoid a second execution
+        self._status = PTS.IN_EXECUTION
+
     def get_data_frame_for_replay(self):
         # return self.pattern._df
         if len(self._wave_tick_list.tick_list) > self.pattern.df_length:

@@ -75,6 +75,8 @@ class MyDashBaseTab:
             return_list.append(DashInterface.get_pattern_part_main_shape(pattern, colors[0]))
             if pattern.was_breakout_done() and pattern.is_part_trade_available():
                 return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors[1]))
+            for shapes in return_list:
+                print('x={}, \ny={}'.format(shapes.x, shapes.y))
         return return_list
 
     def __get_pattern_trade_shape_list__(self, pattern_trade: PatternTrade):

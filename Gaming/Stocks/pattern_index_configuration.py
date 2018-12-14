@@ -23,7 +23,7 @@ class IndexConfiguration:
     def is_symbol_crypto(self, symbol: str) -> bool:
         if symbol in self._symbol_equity_type_dict:
             return self._symbol_equity_type_dict[symbol] == EQUITY_TYPE.CRYPTO
-        return symbol[-3:] == 'USD'
+        return '{}USD'.format(symbol) in self._symbol_equity_type_dict or symbol[-3:] == 'USD'
 
     def get_indices_as_options(self):
         return [{'label': index, 'value': index} for index in self.index_list]

@@ -13,10 +13,12 @@ class MP:  # Metric parameters
     TABLE = 'Table'
     PREDICTOR = 'Predictor'
     LABEL = 'Label'
+    PATTERN_TYPE = 'Pattern_Type'
     VALUE = 'Value'
     PRECISION = 'Precision'
     RECALL = 'RECALL'
     F1_SCORE = 'F1 Score'
+    ROC_AUC = 'ROC AUC'
 
 
 class STBL:  # stocks tables
@@ -242,6 +244,7 @@ class MT:  # Model Types
     DECISION_TREE = 'Decision Tree'
     RANDOM_FOREST = 'Random Forest'
     NN = 'Neural Network'
+    OPTIMIZER = 'Optimizer'
 
     @staticmethod
     def get_all():
@@ -250,9 +253,11 @@ class MT:  # Model Types
                 MT.RANDOM_FOREST, MT.NN]
 
     @staticmethod
-    def get_all_classifiers():
-        return [MT.LOGISTIC_REGRESSION, MT.K_NEAREST_NEIGHBORS, MT.SVM, MT.DECISION_TREE,
-                MT.RANDOM_FOREST]
+    def get_all_classifiers(with_optimizer=True):
+        base_list = [MT.LOGISTIC_REGRESSION, MT.K_NEAREST_NEIGHBORS, MT.SVM, MT.DECISION_TREE, MT.RANDOM_FOREST]
+        if with_optimizer:
+            base_list.append(MT.OPTIMIZER)
+        return base_list
 
     @staticmethod
     def get_all_regressions():
@@ -260,7 +265,7 @@ class MT:  # Model Types
 
     @staticmethod
     def get_all_for_statistics():
-        return sorted(MT.get_all_classifiers())
+        return sorted(MT.get_all_classifiers(True))
 
 
 class MTC:  # Metrics
@@ -268,10 +273,11 @@ class MTC:  # Metrics
     PRECISION = 'Precision'
     RECALL = 'Recall'
     F1_SCORE = 'F1 Score'
+    ROC_AUC = 'ROC AUC'
 
     @staticmethod
     def get_all():
-        return [MTC.PRECISION, MTC.RECALL, MTC.F1_SCORE]
+        return [MTC.PRECISION, MTC.RECALL, MTC.F1_SCORE, MTC.ROC_AUC]
 
     @staticmethod
     def get_all_for_statistics():
@@ -640,6 +646,7 @@ class RST:  # ReplayStatus
 
 class PTS:  # PatternTradeStatus
     NEW = 'new'
+    IN_EXECUTION = 'in execution'
     EXECUTED = 'executed'
     PENDING = 'pending'
     FINISHED = 'finished'
