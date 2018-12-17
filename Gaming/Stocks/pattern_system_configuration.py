@@ -159,6 +159,7 @@ class SystemConfiguration:
         return self.master_predictor_handler.master_predictor_for_trades
 
     def init_predictors_without_condition_list(self):
+        # to avoid that the current case is already within the training data... - for back testing...
         ticker_id = self.data_provider.ticker_id
         ac_pattern = self.data_provider.and_clause_for_pattern
         ac_trades = self.data_provider.and_clause_for_trade

@@ -31,7 +31,7 @@ sys_config.config.trading_last_price_mean_aggregation = 16
 
 sys_config.config.pattern_type_list = FT.get_all()
 sys_config.config.with_trading = True
-sys_config.config.save_pattern_data = False
+sys_config.config.save_pattern_data = True
 sys_config.config.save_trade_data = True
 sys_config.config.save_wave_data = False
 # sys_config.config.pattern_type_list = [FT.TRIANGLE]

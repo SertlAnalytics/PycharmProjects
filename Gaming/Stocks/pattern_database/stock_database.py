@@ -153,14 +153,16 @@ class StockDatabase(BaseDatabase):
                 new_dict = self.__get_company_dict__(key)
                 company_dict[key] = new_dict[key]
 
-    def update_crypto_currencies(self, period=PRD.DAILY, aggregation=1):
+    def update_crypto_currencies(self, period=PRD.DAILY, aggregation=1, excluded_id_list=None):
         company_dic = self.__get_company_dict__(like_input='USD')
+        excluded_id_list = [] if excluded_id_list is None else excluded_id_list
         last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(like_input='USD', period=period)
         print('\nUpdating {}...\n'.format(INDICES.CRYPTO_CCY))
         ticker_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
         for ticker in ticker_dic:
-            self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
-                                                        company_dic, last_loaded_date_stamp_dic)
+            if ticker not in excluded_id_list:
+                self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
+                                                            company_dic, last_loaded_date_stamp_dic)
         self.__handle_error_cases__()
 
     def __handle_error_cases__(self):

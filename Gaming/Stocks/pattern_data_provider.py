@@ -23,7 +23,7 @@ from sertl_analytics.mycache import MyCache
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
-from pattern_data_container import PatternDataHandler
+from pattern_data_handler import PatternDataHandler
 from pattern_configuration import PatternConfiguration
 from pattern_index_configuration import IndexConfiguration
 from pattern_dash.my_dash_caches import MyDataFrameCache

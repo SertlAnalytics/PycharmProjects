@@ -447,6 +447,8 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
                     y_dict[key] = list(df_with_metrics[MP.RECALL])
                 elif metric == MTC.F1_SCORE:
                     y_dict[key] = list(df_with_metrics[MP.F1_SCORE])
+                elif metric == MTC.ROC_AUC:
+                    y_dict[key] = list(df_with_metrics[MP.ROC_AUC])
         return x_dict, y_dict
 
 

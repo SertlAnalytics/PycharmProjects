@@ -55,7 +55,8 @@ class StockDatabaseUpdater:
         print('Update wave data for index: {} ({}days)'.format(index, limit))
         ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
         for ticker in ticker_dic:
-            self.update_wave_records_for_daily_period(ticker, limit)
+            if ticker not in self.sys_config.exchange_config.ticker_id_excluded_list:
+                self.update_wave_records_for_daily_period(ticker, limit)
 
     def update_wave_records_for_daily_period(self, ticker_id: str, limit: int):
         self.sys_config.config.save_wave_data = True

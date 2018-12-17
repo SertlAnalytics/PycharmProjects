@@ -7,8 +7,10 @@ Date: 2018-11-05
 from sertl_analytics.constants.pattern_constants import PRD, INDICES
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
 from pattern_database.stock_database_updater import StockDatabaseUpdater
+from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from datetime import date, datetime
 
+exchange_config = BitfinexConfiguration()
 stock_db = StockDatabase()
 stock_db_updater = StockDatabaseUpdater()
 pattern_table = PatternTable()
@@ -25,7 +27,7 @@ else:
 
     stock_db.delete_duplicate_records(trade_table)
     stock_db.delete_duplicate_records(pattern_table)
-    stock_db.update_crypto_currencies(PRD.DAILY)
+    stock_db.update_crypto_currencies(PRD.DAILY, excluded_id_list=exchange_config.ticker_id_excluded_list)
     #
     if is_weekday:
         stock_db.update_stock_data_by_index(INDICES.DOW_JONES, PRD.DAILY)

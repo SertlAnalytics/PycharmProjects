@@ -12,8 +12,8 @@ from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
 from sertl_analytics.mymath import MyMath
 from pattern_data_frame import PatternDataFrame
-from sertl_analytics.exchanges.exchange_cls import Order, OrderStatus
-from pattern_data_container import PatternDataHandler
+from sertl_analytics.exchanges.exchange_cls import OrderStatus
+from pattern_data_handler import PatternDataHandler
 
 
 class PatternDataDictionary(DataDictionary):

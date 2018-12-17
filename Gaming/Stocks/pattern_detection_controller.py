@@ -116,7 +116,8 @@ class PatternDetectionController:
         for value_dic in self._loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
             and_clause = value_dic[LL.AND_CLAUSE]
-            self.sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit=300)
+            limit = self.sys_config.data_provider.limit
+            self.sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit=limit)
             if self.sys_config.pdh is None:
                 print('No data available for: {} and {}'.format(ticker, and_clause))
                 continue

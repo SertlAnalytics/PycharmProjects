@@ -150,6 +150,22 @@ class Pattern:
     def nearest_neighbor_entry_list(self):
         return self._nearest_neighbor_collector.get_sorted_entry_list()
 
+    @property
+    def relative_width_to_full_data_frame(self):
+        return (self.part_entry.tick_last.position - self.part_entry.tick_first.position) / self.df_length
+
+    def get_center_shape_height(self):
+        return self.part_entry.height / 5
+
+    def get_center_shape_width(self):
+        if self.sys_config.period == PRD.DAILY:
+            days_in_chart = self.df_length
+        else:  # 1 is identical to 1 day  !!!
+            min_in_chart = self.sys_config.period_aggregation * 60 * self.sys_config.data_provider.limit
+            days_in_chart = math.ceil(min_in_chart/(24 * 60 * 60))
+        width = days_in_chart * self.relative_width_to_full_data_frame / 3
+        return width
+
     def __get_pattern_id__(self) -> PatternID:
         kwargs = {
             'equity_type_id': self.data_dict_obj.get(DC.EQUITY_TYPE_ID),

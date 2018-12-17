@@ -95,7 +95,7 @@ class PatternPredictorOptimizer:
                                         np.logical_and(df[MP.TABLE] == table_name,
                                                        np.logical_and(df[MP.PREDICTOR] == predictor,
                                                                       df[MP.LABEL] == label)))]
-        df_filtered = df_filtered[[MP.VALUE, MP.PRECISION, MP.RECALL, MP.F1_SCORE]]
+        df_filtered = df_filtered[[MP.VALUE, MP.PRECISION, MP.RECALL, MP.F1_SCORE, MP.ROC_AUC]]
         return df_filtered.sort_values([MP.VALUE])
 
     def get_sorted_value_list_for_predictor_label(

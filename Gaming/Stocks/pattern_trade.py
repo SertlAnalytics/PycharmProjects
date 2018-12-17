@@ -18,7 +18,7 @@ from pattern_wave_tick import WaveTick, WaveTickList, TickerWaveTickConverter
 from sertl_analytics.plotter.my_plot import MyPlotHelper
 import math
 from pattern_news_handler import NewsHandler
-
+import statistics
 from textwrap import dedent
 
 
@@ -535,8 +535,8 @@ class PatternTrade:
     def __get_value_dict__(self) -> dict:
         return {'Status': self.status, 'Buy_trigger': self.buy_trigger, 'Trade_box': self.trade_box_type,
                 'Trade_strategy': self.trade_strategy, 'Pattern_Type': self.pattern.pattern_type,
-                'Expected_win (per unit)': round(self.expected_win, 4),
-                'Result (resp. amount)': self.get_trade_result_text()
+                'Expected_win': '{}$'.format(round(self.expected_win, 4)),
+                'Result': self.get_trade_result_text()
         }
 
     def get_trade_result_text(self):
@@ -612,6 +612,9 @@ class PatternTrade:
             distance_bottom = round(buy_price - lower_value, 4)
         else:
             height = round(max(height, self.pattern.part_entry.distance_for_trading_box), 4)
+            std_regression = self.pattern.part_entry.std_regression
+            print('__set_properties_after_buy__: height={:.4f}, {:.4f}=str_regression'.format(height, std_regression))
+            height = 2 * std_regression
             if height < buy_price/100:
                 height = buy_price/100  # at least one percent
             distance_bottom = round(height, 4)
@@ -809,7 +812,8 @@ class PatternTrade:
         position_latest_tick = self.wave_tick_list.last_wave_tick.position
         fc_ticks_to_positive_full = self.pattern.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_FULL)
         fc_ticks_to_positive_half = self.pattern.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_HALF)
-        if position_latest_tick - position_breakout > min(fc_ticks_to_positive_full, fc_ticks_to_positive_half):
+        mean_fc_ticks = statistics.mean([fc_ticks_to_positive_full, fc_ticks_to_positive_half])
+        if position_latest_tick - position_breakout > mean_fc_ticks:
             return True
         return False
 

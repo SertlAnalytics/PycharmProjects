@@ -426,13 +426,10 @@ class PlotterInterface:
 
     @staticmethod
     def get_pattern_center_shape(pattern: Pattern):
-        if pattern.sys_config.period == PRD.DAILY:
-            ellipse_breadth = 10
-        else:
-            ellipse_breadth = 2 / (pattern.sys_config.period_aggregation * 60)
-        ellipse_height = pattern.part_entry.height / 6
+        ellipse_height = pattern.get_center_shape_height()
+        ellipse_width = pattern.get_center_shape_width()
         xy_center = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern.xy_center)
-        return Ellipse(np.array(xy_center), ellipse_breadth, ellipse_height)
+        return Ellipse(np.array(xy_center), ellipse_width, ellipse_height)
 
     @staticmethod
     def get_f_regression_shape(pattern_part: PatternPart):

@@ -64,9 +64,7 @@ class PatternPart:
 
     def get_annotation_parameter(self, prediction_text_list: list, color: str = 'blue') -> AnnotationParameter:
         annotation_param = AnnotationParameter()
-        offset_x = self.__get_annotation_offset_x__()
-        offset_y = self.__get_annotation_offset_y__()
-        offset = [offset_x, offset_y]
+        offset = self.pdh.get_x_y_off_set_for_shape_annotation(self.__xy_center)
         annotation_param.text = self.__get_text_for_annotation__(prediction_text_list)
         annotation_param.xy = self.__xy_center
         annotation_param.xy_text = (self.__xy_center[0] + offset[0], self.__xy_center[1] + offset[1])
@@ -83,23 +81,6 @@ class PatternPart:
         if self.height_at_last_position == 0:
             return self.std_regression
         return self.std_regression / (self.height_at_first_position/self.height_at_last_position)
-
-    def __get_annotation_offset_x__(self):
-        x_center = self.__xy_center[0]
-        distance_x_center_to_pattern_left_edge = abs(x_center - self.tick_first.f_var)
-        distance_x_center_to_left_edge = abs(x_center - self.pdh.pattern_data.tick_first.f_var)
-        distance_x_center_to_right_edge = abs(x_center - self.pdh.pattern_data.tick_list[-1].f_var)
-        if distance_x_center_to_left_edge < distance_x_center_to_right_edge:  # i.e. the pattern is in the left part
-            return 0
-        return -3*distance_x_center_to_pattern_left_edge
-
-    def __get_annotation_offset_y__(self):
-        y_center = self.__xy_center[1]
-        distance_y_center_to_top = abs(y_center - self.pdh.pattern_data.max_value)
-        distance_y_center_to_bottom = abs(y_center - self.pdh.pattern_data.min_value)
-        if distance_y_center_to_top > distance_y_center_to_bottom:  # i.e. the pattern is in the lower area
-            return (self.tick_high.high - y_center)/3
-        return -2*abs(self.tick_low.low - y_center)
 
     def __calculate_values__(self):
         self.tick_list = [self.pdh.pattern_data.tick_list[k] for k in range(self.function_cont.position_first,

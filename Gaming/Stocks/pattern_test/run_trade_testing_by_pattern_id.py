@@ -49,7 +49,7 @@ pattern_type_pattern_id_dict = {
 }
 
 pattern_type_list_to_test = [FT.TRIANGLE_DOWN]
-trade_strategy_dict_list = [{BT.BREAKOUT: [TSTR.LIMIT]}]
+trade_strategy_dict_list = [{BT.BREAKOUT: [TSTR.LIMIT_FIX]}]
 
 for pattern_type in pattern_type_list_to_test:
     sys_config.config.pattern_ids_to_find = pattern_type_pattern_id_dict[pattern_type]

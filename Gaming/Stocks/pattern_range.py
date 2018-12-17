@@ -11,7 +11,6 @@ from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.mymath import ToleranceCalculator
 from pattern_system_configuration import SystemConfiguration, debugger
-from pattern_data_container import PatternDataHandler
 import math
 import pandas as pd
 import numpy as np

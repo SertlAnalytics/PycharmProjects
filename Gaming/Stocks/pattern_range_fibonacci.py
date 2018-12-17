@@ -9,11 +9,6 @@ from sertl_analytics.constants.pattern_constants import FT, CN, FD, TP
 from pattern_wave_tick import WaveTick
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_range import PatternRangeMax, PatternRangeMin, PatternRangeDetectorMax, PatternRangeDetectorMin
-from pattern_data_container import PatternDataHandler
-from fibonacci.fibonacci_wave_tree import FibonacciWaveTree, FibonacciWave
-import math
-import pandas as pd
-import numpy as np
 
 
 class FibonacciFormation:
