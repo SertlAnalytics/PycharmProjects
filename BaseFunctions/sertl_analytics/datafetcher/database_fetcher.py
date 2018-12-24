@@ -11,6 +11,7 @@ import os
 import sys
 from sertl_analytics.myexceptions import ErrorHandler
 from time import sleep
+from sertl_analytics.constants.pattern_constants import DC
 
 
 class CDT:  # Column Data Types
@@ -20,6 +21,33 @@ class CDT:  # Column Data Types
     DATE = 'Date'
     TIME = 'Time'
     BOOLEAN = 'Boolean'
+
+
+class MyTableColumn:
+    def __init__(self, column_name: str, data_type='String', data_size='', default=''):
+        self._name = column_name
+        self._type = data_type
+        self._size = data_size
+        self._default = default
+        self._description = self.__get_description__()
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def is_numeric(self):
+        return self._type in [CDT.FLOAT, CDT.INTEGER, CDT.BOOLEAN]
+
+    @property
+    def description(self):
+        return self._description
+
+    def __get_description__(self):
+        #  example:  Column('BigMove', Boolean(), default=False)
+        if self._default == '':
+            return "Column('{}', {}({}))".format(self._name, self._type, self._size)
+        return "Column('{}', {}({}), default={})".format(self._name, self._type, self._size, self._default)
 
 
 class MyTable:
@@ -55,14 +83,43 @@ class MyTable:
     def query_id_oid(self) -> str:
         return "select id, oid from {};".format(self._name)
 
-    def get_query_for_unique_record_by_id(self, record_id: str) -> str:
+    def get_query_select_by_data_dict(self, data_dict: dict, target_columns=None)  -> str:
+        columns = '*' if target_columns is None else ','.join(target_columns)
+        and_clause = self.__get_where_clause_for_data_dict__(data_dict)
+        return "SELECT {} FROM {} where {}".format(columns, self._name, and_clause)
+
+    def get_query_select_for_unique_record_by_id(self, record_id: str) -> str:
         return "SELECT * FROM {} where ID='{}'".format(self._name, record_id)
 
-    def get_query_for_records(self, where_clause='') -> str:
+    def get_query_select_for_unique_record_by_dict(self, data_dict: dict) -> str:
+        and_clause = self.__get_where_clause_for_data_dict__(data_dict)
+        return "SELECT {} FROM {} WHERE {}".format(DC.ROWID, self._name, and_clause)
+
+    def __get_where_clause_for_data_dict__(self, data_dict: dict):
+        and_clause_list = []
+        for column in self._columns:
+            if column.name in data_dict:
+                value = data_dict[column.name]
+                if column.is_numeric:
+                    and_clause_list.append("{}={}".format(column.name, value))
+                elif value.find("'") < 0:
+                    and_clause_list.append("{}='{}'".format(column.name, value))
+        return ' and '.join(and_clause_list)
+
+    @staticmethod
+    def __get_col_lists_for_unique_record__():
+        col_list_str = [MDC.VALID_DT, MDC.MODEL_NAME, MDC.TABLE, MDC.PREDICTOR, MDC.LABEL, MDC.PATTERN_TYPE]
+        col_list_numbers = [MDC.VALUE]
+        return col_list_str, col_list_numbers
+
+    def get_query_select_for_records(self, where_clause='') -> str:
         return "SELECT * FROM {}".format(self._name) + ('' if where_clause == '' else " WHERE {}".format(where_clause))
 
-    def get_query_for_delete_by_id(self, id: str) -> str:
-        return "DELETE FROM {} where ID='{}'".format(self._name, id)
+    def get_query_delete_by_id(self, id: str) -> str:
+        return "DELETE FROM {} where ID='{}';".format(self._name, id)
+
+    def get_query_delete_by_row_id(self, row_id: int) -> str:
+        return 'DELETE FROM {} WHERE oid = {};'.format(self._table.name, row_id)
 
     def __get_column_name_list__(self) -> list:
         return [columns.name for columns in self._columns]
@@ -81,29 +138,6 @@ class MyTable:
 
     def _add_columns_(self):
         pass
-
-
-class MyTableColumn:
-    def __init__(self, column_name: str, data_type='String', data_size='', default=''):
-        self._name = column_name
-        self._type = data_type
-        self._size = data_size
-        self._default = default
-        self._description = self.__get_description__()
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def description(self):
-        return self._description
-
-    def __get_description__(self):
-        #  example:  Column('BigMove', Boolean(), default=False)
-        if self._default == '':
-            return "Column('{}', {}({}))".format(self._name, self._type, self._size)
-        return "Column('{}', {}({}), default={})".format(self._name, self._type, self._size, self._default)
 
 
 class BaseDatabase:

@@ -51,7 +51,7 @@ class SYM:
 
 class BitfinexConfiguration(ExchangeConfiguration):
     def __set_values__(self):
-        self.hodl_dict = {'IOT': 5000, 'ETH': 0}  # currency in upper characters
+        self.hodl_dict = {'IOT': 10000, 'ETH': 0}  # currency in upper characters
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
         self.ticker_refresh_rate_in_seconds = 5

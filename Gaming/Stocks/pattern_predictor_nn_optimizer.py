@@ -1,9 +1,9 @@
 """
-Description: This module is the central modul for optimizing prediction by taking the predictor with the
-best precision for a certain label.
+Description: This module is the central module for optimizing neuronal network predictions
+by finding the best architecture for certain label.
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
-Date: 2018-08-22
+Date: 2018-12-21
 """
 
 from sertl_analytics.constants.pattern_constants import PRED, STBL, FT, DC, MT, MDC
@@ -17,17 +17,18 @@ from sertl_analytics.models.performance_measure import ModelPerformance
 import math
 
 
-class PatternPredictorOptimizer:
+# ToDo - currently NN are pretty slow - lets wait .... (the whole module has to be changed - it's only a copy...)
+
+class PatternNNPredictorOptimizer:
     def __init__(self, db_stock: StockDatabase):
         self._db_stock = db_stock
         self._access_layer_metric = AccessLayer4Metric(self._db_stock)
         self._access_layer_prediction = AccessLayerPrediction(self._db_stock)
-        self._model_dict = LearningMachineFactory.get_classifier_learning_machine_dict()
+        self._model_dict = LearningMachineFactory.get_classifier_model_dict()
         self._df_metric = None
         self._df_metric_optimal = None
         self.__calculate_df_metrics__()
         self._trained_model_dict = {}
-        self._is_test = False
 
     def predict(self, table_name: str, predictor: str, label: str, pattern_type: str, x_data: list):
         x_data_array = self._access_layer_prediction.get_x_data_in_correct_format(x_data)
@@ -96,7 +97,7 @@ class PatternPredictorOptimizer:
 
     def __is_class_metric_for_predictor_and_label_available__(
             self, table_name: str, predictor: str, label: str, pattern_type: str):
-        if self._df_metric.shape[0] == 0 or self._is_test:
+        if self._df_metric.shape[0] == 0:
             return False
         df = self._df_metric[self._df_metric[MDC.PATTERN_TYPE] == pattern_type]
         df_filtered = df[np.logical_and(df[MDC.TABLE] == table_name,
@@ -125,25 +126,15 @@ class PatternPredictorOptimizer:
                                         np.logical_and(df[MDC.PREDICTOR] == predictor, df[MDC.LABEL] == label)))]
         return sorted(list(set(df_filtered[MDC.VALUE])))
 
-    def test_model(self, model_name: str, table_name: str, predictor: str, label: str, pattern_type: str):
-        self._model_dict = LearningMachineFactory.get_learning_machine_for_model_as_dict(model_name)
-        self._is_test = True  # so don't save...
-        self.__calculate_class_metrics_for_predictor_and_label__(table_name, predictor, label, pattern_type)
-        df = self._df_metric[self._df_metric[MDC.PATTERN_TYPE] == pattern_type]
-        df_filtered = df[np.logical_and(df[MDC.MODEL] == model_name,
-                                        np.logical_and(df[MDC.TABLE] == table_name,
-                                        np.logical_and(df[MDC.PREDICTOR] == predictor, df[MDC.LABEL] == label)))]
-        return sorted(list(set(df_filtered[MDC.VALUE])))
-
     def __get_trained_model__(
             self, model_name: str, table_name: str, predictor: str, label_column: str, pattern_type: str):
         key = self.__get_key_for_trained_model__(model_name, table_name, predictor, label_column, pattern_type)
         if key not in self._trained_model_dict:
             x_train, y_train = self._access_layer_prediction.get_x_data_y_train_data_for_predictor(
                 table_name, predictor, label_column, pattern_type)
-            lm = LearningMachineFactory.get_lm_by_model_type(model_name)  # we need a new learning machine for each key
-            lm.fit(x_train, y_train)
-            self._trained_model_dict[key] = lm
+            model = LearningMachineFactory.get_model_by_model_type(model_name)  # we need a new model for each key
+            model.fit(x_train, y_train)
+            self._trained_model_dict[key] = model
         return self._trained_model_dict[key]
 
     def __calculate_class_metrics__(self, table_name: str, predictor: str, label: str, pattern_type: str):
@@ -174,12 +165,9 @@ class PatternPredictorOptimizer:
                     MDC.RECALL: recall_dict[y_value] if y_value in recall_dict else 0,
                     MDC.ROC_AUC: roc_auc_dict[y_value] if y_value in recall_dict else 0
                 })
-        if self._is_test:
-            print(insert_dict_list)
-        else:
-            if len(insert_dict_list) > 0:
-                self._access_layer_metric.insert_data(insert_dict_list)
-                self.__calculate_df_metrics__()
+        if len(insert_dict_list) > 0:
+            self._access_layer_metric.insert_data(insert_dict_list)
+            self.__calculate_df_metrics__()
 
     def __get_parameters_for_optimizer__(self, table_name, predictor, label, pattern_type):
         df = self._df_metric

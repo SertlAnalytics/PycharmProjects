@@ -45,6 +45,7 @@ class PatternConfiguration:
         self.show_final_statistics = False
         self.statistics_excel_file_name = ''
         self.statistics_constraints_excel_file_name = ''  # ''../pattern_statistics/constraints.xlsx'
+        self.prediction_optimizer_date = None
         self.__previous_period_length = 0
 
     def __get_previous_period_length__(self):

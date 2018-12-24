@@ -224,6 +224,8 @@ class MyMath:
 
     @staticmethod
     def round_smart(value: float) -> float:
+        if value == 0:
+            return 0
         decimals = math.ceil(math.log10(abs(value)))
         if decimals > 3:
             return round(value)

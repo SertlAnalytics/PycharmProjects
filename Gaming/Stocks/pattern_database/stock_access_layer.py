@@ -1,5 +1,5 @@
 """
-Description: This module contains the configuration classes for stock pattern detection
+Description: This module contains the configuration tables for stock database
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
@@ -10,17 +10,96 @@ from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, Dat
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.mydates import MyDate
-from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
+from pattern_database.stock_tables import MyTable, PatternTable, TradeTable, StocksTable, \
     CompanyTable, STBL, WaveTable, AssetTable, MetricTable
+from pattern_database.stock_database import StockDatabase
 from pattern_index_configuration import IndexConfiguration
 import pandas as pd
 import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, OPS, FT, TRT, TSTR
+from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, OPS, FT, TRT, TSTR, MDC
 import os
 import time
+
+
+class AccessLayer:
+    def __init__(self, stock_db: StockDatabase):
+        self._stock_db = stock_db
+        self._table = self.__get_table__()
+
+    def select_data_by_data_dict(self, data_dict: dict, target_columns=None) -> pd.DataFrame:
+        query = self._table.get_query_select_by_data_dict(data_dict, target_columns)
+        db_df = DatabaseDataFrame(self._stock_db, query)
+        return db_df.df
+
+    def select_data_by_query(self, query: str) -> pd.DataFrame:
+        db_df = DatabaseDataFrame(self._stock_db, query)
+        return db_df.df
+
+    def insert_data(self, input_dict_list: list):
+        self._stock_db.insert_data_into_table(self._table.name, input_dict_list)
+
+    def update_record(self, record_id: str, data_dict: dict):
+        pass
+
+    def delete_record_by_id(self, record_id: str):
+        pass
+
+    def delete_record_by_rowid(self, rowid: int):
+        query = self._table.get_query_delete_by_row_id(rowid)
+        print(query)
+        self._stock_db.delete_records(query)
+
+    def delete_existing_record(self, data_dict: dict):
+        df = self.__get_data_frame_with_row_id__(data_dict)
+        if df.shape[0] > 0:
+            self.delete_record_by_rowid(df.iloc[0][DC.ROWID])
+        else:
+            print('Nothing to delete for table {}: {}'.format(self._table.name, data_dict))
+
+    def is_record_available(self, data_dict: dict):
+        df = self.__get_data_frame_with_row_id__(data_dict)
+        return df.shape[0] > 0
+
+    def __get_data_frame_with_row_id__(self, data_dict: dict) -> pd.DataFrame:
+        query = self._table.get_query_select_for_unique_record_by_dict(data_dict)
+        db_df = DatabaseDataFrame(self._stock_db, query)
+        return db_df.df
+
+    def __get_table__(self) -> MyTable:
+        pass
+
+
+class AccessLayer4Asset(AccessLayer):
+    def __get_table__(self):
+        return AssetTable()
+
+
+class AccessLayer4Metric(AccessLayer):
+    def __get_table__(self):
+        return MetricTable()
+
+    def get_actual_metric_data_frame(self) -> pd.DataFrame:
+        dt_today = MyDate.get_date_as_string_from_date_time()
+        # dt_today = '2018-12-22'
+        return self.select_data_by_data_dict({MDC.VALID_DT: dt_today})
+
+
+class AccessLayer4Stock(AccessLayer):
+    def __get_table__(self):
+        return StocksTable()
+
+
+class AccessLayer4Pattern(AccessLayer):
+    def __get_table__(self):
+        return PatternTable()
+
+
+class AccessLayer4Trade(AccessLayer):
+    def __get_table__(self):
+        return TradeTable()
 
 
 class StockInsertData:
@@ -101,7 +180,6 @@ class StockDatabase(BaseDatabase):
         self._trade_table = TradeTable()
         self._wave_table = WaveTable()
         self._asset_table = AssetTable()
-        self._metric_table = MetricTable()
         self._alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
         self._alphavantage_stock_fetcher = AlphavantageStockFetcher()
         self._sleep_seconds = 5
@@ -196,9 +274,6 @@ class StockDatabase(BaseDatabase):
             pass
         else:
             self.__insert_data_into_table__(STBL.ASSET, [input_dict])
-
-    def insert_data_into_table(self, table_name: str, input_dict_list: list):
-        self.__insert_data_into_table__(table_name, input_dict_list)
 
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
@@ -317,9 +392,6 @@ class StockDatabase(BaseDatabase):
     def create_asset_table(self):
         self.__create_table__(STBL.ASSET)
 
-    def create_metric_table(self):
-        self.__create_table__(STBL.METRIC)
-
     def __insert_pattern_in_pattern_table__(self, ticker: str, input_dic: dict):
         try:
             self.__insert_data_into_table__(STBL.PATTERN, [input_dic])
@@ -333,43 +405,43 @@ class StockDatabase(BaseDatabase):
         return db_df.df.shape[0] > 0
 
     def is_pattern_already_available(self, pattern_id: str) -> bool:
-        query = self._pattern_table.get_query_select_for_unique_record_by_id(pattern_id)
+        query = self._pattern_table.get_query_for_unique_record_by_id(pattern_id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
     def is_wave_already_available(self, wave_data_dict: dict) -> bool:
-        query = self._wave_table.get_query_select_for_unique_record_by_dict(wave_data_dict)
+        query = self._wave_table.get_query_for_unique_record_by_dict(wave_data_dict)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
     def delete_existing_wave(self, wave_data_dict: dict):
-        query = self._wave_table.get_query_select_for_unique_record_by_dict(wave_data_dict)
+        query = self._wave_table.get_query_for_unique_record_by_dict(wave_data_dict)
         db_df = DatabaseDataFrame(self, query)
         if db_df.df.shape[0] > 0:
             rowid = db_df.df['rowid'][0]
             self.delete_records("DELETE from {} WHERE rowid = {}".format(STBL.WAVE, rowid))
 
     def is_asset_already_available(self, input_data_dict: dict):
-        query = self._asset_table.get_query_select_for_unique_record_by_dict(input_data_dict)
+        query = self._asset_table.get_query_for_unique_record_by_dict(input_data_dict)
         # print('is_asset_already_available: query={}'.format(query))
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
     def is_any_asset_already_available_for_timestamp(self, time_stamp: int):
-        query = self._asset_table.get_query_select_for_records('Validity_Timestamp={}'.format(time_stamp))
+        query = self._asset_table.get_query_for_records('Validity_Timestamp={}'.format(time_stamp))
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
     def update_trade_type_for_pattern(self, pattern_id: str, trade_type: str):
         where_clause = "Pattern_ID = '{}'".format(pattern_id)
-        query = self._trade_table.get_query_select_for_records(where_clause)
+        query = self._trade_table.get_query_for_records(where_clause)
         db_df = DatabaseDataFrame(self, query)
         trade_type_not = TRT.NOT_SHORT if trade_type == TRT.SHORT else TRT.NOT_LONG
         trade_type_new = trade_type_not if db_df.df.shape[0] == 0 else trade_type
         self.update_table_column(STBL.PATTERN, DC.TRADE_TYPE, trade_type_new, "ID = '{}'".format(pattern_id))
 
     def get_pattern_records_as_dataframe(self, where_clause='') -> pd.DataFrame:
-        query = self._pattern_table.get_query_select_for_records(where_clause)
+        query = self._pattern_table.get_query_for_records(where_clause)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
@@ -388,17 +460,17 @@ class StockDatabase(BaseDatabase):
                        "and Buy_Trigger = '{}' and Trade_Strategy = '{}'".format(
             pattern_id, mean, buy_trigger, strategy
         )
-        query = self._trade_table.get_query_select_for_records(where_clause)
+        query = self._trade_table.get_query_for_records(where_clause)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
     def is_trade_already_available(self, trade_id: str) -> bool:
-        query = self._trade_table.get_query_select_for_unique_record_by_id(trade_id)
+        query = self._trade_table.get_query_for_unique_record_by_id(trade_id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
     def get_trade_records_as_dataframe(self, where_clause='') -> pd.DataFrame:
-        query = self._trade_table.get_query_select_for_records(where_clause)
+        query = self._trade_table.get_query_for_records(where_clause)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
@@ -408,23 +480,23 @@ class StockDatabase(BaseDatabase):
         return db_df.df
 
     def get_trade_records_for_statistics_as_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_select_for_records("Trade_Result_ID != 0")
+        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0")
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
     def get_trade_records_for_asset_statistics_as_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_select_for_records("Trade_Result_ID != 0 and Trade_Process = 'Online'")
-        query = self._trade_table.get_query_select_for_records("Trade_Result_ID != 0")
+        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0 and Trade_Process = 'Online'")
+        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0")
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
     def get_asset_records_for_statistics_as_dataframe(self) -> pd.DataFrame:
-        query = self._asset_table.get_query_select_for_records()
+        query = self._asset_table.get_query_for_records()
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
     def get_trade_records_for_replay_as_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_select_for_records("Trade_Result_ID != 0 AND Period = 'DAILY'")
+        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0 AND Period = 'DAILY'")
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
@@ -434,13 +506,13 @@ class StockDatabase(BaseDatabase):
         return db_df.df.iloc[0][DC.PATTERN_ID]
 
     def get_pattern_records_for_replay_as_dataframe(self) -> pd.DataFrame:
-        query = self._pattern_table.get_query_select_for_records("Period = 'DAILY'")
+        query = self._pattern_table.get_query_for_records("Period = 'DAILY'")
         db_df = DatabaseDataFrame(self, query)
         return db_df.df[db_df.df[DC.PATTERN_TYPE].isin(FT.get_long_trade_able_types())]
 
     def delete_existing_trade(self, trade_id: str):
         if self.is_trade_already_available(trade_id):
-            self.delete_records(self._trade_table.get_query_delete_by_id(trade_id))
+            self.delete_records(self._trade_table.get_query_for_delete_by_id(trade_id))
 
     def delete_duplicate_records(self, table: MyTable):
         db_df_duplicate_id = DatabaseDataFrame(self, table.query_duplicate_id)
@@ -512,8 +584,7 @@ class StockDatabase(BaseDatabase):
     def __get_table_by_name__(self, table_name: str):
         return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table,
                 STBL.PATTERN: self._pattern_table, STBL.TRADE: self._trade_table,
-                STBL.WAVE: self._wave_table, STBL.ASSET: self._asset_table,
-                STBL.METRIC: self._metric_table}.get(table_name, None)
+                STBL.WAVE: self._wave_table, STBL.ASSET: self._asset_table}.get(table_name, None)
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):
@@ -530,5 +601,7 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
             self.df.set_index(CN.TIMESTAMP, drop=False, inplace=True)
             self.column_data = [CN.CLOSE]
             self.df_data = self.df[[CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL, CN. TIMESTAMP, CN.BIG_MOVE, CN.DIRECTION]]
+
+
 
 

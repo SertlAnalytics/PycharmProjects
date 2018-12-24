@@ -8,19 +8,6 @@ Date: 2018-05-14
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
-class MP:  # Metric parameters
-    MODEL_NAME = 'Model'
-    TABLE = 'Table'
-    PREDICTOR = 'Predictor'
-    LABEL = 'Label'
-    PATTERN_TYPE = 'Pattern_Type'
-    VALUE = 'Value'
-    PRECISION = 'Precision'
-    RECALL = 'RECALL'
-    F1_SCORE = 'F1 Score'
-    ROC_AUC = 'ROC AUC'
-
-
 class STBL:  # stocks tables
     STOCKS = 'Stocks'
     COMPANY = 'Company'
@@ -28,10 +15,11 @@ class STBL:  # stocks tables
     TRADE = 'Trade'
     WAVE = 'Wave'
     ASSET = 'Asset'
+    METRIC = 'Metric'
 
     @staticmethod
     def get_all():
-        return [STBL.STOCKS, STBL.COMPANY, STBL.PATTERN, STBL.TRADE, STBL.WAVE, STBL.ASSET]
+        return [STBL.STOCKS, STBL.COMPANY, STBL.PATTERN, STBL.TRADE, STBL.WAVE, STBL.ASSET, STBL.METRIC]
 
     @staticmethod
     def get_for_model_statistics():
@@ -253,7 +241,7 @@ class MT:  # Model Types
                 MT.RANDOM_FOREST, MT.NN]
 
     @staticmethod
-    def get_all_classifiers(with_optimizer=True):
+    def get_all_classifiers(with_optimizer=False):
         base_list = [MT.LOGISTIC_REGRESSION, MT.K_NEAREST_NEIGHBORS, MT.SVM, MT.DECISION_TREE, MT.RANDOM_FOREST]
         if with_optimizer:
             base_list.append(MT.OPTIMIZER)
@@ -758,6 +746,7 @@ class PSC:  # Pattern Statistics Columns
 
 
 class DC:  # Data Columns
+    ROWID = 'rowid'
     # for Stocks
     SYMBOL = 'Symbol'
     TIMESTAMP = 'Timestamp'
@@ -962,3 +951,18 @@ class DC:  # Data Columns
     VALUE_PER_UNIT = 'Value_Unit'
     VALUE_TOTAL = 'Value_Total'
     CURRENCY = 'Currency'
+
+
+class MDC:  # Metric data column
+    VALID_DT = 'Valid_Date'
+    MODEL = 'Model'
+    TABLE = 'Table'
+    PREDICTOR = 'Predictor'
+    LABEL = 'Label'
+    PATTERN_TYPE = 'Pattern_Type'
+    VALUE = 'Value'
+    PRECISION = 'Precision'
+    RECALL = 'RECALL'
+    F1_SCORE = 'F1_Score'
+    ROC_AUC = 'ROC_AUC'
+

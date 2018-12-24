@@ -6,15 +6,12 @@ Date: 2018-06-17
 """
 
 import plotly.graph_objs as go
-from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC, MP
-from sertl_analytics.models.performance_measure import ModelPerformance
-from sertl_analytics.models.learning_machine import LearningMachineFactory
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC, MDC
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
 from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_trade_handler import PatternTradeHandler
 from pattern_database.stock_database import StockDatabase
 from pattern_database.stock_tables import PatternTable, TradeTable
-from pattern_database.stock_database import DatabaseDataFrame
 from pattern_predictor_optimizer import PatternPredictorOptimizer
 import pandas as pd
 import itertools
@@ -389,11 +386,12 @@ class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
 
 
 class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
-    def __init__(self, df_base: pd.DataFrame, color_handler: DashColorHandler, db_stock: StockDatabase):
+    def __init__(self, df_base: pd.DataFrame, color_handler: DashColorHandler,
+                 db_stock: StockDatabase, predictor_optimizer: PatternPredictorOptimizer):
         self.db_stock = db_stock
         self.pattern_table = PatternTable()
         self.trade_table = TradeTable()
-        self._predictor_optimizer = PatternPredictorOptimizer(self.db_stock)
+        self._predictor_optimizer = predictor_optimizer
         MyDashTabStatisticsPlotter.__init__(self, df_base, color_handler)
         self._df_base_cache_dict = {}
         print('MyDashTabStatisticsPlotter4Models.__init__()')
@@ -436,19 +434,19 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
         x_dict = {}
         y_dict = {}
         for model_type in model_type_list:
-            df_with_metrics = self._predictor_optimizer.get_metrics_for_model_and_label_as_data_frame(
+            df_metric = self._predictor_optimizer.get_metrics_for_model_and_label_as_data_frame(
                 model_type, self.category, self.predictor, self.x_variable, self.pattern_type)
-            x_dict[model_type] = list(df_with_metrics[MP.VALUE])
+            x_dict[model_type] = list(df_metric[MDC.VALUE])
             for metric in metric_list:
                 key = '{}-{}'.format(model_type, metric)
                 if metric == MTC.PRECISION:
-                    y_dict[key] = list(df_with_metrics[MP.PRECISION])
+                    y_dict[key] = list(df_metric[MDC.PRECISION])
                 elif metric == MTC.RECALL:
-                    y_dict[key] = list(df_with_metrics[MP.RECALL])
+                    y_dict[key] = list(df_metric[MDC.RECALL])
                 elif metric == MTC.F1_SCORE:
-                    y_dict[key] = list(df_with_metrics[MP.F1_SCORE])
+                    y_dict[key] = list(df_metric[MDC.F1_SCORE])
                 elif metric == MTC.ROC_AUC:
-                    y_dict[key] = list(df_with_metrics[MP.ROC_AUC])
+                    y_dict[key] = list(df_metric[MDC.ROC_AUC])
         return x_dict, y_dict
 
 

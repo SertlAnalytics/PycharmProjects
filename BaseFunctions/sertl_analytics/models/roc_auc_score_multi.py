@@ -13,11 +13,12 @@ import statistics as stat
 
 class MyMetrics:
     @staticmethod
-    def get_roc_auc_score(y_train: np.array, y_train_predict: np.array, average=None):
+    def get_roc_auc_score(y_train: np.array, y_train_scrores: np.array, average=None):
         if len(y_train) < 3:
             return [roc_auc_score(y_train, y_train_predict, average=average)]
         scores = []
         std_dev = stat.stdev(y_train)
+        std_dev = 0
         for value in y_train:
             y_train_adjusted = np.array(y_train)
             y_train_predict_adjusted = np.array(y_train_predict)

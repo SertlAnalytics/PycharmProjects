@@ -613,7 +613,7 @@ class PatternTrade:
         else:
             height = round(max(height, self.pattern.part_entry.distance_for_trading_box), 4)
             std_regression = self.pattern.part_entry.std_regression
-            print('__set_properties_after_buy__: height={:.4f}, {:.4f}=str_regression'.format(height, std_regression))
+            # print('__set_properties_after_buy__: height={:.4f}, {:.4f}=str_regression'.format(height, std_regression))
             height = 2 * std_regression
             if height < buy_price/100:
                 height = buy_price/100  # at least one percent

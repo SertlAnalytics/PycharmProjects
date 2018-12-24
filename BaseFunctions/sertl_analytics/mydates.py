@@ -95,7 +95,7 @@ class MyDate:
         return datetime.fromtimestamp(epoch_seconds).time()
 
     @staticmethod
-    def get_date_as_string_from_date_time(date_time) -> str:  # '2018-07-18'
+    def get_date_as_string_from_date_time(date_time=None) -> str:  # '2018-07-18'
         date_time_object = MyDate.get_datetime_object(date_time)
         return date_time_object.strftime('%Y-%m-%d')
 

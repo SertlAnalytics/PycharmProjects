@@ -9,28 +9,34 @@ import numpy as np
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score
 from sklearn.metrics import roc_curve, roc_auc_score
 from sertl_analytics.models.roc_auc_score_multi import MyMetrics
-from sklearn.model_selection import train_test_split, cross_val_predict
+from sklearn.model_selection import train_test_split, cross_val_predict, cross_val_score, GridSearchCV
+from keras.wrappers.scikit_learn import KerasClassifier
 from collections import Counter
 from sertl_analytics.constants.pattern_constants import MTC
+from sertl_analytics.models.learning_machine import LearningMachine
 import warnings
-
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # get rid of ...Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2
 
 class ModelPerformance:
-    def __init__(self, estimator, x_train, y_train, label: str):
+    def __init__(self, lm: LearningMachine, x_train, y_train, label: str):
         warnings.filterwarnings("ignore")
         self._label = label
         self._cv = 3
-        self._estimator = estimator
+        self._lm = lm
         self._x_train = np.array(x_train)
         self._y_train = np.array(y_train)
         self._y_train_value_count_dict = Counter(self._y_train)
         self.__remove_low_values__()
         # print('self._y_train_value_count_dict: {}'.format(self._y_train_value_count_dict))
         self._y_train_predict = np.array([])
+        self._y_train_scores = np.array([])
         self.__calculate_y_train_predict__()
+        self.__calculate_y_train_scores__()
+        self._y_predict_value_list = sorted(list(set(self._y_train)))
+        zero_list = [0 for k in range(0, len(self._y_predict_value_list))]
+        y_train_scores_max = max(self._y_train_scores)
         if len(self._y_train_predict) == 0:
-            self._y_predict_value_list = sorted(list(set(self._y_train)))
-            zero_list = [0 for k in range(0, len(self._y_predict_value_list))]
             self._precision = zero_list
             self._recall = zero_list
             self._f1_score = zero_list
@@ -45,7 +51,8 @@ class ModelPerformance:
             self._precision = precision_score(self._y_train, self._y_train_predict, average=None)
             self._recall = recall_score(self._y_train, self._y_train_predict, average=None)
             self._f1_score = f1_score(self._y_train, self._y_train_predict, average=None)
-            self._roc_auc = MyMetrics.get_roc_auc_score(self._y_train, self._y_train_predict, average=None)
+            # self._roc_auc = MyMetrics.get_roc_auc_score(self._y_train, self._y_train_scores, average=None)
+            self._roc_auc = np.array([y_train_scores_max for k in range(0, len(self._f1_score))])
             self._roc_fpr = None
             self._roc_tpr = None
             self._roc_threshold = None
@@ -99,8 +106,17 @@ class ModelPerformance:
 
     def __calculate_y_train_predict__(self):
         try:
-            self._y_train_predict = cross_val_predict(self._estimator, self._x_train, self._y_train, cv=self._cv)
+            self._y_train_predict = self._lm.cross_val_predict(self._x_train, self._y_train, cv=self._cv)
+        except ValueError as e:
+            print(e)
+
+    def __calculate_y_train_scores__(self):
+        try:
+            self._y_train_scores = self._lm.cross_val_score(
+                self._x_train, self._y_train, cv=self._cv, scoring='accuracy')
+            print('accuracy per cv: {}'.format(self._y_train_scores))
         except ValueError:
+            self._y_train_scores = np.array([0 for k in range(0, self._cv)])
             print('Not enough data...')
 
     def __calculate_roc_values__(self):

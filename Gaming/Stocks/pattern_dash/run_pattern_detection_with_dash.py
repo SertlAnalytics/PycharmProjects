@@ -25,7 +25,7 @@ sys_config.exchange_config.trade_strategy_dict = {
     BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP]
 }
 sys_config.config.simple_moving_average_number = 20
-sys_config.config.trading_last_price_mean_aggregation = 16
+sys_config.config.trading_last_price_mean_aggregation = 8
 
 # debugger.pattern_range_position_list = [217, 224, 242]
 

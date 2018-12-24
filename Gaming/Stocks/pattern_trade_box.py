@@ -47,10 +47,9 @@ class TradingBox:
         self._stop_loss = 0
         self._sell_limit_orig = 0
         self._sell_limit = 0
-        self._distance_trailing_stop = 0
-        self._next_trailing_stop = 0
         self._init_parameters_()
         self.__calculate_stops_and_limits__()
+        self._price_was_close_to_stop = False
 
     def round(self, value: float):
         return round(value, self._round_decimals)
@@ -113,7 +112,7 @@ class TradingBox:
 
     @property
     def distance_trailing_stop(self):
-        return self.round(self._distance_trailing_stop)
+        return self.round(self._distance_bottom)
 
     @property
     def multiplier_positive(self):
@@ -158,22 +157,22 @@ class TradingBox:
         return stop_loss_changed or limit_changed
 
     def __adjust_stop_loss_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
-        ticker_last_price = statistics.mean(self._ticker_last_price_list[-self._api.last_price_mean_aggregation:])
+        ticker_last_price_mean = statistics.mean(self._ticker_last_price_list[-self._api.last_price_mean_aggregation:])
         # ticker_last_price = self._ticker_last_price_list[-1]  # ToDo...either of both or a smart solution...
         self.__adjust_distance_bottom_to_current_result__(ticker_last_price)
         if self._trade_strategy == TSTR.LIMIT:  # with trailing stop
-            if self._stop_loss < ticker_last_price - self._distance_bottom:
-                self._stop_loss = ticker_last_price - self._distance_bottom
+            if self._stop_loss < ticker_last_price_mean - self._distance_bottom:
+                self._stop_loss = ticker_last_price_mean - self._distance_bottom
                 return True
         elif self._trade_strategy == TSTR.LIMIT_FIX:
             pass  # no change in stop loss
         elif self._trade_strategy == TSTR.TRAILING_STOP:  # ToDo trailing stop closer after some time...
-            if self._stop_loss < ticker_last_price - self._distance_bottom:
-                self._stop_loss = ticker_last_price - self._distance_bottom
+            if self._stop_loss < ticker_last_price_mean - self._distance_bottom:
+                self._stop_loss = ticker_last_price_mean - self._distance_bottom
                 return True
         elif self._trade_strategy == TSTR.TRAILING_STEPPED_STOP:  # ToDo trailing stop closer after some time...
-            if self._stop_loss < ticker_last_price - self.distance_stepping:
-                multiplier = int((ticker_last_price - self._stop_loss) / self.distance_stepping) - 1
+            if self._stop_loss < ticker_last_price_mean - self.distance_stepping:
+                multiplier = int((ticker_last_price_mean - self._stop_loss) / self.distance_stepping) - 1
                 self._stop_loss = self._stop_loss + multiplier * self.distance_stepping
                 return True
         elif self._trade_strategy == TSTR.SMA:  # ToDo trailing stop closer after some time (above buy price !!!)
@@ -188,8 +187,16 @@ class TradingBox:
         if current_result > 2:
             adjusted_distance = self._distance_bottom / (current_result - 1)
             if adjusted_distance/self._buy_price > 0.01:
-                print('distance_bottom_adjusted: from {:.2f} to {:.2f}'.format(self._distance_bottom, adjusted_distance))
+                print('distance_bottom_adjusted: {:.2f} -> {:.2f}'.format(self._distance_bottom, adjusted_distance))
                 self._distance_bottom = adjusted_distance
+        elif self._price_was_close_to_stop:  # the first trace back occurred - we can be closer...
+            adjusted_distance = last_price/100  # 1%
+            if adjusted_distance < self._distance_bottom:
+                print('distance_bottom_adjusted: {:.2f} -> {:.2f}'.format(self._distance_bottom, adjusted_distance))
+                self._distance_bottom = adjusted_distance
+        else:
+            if abs(last_price - self._stop_loss)/last_price < 0.005:
+                self._price_was_close_to_stop = True
 
     def __adjust_limit_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
         if self._trade_strategy in [TSTR.LIMIT, TSTR.LIMIT_FIX]:  # _limit doesn't change
@@ -211,8 +218,6 @@ class TradingBox:
         else:
             self._sell_limit_orig = math.inf
         self._sell_limit = self._sell_limit_orig
-        self._distance_trailing_stop = self._distance_bottom
-        self._next_trailing_stop = self._off_set_value
         self.__print_values__('Initialize stop and _limit')
 
     def __print_values__(self, prefix: str):

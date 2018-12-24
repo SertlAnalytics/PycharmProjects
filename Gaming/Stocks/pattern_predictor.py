@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-08-22
 """
 
-from sertl_analytics.constants.pattern_constants import FT
+from sertl_analytics.constants.pattern_constants import FT, STBL, PRED
 from sertl_analytics.models.nn_collector import NearestNeighborCollector
 import numpy as np
 import pandas as pd
@@ -27,6 +27,7 @@ class PatternPredictorApi:
         self.db_stock = db_stock
         self.pattern_table = pattern_table
         self.trade_table = trade_table
+        self.predictor_optimizer = None  # will be set in the script where api is initiated
 
 
 class PatternFeaturesSelector:
@@ -322,8 +323,17 @@ class PatternMasterPredictor:
         self.db_stock = api.db_stock
         self.pattern_table = api.pattern_table
         self.trade_table = api.trade_table
+        self.predictor_optimizer = api.predictor_optimizer
         self.predictor_dict = {}
         # self.__init_predictor_dict__()  # currently we don't need this - we'll do that later per ticker id
+
+    @property
+    def table(self):
+        return ''
+
+    @property
+    def predictor(self):
+        return ''
 
     def get_feature_columns(self, pattern_type: str):
         predictor = self.predictor_dict[pattern_type]
@@ -331,7 +341,18 @@ class PatternMasterPredictor:
 
     def predict_for_label_columns(self, pattern_type: str, x_data: list):
         predictor = self.predictor_dict[pattern_type]
-        return predictor.predict_for_label_columns(x_data)
+        result_dict_for_one_predictor = predictor.predict_for_label_columns(x_data)
+        if predictor.is_ready_for_prediction and False:  # ToDo anywhen....
+            result_dict_for_optimal_predictor = self.predict_optimal_for_label_columns(
+                pattern_type, x_data, predictor.label_columns)
+            for labels in predictor.label_columns:
+                print('Prediction-kNN={}, {}=optimal'.format(result_dict_for_one_predictor[labels],
+                                                             result_dict_for_optimal_predictor[labels]))
+        return result_dict_for_one_predictor
+
+    def predict_optimal_for_label_columns(self, pattern_type: str, x_data: list, label_columns: list):
+        return {label: self.predictor_optimizer.predict(self.table, self.predictor, label, pattern_type, x_data)
+                for label in label_columns}
 
     def get_sorted_nearest_neighbor_entry_list(self, pattern_type: str):
         predictor = self.predictor_dict[pattern_type]
@@ -353,6 +374,14 @@ class PatternMasterPredictor:
 
 
 class PatternMasterPredictorTouchPoints(PatternMasterPredictor):
+    @property
+    def table(self):
+        return STBL.PATTERN
+
+    @property
+    def predictor(self):
+        return PRED.TOUCH_POINT
+
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
@@ -361,6 +390,14 @@ class PatternMasterPredictorTouchPoints(PatternMasterPredictor):
 
 
 class PatternMasterPredictorBeforeBreakout(PatternMasterPredictor):
+    @property
+    def table(self):
+        return STBL.PATTERN
+
+    @property
+    def predictor(self):
+        return PRED.BEFORE_BREAKOUT
+
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
@@ -369,6 +406,14 @@ class PatternMasterPredictorBeforeBreakout(PatternMasterPredictor):
 
 
 class PatternMasterPredictorAfterBreakout(PatternMasterPredictor):
+    @property
+    def table(self):
+        return STBL.PATTERN
+
+    @property
+    def predictor(self):
+        return PRED.AFTER_BREAKOUT
+
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
@@ -377,6 +422,14 @@ class PatternMasterPredictorAfterBreakout(PatternMasterPredictor):
 
 
 class PatternMasterPredictorForTrades(PatternMasterPredictor):
+    @property
+    def table(self):
+        return STBL.TRADE
+
+    @property
+    def predictor(self):
+        return PRED.FOR_TRADE
+
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 

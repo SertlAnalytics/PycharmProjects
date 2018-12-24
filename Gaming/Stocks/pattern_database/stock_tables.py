@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC, PRD, STBL
+from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED
 from sertl_analytics.mydates import MyDate
 
 
@@ -15,6 +15,25 @@ class PredictionFeatureTable:
     @staticmethod
     def is_label_column_for_regression(label_column: str):
         return False   # label_column[-4:] == '_PCT'
+
+
+class MetricTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return STBL.METRIC
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(MDC.VALID_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(MDC.MODEL, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(MDC.TABLE, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(MDC.PREDICTOR, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(MDC.LABEL, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(MDC.PATTERN_TYPE, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(MDC.VALUE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(MDC.PRECISION, CDT.FLOAT))
+        self._columns.append(MyTableColumn(MDC.RECALL, CDT.FLOAT))
+        self._columns.append(MyTableColumn(MDC.F1_SCORE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(MDC.ROC_AUC, CDT.FLOAT))
 
 
 class AssetTable(MyTable):
@@ -34,15 +53,6 @@ class AssetTable(MyTable):
         self._columns.append(MyTableColumn(DC.VALUE_PER_UNIT, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.VALUE_TOTAL, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.CURRENCY, CDT.STRING, 10))
-
-    def get_query_for_unique_record_by_dict(self, data_dict: dict) -> str:
-        col_list_str = [DC.LOCATION, DC.EQUITY_ID]
-        col_list_numbers = [DC.VALIDITY_TS, DC.EQUITY_TYPE_ID]
-        additional_and_clauses_str = ["{}='{}'".format(col, data_dict[col]) for col in col_list_str]
-        and_clauses_str = ' and '.join(additional_and_clauses_str)
-        additional_and_clauses_numbers = ['{}={}'.format(col, data_dict[col]) for col in col_list_numbers]
-        and_clauses_number = ' and '.join(additional_and_clauses_numbers)
-        return "SELECT rowid FROM {} WHERE {} and {}".format(self._name, and_clauses_str, and_clauses_number)
 
     @staticmethod
     def get_columns_for_statistics_category() -> list:
@@ -103,12 +113,6 @@ class WaveTable(MyTable):
         self._columns.append(MyTableColumn(DC.W5_RANGE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.PARENT_WAVE_OID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.WAVE_IN_PARENT, CDT.STRING, 10))
-
-    def get_query_for_unique_record_by_dict(self, data_dict: dict) -> str:
-        col_list = [DC.W1_BEGIN_TS, DC.W2_BEGIN_TS, DC.W3_BEGIN_TS, DC.W4_BEGIN_TS, DC.W5_BEGIN_TS]
-        additional_and_clauses = ['{}={}'.format(col, data_dict[col]) for col in col_list]
-        return "SELECT rowid FROM {} WHERE {}='{}' and {}".format(
-            self._name, DC.TICKER_ID, data_dict[DC.TICKER_ID], ' and '.join(additional_and_clauses))
 
     def get_query_for_wave_counter(self, period: str, limit: int=0) -> str:
         ts_from = self.__get_from_time_stamp__(period, limit)
@@ -267,6 +271,12 @@ class TradeTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def get_label_columns_for_trades_statistics():
         return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_ID]
+
+    @staticmethod
+    def get_label_columns_for_predictor_for_statistics(predictor: str):
+        if predictor == PRED.FOR_TRADE:
+            return TradeTable.get_label_columns_for_trades_statistics()
+        return TradeTable.get_label_columns_for_trades_statistics()
 
     @staticmethod
     def get_columns_for_replay() -> list:
@@ -529,8 +539,10 @@ class PatternTable(MyTable, PredictionFeatureTable):
     def __get_feature_columns_before_breakout__(for_statistics=False):
         base_list = PatternTable.__get_feature_columns_after_breakout__(for_statistics)
         del base_list[base_list.index(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT)]
+        del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_TOP)]
+        del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM)]
         if for_statistics:
-            pass
+            del base_list[base_list.index(DC.BREAKOUT_DIRECTION)]
         else:
             del base_list[base_list.index(DC.BREAKOUT_DIRECTION_ID)]
         del base_list[base_list.index(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT)]
@@ -541,8 +553,6 @@ class PatternTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def __get_feature_columns_touch_points__(for_statistics=False):
         base_list = PatternTable.__get_feature_columns_before_breakout__(for_statistics)
-        del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_TOP)]
-        del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM)]
         return base_list
 
     @staticmethod
@@ -556,6 +566,14 @@ class PatternTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def get_label_columns_touch_points_for_statistics():
         return PatternTable.__get_label_columns_touch_points__(True)
+
+    @staticmethod
+    def get_label_columns_for_predictor_for_statistics(predictor: str):
+        if predictor == PRED.TOUCH_POINT:
+            return PatternTable.__get_label_columns_touch_points__(True)
+        elif predictor == PRED.BEFORE_BREAKOUT:
+            return PatternTable.__get_label_columns_before_breakout__(True)
+        return PatternTable.__get_label_columns_after_breakout__(True)
 
     @staticmethod
     def __get_label_columns_after_breakout__(for_statistics=False):

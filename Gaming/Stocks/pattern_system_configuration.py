@@ -15,6 +15,7 @@ from pattern_debugger import PatternDebugger
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable, WaveTable, AssetTable
 from pattern_id import PatternID
 from pattern_predictor import PatternMasterPredictorHandler, PatternPredictorApi
+from pattern_predictor_optimizer import PatternPredictorOptimizer
 from pattern_data_provider import PatternDataProvider
 from pattern_trade_optimizer import TradeOptimizer
 from copy import deepcopy
@@ -42,15 +43,18 @@ class SystemConfiguration:
         self.df_cache = MyDataFrameCache()
         self.graph_cache = MyGraphCache()
         self.data_provider = PatternDataProvider(self.config, self.index_config, self.db_stock, self.df_cache)
-        self.master_predictor_handler = PatternMasterPredictorHandler(
-            PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)
-        )
+        self.predictor_optimizer = PatternPredictorOptimizer(self.db_stock)
+        self.master_predictor_handler = PatternMasterPredictorHandler(self.__get_pattern_predictor_api__(self.config))
         self.trade_strategy_optimizer = TradeOptimizer(self.db_stock, self.expected_win_pct)
+
+    def __get_pattern_predictor_api__(self, config: PatternConfiguration):
+        api = PatternPredictorApi(config, self.db_stock, self.pattern_table, self.trade_table)
+        api.predictor_optimizer = self.predictor_optimizer
+        return api
 
     def __init_index_value_dict__(self):
         for index in self.index_list:
             self.index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
-
 
     @property
     def pdh(self):
@@ -198,9 +202,9 @@ class SystemConfiguration:
         sys_config_copy.data_provider = PatternDataProvider(
             sys_config_copy.config, sys_config_copy.index_config, self.db_stock, self.df_cache)
         sys_config_copy.data_provider.ticker_dict = self.data_provider.ticker_dict  # we have to copy this as well
+        sys_config_copy.predictor_optimizer = self.predictor_optimizer  # we use the same optimizer  !!!
         sys_config_copy.master_predictor_handler = PatternMasterPredictorHandler(
-            PatternPredictorApi(self.config, self.db_stock, self.pattern_table, self.trade_table)
-        )
+            self.__get_pattern_predictor_api__(sys_config_copy.config))
         sys_config_copy.trade_strategy_optimizer = self.trade_strategy_optimizer
         return sys_config_copy
 

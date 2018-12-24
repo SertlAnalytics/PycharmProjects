@@ -10,4 +10,4 @@ from pattern_database.stock_database import StockDatabase
 
 stock_db = StockDatabase()
 # stock_db.create_pattern_feature_table()
-stock_db.create_asset_table()
+stock_db.create_metric_table()

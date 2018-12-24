@@ -162,8 +162,9 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
             [Input(self._my_statistics_chart_type_selection, 'value'),
              Input(self._my_statistics_predictor_selection, 'value')]
         )
-        def handle_callback_for_category_options(chart_type: str, predictor: str):
+        def handle_callback_for_x_variable_options(chart_type: str, predictor: str):
             value_list = self.__get_value_list_for_x_variable_options__(chart_type, predictor)
+            # print('handle_callback_for_x_variable_options ({}-{}): {}'.format(chart_type, predictor, value_list))
             return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
 
     @staticmethod

@@ -149,7 +149,8 @@ class MyDashTab4ModelStatistics(MyDashTab4StatisticsBase):
         self._dd_handler = ModelsStatisticsDropDownHandler()
 
     def __init_plotter__(self):
-        self._plotter = MyDashTabStatisticsPlotter4Models(self._df_base, self._color_handler, self.sys_config.db_stock)
+        self._plotter = MyDashTabStatisticsPlotter4Models(
+            self._df_base, self._color_handler, self.sys_config.db_stock, self.sys_config.predictor_optimizer)
 
     @staticmethod
     def __get_value_list_for_x_variable_options__(category: str, predictor: str):
