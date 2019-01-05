@@ -14,6 +14,7 @@ from sklearn import tree
 from sklearn.svm import SVC
 from sklearn import neighbors
 from sklearn import ensemble
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import cross_val_predict, cross_val_score
 from sklearn.metrics import accuracy_score
@@ -37,11 +38,12 @@ class ModelType:
     LINEAR_REGRESSION = "Model: Linear, Type: Regression"
     LINEAR_CLASSIFICATION = "Model: Linear, Type: Classification"
     TREE_CLASSIFICATION = "Model: DecisionTree, Type: Classification"
+    MLP_CLASSIFICATION = "Model: Multi-layer Perceptron, Type: Classification"
 
 
 class LearningMachine:
     def __init__(self, hidden_layers=None, optimizer=Optimizer.ADAM, loss=LossFunction.MSE):
-        self.scaler = None
+        self.scaler = StandardScaler()
         self.hidden_layers = hidden_layers
         self.model = None
         self.model_type = None
@@ -69,7 +71,7 @@ class LearningMachine:
         self.model.fit(x_train_scaled, y_train)
 
     def __get_newly_scaled_data__(self, x_train):
-        self.scaler = StandardScaler().fit(x_train)
+        self.scaler.fit(x_train)
         x_train_scaled = self.scaler.transform(x_train)
         return x_train_scaled
 
@@ -94,12 +96,14 @@ class LearningMachine:
     def cross_val_predict(self, predictors: np.array, target: np.array, cv: int):
         if self.model is None:
             self.model = self.get_model()
-        return cross_val_predict(self.model, predictors, target, cv=cv)
+        predictors_scaled = self.__get_newly_scaled_data__(predictors)
+        return cross_val_predict(self.model, predictors_scaled, target, cv=cv)
 
     def cross_val_score(self, predictors: np.array, target: np.array, cv: int, scoring='accuracy'):
         if self.model is None:
             self.model = self.get_model()
-        return cross_val_score(self.model, predictors, target, cv=cv, scoring=scoring)
+        predictors_scaled = self.__get_newly_scaled_data__(predictors)
+        return cross_val_score(self.model, predictors_scaled, target, cv=cv, scoring=scoring)
 
     def get_model(self):
         pass
@@ -113,14 +117,17 @@ class LearningMachine:
     def predict_proba(self, prediction_data: np.array):
         if self.model is None:
             self.model = self.get_model()
-        return self.model.predict_proba(prediction_data)
+        prediction_data_scaled = self.scaler.transform(prediction_data)
+        return self.model.predict_proba(prediction_data_scaled)
 
     def compare_prediction_with_results(self, test_set_target: np.array):
-        self.accuracy = accuracy_score(self.prediction, test_set_target )
+        self.accuracy = accuracy_score(self.prediction, test_set_target)
         self.__print_statistical_data__(test_set_target)
 
-    def __print_statistical_data__(self, test_set_target: np.array):
-        pass
+    def __print_statistical_data__(self, np_test_set_target: np.array):
+        self.accuracy = self.model.score(self.prediction, np_test_set_target)
+        print(confusion_matrix(np_test_set_target, self.prediction))
+        print(classification_report(np_test_set_target, self.prediction))
 
     def print_details(self):
         print('optimizer={}, loss={}, np_predictors.shape={}, np_target.shape={}, np_pred_data.shape={}'.format(
@@ -189,6 +196,11 @@ class LmLogisticRegression(LearningMachine):
         print(classification_report(np_test_set_target, self.prediction))
         # print("Tuned Logistic Regression Parameter: {}".format(self.model.best_params_))
         # print("Tuned Logistic Regression Accuracy: {}".format(self.model.best_score_))
+
+
+class LmMLPClassifier(LearningMachine):
+    def get_model(self):
+        return MLPClassifier(hidden_layer_sizes=(30,30,30))
 
 
 class LmSequential(LearningMachine):

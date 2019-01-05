@@ -43,7 +43,7 @@ class PortfolioTabDropDownHandler(DropDownHandler):
         default_dict = {
             PODD.PERIOD_AGGREGATION: default_value if default_value else 5,
             PODD.REFRESH_INTERVAL: default_value if default_value else 300,
-            PODD.SECOND_GRAPH_RANGE: [1, 200],
+            PODD.SECOND_GRAPH_RANGE: [1, 400],
             PODD.INDICATOR: self._indicator_options[0]['value'],
         }
         # print('__get_default_value__: {}: {}'.format(drop_down_type, default_dict.get(drop_down_type, None)))
@@ -93,6 +93,7 @@ class PortfolioTabDropDownHandler(DropDownHandler):
             {'label': '60 days', 'value': 60},
             {'label': '100 days', 'value': 100},
             {'label': '200 days', 'value': 200},
-            {'label': '400 days', 'value': 400}
+            {'label': '400 days', 'value': 400},
+            {'label': '600 days', 'value': 600}
         ]
 

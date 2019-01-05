@@ -35,6 +35,7 @@ class SystemConfiguration:
             return
         self.config = PatternConfiguration()
         self.index_config = IndexConfiguration([INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100])
+        # self.index_config = IndexConfiguration([INDICES.CRYPTO_CCY])
         self.db_stock = StockDatabase()
         self.pattern_table = PatternTable()
         self.trade_table = TradeTable()

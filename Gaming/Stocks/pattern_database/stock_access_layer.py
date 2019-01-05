@@ -6,7 +6,6 @@ Date: 2018-05-14
 """
 
 from sqlalchemy import create_engine, MetaData
-from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, DateTime, Time
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.mydates import MyDate
@@ -91,6 +90,13 @@ class AccessLayer4Stock(AccessLayer):
     def __get_table__(self):
         return StocksTable()
 
+    def get_actual_price_for_symbol(self, symbol: str, ts_from: int) -> float:
+        query = "SELECT * FROM stocks WHERE symbol='{}' AND Timestamp >= {} LIMIT 1".format(symbol, ts_from)
+        df_result = self.select_data_by_query(query)
+        if df_result.empty:
+            return 0
+        return df_result.iloc[0][DC.CLOSE]
+
 
 class AccessLayer4Pattern(AccessLayer):
     def __get_table__(self):
@@ -169,7 +175,7 @@ class StockInsertHandler:
             self._input_dict_list.append(input_dict)
 
 
-class StockDatabase(BaseDatabase):
+class StockDatabaseOld(BaseDatabase):
     def __init__(self):
         BaseDatabase.__init__(self)
         self._index_config = IndexConfiguration([INDICES.CRYPTO_CCY])

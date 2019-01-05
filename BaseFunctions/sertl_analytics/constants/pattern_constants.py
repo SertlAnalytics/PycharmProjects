@@ -233,16 +233,18 @@ class MT:  # Model Types
     RANDOM_FOREST = 'Random Forest'
     NN = 'Neural Network'
     OPTIMIZER = 'Optimizer'
+    MLP_CLASSIFIER = 'MLP Classifier'
 
     @staticmethod
     def get_all():
         return [MT.LOGISTIC_REGRESSION, MT.K_NEAREST_NEIGHBORS, MT.LINEAR_REGRESSION,
                 MT.SVM, MT.DECISION_TREE,
-                MT.RANDOM_FOREST, MT.NN]
+                MT.RANDOM_FOREST, MT.NN, MT.MLP_CLASSIFIER]
 
     @staticmethod
     def get_all_classifiers(with_optimizer=False):
-        base_list = [MT.LOGISTIC_REGRESSION, MT.K_NEAREST_NEIGHBORS, MT.SVM, MT.DECISION_TREE, MT.RANDOM_FOREST]
+        base_list = [MT.LOGISTIC_REGRESSION, MT.K_NEAREST_NEIGHBORS, MT.SVM, MT.DECISION_TREE,
+                     MT.RANDOM_FOREST, MT.MLP_CLASSIFIER]
         if with_optimizer:
             base_list.append(MT.OPTIMIZER)
         return base_list

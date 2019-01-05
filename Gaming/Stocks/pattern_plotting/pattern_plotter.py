@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, FD, PRD, BT, TSTR
+from sertl_analytics.constants.pattern_constants import CN, FD, PRD, DC
 from sertl_analytics.mydates import MyDate
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,20 +46,26 @@ class PatternPlotter:
     def plot_data_frame(self):
         with_close_plot = self.sys_config.config.plot_close
         with_volume_plot = self.sys_config.config.plot_volume
+        with_breakout_plot = self.sys_config.config.plot_breakouts
 
-        if with_close_plot:
-            fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(15, 10), sharex='all')
-            self.__plot_close__(axes[0])
-            self.__plot_volume__(axes[2])
-            self.axes_for_candlesticks = axes[1]
+        if with_breakout_plot:
+            fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(15, 7), sharex='all')
+            self.axes_for_candlesticks = axes[0]
+            self.__plot_breakouts__(axes[1])
         else:
-            if with_volume_plot:
-                fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(15, 7), sharex='all')
-                self.__plot_volume__(axes[1])
-                self.axes_for_candlesticks = axes[0]
+            if with_close_plot:
+                fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(15, 10), sharex='all')
+                self.__plot_close__(axes[0])
+                self.__plot_volume__(axes[2])
+                self.axes_for_candlesticks = axes[1]
             else:
-                fig, axes = plt.subplots(figsize=(15, 7))
-                self.axes_for_candlesticks = axes
+                if with_volume_plot:
+                    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(15, 7), sharex='all')
+                    self.__plot_volume__(axes[1])
+                    self.axes_for_candlesticks = axes[0]
+                else:
+                    fig, axes = plt.subplots(figsize=(15, 7))
+                    self.axes_for_candlesticks = axes
 
         # self.axes_for_candlesticks.set_yscale('log')
         self.axes_for_candlesticks.set_ylim(self.__get_y_dlim_for_candlestick_plot__())
@@ -333,6 +339,39 @@ class PatternPlotter:
         axis.plot(self.df.loc[:, CN.DATEASNUM], self.df.loc[:, CN.VOL])
         axis.grid()
         axis.legend(loc='upper left')
+
+    def __plot_breakouts__(self, axis):
+        df = self.__get_df_for_breakouts__()
+        axis.plot(df.loc[:, CN.DATEASNUM], df.loc[:, 'Breakout4'])
+        axis.plot(df.loc[:, CN.DATEASNUM], df.loc[:, 'BreakoutSum'])
+        axis.grid()
+        axis.legend(loc='upper left')
+
+    def __get_df_for_breakouts__(self):
+        df = self.df[[CN.DATEASNUM, CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL]]
+        std_dev_list = []
+        breakout_list = []
+        breakout_sum_list = []
+        std_dev_range = 30
+        for k in range(0, df.shape[0]):
+            breakout_flag = 0  # default
+            if len(std_dev_list) not in [0, df.shape[0] - 1]:
+                close_k_1 = df.iloc[k-1][CN.CLOSE]
+                close_k = df.iloc[k][CN.CLOSE]
+                previous_std_dev = std_dev_list[-1]
+                breakout_flag = int((close_k - close_k_1)/previous_std_dev)
+            breakout_list.append(breakout_flag)
+            breakout_sum_list.append(sum(breakout_list))
+
+            left_border = max(0, k-std_dev_range)
+            right_border = 3 if k < 2 else k + 1
+            df_part = df.iloc[left_border:right_border]
+            std_dev = df_part[CN.CLOSE].std()
+            std_dev_list.append(std_dev)
+        df = df.assign(StdDev4=std_dev_list)
+        df = df.assign(Breakout4=breakout_list)
+        df = df.assign(BreakoutSum=breakout_sum_list)
+        return df
 
     def __fill_plot_container_list__(self):
         color_handler = PatternColorHandler()

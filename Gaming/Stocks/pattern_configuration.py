@@ -29,6 +29,7 @@ class PatternConfiguration:
         self.plot_min_max = False
         self.plot_only_pattern_with_fibonacci_waves = True
         self.plot_volume = False
+        self.plot_breakouts = False
         self.plot_close = False
         self.length_for_global_min_max = 50  # a global minimum or maximum must have at least this number as distance
         self.length_for_global_min_max_fibonacci = 10  # ...for fibonacci

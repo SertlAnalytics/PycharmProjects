@@ -17,6 +17,7 @@ from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from pattern_configuration import PatternConfiguration
+from pattern_predictor_optimizer import PatternPredictorOptimizer
 from sertl_analytics.mymath import EntropyHandler
 
 
@@ -54,10 +55,11 @@ class PatternFeaturesSelector:
 
 
 class PatternPredictor:
-    def __init__(self, db_stock: StockDatabase, pattern_type: str, skip_condition_list=None):
+    def __init__(self, optimizer: PatternPredictorOptimizer, pattern_type: str, skip_condition_list=None):
         # print('Loading Predictor: {}'.format(self.__class__.__name__))
         self._predictor = self.__class__.__name__
-        self.db_stock = db_stock
+        self._optimizer = optimizer
+        self.db_stock = self._optimizer.db_stock
         self.pattern_type = pattern_type
         self.skip_condition_list = skip_condition_list
         self.feature_table = self.__get_table_with_prediction_features__()
@@ -81,6 +83,14 @@ class PatternPredictor:
         where_clause = self._query_for_feature_and_label_data[pos_where:]
         elements = self._df_features_with_labels_and_id.shape[0]
         print('Loading Predictor {}: {} elements found for {}'.format(self._predictor, elements, where_clause))
+
+    @property
+    def predictor(self):
+        return ''
+
+    @property
+    def feature_table_name(self):
+        return ''
 
     @property
     def feature_columns(self):
@@ -123,6 +133,13 @@ class PatternPredictor:
                 return_dict[label] = round(prediction, -1)
             else:
                 return_dict[label] = int(prediction)
+
+            # optimal_prediction = self._optimizer.get_optimal_prediction(
+            #     self.feature_table_name, self.predictor, label, self.pattern_type, np_array
+            # )
+            # print('optimal_prediction for {}-{}-{}-{}: {} ({})'.format(
+            #     self.feature_table_name, self.predictor, label, self.pattern_type, optimal_prediction, return_dict[label]
+            # ))
         return return_dict
 
     def __get_base_query_with_pattern_type_condition__(self, base_query: str):
@@ -190,6 +207,11 @@ class PatternPredictor:
             predictor.fit(x_train, y_train)
             self.__print_report__(x_train, y_train, predictor, label_column)
 
+        # print('__train_model__: pattern_type_label={}_{}'.format(self.pattern_type, label_column))
+
+        # self._optimizer.retrain_trained_models(
+        #     self.feature_table_name, self.predictor, label_column, self.pattern_type,x_train, y_train)
+
     def __perform_test_on_training_data__(self, x_input, y_input, predictor, label_column: str):
         X_train, X_test, y_train, y_test = train_test_split(x_input, y_input, test_size=0.3)
         predictor.fit(X_train, y_train)
@@ -254,6 +276,14 @@ class PatternPredictor:
 
 
 class PatternPredictorTouchPoints(PatternPredictor):
+    @property
+    def predictor(self):
+        return PRED.TOUCH_POINT
+
+    @property
+    def feature_table_name(self):
+        return STBL.PATTERN
+
     def __get_table_with_prediction_features__(self) -> PatternTable:
         return PatternTable()
 
@@ -270,6 +300,14 @@ class PatternPredictorTouchPoints(PatternPredictor):
 
 
 class PatternPredictorBeforeBreakout(PatternPredictor):
+    @property
+    def predictor(self):
+        return PRED.BEFORE_BREAKOUT
+
+    @property
+    def feature_table_name(self):
+        return STBL.PATTERN
+
     def __get_table_with_prediction_features__(self) -> PatternTable:
         return PatternTable()
 
@@ -286,6 +324,14 @@ class PatternPredictorBeforeBreakout(PatternPredictor):
 
 
 class PatternPredictorAfterBreakout(PatternPredictor):
+    @property
+    def predictor(self):
+        return PRED.AFTER_BREAKOUT
+
+    @property
+    def feature_table_name(self):
+        return STBL.PATTERN
+
     def __get_table_with_prediction_features__(self) -> PatternTable:
         return PatternTable()
 
@@ -302,6 +348,14 @@ class PatternPredictorAfterBreakout(PatternPredictor):
 
 
 class PatternPredictorForTrades(PatternPredictor):
+    @property
+    def predictor(self):
+        return PRED.FOR_TRADE
+
+    @property
+    def feature_table_name(self):
+        return STBL.TRADE
+
     def __get_table_with_prediction_features__(self) -> TradeTable:
         return TradeTable()
 
@@ -324,8 +378,8 @@ class PatternMasterPredictor:
         self.pattern_table = api.pattern_table
         self.trade_table = api.trade_table
         self.predictor_optimizer = api.predictor_optimizer
-        self.predictor_dict = {}
-        # self.__init_predictor_dict__()  # currently we don't need this - we'll do that later per ticker id
+        self._predictor_dict = {}
+        self._skip_condition_list = None
 
     @property
     def table(self):
@@ -336,13 +390,13 @@ class PatternMasterPredictor:
         return ''
 
     def get_feature_columns(self, pattern_type: str):
-        predictor = self.predictor_dict[pattern_type]
+        predictor = self.__get_predictor_for_pattern_type__(pattern_type)
         return predictor.feature_columns
 
     def predict_for_label_columns(self, pattern_type: str, x_data: list):
-        predictor = self.predictor_dict[pattern_type]
+        predictor = self.__get_predictor_for_pattern_type__(pattern_type)
         result_dict_for_one_predictor = predictor.predict_for_label_columns(x_data)
-        if predictor.is_ready_for_prediction and False:  # ToDo anywhen....
+        if predictor.is_ready_for_prediction and False:  # ToDo any when....
             result_dict_for_optimal_predictor = self.predict_optimal_for_label_columns(
                 pattern_type, x_data, predictor.label_columns)
             for labels in predictor.label_columns:
@@ -355,21 +409,28 @@ class PatternMasterPredictor:
                 for label in label_columns}
 
     def get_sorted_nearest_neighbor_entry_list(self, pattern_type: str):
-        predictor = self.predictor_dict[pattern_type]
+        predictor = self.__get_predictor_for_pattern_type__(pattern_type)
         return predictor.get_sorted_nearest_neighbor_entry_list_for_previous_prediction()
 
     def init_without_condition_list(self, ticker_id: str, and_clause: str):
-        self.__init_predictor_dict__(self.__get_skip_condition_list__(ticker_id, and_clause))
+        self._skip_condition_list = self.__get_skip_condition_list__(ticker_id, and_clause)
+        # self.__init_predictor_dict__(self._skip_condition_list)
 
-    def __init_predictor_dict__(self, skip_condition_list=None):
+    def __init_predictor_dict__(self, skip_condition_list=None):  # ToDo - candidate for deletion
         for pattern_type in FT.get_all():
-            self.predictor_dict[pattern_type] = \
-                self.__get_predictor_for_pattern_type__(pattern_type, skip_condition_list)
+            self._predictor_dict[pattern_type] = \
+                self.__get_new_predictor_for_pattern_type__(pattern_type, skip_condition_list)
 
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         pass
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+    def __get_predictor_for_pattern_type__(self, pattern_type: str):
+        if pattern_type not in self._predictor_dict:
+            self._predictor_dict[pattern_type] = \
+                self.__get_new_predictor_for_pattern_type__(pattern_type, self._skip_condition_list)
+        return self._predictor_dict[pattern_type]
+
+    def __get_new_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
         pass
 
 
@@ -385,8 +446,8 @@ class PatternMasterPredictorTouchPoints(PatternMasterPredictor):
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
-        return PatternPredictorTouchPoints(self.db_stock, pattern_type, skip_condition_list)
+    def __get_new_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorTouchPoints(self.predictor_optimizer, pattern_type, skip_condition_list)
 
 
 class PatternMasterPredictorBeforeBreakout(PatternMasterPredictor):
@@ -401,8 +462,8 @@ class PatternMasterPredictorBeforeBreakout(PatternMasterPredictor):
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
-        return PatternPredictorBeforeBreakout(self.db_stock, pattern_type, skip_condition_list)
+    def __get_new_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorBeforeBreakout(self.predictor_optimizer, pattern_type, skip_condition_list)
 
 
 class PatternMasterPredictorAfterBreakout(PatternMasterPredictor):
@@ -417,8 +478,8 @@ class PatternMasterPredictorAfterBreakout(PatternMasterPredictor):
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
-        return PatternPredictorAfterBreakout(self.db_stock, pattern_type, skip_condition_list)
+    def __get_new_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorAfterBreakout(self.predictor_optimizer, pattern_type, skip_condition_list)
 
 
 class PatternMasterPredictorForTrades(PatternMasterPredictor):
@@ -433,8 +494,8 @@ class PatternMasterPredictorForTrades(PatternMasterPredictor):
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         return ["Ticker_ID = '{}'".format(ticker_id), and_clause]
 
-    def __get_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
-        return PatternPredictorForTrades(self.db_stock, pattern_type, skip_condition_list)
+    def __get_new_predictor_for_pattern_type__(self, pattern_type: str, skip_condition_list: list):
+        return PatternPredictorForTrades(self.predictor_optimizer, pattern_type, skip_condition_list)
 
 
 class PatternMasterPredictorHandler:

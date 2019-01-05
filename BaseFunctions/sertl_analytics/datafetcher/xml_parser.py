@@ -92,6 +92,17 @@ class XMLParser4Nasdaq100(XMLParser):
     def __init__(self):
         api = XMLParserApi()
         api.url = 'https://en.wikipedia.org/wiki/NASDAQ-100'
+        api.tag = 'table'
+        api.tag_attribute_dic = {'class': 'wikitable sortable'}
+        api.sub_tag = 'tr'
+        api.sub_tag_dic = {'ticker': 1, 'name': 0}
+        XMLParser.__init__(self, api)
+
+
+class XMLParser4Nasdaq100Old(XMLParser):
+    def __init__(self):
+        api = XMLParserApi()
+        api.url = 'https://en.wikipedia.org/wiki/NASDAQ-100'
         api.parent_tag = 'div'
         api.parent_tag_attribute_dic = {'class': 'div-col columns column-width'}
         api.tag = 'ul'

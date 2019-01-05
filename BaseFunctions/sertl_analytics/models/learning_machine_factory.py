@@ -10,6 +10,7 @@ from sertl_analytics.models.learning_machine import LearningMachine
 from sertl_analytics.models.learning_machine import LmKNeighborsClassifier, LmSVM
 from sertl_analytics.models.learning_machine import LmDecisionTreeClassifier, LmLogisticRegression
 from sertl_analytics.models.learning_machine import LmSequentialClassification, LmRandomForestClassifier
+from sertl_analytics.models.learning_machine import LmMLPClassifier
 
 
 class LearningMachineFactory:
@@ -56,5 +57,7 @@ class LearningMachineFactory:
             return LmSVM()
         elif model_type == MT.NN:
             return LmSequentialClassification()
+        elif model_type == MT.MLP_CLASSIFIER:
+            return LmMLPClassifier()
         else:
             return LmKNeighborsClassifier()

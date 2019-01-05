@@ -29,9 +29,14 @@ class PatternPredictorOptimizer:
         self._trained_model_dict = {}
         self._is_test = False
 
+    @property
+    def db_stock(self):
+        return self._db_stock
+
     def predict(self, table_name: str, predictor: str, label: str, pattern_type: str, x_data: list):
+        self.__train_models__(table_name, predictor, label, pattern_type)
         x_data_array = self._access_layer_prediction.get_x_data_in_correct_format(x_data)
-        return self.__get_optimal_prediction__(table_name, predictor, label, pattern_type, x_data_array)
+        return self.get_optimal_prediction(table_name, predictor, label, pattern_type, x_data_array)
 
     def calculate_class_metrics_for_predictor_and_label_for_today(self, pattern_list: list):
         table_list = [STBL.PATTERN, STBL.TRADE]
@@ -54,22 +59,25 @@ class PatternPredictorOptimizer:
         df_group_max.reset_index(inplace=True)
         return df_group_max
 
-    def __get_optimal_prediction__(
-            self, table_name: str, predictor: str, label: str, pattern_type: str, x_data: np.array):
+    def get_optimal_prediction(self, table_name: str, predictor: str, label: str, pattern_type: str, x_data: np.array):
         prediction_precision_optimal = 0
         prediction_optimal = - math.inf
         for model_name in self._model_dict:
-            prediction = self.__get_prediction_for_model__(model_name, table_name, predictor, label, pattern_type, x_data)
-            prediction_precision = self.__get_precision_for_model_value__(
-                model_name, table_name, predictor, label, pattern_type, prediction)
-            if prediction_precision > prediction_precision_optimal:
-                prediction_precision_optimal = prediction_precision
-                prediction_optimal = prediction
+            prediction = self.__get_prediction_for_model__(
+                model_name, table_name, predictor, label, pattern_type, x_data)
+            if prediction is not None:
+                prediction_precision = self.__get_precision_for_model_value__(
+                    model_name, table_name, predictor, label, pattern_type, prediction)
+                if prediction_precision > prediction_precision_optimal:
+                    prediction_precision_optimal = prediction_precision
+                    prediction_optimal = prediction
         return prediction_optimal
 
     def __get_prediction_for_model__(
             self, model_name, table: str, predictor: str, label: str, pattern_type: str, x_data: np.array):
         trained_model = self.__get_trained_model__(model_name, table, predictor, label, pattern_type)
+        if trained_model is None:
+            return None
         prediction = trained_model.predict(x_data)[0]
         return prediction
 
@@ -135,16 +143,34 @@ class PatternPredictorOptimizer:
                                         np.logical_and(df[MDC.PREDICTOR] == predictor, df[MDC.LABEL] == label)))]
         return sorted(list(set(df_filtered[MDC.VALUE])))
 
+    def __train_models__(self, table_name: str, predictor: str, label_column: str, pattern_type: str):
+        for model_name in self._model_dict:
+            key = self.__get_key_for_trained_model__(model_name, table_name, predictor, label_column, pattern_type)
+            if key not in self._trained_model_dict:
+                x_train, y_train = self._access_layer_prediction.get_x_data_y_train_data_for_predictor(
+                    table_name, predictor, label_column, pattern_type)
+                lm = LearningMachineFactory.get_lm_by_model_type(model_name)  # we need a new learning machine for each key
+                lm.fit(x_train, y_train)
+                self._trained_model_dict[key] = lm
+
     def __get_trained_model__(
             self, model_name: str, table_name: str, predictor: str, label_column: str, pattern_type: str):
         key = self.__get_key_for_trained_model__(model_name, table_name, predictor, label_column, pattern_type)
-        if key not in self._trained_model_dict:
-            x_train, y_train = self._access_layer_prediction.get_x_data_y_train_data_for_predictor(
-                table_name, predictor, label_column, pattern_type)
-            lm = LearningMachineFactory.get_lm_by_model_type(model_name)  # we need a new learning machine for each key
-            lm.fit(x_train, y_train)
-            self._trained_model_dict[key] = lm
-        return self._trained_model_dict[key]
+        if key in self._trained_model_dict:
+            return self._trained_model_dict[key]
+
+    def retrain_trained_models(
+            self, table_name: str, predictor: str, label_column: str, pattern_type: str, x_train, y_train):
+        y_train_set = set(y_train)
+        for model_name, model in self._model_dict.items():
+            key = self.__get_key_for_trained_model__(model_name, table_name, predictor, label_column, pattern_type)
+            if len(y_train_set) == 1:
+                if key in self._trained_model_dict:  # remove this from the dict since no training is possible
+                    del self._trained_model_dict[key]
+            else:
+                if key not in self._trained_model_dict:  # we need a new learning machine for each key
+                    self._trained_model_dict[key] = LearningMachineFactory.get_lm_by_model_type(model_name)
+                self._trained_model_dict[key].fit(x_train, y_train)
 
     def __calculate_class_metrics__(self, table_name: str, predictor: str, label: str, pattern_type: str):
         x_train, y_train = self._access_layer_prediction.get_x_data_y_train_data_for_predictor(

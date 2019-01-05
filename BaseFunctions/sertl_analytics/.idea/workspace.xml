@@ -2,39 +2,22 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f337eff7-2e2d-415d-b4ab-cf8d55a29aa3" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/learning_machine_factory.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_access_layer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_access_layer_prediction.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_predictor_nn_optimizer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/reinforcement_learning_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/neural_network_learning_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/pattern_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datafetcher/database_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/datafetcher/database_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exchanges/bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/exchanges/bitfinex.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datafetcher/xml_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/datafetcher/xml_parser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/learning_machine.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/learning_machine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/performance_measure.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/performance_measure.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/roc_auc_score_multi.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/roc_auc_score_multi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mydates.py" beforeDir="false" afterPath="$PROJECT_DIR$/mydates.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/mymath.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_plotter_for_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_plotter_for_statistics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/run_pattern_detection_with_dash.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/run_pattern_detection_with_dash.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_create_stock_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_create_stock_table.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_portfolio.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_portfolio.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_matrix.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_matrix.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_predictor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_predictor_optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_predictor_optimizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_access_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_access_layer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_plotting/pattern_plotter.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_plotting/pattern_plotter.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_predictor_optimizer_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_predictor_optimizer_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_box.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -45,11 +28,14 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="nn_collector.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/models/nn_collector.py">
+      <file leaf-file-name="learning_machine.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/models/learning_machine.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="777">
-              <caret line="74" selection-start-line="74" selection-end-line="74" />
+            <state relative-caret-position="238">
+              <caret line="41" selection-start-line="41" selection-end-line="41" />
+              <folding>
+                <element signature="e#179#197#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -80,6 +66,8 @@
       <find>_request</find>
       <find>test'</find>
       <find>hidden_layers</find>
+      <find>StandardScaler</find>
+      <find>np_prediction_data</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -131,7 +119,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -192,6 +179,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -262,9 +250,9 @@
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info active="true" anchor="bottom" id="Event Log" order="7" sideWeight="0.50280225" side_tool="true" visible="true" weight="0.32392156" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50280225" side_tool="true" visible="true" weight="0.32392156" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49559647" weight="0.32862744" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49959967" weight="0.32784313" />
@@ -302,13 +290,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
-          <caret line="28" selection-start-line="28" selection-end-line="28" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/exchange_abc.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
@@ -649,13 +630,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/learning_machine.py">
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/sklearn/model_selection/_validation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="542">
-          <caret line="77" column="57" lean-forward="true" selection-start-line="77" selection-start-column="57" selection-end-line="77" selection-end-column="57" />
-          <folding>
-            <element signature="e#179#197#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="278">
+          <caret line="570" column="57" selection-start-line="570" selection-start-column="57" selection-end-line="570" selection-end-column="57" />
         </state>
       </provider>
     </entry>
@@ -663,6 +641,16 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="777">
           <caret line="74" selection-start-line="74" selection-end-line="74" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/learning_machine.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="41" selection-start-line="41" selection-end-line="41" />
+          <folding>
+            <element signature="e#179#197#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

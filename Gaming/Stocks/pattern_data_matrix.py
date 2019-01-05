@@ -54,6 +54,8 @@ class PatternDataMatrix:
 
     def get_x_y_off_set_for_shape_annotation(self, center_xy: tuple) -> list:
         cell_with_value = self.__get_cell_for_values__(center_xy)
+        if cell_with_value is None:
+            return [0, 0]
         row_number, column_number = cell_with_value.get_row_column_numbers()
         cell_for_text = self.__get_cell_with_text__(column_number, row_number)
         x, y = cell_for_text.get_left_bottom_coordinates()

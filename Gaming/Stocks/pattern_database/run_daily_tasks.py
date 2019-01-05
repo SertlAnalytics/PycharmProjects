@@ -25,6 +25,7 @@ process_single_ticker_id = False
 # stock_db_updater.update_trade_records(16, 16)
 
 if process_single_ticker_id:
+    # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
     stock_db_updater.update_wave_records_for_daily_period('AAPL', 400)
 else:
     is_weekday = datetime.today().weekday() in [1, 2, 3, 4, 5]  # tuesday till saturday => update stock data as well

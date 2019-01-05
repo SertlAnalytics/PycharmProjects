@@ -5,11 +5,14 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-10
 """
 
-from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, INDICES
+from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern_detection_controller import PatternDetectionController
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
+from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
+from sertl_analytics.exchanges.exchange_cls import Balance
+from pattern_database.stock_access_layer import AccessLayer4Asset, AccessLayer4Stock
 
 
 class StockDatabaseUpdater:
@@ -80,4 +83,29 @@ class StockDatabaseUpdater:
         self.sys_config.data_provider.from_db = False
         detector = self.pattern_controller.get_detector_for_fibonacci(self.sys_config, ticker_id)
         detector.save_wave_data()
+
+    def fill_asset_gaps(self, ts_last: int, ts_to: int, ts_interval: int):
+        access_layer_stocks = AccessLayer4Stock(self.db_stock)
+        last_asset_query = 'SELECT * FROM asset WHERE Validity_Timestamp={}'.format(ts_to)
+        df_last_asset = AccessLayer4Asset(self.db_stock).select_data_by_query(last_asset_query)
+        ts_actual = ts_last + ts_interval
+        while ts_actual < ts_to:
+            dt_saving = str(MyDate.get_date_time_from_epoch_seconds(ts_actual))
+            for index, asset_row in df_last_asset.iterrows():
+                equity_type = asset_row[DC.EQUITY_TYPE]
+                asset = asset_row[DC.EQUITY_NAME]
+                amount = asset_row[DC.QUANTITY]
+                value_total = asset_row[DC.VALUE_TOTAL]
+                balance = Balance('exchange', asset, amount, amount)
+                if equity_type == EQUITY_TYPE.CASH:
+                    balance.current_value = value_total
+                else:
+                    if equity_type == EQUITY_TYPE.CRYPTO:
+                        asset = asset + 'USD'
+                    current_price = access_layer_stocks.get_actual_price_for_symbol(asset, ts_actual)
+                    balance.current_value = value_total if current_price == 0 else round(amount * current_price, 2)
+                data_dict = AssetDataDictionary().get_data_dict_for_target_table_for_balance(
+                    balance, ts_actual, dt_saving)
+                self.db_stock.insert_asset_entry(data_dict)
+            ts_actual += ts_interval
 

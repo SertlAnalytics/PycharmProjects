@@ -82,11 +82,13 @@ class MyDashTab4Configuration(MyDashBaseTab):
         @self.app.callback(
             Output('my_dashboard_sub_title_div', 'children'),
             [Input('my_switch_trading_mode_button', 'children'),
-             Input('my_configuration_order_maximum', 'value')])
-        def handle_callback_for_dash_board_title(button_text: str, order_maximum: int):
+             Input('my_configuration_order_maximum', 'value'),
+             Input('my_configuration_sound_machine_state', 'value')])
+        def handle_callback_for_dash_board_title(button_text: str, order_maximum: int, state_sound: str):
+            sound_str = '' if state_sound == 'active' else ' (sound: inactive)'
             if self._trade_handler_online.is_simulation:
-                return 'simulation'
-            return 'active!!! - max. buy value: {:d}'.format(order_maximum)
+                return 'simulation{}'.format(sound_str)
+            return 'active!!! - max. buy value: {:d}{}'.format(order_maximum, sound_str)
 
     def __init_callback_for_configuration_tables__(self):
         @self.app.callback(
