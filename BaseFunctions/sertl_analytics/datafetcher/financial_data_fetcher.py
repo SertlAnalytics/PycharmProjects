@@ -135,6 +135,9 @@ class APIBaseFetcher:
 class AlphavantageJSONFetcher (APIBaseFetcher):
     _request_interval_required = 15  # we have only 5 _request per minute for free api-key, 15 instead of 12 for security
 
+    def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL):
+        return {'symbol': ticker, 'period': period, 'aggregation': aggregation, 'output_size': output_size}
+
     def retrieve_data(self, **kwargs):
         # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):
         APIBaseFetcher.retrieve_data(self, **kwargs)
@@ -354,6 +357,9 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
 
 
 class BitfinexCryptoFetcher(APIBaseFetcher):
+    def get_kw_args(self, period: str, aggregation: int, ticker: str, section='hist', limit=400):
+        return {'symbol': ticker, 'period': period, 'aggregation': aggregation, 'section': section, 'limit': limit}
+
     @property
     def kw_section(self) -> str:
         return self._kwargs.get('section', 'hist')

@@ -28,11 +28,13 @@ class AccessLayerPrediction:
         np_array = np_array.reshape(1, np_array.size)
         return np_array
 
-    def get_df_features_and_labels_for_predictor(self, table_name: str, predictor: str, pattern_type: str):
+    def get_df_features_and_labels_for_predictor(
+            self, table_name: str, predictor: str, pattern_type: str, skip_condition_list: list):
         key = self.__get_key_for_dict__(table_name, predictor, pattern_type)
         if key not in self._df_features_and_labels_dict:
             self._df_features_and_labels_dict[key] = \
-                self.__get_data_frame_for_features_and_labels__(table_name, predictor, pattern_type)
+                self.__get_data_frame_for_features_and_labels__(
+                    table_name, predictor, pattern_type, skip_condition_list)
         return self._df_features_and_labels_dict[key]
 
     def get_features_columns_for_predictor(self, table_name: str, predictor: str):
@@ -47,15 +49,17 @@ class AccessLayerPrediction:
             self._label_column_dict[key] = self.__get_label_columns__(table_name, predictor)
         return self._label_column_dict[key]
 
-    def get_x_data_y_train_data_for_predictor(self, table_name: str, predictor: str, label: str, pattern_type: str):
+    def get_x_data_y_train_data_for_predictor(
+            self, table_name: str, predictor: str, label: str, pattern_type: str, skip_condition_list: list):
         key = self.__get_key_for_dict__(table_name, predictor, label, pattern_type)
         if key not in self._x_data_y_train_data_dict:
-            df = self.get_df_features_and_labels_for_predictor(table_name, predictor, pattern_type)
+            print('Get x_y_data: {}'.format(key))
+            df = self.get_df_features_and_labels_for_predictor(table_name, predictor, pattern_type, skip_condition_list)
             self._x_data_y_train_data_dict[key] = self.__get_x_train_y_train_manipulated__(
                 df, table_name, predictor, label)
         return self._x_data_y_train_data_dict[key]
 
-    def __get_x_train_y_train_manipulated__(self, df: pd.DataFrame, table_name: str, predictor: str, label):
+    def __get_x_train_y_train_manipulated__(self, df: pd.DataFrame, table_name: str, predictor: str, label: str):
         """
         1. Remove the outlines  # ToDo - current we remove only the nn% at the ends - there are smarter ways
         2. Reduce the number of classes to 10
@@ -78,7 +82,8 @@ class AccessLayerPrediction:
         df_return = pd.DataFrame(df.drop(df_top.index, inplace=False))
         df_bottom = df_return[df_return[label] < value_bottom]
         df_return = pd.DataFrame(df_return.drop(df_bottom.index, inplace=False))
-        print('drop_outliers_before={} - after={}'.format(number_rows_before, df_return.shape[0]))
+        if number_rows_before > df_return.shape[0]:
+            print('drop_outliers_before={} - after={}'.format(number_rows_before, df_return.shape[0]))
         return df_return
 
     @staticmethod
@@ -94,8 +99,8 @@ class AccessLayerPrediction:
         # print('\ny_train_orig: {}\ny_train_compressed: {}'.format(list(y_train)[:50], list(y_train_compressed)[:50]))
         return y_train_compressed
 
-    def __get_data_frame_for_features_and_labels__(self, table_name: str, predictor: str, pattern_type: str)\
-            -> pd.DataFrame:
+    def __get_data_frame_for_features_and_labels__(
+            self, table_name: str, predictor: str, pattern_type: str, skip_condition_list: list)-> pd.DataFrame:
         if table_name == STBL.PATTERN:
             if predictor == PRED.TOUCH_POINT:
                 query = self._pattern_table.query_for_feature_and_label_data_touch_points
@@ -105,10 +110,20 @@ class AccessLayerPrediction:
                 query = self._pattern_table.query_for_feature_and_label_data_after_breakout
         else:
             query = self._trade_table.query_for_feature_and_label_data_for_trades
+        query = self.__get_query_with_skip_condition_list__(query, skip_condition_list)
         df = DatabaseDataFrame(self._db_stock, query).df
         if pattern_type != FT.ALL:
             df = df[df[DC.PATTERN_TYPE] == pattern_type]
         return df
+
+    @staticmethod
+    def __get_query_with_skip_condition_list__(query: str, skip_condition_list: list):
+        if skip_condition_list is None:
+            return query
+        skip_condition_all = ' AND '.join(skip_condition_list)
+        if query.find('WHERE') >= 0:  # already where clause available
+            return query + ' AND NOT ({})'.format(skip_condition_all)
+        return query + ' WHERE NOT ({})'.format(skip_condition_all)
 
     @staticmethod
     def __get_key_for_dict__(table_name: str, predictor: str, label='ALL', pattern_type=FT.ALL):

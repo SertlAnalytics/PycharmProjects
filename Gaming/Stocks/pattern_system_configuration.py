@@ -184,7 +184,7 @@ class SystemConfiguration:
 
     def get_semi_deep_copy(self):
         """
-        This function is necessary since db_stock can't be deeply copied - I don't know the reason...
+        This function is necessary since _db_stock can't be deeply copied - I don't know the reason...
         All other components don't make any problems. But nevertheless with this function we have control
         about which part has to be deeply copied and which can be used by reference.
         """

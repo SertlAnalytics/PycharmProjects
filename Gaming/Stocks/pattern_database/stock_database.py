@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, DateTime, Time
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
     CompanyTable, STBL, WaveTable, AssetTable, MetricTable
@@ -102,6 +103,7 @@ class StockDatabase(BaseDatabase):
         self._wave_table = WaveTable()
         self._asset_table = AssetTable()
         self._metric_table = MetricTable()
+        self._bitfinex_crypto_fetcher = BitfinexCryptoFetcher()
         self._alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
         self._alphavantage_stock_fetcher = AlphavantageStockFetcher()
         self._sleep_seconds = 5
@@ -211,13 +213,15 @@ class StockDatabase(BaseDatabase):
             return
         if ticker in company_dic and not company_dic[ticker].ToBeLoaded:
             return  # must not be loaded
-        output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
-        kw_args = {'symbol': ticker, 'period': period, 'aggregation': aggregation, 'output_size': output_size}
         try:
             if self._index_config.is_symbol_crypto(ticker):
-                fetcher = self._alphavantage_crypto_fetcher
+                # fetcher = self._alphavantage_crypto_fetcher
+                fetcher = self._bitfinex_crypto_fetcher
+                kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker)
             else:
                 fetcher = self._alphavantage_stock_fetcher
+                output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
+                kw_args = self._alphavantage_stock_fetcher.get_kw_args(period, aggregation, ticker, output_size)
             fetcher.retrieve_data(**kw_args)
         except KeyError:
             self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
@@ -244,6 +248,10 @@ class StockDatabase(BaseDatabase):
             self.__insert_data_into_table__(STBL.STOCKS, input_list)
             print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
         time.sleep(self._sleep_seconds)
+
+    def __get_kw_args_for_data_fetcher__(self, period: str, aggregation: int, output_size: str, ticker: str):
+        kw_args = {'symbol': ticker, 'period': period, 'aggregation': aggregation, 'output_size': output_size}
+        return kw_args
 
     def __get_company_dict__(self, symbol_input: str = '', like_input: str = ''):
         company_dict = {}

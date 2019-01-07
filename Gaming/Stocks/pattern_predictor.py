@@ -5,11 +5,12 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-08-22
 """
 
-from sertl_analytics.constants.pattern_constants import FT, STBL, PRED
+from sertl_analytics.constants.pattern_constants import FT, STBL, PRED, DC
 from sertl_analytics.models.nn_collector import NearestNeighborCollector
 import numpy as np
 import pandas as pd
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
+from pattern_database.stock_access_layer_prediction import AccessLayerPrediction
 from pattern_database.stock_database import DatabaseDataFrame
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.model_selection import train_test_split
@@ -59,34 +60,32 @@ class PatternPredictor:
         # print('Loading Predictor: {}'.format(self.__class__.__name__))
         self._predictor = self.__class__.__name__
         self._optimizer = optimizer
-        self.db_stock = self._optimizer.db_stock
-        self.pattern_type = pattern_type
-        self.skip_condition_list = skip_condition_list
-        self.feature_table = self.__get_table_with_prediction_features__()
-        self._features_columns_orig = self.__get_feature_columns_orig__()
-        self.label_columns = self.__get_label_columns__()
-        self._predictor_dict = self.__get_predictor_dict__()
-        self._query_for_feature_and_label_data = self.__get_query_for_feature_and_label_data__()
+        self._db_stock = self._optimizer.db_stock
+        self._access_layer_prediction = AccessLayerPrediction(self._db_stock)
+        self._pattern_type = pattern_type
+        self._skip_condition_list = skip_condition_list
         self._df_features_with_labels_and_id = self.__get_df_features_with_labels__()
+        self._feature_table = self.__get_table_with_prediction_features__()
+        self._features_columns_orig = self.__get_feature_columns_orig__()
+        self._label_columns = self.__get_label_columns__()
+        self._predictor_dict = self.__get_predictor_dict__()
         self._feature_columns = self.__get_feature_columns_by_information_gain__()
         self._neighbor_collector = None
-        if self.is_ready_for_prediction:
-            self._df_features = self._df_features_with_labels_and_id[self._feature_columns]
-            self._df_labels = self._df_features_with_labels_and_id[self.label_columns]
-            self._x_data = np.array(self._df_features)
-            self.__train_models__(True)
-        # self.__print_details__()
+        self._is_ready_for_prediction = True  # default
+        self.__train_models__(False)
         # print('self.x_data.shape={}'.format(self._x_data.shape))
-
-    def __print_details__(self):
-        pos_where = self._query_for_feature_and_label_data.find('WHERE')
-        where_clause = self._query_for_feature_and_label_data[pos_where:]
-        elements = self._df_features_with_labels_and_id.shape[0]
-        print('Loading Predictor {}: {} elements found for {}'.format(self._predictor, elements, where_clause))
 
     @property
     def predictor(self):
         return ''
+
+    @property
+    def pattern_type(self):
+        return self._pattern_type
+
+    @property
+    def label_columns(self):
+        return self._label_columns
 
     @property
     def feature_table_name(self):
@@ -98,17 +97,21 @@ class PatternPredictor:
 
     @property
     def is_ready_for_prediction(self):
-        return self._df_features_with_labels_and_id.shape[0] > 10
+        return self._is_ready_for_prediction
 
     def get_sorted_nearest_neighbor_entry_list_for_previous_prediction(self):
         return self._neighbor_collector.get_sorted_entry_list()
+
+    def __get_df_features_with_labels__(self):
+        return self._access_layer_prediction.get_df_features_and_labels_for_predictor(
+            self.feature_table_name, self.predictor, self._pattern_type, self._skip_condition_list)
 
     def __get_feature_columns_by_information_gain__(self) -> list:
         if self._df_features_with_labels_and_id.shape[0] == 0 or True:
             return self._features_columns_orig
         entropy_handler = EntropyHandler(self._df_features_with_labels_and_id,
-                                         self.label_columns, self._features_columns_orig)
-        for label in self.label_columns:
+                                         self._label_columns, self._features_columns_orig)
+        for label in self._label_columns:
             for feature in self._features_columns_orig:
                 information_gain = entropy_handler.calculate_information_gain_for_label_and_feature(label, feature)
                 if len(information_gain) > 1:
@@ -120,42 +123,29 @@ class PatternPredictor:
         np_array = np.array(x_data)
         np_array = np_array.reshape(1, np_array.size)
         return_dict = {}
-        collector_id = '{}_{}'.format(self.__class__.__name__, self.pattern_type)
+        collector_id = '{}_{}'.format(self.__class__.__name__, self._pattern_type)
         self._neighbor_collector = NearestNeighborCollector(self._df_features_with_labels_and_id, collector_id)
-        for label in self.label_columns:
+        for label in self._label_columns:
+            if label == DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF:
+                print(label)
             if self.is_ready_for_prediction:
                 prediction = self._predictor_dict[label].predict(np_array)[0]
                 dist, ind = self._predictor_dict[label].kneighbors(np_array)
                 self._neighbor_collector.add_dist_ind_array(ind, dist)
             else:
                 prediction = 0
-            if self.feature_table.is_label_column_for_regression(label):
+            if self._feature_table.is_label_column_for_regression(label):
                 return_dict[label] = round(prediction, -1)
             else:
                 return_dict[label] = int(prediction)
 
             # optimal_prediction = self._optimizer.get_optimal_prediction(
-            #     self.feature_table_name, self.predictor, label, self.pattern_type, np_array
+            #     self.feature_table_name, self.predictor, label, self._pattern_type, np_array
             # )
             # print('optimal_prediction for {}-{}-{}-{}: {} ({})'.format(
-            #     self.feature_table_name, self.predictor, label, self.pattern_type, optimal_prediction, return_dict[label]
+            #     self.feature_table_name, self.predictor, label, self._pattern_type, optimal_prediction, return_dict[label]
             # ))
         return return_dict
-
-    def __get_base_query_with_pattern_type_condition__(self, base_query: str):
-        if self.pattern_type != '':
-            if base_query.find('WHERE') >= 0:  # already where clause available
-                return base_query + " AND Pattern_Type = '{}'".format(self.pattern_type)
-            return base_query + " WHERE Pattern_Type = '{}'".format(self.pattern_type)
-        return base_query
-
-    def __get_base_query_with_skip_conditions__(self, base_query: str):
-        if self.skip_condition_list:
-            skip_condition_all = ' AND '.join(self.skip_condition_list)
-            if base_query.find('WHERE') >= 0:  # already where clause available
-                return base_query + ' AND NOT ({})'.format(skip_condition_all)
-            return base_query + ' WHERE NOT ({})'.format(skip_condition_all)
-        return base_query
 
     def __get_table_with_prediction_features__(self):
         pass
@@ -166,40 +156,35 @@ class PatternPredictor:
     def __get_label_columns__(self):
         return []
 
-    def __get_query_for_feature_and_label_data__(self):
-        pass
-
     def __get_y_train_for_label_column__(self, label_column: str) -> np.array:
         y_train = np.array(self._df_labels[label_column])
         return y_train.astype(np.int64) if y_train.dtype in ['float', 'float64'] else y_train
 
-    def __get_df_features_with_labels__(self):
-        return DatabaseDataFrame(self.db_stock, self._query_for_feature_and_label_data).df
-
     def __get_predictor_dict__(self) -> dict:
-        return {label: self.__get_predictor_for_label_column__(label) for label in self.label_columns}
+        return {label: self.__get_predictor_for_label_column__(label) for label in self._label_columns}
 
     def __get_predictor_for_label_column__(self, label_column: str):
-        if self.feature_table.is_label_column_for_regression(label_column):
+        if self._feature_table.is_label_column_for_regression(label_column):
             return KNeighborsRegressor(n_neighbors=7, weights='distance')
             # return RandomForestRegressor(n_estimators=3, random_state=42)
         else:
             return KNeighborsClassifier(n_neighbors=7, weights='distance')
             # return RandomForestClassifier(n_estimators=3, random_state=42)
 
-    @staticmethod
-    def __get_predict_probability__(predictor, x_data):
-        predict_probability = predictor.predict_proba(x_data).round(2)
-        return predict_probability
-
     def __train_models__(self, perform_test=False):
-        for label_columns in self.label_columns:
+        for label_columns in self._label_columns:
             self.__train_model__(label_columns, perform_test)
 
     def __train_model__(self, label_column: str, perform_test):
-        # print('\nTrain model for label "{}"'.format(label_column))
-        x_train = self._x_data
-        y_train = self.__get_y_train_for_label_column__(label_column)
+        x_train, y_train = self._access_layer_prediction.get_x_data_y_train_data_for_predictor(
+            self.feature_table_name, self.predictor, label_column, self._pattern_type, self._skip_condition_list
+        )
+        if x_train.shape[0] < 10 or not self._is_ready_for_prediction:
+            self._is_ready_for_prediction = False
+            return
+        # if label_column == DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF:
+        #     y_train_list = [3 if k % 2 == 1 else 2 for k in range(0, len(y_train))]
+        #     y_train = pd.Series(y_train_list)
         predictor = self._predictor_dict[label_column]
         if perform_test:
             self.__perform_test_on_training_data__(x_train, y_train, predictor, label_column)
@@ -207,10 +192,10 @@ class PatternPredictor:
             predictor.fit(x_train, y_train)
             self.__print_report__(x_train, y_train, predictor, label_column)
 
-        # print('__train_model__: pattern_type_label={}_{}'.format(self.pattern_type, label_column))
+        # print('__train_model__: pattern_type_label={}_{}'.format(self._pattern_type, label_column))
 
         # self._optimizer.retrain_trained_models(
-        #     self.feature_table_name, self.predictor, label_column, self.pattern_type,x_train, y_train)
+        #     self.feature_table_name, self.predictor, label_column, self._pattern_type,x_train, y_train)
 
     def __perform_test_on_training_data__(self, x_input, y_input, predictor, label_column: str):
         X_train, X_test, y_train, y_test = train_test_split(x_input, y_input, test_size=0.3)
@@ -219,13 +204,10 @@ class PatternPredictor:
 
     def __print_report__(self, x_input, y_input, predictor, label_column: str):
         rfc_pred = predictor.predict(x_input)
-        if self.feature_table.is_label_column_for_regression(label_column):
+        if self._feature_table.is_label_column_for_regression(label_column):
             self.__print_prediction_details__(y_input, rfc_pred, True)
         else:
             self.__print_prediction_details__(y_input, rfc_pred, False)
-            # print(confusion_matrix(y_input, rfc_pred))
-            # print('\n')
-            # print(classification_report(y_input, rfc_pred))
 
     @staticmethod
     def __print_prediction_details__(y_input, v_predict, for_regression: bool):
@@ -235,44 +217,6 @@ class PatternPredictor:
                 print('{:6.2f} / {:6.2f}: diff = {:6.2f}'.format(y_input[k], v_predict[k], y_input[k]-v_predict[k]))
             else:
                 print('{:2d} / {:2d}: diff = {:2d}'.format(y_input[k], v_predict[k], y_input[k] - v_predict[k]))
-
-    def __plot_train_data__(self, number_matches: int):
-        classes = ['No winner', 'Team 1', 'Team 2', 'Test match']
-        c_light = ['#FFAAAA', '#AAFFAA', '#AAAAFF', 'k']
-        matches = []
-        for i in range(0, len(c_light)):
-            matches.append(mpatches.Rectangle((0, 0), 1, 1, fc=c_light[i]))
-        cmap_light = ListedColormap(c_light[:3])
-        cmap_bold = ListedColormap(['#FF0000', '#00FF00', '#0000FF'])
-        self.__train_models__(4)
-        x_train = self.get_x_train(4)  # normal ranking
-        x_test = self.get_x_test(number_matches, 4)
-        x_min, x_max = x_train[:, 0].min() - 1, x_train[:, 0].max() + 1
-        y_min, y_max = x_train[:, 1].min() - 1, x_train[:, 1].max() + 1
-        h = round((max(x_max, y_max) - min (x_min, y_min))/100,2) # step size in the mesh
-        xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
-                             np.arange(y_min, y_max, h))
-        x = np.c_[xx.ravel(), yy.ravel()]
-
-        clf_list = [self.forest_clf, self.log_reg, self.knn_clf]
-        title_list = ['Random_Forest', 'Logistic_Regression', 'K-Nearest Neighbors: {}'.format(7)]
-
-        f, axes = plt.subplots(len(clf_list), 1, sharex='col', figsize=(7, 10))
-        plt.tight_layout()
-
-        for index, clfs in enumerate(clf_list):
-            ax = axes[index]
-            Z = clfs.predict(np.c_[xx.ravel(), yy.ravel()])
-            Z = Z.reshape(xx.shape)
-            ax.pcolormesh(xx, yy, Z, cmap=cmap_light)
-            ax.scatter(x_train[:, 0], x_train[:, 1], c=self.y_train, cmap=cmap_bold, label='Test')
-            ax.scatter(x_test[:, 0], x_test[:, 1], c=c_light[-1])
-            for i in range(0, x_test.shape[0]):
-                match = self.match_test_list[i]
-                ax.annotate(match.annotation, (x_test[i, 0], x_test[i, 1]))
-            ax.legend(matches, classes, loc='upper right')
-            ax.set_title(title_list[index])
-        plt.show()
 
 
 class PatternPredictorTouchPoints(PatternPredictor):
@@ -288,15 +232,10 @@ class PatternPredictorTouchPoints(PatternPredictor):
         return PatternTable()
 
     def __get_feature_columns_orig__(self):
-        return self.feature_table.feature_columns_touch_points
+        return self._feature_table.feature_columns_touch_points
 
     def __get_label_columns__(self):
-        return self.feature_table.label_columns_touch_points
-
-    def __get_query_for_feature_and_label_data__(self):
-        base_query = self.feature_table.query_for_feature_and_label_data_touch_points
-        base_query = self.__get_base_query_with_pattern_type_condition__(base_query)
-        return self.__get_base_query_with_skip_conditions__(base_query)
+        return self._feature_table.label_columns_touch_points
 
 
 class PatternPredictorBeforeBreakout(PatternPredictor):
@@ -312,15 +251,10 @@ class PatternPredictorBeforeBreakout(PatternPredictor):
         return PatternTable()
 
     def __get_feature_columns_orig__(self):
-        return self.feature_table.features_columns_before_breakout
+        return self._feature_table.features_columns_before_breakout
 
     def __get_label_columns__(self):
-        return self.feature_table.label_columns_before_breakout
-
-    def __get_query_for_feature_and_label_data__(self):
-        base_query = self.feature_table.query_for_feature_and_label_data_before_breakout
-        base_query = self.__get_base_query_with_pattern_type_condition__(base_query)
-        return self.__get_base_query_with_skip_conditions__(base_query)
+        return self._feature_table.label_columns_before_breakout
 
 
 class PatternPredictorAfterBreakout(PatternPredictor):
@@ -336,15 +270,10 @@ class PatternPredictorAfterBreakout(PatternPredictor):
         return PatternTable()
 
     def __get_feature_columns_orig__(self):
-        return self.feature_table.features_columns_after_breakout
+        return self._feature_table.features_columns_after_breakout
 
     def __get_label_columns__(self):
-        return self.feature_table.label_columns_after_breakout
-
-    def __get_query_for_feature_and_label_data__(self):
-        base_query = self.feature_table.query_for_feature_and_label_data_after_breakout
-        base_query = self.__get_base_query_with_pattern_type_condition__(base_query)
-        return self.__get_base_query_with_skip_conditions__(base_query)
+        return self._feature_table.label_columns_after_breakout
 
 
 class PatternPredictorForTrades(PatternPredictor):
@@ -360,15 +289,10 @@ class PatternPredictorForTrades(PatternPredictor):
         return TradeTable()
 
     def __get_feature_columns_orig__(self):
-        return self.feature_table.feature_columns_for_trades
+        return self._feature_table.feature_columns_for_trades
 
     def __get_label_columns__(self):
-        return self.feature_table.label_columns_for_trades
-
-    def __get_query_for_feature_and_label_data__(self):
-        base_query = self.feature_table.query_for_feature_and_label_data_for_trades
-        base_query = self.__get_base_query_with_pattern_type_condition__(base_query)
-        return self.__get_base_query_with_skip_conditions__(base_query)
+        return self._feature_table.label_columns_for_trades
 
 
 class PatternMasterPredictor:

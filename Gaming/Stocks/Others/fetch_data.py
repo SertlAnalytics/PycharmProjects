@@ -212,7 +212,7 @@ class CryptoCorrelationHandler(CorrelationHandler):
             self.df_dic[symbol] = AlphavantageCryptoFetcher(symbol).df_data
 
 
-process = 'StockFetcher'
+process = 'CryptoCorrelation'
 
 if process == 'StockCorrelation':
     correlation_handler = StocksCorrelationHandler()
@@ -222,7 +222,8 @@ if process == 'StockCorrelation':
 elif process == 'CryptoCorrelation':
     correlation_handler = CryptoCorrelationHandler()
     # correlation_handler.fill_df_dic_for_symbol_list(['BTC', 'LTC', 'ETH', 'XRP', 'XMR', 'EOS'], '4b. close (USD)', 'Cryptocurrencies')
-    correlation_handler.fill_df_dic_for_symbol_list(['BTC', 'LTC'])
+    correlation_handler.fill_df_dic_for_symbol_list(['BTC', 'LTC', 'ETH', 'XRP', 'XMR', 'EOS'])
+    # correlation_handler.fill_df_dic_for_symbol_list(['BTC', 'LTC'])
     correlation_handler.show_correlation_heat_map('4b. close (USD)', 'Cryptocurrencies')
 elif process == 'StockFetcher':
     fetcher = AlphavantageStockFetcher('XAG')  # stock: MSFT, Crypto: BTC
