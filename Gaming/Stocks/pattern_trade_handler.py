@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR, TSTR
+from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR, FT
 from pattern_database.stock_tables import AssetTable
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.mydates import MyDate
@@ -356,7 +356,8 @@ class PatternTradeHandler:
         for key in deletion_key_list:
             pattern_trade = self.pattern_trade_dict[key]
             print('Removed from trade_dict ({}): {}'.format(deletion_reason, pattern_trade.get_trade_meta_data()))
-            if deletion_reason != PDR.PATTERN_VANISHED:  # they have the trend to reappear
+            if self.trade_candidate_controller.is_deletion_reason_candidate_for_black_buy_pattern_id_list(
+                    pattern_trade, key):
                 self.trade_candidate_controller.add_pattern_trade_to_black_buy_trigger_list(
                     pattern_trade, deletion_reason)
             del self.pattern_trade_dict[key]
@@ -366,6 +367,7 @@ class PatternTradeHandler:
         deletion_key_list = []
         buying_deletion_key_list = []
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
+            pattern_trade.correct_simulation_flag_according_to_forecast()
             print('handle_buy_triggers: pattern_trade.is_simulation={}, auto={}'.format(
                 pattern_trade.is_simulation, self.exchange_config.automatic_trading_on))
             if pattern_trade.is_breakout_active:

@@ -36,7 +36,7 @@ class MyGraphCacheObject(MyCacheObject):
 
     def is_under_observation(self):
         return self.cached_before_breakout or self.breakout_since_last_data_update or \
-               self.fibonacci_finished_since_last_data_update
+               self.fibonacci_finished_since_last_data_update or self.__was_massive_movement_since_last_tick__()
 
     def __was_any_touch_since_last_data_update__(self):
         return self.detector.was_any_touch_since_time_stamp(self.adjusted_last_refresh_ts, True)
@@ -49,6 +49,9 @@ class MyGraphCacheObject(MyCacheObject):
 
     def __was_cached_before_breakout__(self) -> bool:
         return self.detector.is_any_pattern_without_breakout()
+
+    def __was_massive_movement_since_last_tick__(self) -> bool:
+        return self.detector.was_massive_movement_since_last_tick()
 
 
 class MyGraphCache(MyCache):

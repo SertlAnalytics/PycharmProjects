@@ -359,7 +359,8 @@ class PatternPlotter:
                 close_k_1 = df.iloc[k-1][CN.CLOSE]
                 close_k = df.iloc[k][CN.CLOSE]
                 previous_std_dev = std_dev_list[-1]
-                breakout_flag = int((close_k - close_k_1)/previous_std_dev)
+                if previous_std_dev != 0:
+                    breakout_flag = int((close_k - close_k_1)/previous_std_dev)
             breakout_list.append(breakout_flag)
             breakout_sum_list.append(sum(breakout_list))
 

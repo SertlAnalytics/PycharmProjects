@@ -14,20 +14,17 @@ from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStock
 from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher, CryptoCompareCryptoFetcher
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.user_input.confirmation import UserInput
-from sertl_analytics.constants.pattern_constants import CN, PRD, OPS, EQUITY_TYPE, INDICES, DC
+from sertl_analytics.constants.pattern_constants import CN, PRD, OPS, INDICES, DC
 from pattern_database import stock_database
 from sertl_analytics.mycache import MyCacheObjectApi
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_database import StockDatabase
-from sertl_analytics.mycache import MyCache
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
-from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from pattern_data_handler import PatternDataHandler
 from pattern_configuration import PatternConfiguration
 from pattern_index_configuration import IndexConfiguration
 from pattern_dash.my_dash_caches import MyDataFrameCache
-import time
 
 
 class DP:  # DataProvider
@@ -69,6 +66,7 @@ class PatternDataProvider:
         self.provider_stocks = DP.ALPHAVANTAGE
         self._db_stock = db_stock
         self._df_cache = df_cache
+        self.index_used = ''
         self.from_db = True
         self.period = PRD.DAILY
         self.aggregation = 1
@@ -122,17 +120,18 @@ class PatternDataProvider:
         self.aggregation = 1
 
     def use_index(self, index: str):
+        self.index_used = index
         if index == INDICES.ALL_DATABASE:
             self.ticker_dict = self.get_all_in_database()
         elif index == INDICES.MIXED:
             self.ticker_dict = self.get_mixed_dic()
         else:
-            self.ticker_dict = IndicesComponentList.get_ticker_name_dic(index)
+            self.ticker_dict = self.index_config.get_index_dict(index)
 
     def use_indices(self, indices: list):
         self.ticker_dict = {}
         for index in indices:
-            self.ticker_dict.update(IndicesComponentList.get_ticker_name_dic(index))
+            self.ticker_dict.update(self.index_config.get_index_dict(index))
 
     def use_own_dic(self, dic: dict):
         self.ticker_dict = dic
@@ -141,16 +140,8 @@ class PatternDataProvider:
             if name_from_db != '':
                 self.ticker_dict[symbol] = name_from_db
 
-    @staticmethod
-    def get_index_members_as_dict(index: str):
-        if index == INDICES.CRYPTO_CCY:
-            return IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
-        elif index == INDICES.DOW_JONES:
-            return IndicesComponentList.get_ticker_name_dic(INDICES.DOW_JONES)
-            # return {'MMM': '3M', 'KO': 'Coca Cola'}
-        elif index == INDICES.NASDAQ100:
-            return IndicesComponentList.get_ticker_name_dic(INDICES.NASDAQ100)
-            # return {'TSLA': 'Tesla', 'FCEL': 'Full Cell'}
+    def get_index_members_as_dict(self, index: str):
+        return self.index_config.get_index_dict(index)
 
     @staticmethod
     def get_mixed_dic():

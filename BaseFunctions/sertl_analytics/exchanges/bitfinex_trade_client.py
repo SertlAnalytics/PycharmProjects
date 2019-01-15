@@ -8,20 +8,8 @@ from sertl_analytics.exchanges.bitfinex import MyBitfinex, BitfinexConfiguration
 from sertl_analytics.exchanges.bitfinex import Ticker, Balance
 from sertl_analytics.exchanges.bitfinex import BuyMarketOrder, BuyLimitOrder, BuyStopOrder
 from sertl_analytics.exchanges.bitfinex import SellMarketOrder, SellStopLossOrder, SellTrailingStopOrder
-from sertl_analytics.constants.pattern_constants import CN, TP
+from sertl_analytics.constants.pattern_constants import CN
 from pattern_wave_tick import WaveTick, WaveTickList
-
-
-# log = logging.getLogger(__name__)
-#
-# fh = logging.FileHandler('pattern.log')
-# fh.setLevel(logging.DEBUG)
-# sh = logging.StreamHandler(sys.stdout)
-# sh.setLevel(logging.DEBUG)
-#
-# log.addHandler(sh)
-# log.addHandler(fh)
-# logging.basicConfig(level=logging.DEBUG, handlers=[fh, sh])
 
 
 class MyBitfinexTradeClient:
@@ -126,3 +114,35 @@ class MyBitfinexTradeClient:
 
     def create_sell_trailing_stop_order(self, trading_pair: str, amount: float, distance: float, is_order_simulation: bool):
         return self._bitfinex.create_order(SellTrailingStopOrder(trading_pair, amount, distance), is_order_simulation)
+
+    def get_trading_pairs(self):
+        return self._bitfinex.get_symbols()
+
+    def get_symbol_name_dict(self) -> dict:
+        symbols = self._bitfinex.get_symbols_only()
+        return {symbol: self.__get_symbol_name__(symbol) for symbol in symbols}
+
+    def get_trading_pair_name_dict(self) -> dict:
+        symbols = self._bitfinex.get_symbols_only()
+        ccy = self.exchange_config.default_currency
+        return {'{}{}'.format(symbol, ccy):
+                    '{} ({})'.format(self.__get_symbol_name__(symbol), ccy) for symbol in symbols}
+
+    def __get_symbol_name__(self, symbol: str):
+        named_dict = self.__get_symbol_name_dict__()
+        return named_dict[symbol] if symbol in named_dict else symbol
+
+    @staticmethod
+    def __get_symbol_name_dict__() -> dict:
+        return {'BOX': 'Box',
+                'BTC': 'Bitcoin',
+                'EOS': 'EOS',
+                'ETH': 'Ethereum',
+                'LTC': 'Litecoin',
+                'MGO': 'Mobile Go',
+                'NEO': 'NEO',
+                'IOT': 'IOTA',
+                'XRP': 'Ripple',
+                'XMR': 'XMR',
+                'ZEC': 'ZEC'}
+

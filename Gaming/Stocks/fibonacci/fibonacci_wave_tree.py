@@ -41,7 +41,8 @@ class FibonacciWaveForecastCollector:
         self.__max_position_5_wave_dict[idx].forecast_value_list = self.__forecast_value_list_dict[idx]
 
     def get_forecast_wave_list(self) -> list:
-        return [wave for wave in self.__max_position_5_wave_dict.values()]
+        ts_now = MyDate.get_epoch_seconds_from_datetime()  # new on 10.01.2019 to avoid forecast in the past
+        return [wave for wave in self.__max_position_5_wave_dict.values() if wave.w_5.tick_end.time_stamp > ts_now]
 
 
 class FibonacciWaveTree:

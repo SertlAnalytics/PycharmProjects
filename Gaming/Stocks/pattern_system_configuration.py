@@ -34,9 +34,8 @@ class SystemConfiguration:
         if for_semi_deep_copy:
             return
         self.config = PatternConfiguration()
-        self.index_config = IndexConfiguration([INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100])
-        # self.index_config = IndexConfiguration([INDICES.CRYPTO_CCY])
         self.db_stock = StockDatabase()
+        self.index_config = IndexConfiguration(self.db_stock, [INDICES.CRYPTO_CCY, INDICES.DOW_JONES])
         self.pattern_table = PatternTable()
         self.trade_table = TradeTable()
         self.wave_table = WaveTable()
@@ -53,17 +52,20 @@ class SystemConfiguration:
         api.predictor_optimizer = self.predictor_optimizer
         return api
 
-    def __init_index_value_dict__(self):
-        for index in self.index_list:
-            self.index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
-
     @property
     def pdh(self):
         return self.data_provider.pdh
 
     @property
     def ticker_dict(self) -> dict:
-        return self.data_provider.ticker_dict
+        if self.data_provider.index_used != INDICES.CRYPTO_CCY:
+            return self.data_provider.ticker_dict
+        return_dict = {}
+        main_ticker_dict = self.data_provider.ticker_dict
+        for ticker_id in self.exchange_config.ticker_id_list:
+            if ticker_id in main_ticker_dict:
+                return_dict[ticker_id] = main_ticker_dict[ticker_id]
+        return return_dict
 
     @property
     def from_db(self) -> bool:

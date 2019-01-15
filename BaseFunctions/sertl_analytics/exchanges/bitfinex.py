@@ -61,7 +61,8 @@ class BitfinexConfiguration(ExchangeConfiguration):
         self.finish_vanished_trades = False  # True <=> if a pattern is vanished after buying sell the position (market)
         self.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP]}
         self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP, BT.TOUCH_POINT: TSTR.LIMIT}
-        self.ticker_id_excluded_list = ['IOTUSDx', 'XRPUSDx', 'BOXUSDx']  # in case we have some issues with the data...
+        self.ticker_id_list = ['BTCUSD', 'EOSUSD', 'ETHUSD', 'LTCUSD', 'NEOUSD', 'XMRUSD',
+                               'ZECUSD', 'IOTUSDx', 'XRPUSDx', 'ZECUSD', 'BOXUSDx', 'MGOUSDx']
         self.ticker_id_excluded_from_trade_list = ['NEOUSDx', 'BTCUSD']  # in case we have some issues with the data...
         self.fibonacci_indicators = {'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
         self.bollinger_band_indicators = {'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
@@ -437,8 +438,16 @@ class MyBitfinex(ExchangeInterface):
     def get_history(self, since_ts: int, until_ts, limit: int):
         raise NotImplementedError
 
-    def get_symbols(self):
+    def get_symbols(self):  # i.e. trading pairs for that client
         return self.__get_requests_result__(self.__get_full_url__('symbols'))
+
+    def get_symbols_only(self) -> list:
+        symbols_only = []
+        for trading_pair in self.get_symbols():
+            symbol = trading_pair[:-3].upper()
+            if symbol not in symbols_only:
+                symbols_only.append(symbol)
+        return sorted(symbols_only)
 
     def get_ticker(self, symbol: str) -> Ticker:
         ticker_from_cache = self.ticker_cache.get_cached_object_by_key(symbol)

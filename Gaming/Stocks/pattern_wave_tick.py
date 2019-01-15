@@ -12,7 +12,6 @@ from sertl_analytics.mymath import MyMath, MyPoly1d
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 from sertl_analytics.mydates import MyDate
 from datetime import datetime
-from pattern_database.stock_database import StockDatabase
 import math
 
 

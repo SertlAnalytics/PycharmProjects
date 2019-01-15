@@ -32,7 +32,8 @@ class ExchangeConfiguration:
                                     BT.TOUCH_POINT: TSTR.LIMIT}
         self.fibonacci_indicators = {}
         self.bollinger_band_indicators = {}
-        self.ticker_id_excluded_list = []  # in case we don't want to process them...
+        self.massive_breakout_pct = 10  # = 10%
+        self.ticker_id_list = []  # we want to track only these symbols...
         self.ticker_id_excluded_from_trade_list = []  # in case we have some issues the datas...
         self.__set_values__()
 

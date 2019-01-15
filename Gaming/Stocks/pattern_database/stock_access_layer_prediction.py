@@ -50,10 +50,10 @@ class AccessLayerPrediction:
         return self._label_column_dict[key]
 
     def get_x_data_y_train_data_for_predictor(
-            self, table_name: str, predictor: str, label: str, pattern_type: str, skip_condition_list: list):
+            self, table_name: str, predictor: str, label: str, pattern_type: str, skip_condition_list: list=None):
         key = self.__get_key_for_dict__(table_name, predictor, label, pattern_type)
         if key not in self._x_data_y_train_data_dict:
-            print('Get x_y_data: {}'.format(key))
+            # print('Get x_y_data: {}'.format(key))
             df = self.get_df_features_and_labels_for_predictor(table_name, predictor, pattern_type, skip_condition_list)
             self._x_data_y_train_data_dict[key] = self.__get_x_train_y_train_manipulated__(
                 df, table_name, predictor, label)
@@ -82,8 +82,8 @@ class AccessLayerPrediction:
         df_return = pd.DataFrame(df.drop(df_top.index, inplace=False))
         df_bottom = df_return[df_return[label] < value_bottom]
         df_return = pd.DataFrame(df_return.drop(df_bottom.index, inplace=False))
-        if number_rows_before > df_return.shape[0]:
-            print('drop_outliers_before={} - after={}'.format(number_rows_before, df_return.shape[0]))
+        # if number_rows_before > df_return.shape[0]:
+        #     print('drop_outliers_before={} - after={}'.format(number_rows_before, df_return.shape[0]))
         return df_return
 
     @staticmethod

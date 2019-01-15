@@ -58,6 +58,7 @@ class PatternFeaturesSelector:
 class PatternPredictor:
     def __init__(self, optimizer: PatternPredictorOptimizer, pattern_type: str, skip_condition_list=None):
         # print('Loading Predictor: {}'.format(self.__class__.__name__))
+        self._use_optimizer = False
         self._predictor = self.__class__.__name__
         self._optimizer = optimizer
         self._db_stock = self._optimizer.db_stock
@@ -126,25 +127,23 @@ class PatternPredictor:
         collector_id = '{}_{}'.format(self.__class__.__name__, self._pattern_type)
         self._neighbor_collector = NearestNeighborCollector(self._df_features_with_labels_and_id, collector_id)
         for label in self._label_columns:
-            if label == DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF:
-                print(label)
+            # if label == DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF:
+            #     print(label)
             if self.is_ready_for_prediction:
                 prediction = self._predictor_dict[label].predict(np_array)[0]
                 dist, ind = self._predictor_dict[label].kneighbors(np_array)
                 self._neighbor_collector.add_dist_ind_array(ind, dist)
+                if self._use_optimizer:
+                    prediction_optimal = self._optimizer.get_optimal_prediction(
+                        self.feature_table_name, self.predictor, label, self._pattern_type, np_array)
+                    if prediction_optimal != 0:
+                        prediction = prediction_optimal
             else:
                 prediction = 0
             if self._feature_table.is_label_column_for_regression(label):
                 return_dict[label] = round(prediction, -1)
             else:
                 return_dict[label] = int(prediction)
-
-            # optimal_prediction = self._optimizer.get_optimal_prediction(
-            #     self.feature_table_name, self.predictor, label, self._pattern_type, np_array
-            # )
-            # print('optimal_prediction for {}-{}-{}-{}: {} ({})'.format(
-            #     self.feature_table_name, self.predictor, label, self._pattern_type, optimal_prediction, return_dict[label]
-            # ))
         return return_dict
 
     def __get_table_with_prediction_features__(self):
@@ -155,10 +154,6 @@ class PatternPredictor:
 
     def __get_label_columns__(self):
         return []
-
-    def __get_y_train_for_label_column__(self, label_column: str) -> np.array:
-        y_train = np.array(self._df_labels[label_column])
-        return y_train.astype(np.int64) if y_train.dtype in ['float', 'float64'] else y_train
 
     def __get_predictor_dict__(self) -> dict:
         return {label: self.__get_predictor_for_label_column__(label) for label in self._label_columns}
@@ -193,9 +188,9 @@ class PatternPredictor:
             self.__print_report__(x_train, y_train, predictor, label_column)
 
         # print('__train_model__: pattern_type_label={}_{}'.format(self._pattern_type, label_column))
-
-        # self._optimizer.retrain_trained_models(
-        #     self.feature_table_name, self.predictor, label_column, self._pattern_type,x_train, y_train)
+        if self._use_optimizer:
+            self._optimizer.retrain_trained_models(
+                self.feature_table_name, self.predictor, label_column, self._pattern_type, x_train, y_train)
 
     def __perform_test_on_training_data__(self, x_input, y_input, predictor, label_column: str):
         X_train, X_test, y_train, y_test = train_test_split(x_input, y_input, test_size=0.3)

@@ -83,10 +83,11 @@ class MyTable:
     def query_id_oid(self) -> str:
         return "select id, oid from {};".format(self._name)
 
-    def get_query_select_by_data_dict(self, data_dict: dict, target_columns=None)  -> str:
+    def get_query_select_by_data_dict(self, data_dict: dict, target_columns=None, sort_columns=None)  -> str:
         columns = '*' if target_columns is None else ','.join(target_columns)
         and_clause = self.__get_where_clause_for_data_dict__(data_dict)
-        return "SELECT {} FROM {} where {}".format(columns, self._name, and_clause)
+        order_by_clause = '' if sort_columns is None else ' ORDER BY {}'.format(','.join(sort_columns))
+        return "SELECT {} FROM {} where {}{}".format(columns, self._name, and_clause, order_by_clause)
 
     def get_query_select_for_unique_record_by_id(self, record_id: str) -> str:
         return "SELECT * FROM {} where ID='{}'".format(self._name, record_id)

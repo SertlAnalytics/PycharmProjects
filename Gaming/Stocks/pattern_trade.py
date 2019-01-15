@@ -169,7 +169,7 @@ class PatternTrade:
     def trade_sub_process(self):
         if self._status == PTS.NEW:
             return TSP.BUYING if self.is_breakout_active else TSP.WATCHING
-        if self._status == PTS.EXECUTED:
+        if self._status in [PTS.EXECUTED, PTS.IN_EXECUTION]:
             return TSP.SELLING
         return TSP.RE_BUYING
 
@@ -224,6 +224,17 @@ class PatternTrade:
     @trade_client.setter
     def trade_client(self, value):
         self._trade_client = value
+
+    def correct_simulation_flag_according_to_forecast(self):
+        is_simulation_old = self._is_simulation
+        direction = self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID)  # ASC == 1
+        false_breakout = self.data_dict_obj.get(DC.FC_FALSE_BREAKOUT_ID)
+        if direction == 1 and false_breakout != 1:
+            self._is_simulation = False
+        else:
+            self._is_simulation = True
+        if is_simulation_old != self._is_simulation:
+            print('Simulation flag changed: {} -> {}'.format(is_simulation_old, self._is_simulation))
 
     def set_status_in_execution(self):  # to avoid a second execution
         self._status = PTS.IN_EXECUTION
@@ -606,7 +617,7 @@ class PatternTrade:
         buy_price = ticker.last_price
         upper_value = self.pattern.get_upper_value(ticker.time_stamp)
         lower_value = self.pattern.get_lower_value(ticker.time_stamp)
-        off_set_value = buy_price
+        off_set_value = upper_value  # if self.trade_strategy == TSTR.LIMIT_FIX else buy_price
         height = abs(upper_value - lower_value)
         if self.buy_trigger == BT.TOUCH_POINT:
             distance_bottom = round(buy_price - lower_value, 4)

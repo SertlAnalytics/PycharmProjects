@@ -282,9 +282,8 @@ class PatternDetectionController:
                     break
         else:
             for ticker in self.sys_config.ticker_dict:
-                if ticker not in self.sys_config.exchange_config.ticker_id_excluded_list:
-                    and_clause = self.sys_config.data_provider.and_clause
-                    self._loop_list_ticker.append({LL.TICKER: ticker, LL.AND_CLAUSE: and_clause})
+                and_clause = self.sys_config.data_provider.and_clause
+                self._loop_list_ticker.append({LL.TICKER: ticker, LL.AND_CLAUSE: and_clause})
 
     def __handle_statistics__(self, detector: PatternDetector):
         for pattern in detector.pattern_list:

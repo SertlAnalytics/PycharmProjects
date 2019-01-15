@@ -5,22 +5,16 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sqlalchemy import create_engine, MetaData
+
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import MyTable, PatternTable, TradeTable, StocksTable, \
-    CompanyTable, STBL, WaveTable, AssetTable, MetricTable
+    CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable
 from pattern_database.stock_database import StockDatabase
-from pattern_index_configuration import IndexConfiguration
 import pandas as pd
 import math
-from datetime import datetime
-from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, OPS, FT, TRT, TSTR, MDC
-import os
-import time
+from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC
 
 
 class AccessLayer:
@@ -28,14 +22,35 @@ class AccessLayer:
         self._stock_db = stock_db
         self._table = self.__get_table__()
 
-    def select_data_by_data_dict(self, data_dict: dict, target_columns=None) -> pd.DataFrame:
-        query = self._table.get_query_select_by_data_dict(data_dict, target_columns)
-        db_df = DatabaseDataFrame(self._stock_db, query)
-        return db_df.df
+    @property
+    def table_name(self):
+        return self._table.name
 
-    def select_data_by_query(self, query: str) -> pd.DataFrame:
+    def get_all_as_data_frame(self, index_col=''):
+        return self.select_data_by_query("SELECT * from {}".format(self._table.name), index_col)
+
+    def get_all_as_data_dict(self, index_col: str):
+        df = self.select_data_by_query("SELECT * from {}".format(self._table.name), index_col)
+        return df.to_dict(orient='index')
+
+    def get_as_data_dict_by_data_dict(self, data_dict: dict, sort_columns=None, index_col=''):
+        df = self.select_data_by_data_dict(data_dict, target_columns=None, sort_columns=sort_columns, index_col=index_col)
+        return df.to_dict(orient='index')
+
+    def select_data_by_data_dict(self, data_dict: dict, target_columns=None, sort_columns=None, index_col='') -> pd.DataFrame:
+        query = self._table.get_query_select_by_data_dict(data_dict, target_columns, sort_columns)
         db_df = DatabaseDataFrame(self._stock_db, query)
-        return db_df.df
+        return self.__get_dataframe_with_index_column__(db_df.df, index_col)
+
+    def select_data_by_query(self, query: str, index_col='') -> pd.DataFrame:
+        db_df = DatabaseDataFrame(self._stock_db, query)
+        return self.__get_dataframe_with_index_column__(db_df.df, index_col)
+
+    @staticmethod
+    def __get_dataframe_with_index_column__(df: pd.DataFrame, index_col: str):
+        if not df.empty and index_col != '':
+            df.set_index(index_col, drop=False, inplace=True)
+        return df
 
     def insert_data(self, input_dict_list: list):
         self._stock_db.insert_data_into_table(self._table.name, input_dict_list)
@@ -62,13 +77,47 @@ class AccessLayer:
         df = self.__get_data_frame_with_row_id__(data_dict)
         return df.shape[0] > 0
 
+    def are_any_records_available(self, data_dict: dict):
+        df = self.__get_data_frame_with_row_id__(data_dict)
+        return df.shape[0] > 0
+
     def __get_data_frame_with_row_id__(self, data_dict: dict) -> pd.DataFrame:
         query = self._table.get_query_select_for_unique_record_by_dict(data_dict)
+        return self.__get_data_frame_with_row_id_by_query__(query)
+
+    def __get_data_frame_with_row_id_by_query__(self, query: str) -> pd.DataFrame:
         db_df = DatabaseDataFrame(self._stock_db, query)
         return db_df.df
 
     def __get_table__(self) -> MyTable:
         pass
+
+
+class AccessLayer4Equity(AccessLayer):
+    def are_any_records_available_for_date(self, date: str, exchange: str, equity_type: str):
+        query = "SELECT * from {} WHERE {} >= '{}' and {}='{}' and {}='{}'".format(
+            self.table_name, EDC.VALID_TO_DT, date, EDC.EXCHANGE, exchange, EDC.EQUITY_TYPE, equity_type
+        )
+        df = self.__get_data_frame_with_row_id_by_query__(query)
+        return df.shape[0] > 0
+
+    def get_existing_equities_as_data_dict(self, equity_type: str, exchange: str):
+        data_dict = {EDC.EQUITY_TYPE: equity_type, EDC.EXCHANGE: exchange}
+        return self.get_as_data_dict_by_data_dict(data_dict, [EDC.EQUITY_KEY])
+
+    def get_index_dict(self, index: str):
+        data_dict = {EDC.EXCHANGE: TRC.BITFINEX} if index == INDICES.CRYPTO_CCY else {EDC.EXCHANGE: index}
+        full_dict = self.get_as_data_dict_by_data_dict(data_dict, [EDC.EQUITY_KEY], EDC.EQUITY_KEY)
+        return {value_dict[EDC.EQUITY_KEY]: value_dict[EDC.EQUITY_NAME] for value_dict in full_dict.values()}
+
+    def delete_existing_equities(self, equity_type: str, exchange: str):
+        query = "DELETE FROM {} WHERE {}='{}' and {}='{}';".format(
+            self._table.name, EDC.EQUITY_TYPE, equity_type, EDC.EXCHANGE, exchange)
+        print(query)
+        self._stock_db.delete_records(query)
+
+    def __get_table__(self):
+        return EquityTable()
 
 
 class AccessLayer4Asset(AccessLayer):
@@ -90,8 +139,16 @@ class AccessLayer4Stock(AccessLayer):
     def __get_table__(self):
         return StocksTable()
 
+    def get_all_as_data_frame(self, symbol=''):
+        if symbol == '':
+            return self.select_data_by_query("SELECT * from {} ORDER BY {}".format(self._table.name, DC.TIMESTAMP))
+        else:
+            return self.select_data_by_query("SELECT * from {} WHERE symbol = '{}' ORDER BY {}".format(
+                self._table.name, symbol, DC.TIMESTAMP))
+
     def get_actual_price_for_symbol(self, symbol: str, ts_from: int) -> float:
-        query = "SELECT * FROM stocks WHERE symbol='{}' AND Timestamp >= {} LIMIT 1".format(symbol, ts_from)
+        query = "SELECT * FROM {} WHERE symbol='{}' AND Timestamp >= {} LIMIT 1".format(
+            self._table.name, symbol, ts_from)
         df_result = self.select_data_by_query(query)
         if df_result.empty:
             return 0
@@ -173,424 +230,6 @@ class StockInsertHandler:
         input_dict = insert_data.get_dict_for_input(self._symbol, self._period, self._aggregation)
         if len(input_dict) > 0:
             self._input_dict_list.append(input_dict)
-
-
-class StockDatabaseOld(BaseDatabase):
-    def __init__(self):
-        BaseDatabase.__init__(self)
-        self._index_config = IndexConfiguration([INDICES.CRYPTO_CCY])
-        self._dt_now_time_stamp = int(datetime.now().timestamp())
-        self._stocks_table = StocksTable()
-        self._company_table = CompanyTable()
-        self._pattern_table = PatternTable()
-        self._trade_table = TradeTable()
-        self._wave_table = WaveTable()
-        self._asset_table = AssetTable()
-        self._alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
-        self._alphavantage_stock_fetcher = AlphavantageStockFetcher()
-        self._sleep_seconds = 5
-
-    def is_symbol_loaded(self, symbol: str):
-        last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
-        return len(last_loaded_time_stamp_dic) == 1
-
-    def get_name_for_symbol(self, symbol: str):
-        if symbol[-3:] == 'USD':
-            return symbol
-        company_dic = self.__get_company_dict__(symbol)
-        return '' if len(company_dic) == 0 else company_dic[symbol].Name
-
-    def __get_engine__(self):
-        db_path = self.__get_db_path__()
-        return create_engine('sqlite:///' + db_path)
-
-    def __get_db_name__(self):
-        return 'MyStocks.sqlite'
-
-    def __get_db_path__(self):
-        package_dir = os.path.abspath(os.path.dirname(__file__))
-        return os.path.join(package_dir, self.__get_db_name__())
-
-    def import_stock_data_by_deleting_existing_records(self, symbol: str, period=PRD.DAILY, output_size=OPS.COMPACT):
-        self.delete_records("DELETE from Stocks WHERE Symbol = '" + str(symbol) + "'")
-        input_dic = self.get_input_values_for_stock_table(period, symbol, output_size)
-        self.__insert_data_into_table__('Stocks', input_dic)
-
-    def update_stock_data_by_index(self, index: str, period=PRD.DAILY, aggregation=1):
-        company_dict = self.__get_company_dict__()
-        self.__check_company_dic_against_web__(index, company_dict)
-        last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(period=period)
-        index_list = self.__get_index_list__(index)
-        for index in index_list:
-            print('\nUpdating {}...\n'.format(index))
-            ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
-            for ticker in ticker_dic:
-                self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
-                                                            company_dict, last_loaded_date_stamp_dic)
-        self.__handle_error_cases__()
-
-    def __check_company_dic_against_web__(self, index: str, company_dict: dict):
-        company_dict_by_web = IndicesComponentList.get_ticker_name_dic(index)
-        for key in company_dict_by_web:
-            if key not in company_dict:
-                name = company_dict_by_web[key]
-                self.__insert_company_in_company_table__(key, name, True)
-                new_dict = self.__get_company_dict__(key)
-                company_dict[key] = new_dict[key]
-
-    def update_crypto_currencies(self, period=PRD.DAILY, aggregation=1, excluded_id_list=None):
-        company_dic = self.__get_company_dict__(like_input='USD')
-        excluded_id_list = [] if excluded_id_list is None else excluded_id_list
-        last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(like_input='USD', period=period)
-        print('\nUpdating {}...\n'.format(INDICES.CRYPTO_CCY))
-        ticker_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
-        for ticker in ticker_dic:
-            if ticker not in excluded_id_list:
-                self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
-                                                            company_dic, last_loaded_date_stamp_dic)
-        self.__handle_error_cases__()
-
-    def __handle_error_cases__(self):
-        while len(self.error_handler.retry_dic) > 0:
-            retry_dic = dict(self.error_handler.retry_dic)
-            self.error_handler.retry_dic = {}
-            for ticker in retry_dic:
-                print('Handle error case for {}'.format(ticker))
-                time.sleep(self._sleep_seconds)
-                li = retry_dic[ticker]
-                self.update_stock_data_for_symbol(ticker, li[0], li[1])
-
-    def update_stock_data_for_symbol(self, symbol: str, name_input='', period=PRD.DAILY, aggregation=1):
-        company_dic = self.__get_company_dict__(symbol)
-        name = company_dic[symbol] if symbol in company_dic else name_input
-        last_loaded_dict = self.__get_last_loaded_time_stamp_dic__(symbol)
-        self.__update_stock_data_for_single_value__(period, aggregation, symbol, name, company_dic, last_loaded_dict)
-
-    def insert_pattern_data(self, input_dict_list: list):
-        self.__insert_data_into_table__(STBL.PATTERN, input_dict_list)
-
-    def insert_trade_data(self, input_dict_list: list):
-        self.__insert_data_into_table__(STBL.TRADE, input_dict_list)
-
-    def insert_wave_data(self, input_dict_list: list):
-        self.__insert_data_into_table__(STBL.WAVE, input_dict_list)
-
-    def insert_asset_entry(self, input_dict: dict, replace=False):
-        if self.is_asset_already_available(input_dict):
-            pass
-        else:
-            self.__insert_data_into_table__(STBL.ASSET, [input_dict])
-
-    def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str,
-                                               company_dic: dict, last_loaded_date_stamp_dic: dict):
-        name = self._company_table.get_alternate_name(ticker, name)
-        last_loaded_time_stamp = last_loaded_date_stamp_dic[ticker] if ticker in last_loaded_date_stamp_dic else 100000
-        process_type = self._stocks_table.get_process_type_for_update(
-            period, aggregation, self._dt_now_time_stamp, last_loaded_time_stamp)
-        if process_type == 'NONE':
-            print('{} - {} is already up-to-date - no load required.'.format(ticker, name))
-            return
-        if ticker in company_dic and not company_dic[ticker].ToBeLoaded:
-            return  # must not be loaded
-        output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
-        kw_args = {'symbol': ticker, 'period': period, 'aggregation': aggregation, 'output_size': output_size}
-        try:
-            if self._index_config.is_symbol_crypto(ticker):
-                fetcher = self._alphavantage_crypto_fetcher
-            else:
-                fetcher = self._alphavantage_stock_fetcher
-            fetcher.retrieve_data(**kw_args)
-        except KeyError:
-            self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
-            self.error_handler.add_to_retry_dic(ticker, [name, period])
-            time.sleep(self._sleep_seconds)
-            return
-        except:
-            self.error_handler.catch_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
-            self.error_handler.add_to_retry_dic(ticker, [name, period])
-            time.sleep(self._sleep_seconds)
-            return
-        df = fetcher.df
-        if ticker not in company_dic:
-            to_be_loaded = df[CN.VOL].mean() > 10000
-            self.__insert_company_in_company_table__(ticker, name, to_be_loaded)
-            company_dic[ticker] = to_be_loaded
-            if not to_be_loaded:
-                time.sleep(self._sleep_seconds)
-                return
-        if ticker in last_loaded_date_stamp_dic:
-            df = df.loc[last_loaded_time_stamp:].iloc[1:]
-        if df.shape[0] > 0:
-            input_list = self.__get_df_data_for_insert_statement__(df, period, ticker)
-            self.__insert_data_into_table__(STBL.STOCKS, input_list)
-            print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
-        time.sleep(self._sleep_seconds)
-
-    def __get_company_dict__(self, symbol_input: str = '', like_input: str = ''):
-        company_dict = {}
-        query = self._company_table.get_select_query(symbol_input, like_input)
-        db_df = DatabaseDataFrame(self, query)
-        for index, rows in db_df.df.iterrows():
-            company_dict[rows.Symbol] = rows
-        return company_dict
-
-    def __get_last_loaded_time_stamp_dic__(self, symbol_input: str = '', like_input: str = '', period=PRD.DAILY):
-        last_loaded_time_stamp_dic = {}
-        query = self._stocks_table.get_distinct_symbol_query(symbol_input, like_input)
-        db_df = DatabaseDataFrame(self, query)
-        loaded_symbol_list = [rows.Symbol for index, rows in db_df.df.iterrows()]
-        for symbol in loaded_symbol_list:
-            query = "SELECT * FROM {} WHERE Symbol = '{}' and Period = '{}' ORDER BY Timestamp Desc LIMIT 1".format(
-                STBL.STOCKS, symbol, period)
-            db_df = DatabaseDataFrame(self, query)
-            try:
-                last_loaded_time_stamp_dic[symbol] = db_df.df[CN.TIMESTAMP].values[0]
-            except:
-                print('Problem with __get_last_loaded_time_stamp_dic__ for {}'.format(symbol))
-        return last_loaded_time_stamp_dic
-
-    def __insert_company_in_company_table__(self, ticker: str, name: str, to_be_loaded: bool):
-        input_dic = self._company_table.get_insert_dict_for_company(ticker, name, to_be_loaded)
-        try:
-            self.__insert_data_into_table__(STBL.COMPANY, [input_dic])
-        except Exception:
-            self.error_handler.catch_exception(__name__)
-            print('{} - {}: problem inserting into {} table.'.format(ticker, name, STBL.COMPANY))
-
-    @staticmethod
-    def __get_index_list__(index: str):
-        return [INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.SP500] if index == INDICES.ALL else [index]
-
-    def get_input_values_for_stock_table(self, period, symbol: str, output_size: str):
-        kw_args = {'symbol': symbol, 'period': period, 'output_size': output_size}
-        self._alphavantage_stock_fetcher.retrieve_data(**kw_args)
-        return self.__get_df_data_for_insert_statement__(self._alphavantage_stock_fetcher.df, period, symbol)
-
-    @staticmethod
-    def __get_df_data_for_insert_statement__(df: pd.DataFrame, period: str, symbol: str, aggregation=1):
-        insert_handler = StockInsertHandler(symbol, period, aggregation)
-        for time_stamp, row in df.iterrows():
-            insert_handler.add_data_frame_row(time_stamp, row)
-        return insert_handler.input_dict_list
-
-    def save_tick_list(self, tick_list: list, symbol: str, period: str, aggregation: int):
-        insert_handler = StockInsertHandler(symbol, period, aggregation)
-        for wave_tick in tick_list:
-            if not self.is_stock_data_already_available(symbol, wave_tick.time_stamp, period, aggregation):
-                insert_handler.add_wave_tick(wave_tick)
-        self.__insert_data_into_table__(STBL.STOCKS, insert_handler.input_dict_list)
-
-    def create_stocks_table(self):
-        self.__create_table__(STBL.STOCKS)
-
-    def create_company_table(self):
-        self.__create_table__(STBL.COMPANY)
-
-    def create_pattern_table(self):
-        self.__create_table__(STBL.PATTERN)
-
-    def create_trade_table(self):
-        self.__create_table__(STBL.TRADE)
-
-    def create_wave_table(self):
-        self.__create_table__(STBL.WAVE)
-
-    def create_asset_table(self):
-        self.__create_table__(STBL.ASSET)
-
-    def __insert_pattern_in_pattern_table__(self, ticker: str, input_dic: dict):
-        try:
-            self.__insert_data_into_table__(STBL.PATTERN, [input_dic])
-        except Exception:
-            self.error_handler.catch_exception(__name__)
-            print('{}: problem inserting into {} table.'.format(ticker, STBL.PATTERN))
-
-    def is_stock_data_already_available(self, symbol: str, time_stamp: int, period: str, aggregation: int) -> bool:
-        query = self._stocks_table.get_query_for_unique_record(symbol, time_stamp, period, aggregation)
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df.shape[0] > 0
-
-    def is_pattern_already_available(self, pattern_id: str) -> bool:
-        query = self._pattern_table.get_query_for_unique_record_by_id(pattern_id)
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df.shape[0] > 0
-
-    def is_wave_already_available(self, wave_data_dict: dict) -> bool:
-        query = self._wave_table.get_query_for_unique_record_by_dict(wave_data_dict)
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df.shape[0] > 0
-
-    def delete_existing_wave(self, wave_data_dict: dict):
-        query = self._wave_table.get_query_for_unique_record_by_dict(wave_data_dict)
-        db_df = DatabaseDataFrame(self, query)
-        if db_df.df.shape[0] > 0:
-            rowid = db_df.df['rowid'][0]
-            self.delete_records("DELETE from {} WHERE rowid = {}".format(STBL.WAVE, rowid))
-
-    def is_asset_already_available(self, input_data_dict: dict):
-        query = self._asset_table.get_query_for_unique_record_by_dict(input_data_dict)
-        # print('is_asset_already_available: query={}'.format(query))
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df.shape[0] > 0
-
-    def is_any_asset_already_available_for_timestamp(self, time_stamp: int):
-        query = self._asset_table.get_query_for_records('Validity_Timestamp={}'.format(time_stamp))
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df.shape[0] > 0
-
-    def update_trade_type_for_pattern(self, pattern_id: str, trade_type: str):
-        where_clause = "Pattern_ID = '{}'".format(pattern_id)
-        query = self._trade_table.get_query_for_records(where_clause)
-        db_df = DatabaseDataFrame(self, query)
-        trade_type_not = TRT.NOT_SHORT if trade_type == TRT.SHORT else TRT.NOT_LONG
-        trade_type_new = trade_type_not if db_df.df.shape[0] == 0 else trade_type
-        self.update_table_column(STBL.PATTERN, DC.TRADE_TYPE, trade_type_new, "ID = '{}'".format(pattern_id))
-
-    def get_pattern_records_as_dataframe(self, where_clause='') -> pd.DataFrame:
-        query = self._pattern_table.get_query_for_records(where_clause)
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df
-
-    def get_wave_counter_dict(self, period: str, limit: int=0):
-        query = self._wave_table.get_query_for_wave_counter(period, limit)
-        db_df = DatabaseDataFrame(self, query)
-        return {row[0]: row[1] for index, row in db_df.df.iterrows()}
-
-    def get_wave_records_for_recommender_as_dataframe(self, limit: int) -> pd.DataFrame:
-        query = self._wave_table.get_query_for_recommender_records(limit)
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df
-
-    def is_trade_already_available_for_pattern_id(self, pattern_id, buy_trigger: str, strategy: str, mean: int) -> bool:
-        where_clause = "Pattern_ID = '{}' and Trade_Mean_Aggregation = {} " \
-                       "and Buy_Trigger = '{}' and Trade_Strategy = '{}'".format(
-            pattern_id, mean, buy_trigger, strategy
-        )
-        query = self._trade_table.get_query_for_records(where_clause)
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df.shape[0] > 0
-
-    def is_trade_already_available(self, trade_id: str) -> bool:
-        query = self._trade_table.get_query_for_unique_record_by_id(trade_id)
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df.shape[0] > 0
-
-    def get_trade_records_as_dataframe(self, where_clause='') -> pd.DataFrame:
-        query = self._trade_table.get_query_for_records(where_clause)
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df
-
-    def get_trade_records_for_trading_optimizer_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_for_trading_optimizer()
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df
-
-    def get_trade_records_for_statistics_as_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0")
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df
-
-    def get_trade_records_for_asset_statistics_as_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0 and Trade_Process = 'Online'")
-        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0")
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df
-
-    def get_asset_records_for_statistics_as_dataframe(self) -> pd.DataFrame:
-        query = self._asset_table.get_query_for_records()
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df
-
-    def get_trade_records_for_replay_as_dataframe(self) -> pd.DataFrame:
-        query = self._trade_table.get_query_for_records("Trade_Result_ID != 0 AND Period = 'DAILY'")
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df
-
-    def get_pattern_id_for_trade_id(self, trade_id: str) -> str:
-        query = "SELECT id, pattern_id FROM trade WHERE id = '{}'".format(trade_id)
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df.iloc[0][DC.PATTERN_ID]
-
-    def get_pattern_records_for_replay_as_dataframe(self) -> pd.DataFrame:
-        query = self._pattern_table.get_query_for_records("Period = 'DAILY'")
-        db_df = DatabaseDataFrame(self, query)
-        return db_df.df[db_df.df[DC.PATTERN_TYPE].isin(FT.get_long_trade_able_types())]
-
-    def delete_existing_trade(self, trade_id: str):
-        if self.is_trade_already_available(trade_id):
-            self.delete_records(self._trade_table.get_query_for_delete_by_id(trade_id))
-
-    def delete_duplicate_records(self, table: MyTable):
-        db_df_duplicate_id = DatabaseDataFrame(self, table.query_duplicate_id)
-        if db_df_duplicate_id.df.shape[0] == 0:
-            return
-        id_oid_keep_dict = {}
-        row_id_delete_list = []
-        db_df_id_oid = DatabaseDataFrame(self, table.query_id_oid)
-        duplicate_id_list = list(db_df_duplicate_id.df[DC.ID])
-        for index, row in db_df_id_oid.df.iterrows():
-            record_id = row[DC.ID]
-            if record_id in duplicate_id_list:
-                row_id = row['rowid']
-                if record_id in id_oid_keep_dict:
-                    row_id_delete_list.append(str(row_id))
-                else:
-                    id_oid_keep_dict[record_id] = row_id
-        row_id_delete_concatenated = ','.join(row_id_delete_list)
-        query = 'DELETE FROM {} WHERE oid in ({});'.format(table.name, row_id_delete_concatenated)
-        print(query)
-        self.delete_records(query)
-
-    def get_missing_trade_strategies_for_pattern_id(self, pattern_id: str, check_against_strategy_dict: dict,
-                                                    mean: int, sma_number: int) -> dict:
-        query = "SELECT ID, Pattern_id, Buy_Trigger, Trade_Strategy, Trade_Mean_Aggregation " \
-                "FROM trade where pattern_id = '{}'".format(pattern_id)
-        db_df = DatabaseDataFrame(self, query)
-        return_dict = {}
-        strategy_dict_exist = {}
-        for index, row in db_df.df.iterrows():
-            buy_trigger = row[DC.BUY_TRIGGER]
-            trade_strategy = row[DC.TRADE_STRATEGY]
-            mean_aggregation = row[DC.TRADE_MEAN_AGGREGATION]
-
-            is_combination_existing = False
-            if trade_strategy == TSTR.SMA and mean_aggregation == sma_number:
-                is_combination_existing = True
-            elif trade_strategy != TSTR.SMA and mean_aggregation == mean:
-                is_combination_existing = True
-
-            if is_combination_existing:
-                if buy_trigger not in strategy_dict_exist:
-                    strategy_dict_exist[buy_trigger] = [trade_strategy]
-                else:
-                    strategy_dict_exist[buy_trigger].append(trade_strategy)
-        for buy_trigger, trade_strategy_list in check_against_strategy_dict.items():
-            if buy_trigger not in strategy_dict_exist:
-                return_dict[buy_trigger] = trade_strategy_list
-            else:
-                exist_list = strategy_dict_exist[buy_trigger]
-                return_dict[buy_trigger] = [strategy for strategy in trade_strategy_list if strategy not in exist_list]
-        return return_dict
-
-    def get_pattern_differences_to_saved_version(self, pattern_dict: dict) -> dict:
-        query = self._pattern_table.get_query_for_unique_record_by_id(pattern_dict[DC.ID])
-        db_df = DatabaseDataFrame(self, query)
-        df_first = db_df.df.iloc[0]
-        return {key: [str(df_first[key]), str(pattern_dict[key])] for key, values in pattern_dict.items()
-                if str(df_first[key]) != str(pattern_dict[key])}
-
-    def __create_table__(self, table_name: str):
-        metadata = MetaData()
-        table = self.__get_table_by_name__(table_name)
-        exec(table.description)
-        self.create_database_elements(metadata)
-        table_obj = metadata.tables.get(table_name)
-        print(repr(table_obj))
-
-    def __get_table_by_name__(self, table_name: str):
-        return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table,
-                STBL.PATTERN: self._pattern_table, STBL.TRADE: self._trade_table,
-                STBL.WAVE: self._wave_table, STBL.ASSET: self._asset_table}.get(table_name, None)
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):

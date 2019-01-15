@@ -26,7 +26,9 @@ process_single_ticker_id = False
 
 if process_single_ticker_id:
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
-    stock_db_updater.update_wave_records_for_daily_period('AAPL', 400)
+    stock_db_updater.update_equity_records()
+    # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
+    # stock_db_updater.update_wave_records_for_daily_period('AAPL', 400)
 else:
     is_weekday = datetime.today().weekday() in [1, 2, 3, 4, 5]  # tuesday till saturday => update stock data as well
 
@@ -35,7 +37,7 @@ else:
 
     stock_db.delete_duplicate_records(trade_table)
     stock_db.delete_duplicate_records(pattern_table)
-    stock_db.update_crypto_currencies(PRD.DAILY, excluded_id_list=exchange_config.ticker_id_excluded_list)
+    stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
 
     if is_weekday:
         stock_db.update_stock_data_by_index(INDICES.DOW_JONES, PRD.DAILY)
@@ -43,6 +45,8 @@ else:
         stock_db.update_stock_data_for_symbol('TSLA')
         stock_db.update_stock_data_for_symbol('GE')
         stock_db.update_stock_data_by_index(INDICES.NASDAQ100, PRD.DAILY)
+    else:
+        stock_db_updater.update_equity_records()
 
     # print(stock_db.get_wave_counter_dict(400))
 
@@ -62,6 +66,6 @@ else:
         stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.NASDAQ100)
 
     if is_weekday:
-        stock_db_updater.update_trade_records(16, 16)
+        stock_db_updater.update_trade_records(4, 16)
 
 

@@ -10,11 +10,13 @@ from sertl_analytics.myexceptions import MyException
 from sertl_analytics.datafetcher.xml_parser import XMLParser4DowJones, XMLParser4Nasdaq100, XMLParser4SP500
 from sertl_analytics.datafetcher.file_fetcher import NasdaqFtpFileFetcher
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
+from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
+from sertl_analytics.exchanges.bitfinex_trade_client import MyBitfinexTradeClient
 
 
-class IndicesComponentList:
+class IndicesComponentFetcher:
     @staticmethod
-    def get_ticker_name_dic(index: str, currency: str = 'USD') -> dict:
+    def get_ticker_name_dic(index: str) -> dict:
         if index == INDICES.DOW_JONES:
             parser = XMLParser4DowJones()
             return parser.get_result_dic()
@@ -29,24 +31,12 @@ class IndicesComponentList:
             df = ftp_fetcher.get_data_frame()
             return PyBaseDataFrame.get_rows_as_dictionary(df, 'Symbol', ['Security Name'], {'Market Category': 'Q'})
         elif index == INDICES.CRYPTO_CCY:
-            base_dic = IndicesComponentList.__get_crypto_currency_base_dic__()
-            return {key + currency: value + ' (' + currency + ')' for key, value in base_dic.items()}
+            client = MyBitfinexTradeClient(BitfinexConfiguration())
+            return client.get_trading_pair_name_dict()
         elif index == INDICES.MIXED:
             return {"TSLA": "Tesla", "FCEL": "Full Cell", "ONVO": "Organovo", "MRAM": "MRAM"}
         else:
             raise MyException('No index fetcher defined for "{}"'.format(index))
 
-    @staticmethod
-    def __get_crypto_currency_base_dic__() -> dict:
-        # not currently , 'XRP': 'Ripple',  'IOT': 'IOTA', 'ETC': 'Ethereum-Classic',
-        return {'BTC': 'Bitcoin',
-                'EOS': 'EOS',
-                'ETH': 'Ethereum',
-                'LTC': 'Litecoin',
-                'NEO': 'NEO',
-                'XMR': 'XMR',
-                'ZEC': 'ZEC',
-                'IOT': 'IOTA',
-                'XRP': 'Ripple',
-                'BOX': 'Box'
-                }
+
+

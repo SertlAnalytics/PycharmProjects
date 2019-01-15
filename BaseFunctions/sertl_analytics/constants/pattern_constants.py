@@ -9,6 +9,7 @@ from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
 class STBL:  # stocks tables
+    EQUITY = 'Equity'
     STOCKS = 'Stocks'
     COMPANY = 'Company'
     PATTERN = 'Pattern'
@@ -19,7 +20,7 @@ class STBL:  # stocks tables
 
     @staticmethod
     def get_all():
-        return [STBL.STOCKS, STBL.COMPANY, STBL.PATTERN, STBL.TRADE, STBL.WAVE, STBL.ASSET, STBL.METRIC]
+        return [STBL.EQUITY, STBL.STOCKS, STBL.COMPANY, STBL.PATTERN, STBL.TRADE, STBL.WAVE, STBL.ASSET, STBL.METRIC]
 
     @staticmethod
     def get_for_model_statistics():
@@ -44,6 +45,7 @@ class PRED:  # Predictors
     BEFORE_BREAKOUT = 'Before_Breakout'
     AFTER_BREAKOUT = 'After_Breakout'
     FOR_TRADE = 'For_Trade'
+    BREAKOUT_LEVEL = 'Breakout_Level'
 
     @staticmethod
     def get_as_options():
@@ -628,6 +630,11 @@ class TTC:  # Trade test cases
     BACK_TESTING = 'back testing'
 
 
+class EST:  # EquityStatus
+    ACTIVE = 'active'
+    INACTIVE = 'inactive'
+
+
 class RST:  # ReplayStatus
     REPLAY = 'replay'
     STOP = 'stop'
@@ -756,7 +763,7 @@ class DC:  # Data Columns
     TIME = 'Time'
     OPEN = 'Open'
     HIGH = 'High'
-    LOW = 'LOW'
+    LOW = 'Low'
     CLOSE = 'Close'
     VOLUME = 'Volume'
     BIG_MOVE = 'BigMove'
@@ -967,4 +974,14 @@ class MDC:  # Metric data column
     RECALL = 'RECALL'
     F1_SCORE = 'F1_Score'
     ROC_AUC = 'ROC_AUC'
+
+
+class EDC:  # Equity data column
+    EQUITY_KEY = 'Key'
+    EQUITY_NAME = 'Name'
+    EQUITY_TYPE = 'Equity_Type'
+    EXCHANGE = 'Exchange'
+    VALID_FROM_DT = 'Valid_From_Date'
+    VALID_TO_DT = 'Valid_To_Date'
+    EQUITY_STATUS = 'Status'
 

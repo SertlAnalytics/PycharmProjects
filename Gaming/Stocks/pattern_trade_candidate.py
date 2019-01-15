@@ -6,7 +6,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import DC, BLR, TP
+from sertl_analytics.constants.pattern_constants import DC, BLR, TP, PDR, FT
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_system_configuration import TradeOptimizer
@@ -205,6 +205,15 @@ class TradeCandidateController:
         buy_trigger = pattern_trade.buy_trigger
         key = self.__get_key_for_black_buy_pattern_id_readable_list(pattern_trade.pattern, buy_trigger)
         self.__add_to_black_buy_pattern_id_readable_list__(key, reason)
+
+    @staticmethod
+    def is_deletion_reason_candidate_for_black_buy_pattern_id_list(pattern_trade: PatternTrade, deletion_reason: str):
+        if deletion_reason == PDR.PATTERN_VANISHED: # they have the trend to reappear
+            return False
+        elif deletion_reason == PDR.WRONG_BREAKOUT:
+            if pattern_trade.pattern.pattern_type in FT.get_fibonacci_types():
+                return False # they have the trend to reappear
+        return True
 
     def __add_to_black_buy_pattern_id_readable_list__(self, buy_trigger_key: str, reason: str):
         if buy_trigger_key not in self._black_buy_pattern_id_readable_list:

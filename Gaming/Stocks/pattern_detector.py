@@ -138,6 +138,21 @@ class PatternDetector:
                 return True
         return False
 
+    def was_massive_movement_since_last_tick(self) -> bool:
+        symbol = self.sys_config.runtime_config.actual_ticker
+        tick_previous = self.pdh.pattern_data.tick_list[-2]
+        tick_last = self.pdh.pattern_data.tick_list[-1]
+        if tick_previous.high == 0:  # ToDo - why can this happen?
+            return False
+        massive_movement_pct = self.sys_config.exchange_config.massive_breakout_pct
+        movement_up_pct = (tick_last.high - tick_previous.high) / tick_previous.high * 100
+        movement_down_pct = (tick_last.low - tick_previous.low) / tick_previous.low * 100
+        if movement_up_pct > massive_movement_pct or movement_down_pct < -massive_movement_pct:
+            print('Massive movement for {}: up={:.2f}%, down={:.2f}% (allowed - abs.: {:.2f})%'.format(
+                symbol, movement_up_pct, movement_down_pct, massive_movement_pct))
+            return True
+        return False
+
     def get_pattern_list_for_buy_trigger(self, buy_trigger: str) -> list:
         pattern_list = []
         for pattern in self.pattern_list:

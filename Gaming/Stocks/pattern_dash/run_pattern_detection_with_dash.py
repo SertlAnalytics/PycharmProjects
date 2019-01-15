@@ -24,6 +24,7 @@ sys_config.exchange_config.deactivate_automatic_trading()
 sys_config.exchange_config.trade_strategy_dict = {
     BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP]
 }
+sys_config.exchange_config.massive_breakout_pct = 5
 sys_config.config.simple_moving_average_number = 20
 sys_config.config.trading_last_price_mean_aggregation = 8
 

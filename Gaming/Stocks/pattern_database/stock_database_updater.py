@@ -5,14 +5,18 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-10
 """
 
-from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE
+from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE, TRC, INDICES, EDC, EST
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern_detection_controller import PatternDetectionController
-from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.exchanges.exchange_cls import Balance
-from pattern_database.stock_access_layer import AccessLayer4Asset, AccessLayer4Stock
+from pattern_database.stock_access_layer import AccessLayer4Asset, AccessLayer4Stock, AccessLayer4Equity
+from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentFetcher
+from time import sleep
+from sertl_analytics.datafetcher.xml_parser import XMLParser4DowJones, XMLParser4Nasdaq100, XMLParser4SP500
+from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
+from sertl_analytics.exchanges.bitfinex_trade_client import MyBitfinexTradeClient
 
 
 class StockDatabaseUpdater:
@@ -20,6 +24,52 @@ class StockDatabaseUpdater:
         self.sys_config = SystemConfiguration()
         self.db_stock = self.sys_config.db_stock
         self.pattern_controller = PatternDetectionController(self.sys_config)
+
+    def update_equity_records(self):
+        access_layer = AccessLayer4Equity(self.db_stock)
+        dt_today = MyDate.get_date_from_datetime()
+        # dt_today = MyDate.adjust_by_days(dt_today, 40)
+        dt_valid_until = MyDate.adjust_by_days(dt_today, 30)
+        dt_today_str = str(dt_today)
+        dt_valid_until_str = str(dt_valid_until)
+        exchange_equity_type_dict = self.__get_equity_dict__()
+        for exchange, equity_type in exchange_equity_type_dict.items():
+            value_dict = access_layer.get_index_dict(exchange)
+            if not access_layer.are_any_records_available_for_date(dt_today, exchange, equity_type):
+                access_layer.delete_existing_equities(equity_type, exchange)
+                sleep(2)
+                self.__update_equity_records_for_equity_type__(
+                    access_layer, dt_today_str, dt_valid_until_str, exchange, equity_type)
+
+    @staticmethod
+    def __get_equity_dict__():
+        return {
+            TRC.BITFINEX: EQUITY_TYPE.CRYPTO,
+            INDICES.DOW_JONES: EQUITY_TYPE.SHARE,
+            INDICES.NASDAQ100: EQUITY_TYPE.SHARE
+        }
+
+    def __update_equity_records_for_equity_type__(
+            self, access_layer: AccessLayer4Equity, dt_today_str: str, dt_valid_until_str: str,
+            exchange: str, equity_type: str):
+        # a) get existing entries from source (internet, ...)
+        if equity_type == EQUITY_TYPE.SHARE:
+            source_data_dict = IndicesComponentFetcher.get_ticker_name_dic(exchange)
+        else:
+            source_data_dict = IndicesComponentFetcher.get_ticker_name_dic(INDICES.CRYPTO_CCY)
+
+        # b) get existing records
+        existing_data_dict = access_layer.get_existing_equities_as_data_dict(equity_type, exchange)
+
+        # b) none available => get new ones
+        for key, value in source_data_dict.items():
+            if key in existing_data_dict:
+                pass
+            else:
+                data_dict = {EDC.EQUITY_KEY: key, EDC.EQUITY_NAME: value,
+                             EDC.VALID_FROM_DT: dt_today_str, EDC.VALID_TO_DT: dt_valid_until_str,
+                             EDC.EXCHANGE: exchange, EDC.EQUITY_TYPE: equity_type, EDC.EQUITY_STATUS: EST.ACTIVE}
+                self.db_stock.insert_equity_data(data_dict)
 
     def update_trade_records(self, mean: int, sma_number: int, trade_strategies: dict=None):
         self.sys_config.init_detection_process_for_automated_trade_update(mean, sma_number)

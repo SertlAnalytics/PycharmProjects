@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED
+from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC
 from sertl_analytics.mydates import MyDate
 
 
@@ -15,6 +15,21 @@ class PredictionFeatureTable:
     @staticmethod
     def is_label_column_for_regression(label_column: str):
         return False   # label_column[-4:] == '_PCT'
+
+
+class EquityTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return STBL.EQUITY
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(EDC.EQUITY_KEY, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(EDC.EQUITY_NAME, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(EDC.EQUITY_TYPE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(EDC.EXCHANGE, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(EDC.VALID_FROM_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(EDC.VALID_TO_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(EDC.EQUITY_STATUS, CDT.STRING, 20))
 
 
 class MetricTable(MyTable):

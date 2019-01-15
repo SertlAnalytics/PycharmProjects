@@ -60,6 +60,8 @@ class PatternPredictorOptimizer:
         return df_group_max
 
     def get_optimal_prediction(self, table_name: str, predictor: str, label: str, pattern_type: str, x_data: np.array):
+        # if label == DC.BREAKOUT_DIRECTION_ID:
+        #     print('stop: {}'.format(label))
         prediction_precision_optimal = 0
         prediction_optimal = - math.inf
         for model_name in self._model_dict:
@@ -71,7 +73,7 @@ class PatternPredictorOptimizer:
                 if prediction_precision > prediction_precision_optimal:
                     prediction_precision_optimal = prediction_precision
                     prediction_optimal = prediction
-        return prediction_optimal
+        return 0 if prediction_optimal == - math.inf else prediction_optimal
 
     def __get_prediction_for_model__(
             self, model_name, table: str, predictor: str, label: str, pattern_type: str, x_data: np.array):
@@ -158,6 +160,9 @@ class PatternPredictorOptimizer:
         key = self.__get_key_for_trained_model__(model_name, table_name, predictor, label_column, pattern_type)
         if key in self._trained_model_dict:
             return self._trained_model_dict[key]
+
+    def train_models_for_breakout(self, x_train, y_train):
+        self.retrain_trained_models(STBL.STOCKS, PRED.BREAKOUT_LEVEL, 'Breakout_level', FT.ALL, x_train, y_train)
 
     def retrain_trained_models(
             self, table_name: str, predictor: str, label_column: str, pattern_type: str, x_train, y_train):

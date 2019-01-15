@@ -113,7 +113,10 @@ class PatternPart:
         self.__xy = self.stock_df.get_xy_parameter(self.function_cont)
 
     def __set_xy_pattern_range_parameter__(self):
+        print('__set_xy_pattern_range_parameter__: self.stock_df.tick_first:')
+        self.stock_df.tick_first.print()
         self.__xy_pattern_range = self.stock_df.get_xy_parameter(self.function_cont, self.pattern_range.tick_last)
+        print('self.__xy_pattern_range={}'.format(self.__xy_pattern_range))
 
     def __set_xy_regression__(self):
         self.__xy_regression = self.stock_df.get_xy_regression(self.function_cont)

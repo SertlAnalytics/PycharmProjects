@@ -28,7 +28,7 @@ class PatternData:
         self.df = self.__get_adjusted_df_for_wave_simulation__(df)
         self.df_length = self.df.shape[0]
         self.max_value = self.df[CN.HIGH].max()
-        self.min_value = self.df[CN.HIGH].min()
+        self.min_value = self.df[CN.LOW].min()
         self.height = self.max_value - self.min_value
         self.__add_columns__()
         self.__init_columns_for_ticks_distance__()

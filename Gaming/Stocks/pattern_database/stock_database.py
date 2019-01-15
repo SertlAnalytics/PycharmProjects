@@ -12,12 +12,11 @@ from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStock
 from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
-    CompanyTable, STBL, WaveTable, AssetTable, MetricTable
-from pattern_index_configuration import IndexConfiguration
+    CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable
 import pandas as pd
 import math
 from datetime import datetime
-from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
+from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentFetcher
 from sertl_analytics.datafetcher.database_fetcher import MyTable
 from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, OPS, FT, TRT, TSTR
 import os
@@ -94,8 +93,8 @@ class StockInsertHandler:
 class StockDatabase(BaseDatabase):
     def __init__(self):
         BaseDatabase.__init__(self)
-        self._index_config = IndexConfiguration([INDICES.CRYPTO_CCY])
         self._dt_now_time_stamp = int(datetime.now().timestamp())
+        self._entity_table = EquityTable()
         self._stocks_table = StocksTable()
         self._company_table = CompanyTable()
         self._pattern_table = PatternTable()
@@ -141,14 +140,14 @@ class StockDatabase(BaseDatabase):
         index_list = self.__get_index_list__(index)
         for index in index_list:
             print('\nUpdating {}...\n'.format(index))
-            ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
+            ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(index)
             for ticker in ticker_dic:
                 self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
                                                             company_dict, last_loaded_date_stamp_dic)
         self.__handle_error_cases__()
 
     def __check_company_dic_against_web__(self, index: str, company_dict: dict):
-        company_dict_by_web = IndicesComponentList.get_ticker_name_dic(index)
+        company_dict_by_web = IndicesComponentFetcher.get_ticker_name_dic(index)
         for key in company_dict_by_web:
             if key not in company_dict:
                 name = company_dict_by_web[key]
@@ -156,14 +155,13 @@ class StockDatabase(BaseDatabase):
                 new_dict = self.__get_company_dict__(key)
                 company_dict[key] = new_dict[key]
 
-    def update_crypto_currencies(self, period=PRD.DAILY, aggregation=1, excluded_id_list=None):
+    def update_crypto_currencies(self, period=PRD.DAILY, aggregation=1, symbol_list=None):
         company_dic = self.__get_company_dict__(like_input='USD')
-        excluded_id_list = [] if excluded_id_list is None else excluded_id_list
         last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(like_input='USD', period=period)
         print('\nUpdating {}...\n'.format(INDICES.CRYPTO_CCY))
-        ticker_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
+        ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(INDICES.CRYPTO_CCY)
         for ticker in ticker_dic:
-            if ticker not in excluded_id_list:
+            if symbol_list is None or ticker in symbol_list:
                 self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
                                                             company_dic, last_loaded_date_stamp_dic)
         self.__handle_error_cases__()
@@ -190,6 +188,9 @@ class StockDatabase(BaseDatabase):
     def insert_trade_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.TRADE, input_dict_list)
 
+    def insert_equity_data(self, input_dict_list: list):
+        self.__insert_data_into_table__(STBL.EQUITY, input_dict_list)
+
     def insert_wave_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.WAVE, input_dict_list)
 
@@ -214,7 +215,7 @@ class StockDatabase(BaseDatabase):
         if ticker in company_dic and not company_dic[ticker].ToBeLoaded:
             return  # must not be loaded
         try:
-            if self._index_config.is_symbol_crypto(ticker):
+            if ticker[-3:] == 'USD':  # ToDo - with function
                 # fetcher = self._alphavantage_crypto_fetcher
                 fetcher = self._bitfinex_crypto_fetcher
                 kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker)
@@ -306,6 +307,9 @@ class StockDatabase(BaseDatabase):
             if not self.is_stock_data_already_available(symbol, wave_tick.time_stamp, period, aggregation):
                 insert_handler.add_wave_tick(wave_tick)
         self.__insert_data_into_table__(STBL.STOCKS, insert_handler.input_dict_list)
+
+    def create_equity_table(self):
+        self.__create_table__(STBL.EQUITY)
 
     def create_stocks_table(self):
         self.__create_table__(STBL.STOCKS)
@@ -519,6 +523,7 @@ class StockDatabase(BaseDatabase):
 
     def __get_table_by_name__(self, table_name: str):
         return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table,
+                STBL.EQUITY: self._entity_table,
                 STBL.PATTERN: self._pattern_table, STBL.TRADE: self._trade_table,
                 STBL.WAVE: self._wave_table, STBL.ASSET: self._asset_table,
                 STBL.METRIC: self._metric_table}.get(table_name, None)

@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import json
 from pattern_detection_controller import PatternDetectionController
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
-from sertl_analytics.constants.pattern_constants import BT, PRD
+from sertl_analytics.constants.pattern_constants import BT, PRD, INDICES
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_tools import MyGraphCache, MyDashStateHandler, MyGraphCacheObjectApi
@@ -473,8 +473,13 @@ class MyDashTab4Pattern(MyDashBaseTab):
 
     def __fill_ticker_options__(self):
         self._ticker_options = []
-        for symbol, name in self.sys_config.data_provider.ticker_dict.items():
-            if symbol not in self.sys_config.exchange_config.ticker_id_excluded_list:
+        if self.sys_config.data_provider.index_used == INDICES.CRYPTO_CCY:
+            for ticker_id in self.bitfinex_config.ticker_id_list:
+                if ticker_id in self.sys_config.data_provider.ticker_dict:
+                    name = self.sys_config.data_provider.ticker_dict[ticker_id]
+                    self._ticker_options.append({'label': '{}'.format(name), 'value': ticker_id})
+        else:  # currently we take all - but this is definitely to much for calculation...
+            for symbol, name in self.sys_config.data_provider.ticker_dict.items():
                 self._ticker_options.append({'label': '{}'.format(name), 'value': symbol})
 
     def __get_ticker_label__(self, ticker_value: str):
