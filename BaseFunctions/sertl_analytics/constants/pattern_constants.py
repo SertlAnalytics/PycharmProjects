@@ -8,6 +8,44 @@ Date: 2018-05-14
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
+class POC:  # PatternObservationColumns
+    # All pct values are with respective to the off set value = buy price
+    LIMIT_PCT = 'Limit_Percentage'
+    CURRENT_VALUE_HIGH_PCT = 'Current_Value_High_Percentage'
+    CURRENT_VALUE_LOW_PCT = 'Current_Value_Low_Percentage'
+    CURRENT_VALUE_OPEN_PCT = 'Current_Value_Open_Percentage'
+    CURRENT_VALUE_CLOSE_PCT = 'Current_Value_Close_Percentage'
+    STOP_LOSS_PCT = 'Stop_Loss_PCT'
+    BEFORE_PATTERN_MAX_PCT = 'Before_Pattern_Max_Percentage'
+    BEFORE_PATTERN_MIN_PCT = 'Before_Pattern_Min_Percentage'
+    PATTERN_MAX_PCT = 'Pattern_Max_Percentage'
+    PATTERN_MIN_PCT = 'Pattern_Min_Percentage'
+    AFTER_BUY_MAX_PCT = 'After_Buy_Max_Percentage'  # until current value !!!
+    AFTER_BUY_MIN_PCT = 'After_Buy_Min_Percentage'  # until current value !!!
+
+    @staticmethod
+    def get_observation_space_columns():
+        return [POC.LIMIT_PCT, POC.STOP_LOSS_PCT,
+                POC.CURRENT_VALUE_HIGH_PCT, POC.CURRENT_VALUE_LOW_PCT,
+                POC.CURRENT_VALUE_OPEN_PCT, POC.CURRENT_VALUE_CLOSE_PCT,
+                POC.BEFORE_PATTERN_MAX_PCT, POC.BEFORE_PATTERN_MIN_PCT,
+                POC.PATTERN_MAX_PCT, POC.PATTERN_MIN_PCT,
+                POC.AFTER_BUY_MAX_PCT, POC.AFTER_BUY_MIN_PCT,
+                DC.FC_HALF_POSITIVE_PCT, DC.FC_FULL_POSITIVE_PCT,
+                DC.FC_HALF_NEGATIVE_PCT, DC.FC_HALF_NEGATIVE_PCT,
+                DC.FC_TICKS_TO_POSITIVE_HALF, DC.FC_TICKS_TO_POSITIVE_FULL,
+                DC.FC_TICKS_TO_NEGATIVE_HALF, DC.FC_TICKS_TO_NEGATIVE_FULL]
+
+    
+class TPA:  # TradePolicyAction
+    SELL = 'Sell'
+    STOP_LOSS_UP = 'Stop_Loss_upwards'
+    STOP_LOSS_DOWN = 'Stop_Loss_downwards'
+    WAIT = 'WAIT'
+    LIMIT_UP = 'Limit_upwards'
+    LIMIT_DOWN = 'Limit_downwards'
+
+
 class STBL:  # stocks tables
     EQUITY = 'Equity'
     STOCKS = 'Stocks'
@@ -960,6 +998,18 @@ class DC:  # Data Columns
     VALUE_PER_UNIT = 'Value_Unit'
     VALUE_TOTAL = 'Value_Total'
     CURRENCY = 'Currency'
+
+    @staticmethod
+    def get_columns_for_agent_environment():
+        return [DC.TS_PATTERN_TICK_FIRST, DC.TS_PATTERN_TICK_LAST,
+                DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_END_DT,
+                DC.EXPECTED_WIN,
+                DC.TRADE_BOX_OFF_SET, DC.TRADE_BOX_LIMIT_ORIG, DC.TRADE_BOX_STOP_LOSS_ORIG,
+                DC.FC_HALF_POSITIVE_PCT, DC.FC_FULL_POSITIVE_PCT, DC.FC_HALF_NEGATIVE_PCT, DC.FC_FULL_NEGATIVE_PCT,
+                DC.FC_TICKS_TO_POSITIVE_HALF, DC.FC_TICKS_TO_POSITIVE_FULL,
+                DC.FC_TICKS_TO_NEGATIVE_HALF, DC.FC_TICKS_TO_NEGATIVE_FULL,
+                DC.BUY_DT, DC.BUY_PRICE,
+                DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_AMOUNT, DC.TRADE_RESULT_PCT]
 
 
 class MDC:  # Metric data column

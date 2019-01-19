@@ -214,6 +214,14 @@ class MyMath:
         return round(value_change / value_mean, decimal_round)
 
     @staticmethod
+    def get_value_from_percentage_on_base_value(value_pct: float, value_base: float, decimal_round=2) -> float:
+        return round(value_base + (value_base * value_pct/100), decimal_round)  # 10% = 10 percentage
+
+    @staticmethod
+    def get_value_from_pct_on_base_value(value_pct: float, value_base: float, decimal_round=2) -> float:
+        return round(value_base + (value_base * value_pct), decimal_round)  # 10% = 0.10 pct
+
+    @staticmethod
     def get_standard_deviation_for_regression(x, y, rounding=2):
         np_array = np.polyfit(x, y, 1)
         intercept, slope = np_array[1], np_array[0]

@@ -1,8 +1,8 @@
 """
-Description: This job updates the trade records for all pattern without that trade type.
+Description: This class is responsible for the automated daily update of the stock database.
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
-Date: 2018-06-10
+Date: 2018-12-10
 """
 
 from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE, TRC, INDICES, EDC, EST
@@ -12,11 +12,7 @@ from pattern_detection_controller import PatternDetectionController
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.exchanges.exchange_cls import Balance
 from pattern_database.stock_access_layer import AccessLayer4Asset, AccessLayer4Stock, AccessLayer4Equity
-from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentFetcher
 from time import sleep
-from sertl_analytics.datafetcher.xml_parser import XMLParser4DowJones, XMLParser4Nasdaq100, XMLParser4SP500
-from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
-from sertl_analytics.exchanges.bitfinex_trade_client import MyBitfinexTradeClient
 
 
 class StockDatabaseUpdater:
@@ -52,11 +48,9 @@ class StockDatabaseUpdater:
     def __update_equity_records_for_equity_type__(
             self, access_layer: AccessLayer4Equity, dt_today_str: str, dt_valid_until_str: str,
             exchange: str, equity_type: str):
-        # a) get existing entries from source (internet, ...)
-        if equity_type == EQUITY_TYPE.SHARE:
-            source_data_dict = IndicesComponentFetcher.get_ticker_name_dic(exchange)
-        else:
-            source_data_dict = IndicesComponentFetcher.get_ticker_name_dic(INDICES.CRYPTO_CCY)
+        # a) get symbol - name dictionaries
+        index = exchange if equity_type == EQUITY_TYPE.SHARE else INDICES.CRYPTO_CCY
+        source_data_dict = self.sys_config.index_config.get_ticker_dict_for_index(index)
 
         # b) get existing records
         existing_data_dict = access_layer.get_existing_equities_as_data_dict(equity_type, exchange)
@@ -99,6 +93,7 @@ class StockDatabaseUpdater:
                     self.db_stock.update_trade_type_for_pattern(pattern_id, TRT.LONG)
 
     def update_pattern_data_by_index_for_daily_period(self, index: str):
+        print('Update pattern data for index: {}'.format(index))
         self.sys_config.init_detection_process_for_automated_pattern_update()
         self.sys_config.data_provider.use_index(index)
         pattern_controller = PatternDetectionController(self.sys_config)
@@ -106,10 +101,9 @@ class StockDatabaseUpdater:
 
     def update_wave_data_by_index_for_daily_period(self, index: str, limit: int):
         print('Update wave data for index: {} ({}days)'.format(index, limit))
-        ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
+        ticker_dic = self.__get_configured_ticker_dict_for_index__(index)
         for ticker in ticker_dic:
-            if ticker not in self.sys_config.exchange_config.ticker_id_excluded_list:
-                self.update_wave_records_for_daily_period(ticker, limit)
+            self.update_wave_records_for_daily_period(ticker, limit)
 
     def update_wave_records_for_daily_period(self, ticker_id: str, limit: int):
         self.sys_config.config.save_wave_data = True
@@ -122,9 +116,17 @@ class StockDatabaseUpdater:
 
     def update_wave_data_by_index_for_intraday(self, index: str, aggregation: int=30):
         print('Update wave data for index: {} ({}min)'.format(index, aggregation))
-        ticker_dic = IndicesComponentList.get_ticker_name_dic(index)
+        ticker_dic = self.__get_configured_ticker_dict_for_index__(index)
         for ticker in ticker_dic:
             self.update_wave_records_for_intraday(ticker, aggregation)
+
+    def __get_configured_ticker_dict_for_index__(self, index):
+        if index == INDICES.CRYPTO_CCY:
+            ticker_dic = self.sys_config.index_config.get_ticker_dict_for_index(
+                index, self.sys_config.exchange_config.ticker_id_list)
+        else:
+            ticker_dic = self.sys_config.index_config.get_ticker_dict_for_index(index)
+        return ticker_dic
 
     def update_wave_records_for_intraday(self, ticker_id: str, aggregation: int):
         self.sys_config.config.save_wave_data = True

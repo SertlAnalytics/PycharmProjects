@@ -18,7 +18,7 @@ sys_config = SystemConfiguration()
 sys_config.exchange_config.trade_strategy_dict = {BT.BREAKOUT: [TSTR.TRAILING_STEPPED_STOP]}
 sys_config.config.pattern_type_list = FT.get_all()
 sys_config.config.plot_data = True
-sys_config.config.with_trading = True
+sys_config.config.with_trading = False
 sys_config.config.save_pattern_data = False
 sys_config.config.save_trade_data = False
 sys_config.config.plot_only_pattern_with_fibonacci_waves = False
@@ -30,7 +30,7 @@ sys_config.config.bound_upper_value = CN.CLOSE
 sys_config.config.bound_lower_value = CN.CLOSE
 sys_config.config.breakout_range_pct = 0.05  # default is 0.05
 sys_config.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
-sys_config.config.pattern_ids_to_find = ['1_1_1_KO_22_2016-07-22_00:00_2016-09-28_00:00']
+sys_config.config.pattern_ids_to_find = ['1_1_1_MMM_10_2014-08-26_00:00_2014-09-08_00:00']
 
 pattern_controller = PatternDetectionController(sys_config)
 pattern_controller.run_pattern_detector()

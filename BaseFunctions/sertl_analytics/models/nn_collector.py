@@ -80,23 +80,19 @@ class NearestNeighborEntry:
         return '{}#{}: c={}, d={}'.format(self._index, self._id, self.counter, self.distance)
 
 
-class NearestNeighborCollector:
-    def __init__(self, df_features_with_labels_and_id: pd.DataFrame, collector_id: str):
+class NearestNeighborContainer:
+    def __init__(self, collector_id: str):
         self._id = collector_id
-        self._df = df_features_with_labels_and_id
         self._entry_dict = {}
 
-    def add_dist_ind_array(self, ind_array: np.array, dist_array: np.array):
-        ind_list = list(ind_array[0])
-        dist_list = list(dist_array[0])
-        for pos, index in enumerate(ind_list):
-            neighbor_entry = self.__get_entry_for_index__(index)
-            neighbor_entry.add_distance(dist_list[pos])
+    def get_pattern_id_list(self):
+        return [nn.id for nn in self._entry_dict.values()]
 
     def add_entry_list(self, entry_list: list):
         for nn_entry in entry_list:
             if nn_entry.id in self._entry_dict:
                 for distance in nn_entry.distance_list:
+                    # we want later the average distance over all labels...
                     self._entry_dict[nn_entry.id].add_distance(distance)
             else:
                 self._entry_dict[nn_entry.id] = nn_entry
@@ -109,9 +105,22 @@ class NearestNeighborCollector:
     def print_sorted_list(self, elements=0):
         entry_list = self.get_sorted_entry_list()
         entry_list = entry_list[:elements] if elements > 0 else entry_list
-        print('\nNearestNeighborCollector: {}'.format(self._id))
+        print('\nNearestNeighborContainer: {}'.format(self._id))
         for entry in entry_list:
             print(entry.get_details())
+
+
+class NearestNeighborCollector(NearestNeighborContainer):
+    def __init__(self, df_features_with_labels_and_id: pd.DataFrame, collector_id: str):
+        NearestNeighborContainer.__init__(self, collector_id)
+        self._df = df_features_with_labels_and_id
+
+    def add_dist_ind_array(self, ind_array: np.array, dist_array: np.array):
+        ind_list = list(ind_array[0])
+        dist_list = list(dist_array[0])
+        for pos, index in enumerate(ind_list):
+            neighbor_entry = self.__get_entry_for_index__(index)
+            neighbor_entry.add_distance(dist_list[pos])
 
     def __get_entry_for_index__(self, index: int) -> NearestNeighborEntry:
         if index not in self._entry_dict:

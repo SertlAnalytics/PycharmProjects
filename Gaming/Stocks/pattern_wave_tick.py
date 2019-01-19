@@ -26,7 +26,7 @@ class WaveTick:
         self.wrong_breakout_value = 0
         self.limit_value = 0
         self.stop_loss_value = 0
-        self._position = int(self.tick[CN.POSITION])
+        self._position = int(self.tick[CN.POSITION]) if CN.POSITION in tick else 0
 
     @property
     def date(self):

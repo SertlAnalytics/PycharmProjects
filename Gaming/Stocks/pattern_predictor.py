@@ -56,6 +56,10 @@ class PatternFeaturesSelector:
 
 
 class PatternPredictor:
+    """
+    This class is not only one predictor but a collection of predictors for a dedicated pattern type and
+    several labels. As a result: the method predict returns a value for each of this labels.
+    """
     def __init__(self, optimizer: PatternPredictorOptimizer, pattern_type: str, skip_condition_list=None):
         # print('Loading Predictor: {}'.format(self.__class__.__name__))
         self._use_optimizer = False
@@ -177,20 +181,19 @@ class PatternPredictor:
         if x_train.shape[0] < 10 or not self._is_ready_for_prediction:
             self._is_ready_for_prediction = False
             return
-        # if label_column == DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF:
-        #     y_train_list = [3 if k % 2 == 1 else 2 for k in range(0, len(y_train))]
-        #     y_train = pd.Series(y_train_list)
         predictor = self._predictor_dict[label_column]
+        self.__train_predictor_for_label_column__( predictor, label_column, x_train, y_train, perform_test)
+
+        if self._use_optimizer:
+            self._optimizer.retrain_trained_models(
+                self.feature_table_name, self.predictor, label_column, self._pattern_type, x_train, y_train)
+
+    def __train_predictor_for_label_column__(self, predictor, label_column: str, x_train, y_train, perform_test: bool):
         if perform_test:
             self.__perform_test_on_training_data__(x_train, y_train, predictor, label_column)
         else:
             predictor.fit(x_train, y_train)
             self.__print_report__(x_train, y_train, predictor, label_column)
-
-        # print('__train_model__: pattern_type_label={}_{}'.format(self._pattern_type, label_column))
-        if self._use_optimizer:
-            self._optimizer.retrain_trained_models(
-                self.feature_table_name, self.predictor, label_column, self._pattern_type, x_train, y_train)
 
     def __perform_test_on_training_data__(self, x_input, y_input, predictor, label_column: str):
         X_train, X_test, y_train, y_test = train_test_split(x_input, y_input, test_size=0.3)
@@ -333,12 +336,6 @@ class PatternMasterPredictor:
 
     def init_without_condition_list(self, ticker_id: str, and_clause: str):
         self._skip_condition_list = self.__get_skip_condition_list__(ticker_id, and_clause)
-        # self.__init_predictor_dict__(self._skip_condition_list)
-
-    def __init_predictor_dict__(self, skip_condition_list=None):  # ToDo - candidate for deletion
-        for pattern_type in FT.get_all():
-            self._predictor_dict[pattern_type] = \
-                self.__get_new_predictor_for_pattern_type__(pattern_type, skip_condition_list)
 
     def __get_skip_condition_list__(self, ticker_id: str, and_clause: str) -> list:
         pass

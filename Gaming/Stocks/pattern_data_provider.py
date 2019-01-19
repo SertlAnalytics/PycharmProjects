@@ -126,14 +126,16 @@ class PatternDataProvider:
         elif index == INDICES.MIXED:
             self.ticker_dict = self.get_mixed_dic()
         else:
-            self.ticker_dict = self.index_config.get_index_dict(index)
+            self.ticker_dict = self.index_config.get_ticker_dict_for_index(index)
 
     def use_indices(self, indices: list):
+        self.index_used = ''
         self.ticker_dict = {}
         for index in indices:
-            self.ticker_dict.update(self.index_config.get_index_dict(index))
+            self.ticker_dict.update(self.index_config.get_ticker_dict_for_index(index))
 
     def use_own_dic(self, dic: dict):
+        self.index_used = ''
         self.ticker_dict = dic
         for symbol in self.ticker_dict:
             name_from_db = self._db_stock.get_name_for_symbol(symbol)
@@ -141,7 +143,7 @@ class PatternDataProvider:
                 self.ticker_dict[symbol] = name_from_db
 
     def get_index_members_as_dict(self, index: str):
-        return self.index_config.get_index_dict(index)
+        return self.index_config.get_ticker_dict_for_index(index)
 
     @staticmethod
     def get_mixed_dic():

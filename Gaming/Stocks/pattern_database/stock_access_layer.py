@@ -5,16 +5,17 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import MyTable, PatternTable, TradeTable, StocksTable, \
     CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable
 from pattern_database.stock_database import StockDatabase
+from pattern_wave_tick import WaveTick, WaveTickList
 import pandas as pd
 import math
+import numpy as np
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC
+from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC, POC
 
 
 class AccessLayer:
@@ -153,6 +154,25 @@ class AccessLayer4Stock(AccessLayer):
         if df_result.empty:
             return 0
         return df_result.iloc[0][DC.CLOSE]
+
+    def get_wave_tick_list_for_time_stamp_interval(self, symbol: str, ts_from: int, ts_to: int):
+        df = self.select_data_by_query(
+            "SELECT * from {} WHERE symbol = '{}' AND {} BETWEEN {} and {} ORDER BY {}".format(
+                self._table.name, symbol, DC.TIMESTAMP, ts_from, ts_to, DC.TIMESTAMP))
+        return WaveTickList(df)
+
+    def get_wave_tick_lists_for_time_stamp_intervals(self, symbol: str, ts_list: list) -> list:
+        # this is used for a faster access to several consequetive timestames (before_pattern, pattern, after_pattern)
+        wave_tick_list_return = []
+        ts_from = ts_list[0]
+        ts_to = ts_list[-1]
+        df = self.select_data_by_query(
+            "SELECT * from {} WHERE symbol = '{}' AND {} BETWEEN {} and {} ORDER BY {}".format(
+                self._table.name, symbol, DC.TIMESTAMP, ts_from, ts_to, DC.TIMESTAMP))
+        for k in range(0, len(ts_list)-1):
+            df_part = df[np.logical_and(df[DC.TIMESTAMP] >= ts_list[k], df[DC.TIMESTAMP] < ts_list[k+1])]
+            wave_tick_list_return.append(WaveTickList(df_part))
+        return wave_tick_list_return
 
 
 class AccessLayer4Pattern(AccessLayer):

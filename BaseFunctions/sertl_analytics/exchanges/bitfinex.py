@@ -19,13 +19,12 @@ import math
 from sertl_analytics.constants.pattern_constants import OS, OT, TSTR, BT
 from sertl_analytics.exchanges.exchange_abc import ExchangeInterface
 from sertl_analytics.exchanges.exchange_cls import Order, OrderApi, OrderStatus
-from sertl_analytics.exchanges.exchange_cls import OrderBook, Balance, Ticker
+from sertl_analytics.exchanges.exchange_cls import Balance, Ticker
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.mystring import MyString
-from sertl_analytics.mycache import MyCacheObjectApi, MyCacheObject, MyCache
+from sertl_analytics.mycache import MyCacheObjectApi, MyCache
 
 
 class TP:  # trading pairs - they are all put to lowercase when sent to Bitfinex

@@ -385,6 +385,17 @@ class StockDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         return db_df.df
 
+    def get_prediction_mean_values_for_nearest_neighbor_ids(self, id_list: list):
+        where_clause = "id in ('{}')".format("','".join(id_list))
+        df = self.get_pattern_records_as_dataframe(where_clause)
+        df = df[[DC.NEXT_PERIOD_HALF_POSITIVE_PCT, DC.NEXT_PERIOD_FULL_POSITIVE_PCT,
+                 DC.NEXT_PERIOD_HALF_NEGATIVE_PCT, DC.NEXT_PERIOD_FULL_NEGATIVE_PCT,
+                 DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF, DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL,
+                 DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF, DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL]]
+        return_dict = df.mean().to_dict()
+        return_dict = {label: round(value) for label, value in return_dict.items()}
+        return return_dict
+
     def get_wave_counter_dict(self, period: str, limit: int=0):
         query = self._wave_table.get_query_for_wave_counter(period, limit)
         db_df = DatabaseDataFrame(self, query)

@@ -16,7 +16,7 @@ from pattern_part import PatternPart, PatternEntryPart, PatternTradePart
 import pattern_constraints as cstr
 from sertl_analytics.myexceptions import MyException
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.models.nn_collector import NearestNeighborCollector
+from sertl_analytics.models.nn_collector import NearestNeighborContainer
 from pattern_wave_tick import WaveTick
 from pattern_function_container import PatternFunctionContainerFactoryApi
 from pattern_value_categorizer import ValueCategorizer
@@ -105,7 +105,7 @@ class Pattern:
         self.y_predict_before_breakout = None
         self.y_predict_after_breakout = None
         self.value_categorizer = None
-        self._nearest_neighbor_collector = NearestNeighborCollector(self.df, self.id_readable)
+        self._nearest_neighbor_container = NearestNeighborContainer(self.id_readable)  # only used as a container
 
     @property
     def pattern_id(self) -> PatternID:
@@ -148,7 +148,7 @@ class Pattern:
 
     @property
     def nearest_neighbor_entry_list(self):
-        return self._nearest_neighbor_collector.get_sorted_entry_list()
+        return self._nearest_neighbor_container.get_sorted_entry_list()
 
     @property
     def relative_width_to_full_data_frame(self):
@@ -205,7 +205,7 @@ class Pattern:
         self.__calculate_predictions_after_breakout__()
 
     def print_nearest_neighbor_collection(self):
-        self._nearest_neighbor_collector.print_sorted_list(5)
+        self._nearest_neighbor_container.print_sorted_list(5)
 
     def is_ready_for_back_testing(self):
         pos_last = self.part_entry.tick_last.position + self.get_minimal_trade_position_size()
@@ -318,9 +318,12 @@ class Pattern:
 
     def __add_nn_entry_list_from_predictor__(self, master_predictor: PatternMasterPredictor, pattern_type: str):
         nn_entry_list = master_predictor.get_sorted_nearest_neighbor_entry_list(pattern_type)
-        self._nearest_neighbor_collector.add_entry_list(nn_entry_list)
+        self._nearest_neighbor_container.add_entry_list(nn_entry_list)
+        # pattern_id_list = self._nearest_neighbor_container.get_pattern_id_list()
+        # df = self.sys_config.db_stock.get_prediction_mean_values_for_nearest_neighbor_ids(pattern_id_list)
+        # pass
 
-    def __print__prediction__(self, prediction_dict: dict, prediction_type: str):
+    def __print_prediction__(self, prediction_dict: dict, prediction_type: str):
         pos_breakout = '-' if self.breakout is None else self.breakout.tick_breakout.position
         print('pattern.add_parts.. {}/{}: {} = {}'.format(
             self.pattern_range.position_list, pos_breakout, prediction_type, prediction_dict))

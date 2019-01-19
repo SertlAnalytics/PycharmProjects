@@ -20,13 +20,11 @@ stock_db_updater = StockDatabaseUpdater()
 pattern_table = PatternTable()
 trade_table = TradeTable()
 
-process_single_ticker_id = False
 
-# stock_db_updater.update_trade_records(16, 16)
-
-if process_single_ticker_id:
+if False:
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
-    stock_db_updater.update_equity_records()
+    stock_db_updater.update_trade_records(4, 16)
+    # stock_db_updater.update_equity_records()
     # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
     # stock_db_updater.update_wave_records_for_daily_period('AAPL', 400)
 else:
@@ -48,7 +46,7 @@ else:
     else:
         stock_db_updater.update_equity_records()
 
-    # print(stock_db.get_wave_counter_dict(400))
+    # print(stock_db.get_wave_counter_dict(PRD.DAILY, 400))
 
     stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.CRYPTO_CCY, 400)
     if is_weekday:
@@ -65,7 +63,7 @@ else:
         stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)
         stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.NASDAQ100)
 
-    if is_weekday:
-        stock_db_updater.update_trade_records(4, 16)
+    # if is_weekday:
+    #     stock_db_updater.update_trade_records(4, 16)
 
 
