@@ -36,6 +36,10 @@ class TradeEntity(AccessEntity):
         self.wave_tick_list_after_breakout = None
 
     @property
+    def max_ticks_after_breakout(self) -> int:
+        return 0 if self.wave_tick_list_after_breakout is None else self.wave_tick_list_after_breakout.df.shape[0]
+
+    @property
     def entity_key(self):
         return self._entity_data_dict[DC.ID]
 
@@ -54,6 +58,10 @@ class TradeEntity(AccessEntity):
     @property
     def buy_date(self) -> str:
         return self._entity_data_dict[DC.BUY_DT]
+
+    @property
+    def trade_result_pct(self) -> float:
+        return self._entity_data_dict[DC.TRADE_RESULT_PCT]
 
     @property
     def ts_before_pattern(self) -> int:
@@ -89,6 +97,7 @@ class TradeEntity(AccessEntity):
         return {column: self._entity_data_dict[column] for column in columns}
 
     def __add_observation_specific_columns_to_data_dict__(self):
+        self._entity_data_dict[POC.CURRENT_TICK_PCT] = 0
         self._entity_data_dict[POC.LIMIT_PCT] = self.__get_limit_pct__()
         self._entity_data_dict[POC.CURRENT_VALUE_HIGH_PCT] = 0
         self._entity_data_dict[POC.CURRENT_VALUE_LOW_PCT] = 0
@@ -105,6 +114,18 @@ class TradeEntity(AccessEntity):
             self.buy_price, self.wave_tick_list_pattern.df[CN.LOW].min())
         self._entity_data_dict[POC.AFTER_BUY_MAX_PCT] = 0
         self._entity_data_dict[POC.AFTER_BUY_MIN_PCT] = 0
+
+        self._entity_data_dict[POC.FC_TICKS_TO_POSITIVE_HALF_PCT] = self.__get_forecast_ticks_as_pct__(
+            DC.FC_TICKS_TO_POSITIVE_HALF)
+        self._entity_data_dict[POC.FC_TICKS_TO_POSITIVE_FULL_PCT] = self.__get_forecast_ticks_as_pct__(
+            DC.FC_TICKS_TO_POSITIVE_FULL)
+        self._entity_data_dict[POC.FC_TICKS_TO_NEGATIVE_HALF_PCT] = self.__get_forecast_ticks_as_pct__(
+            DC.FC_TICKS_TO_NEGATIVE_HALF)
+        self._entity_data_dict[POC.FC_TICKS_TO_NEGATIVE_FULL_PCT] = self.__get_forecast_ticks_as_pct__(
+            DC.FC_TICKS_TO_NEGATIVE_FULL)
+
+    def __get_forecast_ticks_as_pct__(self, data_column: str):
+        return round(self._entity_data_dict[data_column]/self.max_ticks_after_breakout*100, 2)
 
     def __get_limit_pct__(self):
         limit_orig = self._entity_data_dict[DC.TRADE_BOX_LIMIT_ORIG]
@@ -160,6 +181,17 @@ class EntityCollection:
 
 
 class TradeEntityCollection(EntityCollection):
+    def __init__(self, df: pd.DataFrame):
+        EntityCollection.__init__(self, df)
+        self._collection_trade_result_pct = self.__get_collection_trade_result_pct__()
+
+    @property
+    def collection_trade_result_pct(self):
+        return self._collection_trade_result_pct
+
+    def __get_collection_trade_result_pct__(self):
+        return sum([entity.trade_result_pct for entity in self._entity_dict.values()])
+
     def __get_entity_for_row__(self, row) -> AccessEntity:
         return TradeEntity(row)
 

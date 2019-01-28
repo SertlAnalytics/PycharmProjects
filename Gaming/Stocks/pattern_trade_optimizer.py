@@ -5,8 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, DC, TSTR
+from sertl_analytics.constants.pattern_constants import FT, DC, TSTR, TPMDC
 from pattern_database.stock_database import StockDatabase
+from pattern_database.stock_access_layer import AccessLayer4TradePolicyMetric
 import numpy as np
 import statistics
 import math
@@ -20,6 +21,7 @@ class TradeOptimizer:
         self.expected_relation_pos_neg = 1.8
         self._pattern_type_pos_neg_result_dict = self.__get_pattern_type_pos_neg_result_relation_as_dict__()
         self._optimal_pattern_type_dict_for_long_trading = self.__get_optimal_pattern_type_dict_for_long_trading__()
+        self._optimal_last_price_mean_aggregation_dict = self.__get_optimal_last_price_mean_aggregation_dict__()
         self._optimal_pattern_type_list_for_long_trading = \
             [pattern_type for pattern_type in self._optimal_pattern_type_dict_for_long_trading]
 
@@ -38,6 +40,11 @@ class TradeOptimizer:
     def get_trade_able_pattern_from_pattern_list(self, pattern_list: list) -> list:
         return [pattern for pattern in pattern_list
                 if pattern.pattern_type in self._optimal_pattern_type_list_for_long_trading]
+
+    def get_optimal_last_price_mean_aggregation_for_pattern_type(self, pattern_type: str):
+        if pattern_type in self._optimal_last_price_mean_aggregation_dict:
+            return self._optimal_last_price_mean_aggregation_dict[pattern_type]
+        return 4
 
     def adjust_strategy_list_for_expected_win(self, strategy_list: list, actual_expected_win_pct: float):
         return_list = []
@@ -86,6 +93,20 @@ class TradeOptimizer:
             if self._pattern_type_pos_neg_result_dict[pattern_type] > self.expected_relation_pos_neg:
                 opt_dict[pattern_type] = self._pattern_type_pos_neg_result_dict[pattern_type]
         return opt_dict
+
+    def __get_optimal_last_price_mean_aggregation_dict__(self):
+        df = AccessLayer4TradePolicyMetric(self.db_stock).get_metric_data_frame_for_sell_coded_trades()
+        return_dict = {}
+        for long_pattern_type in self._optimal_pattern_type_dict_for_long_trading:
+            df_long_pattern_type = df[df[TPMDC.PATTERN_TYPE] == long_pattern_type]
+            if df_long_pattern_type.empty:
+                return_dict[long_pattern_type] = 4
+            else:
+                max_value = df_long_pattern_type[TPMDC.REWARD_PCT_AVG].max()
+                df_max = df_long_pattern_type[df_long_pattern_type[TPMDC.REWARD_PCT_AVG] == max_value]
+                mean_for_max = df_max.iloc[0][TPMDC.TRADE_MEAN_AGGREGATION]
+                return_dict[long_pattern_type] = mean_for_max
+        return return_dict
 
     def __get_pattern_type_pos_neg_result_relation_as_dict__(self):
         pattern_type_pos_neg_relation_dict = {}

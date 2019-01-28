@@ -29,6 +29,7 @@ class PatternTradeApi:
         self.buy_trigger = buy_trigger
         self.box_type = TBT.TOUCH_POINT if buy_trigger == BT.TOUCH_POINT else TBT.EXPECTED_WIN
         self.trade_strategy = trade_strategy
+        self.last_price_mean_aggregation = 4  # will be overwritten
 
 
 class PatternTrade:
@@ -40,6 +41,7 @@ class PatternTrade:
         self.buy_trigger = api.buy_trigger
         self.trade_box_type = api.box_type
         self.trade_strategy = api.trade_strategy
+        self.last_price_mean_aggregation = api.last_price_mean_aggregation
         self.pattern = api.pattern
         self.news_handler = NewsHandler()
         self._volume_mean_for_breakout = self.pattern.volume_mean_for_breakout
@@ -89,7 +91,10 @@ class PatternTrade:
         if self.trade_strategy == TSTR.SMA:
             mean_aggregation = 'mean{:02d}'.format(self.sys_config.config.simple_moving_average_number)
         else:
-            mean_aggregation = 'mean{:02d}'.format(self.sys_config.config.trading_last_price_mean_aggregation)
+            if self.trade_process == TP.ONLINE:
+                mean_aggregation = 'mean{:02d}'.format(self.last_price_mean_aggregation)
+            else:
+                mean_aggregation = 'mean{:02d}'.format(self.sys_config.config.trading_last_price_mean_aggregation)
         return '{}-{}-{}-{}_{}'.format(
             self.buy_trigger, self.trade_box_type, self.trade_strategy, mean_aggregation, self.pattern.id_readable)
 
@@ -590,7 +595,10 @@ class PatternTrade:
         api.trade_strategy = self.trade_strategy
         api.height = height
         api.distance_bottom = distance_bottom
-        api.last_price_mean_aggregation = self.sys_config.config.trading_last_price_mean_aggregation
+        if self.trade_process == TP.ONLINE:
+            api.last_price_mean_aggregation = self.last_price_mean_aggregation
+        else:
+            api.last_price_mean_aggregation = self.sys_config.config.trading_last_price_mean_aggregation
         if self.trade_box_type == TBT.EXPECTED_WIN:
             return ExpectedWinTradingBox(api)
         elif self.trade_box_type == TBT.TOUCH_POINT:
@@ -637,6 +645,10 @@ class PatternTrade:
     def __get_corrected_distance_bottom__(distance_bottom: float, off_set_value: float) -> float:
         if abs(distance_bottom/off_set_value) > 0.02:  # we accept only 2% distance...
             distance_bottom_new = round(off_set_value * 0.02, 4)
+            print('Distance bottom changed: {} -> {}'.format(distance_bottom, distance_bottom_new))
+            return distance_bottom_new
+        elif abs(distance_bottom/off_set_value) < 0.005:  # we need at least 0.5% distance...
+            distance_bottom_new = round(off_set_value * 0.005, 4)
             print('Distance bottom changed: {} -> {}'.format(distance_bottom, distance_bottom_new))
             return distance_bottom_new
         return distance_bottom

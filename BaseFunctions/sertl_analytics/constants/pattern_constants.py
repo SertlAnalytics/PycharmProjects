@@ -8,33 +8,47 @@ Date: 2018-05-14
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
+class TFOP:
+    GRADIENT_DESCENT_MANUAL = 'Gradient_Descent_Manual'
+    GRADIENT_DESCENT = 'Gradient_Descent'
+    GRADIENT_DESCENT_OPTIMIZER = 'Gradient_Descent_Optimizer'
+    MOMENTUM_OPTIMIZER = 'Momentum_Optimizer'
+
+
 class POC:  # PatternObservationColumns
     # All pct values are with respective to the off set value = buy price
     LIMIT_PCT = 'Limit_Percentage'
+    STOP_LOSS_PCT = 'Stop_Loss_PCT'
+    CURRENT_TICK_PCT = 'Current_Tick_Percentage'  # regarding to length of pattern
     CURRENT_VALUE_HIGH_PCT = 'Current_Value_High_Percentage'
     CURRENT_VALUE_LOW_PCT = 'Current_Value_Low_Percentage'
     CURRENT_VALUE_OPEN_PCT = 'Current_Value_Open_Percentage'
     CURRENT_VALUE_CLOSE_PCT = 'Current_Value_Close_Percentage'
-    STOP_LOSS_PCT = 'Stop_Loss_PCT'
     BEFORE_PATTERN_MAX_PCT = 'Before_Pattern_Max_Percentage'
     BEFORE_PATTERN_MIN_PCT = 'Before_Pattern_Min_Percentage'
     PATTERN_MAX_PCT = 'Pattern_Max_Percentage'
     PATTERN_MIN_PCT = 'Pattern_Min_Percentage'
     AFTER_BUY_MAX_PCT = 'After_Buy_Max_Percentage'  # until current value !!!
     AFTER_BUY_MIN_PCT = 'After_Buy_Min_Percentage'  # until current value !!!
+    FC_TICKS_TO_POSITIVE_HALF_PCT = 'Forecast_Ticks_To_Positive_Half_Percentage'  # regarding to length of pattern
+    FC_TICKS_TO_POSITIVE_FULL_PCT = 'Forecast_Ticks_To_Positive_Full_Percentage'  # regarding to length of pattern
+    FC_TICKS_TO_NEGATIVE_HALF_PCT = 'Forecast_Ticks_To_Negative_Half_Percentage'  # regarding to length of pattern
+    FC_TICKS_TO_NEGATIVE_FULL_PCT = 'Forecast_Ticks_To_Negative_Full_Percentage'  # regarding to length of pattern
+
 
     @staticmethod
     def get_observation_space_columns():
         return [POC.LIMIT_PCT, POC.STOP_LOSS_PCT,
+                POC.CURRENT_TICK_PCT,
                 POC.CURRENT_VALUE_HIGH_PCT, POC.CURRENT_VALUE_LOW_PCT,
                 POC.CURRENT_VALUE_OPEN_PCT, POC.CURRENT_VALUE_CLOSE_PCT,
                 POC.BEFORE_PATTERN_MAX_PCT, POC.BEFORE_PATTERN_MIN_PCT,
                 POC.PATTERN_MAX_PCT, POC.PATTERN_MIN_PCT,
                 POC.AFTER_BUY_MAX_PCT, POC.AFTER_BUY_MIN_PCT,
                 DC.FC_HALF_POSITIVE_PCT, DC.FC_FULL_POSITIVE_PCT,
-                DC.FC_HALF_NEGATIVE_PCT, DC.FC_HALF_NEGATIVE_PCT,
-                DC.FC_TICKS_TO_POSITIVE_HALF, DC.FC_TICKS_TO_POSITIVE_FULL,
-                DC.FC_TICKS_TO_NEGATIVE_HALF, DC.FC_TICKS_TO_NEGATIVE_FULL]
+                DC.FC_HALF_NEGATIVE_PCT, DC.FC_FULL_NEGATIVE_PCT,
+                POC.FC_TICKS_TO_POSITIVE_HALF_PCT, POC.FC_TICKS_TO_POSITIVE_FULL_PCT,
+                POC.FC_TICKS_TO_NEGATIVE_HALF_PCT, POC.FC_TICKS_TO_NEGATIVE_FULL_PCT]
 
     
 class TPA:  # TradePolicyAction
@@ -51,14 +65,17 @@ class STBL:  # stocks tables
     STOCKS = 'Stocks'
     COMPANY = 'Company'
     PATTERN = 'Pattern'
+    PROCESS = 'Process'
     TRADE = 'Trade'
     WAVE = 'Wave'
     ASSET = 'Asset'
     METRIC = 'Metric'
+    TRADE_POLICY_METRIC = 'TradePolicyMetric'
 
     @staticmethod
     def get_all():
-        return [STBL.EQUITY, STBL.STOCKS, STBL.COMPANY, STBL.PATTERN, STBL.TRADE, STBL.WAVE, STBL.ASSET, STBL.METRIC]
+        return [STBL.EQUITY, STBL.STOCKS, STBL.COMPANY, STBL.PATTERN, STBL.TRADE,
+                STBL.WAVE, STBL.ASSET, STBL.METRIC, STBL.TRADE_POLICY_METRIC, STBL.PROCESS]
 
     @staticmethod
     def get_for_model_statistics():
@@ -1026,6 +1043,19 @@ class MDC:  # Metric data column
     ROC_AUC = 'ROC_AUC'
 
 
+class TPMDC:  # Trade Policy Metric data column
+    VALID_DT = 'Valid_Date'
+    POLICY = 'Policy'
+    EPISODES = 'Episodes'
+    PERIOD = 'Period'
+    AGGREGATION = 'Aggregation'
+    TRADE_MEAN_AGGREGATION = 'Trade_Mean_Aggregation'
+    PATTERN_TYPE = 'Pattern_Type'
+    NUMBER_TRADES = 'Number_Trades'
+    REWARD_PCT_TOTAL = 'Reward_percentage_total'
+    REWARD_PCT_AVG = 'Reward_percentage_avg'
+
+
 class EDC:  # Equity data column
     EQUITY_KEY = 'Key'
     EQUITY_NAME = 'Name'
@@ -1034,4 +1064,16 @@ class EDC:  # Equity data column
     VALID_FROM_DT = 'Valid_From_Date'
     VALID_TO_DT = 'Valid_To_Date'
     EQUITY_STATUS = 'Status'
+
+
+class PRDC:  # Process data column
+    PROCESS = 'Process'
+    TRIGGER = 'Trigger'
+    START_DT = 'Start_Date'
+    START_TIME = 'Start_Time'
+    END_DT = 'End_Date'
+    END_TIME = 'End_Time'
+    RUNTIME_SECONDS = 'Runtime_Seconds'
+    COMMENT = 'Comment'
+
 

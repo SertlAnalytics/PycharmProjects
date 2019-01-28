@@ -11,8 +11,17 @@ import matplotlib.dates as m_dates
 
 class MyDate:
     @staticmethod
+    def weekday():  # Monday = 0, ..., Sunday = 6
+        return datetime.today().weekday()
+
+    @staticmethod
     def time_stamp_now() -> int:
         return int(datetime.now().timestamp())
+
+    @staticmethod
+    def time_now_str() -> str:
+        dt_now = datetime.now()
+        return '{}'.format(MyDate.get_time_from_datetime(dt_now))
 
     @staticmethod
     def date_time_now_str() -> str:
@@ -36,6 +45,21 @@ class MyDate:
             return int(datetime.timestamp(datetime.now()))
         date_time_object = MyDate.get_datetime_object(date_time)
         return int(datetime.timestamp(date_time_object))
+
+    @staticmethod
+    def get_time_difference_to_now_in_minutes(time_01: str) -> int:
+        time_01 = time_01 if len(time_01) == 8 else '{}:00'.format(time_01)
+        return int(MyDate.get_time_difference_in_seconds(time_01)/60)
+
+    @staticmethod
+    def get_time_difference_in_seconds(time_01: str, time_02=None) -> int:
+        dt_str = MyDate.get_date_as_string_from_date_time()
+        epoch_seconds_01 = MyDate.get_epoch_seconds_from_datetime('{} {}'.format(dt_str, time_01))
+        if time_02 is None:
+            epoch_seconds_02 = MyDate.get_epoch_seconds_from_datetime()
+        else:
+            epoch_seconds_02 = MyDate.get_epoch_seconds_from_datetime('{} {}'.format(dt_str, time_02))
+        return epoch_seconds_01 - epoch_seconds_02
 
     @staticmethod
     def get_epoch_seconds_for_date(date_time=None) -> int:
@@ -100,7 +124,7 @@ class MyDate:
         return date_time_object.strftime('%Y-%m-%d')
 
     @staticmethod
-    def get_date_time_as_string_from_date_time(date_time, dt_format='%Y-%m-%d %H:%M:%S') -> str:  # '2018-07-18 hh:mm:ss'
+    def get_date_time_as_string_from_date_time(date_time=None, dt_format='%Y-%m-%d %H:%M:%S') -> str:  # '2018-07-18 hh:mm:ss'
         date_time_object = MyDate.get_datetime_object(date_time)
         return date_time_object.strftime(dt_format)
 
@@ -140,6 +164,26 @@ class MyDate:
         if type(date_time) is date:
             return (date_time + timedelta(days=days))
         return (date_time + timedelta(days=days)).date()
+
+    @staticmethod
+    def adjust_by_seconds(date_time, seconds: int):
+        if type(date_time) is str:
+            date_time = MyDate.get_date_from_datetime(date_time)
+        if type(date_time) is date:
+            return (date_time + timedelta(seconds=seconds))
+        return (date_time + timedelta(seconds=seconds))
+
+    @staticmethod
+    def is_tuesday_till_saturday():
+        return datetime.today().weekday() in [1, 2, 3, 4, 5]
+
+    @staticmethod
+    def is_sunday():
+        return datetime.today().weekday() == 6
+
+    @staticmethod
+    def is_monday():
+        return datetime.today().weekday() == 0
 
 
 class MyClock:

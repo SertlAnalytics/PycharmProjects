@@ -290,7 +290,7 @@ class PatternTradeHandler:
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
             ticker_last_price = pattern_trade.ticker_actual.last_price
             pattern_trade.print_state_details_for_actual_ticker(PTHP.HANDLE_SELL_TRIGGERS)
-            if pattern_trade.are_forecast_ticks_sell_triggers(ticker_last_price):
+            if pattern_trade.are_forecast_ticks_sell_triggers(ticker_last_price) and False:  # ToDo - too early....
                 self.__handle_sell_trigger__(pattern_trade, ST.FORECAST_TICKS)
             if pattern_trade.stop_loss_current > ticker_last_price:
                 self.__handle_sell_trigger__(pattern_trade, ST.STOP_LOSS)

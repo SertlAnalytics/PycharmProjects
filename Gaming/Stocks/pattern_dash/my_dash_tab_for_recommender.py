@@ -99,7 +99,9 @@ class MyDashTab4Recommender(MyDashBaseTab):
              Input(self._data_table_name, 'selected_row_indices')],
             [State('my_recommender_aggregation', 'value'),
              State('my_recommender_refresh_interval_selection', 'value')])
-        def handle_callback_for_graph_first(rows: list, selected_row_indices: list, aggregation: int, refresh_interval: int):
+        def handle_callback_for_graph_first(
+                rows: list, selected_row_indices: list, aggregation: int, refresh_interval: int):
+            # print('selected_row_indices={}'.format(selected_row_indices))
             self._recommender_table.init_selected_row(rows, selected_row_indices)
             if self._recommender_table.selected_row_index == -1:
                 return ''

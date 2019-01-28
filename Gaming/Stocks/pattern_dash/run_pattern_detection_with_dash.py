@@ -9,6 +9,7 @@ from sertl_analytics.myprofiler import MyProfiler
 from sertl_analytics.constants.pattern_constants import FT, INDICES, CN, BT, TSTR, PRD, OPS
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_dash.my_dash_for_pattern import MyDash4Pattern
+from pattern_dash.my_dash_job_handler import MyDashJobHandler
 
 
 my_profiler = MyProfiler()
@@ -26,7 +27,7 @@ sys_config.exchange_config.trade_strategy_dict = {
 }
 sys_config.exchange_config.massive_breakout_pct = 5
 sys_config.config.simple_moving_average_number = 20
-sys_config.config.trading_last_price_mean_aggregation = 8
+sys_config.config.trading_last_price_mean_aggregation = 4
 
 # debugger.pattern_range_position_list = [217, 224, 242]
 
@@ -55,6 +56,8 @@ sys_config.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
 sys_config.config.fibonacci_detail_print = True
 # sys_config.config.use_index(Indices.DOW_JONES)
 sys_config.data_provider.use_index(INDICES.CRYPTO_CCY)
+my_dash_job_handler = MyDashJobHandler(check_interval_min=15)
+my_dash_job_handler.start_scheduler()
 my_dash = MyDash4Pattern(sys_config)
 my_dash.get_pattern()
 my_dash.run_on_server()

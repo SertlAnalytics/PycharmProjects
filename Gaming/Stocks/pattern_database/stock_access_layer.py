@@ -8,19 +8,19 @@ Date: 2018-05-14
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import MyTable, PatternTable, TradeTable, StocksTable, \
-    CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable
+    CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable, TradePolicyMetricTable, ProcessTable
 from pattern_database.stock_database import StockDatabase
 from pattern_wave_tick import WaveTick, WaveTickList
 import pandas as pd
 import math
 import numpy as np
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC, POC
+from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC, TPMDC, PRDC
 
 
 class AccessLayer:
-    def __init__(self, stock_db: StockDatabase):
-        self._stock_db = stock_db
+    def __init__(self, stock_db: StockDatabase=None):
+        self._stock_db = StockDatabase() if stock_db is None else stock_db
         self._table = self.__get_table__()
 
     @property
@@ -126,6 +126,16 @@ class AccessLayer4Asset(AccessLayer):
         return AssetTable()
 
 
+class AccessLayer4Process(AccessLayer):
+    def __get_table__(self):
+        return ProcessTable()
+
+    def is_process_available_for_today(self, process: str) -> pd.DataFrame:
+        dt_today = MyDate.get_date_as_string_from_date_time()  # e.g. dt_today = '2018-12-22'
+        df = self.select_data_by_data_dict({PRDC.PROCESS: process, PRDC.START_DT: dt_today})
+        return df.shape[0] > 0
+
+
 class AccessLayer4Metric(AccessLayer):
     def __get_table__(self):
         return MetricTable()
@@ -134,6 +144,19 @@ class AccessLayer4Metric(AccessLayer):
         dt_today = MyDate.get_date_as_string_from_date_time()
         # dt_today = '2018-12-22'
         return self.select_data_by_data_dict({MDC.VALID_DT: dt_today})
+
+
+class AccessLayer4TradePolicyMetric(AccessLayer):
+    def __get_table__(self):
+        return TradePolicyMetricTable()
+
+    def get_actual_metric_data_frame(self) -> pd.DataFrame:
+        dt_today = MyDate.get_date_as_string_from_date_time()  # dt_today = '2018-12-22'
+        return self.select_data_by_data_dict({MDC.VALID_DT: dt_today})
+
+    def get_metric_data_frame_for_sell_coded_trades(self) -> pd.DataFrame:
+        df = self.select_data_by_data_dict({TPMDC.POLICY: 'TradePolicySellCodedTrade'})
+        return df
 
 
 class AccessLayer4Stock(AccessLayer):

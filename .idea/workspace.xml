@@ -2,22 +2,45 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e2e2d6f2-cb41-4534-81a7-e089d2477bad" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/exchanges/bitfinex_trade_client.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/exchanges/interactive_broker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BaseFunctions/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/BaseFunctions/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_dash/my_dash_job_handler.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/run_trade_policy_by_gradient_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_policy_gradient.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_policy_handler_gradient.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_scheduling/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_scheduling/pattern_job.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_test/run_scheduler_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_test/run_tensorflow_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/tensorflow_playground/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Gaming/Stocks/tensorflow_playground/linear_regression.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/exchanges/bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/exchanges/bitfinex.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/exchanges/exchange_cls.py" beforeDir="false" afterPath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/exchanges/exchange_cls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Gaming/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/.idea/Stocks.iml" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/.idea/Stocks.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/constants/pattern_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/mydates.py" beforeDir="false" afterPath="$PROJECT_DIR$/BaseFunctions/sertl_analytics/mydates.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/.idea/dictionaries/josef.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_bitfinex.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_dash/my_dash_tab_for_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_dash/my_dash_tab_for_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_breakout.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_dash/my_dash_tab_for_recommender.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_dash/my_dash_tab_for_recommender.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_dash/my_dash_tab_table_for_recommender.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_dash/my_dash_tab_table_for_recommender.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_dash/run_pattern_detection_with_dash.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_dash/run_pattern_detection_with_dash.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/run_create_stock_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/run_create_stock_table.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/run_daily_tasks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_system_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_access_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_access_entity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_access_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_access_layer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_database_updater.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_database/stock_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_part.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_part.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/run_trade_policy_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/run_trade_policy_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_environment.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_environment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_observation.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_observation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_policy.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_policy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_policy_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_reinforcement/trade_policy_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade_box.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade_candidate.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade_candidate.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade_handler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/run_bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/run_bitfinex.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade_optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/pattern_trade_optimizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Gaming/Stocks/run_pattern_detection_by_pattern_id.py" beforeDir="false" afterPath="$PROJECT_DIR$/Gaming/Stocks/run_pattern_detection_by_pattern_id.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -40,7 +63,22 @@
     </navigator>
     <panes>
       <pane id="Scope" />
-      <pane id="ProjectPane" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="PycharmProjects" type="b2602c69:ProjectViewProjectNode" />
+              <item name="PycharmProjects" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="PycharmProjects" type="b2602c69:ProjectViewProjectNode" />
+              <item name="PycharmProjects" type="462c0819:PsiDirectoryNode" />
+              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -77,21 +115,21 @@
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" side_tool="true" />
+      <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Version Control" />
-      <window_info anchor="bottom" id="Python Console" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Python Console" order="7" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" />
+      <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
-      <window_info id="Favorites" side_tool="true" />
-      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Find" order="1" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">

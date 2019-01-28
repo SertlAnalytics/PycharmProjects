@@ -30,7 +30,7 @@ sys_config.config.bound_upper_value = CN.CLOSE
 sys_config.config.bound_lower_value = CN.CLOSE
 sys_config.config.breakout_range_pct = 0.05  # default is 0.05
 sys_config.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
-sys_config.config.pattern_ids_to_find = ['1_1_1_MMM_10_2014-08-26_00:00_2014-09-08_00:00']
+sys_config.config.pattern_ids_to_find = ['1_1_1_AXP_10_2018-05-22_00:00_2018-07-12_00:00']
 
 pattern_controller = PatternDetectionController(sys_config)
 pattern_controller.run_pattern_detector()

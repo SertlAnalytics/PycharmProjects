@@ -12,7 +12,7 @@ from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStock
 from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
-    CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable
+    CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable, TradePolicyMetricTable, ProcessTable
 import pandas as pd
 import math
 from datetime import datetime
@@ -102,10 +102,20 @@ class StockDatabase(BaseDatabase):
         self._wave_table = WaveTable()
         self._asset_table = AssetTable()
         self._metric_table = MetricTable()
+        self._trade_policy_metric_table = TradePolicyMetricTable()
+        self._process_table = ProcessTable()
         self._bitfinex_crypto_fetcher = BitfinexCryptoFetcher()
         self._alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
         self._alphavantage_stock_fetcher = AlphavantageStockFetcher()
         self._sleep_seconds = 5
+
+    @property
+    def trade_table(self):
+        return self._trade_table
+
+    @property
+    def pattern_table(self):
+        return self._pattern_table
 
     def is_symbol_loaded(self, symbol: str):
         last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
@@ -332,6 +342,12 @@ class StockDatabase(BaseDatabase):
     def create_metric_table(self):
         self.__create_table__(STBL.METRIC)
 
+    def create_trade_policy_metric_table(self):
+        self.__create_table__(STBL.TRADE_POLICY_METRIC)
+
+    def create_process_table(self):
+        self.__create_table__(STBL.PROCESS)
+
     def __insert_pattern_in_pattern_table__(self, ticker: str, input_dic: dict):
         try:
             self.__insert_data_into_table__(STBL.PATTERN, [input_dic])
@@ -537,7 +553,9 @@ class StockDatabase(BaseDatabase):
                 STBL.EQUITY: self._entity_table,
                 STBL.PATTERN: self._pattern_table, STBL.TRADE: self._trade_table,
                 STBL.WAVE: self._wave_table, STBL.ASSET: self._asset_table,
-                STBL.METRIC: self._metric_table}.get(table_name, None)
+                STBL.METRIC: self._metric_table,
+                STBL.TRADE_POLICY_METRIC: self._trade_policy_metric_table,
+                STBL.PROCESS: self._process_table}.get(table_name, None)
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):

@@ -136,11 +136,11 @@ class RecommenderTable:
         return [row.get_row_as_dict() for row in sorted_list]
 
     def init_selected_row(self, table_rows: list, selected_row_indices: list=None):
-        if selected_row_indices is None or len(selected_row_indices) != 1:
+        if selected_row_indices is None or len(selected_row_indices) != 1:  # ToDo: deselect the former selection
             self._selected_row_index = -1
             self._selected_row = None
         else:
-            self._selected_row_index = selected_row_indices[0]
+            self._selected_row_index = selected_row_indices[0]  # the latest selected is always on position 0
             self._selected_row = table_rows[self._selected_row_index]
 
     def update_rows_for_selected_indices(self, selected_indices: list, scoring: str):

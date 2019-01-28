@@ -394,7 +394,7 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
         self._predictor_optimizer = predictor_optimizer
         MyDashTabStatisticsPlotter.__init__(self, df_base, color_handler)
         self._df_base_cache_dict = {}
-        print('MyDashTabStatisticsPlotter4Models.__init__()')
+        # print('MyDashTabStatisticsPlotter4Models.__init__()')
 
     def __init_parameter__(self):
         self._chart_id = 'models_statistics_graph'

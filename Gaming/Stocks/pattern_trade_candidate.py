@@ -167,10 +167,14 @@ class TradeCandidateController:
             if pattern.are_conditions_for_trade_strategy_fulfilled(best_strategy):
                 trade_api = PatternTradeApi(pattern, buy_trigger, best_strategy)
                 trade_api.exchange_config = self.exchange_config
+                trade_api.last_price_mean_aggregation = self.__get_optimal_last_price_mean_aggregation__(pattern)
                 self.__add_trade_candidate_entry_to_ticker_id_dict__(TradeCandidate(PatternTrade(trade_api)))
             else:
                 self.__add_to_black_buy_strategy_pattern_id_readable_list__(
                     key_buy_and_strategy, BLR.TRADE_STRATEGY_CONDITIONS)
+
+    def __get_optimal_last_price_mean_aggregation__(self, pattern: Pattern):
+        return self.trade_optimizer.get_optimal_last_price_mean_aggregation_for_pattern_type(pattern.pattern_type)
 
     def __get_best_trade_strategy_for_pattern__(self, buy_trigger: str, pattern: Pattern, strategy_list: list):
         if len(strategy_list) == 1:  # we don't need to check alternatives

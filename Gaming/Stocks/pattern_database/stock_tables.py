@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC
+from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC
 from sertl_analytics.mydates import MyDate
 
 
@@ -15,6 +15,22 @@ class PredictionFeatureTable:
     @staticmethod
     def is_label_column_for_regression(label_column: str):
         return False   # label_column[-4:] == '_PCT'
+
+
+class ProcessTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return STBL.PROCESS
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(PRDC.PROCESS, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(PRDC.TRIGGER, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(PRDC.START_DT, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(PRDC.START_TIME, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(PRDC.END_DT, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(PRDC.END_TIME, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(PRDC.RUNTIME_SECONDS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(PRDC.COMMENT, CDT.STRING, 200))
 
 
 class EquityTable(MyTable):
@@ -49,6 +65,24 @@ class MetricTable(MyTable):
         self._columns.append(MyTableColumn(MDC.RECALL, CDT.FLOAT))
         self._columns.append(MyTableColumn(MDC.F1_SCORE, CDT.FLOAT))
         self._columns.append(MyTableColumn(MDC.ROC_AUC, CDT.FLOAT))
+
+
+class TradePolicyMetricTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return STBL.TRADE_POLICY_METRIC
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(TPMDC.VALID_DT, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(TPMDC.POLICY, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(TPMDC.EPISODES, CDT.INTEGER))
+        self._columns.append(MyTableColumn(TPMDC.PERIOD, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(TPMDC.AGGREGATION, CDT.INTEGER))
+        self._columns.append(MyTableColumn(TPMDC.TRADE_MEAN_AGGREGATION, CDT.INTEGER))
+        self._columns.append(MyTableColumn(TPMDC.PATTERN_TYPE, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(TPMDC.NUMBER_TRADES, CDT.INTEGER))
+        self._columns.append(MyTableColumn(TPMDC.REWARD_PCT_TOTAL, CDT.FLOAT))
+        self._columns.append(MyTableColumn(TPMDC.REWARD_PCT_AVG, CDT.FLOAT))
 
 
 class AssetTable(MyTable):

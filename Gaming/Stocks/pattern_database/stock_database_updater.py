@@ -6,12 +6,16 @@ Date: 2018-12-10
 """
 
 from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE, TRC, INDICES, EDC, EST
+from sertl_analytics.constants.pattern_constants import TPMDC
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
 from pattern_detection_controller import PatternDetectionController
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.exchanges.exchange_cls import Balance
 from pattern_database.stock_access_layer import AccessLayer4Asset, AccessLayer4Stock, AccessLayer4Equity
+from pattern_database.stock_access_layer import AccessLayer4TradePolicyMetric
+from pattern_reinforcement.trade_policy import TradePolicyFactory
+from pattern_reinforcement.trade_policy_handler import TradePolicyHandler
 from time import sleep
 
 
@@ -135,6 +139,38 @@ class StockDatabaseUpdater:
         self.sys_config.data_provider.from_db = False
         detector = self.pattern_controller.get_detector_for_fibonacci(self.sys_config, ticker_id)
         detector.save_wave_data()
+
+    def update_trade_policy_metric_for_today(self, pattern_type_list: list):
+        print("\nSTARTING 'update_trade_policy_metric_for_today' for {}...".format(pattern_type_list))
+        access_layer = AccessLayer4TradePolicyMetric(self.db_stock)
+        dt_today_str = str(MyDate.get_date_from_datetime())
+        check_dict = {TPMDC.VALID_DT: dt_today_str}
+        if access_layer.are_any_records_available(check_dict):
+            print("END 'update_trade_policy_metric_for_today': No updates for today\n")
+            return
+        policy_list = TradePolicyFactory.get_trade_policies_for_metric_calculation()
+        period_list = [PRD.DAILY]
+        mean_aggregation_list = [4, 8, 16]
+        for pattern_type in pattern_type_list:
+            for period in period_list:
+                for mean_aggregation in mean_aggregation_list:
+                    policy_handler = TradePolicyHandler(pattern_type=pattern_type, period=period,
+                                                        mean_aggregation=mean_aggregation)
+                    for policy in policy_list:
+                        episode_rewards, entity_counter, episode = policy_handler.train_policy(policy)
+                        insert_dict = {TPMDC.VALID_DT: dt_today_str,
+                                       TPMDC.POLICY: policy.policy_name,
+                                       TPMDC.EPISODES: episode,
+                                       TPMDC.PERIOD: period,
+                                       TPMDC.AGGREGATION: 1,
+                                       TPMDC.TRADE_MEAN_AGGREGATION: mean_aggregation,
+                                       TPMDC.PATTERN_TYPE: pattern_type,
+                                       TPMDC.NUMBER_TRADES: entity_counter,
+                                       TPMDC.REWARD_PCT_TOTAL: round(episode_rewards, 2),
+                                       TPMDC.REWARD_PCT_AVG: round(episode_rewards/entity_counter, 2),
+                                       }
+                        access_layer.insert_data([insert_dict])
+        print("END 'update_trade_policy_metric_for_today'\n")
 
     def fill_asset_gaps(self, ts_last: int, ts_to: int, ts_interval: int):
         access_layer_stocks = AccessLayer4Stock(self.db_stock)

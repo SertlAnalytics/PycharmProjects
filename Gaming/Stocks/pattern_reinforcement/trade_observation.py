@@ -6,18 +6,19 @@ Date: 2019-01-17
 """
 
 from sertl_analytics.constants.pattern_constants import POC, DC
+import numpy as np
 
 
 class TradeObservation:
     """
-     return [POC.LIMIT_PCT, POC.CURRENT_VALUE_PCT, POC.STOP_LOSS_PCT,
+     return [POC.CURRENT_TICK_PCT, POC.LIMIT_PCT, POC.CURRENT_VALUE_PCT, POC.STOP_LOSS_PCT,
                 POC.BEFORE_PATTERN_MAX_PCT, POC.BEFORE_PATTERN_MIN_PCT,
                 POC.PATTERN_MAX_PCT, POC.PATTERN_MIN_PCT,
                 POC.AFTER_BUY_MAX_PCT, POC.AFTER_BUY_MIN_PCT,
                 DC.FC_HALF_POSITIVE_PCT, DC.FC_FULL_POSITIVE_PCT,
-                DC.FC_HALF_NEGATIVE_PCT, DC.FC_HALF_NEGATIVE_PCT,
-                DC.FC_TICKS_TO_POSITIVE_HALF, DC.FC_TICKS_TO_POSITIVE_FULL,
-                DC.FC_TICKS_TO_NEGATIVE_HALF, DC.FC_TICKS_TO_NEGATIVE_FULL]
+                DC.FC_HALF_NEGATIVE_PCT, DC.FC_FULL_NEGATIVE_PCT,
+                POC.FC_TICKS_TO_POSITIVE_HALF_PCT, POC.FC_TICKS_TO_POSITIVE_FULL_PCT,
+                POC.FC_TICKS_TO_NEGATIVE_HALF_PCT, POC.FC_TICKS_TO_NEGATIVE_FULL_PCT]
     """
     def __init__(self, data_dict: dict):
         self._data_dict = data_dict
@@ -25,13 +26,38 @@ class TradeObservation:
         self._stop_loss_pct_orig = self._data_dict[POC.STOP_LOSS_PCT]
 
     @property
+    def size(self):
+        return len(self._data_dict)
+
+    @property
+    def value_array(self):
+        np_array = np.array([self._data_dict[col] for col in self._data_dict])
+        return np_array.reshape(1, np_array.shape[0])
+
+    @property
+    def after_buy_max_pct(self) -> float:
+        return self._data_dict[POC.AFTER_BUY_MAX_PCT]
+
+    @property
     def forecast_limit(self):
         return self._limit_pct_orig * \
                max(50, self._data_dict[DC.FC_HALF_POSITIVE_PCT], self._data_dict[DC.FC_FULL_POSITIVE_PCT])/100
 
     @property
+    def forecast_ticks_to_positive_max_pct(self) -> int:
+        return max(self._data_dict[POC.FC_TICKS_TO_POSITIVE_HALF_PCT], self._data_dict[POC.FC_TICKS_TO_POSITIVE_FULL_PCT])
+
+    @property
     def limit_pct_orig(self):
         return self._limit_pct_orig
+
+    @property
+    def current_tick_pct(self):
+        return self._data_dict[POC.CURRENT_TICK_PCT]
+
+    @current_tick_pct.setter
+    def current_tick_pct(self, value_pct: float):
+        self._data_dict[POC.CURRENT_TICK_PCT] = value_pct
 
     @property
     def limit_pct(self):
