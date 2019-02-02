@@ -58,7 +58,7 @@ class TradePolicyHandler:
                 entity = self._trade_entity_collection.get_next_element()
             self.__print_episode_details__(entity_counter, episode, episode_rewards, episode_rewards_orig)
 
-    def run_policy(self, print_details_per_trade=False):
+    def run_policy(self, policy: object, print_details_per_trade=False):
         self._print_details_per_trade = print_details_per_trade
         episode_rewards = 0
         episode_rewards_orig = 0

@@ -12,6 +12,7 @@ from pattern_reinforcement.trade_policy import TradePolicy
 from pattern_reinforcement.trade_policy_action import TradePolicyWaitAction, TradePolicyStopLossUpAction
 import tensorflow as tf
 import numpy as np
+import random
 
 
 class TradePolicyByPolicyGradient(TradePolicy):
@@ -47,6 +48,7 @@ class TradePolicyByPolicyGradient(TradePolicy):
         hidden = tf.layers.dense(self._x_ph, self._n_hidden, activation=tf.nn.elu, kernel_initializer=initializer)
         logits = tf.layers.dense(hidden, self._n_outputs, kernel_initializer=initializer)
         outputs = tf.nn.sigmoid(logits)
+        # outputs = tf.nn.relu(logits)
         # 3. Select a random action based on the estimated probabilities
         p_left_and_right = tf.concat(axis=1, values=[outputs, 1-outputs])
         self._action = tf.multinomial(tf.log(p_left_and_right), num_samples=1)
@@ -83,6 +85,10 @@ class TradePolicyByPolicyGradient(TradePolicy):
         self._initializer = tf.global_variables_initializer()
         self._saver = tf.train.Saver()
 
+    def init_saver(self):
+        if self._saver is None:
+            self._saver = tf.train.Saver()
+
         """
         On to the execution phase. We will need a couple of functions to compute the total discounted rewards, 
         given the row rewards and to normalize the results across multiple episodes
@@ -117,12 +123,13 @@ class TradePolicyByPolicyGradient(TradePolicy):
                  for step, reward in enumerate(rewards)],
                 axis=0)
             feed_dict[grad_placeholder] = mean_gradients
+            # print('update_policy: mean_gradients={}'.format(mean_gradients))
         sess.run(self._training_optimizer, feed_dict=feed_dict)
 
     # we sell just at the price the original trade was sold at - just for comparison reasons
     def get_action_and_gradients(self, observation: TradeObservation, sess: tf.Session):
         action_val, gradient_val = sess.run([self._action, self._gradients],
-                                            feed_dict={self._x_ph: observation.value_array})
+                                            feed_dict={self._x_ph: observation.scaled_value_array})
         action = self.__get_action_from_action_values__(action_val, observation)
         return action, gradient_val
 
@@ -131,11 +138,17 @@ class TradePolicyByPolicyGradient(TradePolicy):
         return action
 
     @staticmethod
+    def get_random_action():
+        random_int = random.randint(0, 1)
+        return TradePolicyWaitAction() if random_int == 0 else TradePolicySellAction()
+
+    @staticmethod
     def __get_action_from_action_values__(action_val: list, obs: TradeObservation):
         stop_loss_pct_new = obs.stop_loss_pct + 1
-        sell_action_active = False
+        sell_action_active = True
+        # print('action_val[0][0]={}'.format(action_val[0][0]))
         if sell_action_active:
-            return TradePolicyWaitAction() if action_val[0][0] == 0 else TradePolicySellAction()
+            return TradePolicyWaitAction() if action_val[0][0] == 1 else TradePolicySellAction()
         else:
             return TradePolicyWaitAction() if action_val[0][0] == 0 else TradePolicyStopLossUpAction(
                 parameter=stop_loss_pct_new)

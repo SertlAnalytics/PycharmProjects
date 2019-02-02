@@ -15,7 +15,7 @@ import pandas as pd
 import math
 import numpy as np
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC, TPMDC, PRDC
+from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC, TPMDC, PRDC, FD
 
 
 class AccessLayer:
@@ -206,6 +206,100 @@ class AccessLayer4Pattern(AccessLayer):
 class AccessLayer4Trade(AccessLayer):
     def __get_table__(self):
         return TradeTable()
+
+
+class AccessLayer4Wave(AccessLayer):
+    def __get_table__(self):
+        return WaveTable()
+
+    def get_intraday_wave_data_frame(self) -> pd.DataFrame:
+        order_by_columns = ','.join([DC.TICKER_ID, DC.WAVE_END_DT])
+        query = "SELECT * FROM {} WHERE {}={} ORDER BY {}".format(self._table.name, DC.PERIOD_ID, 0, order_by_columns)
+        return self.select_data_by_query(query)
+
+    def get_daily_wave_data_frame(self) -> pd.DataFrame:
+        order_by_columns = ','.join([DC.TICKER_ID, DC.WAVE_END_DT])
+        query = "SELECT * FROM {} WHERE {}={} ORDER BY {}".format(self._table.name, DC.PERIOD_ID, 1, order_by_columns)
+        return self.select_data_by_query(query)
+
+    def get_multiple_intraday_wave_data_frame(self, period_id=0) -> pd.DataFrame:
+        query = "Select Equity_Type, Period, Period_ID, Ticker_ID, Ticker_Name, Wave_Type," \
+                " W1_Begin_Timestamp, W1_Begin_Datetime, W1_Begin_Value," \
+                " Wave_End_Datetime, Wave_End_Value, Wave_End_Timestamp, count(*) as counter," \
+                " 0 as Day_01, 0 as Day_02, 0 as Day_03, 0 as Day_04, 0 as Day_05, 0 as Day_Max" \
+                " from Wave" \
+                " where Period_ID = {}" \
+                " group by Ticker_ID, Wave_Type, W1_Begin_Timestamp, Wave_End_Timestamp" \
+                " having count(*) > 1" \
+                " ORDER by Ticker_ID, W1_Begin_Timestamp, Wave_End_Timestamp".format(period_id)
+        return self.select_data_by_query(query)
+
+    def get_multiple_intraday_wave_data_frame_with_corresponding_daily_wave_data(self, period_id=0) -> pd.DataFrame:
+        df_intraday = self.get_multiple_intraday_wave_data_frame(period_id)
+        df_stocks = self._stock_db.select_data_by_query("SELECT * FROM Stocks WHERE Period = 'DAILY'")
+        key_list = []
+        row_dict = {}
+        for index, row in df_intraday.iterrows():
+            wave_type = row[DC.WAVE_TYPE]
+            value_end = row[DC.WAVE_END_VALUE]
+            ts_end = row[DC.WAVE_END_TS]
+            ts_daily_start = ts_end - 86400
+            ts_daily_end = ts_daily_start + 86400 * 10
+            ticker_id = row[DC.TICKER_ID]
+            day_str = row[DC.WAVE_END_DT].split(' ')[0]
+            key = '{}_{}'.format(ticker_id, day_str)
+            counter = 0
+            day_max = -math.inf
+            if key not in key_list:
+                df_filtered_stocks = df_stocks[np.logical_and(df_stocks[DC.SYMBOL] == ticker_id,
+                                                              df_stocks[DC.TIMESTAMP] >= ts_daily_start)]
+                key_list.append(key)
+                for index_stocks, row_stocks in df_filtered_stocks.iterrows():
+                    row_low, row_high = row_stocks[DC.LOW], row_stocks[DC.HIGH]
+                    if day_str == row_stocks[DC.DATE]:  # check values
+                        if not (row_low <= value_end <= row_high):
+                            print('{}-{}: value not in range of date {}: {} not in [{}, {}]'.format(
+                              index, ticker_id, day_str, value_end, row_low, row_high
+                            ))
+                            break
+                    else:
+                        counter += 1
+                        if wave_type == FD.ASC:
+                            day_value = round((value_end - row_low)/value_end * 100, 2)
+
+                        else:
+                            day_value = round((row_high - value_end) / value_end * 100, 2)
+                        row['Day_0{}'.format(counter)] = day_value
+                        day_max = day_value if day_value > day_max else day_max
+                        if counter == 5:
+                            row['Day_Max'] = day_max
+                            break
+                if counter == 5:
+                    row_dict[key] = row
+        df_result = pd.DataFrame([row for row in row_dict.values()])
+        return df_result
+
+    def get_intraday_wave_data_frame_with_corresponding_daily_wave_data(self) -> pd.DataFrame:
+        df_intraday = self.get_intraday_wave_data_frame()
+        df_daily = self.get_daily_wave_data_frame()
+        key_list = []
+        row_dict = {}
+        for index, row in df_intraday.iterrows():
+            ticker_id = row[DC.TICKER_ID]
+            day_str = row[DC.WAVE_END_DT].split(' ')[0]
+            key = '{}_{}'.format(ticker_id, day_str)
+            if key not in key_list:
+                key_list.append(key)
+                df_daily_ticker = df_daily[df_daily[DC.TICKER_ID] == ticker_id]
+                for index_daily, row_daily in df_daily_ticker.iterrows():
+                    day_str_daily = row_daily[DC.WAVE_END_DT].split(' ')[0]
+                    if day_str == day_str_daily:
+                        row[DC.WAVE_END_TS] = row_daily[DC.WAVE_END_TS]  # we want to have the daily timestamp
+                        row_dict[key] = row
+        df_result = pd.DataFrame([row for row in row_dict.values()])
+        df_result = df_result[[DC.TICKER_ID, DC.TICKER_NAME, DC.WAVE_TYPE, DC.WAVE_TYPE_ID,
+                               DC.WAVE_END_DT, DC.WAVE_END_VALUE, DC.WAVE_END_TS]]
+        return df_result
 
 
 class StockInsertData:

@@ -361,9 +361,9 @@ class FibonacciWave:
             self.data_dict_obj.add(DC.WAVE_END_TS, component.tick_end.time_stamp)
             self.data_dict_obj.add(DC.WAVE_END_DT, component.tick_end.date_time_str)
             if self.wave_type == FD.ASC:
-                self.data_dict_obj.add(DC.WAVE_END_VALUE, component.tick_start.high)
+                self.data_dict_obj.add(DC.WAVE_END_VALUE, component.tick_end.high)
             else:
-                self.data_dict_obj.add(DC.WAVE_END_VALUE, component.tick_start.low)
+                self.data_dict_obj.add(DC.WAVE_END_VALUE, component.tick_end.low)
             self.data_dict_obj.add(DC.WAVE_TYPE, self.wave_type)
             self.data_dict_obj.add(DC.WAVE_TYPE_ID, FD.get_id(self.wave_type))
             self.data_dict_obj.add(DC.WAVE_STRUCTURE, self.wave_structure)

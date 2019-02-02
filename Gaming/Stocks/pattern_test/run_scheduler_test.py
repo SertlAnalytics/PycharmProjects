@@ -17,15 +17,16 @@ diff = MyDate.get_time_difference_to_now_in_minutes(time_str)
 dt_now = MyDate.get_datetime_object()
 dt_now = MyDate.adjust_by_seconds(dt_now, 10)
 start_time = str(dt_now.time())[:8]
+weekday_list = [0, 1, 2, 3, 4, 5, 6]
 
-for_dash_test = True
+for_dash_test = False
 if for_dash_test:
     my_handler = MyDashJobHandler(1, for_test=True)
     my_handler.start_scheduler()
 else:
     scheduler = MyPatternScheduler(1)
-    scheduler.add_job(MyPatternJob(period=PRD.DAILY, weekdays=[0, 1, 2], start_time=start_time))
-    scheduler.add_job(MySecondJob(period=PRD.DAILY, weekdays=[0, 1, 2], start_time=start_time))
+    scheduler.add_job(MyPatternJob(period=PRD.DAILY, weekdays=weekday_list, start_time=start_time))
+    scheduler.add_job(MySecondJob(period=PRD.DAILY, weekdays=weekday_list, start_time=start_time))
     scheduler.start_scheduler()
 
 for k in range(10):

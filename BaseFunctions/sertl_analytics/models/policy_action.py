@@ -9,8 +9,12 @@ Date: 2019-01-19
 class PolicyAction:
     def __init__(self, parameter=None, reason=''):
         self._name = self.__get_name__()
-        self._parameter = parameter
+        self._parameter = parameter if parameter is None else round(parameter, 2)
         self._reason = reason
+
+    @property
+    def short(self):
+        return 'A{}'.format(self.__get_parameter_info__())
 
     @property
     def name(self):
@@ -34,4 +38,7 @@ class PolicyAction:
 
     def __get_name__(self):
         return ''
+
+    def __get_parameter_info__(self):
+        return '' if self._parameter is None else ':{}'.format(self.parameter)
 

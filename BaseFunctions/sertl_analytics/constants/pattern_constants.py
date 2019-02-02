@@ -24,6 +24,8 @@ class POC:  # PatternObservationColumns
     CURRENT_VALUE_LOW_PCT = 'Current_Value_Low_Percentage'
     CURRENT_VALUE_OPEN_PCT = 'Current_Value_Open_Percentage'
     CURRENT_VALUE_CLOSE_PCT = 'Current_Value_Close_Percentage'
+    CURRENT_VOLUME_BUY_PCT = 'Current_Volume_Buy_Percentage'
+    CURRENT_VOLUME_LAST_PCT = 'Current_Volume_Last_Percentage'
     BEFORE_PATTERN_MAX_PCT = 'Before_Pattern_Max_Percentage'
     BEFORE_PATTERN_MIN_PCT = 'Before_Pattern_Min_Percentage'
     PATTERN_MAX_PCT = 'Pattern_Max_Percentage'
@@ -35,13 +37,14 @@ class POC:  # PatternObservationColumns
     FC_TICKS_TO_NEGATIVE_HALF_PCT = 'Forecast_Ticks_To_Negative_Half_Percentage'  # regarding to length of pattern
     FC_TICKS_TO_NEGATIVE_FULL_PCT = 'Forecast_Ticks_To_Negative_Full_Percentage'  # regarding to length of pattern
 
-
     @staticmethod
     def get_observation_space_columns():
-        return [POC.LIMIT_PCT, POC.STOP_LOSS_PCT,
+        return [POC.LIMIT_PCT,
+                POC.STOP_LOSS_PCT,
                 POC.CURRENT_TICK_PCT,
                 POC.CURRENT_VALUE_HIGH_PCT, POC.CURRENT_VALUE_LOW_PCT,
                 POC.CURRENT_VALUE_OPEN_PCT, POC.CURRENT_VALUE_CLOSE_PCT,
+                POC.CURRENT_VOLUME_BUY_PCT, POC.CURRENT_VOLUME_LAST_PCT,
                 POC.BEFORE_PATTERN_MAX_PCT, POC.BEFORE_PATTERN_MIN_PCT,
                 POC.PATTERN_MAX_PCT, POC.PATTERN_MIN_PCT,
                 POC.AFTER_BUY_MAX_PCT, POC.AFTER_BUY_MIN_PCT,

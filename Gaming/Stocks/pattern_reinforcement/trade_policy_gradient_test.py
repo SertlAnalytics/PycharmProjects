@@ -23,7 +23,7 @@ class TradePolicyByPolicyGradientTest:
         self._policy_handler = TradePolicyHandler(pattern_type=FT.CHANNEL, period=PRD.DAILY, mean_aggregation=4,
                                                   number_trades=20, pattern_id=self._pattern_id)
         self._policy_gradient_handler = TradePolicyHandlerByGradient(pattern_type=FT.CHANNEL, period=PRD.DAILY,
-                                                                     mean_aggregation=4, number_trades=100,
+                                                                     mean_aggregation=4, number_trades=200,
                                                                      pattern_id=self._pattern_id)
         self._observation_space_size = self._policy_gradient_handler.observation_space_size
         self._policy = TradePolicyByPolicyGradient(self._observation_space_size, 1)
@@ -31,14 +31,14 @@ class TradePolicyByPolicyGradientTest:
     def train_trade_policy(self, trade_policy: TradePolicy, episods=1):
         self._policy_handler.train_policy(trade_policy, episods)
 
-    def train_gradient_policy(self, episodes=100):
+    def train_gradient_policy(self, episodes: int):
         self._policy_gradient_handler.train_policy_by_gradient(self._policy, episodes=episodes)
 
     def run_trained_trade_policy(self, print_details_per_trade=False):
-        self._policy_handler.run_policy(print_details_per_trade=print_details_per_trade)
+        self._policy_handler.run_policy(self._policy, print_details_per_trade=print_details_per_trade)
 
     def run_trained_gradient_trade_policy(self, print_details_per_trade=False):
-        self._policy_gradient_handler.run_policy(print_details_per_trade=print_details_per_trade)
+        self._policy_gradient_handler.run_policy(self._policy, print_details_per_trade=print_details_per_trade)
 
     def run_discount_rewards_test(self):
         discount_rewards = self._policy.discount_rewards([10, 0, -50], discount_rate=0.8)

@@ -163,6 +163,15 @@ class BaseDatabase:
         connection.close()
         return results
 
+    def select_data_by_query(self, query: str, index_col='') -> pd.DataFrame:
+        result_set = self.get_result_set_for_query(query)
+        df = pd.DataFrame(result_set)
+        if df.shape[0] > 0:
+            df.columns = result_set[0].keys()
+        if not df.empty and index_col != '':
+            df.set_index(index_col, drop=False, inplace=True)
+        return df
+
     def delete_records(self, query: str):
         connection = self.engine.connect()
         done = False

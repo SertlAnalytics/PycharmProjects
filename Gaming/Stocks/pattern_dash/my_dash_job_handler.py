@@ -103,8 +103,8 @@ class MyDashJobHandler:
         self._scheduler.add_job(MyDashDeleteDuplicatesJob(start_time='02:00', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyDashStockDataUpdateJob(start_time='02:30', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyEquityUpdateJob(start_time='03:00', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyPatternUpdateJob(start_time='03:30', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyWaveUpdateJob(start_time='04:00', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyPatternUpdateJob(start_time='03:15', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyWaveUpdateJob(start_time='10:00', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyDashTradePolicyUpdateJob(start_time='05:00', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyDashPredictorOptimizerJob(
             start_time='05:30', stock_db_updater=self._stock_db_updater))

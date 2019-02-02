@@ -44,6 +44,10 @@ class EnvironmentInterface:
         raise NotImplementedError
 
     @abstractmethod
+    def __get_observation_space__(self):  # filling the observation space - if it is a discrete one
+        raise NotImplementedError
+
+    @abstractmethod
     def reset(self):  # initialize the environment
         raise NotImplementedError
 

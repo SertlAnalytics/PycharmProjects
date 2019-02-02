@@ -18,24 +18,33 @@ class TradePolicyHandlerByGradient(TradePolicyHandler):
     def save_path(self):
         return './polycy_pg/my_policy_net_pg.ckpt'
 
-    def train_policy_by_gradient(self, policy: TradePolicyByPolicyGradient, episodes=250, save_after_episodes=50,
+    def train_policy_by_gradient(self, policy: TradePolicyByPolicyGradient, episodes: int, save_after_episodes=50,
                                  n_games_per_update=20, discount_rate=0.95):
-        env = TradeEnvironment(self._trade_entity_collection)
+        entity = self._trade_entity_collection.get_nth_element(11)
+        env = TradeEnvironment(self._trade_entity_collection, entity=entity)
+        # n_games_per_update = self._trade_entity_collection.elements
         episode_rewards_orig = self._trade_entity_collection.collection_trade_result_pct
+        episode_rewards_max = 0
         self._trade_policy = policy
         self._trade_policy.init_execution_phase()
         with tf.Session() as sess:
-            self._trade_policy.initializer.run()
+            self._trade_policy.saver.restore(sess=sess, save_path=self.save_path)
+            # self._trade_policy.initializer.run()
             for episode in range(episodes):
                 all_rewards = []  # all sequences of row rewards for each episode
                 all_gradients = []  # gradients saved at each step of each episode
                 for games in range(n_games_per_update):
+                    entity = self._trade_entity_collection.get_element_by_random()
+                    env = TradeEnvironment(self._trade_entity_collection, entity=entity)
                     current_rewards = []  # all row rewards from the current episode
                     current_gradients = []  # all gradients from the current episode
                     obs = env.reset()
+                    base_obs_date = obs.wave_tick.date
                     # print('obs.value: {}'.format(obs.value_array))
                     for step_number in range(1, env.max_steps + 1):
                         action, gradient_val = self._trade_policy.get_action_and_gradients(obs, sess)
+                        # if episode < episodes/2:
+                        #     action = self._trade_policy.get_random_action()
                         obs, reward, done, info = env.step(action)
                         current_rewards.append(reward)
                         current_gradients.append(gradient_val)
@@ -43,14 +52,24 @@ class TradePolicyHandlerByGradient(TradePolicyHandler):
                             break
                     all_rewards.append(current_rewards)
                     all_gradients.append(current_gradients)
+                    if games == 0:
+                        print('{}-{} (start: {} {}): Reward for {}: {:.2f}%, orig={:.2f}% (actions: {})'.format(
+                            episode, games, env.base_observation_number, base_obs_date, entity.pattern_id,
+                            sum(current_rewards), entity.trade_result_pct, env.actions))
+                rewards_total = sum([sum(current_reward) for current_reward in all_rewards])
+
+                #
+                # self.__print_episode_details__(
+                #     self._trade_entity_collection.elements, episode, rewards_total, episode_rewards_orig)
+
+                if rewards_total > episode_rewards_max:
+                    episode_rewards_max = rewards_total
+                    self._trade_policy.saver.save(sess, self.save_path)
+                # else:
+                #     print(episode)
                 # at this point we have run the policy for 10 episodes, and we are
                 # ready for a policy update using the algorithm described earlier
                 self._trade_policy.update_policy(sess, all_rewards, all_gradients, discount_rate)
-                if episode % save_after_episodes == 0:
-                    self._trade_policy.saver.save(sess, self.save_path)
-                rewards_total = sum([sum(current_reward) for current_reward in all_rewards])
-                self.__print_episode_details__(
-                    self._trade_entity_collection.elements, episode, rewards_total, episode_rewards_orig)
 
     def train_policy_by_gradient_v2(self, policy: TradePolicyByPolicyGradient, episodes=250, save_after_episodes=50,
                                      n_games_per_update=20, discount_rate=0.95):
@@ -94,17 +113,18 @@ class TradePolicyHandlerByGradient(TradePolicyHandler):
         env.close()
         print('mean={}, std={}, min={}, max={}'.format(np.mean(totals), np.std(totals), np.min(totals), np.max(totals)))
 
-    def run_policy(self, print_details_per_trade=False):
+    def run_policy(self, policy: TradePolicyByPolicyGradient, print_details_per_trade=False):
         env = TradeEnvironment(self._trade_entity_collection)
         episode_rewards_orig = self._trade_entity_collection.collection_trade_result_pct
+        self._trade_policy = policy
+        self._trade_policy.init_saver()
         with tf.Session() as sess:
             self._trade_policy.saver.restore(sess=sess, save_path=self.save_path)
             all_rewards = []
             entity = self._trade_entity_collection.get_first_element()
             while entity is not None:
-                env.init_by_entity(entity)
                 current_rewards = []  # all row rewards from the current episode
-                obs = env.reset()
+                obs = env.reset_by_entity(entity)
                 for step_number in range(1, env.max_steps + 1):
                     action = self._trade_policy.get_action(obs, sess)
                     obs, reward, done, info = env.step(action)
@@ -112,8 +132,8 @@ class TradePolicyHandlerByGradient(TradePolicyHandler):
                     if done:
                         break
                 all_rewards.append(current_rewards)
-                print('Reward for {}: {:.2f}%, orig={:.2f}%'.format(
-                    entity.pattern_id, sum(current_rewards), entity.trade_result_pct))
+                print('Reward for {}: {:.2f}%, orig={:.2f}% (actions: {})'.format(
+                    entity.pattern_id, sum(current_rewards), entity.trade_result_pct, env.actions))
                 entity = self._trade_entity_collection.get_next_element()
             rewards_total = sum([sum(current_reward) for current_reward in all_rewards])
             self.__print_episode_details__(

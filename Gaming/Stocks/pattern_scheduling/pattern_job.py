@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from pattern_database.stock_access_layer import AccessLayer4Process
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import PRD, PRDC
+from pattern_logging.pattern_log import PatternLog
 
 
 class JobRuntime:
@@ -60,6 +61,7 @@ class MyPatternJob:
         self._is_running = False
         self._access_layer_process = AccessLayer4Process()
         self._job_runtime = JobRuntime()
+        self._pattern_log = PatternLog('../pattern_logging/pattern_log.csv')
 
     @property
     def job_name(self):
@@ -92,7 +94,9 @@ class MyPatternJob:
     def __run_task__(self):
         print("{}: Thread started at {}...(scheduled: {})".format(
             self.job_name, MyDate.time_now_str(), self._scheduled_start_time))
+        self._pattern_log.log_message(self.job_name, process='Scheduler', process_step='Start')
         self.__perform_task__()
+        self._pattern_log.log_message(self.job_name, process='Scheduler', process_step='End')
         self._is_running = False
         self._done = True
         self._job_runtime.stop()

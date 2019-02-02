@@ -13,6 +13,7 @@ from pattern_database.stock_access_layer import AccessLayer4Stock
 from pattern_database.stock_database import StockDatabase
 from pattern_wave_tick import WaveTick
 import math
+import random
 
 
 class AccessEntity:
@@ -34,6 +35,7 @@ class TradeEntity(AccessEntity):
         self.wave_tick_list_before_pattern = None
         self.wave_tick_list_pattern = None
         self.wave_tick_list_after_breakout = None
+        self._wave_tick_for_buying = None
 
     @property
     def max_ticks_after_breakout(self) -> int:
@@ -58,6 +60,10 @@ class TradeEntity(AccessEntity):
     @property
     def buy_date(self) -> str:
         return self._entity_data_dict[DC.BUY_DT]
+
+    @property
+    def buy_volume(self) -> float:
+        return self.wave_tick_for_buying.volume
 
     @property
     def trade_result_pct(self) -> float:
@@ -85,6 +91,12 @@ class TradeEntity(AccessEntity):
         breakout_time_str = self._entity_data_dict[DC.BUY_TIME]
         return MyDate.get_epoch_seconds_from_datetime('{} {}'.format(breakout_date_str, breakout_time_str))
 
+    @property
+    def wave_tick_for_buying(self) -> WaveTick:
+        if self._wave_tick_for_buying is None:
+            self._wave_tick_for_buying = self.wave_tick_list_pattern.tick_list[-1]
+        return self._wave_tick_for_buying
+
     def __add_specific_columns__(self):
         self._entity_data_dict[DC.TS_BREAKOUT] = self.ts_breakout
 
@@ -92,18 +104,20 @@ class TradeEntity(AccessEntity):
         return self.wave_tick_list_after_breakout.tick_list[step_number-1]
 
     def get_data_dict_for_agent_first_observation(self) -> dict:
-        columns = POC.get_observation_space_columns()
         self.__add_observation_specific_columns_to_data_dict__()
+        columns = POC.get_observation_space_columns()
         return {column: self._entity_data_dict[column] for column in columns}
 
     def __add_observation_specific_columns_to_data_dict__(self):
-        self._entity_data_dict[POC.CURRENT_TICK_PCT] = 0
         self._entity_data_dict[POC.LIMIT_PCT] = self.__get_limit_pct__()
+        self._entity_data_dict[POC.STOP_LOSS_PCT] = self.__get_stop_loss_pct__()
+        self._entity_data_dict[POC.CURRENT_TICK_PCT] = 0
         self._entity_data_dict[POC.CURRENT_VALUE_HIGH_PCT] = 0
         self._entity_data_dict[POC.CURRENT_VALUE_LOW_PCT] = 0
         self._entity_data_dict[POC.CURRENT_VALUE_OPEN_PCT] = 0
         self._entity_data_dict[POC.CURRENT_VALUE_CLOSE_PCT] = 0
-        self._entity_data_dict[POC.STOP_LOSS_PCT] = self.__get_stop_loss_pct__()
+        self._entity_data_dict[POC.CURRENT_VOLUME_BUY_PCT] = 0
+        self._entity_data_dict[POC.CURRENT_VOLUME_LAST_PCT] = 0
         self._entity_data_dict[POC.BEFORE_PATTERN_MAX_PCT] = MyMath.get_change_in_percentage(
             self.buy_price, self.wave_tick_list_before_pattern.df[CN.HIGH].max())
         self._entity_data_dict[POC.BEFORE_PATTERN_MIN_PCT] = MyMath.get_change_in_percentage(
@@ -141,21 +155,21 @@ class TradeEntity(AccessEntity):
 
 
 class EntityCollection:
-    def __init__(self, df: pd.DataFrame):
-        self._df = df
-        self._entity_dict = {}
-        self._entity_key_list = []
+    def __init__(self, df: pd.DataFrame, sort_columns=None):
+        self._df = self.__get_sorted_df__(df, sort_columns)
+        self._entity_key_dict = {}
+        self._entity_number_dict = {}
         self._counter = 0
         self.__fill_entity_dict__()
 
     @property
     def elements(self):
-        return len(self._entity_dict)
+        return len(self._entity_key_dict)
 
     def get_nth_element(self, number: int):
         self._counter = number
         if 1 <= number <= self.elements:
-            return self._entity_dict[self._entity_key_list[number-1]]
+            return self._entity_number_dict[self._counter]
 
     def get_first_element(self):
         return self.get_nth_element(1)
@@ -169,20 +183,32 @@ class EntityCollection:
     def get_last_element(self):
         return self.get_nth_element(self.elements)
 
+    def get_element_by_random(self):
+        random_index = random.randint(1, self.elements)
+        return self.get_nth_element(random_index)
+
     def __fill_entity_dict__(self):
+        counter = 0
         for index, row in self._df.iterrows():
+            counter += 1
             entity = self.__get_entity_for_row__(row)
-            self._entity_key_list.append(entity.entity_key)
-            self._entity_dict[entity.entity_key] = entity
+            self._entity_number_dict[counter] = entity
+            self._entity_key_dict[entity.entity_key] = entity
         pass
 
     def __get_entity_for_row__(self, row):
         pass
 
+    @staticmethod
+    def __get_sorted_df__(df: pd.DataFrame, sort_columns: object) -> pd.DataFrame:
+        if sort_columns is None:
+            return df
+        return df.sort_values(sort_columns)
+
 
 class TradeEntityCollection(EntityCollection):
     def __init__(self, df: pd.DataFrame):
-        EntityCollection.__init__(self, df)
+        EntityCollection.__init__(self, df, [DC.PATTERN_ID])
         self._collection_trade_result_pct = self.__get_collection_trade_result_pct__()
 
     @property
@@ -190,7 +216,7 @@ class TradeEntityCollection(EntityCollection):
         return self._collection_trade_result_pct
 
     def __get_collection_trade_result_pct__(self):
-        return sum([entity.trade_result_pct for entity in self._entity_dict.values()])
+        return sum([entity.trade_result_pct for entity in self._entity_key_dict.values()])
 
     def __get_entity_for_row__(self, row) -> AccessEntity:
         return TradeEntity(row)

@@ -38,6 +38,7 @@ class CartPolePolicyHandlerByGradient:
     def train_policy_by_gradient(self, policy: CartPolePolicyByPolicyGradient, episodes=250, save_after_episodes=50,
                                  n_games_per_update=10, discount_rate=0.95):
         env = gym.make("CartPole-v0")
+        print('env.observation_space.n={}, env.action_space.n={}'.format(env.observation_space, env.action_space))
         self._trade_policy = policy
         self._trade_policy.init_execution_phase()
         with tf.Session() as sess:

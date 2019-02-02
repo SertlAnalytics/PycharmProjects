@@ -12,6 +12,7 @@ from sertl_analytics.exchanges.interactive_broker import IBKRConfiguration
 from pattern_configuration import PatternConfiguration
 from pattern_runtime_configuration import RuntimeConfiguration
 from pattern_debugger import PatternDebugger
+from pattern_logging.pattern_log import PatternLog
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable, WaveTable, AssetTable
 from pattern_id import PatternID
 from pattern_predictor import PatternMasterPredictorHandler, PatternPredictorApi
@@ -26,6 +27,7 @@ from pattern_index_configuration import IndexConfiguration
 
 class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
+        self.pattern_log = PatternLog('./pattern_logging/pattern_log.csv')
         self.runtime_config = RuntimeConfiguration()
         self.crypto_config = BitfinexConfiguration()
         self.exchange_config = self.crypto_config
@@ -78,6 +80,9 @@ class SystemConfiguration:
     @property
     def period_aggregation(self) -> int:
         return self.data_provider.aggregation
+
+    def log_message(self, log_message: str, process='', process_step='run'):
+        self.pattern_log.log_message(log_message, process, process_step)
 
     def init_detection_process_for_automated_trade_update(self, mean: int, sma_number: int):
         self.config.detection_process = PDP.UPDATE_TRADE_DATA

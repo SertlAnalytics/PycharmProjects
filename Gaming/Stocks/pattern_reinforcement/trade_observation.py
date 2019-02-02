@@ -6,6 +6,7 @@ Date: 2019-01-17
 """
 
 from sertl_analytics.constants.pattern_constants import POC, DC
+from pattern_wave_tick import WaveTick
 import numpy as np
 
 
@@ -20,18 +21,40 @@ class TradeObservation:
                 POC.FC_TICKS_TO_POSITIVE_HALF_PCT, POC.FC_TICKS_TO_POSITIVE_FULL_PCT,
                 POC.FC_TICKS_TO_NEGATIVE_HALF_PCT, POC.FC_TICKS_TO_NEGATIVE_FULL_PCT]
     """
-    def __init__(self, data_dict: dict):
+    def __init__(self, data_dict: dict, wave_tick: WaveTick):
         self._data_dict = data_dict
+        self._columns = [col for col in self._data_dict]
+        self._wave_tick = wave_tick
         self._limit_pct_orig = self._data_dict[POC.LIMIT_PCT]
         self._stop_loss_pct_orig = self._data_dict[POC.STOP_LOSS_PCT]
+        self._scaled_value_array = None
+
+    def scale_value_array(self, scaler):
+        self._scaled_value_array = scaler.transform(self.value_array)
+
+    @property
+    def scaled_value_array(self):
+        return self._scaled_value_array
+
+    @property
+    def wave_tick(self):
+        return self._wave_tick
+
+    @wave_tick.setter
+    def wave_tick(self, value):
+        self._wave_tick = value
 
     @property
     def size(self):
         return len(self._data_dict)
 
     @property
+    def columns(self):
+        return self._columns
+
+    @property
     def value_array(self):
-        np_array = np.array([self._data_dict[col] for col in self._data_dict])
+        np_array = np.array([self._data_dict[col] for col in self._columns])
         return np_array.reshape(1, np_array.shape[0])
 
     @property
@@ -100,6 +123,22 @@ class TradeObservation:
     @current_value_close_pct.setter
     def current_value_close_pct(self, value_pct: float):
         self._data_dict[POC.CURRENT_VALUE_CLOSE_PCT] = value_pct
+
+    @property
+    def current_volume_buy_pct(self):
+        return self._data_dict[POC.CURRENT_VOLUME_BUY_PCT]
+
+    @current_volume_buy_pct.setter
+    def current_volume_buy_pct(self, value_pct: float):
+        self._data_dict[POC.CURRENT_VOLUME_BUY_PCT] = value_pct
+
+    @property
+    def current_volume_last_pct(self):
+        return self._data_dict[POC.CURRENT_VOLUME_LAST_PCT]
+
+    @current_volume_last_pct.setter
+    def current_volume_last_pct(self, value_pct: float):
+        self._data_dict[POC.CURRENT_VOLUME_LAST_PCT] = value_pct
 
     @property
     def stop_loss_pct(self):
