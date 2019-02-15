@@ -14,7 +14,7 @@ from pattern_reinforcement.trade_policy import TradePolicySellOnFirstLargeWin, T
 test = TradePolicyByPolicyGradientTest()
 # test.run_discount_rewards_test()
 # test.train_trade_policy(TradePolicyWaitTillEnd(), 2)
-test.train_gradient_policy(episodes=400)
+# test.train_gradient_policy(episodes=40)
 test.run_trained_gradient_trade_policy(False)
 
 

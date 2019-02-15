@@ -8,6 +8,7 @@ Date: 2019-01-17
 from sertl_analytics.constants.pattern_constants import POC, DC
 from pattern_wave_tick import WaveTick
 import numpy as np
+import math
 
 
 class TradeObservation:
@@ -21,13 +22,23 @@ class TradeObservation:
                 POC.FC_TICKS_TO_POSITIVE_HALF_PCT, POC.FC_TICKS_TO_POSITIVE_FULL_PCT,
                 POC.FC_TICKS_TO_NEGATIVE_HALF_PCT, POC.FC_TICKS_TO_NEGATIVE_FULL_PCT]
     """
-    def __init__(self, data_dict: dict, wave_tick: WaveTick):
+    def __init__(self, data_dict: dict, wave_tick: WaveTick, wave_tick_previous=None):
         self._data_dict = data_dict
         self._columns = [col for col in self._data_dict]
         self._wave_tick = wave_tick
+        self._wave_tick_previous = wave_tick_previous
         self._limit_pct_orig = self._data_dict[POC.LIMIT_PCT]
-        self._stop_loss_pct_orig = self._data_dict[POC.STOP_LOSS_PCT]
+        self._stop_loss_pct_orig = -math.inf  # self._data_dict[POC.STOP_LOSS_PCT]
         self._scaled_value_array = None
+        self._key = self.__get_key__()
+
+    def __get_key__(self):
+        if self._wave_tick_previous is None:
+            return '{}-{}'.format(self._wave_tick.time_stamp, self._wave_tick.time_stamp)
+        return '{}-{}'.format(self._wave_tick.time_stamp, self._wave_tick_previous.time_stamp)
+
+    def key(self):
+        return self._key
 
     def scale_value_array(self, scaler):
         self._scaled_value_array = scaler.transform(self.value_array)
@@ -40,13 +51,17 @@ class TradeObservation:
     def wave_tick(self):
         return self._wave_tick
 
+    @property
+    def wave_tick_previous(self):
+        return self._wave_tick_previous
+
     @wave_tick.setter
     def wave_tick(self, value):
         self._wave_tick = value
 
     @property
     def size(self):
-        return len(self._data_dict)
+        return self.value_array.shape[1]
 
     @property
     def columns(self):

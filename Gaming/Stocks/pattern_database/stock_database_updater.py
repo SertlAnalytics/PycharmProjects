@@ -147,7 +147,7 @@ class StockDatabaseUpdater:
         check_dict = {TPMDC.VALID_DT: dt_today_str}
         if access_layer.are_any_records_available(check_dict):
             print("END 'update_trade_policy_metric_for_today': No updates for today\n")
-            return
+            # return
         policy_list = TradePolicyFactory.get_trade_policies_for_metric_calculation()
         period_list = [PRD.DAILY]
         mean_aggregation_list = [4, 8, 16]
@@ -157,17 +157,17 @@ class StockDatabaseUpdater:
                     policy_handler = TradePolicyHandler(pattern_type=pattern_type, period=period,
                                                         mean_aggregation=mean_aggregation)
                     for policy in policy_list:
-                        episode_rewards, entity_counter, episode = policy_handler.train_policy(policy)
+                        rewards, entity_counter = policy_handler.run_policy(policy, False)
                         insert_dict = {TPMDC.VALID_DT: dt_today_str,
                                        TPMDC.POLICY: policy.policy_name,
-                                       TPMDC.EPISODES: episode,
+                                       TPMDC.EPISODES: 1,
                                        TPMDC.PERIOD: period,
                                        TPMDC.AGGREGATION: 1,
                                        TPMDC.TRADE_MEAN_AGGREGATION: mean_aggregation,
                                        TPMDC.PATTERN_TYPE: pattern_type,
                                        TPMDC.NUMBER_TRADES: entity_counter,
-                                       TPMDC.REWARD_PCT_TOTAL: round(episode_rewards, 2),
-                                       TPMDC.REWARD_PCT_AVG: round(episode_rewards/entity_counter, 2),
+                                       TPMDC.REWARD_PCT_TOTAL: round(rewards, 2),
+                                       TPMDC.REWARD_PCT_AVG: round(rewards/entity_counter, 2),
                                        }
                         access_layer.insert_data([insert_dict])
         print("END 'update_trade_policy_metric_for_today'\n")

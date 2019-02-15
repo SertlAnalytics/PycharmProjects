@@ -19,7 +19,6 @@ from sertl_analytics.plotter.my_plot import MyPlotHelper
 import math
 from pattern_news_handler import NewsHandler
 import statistics
-from textwrap import dedent
 
 
 class PatternTradeApi:

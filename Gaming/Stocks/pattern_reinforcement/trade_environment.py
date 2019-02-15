@@ -30,46 +30,54 @@ class EnvironmentStep:
 
 
 class TradeEnvironment(EnvironmentInterface):
-    def __init__(self, trade_entity_collection: TradeEntityCollection, entity: TradeEntity=None):
+    """
+    This environment can be fed by a trade entity collection or by a single entity (for policy checks).
+    """
+    def __init__(self, trade_entity_collection: TradeEntityCollection=None, entity: TradeEntity=None):
         self._trade_entity_collection = trade_entity_collection
-        self._entity_init = entity
-        self._step = None
+        self._trade_entity = entity
         self._step_counter = 0
         self._step_list = []
-        self._sell_limit = None
-        self._stop_loss = None
-        self._trailing_distance = None
-        self._observation_orig = None
-        self._observation_space = None
+        self._observation_space = self.__get_observation_space__()
         self._observation_space_df = None
         self._observation_space_scaled_df = None
         self._observation_space_scaler = None
         self._base_observation_number = 0
-        self._max_steps = 0
-        self._observation_after_step = None
-        self.__init_by_entity__(entity)
+        if self._trade_entity_collection is not None:
+            self.__init_observation_space_scaler__()
+            self.__scale_observations__()
+        self.__init_entity_independent_variables__()
 
-    def __init_by_entity__(self, trade_entity: TradeEntity):
-        self._trade_entity = self.__get_entity_by_random__() if trade_entity is None else trade_entity
-        self._off_set_volume = self._trade_entity.buy_volume
-        self._off_set_value = self._trade_entity.buy_price
-        self._off_set_date = self._trade_entity.buy_date
-        self._wave_tick_for_buying = self._trade_entity.wave_tick_for_buying
-        self._max_steps = self._trade_entity.max_ticks_after_breakout
-        self._observation_orig = self.__get_observation_orig__()
-        self._observation_space = self.__get_observation_space__()
+    @property
+    def off_set_volume(self):
+        return self._trade_entity.buy_volume
+
+    @property
+    def off_set_value(self):
+        return self._trade_entity.buy_price
+
+    @property
+    def off_set_date(self):
+        return self._trade_entity.buy_date
+
+    @property
+    def wave_tick_for_buying(self):
+        return self._trade_entity.wave_tick_for_buying
+
+    @property
+    def max_steps(self):
+        return len(self._observation_space) - self._base_observation_number
+
+    def __init_observation_space_scaler__(self):
         self._observation_space_df = self.__get_observation_space_df__()
         self._observation_space_scaler = self.__get_fitted_scaler__()
         self._observation_space_scaled_df = self.__get_observation_space_scaled_df__()
         # self.__print_observation_spaces__()
-        self.__init_entity_independent_variables__()
 
     def __init_entity_independent_variables__(self):
-        self._done = False
         self._step_list = []
         self._step_counter = 0
         self._base_observation_number = 0
-        self._step = None
 
     def __get_fitted_scaler__(self):
         scaler = StandardScaler()
@@ -84,9 +92,9 @@ class TradeEnvironment(EnvironmentInterface):
         for obs in self._observation_space:
             obs.scale_value_array(self._observation_space_scaler)
 
-    def __get_observation_orig__(self):
-        observation_orig_data_dict = self._trade_entity.get_data_dict_for_agent_first_observation()
-        return TradeObservation(observation_orig_data_dict, self._wave_tick_for_buying)
+    @property
+    def entity(self):
+        return self._trade_entity
 
     @property
     def base_observation_number(self):
@@ -98,10 +106,6 @@ class TradeEnvironment(EnvironmentInterface):
         return '{}: {}'.format(len(action_short_list), action_short_list)
 
     @property
-    def max_steps(self):
-        return self._max_steps
-
-    @property
     def observation_space(self):  # data frame for the observations, shape[0] return the numbers of observations
         return self._observation_space
 
@@ -110,21 +114,23 @@ class TradeEnvironment(EnvironmentInterface):
         return sum([step.reward for step in self._step_list])
 
     def reset(self) -> TradeObservation:  # initialize the environment
-        if self._entity_init is None:
-            self.__init_by_entity__(self.__get_entity_by_random__())
-        else:
-            self.__init_entity_independent_variables__()
+        self.__init_entity_independent_variables__()
+        if self._trade_entity_collection is not None:
+            self._trade_entity = self._trade_entity_collection.get_element_by_random()
+            self._observation_space = self.__get_observation_space_by_entity__(self._trade_entity)
+        self.__init_entity_independent_variables__()
         return self.__get_observation_by_random__()
 
     def reset_by_entity(self, trade_entity: TradeEntity) -> TradeObservation:  # initialize the environment
-        self.__init_by_entity__(trade_entity)
+        self.__init_entity_independent_variables__()
+        self._trade_entity = trade_entity
+        self._observation_space = self.__get_observation_space_by_entity__(self._trade_entity)
         self._base_observation_number = 1
-        self._step_counter = 0
-        self._max_steps = len(self.observation_space) - self._base_observation_number
-        return self.observation_space[0]
+        return self._observation_space[0]
 
-    def __get_entity_by_random__(self) -> TradeEntity:
-        return self._trade_entity_collection.get_element_by_random()
+    def reset_to_start(self) -> TradeObservation:  # initialize the environment
+        self._base_observation_number = 1
+        return self._observation_space[0]
 
     def render(self, mode=''):  # shows the environment
         pass
@@ -134,20 +140,18 @@ class TradeEnvironment(EnvironmentInterface):
 
     def step(self, action: PolicyAction):  # returns obs, reward, done, info
         self._step_counter += 1
-        self._observation_after_step = self.__get_observation_for_step__()
-        self._step = EnvironmentStep(self._step_counter, action)
-        self._step.wave_tick = self._observation_after_step.wave_tick
-        self._step_list.append(self._step)
-        self.__adjust_observation_after_step_with_respect_to_latest_action__()
-        self.__calculate_end_with_respect_to_current_step_and_action__()
-        self.__calculate_reward__()
-        return self._observation_after_step, self._step.reward, self._done, self._step.info_dict
+        observation_after_step = self.__get_observation_for_step__()
+        step = EnvironmentStep(self._step_counter, action)
+        step.wave_tick = observation_after_step.wave_tick
+        self._step_list.append(step)
+        self.__adjust_observation_after_step_by_latest_action__(observation_after_step, step)
+        done = self.__get_done_with_respect_to_current_step_and_action__(observation_after_step, step)
+        self.__calculate_reward__(done, observation_after_step, step)
+        return observation_after_step, step.reward, done, step.info_dict
 
     def __get_observation_by_random__(self):
         self._base_observation_number = random.randint(1, len(self.observation_space) - 1)
-        self._step_counter = 0
-        self._max_steps = len(self.observation_space) - self._base_observation_number
-        return self.observation_space[self._base_observation_number - 1]
+        return self._observation_space[self._base_observation_number - 1]
 
     def __print_observation_spaces__(self):
         scaled_array = self._observation_space_scaler.transform(self._observation_space_df)
@@ -167,56 +171,72 @@ class TradeEnvironment(EnvironmentInterface):
         return df
 
     def __get_observation_space__(self) -> list:
-        return_list = [self._observation_orig]
-        self._step_counter = 0
-        for wave_tick in self._trade_entity.wave_tick_list_after_breakout.tick_list:
-            self._step_counter += 1
+        if self._trade_entity is None:
+            return self.__get_observation_space_by_entity_collection__()
+        else:
+            return self.__get_observation_space_by_entity__(self._trade_entity)
+
+    def __get_observation_space_by_entity_collection__(self):
+        return_list = []
+        for trade_entity in self._trade_entity_collection.entity_number_dict.values():
+            return_list = return_list + self.__get_observation_space_by_entity__(trade_entity)
+        return return_list
+
+    def __get_observation_space_by_entity__(self, trade_entity: TradeEntity) -> list:
+        return_list = [self.__get_first_observation_for_trade_entity__(trade_entity)]
+        len_list = len(trade_entity.wave_tick_list_after_breakout.tick_list)
+        for index, wave_tick in enumerate(trade_entity.wave_tick_list_after_breakout.tick_list):
             obs_previous = return_list[-1]
-            obs_new = deepcopy(obs_previous)
-            self.__adjust_new_observation_to_wave_tick__(obs_new, wave_tick, obs_previous.wave_tick)
+            obs_new = self.__get_first_observation_for_trade_entity__(trade_entity)
+            obs_new.current_tick_pct = round((index + 1)/len_list * 100, 2)
+            self.__adjust_observation_to_wave_tick__(obs_new, wave_tick, obs_previous.wave_tick)
             return_list.append(obs_new)
         return return_list
 
+    @staticmethod
+    def __get_first_observation_for_trade_entity__(trade_entity: TradeEntity):
+        observation_start_data_dict = trade_entity.get_data_dict_for_agent_first_observation()
+        return TradeObservation(observation_start_data_dict, trade_entity.wave_tick_for_buying)
+
     def __get_observation_for_step__(self):
-        return deepcopy(self._observation_space[self._base_observation_number + self._step_counter - 1])
+        return self._observation_space[self._base_observation_number + self._step_counter - 1]
 
-    def __adjust_observation_after_step_with_respect_to_latest_action__(self):
-        if self._step.action.name == TPA.WAIT:
-            pass
-        elif self._step.action.name == TPA.STOP_LOSS_UP:
-            self._observation_after_step.stop_loss_pct = self._step.action.parameter
+    @staticmethod
+    def __adjust_observation_after_step_by_latest_action__(obs: TradeObservation, step: EnvironmentStep):
+        if step.action.name == TPA.STOP_LOSS_UP:
+            obs.stop_loss_pct = step.action.parameter
 
-    def __adjust_new_observation_to_wave_tick__(
+    def __adjust_observation_to_wave_tick__(
             self, obs: TradeObservation, wave_tick: WaveTick, wave_tick_previous: WaveTick):
         obs.wave_tick = wave_tick
-        obs.current_tick_pct = round(self._step_counter/self.max_steps * 100, 2)
-        obs.current_value_high_pct = MyMath.get_change_in_percentage(self._off_set_value, wave_tick.high)
-        obs.current_value_low_pct = MyMath.get_change_in_percentage(self._off_set_value, wave_tick.low)
-        obs.current_value_open_pct = MyMath.get_change_in_percentage(self._off_set_value, wave_tick.open)
-        obs.current_value_close_pct = MyMath.get_change_in_percentage(self._off_set_value, wave_tick.close)
-        obs.current_volume_buy_pct = MyMath.get_change_in_percentage(self._off_set_volume, wave_tick.volume)
+        obs.current_value_high_pct = MyMath.get_change_in_percentage(self.off_set_value, wave_tick.high)
+        obs.current_value_low_pct = MyMath.get_change_in_percentage(self.off_set_value, wave_tick.low)
+        obs.current_value_open_pct = MyMath.get_change_in_percentage(self.off_set_value, wave_tick.open)
+        obs.current_value_close_pct = MyMath.get_change_in_percentage(self.off_set_value, wave_tick.close)
+        obs.current_volume_buy_pct = MyMath.get_change_in_percentage(self.off_set_volume, wave_tick.volume)
         obs.current_volume_last_pct = MyMath.get_change_in_percentage(wave_tick_previous.volume, wave_tick.volume)
 
-    def __calculate_end_with_respect_to_current_step_and_action__(self):
-        if self._step_counter == self._max_steps:
-            self._step.info_dict['END Reason'] = 'Max steps reached'
-            self._done = True
-        elif self._observation_after_step.current_value_low_pct < self._observation_after_step.stop_loss_pct:
-            self._step.info_dict['END Reason'] = 'Stop loss triggered'
-            self._step.reward = self._observation_after_step.stop_loss_pct
-            self._done = True
-        elif self._step.action.name == TPA.SELL:
-            self._step.info_dict['END Reason'] = 'Position sold by policy'
-            self._done = True
+    def __get_done_with_respect_to_current_step_and_action__(self, obs: TradeObservation, step: EnvironmentStep):
+        if self._step_counter == self.max_steps:
+            step.info_dict['END Reason'] = 'Max steps reached'
+            return True
+        elif obs.current_value_low_pct < obs.stop_loss_pct:
+            step.info_dict['END Reason'] = 'Stop loss triggered'
+            step.reward = obs.stop_loss_pct
+            return True
+        elif step.action.name == TPA.SELL:
+            step.info_dict['END Reason'] = 'Position sold by policy'
+            return True
+        return False
 
-    def __calculate_reward__(self):
-        if self._done:
-            self._step.reward = self._observation_after_step.current_value_open_pct
-            date = self._observation_after_step.wave_tick.date
-            sold_price = MyMath.get_value_from_percentage_on_base_value(self._step.reward, self._off_set_value)
-            self._step.info_dict['SOLD'] = '{:.2f} ({}) - bought: {:.2f} ({})'.format(
-                sold_price, date, self._off_set_value, self._off_set_date)
+    def __calculate_reward__(self, done: bool, obs: TradeObservation, step: EnvironmentStep):
+        if done:
+            step.reward = obs.current_value_open_pct
+            date = obs.wave_tick.date
+            sold_price = MyMath.get_value_from_percentage_on_base_value(step.reward, self.off_set_value)
+            step.info_dict['SOLD'] = '{:.2f} ({}) - bought: {:.2f} ({})'.format(
+                sold_price, date, self.off_set_value, self.off_set_date)
         else:
-            self._step.reward = -0.01
+            step.reward = -0.01
 
 

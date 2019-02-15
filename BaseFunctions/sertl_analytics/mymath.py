@@ -205,6 +205,8 @@ class MyMath:
     def get_change_in_percentage(value_from: float, value_to: float, decimal_round=1) -> float:
         value_change = value_to - value_from
         value_mean = (value_from + value_to)/2
+        if value_mean == 0:
+            return 0
         return round(value_change/value_mean * 100, decimal_round)
 
     @staticmethod

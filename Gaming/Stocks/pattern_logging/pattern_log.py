@@ -6,11 +6,13 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.mydates import MyDate
+import os
 
 
 class PatternLog:
-    def __init__(self, file_path='../pattern_logging/pattern_log_test.csv'):
-        self._log_file_path = file_path
+    def __init__(self, file_name='pattern_log_test.csv'):
+        package_dir = os.path.abspath(os.path.dirname(__file__))
+        self._log_file_path = os.path.join(package_dir, file_name)
 
     def log_message(self, log_message: str, process='', process_step='run'):
         for old, new in {',': ' ', '; ': ' ', '  ': ' '}.items():

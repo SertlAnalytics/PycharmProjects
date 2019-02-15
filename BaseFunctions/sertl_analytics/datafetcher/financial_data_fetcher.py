@@ -26,6 +26,7 @@ class APIBaseFetcher:
         self._df_data = None
         self._df_volume = None
         self._df_columns = []
+        self._latest_successful_request_data = None  # in case of a problem with the current request take these data
 
     @property
     def kw_symbol(self) -> str:
@@ -68,6 +69,9 @@ class APIBaseFetcher:
     @property
     def df_volume(self) -> pd.DataFrame:
         return self._df_volume
+
+    def __are_retrieved_data_correct__(self, data_stream: object):
+        return True
 
     def __print_request_details__(self, url):
         request_time = MyDate.get_time_from_epoch_seconds(self.class_last_request_ts)
@@ -378,6 +382,12 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
     def __get_data_frame__(self, request_data) -> pd.DataFrame:
         json_data = request_data.json()
         self.api_symbol = self._kwargs['symbol']
+        if self.__are_retrieved_data_correct__(json_data):
+            self._latest_successful_request_data = json_data
+        else:
+            if self._latest_successful_request_data is not None:
+                print('Use latest successfully retrieved data for {}'.format(self.api_symbol))
+                json_data = self._latest_successful_request_data
         if type(json_data[0]) is list:
             df = pd.DataFrame(json_data)
         else:
@@ -393,6 +403,10 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         df = df.sort_index()
         # _df.sort_index(inplace=True)
         return df
+
+    def __are_retrieved_data_correct__(self, json_data: object):
+        # JSON in error case: ["error", 11010, "ratelimit: error"]
+        return "error" not in json_data
 
     def _get_url_(self):  # the _symbol has the structure tsymbolCCY like tBTCUSD
         # https://api.bitfinex.com/v2/candles/trade:5m:tBTCUSD/hist

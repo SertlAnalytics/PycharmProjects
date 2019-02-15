@@ -33,7 +33,7 @@ class CartPolePolicyByPolicyGradient(TradePolicyByPolicyGradient):
 class CartPolePolicyHandlerByGradient:
     @property
     def save_path(self):
-        return './polycy_pg/my_policy_net_pg.ckpt'
+        return './policy_pg/my_policy_net_pg.ckpt'
 
     def train_policy_by_gradient(self, policy: CartPolePolicyByPolicyGradient, episodes=250, save_after_episodes=50,
                                  n_games_per_update=10, discount_rate=0.95):

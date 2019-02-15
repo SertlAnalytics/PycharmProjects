@@ -15,6 +15,16 @@ import math
 
 
 class TradePolicyHandler:
+    """
+    Description: The intuition behind this class is to use the model for a label which is best suited for
+    the input value x.
+    Example:
+    a) Model A predicts a value a_y with the recall = a_r, the precision a_p and a f1-ratio value a_f1
+    b) Model B predicts a value b_y with the recall = b_r, the precision b_p and a f1-ratio value b_f1
+    c) Then: if b_f1 is larger than a_f1 then we take the prediction b_y instead of prediction a_y
+    Purpose: We want to have the best possible prediction (for the underlying best model) for the value x.
+    Usage: These information are currently NOT used within AiLean. We use only Nearest neighbor as main model.
+    """
     def __init__(self, pattern_type=FT.CHANNEL, period=PRD.DAILY, mean_aggregation=4,
                  number_trades=math.inf, pattern_id='', compare_with_orig=True):
         self._pattern_type = pattern_type
@@ -33,46 +43,41 @@ class TradePolicyHandler:
     def save_path(self):
         return ''
 
-    @property
-    def observation_space_size(self):
-        env = TradeEnvironment(self._trade_entity_collection)
-        observation = env.reset()
-        return observation.size
-
     def train_policy(self, policy: TradePolicy, episodes=1, print_details_per_trade=False):
         self._trade_policy = policy
         self._print_details_per_trade = print_details_per_trade
         episode_range = range(1, episodes+1)
+        episode_elements = self._trade_entity_collection.elements
         for episode in episode_range:
             episode_rewards = 0
             episode_rewards_orig = 0
-            entity_counter = 0
-            entity = self._trade_entity_collection.get_first_element()
-            while entity is not None:
-                entity_counter += 1
+            for number, entity in self._trade_entity_collection.entity_number_dict.items():
                 episode_rewards_orig += entity.trade_result_pct
                 if type(self._trade_policy) is TradePolicySellCodedTrade:
                     episode_rewards = episode_rewards_orig
                 else:
-                    episode_rewards = self.__get_episode_rewards__(entity, episode_rewards)
-                entity = self._trade_entity_collection.get_next_element()
-            self.__print_episode_details__(entity_counter, episode, episode_rewards, episode_rewards_orig)
+                    episode_rewards += self.__get_episode_rewards__(entity)
+            self.__print_episode_details__(episode_elements, episode, episode_rewards, episode_rewards_orig)
+            return episode_rewards, episode_elements, episode  # ToDo - how to handle different episodes
 
     def run_policy(self, policy: object, print_details_per_trade=False):
+        self._trade_policy = policy
         self._print_details_per_trade = print_details_per_trade
-        episode_rewards = 0
-        episode_rewards_orig = 0
-        entity_counter = 0
+        rewards = 0
+        rewards_orig = 0
         entity = self._trade_entity_collection.get_first_element()
         while entity is not None:
-            entity_counter += 1
-            episode_rewards_orig += entity.trade_result_pct
+            rewards_orig += entity.trade_result_pct
             if type(self._trade_policy) is TradePolicySellCodedTrade:
-                episode_rewards = episode_rewards_orig
+                rewards += entity.trade_result_pct
             else:
-                episode_rewards = self.__get_episode_rewards__(entity, episode_rewards)
+                rewards += self.__get_rewards_from_start__(entity)
             entity = self._trade_entity_collection.get_next_element()
-        self.__print_episode_details__(entity_counter, 1, episode_rewards, episode_rewards_orig)
+        self.__print_episode_details__(self._trade_entity_collection.elements, 1, rewards, rewards_orig)
+        return rewards, self._trade_entity_collection.elements
+
+    def __get_environment__(self) -> TradeEnvironment:
+        pass
 
     def __print_episode_details__(
             self, entity_counter: int, episode: int, episode_rewards: float, episode_rewards_orig: float):
@@ -83,8 +88,8 @@ class TradePolicyHandler:
             self._trade_policy.policy_name, self._pattern_type, self._mean_aggregation,
             episode, entity_counter, reward_policy, reward_orig_trades))
 
-    def __get_episode_rewards__(self, entity: TradeEntity, episode_rewards: float):
-        env = TradeEnvironment(self._trade_entity_collection, entity)
+    def __get_episode_rewards__(self, entity: TradeEntity):
+        env = TradeEnvironment(entity=entity)
         observation = env.reset()
         for step_number in range(1, env.max_steps + 1):
             action = self._trade_policy.get_action(observation)
@@ -92,11 +97,22 @@ class TradePolicyHandler:
             if done:
                 if self._print_details_per_trade:
                     self.__print_reward_details__(entity.pattern_id, reward, info, step_number)
-                episode_rewards += reward
-                break
+                return reward
             # elif len(info) > 0:
             #     print('\nInfo for "{}" after {} steps: {}'.format(entity.entity_key, step_number, info))
-        return episode_rewards
+        return 0
+
+    def __get_rewards_from_start__(self, entity: TradeEntity):
+        env = TradeEnvironment(entity=entity)
+        observation = env.reset_to_start()
+        for step_number in range(1, env.max_steps + 1):
+            action = self._trade_policy.get_action(observation)
+            observation, reward, done, info = env.step(action)
+            if done:
+                if self._print_details_per_trade:
+                    self.__print_reward_details__(entity.pattern_id, reward, info, step_number)
+                return reward
+        return 0
 
     def __print_reward_details__(self, pattern_id, reward: float, info: dict, step_number: int):
         print("\nReward for '{}' and '{}' after {} steps: {}%\n--> Details: {}".format(

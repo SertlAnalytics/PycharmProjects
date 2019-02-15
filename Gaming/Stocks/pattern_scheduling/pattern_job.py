@@ -98,7 +98,6 @@ class MyPatternJob:
         self.__perform_task__()
         self._pattern_log.log_message(self.job_name, process='Scheduler', process_step='End')
         self._is_running = False
-        self._done = True
         self._job_runtime.stop()
         self._executor.shutdown(wait=False)
         self.__write_statistics_to_database__()

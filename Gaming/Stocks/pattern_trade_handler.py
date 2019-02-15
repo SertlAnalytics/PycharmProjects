@@ -5,8 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR, FT
-from pattern_database.stock_tables import AssetTable
+from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
@@ -20,6 +19,7 @@ from pattern_news_handler import NewsHandler
 from pattern_trade_candidate import TradeCandidateController, TradeCandidate
 from pattern import Pattern
 import pandas as pd
+from pattern_logging.pattern_log import PatternLog
 
 
 class PatternTradeHandler:
@@ -28,6 +28,7 @@ class PatternTradeHandler:
         self.exchange_config = self.sys_config.exchange_config
         self.trade_optimizer = self.sys_config.trade_strategy_optimizer
         self.trade_process = self.sys_config.runtime_config.actual_trade_process
+        self._pattern_log = PatternLog('pattern_log_trades.csv')
         self._trade_client_crypto = MyBitfinexTradeClient(self.exchange_config)
         self._trade_client_shares = MyIBKRTradeClient(self.sys_config.shares_config)
         self.stock_db = self.sys_config.db_stock
@@ -246,13 +247,13 @@ class PatternTradeHandler:
         else:
             pattern_trade.trade_client = self.__get_trade_client_for_symbol__(pattern_trade.ticker_id)
             self.pattern_trade_dict[pattern_trade.id] = pattern_trade
-            self.__print_details_after_adding_to_trade_dict(pattern_trade, 'Add')
+            self.__print_details_after_adding_to_trade_dict__(pattern_trade, 'Add')
 
-    @staticmethod
-    def __print_details_after_adding_to_trade_dict(pattern_trade: PatternTrade, scope: str):
+    def __print_details_after_adding_to_trade_dict__(self, pattern_trade: PatternTrade, scope: str):
         prefix = 'Adding to trade_dict' if scope == 'Add' else 'Replacing in trade_dict'
         suffix = ' (simulation)' if pattern_trade.is_simulation else ' (REAL)'
         print('{}{}...: {}'.format(prefix, suffix, pattern_trade.id))
+        self._pattern_log.log_message(pattern_trade.id, process='Trade_Handler', process_step=scope)
 
     def __remove_outdated_pattern_trades_in_status_new__(self):
         # remove trades which doesn't belong to an actual pattern anymore
@@ -323,6 +324,8 @@ class PatternTradeHandler:
         sell_price = pattern_trade.get_actual_sell_price(sell_trigger, ticker.last_price)
         sell_comment = 'Sell_{} at {:.2f} on {}'.format(sell_trigger, sell_price, ticker.date_time_str)
         print('Sell: {}'.format(sell_comment))
+        self._pattern_log.log_message('{}: {}'.format(pattern_trade.id, sell_trigger),
+                                      process='Trade_Handler', process_step='Sell')
         ticker_id = pattern_trade.ticker_id
         if self.trade_process == TP.ONLINE:
             order_status = pattern_trade.trade_client.create_sell_market_order(
@@ -356,6 +359,8 @@ class PatternTradeHandler:
         for key in deletion_key_list:
             pattern_trade = self.pattern_trade_dict[key]
             print('Removed from trade_dict ({}): {}'.format(deletion_reason, pattern_trade.get_trade_meta_data()))
+            self._pattern_log.log_message('{}: {}'.format(pattern_trade.id, deletion_reason),
+                                          process='Trade_Handler', process_step='Delete')
             if self.trade_candidate_controller.is_deletion_reason_candidate_for_black_buy_pattern_id_list(
                     pattern_trade, key):
                 self.trade_candidate_controller.add_pattern_trade_to_black_buy_trigger_list(
@@ -426,6 +431,7 @@ class PatternTradeHandler:
                                                         pattern_trade.buy_trigger, pattern_trade.trade_strategy,
                                                         ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
+        self._pattern_log.log_message('{}'.format(pattern_trade.id), process='Trade_Handler', process_step='Buy')
         if self.trade_process == TP.ONLINE:
             order_status = pattern_trade.trade_client.buy_available(
                 ticker.ticker_id, ticker.last_price, pattern_trade.is_simulation)

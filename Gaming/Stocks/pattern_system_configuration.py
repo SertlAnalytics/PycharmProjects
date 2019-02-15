@@ -27,7 +27,7 @@ from pattern_index_configuration import IndexConfiguration
 
 class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
-        self.pattern_log = PatternLog('./pattern_logging/pattern_log.csv')
+        self.pattern_log = PatternLog('pattern_log.csv')
         self.runtime_config = RuntimeConfiguration()
         self.crypto_config = BitfinexConfiguration()
         self.exchange_config = self.crypto_config

@@ -21,6 +21,7 @@ class MyDashPatternJob(MyPatternJob):
         MyPatternJob.__init__(self, period=PRD.DAILY, weekdays=list([0, 1, 2, 3, 4, 5, 6]), start_time=start_time)
         self._stock_db_updater = stock_db_updater
 
+
 class MyDashTradePolicyUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
         self._stock_db_updater.update_trade_policy_metric_for_today(
@@ -100,11 +101,11 @@ class MyDashJobHandler:
         self._scheduler.start_scheduler()
 
     def __add_jobs__(self):
-        self._scheduler.add_job(MyDashDeleteDuplicatesJob(start_time='02:00', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyDashStockDataUpdateJob(start_time='02:30', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyDashDeleteDuplicatesJob(start_time='01:00', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyDashStockDataUpdateJob(start_time='01:30', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyEquityUpdateJob(start_time='03:00', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyPatternUpdateJob(start_time='03:15', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyWaveUpdateJob(start_time='10:00', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyWaveUpdateJob(start_time='04:00', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyDashTradePolicyUpdateJob(start_time='05:00', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyDashPredictorOptimizerJob(
             start_time='05:30', stock_db_updater=self._stock_db_updater))

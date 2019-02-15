@@ -2,21 +2,39 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f337eff7-2e2d-415d-b4ab-cf8d55a29aa3" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/datafetcher/file_name_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/policy_action.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/policy_action.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/policy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/policy_pg/my_policy_net_pg.ckpt.index" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/__init__-Family-Elitebook.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/mymath.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Courses/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Courses/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Courses/edX_AI/PlayerAI_3-Family-Elitebook.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/Stocks.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/Stocks.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/gym_practise/gym_cart_pole.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/gym_practise/gym_cart_pole.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_access_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_access_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.index" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.index" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_logging/pattern_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_logging/pattern_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/polycy_pg/checkpoint" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/policy_pg/checkpoint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.meta" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/policy_pg/my_policy_net_pg.ckpt.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/run_trade_policy_by_gradient_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/run_trade_policy_by_gradient_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_environment.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_environment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_action.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_action.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_gradient.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_gradient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_gradient_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_gradient_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_observation.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_observation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_handler_gradient.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_reinforcement/trade_policy_handler_gradient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/run_pattern_detection_by_pattern_id.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/run_pattern_detection_by_pattern_id.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_job.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_job.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_handler.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -30,7 +48,7 @@
       <file leaf-file-name="bitfinex.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="218">
+            <state relative-caret-position="4743">
               <caret line="279" selection-start-line="279" selection-end-line="279" />
               <folding>
                 <element signature="e#287#325#0" expanded="true" />
@@ -43,7 +61,7 @@
         <entry file="file://$PROJECT_DIR$/datafetcher/file_fetcher.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="153">
-              <caret line="11" lean-forward="true" selection-start-line="11" selection-end-line="11" />
+              <caret line="11" selection-start-line="11" selection-end-line="11" />
             </state>
           </provider>
         </entry>
@@ -52,7 +70,7 @@
         <entry file="file://$PROJECT_DIR$/datafetcher/file_name_fetcher.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="228">
-              <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
+              <caret line="17" selection-start-line="17" selection-end-line="17" />
               <folding>
                 <element signature="e#195#204#0" expanded="true" />
               </folding>
@@ -158,30 +176,6 @@
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
               <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
               <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="datafetcher" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="environment" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="exchanges" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
-              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
-              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
-              <item name="models" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
@@ -346,7 +340,7 @@
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50159234" side_tool="true" visible="true" weight="0.4" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.4928344" weight="0.32784313" />
@@ -737,7 +731,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="218">
+        <state relative-caret-position="4743">
           <caret line="279" selection-start-line="279" selection-end-line="279" />
           <folding>
             <element signature="e#287#325#0" expanded="true" />
@@ -748,14 +742,14 @@
     <entry file="file://$PROJECT_DIR$/datafetcher/file_fetcher.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="153">
-          <caret line="11" lean-forward="true" selection-start-line="11" selection-end-line="11" />
+          <caret line="11" selection-start-line="11" selection-end-line="11" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/datafetcher/file_name_fetcher.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="228">
-          <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
           <folding>
             <element signature="e#195#204#0" expanded="true" />
           </folding>

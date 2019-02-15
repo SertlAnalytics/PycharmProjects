@@ -166,6 +166,14 @@ class EntityCollection:
     def elements(self):
         return len(self._entity_key_dict)
 
+    @property
+    def counter(self):
+        return self._counter
+
+    @property
+    def entity_number_dict(self) -> dict:
+        return self._entity_number_dict
+
     def get_nth_element(self, number: int):
         self._counter = number
         if 1 <= number <= self.elements:

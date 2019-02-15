@@ -2,39 +2,40 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/file_name_fetcher.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pattern_logging/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pattern_logging/pattern_log.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pattern_test/run_access_layer_tests.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pattern_test/run_logging_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pattern_reinforcement/policy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pattern_reinforcement/policy_pg/my_policy_net_pg.ckpt.index" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/exchanges/bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/exchanges/bitfinex.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/models_abc.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/models_abc.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/policy_action.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/policy_action.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/__init__-Family-Elitebook.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/financial_data_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/financial_data_fetcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Courses/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Courses/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Courses/edX_AI/PlayerAI_3-Family-Elitebook.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Stocks.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Stocks.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fibonacci/fibonacci_wave.py" beforeDir="false" afterPath="$PROJECT_DIR$/fibonacci/fibonacci_wave.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gym_practise/gym_cart_pole.py" beforeDir="false" afterPath="$PROJECT_DIR$/gym_practise/gym_cart_pole.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_interface_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_interface_for_pattern.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_job_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_job_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/run_daily_tasks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_database/stock_access_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/stock_access_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_database/stock_access_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/stock_access_layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.index" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.index" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.meta" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/stock_database_updater.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_logging/pattern_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_logging/pattern_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/checkpoint" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/policy_pg/checkpoint" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.index" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.meta" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/policy_pg/my_policy_net_pg.ckpt.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_reinforcement/run_trade_policy_by_gradient_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/run_trade_policy_by_gradient_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_reinforcement/trade_environment.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/trade_environment.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_reinforcement/trade_observation.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/trade_observation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_action.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_action.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler_gradient.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler_gradient.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_scheduling/pattern_job.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_scheduling/pattern_job.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_scheduling/pattern_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_scheduling/pattern_scheduler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_system_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_test/run_scheduler_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_test/run_scheduler_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_pattern_detection_by_pattern_id.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_pattern_detection_by_pattern_id.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_trade.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_trade_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_trade_handler.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -50,34 +51,13 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="467">
-              <caret line="69" column="46" lean-forward="true" selection-start-line="69" selection-start-column="46" selection-end-line="69" selection-end-column="46" />
+            <state relative-caret-position="187">
+              <caret line="11" selection-start-line="11" selection-end-line="11" />
               <folding>
                 <element signature="e#198#247#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="run_access_layer_tests.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pattern_test/run_access_layer_tests.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="221">
-              <caret line="15" column="46" selection-start-line="15" selection-start-column="46" selection-end-line="15" selection-end-column="46" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="stock_access_layer.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pattern_database/stock_access_layer.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="42">
-              <caret line="236" column="8" selection-start-line="236" selection-start-column="8" selection-end-line="236" selection-end-column="8" />
-              <folding>
-                <element signature="e#180#268#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -94,19 +74,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>__init_data_from_database__</find>
-      <find>fit</find>
-      <find>print</find>
-      <find>y_regression_predict_after_breakout</find>
-      <find>_neighbor_collector</find>
-      <find>_nearest_neighbor_collector</find>
-      <find>as_dataframe</find>
-      <find>_nearest_neighbor_container</find>
-      <find>DC</find>
-      <find>wave_ti</find>
-      <find>current_tick_pct</find>
-      <find>trading_last_price_mean_aggregation</find>
-      <find>Sell_Forecast</find>
       <find>Sell_Forecast_ticks_reached</find>
       <find>FORECAST_TICKS</find>
       <find>get_optimal_last_price_mean_aggregation_for_pattern_type</find>
@@ -124,6 +91,19 @@
       <find>random</find>
       <find>rand</find>
       <find>standardsc</find>
+      <find>TradeObservation</find>
+      <find>_done</find>
+      <find>import os</find>
+      <find>_sell_limit</find>
+      <find>_stop_loss</find>
+      <find>_trailing_distance</find>
+      <find>_step_counter</find>
+      <find>_step</find>
+      <find>_observation_after_step</find>
+      <find>_max_steps_dict</find>
+      <find>__get_data_frame__</find>
+      <find>__get_data_frame</find>
+      <find>__add_tickers_for_actual_time_stamp</find>
     </findStrings>
     <replaceStrings>
       <replace>MyPyDate</replace>
@@ -172,14 +152,8 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/pattern_reinforcement/pattern_environment.py" />
-        <option value="$PROJECT_DIR$/pattern_reinforcement/pattern_policy_handler.py" />
         <option value="$PROJECT_DIR$/pattern_reinforcement/pattern_observation.py" />
-        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" />
-        <option value="$PROJECT_DIR$/pattern_database/stock_database_updater.py" />
-        <option value="$PROJECT_DIR$/pattern_database/run_daily_tasks.py" />
         <option value="$PROJECT_DIR$/pattern_reinforcement/run_trade_policy_test.py" />
-        <option value="$PROJECT_DIR$/pattern_trade_handler.py" />
         <option value="$PROJECT_DIR$/pattern_reinforcement/trade_policy.py" />
         <option value="$PROJECT_DIR$/pattern_trade_optimizer.py" />
         <option value="$PROJECT_DIR$/pattern_trade_candidate.py" />
@@ -189,7 +163,6 @@
         <option value="$PROJECT_DIR$/pattern_test/run_tensorflow_test.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_recommender.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_recommender.py" />
-        <option value="$PROJECT_DIR$/pattern_trade.py" />
         <option value="$PROJECT_DIR$/pattern_database/stock_database.py" />
         <option value="$PROJECT_DIR$/pattern_database/run_create_stock_table.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydates.py" />
@@ -199,30 +172,37 @@
         <option value="$PROJECT_DIR$/gym_practise/gym_cart_pole.py" />
         <option value="$PROJECT_DIR$/pattern_reinforcement/trade_policy_action.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/policy_action.py" />
-        <option value="$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/models_abc.py" />
         <option value="$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient_test.py" />
-        <option value="$PROJECT_DIR$/pattern_reinforcement/trade_observation.py" />
         <option value="$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient.py" />
         <option value="$PROJECT_DIR$/run_pattern_detection_by_pattern_id.py" />
-        <option value="$PROJECT_DIR$/pattern_reinforcement/run_trade_policy_by_gradient_test.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/exchanges/bitfinex.py" />
-        <option value="$PROJECT_DIR$/pattern_dash/my_dash_job_handler.py" />
         <option value="$PROJECT_DIR$/pattern_test/run_logging_test.py" />
-        <option value="$PROJECT_DIR$/pattern_logging/pattern_log.py" />
-        <option value="$PROJECT_DIR$/pattern_system_configuration.py" />
-        <option value="$PROJECT_DIR$/pattern_scheduling/pattern_scheduler.py" />
-        <option value="$PROJECT_DIR$/pattern_scheduling/pattern_job.py" />
         <option value="$PROJECT_DIR$/pattern_test/run_scheduler_test.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" />
-        <option value="$PROJECT_DIR$/pattern_database/stock_access_entity.py" />
-        <option value="$PROJECT_DIR$/pattern_reinforcement/trade_environment.py" />
-        <option value="$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler_gradient.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py" />
         <option value="$PROJECT_DIR$/pattern_test/run_access_layer_tests.py" />
         <option value="$PROJECT_DIR$/pattern_database/stock_access_layer.py" />
         <option value="$PROJECT_DIR$/fibonacci/fibonacci_wave.py" />
+        <option value="$PROJECT_DIR$/pattern_dash/my_dash_job_handler.py" />
+        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" />
+        <option value="$PROJECT_DIR$/pattern_database/stock_access_entity.py" />
+        <option value="$PROJECT_DIR$/pattern_scheduling/pattern_job.py" />
+        <option value="$PROJECT_DIR$/pattern_trade.py" />
+        <option value="$PROJECT_DIR$/pattern_reinforcement/run_trade_policy_by_gradient_test.py" />
+        <option value="$PROJECT_DIR$/pattern_reinforcement/trade_observation.py" />
+        <option value="$PROJECT_DIR$/pattern_trade_handler.py" />
+        <option value="$PROJECT_DIR$/pattern_logging/pattern_log.py" />
+        <option value="$PROJECT_DIR$/pattern_logging/pattern_log_test.csv" />
+        <option value="$PROJECT_DIR$/pattern_system_configuration.py" />
+        <option value="$PROJECT_DIR$/pattern_scheduling/pattern_scheduler.py" />
+        <option value="$PROJECT_DIR$/pattern_database/run_daily_tasks.py" />
+        <option value="$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler_gradient.py" />
+        <option value="$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler.py" />
+        <option value="$PROJECT_DIR$/pattern_reinforcement/trade_environment.py" />
+        <option value="$PROJECT_DIR$/pattern_database/stock_database_updater.py" />
         <option value="$PROJECT_DIR$/run_pattern_detection.py" />
+        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/financial_data_fetcher.py" />
       </list>
     </option>
   </component>
@@ -247,17 +227,7 @@
             <path>
               <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
               <item name="Stocks" type="462c0819:PsiDirectoryNode" />
-              <item name="docs" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Stocks" type="462c0819:PsiDirectoryNode" />
-              <item name="fibonacci" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Stocks" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Stocks" type="462c0819:PsiDirectoryNode" />
-              <item name="pattern_test" type="462c0819:PsiDirectoryNode" />
+              <item name="pattern_logging" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -308,7 +278,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run_pattern_detection_with_dash">
+  <component name="RunManager" selected="Python.run_pattern_detection">
     <configuration name="run_access_layer_tests" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -322,6 +292,24 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pattern_test/run_access_layer_tests.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="run_daily_tasks" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Stocks" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pattern_database" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pattern_database/run_daily_tasks.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -381,24 +369,6 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
-    <configuration name="run_scheduler_test" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Stocks" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pattern_test" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pattern_test/run_scheduler_test.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-    </configuration>
     <configuration name="run_trade_policy_by_gradient_test" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -422,16 +392,16 @@
       <item itemvalue="Python.run_pattern_detection_with_dash" />
       <item itemvalue="Python.run_trade_policy_by_gradient_test" />
       <item itemvalue="Python.run_access_layer_tests" />
+      <item itemvalue="Python.run_daily_tasks" />
       <item itemvalue="Python.run_logging_test" />
-      <item itemvalue="Python.run_scheduler_test" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.run_pattern_detection_with_dash" />
-        <item itemvalue="Python.run_access_layer_tests" />
-        <item itemvalue="Python.run_trade_policy_by_gradient_test" />
-        <item itemvalue="Python.run_scheduler_test" />
+        <item itemvalue="Python.run_daily_tasks" />
         <item itemvalue="Python.run_logging_test" />
+        <item itemvalue="Python.run_trade_policy_by_gradient_test" />
+        <item itemvalue="Python.run_access_layer_tests" />
       </list>
     </recent_temporary>
   </component>
@@ -459,17 +429,17 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.65758294" visible="true" weight="0.22372611" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.65555555" visible="true" weight="0.2834395" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32156864" />
       <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.5007962" side_tool="true" weight="0.321885" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49920383" visible="true" weight="0.36900958" />
-      <window_info anchor="bottom" id="Version Control" order="9" weight="0.32667732" />
-      <window_info anchor="bottom" id="Python Console" order="10" weight="0.34504792" />
-      <window_info id="Structure" order="1" sideWeight="0.34241706" side_tool="true" weight="0.2571656" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.33411765" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49920383" visible="true" weight="0.534902" />
+      <window_info anchor="bottom" id="Version Control" order="9" weight="0.3262745" />
+      <window_info anchor="bottom" id="Python Console" order="10" weight="0.3443137" />
+      <window_info id="Structure" order="1" sideWeight="0.34444445" side_tool="true" weight="0.28423566" />
       <window_info anchor="bottom" id="Terminal" order="11" weight="0.31843138" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.48801917" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.48705882" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="SVN Repositories" order="7" weight="0.3298722" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -478,27 +448,26 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.33490196" />
     </layout>
     <layout-to-restore>
       <window_info anchor="bottom" id="SVN Repositories" order="7" weight="0.3298722" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.65758294" visible="true" weight="0.2571656" />
-      <window_info id="Structure" order="1" sideWeight="0.34241706" side_tool="true" visible="true" weight="0.2571656" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.65555555" visible="true" weight="0.2834395" />
+      <window_info id="Structure" order="1" sideWeight="0.34444445" side_tool="true" weight="0.28423566" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="bottom" id="TODO" order="6" weight="0.32313725" />
-      <window_info anchor="bottom" id="Version Control" order="9" weight="0.32705882" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.33803922" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32156864" />
+      <window_info anchor="bottom" id="Version Control" order="9" weight="0.32667732" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49920383" weight="0.3529412" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.53833866" />
-      <window_info anchor="bottom" id="Terminal" order="11" weight="0.32" />
-      <window_info anchor="bottom" id="Event Log" order="8" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.48801917" />
+      <window_info anchor="bottom" id="Terminal" order="11" weight="0.31843138" />
+      <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.5007962" side_tool="true" weight="0.321885" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Find" order="1" visible="true" weight="0.34105432" />
-      <window_info anchor="bottom" id="Python Console" order="10" weight="0.34745097" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.33490196" />
+      <window_info anchor="bottom" id="Python Console" order="10" weight="0.3443137" />
     </layout-to-restore>
   </component>
   <component name="Vcs.Log.History.Properties">
@@ -695,7 +664,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/pattern_database/run_daily_tasks.py</url>
-          <line>52</line>
+          <line>62</line>
           <option name="timeStamp" value="2084" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -704,19 +673,9 @@
           <option name="timeStamp" value="2092" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pattern_database/run_daily_tasks.py</url>
-          <line>27</line>
-          <option name="timeStamp" value="2131" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/pattern_test/run_scheduler_test.py</url>
           <line>23</line>
           <option name="timeStamp" value="2145" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pattern_scheduling/pattern_scheduler.py</url>
-          <line>41</line>
-          <option name="timeStamp" value="2146" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/tensorflow_playground/tf_housing_data.py</url>
@@ -734,29 +693,46 @@
           <option name="timeStamp" value="2157" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pattern_reinforcement/trade_environment.py</url>
-          <line>196</line>
-          <option name="timeStamp" value="2203" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler_gradient.py</url>
-          <line>43</line>
-          <option name="timeStamp" value="2204" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/pattern_database/stock_access_layer.py</url>
-          <line>292</line>
+          <line>361</line>
           <option name="timeStamp" value="2212" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/pattern_test/run_access_layer_tests.py</url>
-          <line>15</line>
+          <line>14</line>
           <option name="timeStamp" value="2225" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_database/run_daily_tasks.py</url>
+          <line>36</line>
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_reinforcement/run_trade_policy_by_gradient_test.py</url>
+          <line>17</line>
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_database/run_daily_tasks.py</url>
+          <line>41</line>
+          <option name="timeStamp" value="34" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_test/run_logging_test.py</url>
+          <line>7</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler.py</url>
+          <line>73</line>
+          <option name="timeStamp" value="46" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pattern_reinforcement/trade_environment.py</url>
+          <line>189</line>
+          <option name="timeStamp" value="52" />
+        </line-breakpoint>
       </breakpoints>
-      <breakpoints-dialog>
-        <breakpoints-dialog />
-      </breakpoints-dialog>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -764,25 +740,25 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="2227" />
+      <option name="time" value="56" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateCodeFragment">
       <expression>
-        <expression-string>self.f_regression_slope_bounds[1] = 0.6</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
     </expressions>
     <expressions id="breakpointCondition">
       <expression>
-        <expression-string>i == 98</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>tick_i.position == 98</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -797,27 +773,27 @@
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>tick_left.position == 175 and tick_right.position == 207</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>tick_head.position == 188</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>tick_left.position == 155 and tick_right.position == 166</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>tick_head.position == 159</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>tick_i.position == 88</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -839,7 +815,7 @@
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>&lt;class 'list'&gt;: ['Upper_in', 'Low_in', 'Upper_in', 'Low_in', 'Upper_in']</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -861,12 +837,12 @@
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>self.f_regression_slope_bounds[0] = -0.6</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>self.f_regression_slope_bounds[0] = 0.6</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -878,155 +854,10 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/pattern_database/stock_access_layer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4335">
-          <caret line="265" selection-start-line="265" selection-end-line="265" />
-          <folding>
-            <element signature="e#180#268#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_trade_optimizer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="199">
-          <caret line="21" selection-start-line="21" selection-end-line="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="5" selection-end-column="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/tensorflow/python/ops/math_ops.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2912">
-          <caret line="1306" column="4" selection-start-line="1306" selection-start-column="4" selection-end-line="1306" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/tensorflow/python/training/saver.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="21318">
-          <caret line="1292" selection-start-line="1292" selection-end-line="1292" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tensorflow_playground/linear_regression.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="478">
-          <caret line="45" column="26" selection-start-line="45" selection-start-column="26" selection-end-line="45" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/run_trade_policy_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="19" column="43" lean-forward="true" selection-start-line="19" selection-start-column="43" selection-end-line="19" selection-end-column="43" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_database/stock_database.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="544">
-          <caret line="453" selection-start-line="453" selection-end-line="453" />
-          <folding>
-            <element signature="e#190#236#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/tensorflow/python/framework/ops.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="207">
-          <caret line="573" selection-start-line="573" selection-end-line="573" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/tensorflow/python/client/session.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="264">
-          <caret line="913" selection-start-line="913" selection-end-line="913" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="23" column="72" lean-forward="true" selection-start-line="23" selection-start-column="3" selection-end-line="23" selection-end-column="72" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/policy_action.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="40" lean-forward="true" selection-start-line="10" selection-start-column="40" selection-end-line="10" selection-end-column="40" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_action.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="22" column="8" selection-start-line="22" selection-start-column="8" selection-end-line="22" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/models_abc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="486">
-          <caret line="46" column="81" lean-forward="true" selection-start-line="46" selection-start-column="81" selection-end-line="46" selection-end-column="81" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/random.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="316">
-          <caret line="746" selection-start-line="746" selection-end-line="746" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_database/run_daily_tasks.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="36">
-          <caret line="31" column="26" selection-start-line="31" selection-start-column="26" selection-end-line="31" selection-end-column="26" />
-          <folding>
-            <element signature="e#188#260#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/sklearn/datasets/california_housing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-608">
-          <caret line="52" column="4" selection-start-line="52" selection-start-column="4" selection-end-line="52" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tensorflow_playground/tf_housing_data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="284">
-          <caret line="94" column="30" lean-forward="true" selection-start-line="94" selection-start-column="30" selection-end-line="94" selection-end-column="30" />
-          <folding>
-            <element signature="e#170#188#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/gym_practise/gym_cart_pole.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="438">
           <caret line="69" column="41" lean-forward="true" selection-start-line="69" selection-start-column="41" selection-end-line="69" selection-end-column="41" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_wave_tick.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="31" column="12" selection-start-line="31" selection-start-column="8" selection-end-line="31" selection-end-column="12" />
         </state>
       </provider>
     </entry>
@@ -1037,41 +868,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="248">
-          <caret line="51" column="20" selection-start-line="51" selection-start-column="20" selection-end-line="51" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_test/run_plot_test.py">
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret selection-end-line="5" selection-end-column="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/exchanges/bitfinex.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="62" column="101" lean-forward="true" selection-start-line="62" selection-start-column="101" selection-end-line="62" selection-end-column="101" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_database/stock_database_updater.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2001">
-          <caret line="22" column="23" lean-forward="true" selection-start-line="22" selection-start-column="23" selection-end-line="22" selection-end-column="23" />
-          <folding>
-            <element signature="e#195#314#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydates.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="245">
-          <caret line="126" column="46" selection-start-line="126" selection-start-column="8" selection-end-line="126" selection-end-column="46" />
         </state>
       </provider>
     </entry>
@@ -1082,14 +882,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/run_pattern_detection_with_dash.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="504">
-          <caret line="58" column="33" selection-start-line="58" selection-start-column="33" selection-end-line="58" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_test/run_logging_test.py" />
     <entry file="file://$PROJECT_DIR$/pattern_test/run_test_scripts.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-2">
@@ -1099,92 +891,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_scheduling/pattern_job.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="424">
-          <caret line="100" column="25" lean-forward="true" selection-start-line="100" selection-start-column="25" selection-end-line="100" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_scheduling/pattern_scheduler.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="9" column="55" selection-start-line="9" selection-start-column="55" selection-end-line="9" selection-end-column="55" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_system_configuration.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="29" column="74" lean-forward="true" selection-start-line="29" selection-start-column="8" selection-end-line="29" selection-end-column="74" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_job_handler.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="18" column="28" lean-forward="true" selection-start-line="18" selection-start-column="28" selection-end-line="18" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_test/run_scheduler_test.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
           <caret line="20" selection-start-line="20" selection-end-line="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="63" column="32" lean-forward="true" selection-start-line="63" selection-start-column="32" selection-end-line="63" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_observation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="17" column="61" lean-forward="true" selection-start-line="17" selection-start-column="61" selection-end-line="17" selection-end-column="61" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_environment.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="481">
-          <caret line="206" column="29" lean-forward="true" selection-start-line="206" selection-start-column="29" selection-end-line="206" selection-end-column="29" />
-          <folding>
-            <element signature="e#286#352#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_logging/pattern_log.py" />
-    <entry file="file://$PROJECT_DIR$/pattern_logging/pattern_log.csv" />
-    <entry file="file://$PROJECT_DIR$/pattern_database/stock_access_entity.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="185" column="29" selection-start-line="185" selection-start-column="8" selection-end-line="185" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler_gradient.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="40" column="37" lean-forward="true" selection-start-line="40" selection-start-column="37" selection-end-line="40" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="294">
-          <caret line="34" column="47" selection-start-line="34" selection-start-column="47" selection-end-line="34" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/run_trade_policy_by_gradient_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="16" column="14" lean-forward="true" selection-start-line="16" selection-start-column="14" selection-end-line="16" selection-end-column="14" />
         </state>
       </provider>
     </entry>
@@ -1216,16 +926,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="467">
-          <caret line="69" column="46" lean-forward="true" selection-start-line="69" selection-start-column="46" selection-end-line="69" selection-end-column="46" />
-          <folding>
-            <element signature="e#198#247#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_test/run_access_layer_tests.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="221">
@@ -1233,12 +933,298 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_data_provider.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="265">
+          <caret line="121" column="8" selection-start-line="121" selection-start-column="8" selection-end-line="121" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_wave_tick.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-102">
+          <caret line="49" column="8" selection-start-line="49" selection-start-column="8" selection-end-line="49" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="193">
+          <caret line="203" column="17" selection-start-line="203" selection-start-column="17" selection-end-line="203" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_recommender.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="493">
+          <caret line="32" column="21" lean-forward="true" selection-start-line="32" selection-start-column="21" selection-end-line="32" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_database/stock_access_layer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="42">
-          <caret line="236" column="8" selection-start-line="236" selection-start-column="8" selection-end-line="236" selection-end-column="8" />
+        <state relative-caret-position="297">
+          <caret line="132" column="8" selection-start-line="132" selection-start-column="8" selection-end-line="132" selection-end-column="8" />
           <folding>
             <element signature="e#180#268#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydates.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="13" column="8" selection-start-line="13" selection-start-column="8" selection-end-line="13" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/concurrent/futures/thread.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="419">
+          <caret line="83" column="8" selection-start-line="83" selection-start-column="8" selection-end-line="83" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="258">
+          <caret line="129" column="8" selection-start-line="129" selection-start-column="8" selection-end-line="129" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_scheduling/pattern_job.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="697">
+          <caret line="98" column="93" lean-forward="true" selection-start-line="98" selection-start-column="8" selection-end-line="98" selection-end-column="93" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_predictor_optimizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="493">
+          <caret line="40" column="8" selection-start-line="40" selection-start-column="8" selection-end-line="40" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_gradient_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="442">
+          <caret line="40" column="41" lean-forward="true" selection-start-line="40" selection-start-column="41" selection-end-line="40" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/run_trade_policy_by_gradient_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern.log">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-40647">
+          <caret line="12" column="118" selection-start-line="12" selection-start-column="118" selection-end-line="12" selection-end-column="118" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_database/stock_database.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="21" selection-start-line="21" selection-end-line="21" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_test/run_logging_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" selection-start-line="7" selection-end-line="7" />
+          <folding>
+            <element signature="e#204#254#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_system_configuration.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="32" column="49" lean-forward="true" selection-start-line="32" selection-start-column="49" selection-end-line="32" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_logging/pattern_log_test.csv">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="70" selection-start-line="2" selection-start-column="70" selection-end-line="2" selection-end-column="70" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_scheduling/pattern_scheduler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="18" column="51" selection-start-line="18" selection-start-column="51" selection-end-line="18" selection-end-column="51" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_detection_controller.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="377">
+          <caret line="113" column="8" selection-start-line="113" selection-start-column="8" selection-end-line="113" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_logging/pattern_log.csv">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="100">
+          <caret line="130" column="59" lean-forward="true" selection-start-line="130" selection-start-column="59" selection-end-line="130" selection-end-column="59" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_logging/pattern_log.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_logging/pattern_log_scheduler.csv">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1734" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/run_pattern_detection_with_dash.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="400">
+          <caret line="58" column="28" selection-start-line="58" selection-start-column="28" selection-end-line="58" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler_gradient.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="830">
+          <caret line="166" lean-forward="true" selection-start-line="166" selection-end-line="166" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/models_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="610">
+          <caret line="58" selection-start-line="58" selection-end-line="58" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_environment.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="241">
+          <caret line="197" column="56" lean-forward="true" selection-start-line="197" selection-start-column="56" selection-end-line="197" selection-end-column="56" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_database/stock_access_entity.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-73">
+          <caret line="105" column="8" selection-start-line="105" selection-start-column="8" selection-end-line="105" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_observation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="218">
+          <caret line="22" column="85" lean-forward="true" selection-start-line="22" selection-start-column="85" selection-end-line="22" selection-end-column="85" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_database/run_daily_tasks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="309">
+          <caret line="29" column="42" selection-start-line="29" selection-start-column="42" selection-end-line="29" selection-end-column="42" />
+          <folding>
+            <element signature="e#188#260#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="235">
+          <caret line="99" column="83" selection-start-line="99" selection-start-column="83" selection-end-line="99" selection-end-column="83" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_reinforcement/trade_policy_handler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="54">
+          <caret line="91" column="24" selection-start-line="91" selection-start-column="24" selection-end-line="91" selection-end-column="24" />
+          <folding>
+            <element signature="e#183#255#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_database/stock_database_updater.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="462">
+          <caret line="171" column="57" selection-start-line="171" selection-start-column="57" selection-end-line="171" selection-end-column="57" />
+          <folding>
+            <element signature="e#195#314#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_job_handler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="275">
+          <caret line="27" column="75" selection-start-line="26" selection-start-column="8" selection-end-line="27" selection-end-column="75" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_logging/pattern_log_trades.csv">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-85">
+          <caret line="4" column="51" selection-start-line="4" selection-start-column="51" selection-end-line="4" selection-end-column="51" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/exchanges/bitfinex.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="488" column="44" selection-start-line="488" selection-start-column="44" selection-end-line="488" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/financial_data_fetcher.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="358">
+          <caret line="399" column="35" lean-forward="true" selection-start-line="399" selection-start-column="35" selection-end-line="399" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/exchanges/bitfinex_trade_client.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="197">
+          <caret line="31" column="35" selection-start-line="31" selection-start-column="35" selection-end-line="31" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_trade.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="256" column="13" lean-forward="true" selection-start-line="256" selection-start-column="13" selection-end-line="256" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_trade_handler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="503">
+          <caret line="287" column="31" selection-start-line="287" selection-start-column="31" selection-end-line="287" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" selection-start-line="11" selection-end-line="11" />
+          <folding>
+            <element signature="e#198#247#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -22,9 +22,14 @@ pattern_table = PatternTable()
 trade_table = TradeTable()
 
 
-if False:
+if True:
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
-    stock_db_updater.update_trade_policy_metric_for_today([FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
+    # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
+    # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)
+    # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.NASDAQ100)
+    stock_db_updater.update_trade_policy_metric_for_today(
+        [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
+    # stock_db_updater.update_trade_policy_metric_for_today([FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
     # stock_db_updater.update_equity_records()
     # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
     # stock_db_updater.update_wave_records_for_daily_period('AAPL', 400)
