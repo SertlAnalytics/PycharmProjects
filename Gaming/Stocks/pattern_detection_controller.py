@@ -125,6 +125,7 @@ class PatternDetectionController:
             self.sys_config.init_predictors_without_condition_list()
             detector = PatternDetector(self.sys_config)
             detector.parse_for_fibonacci_waves()
+            detector.add_prediction_data_to_wave()
             detector.save_wave_data()
             detector.parse_for_pattern()
             bollinger_bound_break_direction = detector.pdh.get_bollinger_band_boundary_break_direction()
@@ -186,6 +187,7 @@ class PatternDetectionController:
         sys_config.init_predictors_without_condition_list()
         detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()
+        detector.add_prediction_data_to_wave()
         detector.parse_for_pattern()
         detector.save_pattern_data()
         return detector

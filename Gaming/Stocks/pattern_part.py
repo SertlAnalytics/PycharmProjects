@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, FT, PRD
+from sertl_analytics.constants.pattern_constants import CN, FT, PRD, PAT
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mymath import MyMath
 from pattern_function_container import PatternFunctionContainer
@@ -62,10 +62,10 @@ class PatternPart:
             self.__set_xy_center__()
             self.__set_xy_regression__()
 
-    def get_annotation_parameter(self, prediction_text_list: list, color: str = 'blue') -> AnnotationParameter:
+    def get_annotation_parameter(self, prediction_text_dict: dict, color: str = 'blue') -> AnnotationParameter:
         annotation_param = AnnotationParameter()
         offset = self.pdh.get_x_y_off_set_for_shape_annotation(self.__xy_center)
-        annotation_param.text = self.__get_text_for_annotation__(prediction_text_list)
+        annotation_param.text = self.__get_text_for_annotation__(prediction_text_dict)
         annotation_param.xy = self.__xy_center
         annotation_param.xy_text = (self.__xy_center[0] + offset[0], self.__xy_center[1] + offset[1])
         annotation_param.visible = False
@@ -199,12 +199,12 @@ class PatternPart:
         # print('u={}, l={}, reg={}'.format(f_upper_slope, f_lower_slope, f_regression_slope))
         return f_upper_slope, f_lower_slope, f_regression_slope
 
-    def __get_text_for_annotation__(self, prediction_text_list: list):
-        annotations_as_dict = self.get_annotation_text_as_dict(prediction_text_list)
+    def __get_text_for_annotation__(self, prediction_text_dict: dict):
+        annotations_as_dict = self.get_annotation_text_as_dict(prediction_text_dict)
         annotation_text_list = ['{}: {}'.format(key, values) for key, values in annotations_as_dict.items()]
         return '\n'.join(annotation_text_list)
 
-    def get_annotation_text_as_dict(self, prediction_text_list: list) -> dict:
+    def get_annotation_text_as_dict(self, prediction_text_dict: dict) -> dict:
         std_dev = round(self.df[CN.CLOSE].std(), 2)
         f_upper_percent, f_lower_percent, f_reg_percent = self.get_slope_values()
         if self.sys_config.period == PRD.INTRADAY:
@@ -234,9 +234,11 @@ class PatternPart:
             return_dict['Breakout'] = '{}'.format(self.breakout.get_details_for_annotations())
         self.__add_expected_trading_end_to_dict__(return_dict)
         return_dict['Range position'] = '{}'.format(self.pattern_range.position_list)
-        return_dict['Prediction before breakout'] = prediction_text_list[0]
+        return_dict[PAT.BEFORE_BREAKOUT] = prediction_text_dict[PAT.BEFORE_BREAKOUT]
         if self.breakout:
-            return_dict['Prediction after breakout'] = prediction_text_list[1]
+            return_dict[PAT.AFTER_BREAKOUT] = prediction_text_dict[PAT.AFTER_BREAKOUT]
+        if PAT.RETRACEMENT in prediction_text_dict:
+            return_dict[PAT.RETRACEMENT] = prediction_text_dict[PAT.RETRACEMENT]
         return return_dict
 
     def __add_expected_trading_end_to_dict__(self, return_dict: dict):

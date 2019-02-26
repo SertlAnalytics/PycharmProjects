@@ -8,7 +8,7 @@ Date: 2019-01-18
 from sertl_analytics.constants.pattern_constants import DC, FT, PRD, TPA
 from pattern_database.stock_database import StockDatabase
 from pattern_database.stock_access_layer import AccessLayer4Trade
-from pattern_database.stock_access_entity import TradeEntityCollection, TradeEntity
+from pattern_database.stock_trade_entity import TradeEntityCollection, TradeEntity
 from pattern_reinforcement.trade_environment import TradeEnvironment
 from pattern_reinforcement.trade_policy import TradePolicy, TradePolicySellCodedTrade
 import math

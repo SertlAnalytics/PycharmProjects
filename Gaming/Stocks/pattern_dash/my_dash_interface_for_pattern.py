@@ -85,6 +85,11 @@ class DashInterface:
         return MyPolygonShape(x, y, color)
 
     @staticmethod
+    def get_forecast_shape(pattern: Pattern, color: str):
+        x, y = DashInterface.get_xy_separated_from_timestamp(pattern.sys_config, pattern.xy_retracement)
+        return MyPolygonShape(x, y, color)
+
+    @staticmethod
     def get_pattern_trade_watching_shape(pattern_trade: PatternTrade, color: str):
         return DashInterface.__get_pattern_trade_shape__(pattern_trade, color, pattern_trade.xy_for_watching)
 

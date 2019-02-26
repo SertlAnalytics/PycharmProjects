@@ -53,6 +53,28 @@ class POC:  # PatternObservationColumns
                 POC.FC_TICKS_TO_POSITIVE_HALF_PCT, POC.FC_TICKS_TO_POSITIVE_FULL_PCT,
                 POC.FC_TICKS_TO_NEGATIVE_HALF_PCT, POC.FC_TICKS_TO_NEGATIVE_FULL_PCT]
 
+
+class WPC:  # WavePredictionColumns
+    # All pct values are with respective to the total value and total timestamp range
+    W1_VALUE_RANGE_PCT = 'W1_Value_Range_PCT'
+    W2_VALUE_RANGE_PCT = 'W2_Value_Range_PCT'
+    W3_VALUE_RANGE_PCT = 'W3_Value_Range_PCT'
+    W4_VALUE_RANGE_PCT = 'W4_Value_Range_PCT'
+    W5_VALUE_RANGE_PCT = 'W5_Value_Range_PCT'
+    W1_TS_RANGE_PCT = 'W1_Timestamp_Range_PCT'
+    W2_TS_RANGE_PCT = 'W2_Timestamp_Range_PCT'
+    W3_TS_RANGE_PCT = 'W3_Timestamp_Range_PCT'
+    W4_TS_RANGE_PCT = 'W4_Timestamp_Range_PCT'
+    W5_TS_RANGE_PCT = 'W5_Timestamp_Range_PCT'
+
+    @staticmethod
+    def get_wave_prediction_columns():
+        return [WPC.W1_VALUE_RANGE_PCT, WPC.W2_VALUE_RANGE_PCT,
+                WPC.W3_VALUE_RANGE_PCT, WPC.W4_VALUE_RANGE_PCT, WPC.W5_VALUE_RANGE_PCT,
+                WPC.W1_TS_RANGE_PCT, WPC.W2_TS_RANGE_PCT,
+                WPC.W3_TS_RANGE_PCT, WPC.W4_TS_RANGE_PCT, WPC.W5_TS_RANGE_PCT,
+                DC.WAVE_END_FLAG, DC.WAVE_MAX_RETR_PCT, DC.WAVE_MAX_RETR_TS_PCT]
+
     
 class TPA:  # TradePolicyAction
     SELL = 'Sell'
@@ -310,6 +332,10 @@ class MT:  # Model Types
         return base_list
 
     @staticmethod
+    def get_all_cv_classifiers():  # cv=cross-validation
+        return [MT.K_NEAREST_NEIGHBORS, MT.SVM, MT.DECISION_TREE, MT.RANDOM_FOREST]
+
+    @staticmethod
     def get_all_regressions():
         return [MT.LINEAR_REGRESSION]
 
@@ -482,6 +508,12 @@ class PT:  # PredictorType
 
     def get_id(key: str):
         return {PT.TOUCH_POINTS: 1, PT.BEFORE_BREAKOUT: 2, PT.AFTER_BREAKOUT: 3}.get(key)
+
+
+class PAT:  # PredictionAnnotationType
+    BEFORE_BREAKOUT = 'Prediction before breakout'
+    AFTER_BREAKOUT = 'Prediction after breakout'
+    RETRACEMENT = 'Prediction retracement'
 
 
 class INDICES:
@@ -1009,6 +1041,20 @@ class DC:  # Data Columns
     W5_RANGE = 'W5_Range'
     PARENT_WAVE_OID = 'Parent_Wave_OID'
     WAVE_IN_PARENT = 'Wave_in_parent'
+    WAVE_END_FLAG = 'Wave_End_Flag'
+    WAVE_MAX_RETR_PCT = 'Wave_Max_Retr_PCT'
+    WAVE_MAX_RETR_TS_PCT = 'Wave_Max_Retr_Timestamp_PCT'
+
+    FC_TS = 'FC_Timestamp'
+    FC_DT = 'FC_Datetime'
+
+    FC_C_WAVE_END_FLAG = 'FC_C_Wave_End_Flag'
+    FC_C_WAVE_MAX_RETR_PCT = 'FC_C_Wave_Max_Retr_PCT'
+    FC_C_WAVE_MAX_RETR_TS_PCT = 'FC_C_Wave_Max_Retr_Timestamp_PCT'
+
+    FC_R_WAVE_END_FLAG = 'FC_R_Wave_End_Flag'
+    FC_R_WAVE_MAX_RETR_PCT = 'FC_R_Wave_Max_Retr_PCT'
+    FC_R_WAVE_MAX_RETR_TS_PCT = 'FC_R_Wave_Max_Retr_Timestamp_PCT'
 
     # Additional Asset Columns
     VALIDITY_DT = 'Validity_Datetime'

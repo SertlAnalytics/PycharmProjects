@@ -11,6 +11,7 @@ from sertl_analytics.models.learning_machine import LmKNeighborsClassifier, LmSV
 from sertl_analytics.models.learning_machine import LmDecisionTreeClassifier, LmLogisticRegression
 from sertl_analytics.models.learning_machine import LmSequentialClassification, LmRandomForestClassifier
 from sertl_analytics.models.learning_machine import LmMLPClassifier
+from sertl_analytics.models.learning_machine import LmLinearRegression
 
 
 class LearningMachineFactory:
@@ -25,8 +26,13 @@ class LearningMachineFactory:
         return {model: LearningMachineFactory.get_model_by_model_type(model) for model in model_type_list}
 
     @staticmethod
-    def get_classifier_learning_machine_dict():
-        model_type_list = MT.get_all_classifiers()
+    def get_classifier_learning_machine_dict(only_with_implemented_cv=False):
+        model_type_list = MT.get_all_cv_classifiers() if only_with_implemented_cv else MT.get_all_classifiers()
+        return {model: LearningMachineFactory.get_lm_by_model_type(model) for model in model_type_list}
+
+    @staticmethod
+    def get_regression_learning_machine_dict():
+        model_type_list = MT.get_all_regressions()
         return {model: LearningMachineFactory.get_lm_by_model_type(model) for model in model_type_list}
 
     @staticmethod
@@ -47,6 +53,8 @@ class LearningMachineFactory:
     def get_lm_by_model_type(model_type: str) -> LearningMachine:
         if model_type == MT.K_NEAREST_NEIGHBORS:
             return LmKNeighborsClassifier()
+        elif model_type == MT.LINEAR_REGRESSION:
+            return LmLinearRegression()
         elif model_type == MT.LOGISTIC_REGRESSION:
             return LmLogisticRegression()
         elif model_type == MT.DECISION_TREE:

@@ -11,12 +11,8 @@ import numpy as np
 import pandas as pd
 from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable
 from pattern_database.stock_access_layer_prediction import AccessLayerPrediction
-from pattern_database.stock_database import DatabaseDataFrame
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.model_selection import train_test_split
-from matplotlib.colors import ListedColormap
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from pattern_configuration import PatternConfiguration
 from pattern_predictor_optimizer import PatternPredictorOptimizer
 from sertl_analytics.mymath import EntropyHandler

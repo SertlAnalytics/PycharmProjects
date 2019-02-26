@@ -66,6 +66,9 @@ class MetricTable(MyTable):
         self._columns.append(MyTableColumn(MDC.F1_SCORE, CDT.FLOAT))
         self._columns.append(MyTableColumn(MDC.ROC_AUC, CDT.FLOAT))
 
+    def __get_key_column_name_list__(self):
+        return [MDC.VALID_DT, MDC.TABLE, MDC.PREDICTOR, MDC.LABEL, MDC.PATTERN_TYPE, [MDC.VALUE]]
+
 
 class TradePolicyMetricTable(MyTable):
     @staticmethod
@@ -162,6 +165,24 @@ class WaveTable(MyTable):
         self._columns.append(MyTableColumn(DC.W5_RANGE, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.PARENT_WAVE_OID, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.WAVE_IN_PARENT, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(DC.WAVE_END_FLAG, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.WAVE_MAX_RETR_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.WAVE_MAX_RETR_TS_PCT, CDT.FLOAT))
+
+        self._columns.append(MyTableColumn(DC.FC_TS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_DT, CDT.STRING, 20))
+
+        self._columns.append(MyTableColumn(DC.FC_C_WAVE_END_FLAG, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.FC_C_WAVE_MAX_RETR_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.FC_C_WAVE_MAX_RETR_TS_PCT, CDT.FLOAT))
+
+        self._columns.append(MyTableColumn(DC.FC_R_WAVE_END_FLAG, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.FC_R_WAVE_MAX_RETR_PCT, CDT.FLOAT))
+        self._columns.append(MyTableColumn(DC.FC_R_WAVE_MAX_RETR_TS_PCT, CDT.FLOAT))
+
+    def __get_key_column_name_list__(self):
+        return [DC.EQUITY_TYPE_ID, DC.PERIOD_ID, DC.TICKER_ID, DC.WAVE_TYPE_ID, DC.WAVE_STRUCTURE_ID,
+                DC.W1_BEGIN_TS, DC.W2_BEGIN_TS, DC.W3_BEGIN_TS, DC.W4_BEGIN_TS, DC.W5_BEGIN_TS, DC.WAVE_END_TS]
 
     def get_query_for_wave_counter(self, period: str, limit: int=0) -> str:
         ts_from = self.__get_from_time_stamp__(period, limit)

@@ -55,7 +55,10 @@ class MyTable:
         self._name = self._get_name_()
         self._columns = []
         self._add_columns_()
-        self._column_name_list = self.__get_column_name_list__()
+        self._column_dict = {column.name: column for column in self._columns}
+        self._column_name_list = [columns.name for columns in self._columns]
+        self._key_column_name_list = self.__get_key_column_name_list__()
+        self._key_columns = [column for column in self._columns if column.name in self._key_column_name_list]
         self._description = self.__get_description__()
         self._query_select_all = self.query_select_all
 
@@ -68,6 +71,10 @@ class MyTable:
         return self._column_name_list
 
     @property
+    def key_column_name_list(self) -> list:
+        return self._key_column_name_list
+
+    @property
     def description(self):
         return self._description
 
@@ -77,11 +84,13 @@ class MyTable:
 
     @property
     def query_duplicate_id(self) -> str:
-        return "select id, count(*) from {} group by id having count(*) > 1;".format(self._name)
+        columns = ', '.join(self._key_column_name_list)
+        return "select {}, count(*) from {} group by {} having count(*) > 1;".format(columns, self._name, columns)
 
     @property
     def query_id_oid(self) -> str:
-        return "select id, oid from {};".format(self._name)
+        columns = ', '.join(self._key_column_name_list)
+        return "select {}, oid from {};".format(columns, self._name)
 
     def get_query_select_by_data_dict(self, data_dict: dict, target_columns=None, sort_columns=None)  -> str:
         columns = '*' if target_columns is None else ','.join(target_columns)
@@ -93,25 +102,35 @@ class MyTable:
         return "SELECT * FROM {} where ID='{}'".format(self._name, record_id)
 
     def get_query_select_for_unique_record_by_dict(self, data_dict: dict) -> str:
-        and_clause = self.__get_where_clause_for_data_dict__(data_dict)
+        and_clause = self.__get_key_where_clause_for_data_dict__(data_dict)
         return "SELECT {} FROM {} WHERE {}".format(DC.ROWID, self._name, and_clause)
 
+    def get_update_set_clause_from_data_dict(self, data_dict: dict):
+        set_clause_list = self.__get_clause_list_for_data_dict__(data_dict)
+        return ', '.join(set_clause_list)
+
     def __get_where_clause_for_data_dict__(self, data_dict: dict):
-        and_clause_list = []
-        for column in self._columns:
-            if column.name in data_dict:
-                value = data_dict[column.name]
-                if column.is_numeric:
-                    and_clause_list.append("{}={}".format(column.name, value))
-                elif value.find("'") < 0:
-                    and_clause_list.append("{}='{}'".format(column.name, value))
+        and_clause_list = self.__get_clause_list_for_data_dict__(data_dict)
         return ' and '.join(and_clause_list)
 
-    @staticmethod
-    def __get_col_lists_for_unique_record__():
-        col_list_str = [MDC.VALID_DT, MDC.MODEL_NAME, MDC.TABLE, MDC.PREDICTOR, MDC.LABEL, MDC.PATTERN_TYPE]
-        col_list_numbers = [MDC.VALUE]
-        return col_list_str, col_list_numbers
+    def __get_clause_list_for_data_dict__(self, data_dict: dict):
+        clause_list = []
+        for column_name in data_dict:
+            if column_name in self._column_dict:
+                value = data_dict[column_name]
+                column = self._column_dict[column_name]
+                if column.is_numeric:
+                    clause_list.append("{}={}".format(column.name, value))
+                elif value.find("'") < 0:
+                    clause_list.append("{}='{}'".format(column.name, value))
+        return clause_list
+
+    def __get_key_where_clause_for_data_dict__(self, data_dict: dict):
+        key_data_dict = {col: data_dict[col] for col in self._key_column_name_list}
+        return self.__get_where_clause_for_data_dict__(key_data_dict)
+
+    def __get_key_column_name_list__(self):
+        return [DC.ID] if DC.ID in self._column_name_list else self._column_name_list
 
     def get_query_select_for_records(self, where_clause='') -> str:
         return "SELECT * FROM {}".format(self._name) + ('' if where_clause == '' else " WHERE {}".format(where_clause))
@@ -229,10 +248,13 @@ class BaseDatabase:
         return return_value
 
     def update_table_column(self, table_name: str, column: str, value, where_clause: str):
-        return_value = True
-        connection = self.engine.connect()
         value = "'{}'".format(value) if type(value) is str else value
         stmt = "UPDATE {} SET {}={} WHERE {}".format(table_name, column, value, where_clause)
+        return self.update_table_by_statement(table_name, stmt)
+
+    def update_table_by_statement(self, table_name: str, stmt: str):
+        return_value = True
+        connection = self.engine.connect()
         try:
             results = connection.execute(stmt)
             print('Updated in {}: {} records.'.format(table_name, results.rowcount))

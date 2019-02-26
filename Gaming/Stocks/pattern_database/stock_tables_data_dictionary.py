@@ -37,6 +37,17 @@ class WaveDataDictionary(DataDictionaryWithTable):
     def __init_data_dict__(self):
         self.add(DC.PARENT_WAVE_OID, 0)
         self.add(DC.WAVE_IN_PARENT , '')
+        self.add(DC.WAVE_END_FLAG, -1)
+        self.add(DC.WAVE_MAX_RETR_PCT, 0)
+        self.add(DC.WAVE_MAX_RETR_TS_PCT, 0)
+        self.add(DC.FC_TS, 0)
+        self.add(DC.FC_DT, '')
+        self.add(DC.FC_C_WAVE_END_FLAG, -1)
+        self.add(DC.FC_C_WAVE_MAX_RETR_PCT, 0)
+        self.add(DC.FC_C_WAVE_MAX_RETR_TS_PCT, 0)
+        self.add(DC.FC_R_WAVE_END_FLAG, -1)
+        self.add(DC.FC_R_WAVE_MAX_RETR_PCT, 0)
+        self.add(DC.FC_R_WAVE_MAX_RETR_TS_PCT, 0)
 
 
 class AssetDataDictionary(DataDictionaryWithTable):

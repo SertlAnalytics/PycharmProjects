@@ -11,6 +11,18 @@ from sertl_analytics.mystring import MyString
 from sertl_analytics.constants.pattern_constants import BT, TSTR, TP
 
 
+class SmallProfitHandler:
+    def __init__(self, min_profit_pct: float, start_profit_pct: float, active=False):
+        self._min_profit_pct = min_profit_pct
+        self._start_profit_pct = start_profit_pct
+        self._active = active
+
+    def can_small_profit_can_be_taken(self, current_pct: float):
+        if self._active:
+            return False
+        return False
+
+
 class ExchangeConfiguration:
     buy_order_value_max = 100
     automatic_trading_on = False
@@ -22,6 +34,8 @@ class ExchangeConfiguration:
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
         self.ticker_refresh_rate_in_seconds = 5
+        self.small_profit_taking_parameters = [1.00, 1.5]  # 1. param: at least this profit i.e. stop loss,
+        # 2. param: when this stop loss is enabled
         self.cache_ticker_seconds = 30  # keep ticker in the cache
         self.cache_balance_seconds = 300  # keep balances in the cache (it's overwriten when changes happen)
         self.check_ticker_after_timer_intervals = 4  # currently the timer intervall is set to 5 sec, i.e. check each 20 sec.

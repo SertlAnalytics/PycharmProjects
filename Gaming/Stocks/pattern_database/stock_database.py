@@ -117,6 +117,10 @@ class StockDatabase(BaseDatabase):
     def pattern_table(self):
         return self._pattern_table
 
+    @property
+    def wave_table(self):
+        return self._wave_table
+
     def is_symbol_loaded(self, symbol: str):
         last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
         return len(last_loaded_time_stamp_dic) == 1
@@ -488,9 +492,19 @@ class StockDatabase(BaseDatabase):
         id_oid_keep_dict = {}
         row_id_delete_list = []
         db_df_id_oid = DatabaseDataFrame(self, table.query_id_oid)
-        duplicate_id_list = list(db_df_duplicate_id.df[DC.ID])
+        key_columns = table.key_column_name_list
+        if len(key_columns) == 1:
+            duplicate_id_list = list(db_df_duplicate_id.df[key_columns])
+        else:
+            duplicate_id_list = []
+            for index, row in db_df_duplicate_id.df.iterrows():
+                record_id = '_'.join([str(row[column]) for column in key_columns])
+                duplicate_id_list.append(record_id)
         for index, row in db_df_id_oid.df.iterrows():
-            record_id = row[DC.ID]
+            if len(key_columns) == 1:
+                record_id = row[DC.ID]
+            else:
+                record_id = '_'.join([str(row[column]) for column in key_columns])
             if record_id in duplicate_id_list:
                 row_id = row['rowid']
                 if record_id in id_oid_keep_dict:

@@ -12,7 +12,7 @@ from sertl_analytics.mymath import MyMath
 from sertl_analytics.constants.pattern_constants import TPA
 from copy import deepcopy
 from pattern_reinforcement.trade_observation import TradeObservation
-from pattern_database.stock_access_entity import TradeEntity, TradeEntityCollection
+from pattern_database.stock_trade_entity import TradeEntity, TradeEntityCollection
 from pattern_wave_tick import WaveTick
 import random
 import numpy as np

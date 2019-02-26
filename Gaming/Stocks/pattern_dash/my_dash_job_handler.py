@@ -41,6 +41,7 @@ class MyDashDeleteDuplicatesJob(MyDashPatternJob):
         db_stock = StockDatabase()
         db_stock.delete_duplicate_records(db_stock.trade_table)
         db_stock.delete_duplicate_records(db_stock.pattern_table)
+        db_stock.delete_duplicate_records(db_stock.wave_table)
 
 
 class MyDashStockDataUpdateJob(MyDashPatternJob):
@@ -73,6 +74,8 @@ class MyWaveUpdateJob(MyDashPatternJob):
         if MyDate.is_tuesday_till_saturday():
             self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)
             self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.NASDAQ100)
+
+        self._stock_db_updater.add_wave_end_data_to_wave_records(symbol='', ts_start=0, ts_end=0, scheduled_job=True)
 
 
 class MyPatternUpdateJob(MyDashPatternJob):

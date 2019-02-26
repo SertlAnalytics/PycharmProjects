@@ -14,6 +14,7 @@ from sertl_analytics.mymath import MyMath
 from pattern_data_frame import PatternDataFrame
 from sertl_analytics.exchanges.exchange_cls import OrderStatus
 from pattern_data_handler import PatternDataHandler
+from pattern_logging.pattern_log import PatternLog
 
 
 class PatternDataDictionary(DataDictionary):
@@ -55,8 +56,12 @@ class PatternDataDictionary(DataDictionary):
         return True
 
     def is_data_dict_ready_for_trade_table(self):
+        trade_id = self._data_dict.get(DC.ID)
         for col in self.sys_config.trade_table.column_name_list:
             if col not in self._data_dict:
+                PatternLog.log_message(log_message='{}: Col {} not in _data_dict'.format(trade_id, col),
+                                       process='Save trade',
+                                       process_step='is_data_dict_ready_for_trade_table')
                 return False
         return True
 

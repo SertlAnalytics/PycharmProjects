@@ -61,7 +61,6 @@ class MyPatternJob:
         self._is_running = False
         self._access_layer_process = AccessLayer4Process()
         self._job_runtime = JobRuntime()
-        self._pattern_log = PatternLog('../pattern_logging/pattern_log.csv')
 
     @property
     def job_name(self):
@@ -92,16 +91,22 @@ class MyPatternJob:
         self._is_running = False
 
     def __run_task__(self):
+        process_step = 'End'
         print("{}: Thread started at {}...(scheduled: {})".format(
             self.job_name, MyDate.time_now_str(), self._scheduled_start_time))
-        self._pattern_log.log_message(self.job_name, process='Scheduler', process_step='Start')
-        self.__perform_task__()
-        self._pattern_log.log_message(self.job_name, process='Scheduler', process_step='End')
-        self._is_running = False
-        self._job_runtime.stop()
-        self._executor.shutdown(wait=False)
-        self.__write_statistics_to_database__()
-        print("{}: Thread shutdown at {}".format(self.job_name, MyDate.time_now_str()))
+        PatternLog.log_message(self.job_name, process='Scheduler', process_step='Start')
+        try:
+            self.__perform_task__()
+        except:
+            PatternLog.log_error()
+            process_step = 'End with error'
+        finally:
+            PatternLog.log_message(self.job_name, process='Scheduler', process_step=process_step)
+            self._is_running = False
+            self._job_runtime.stop()
+            self._executor.shutdown(wait=False)
+            self.__write_statistics_to_database__()
+            print("{}: Thread shutdown at {}".format(self.job_name, MyDate.time_now_str()))
 
     def __perform_task__(self):
         print('Do something - the first time...')

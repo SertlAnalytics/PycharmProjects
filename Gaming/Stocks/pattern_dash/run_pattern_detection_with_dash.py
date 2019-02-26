@@ -17,7 +17,7 @@ sys_config = SystemConfiguration()
 
 sys_config.data_provider.from_db = False
 sys_config.data_provider.period = PRD.INTRADAY
-sys_config.data_provider.aggregation = 15
+sys_config.data_provider.aggregation = 15  # ToDo: Back to 15
 sys_config.data_provider.output_size = OPS.COMPACT
 sys_config.data_provider.limit = 200
 

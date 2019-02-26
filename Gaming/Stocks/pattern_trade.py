@@ -98,8 +98,20 @@ class PatternTrade:
             self.buy_trigger, self.trade_box_type, self.trade_strategy, mean_aggregation, self.pattern.id_readable)
 
     @property
+    def id_suffix(self):
+        return '(simulation)' if self.is_simulation else '(REAL)'
+
+    @property
+    def id_for_logging(self):
+        return '{} {}'.format(self.id, self.id_suffix)
+
+    @property
     def is_winner(self) -> bool:
         return self.data_dict_obj.get(DC.TRADE_RESULT_ID, 0) == 1
+
+    @property
+    def trade_result_pct(self) -> float:
+        return self.data_dict_obj.get(DC.TRADE_RESULT_PCT, 0)
 
     @property
     def is_breakout_active(self):
@@ -228,6 +240,11 @@ class PatternTrade:
     @trade_client.setter
     def trade_client(self, value):
         self._trade_client = value
+
+    def get_sell_comment(self, sell_trigger: str) -> str:
+        ticker = self.ticker_actual
+        sell_price = self.get_actual_sell_price(sell_trigger, ticker.last_price)
+        return 'Sell_{} at {:.2f} on {}'.format(sell_trigger, sell_price, ticker.date_time_str)
 
     def correct_simulation_flag_according_to_forecast(self):
         is_simulation_old = self._is_simulation

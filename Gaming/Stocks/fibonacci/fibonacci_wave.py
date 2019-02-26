@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 import numpy as np
-from sertl_analytics.constants.pattern_constants import FD, FR, CM, FWST, DC
+from sertl_analytics.constants.pattern_constants import FD, FR, CM, FWST, DC, PRD
 from sertl_analytics.mymath import MyPoly1d
 from sertl_analytics.mydates import MyDate
 from fibonacci.fibonacci_wave_component import FibonacciWaveComponent, FibonacciRegressionComponent, \
@@ -17,6 +17,8 @@ from fibonacci.fibonacci_wave_component import FibonacciAscendingRetracementComp
 from fibonacci.fibonacci_wave_component import FibonacciDescendingRetracementComponent
 from fibonacci.fibonacci_helper import fibonacci_helper, FibonacciHelperApi
 from pattern_database.stock_tables_data_dictionary import WaveDataDictionary
+from fibonacci.fibonacci_wave_prediction import FibonacciClassifierPrediction, FibonacciRegressionPrediction
+from fibonacci.fibonacci_wave_prediction import FibonacciPrediction
 from pattern_wave_tick import WaveTick
 import math
 from copy import deepcopy
@@ -34,18 +36,64 @@ class FibonacciWave:
         self.comp_dic = {}
         self.comp_forecast_parameter_list = []  # structure example [[0.382, 213.26, 85], [0.5, 215.53, 88], ....]
         self.forecast_value_list = []
+        self._classifier_prediction = None
+        self._regression_prediction = None
 
     @property
     def wave_type(self):
         return FD.NONE
 
     @property
+    def period(self):
+        return self.data_dict_obj.get(DC.PERIOD)
+
+    @property
+    def classifier_prediction(self):
+        if self._classifier_prediction is None:
+            self._classifier_prediction = FibonacciClassifierPrediction(self.data_dict_obj)
+        return self._classifier_prediction
+
+    @property
+    def regression_prediction(self):
+        if self._regression_prediction is None:
+            self._regression_prediction = FibonacciRegressionPrediction(self.data_dict_obj)
+        return self._regression_prediction
+
+    @property
     def position_start(self):
         return self.comp_position_list[0]
 
     @property
+    def value_range(self):
+        return abs(self.w_5.value_end - self.w_1.value_start)
+
+    @property
+    def time_stamp_range(self):
+        return abs(self.w_5.time_stamp_end - self.w_1.time_stamp_start)
+
+    @property
     def position_end(self):
         return self.comp_position_list[-1]
+
+    @property
+    def forecast_wave_end_pct(self):
+        return self.data_dict_obj.get(DC.FC_R_WAVE_END_FLAG)
+
+    @property
+    def forecast_value_retracement_pct(self):
+        return self.data_dict_obj.get(DC.FC_R_WAVE_MAX_RETR_PCT)
+
+    @property
+    def forecast_value_retracement(self):
+        return self.regression_prediction.get_value_for_retracement_pct(self.forecast_value_retracement_pct)
+
+    @property
+    def forecast_timestamp_retracement_pct(self):
+        return self.data_dict_obj.get(DC.FC_R_WAVE_MAX_RETR_TS_PCT)
+
+    @property
+    def forecast_date_time_retracement(self):
+        return self.regression_prediction.get_date_time_for_retracement_pct(self.forecast_timestamp_retracement_pct)
 
     @property
     def f_upper(self) -> np.poly1d:
@@ -199,6 +247,38 @@ class FibonacciWave:
     @property
     def comp_position_key_5(self):
         return self.__get_comp_position_key__(5)
+
+    def update_prediction_data_by_dict(self, prediction_dict: dict):
+        # {DC.WAVE_END_FLAG: [1, 0.78], DC.WAVE_MAX_RETR_PCT: [53, 54.79], DC.WAVE_MAX_RETR_TS_PCT: [40, 25.97]}
+        self.update_dict_by_prediction_dict(prediction_dict, self.data_dict_obj.data_dict)
+
+    @staticmethod
+    def update_dict_by_prediction_dict(prediction_dict: dict, target_dict: dict):
+        # {DC.WAVE_END_FLAG: [1, 0.78], DC.WAVE_MAX_RETR_PCT: [53, 54.79], DC.WAVE_MAX_RETR_TS_PCT: [40, 25.97]}
+        prefix_pos_dict = {'FC_C_': 0, 'FC_R_': 1}
+        target_dict[DC.FC_TS] = MyDate.time_stamp_now()
+        target_dict[DC.FC_DT] = MyDate.date_time_now_str()
+        for label, value_list in prediction_dict.items():
+            for prefix, position in prefix_pos_dict.items():
+                target_dict['{}{}'.format(prefix, label)] = value_list[position]
+
+    def print_predictions(self, with_title=False):
+        prefix = '...Retracement prediction for '
+        if with_title:
+            print('Fibonacci retracement prediction:\n')
+        print('{}{}: {}'.format(prefix, 'Classifier', self.classifier_prediction.get_values_for_print_as_list()))
+        print('{}{}: {}'.format(prefix, 'Regression', self.regression_prediction.get_values_for_print_as_list()))
+
+    def get_xy_parameter_for_prediction_shape(self):
+        xy_classifier = self.classifier_prediction.get_xy_parameter()
+        xy_regression = self.regression_prediction.get_xy_parameter()
+        return [xy_classifier[0], xy_classifier[1], xy_regression[1], xy_regression[0]]
+
+    def get_value_for_retracement_pct(self, retracement_pct: float) -> float:
+        return self.regression_prediction.get_value_for_retracement_pct(retracement_pct)
+
+    def get_date_time_for_retracement_pct(self, retracement_pct: float) -> str:
+        return self.regression_prediction.get_date_time_for_retracement_pct(retracement_pct)
 
     def get_minimal_retracement_range_after_finishing(self) -> float:
         wave_structure = self.wave_structure
@@ -479,6 +559,7 @@ class FibonacciWave:
         print('{}{}: {} - {} ({}): R_1={:=5.1f}%, P_1={:=5.1f}%, R_2={:=5.1f}%, P_2={:=5.1f}%'.format(
             '' if suffix == '' else suffix + ': ', self.wave_type, dates[0], dates[-1], positions,
             ret_reg_list[1], ret_reg_list[2], ret_reg_list[3], ret_reg_list[4]))
+        self.print_predictions()
 
     def get_xy_parameter(self):
         if len(self.forecast_value_list) == 0:

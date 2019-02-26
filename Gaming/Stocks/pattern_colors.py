@@ -19,7 +19,7 @@ class PatternColorHandler:
             return 'salmon', 'orangered', 'lightgreen', 'red' # for watching, buying, selling, after_selling
 
     def get_colors_for_pattern(self, pattern: Pattern):
-        return self.__get_pattern_color__(pattern), self.__get_trade_color__(pattern)
+        return self.__get_pattern_color__(pattern), self.__get_trade_color__(pattern), self.__get_retracement_color__()
 
     @staticmethod
     def __get_pattern_color__(pattern: Pattern):
@@ -38,3 +38,7 @@ class PatternColorHandler:
                 return 'orangered'
         else:
             return 'white'
+
+    @staticmethod
+    def __get_retracement_color__():
+       return 'yellow'

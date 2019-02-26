@@ -12,6 +12,7 @@ from fibonacci.fibonacci_helper import fibonacci_helper
 from pattern_wave_tick import WaveTick
 from sertl_analytics.mymath import MyMath
 
+
 class FibonacciWaveComponent:
     def __init__(self, df_source: pd.DataFrame, tick_start: WaveTick, tick_end: WaveTick, comp_id: str):
         self.comp_id = comp_id
@@ -45,6 +46,14 @@ class FibonacciWaveComponent:
     @property
     def value_end(self):
         return 0
+
+    @property
+    def time_stamp_start(self):
+        return self.tick_start.time_stamp
+
+    @property
+    def time_stamp_end(self):
+        return self.tick_end.time_stamp
 
     def __get_df_for_range__(self, df_source: pd.DataFrame):
         df = df_source

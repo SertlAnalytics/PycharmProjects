@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, FCC, FD, DC, CN, SVC, EXTREMA, BT, PT, PRD, TSTR
+from sertl_analytics.constants.pattern_constants import FT, FCC, FD, DC, CN, SVC, EXTREMA, BT, PT, PRD, TSTR, PAT
 import numpy as np
 import pandas as pd
 import math
@@ -94,6 +94,7 @@ class Pattern:
         self.xy_pattern_range = None
         self.xy_center = None
         self.xy_trade = None
+        self.xy_retracement = None
         self.date_first = None
         self.date_last = None
         self.breakout = None
@@ -185,6 +186,7 @@ class Pattern:
         self.xy_center = self._part_entry.xy_center
         self.date_first = self._part_entry.date_first
         self.date_last = self._part_entry.date_last
+        self.xy_retracement = self.__get_xy_retracement__()
 
     def add_data_dict_entries_after_part_entry(self):
         self.__add_data_dict_entries_after_part_entry__()
@@ -364,8 +366,8 @@ class Pattern:
         return self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION)
 
     @property
-    def type(self):
-        return FT.NONE  # is overwritten
+    def is_fibonacci(self):
+        return self.pattern_type in [FT.FIBONACCI_ASC, FT.FIBONACCI_DESC]
 
     @property
     def mean(self):
@@ -433,18 +435,21 @@ class Pattern:
         return self.constraints.are_pre_constraints_fulfilled(self.data_dict_obj.data_dict)
 
     def get_annotation_text_as_dict(self) -> dict:
-        annotation_prediction_text_list = self.__get_annotation_prediction_text_list__()
-        return self._part_entry.get_annotation_text_as_dict(annotation_prediction_text_list)
+        annotation_prediction_text_dict = self.__get_annotation_prediction_text_dict__()
+        return self._part_entry.get_annotation_text_as_dict(annotation_prediction_text_dict)
 
     def get_annotation_parameter(self, color: str = 'blue'):
-        annotation_prediction_text_list = self.__get_annotation_prediction_text_list__()
-        return self._part_entry.get_annotation_parameter(annotation_prediction_text_list, color)
+        annotation_prediction_text_dict = self.__get_annotation_prediction_text_dict__()
+        return self._part_entry.get_annotation_parameter(annotation_prediction_text_dict, color)
 
-    def __get_annotation_prediction_text_list__(self):
-        annotation_prediction_text_list = [
-            self.__get_annotation_text_for_prediction_before_breakout__(),
-            self.__get_annotation_text_for_prediction_after_breakout__()]
-        return annotation_prediction_text_list
+    def __get_annotation_prediction_text_dict__(self) -> dict:
+        annotation_prediction_text_dict = {
+            PAT.BEFORE_BREAKOUT: self.__get_annotation_text_for_prediction_before_breakout__(),
+            PAT.AFTER_BREAKOUT: self.__get_annotation_text_for_prediction_after_breakout__()}
+        if self.is_fibonacci:
+            annotation_prediction_text_dict[PAT.RETRACEMENT] = \
+                self.__get_annotation_text_for_retracement_prediction__()
+        return annotation_prediction_text_dict
 
     def __get_annotation_text_for_prediction_before_breakout__(self):
         if self.y_predict_before_breakout is None:
@@ -479,6 +484,9 @@ class Pattern:
         return '+{}-{}% / -{}-{}% after {}-{} / {}-{} ticks - {}'.format(
             pos_pct_half, pos_pct_full, neg_pct_half, neg_pct_full,
             pos_ticks_half, pos_ticks_full, neg_ticks_half, neg_ticks_full, false_breakout_str)
+
+    def __get_annotation_text_for_retracement_prediction__(self):
+        return ''
 
     def __add_predictions_before_breakout_to_data_dict__(self):
         if self.y_predict_touch_points is None:
@@ -632,6 +640,9 @@ class Pattern:
             return tick.close > self.trade_result.limit and (tick.high - tick.close)/tick.close < threshold
         else:
             return tick.close < self.trade_result.limit and (tick.close - tick.low)/tick.close < threshold
+
+    def __get_xy_retracement__(self):
+        pass
 
     def get_x_data_for_prediction_touch_points(self):
         return self.__get_x_data_for_prediction__(PT.TOUCH_POINTS)
@@ -850,6 +861,12 @@ class FibonacciPattern(Pattern):
         last_value = self.function_cont.height_end
         expected_retracement = self.pattern_range.fib_form.get_minimal_retracement_range_after_wave_finishing()
         return round(max(expected_retracement - last_value, last_value), 4)
+
+    def __get_annotation_text_for_retracement_prediction__(self):
+        return self.pattern_range.fib_form.get_retracement_annotation_for_prediction()
+
+    def __get_xy_retracement__(self):
+        return self.pattern_range.fib_form.get_xy_parameter_for_prediction_shape()
 
 
 class FibonacciAscPattern(FibonacciPattern):

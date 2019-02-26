@@ -33,6 +33,11 @@ class PatternPlotContainer:
         self.shape_dic['trade'] = trade_shape
         self.color_dic['trade'] = trade_color
 
+    def add_retracement_shape(self, retracement_shape, retracement_color: str):
+        self.index_list.append('retracement')
+        self.shape_dic['retracement'] = retracement_shape
+        self.color_dic['retracement'] = retracement_color
+
     def add_border_line_top_shape(self, line_shape):
         self.index_list.append('top')
         self.shape_dic['top'] = line_shape

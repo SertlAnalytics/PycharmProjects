@@ -18,7 +18,6 @@ class MyPatternScheduler:
         self._check_interval_min = check_interval_min
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._job_list = []
-        self._pattern_log = PatternLog('pattern_log_scheduler.csv')
 
     @property
     def process_name(self):
@@ -33,7 +32,7 @@ class MyPatternScheduler:
     def __check_scheduled_jobs__(self):
         interval_seconds = self._check_interval_min * 60
         while True:
-            self._pattern_log.log_message('__check_scheduled_jobs__', process='Scheduler', process_step='Start')
+            PatternLog.log_scheduler_process('__check_scheduled_jobs__', process='Scheduler', process_step='Start')
             # ToDo - get rid of this log when error for missing second day start is found
             print("{}: Checking for scheduled tasks...(next time in {} seconds)".format(
                 self.process_name, interval_seconds))

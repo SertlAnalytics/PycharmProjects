@@ -95,8 +95,9 @@ class MyDate:
 
     @staticmethod
     def get_date_time_from_epoch_seconds_as_string(epoch_seconds: float) -> str:
-        return '{} {}'.format(MyDate.get_date_from_epoch_seconds(epoch_seconds),
-                              MyDate.get_time_from_epoch_seconds(epoch_seconds))
+        date_str = str(MyDate.get_date_from_epoch_seconds(epoch_seconds))
+        time_str = str(MyDate.get_time_from_epoch_seconds(epoch_seconds))
+        return '{} {}'.format(date_str, time_str[:8])
 
     @staticmethod
     def get_date_time_t_from_epoch_seconds(epoch_seconds: float) -> datetime:

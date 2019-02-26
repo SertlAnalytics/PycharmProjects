@@ -5,18 +5,24 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-12-10
 """
 
-from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE, TRC, INDICES, EDC, EST
+from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE, TRC
+from sertl_analytics.constants.pattern_constants import INDICES, EDC, EST, FD
 from sertl_analytics.constants.pattern_constants import TPMDC
 from sertl_analytics.mydates import MyDate
+from fibonacci.fibonacci_wave import FibonacciWave
 from pattern_system_configuration import SystemConfiguration
 from pattern_detection_controller import PatternDetectionController
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.exchanges.exchange_cls import Balance
 from pattern_database.stock_access_layer import AccessLayer4Asset, AccessLayer4Stock, AccessLayer4Equity
+from pattern_database.stock_access_layer import AccessLayer4Wave
 from pattern_database.stock_access_layer import AccessLayer4TradePolicyMetric
 from pattern_reinforcement.trade_policy import TradePolicyFactory
 from pattern_reinforcement.trade_policy_handler import TradePolicyHandler
+from pattern_database.stock_wave_entity import WaveEntity
+from pattern_logging.pattern_log import PatternLog
 from time import sleep
+import numpy as np
 
 
 class StockDatabaseUpdater:
@@ -24,6 +30,89 @@ class StockDatabaseUpdater:
         self.sys_config = SystemConfiguration()
         self.db_stock = self.sys_config.db_stock
         self.pattern_controller = PatternDetectionController(self.sys_config)
+
+    def add_wave_end_data_to_wave_records(self, symbol='', ts_start=0, ts_end=0, scheduled_job=False):
+        """
+        Some attributes have to be calculated AFTER the waves completes:
+        DC.WAVE_END_FLAG, DC.WAVE_MAX_RETR_PCT, DC.WAVE_MAX_RETR_TS_PCT
+        """
+        print('Add wave end data to wave records..')
+        access_layer_wave = AccessLayer4Wave(self.db_stock)
+        access_layer_stocks = AccessLayer4Stock(self.db_stock)
+        df_wave_to_process = access_layer_wave.get_wave_data_frame_without_end_data(symbol, ts_start, ts_end)
+        ts_start_stocks = ts_start if ts_end == 0 else ts_end
+        df_stocks = access_layer_stocks.get_stocks_data_frame_for_wave_completing(symbol=symbol, ts_start=ts_start_stocks)
+        tolerance = 0.01
+        update_counter = 0
+        ts_now = MyDate.time_stamp_now()
+        for wave_index, wave_row in df_wave_to_process.iterrows():
+            wave_entity = WaveEntity(wave_row)
+            ts_start, ts_end = wave_entity.get_ts_start_end_for_check_period()
+            ts_start_dt = MyDate.get_date_from_epoch_seconds(ts_start)
+            ts_end_dt = MyDate.get_date_from_epoch_seconds(ts_end)
+            wave_end_value, wave_value_range = wave_entity.wave_end_value, wave_entity.wave_value_range
+            if ts_end < ts_now:
+                wave_end_reached = 1
+                max_retracement = 0
+                max_retracement_ts = ts_start
+                max_retracement_dt = ts_start_dt
+                df_filtered_stocks = df_stocks[np.logical_and(
+                    df_stocks[DC.SYMBOL] == wave_entity.symbol,
+                    np.logical_and(df_stocks[DC.TIMESTAMP] > ts_start, df_stocks[DC.TIMESTAMP] <= ts_end))]
+                for index_stocks, row_stocks in df_filtered_stocks.iterrows():
+                    row_low, row_high, row_ts = row_stocks[DC.LOW], row_stocks[DC.HIGH], row_stocks[DC.TIMESTAMP]
+                    if wave_entity.wave_type == FD.ASC:
+                        if wave_end_value < row_high * (1 - tolerance):
+                            wave_end_reached = 0
+                            break
+                        else:
+                            retracement = wave_end_value - row_low
+                    else:
+                        if wave_end_value > row_low * (1 + tolerance):
+                            wave_end_reached = 0
+                            break
+                        else:
+                            retracement = row_high - wave_end_value
+                    if retracement > max_retracement:
+                        max_retracement = round(retracement, 2)
+                        max_retracement_ts = row_ts
+                        max_retracement_dt = row_stocks[DC.DATE]
+                max_retracement_pct = round(max_retracement / wave_value_range * 100, 2)
+                max_retracement_ts_pct = round((max_retracement_ts - ts_start) / wave_entity.wave_ts_range * 100, 2)
+                data_dict = {DC.WAVE_END_FLAG: wave_end_reached,
+                             DC.WAVE_MAX_RETR_PCT: max_retracement_pct,
+                             DC.WAVE_MAX_RETR_TS_PCT: max_retracement_ts_pct}
+                access_layer_wave.update_record(wave_entity.row_id, data_dict)
+                update_counter += 1
+
+        if scheduled_job:
+            PatternLog.log_scheduler_process(
+                log_message='Updated: {}/{}'.format(update_counter, df_wave_to_process.shape[0]),
+                process='Update wave records',
+                process_step='add_wave_end_data')
+
+    def add_wave_prediction_data_to_wave_records(self, symbol='', ts_start=0, ts_end=0, scheduled_job=False):
+        """
+        This job calculates the prediction data for all kind of waves (daily and intraday
+        """
+        print('Add prediction data to wave records..')
+        access_layer_wave = AccessLayer4Wave(self.db_stock)
+        df_wave_to_process = access_layer_wave.get_wave_data_without_prediction_data(symbol, ts_start, ts_end)
+        update_counter = 0
+        for wave_index, wave_row in df_wave_to_process.iterrows():
+            wave_entity = WaveEntity(wave_row)
+            x_data = wave_entity.data_list_for_prediction_x_data
+            prediction_dict = self.sys_config.fibonacci_predictor.get_prediction_as_dict(x_data)
+            data_dict = {}
+            FibonacciWave.update_dict_by_prediction_dict(prediction_dict, data_dict)
+            access_layer_wave.update_record(wave_entity.row_id, data_dict)
+            update_counter += 1
+
+        if scheduled_job:
+            PatternLog.log_scheduler_process(
+                log_message='Updated: {}/{}'.format(update_counter, df_wave_to_process.shape[0]),
+                process='Update wave records',
+                process_step='add_wave_prediction')
 
     def update_equity_records(self):
         access_layer = AccessLayer4Equity(self.db_stock)

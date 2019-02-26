@@ -9,6 +9,8 @@ from sertl_analytics.constants.pattern_constants import FT, CN, FD, TP
 from pattern_wave_tick import WaveTick
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_range import PatternRangeMax, PatternRangeMin, PatternRangeDetectorMax, PatternRangeDetectorMin
+import numpy as np
+import statistics
 
 
 class FibonacciFormation:
@@ -16,6 +18,9 @@ class FibonacciFormation:
         self.wave_list = wave_list
         self.pattern_type = pattern_type
         self.valid_wave_list = self.__get_valid_wave_list__()
+        self.mean_forecast_wave_end_pct = self.__get_mean_forecast_wave_end_pct__()
+        self.mean_forecast_retracement_pct = self.__get_mean_forecast_retracement_pct__()
+        self.mean_forecast_timestamp_retracement_pct = self.__get_mean_forecast_timestamp_retracement_pct__()
         self.valid_wave = self.valid_wave_list[0] if self.valid_wave_list else None
 
     @property
@@ -55,8 +60,44 @@ class FibonacciFormation:
         else:
             return self.tick_start.high - self.tick_end.low
 
+    def __get_mean_forecast_wave_end_pct__(self):
+        if self.are_valid_waves_available:
+            return statistics.mean([wave.forecast_wave_end_pct for wave in self.valid_wave_list]) * 100
+        return 0
+
+    def __get_mean_forecast_retracement_pct__(self) -> float:
+        if self.are_valid_waves_available:
+            return statistics.mean([wave.forecast_value_retracement_pct for wave in self.valid_wave_list])
+        return 0
+
+    def __get_mean_forecast_timestamp_retracement_pct__(self) -> float:
+        if self.are_valid_waves_available:
+            return statistics.mean([wave.forecast_timestamp_retracement_pct for wave in self.valid_wave_list])
+        return 0
+
+    def __get_valid_wave__(self):
+        if self.are_valid_waves_available:
+            if len(self.valid_wave_list) == 1:
+                return self.valid_wave_list[0]
+            else:
+                return self.valid_wave_list[0]
+        return None
+
     def get_minimal_retracement_range_after_wave_finishing(self):
         return self.valid_wave.get_minimal_retracement_range_after_finishing()
+
+    def get_retracement_annotation_for_prediction(self) -> str:
+        if not self.are_valid_waves_available:
+            return ''
+        target_retracement = self.valid_wave.get_value_for_retracement_pct(self.mean_forecast_retracement_pct)
+        target_date_time_retracement = self.valid_wave.get_date_time_for_retracement_pct(
+            self.mean_forecast_timestamp_retracement_pct)
+        return '{:.2f}%: {:.2f} on {} (probability for wave end reached: {:.0f}%)'.format(
+            self.mean_forecast_retracement_pct, target_retracement,
+            target_date_time_retracement, self.mean_forecast_wave_end_pct)
+
+    def get_xy_parameter_for_prediction_shape(self):
+        return self.valid_wave.get_xy_parameter_for_prediction_shape()
 
     def __get_valid_wave_list__(self):
         return_list = []  # we need waves where the neckline does not intersect the fibonacci wave

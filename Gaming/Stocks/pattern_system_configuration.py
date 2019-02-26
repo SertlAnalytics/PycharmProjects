@@ -23,11 +23,11 @@ from copy import deepcopy
 from pattern_sound.pattern_sound_machine import PatternSoundMachine
 from pattern_dash.my_dash_caches import MyGraphCache, MyDataFrameCache
 from pattern_index_configuration import IndexConfiguration
+from fibonacci.fibonacci_predictor import FibonacciPredictor
 
 
 class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
-        self.pattern_log = PatternLog('pattern_log.csv')
         self.runtime_config = RuntimeConfiguration()
         self.crypto_config = BitfinexConfiguration()
         self.exchange_config = self.crypto_config
@@ -46,6 +46,7 @@ class SystemConfiguration:
         self.graph_cache = MyGraphCache()
         self.data_provider = PatternDataProvider(self.config, self.index_config, self.db_stock, self.df_cache)
         self.predictor_optimizer = PatternPredictorOptimizer(self.db_stock)
+        self.fibonacci_predictor = FibonacciPredictor(self.db_stock, 5)
         self.master_predictor_handler = PatternMasterPredictorHandler(self.__get_pattern_predictor_api__(self.config))
         self.trade_strategy_optimizer = TradeOptimizer(self.db_stock, self.expected_win_pct)
 
@@ -80,9 +81,6 @@ class SystemConfiguration:
     @property
     def period_aggregation(self) -> int:
         return self.data_provider.aggregation
-
-    def log_message(self, log_message: str, process='', process_step='run'):
-        self.pattern_log.log_message(log_message, process, process_step)
 
     def init_detection_process_for_automated_trade_update(self, mean: int, sma_number: int):
         self.config.detection_process = PDP.UPDATE_TRADE_DATA
@@ -211,6 +209,7 @@ class SystemConfiguration:
             sys_config_copy.config, sys_config_copy.index_config, self.db_stock, self.df_cache)
         sys_config_copy.data_provider.ticker_dict = self.data_provider.ticker_dict  # we have to copy this as well
         sys_config_copy.predictor_optimizer = self.predictor_optimizer  # we use the same optimizer  !!!
+        sys_config_copy.fibonacci_predictor = self.fibonacci_predictor
         sys_config_copy.master_predictor_handler = PatternMasterPredictorHandler(
             self.__get_pattern_predictor_api__(sys_config_copy.config))
         sys_config_copy.trade_strategy_optimizer = self.trade_strategy_optimizer

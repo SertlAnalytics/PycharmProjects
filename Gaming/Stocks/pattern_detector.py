@@ -342,6 +342,11 @@ class PatternDetector:
         if len(input_list) > 0:
             self.sys_config.db_stock.insert_pattern_data(input_list)
 
+    def add_prediction_data_to_wave(self, print_prediction=False):
+        for fib_wave in self.fib_wave_tree.fibonacci_wave_list:
+            if fib_wave.is_wave_ready_for_wave_table():
+                self.sys_config.fibonacci_predictor.add_predictions_to_wave(fib_wave, print_prediction)
+
     def save_wave_data(self):
         if not self.sys_config.config.save_wave_data:
             return
@@ -350,8 +355,8 @@ class PatternDetector:
             if fib_wave.is_wave_ready_for_wave_table():
                 data_dict = fib_wave.data_dict_obj.get_data_dict_for_target_table()
                 if data_dict is not None:
-                    self.sys_config.db_stock.delete_existing_wave(data_dict)
-                    input_list.append(data_dict)
+                    if not self.sys_config.db_stock.is_wave_already_available(data_dict):
+                        input_list.append(data_dict)
         if len(input_list) > 0:
             self.sys_config.db_stock.insert_wave_data(input_list)
 

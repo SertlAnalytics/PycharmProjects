@@ -405,8 +405,8 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         return df
 
     def __are_retrieved_data_correct__(self, json_data: object):
-        # JSON in error case: ["error", 11010, "ratelimit: error"]
-        return "error" not in json_data
+        # JSON in error case: ["error", 11010, "ratelimit: error"] or []
+        return len(json_data) > 0 and "error" not in json_data
 
     def _get_url_(self):  # the _symbol has the structure tsymbolCCY like tBTCUSD
         # https://api.bitfinex.com/v2/candles/trade:5m:tBTCUSD/hist
