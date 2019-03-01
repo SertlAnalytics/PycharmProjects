@@ -6,6 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.constants.pattern_constants import LOGT
 import os
 import sys
 import traceback
@@ -74,3 +75,19 @@ class PatternLog:
     def __get_file_path__(file_name: str):
         package_dir = os.path.abspath(os.path.dirname(__file__))
         return os.path.join(package_dir, file_name)
+
+    @staticmethod
+    def get_file_path_for_log_type(log_type: str):
+        if log_type == LOGT.ERRORS:
+            return PatternLog.__get_file_path_for_errors__()
+        elif log_type == LOGT.PROCESSES:
+            return ''
+        elif log_type == LOGT.SCHEDULER:
+            return PatternLog.__get_file_path_for_scheduler__()
+        elif log_type == LOGT.PATTERN_LOG:
+            return PatternLog.__get_file_path_for_messages__()
+        elif log_type == LOGT.WAVES:
+            return ''
+        elif log_type == LOGT.TRADES:
+            return PatternLog.__get_file_path_for_trades__()
+        return ''

@@ -51,6 +51,7 @@ class MyDashStockDataUpdateJob(MyDashPatternJob):
 
         db_stock.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
         if MyDate.is_tuesday_till_saturday():
+            db_stock.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
             db_stock.update_stock_data_by_index(INDICES.DOW_JONES, PRD.DAILY)
             db_stock.update_stock_data_for_symbol('FCEL')
             db_stock.update_stock_data_for_symbol('TSLA')
@@ -67,11 +68,13 @@ class MyWaveUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
         self._stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.CRYPTO_CCY, 400)
         if MyDate.is_tuesday_till_saturday():
+            self._stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.INDICES, 400)
             self._stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.DOW_JONES, 400)
             self._stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.NASDAQ100, 400)
 
         self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
         if MyDate.is_tuesday_till_saturday():
+            self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.INDICES)
             self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)
             self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.NASDAQ100)
 
@@ -82,6 +85,7 @@ class MyPatternUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
         self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.CRYPTO_CCY)
         if MyDate.is_tuesday_till_saturday():
+            self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.INDICES)
             self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.DOW_JONES)
             self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.NASDAQ100)
 

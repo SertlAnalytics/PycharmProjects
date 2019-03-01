@@ -26,7 +26,7 @@ class APIBaseFetcher:
         self._df_data = None
         self._df_volume = None
         self._df_columns = []
-        self._latest_successful_request_data = None  # in case of a problem with the current request take these data
+        self._latest_successful_request_data_dict = {}  # in case of a problem with the current request take these data
 
     @property
     def kw_symbol(self) -> str:
@@ -383,11 +383,11 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         json_data = request_data.json()
         self.api_symbol = self._kwargs['symbol']
         if self.__are_retrieved_data_correct__(json_data):
-            self._latest_successful_request_data = json_data
+            self._latest_successful_request_data_dict[self.api_symbol] = json_data
         else:
-            if self._latest_successful_request_data is not None:
+            if self.api_symbol in self._latest_successful_request_data_dict:
                 print('Use latest successfully retrieved data for {}'.format(self.api_symbol))
-                json_data = self._latest_successful_request_data
+                json_data = self._latest_successful_request_data_dict[self.api_symbol]
         if type(json_data[0]) is list:
             df = pd.DataFrame(json_data)
         else:

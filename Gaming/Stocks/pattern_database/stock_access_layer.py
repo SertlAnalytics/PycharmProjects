@@ -234,6 +234,12 @@ class AccessLayer4Wave(AccessLayer):
         query = "SELECT * FROM {} WHERE {}={} ORDER BY {}".format(self._table.name, DC.PERIOD_ID, 0, order_by_columns)
         return self.select_data_by_query(query)
 
+    def get_grouped_by_for_wave_plotting(self):
+        df = self.get_all_as_data_frame()
+        df[DC.DATE] = df[DC.WAVE_END_DT].apply(MyDate.get_date_str_from_datetime)
+        df_for_grouping = df[[DC.EQUITY_TYPE, DC.PERIOD, DC.WAVE_TYPE, DC.DATE, DC.TICKER_ID]]
+        return df_for_grouping.groupby([DC.EQUITY_TYPE, DC.PERIOD, DC.WAVE_TYPE, DC.DATE]).count()
+
     def get_daily_wave_data_frame(self) -> pd.DataFrame:
         order_by_columns = ','.join([DC.TICKER_ID, DC.WAVE_END_DT])
         query = "SELECT * FROM {} WHERE {}={} ORDER BY {}".format(self._table.name, DC.PERIOD_ID, 1, order_by_columns)

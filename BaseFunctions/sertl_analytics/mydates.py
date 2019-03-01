@@ -149,6 +149,10 @@ class MyDate:
         return datetime.strptime(str(date_time)[:19], '%Y-%m-%d %H:%M:%S').time()
 
     @staticmethod
+    def get_date_str_from_datetime(date_time):
+        return str(MyDate.get_date_from_datetime(date_time))
+
+    @staticmethod
     def get_number_for_date_time(date_time):
         time_difference = date_time - datetime(2010, 1, 1)
         difference_in_seconds = (time_difference.days * 86400) + time_difference.seconds

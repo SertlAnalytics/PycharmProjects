@@ -140,6 +140,24 @@ class PRED:  # Predictors
         return [PRED.FOR_TRADE]
 
 
+class DTRG:  # Date Ranges
+    ALL = 'All'
+    TODAY = 'Today'
+    CURRENT_WEEK = 'Current week'
+    CURRENT_MONTH = 'Current month'
+    LAST_WEEK_WEEK = 'Last week'
+    LAST_MONTH = 'Last month'
+    LAST_YEAR = 'Breakout_Level'
+
+    @staticmethod
+    def get_as_options_for_log_tab():
+        return [{'label': date_range, 'value': date_range} for date_range in DTRG.get_for_log_tab()]
+
+    @staticmethod
+    def get_for_log_tab():
+        return [DTRG.ALL, DTRG.TODAY, DTRG.CURRENT_WEEK]
+
+
 class CHM:  # chart modes
     MARKERS = 'markers'
     LINES = 'lines'
@@ -486,6 +504,32 @@ class PRD:  # Periods
         return 'Hallo'
 
 
+class LOGT:  # Log Types (corresponds with the columns in the overview table for logs
+    DATE_RANGE = 'date_range'
+    ERRORS = 'errors'
+    PROCESSES = 'processes'
+    SCHEDULER = 'scheduler'
+    PATTERN_LOG = 'pattern_log'
+    WAVES = 'waves'
+    TRADES = 'trades'
+
+    @staticmethod
+    def get_log_types_for_processing():
+        return [LOGT.ERRORS, LOGT.PROCESSES, LOGT.SCHEDULER, LOGT.PATTERN_LOG, LOGT.WAVES, LOGT.TRADES]
+
+    @staticmethod
+    def get_first_log_type_for_processing():
+        return LOGT.get_log_types_for_processing()[0]
+
+
+class LOGDC:  # Log data columns
+    DATE = 'Date'
+    TIME = 'Time'
+    PROCESS = 'Process'
+    PROCESS_STEP = 'Process Step'
+    COMMENT = 'Comment'
+
+
 class SCORING:
     ALL = 'all'
     BEST = 'best'
@@ -525,6 +569,7 @@ class INDICES:
     CRYPTO_CCY = 'Crypto Currencies'
     ALL_DATABASE = 'All in database'
     ALL = 'All'
+    INDICES = 'Indices'
     NONE = 'None'
 
 

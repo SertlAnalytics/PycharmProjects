@@ -126,7 +126,7 @@ class MyDashBaseTab:
             # print('{}: __get_candlesticks_trace__: x_value={}'.format(ticker, x_value))
         else:
             x_value = df[CN.DATE]
-        # columns = [CN.TIMESTAMP, CN.DATE, CN.TIME, CN.HIGH, CN.LOW, CN.DATETIME]
+        # columns = [CN.TIMESTAMP, CN.DATE_RANGE, CN.TIME, CN.HIGH, CN.LOW, CN.DATETIME]
         # print('__get_candlesticks_trace__: _period={}, ticker={}, head={}, x_value={}'.format(
         #     _period, ticker, _df[columns].head(-5), x_value))
         candlestick = {

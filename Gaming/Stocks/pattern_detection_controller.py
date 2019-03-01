@@ -219,6 +219,7 @@ class PatternDetectionController:
         print('\nProcessing for Fib & Pattern: {} ({})\n'.format(ticker, sys_config.runtime_config.actual_ticker_name))
         detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()
+        detector.add_prediction_data_to_wave()
         detector.parse_for_pattern()
         return detector
 

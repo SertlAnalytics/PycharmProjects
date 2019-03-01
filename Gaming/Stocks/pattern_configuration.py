@@ -64,7 +64,7 @@ class PatternConfiguration:
         #     kwargs = {
         #         'equity_type_id': self.data_dict_obj.get(DC.EQUITY_TYPE_ID),
         #         '_period': self.data_dict_obj.get(DC.PERIOD),
-        #         '_aggregation': self.data_dict_obj.get(DC.PERIOD_AGGREGATION),
+        #         '_aggregation': self.data_dict_obj.get(DC.PROCESS),
         #         'ticker_id': self.ticker_id,
         #         'pattern_type': self.pattern_type,
         #         'pattern_range_id': self.pattern_range.id

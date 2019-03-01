@@ -2,36 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a9b7b1e9-a92d-4270-bcc9-9b843e8495d6" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/policy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/policy_pg/my_policy_net_pg.ckpt.index" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sertl_analytics/__init__-Family-Elitebook.py" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_log.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_log.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_table_for_log.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sertl_analytics/datafetcher/financial_data_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/sertl_analytics/datafetcher/financial_data_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sertl_analytics/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/sertl_analytics/mymath.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/Stocks.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/Stocks.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/gym_practise/gym_cart_pole.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/gym_practise/gym_cart_pole.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_header_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_header_tables.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/run_daily_tasks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/stock_access_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/stock_access_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_database/stock_database_updater.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_logging/pattern_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_logging/pattern_log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/polycy_pg/checkpoint" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/policy_pg/checkpoint" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.data-00000-of-00001" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/polycy_pg/my_policy_net_pg.ckpt.meta" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/policy_pg/my_policy_net_pg.ckpt.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/run_trade_policy_by_gradient_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/run_trade_policy_by_gradient_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/trade_environment.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/trade_environment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/trade_observation.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/trade_observation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/trade_policy_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/trade_policy_handler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/trade_policy_handler_gradient.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_reinforcement/trade_policy_handler_gradient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_scheduling/pattern_job.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_scheduling/pattern_job.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_system_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_trade.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_trade_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_trade_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_detection_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_detection_controller.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -63,17 +42,29 @@
       <file leaf-file-name="learning_machine_factory.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sertl_analytics/models/learning_machine_factory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="731">
+            <state relative-caret-position="714">
               <caret line="48" column="29" selection-start-line="48" selection-start-column="29" selection-end-line="48" selection-end-column="29" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="learning_machine.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="learning_machine.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sertl_analytics/models/learning_machine.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="220">
               <caret line="13" column="27" selection-start-line="13" selection-start-column="27" selection-end-line="13" selection-end-column="27" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="financial_data_fetcher.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/sertl_analytics/datafetcher/financial_data_fetcher.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="398">
+              <caret line="389" column="64" selection-start-line="389" selection-start-column="33" selection-end-line="389" selection-end-column="64" />
+              <folding>
+                <element signature="e#204#223#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -91,6 +82,8 @@
     <findStrings>
       <find>counter</find>
       <find>standard</find>
+      <find>retrieved</find>
+      <find>_latest_successful_request_data</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -111,7 +104,6 @@
         <option value="$PROJECT_DIR$/sertl_analytics/models/learning_machine.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/constants/pattern_constants.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/functions/math_functions.py" />
-        <option value="$PROJECT_DIR$/sertl_analytics/datafetcher/financial_data_fetcher.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/environment/__init__.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/myconstants.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/mypasswords.py" />
@@ -119,6 +111,7 @@
         <option value="$PROJECT_DIR$/sertl_analytics/MyBokeh/flask_stactic_bokeh_graph.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/trading/mybitfinex.py" />
         <option value="$PROJECT_DIR$/sertl_analytics/pybase/data_dictionary.py" />
+        <option value="$PROJECT_DIR$/sertl_analytics/datafetcher/financial_data_fetcher.py" />
       </list>
     </option>
   </component>
@@ -198,10 +191,12 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32941177" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
@@ -215,7 +210,6 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.32941177" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -461,16 +455,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sertl_analytics/datafetcher/financial_data_fetcher.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1190">
-          <caret line="183" column="13" selection-start-line="183" selection-start-column="13" selection-end-line="183" selection-end-column="13" />
-          <folding>
-            <element signature="e#204#223#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sertl_analytics/exchanges/exchange_abc.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="102">
@@ -518,7 +502,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sertl_analytics/models/learning_machine_factory.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="731">
+        <state relative-caret-position="714">
           <caret line="48" column="29" selection-start-line="48" selection-start-column="29" selection-end-line="48" selection-end-column="29" />
         </state>
       </provider>
@@ -527,6 +511,16 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="220">
           <caret line="13" column="27" selection-start-line="13" selection-start-column="27" selection-end-line="13" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sertl_analytics/datafetcher/financial_data_fetcher.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="398">
+          <caret line="389" column="64" selection-start-line="389" selection-start-column="33" selection-end-line="389" selection-end-column="64" />
+          <folding>
+            <element signature="e#204#223#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

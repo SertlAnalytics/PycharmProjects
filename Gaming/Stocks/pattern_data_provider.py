@@ -125,6 +125,8 @@ class PatternDataProvider:
             self.ticker_dict = self.get_all_in_database()
         elif index == INDICES.MIXED:
             self.ticker_dict = self.get_mixed_dic()
+        elif index == INDICES.INDICES:
+            self.ticker_dict = {"DJI": "Dow", "NDX": "Nasdaq"}
         else:
             self.ticker_dict = self.index_config.get_ticker_dict_for_index(index)
 
