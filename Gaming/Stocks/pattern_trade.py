@@ -784,6 +784,8 @@ class PatternTrade:
             self.data_dict_obj.add(DC.SELL_COMMENT, '')
             self.data_dict_obj.add(DC.TRADE_REACHED_PRICE, 0)
             self.data_dict_obj.add(DC.TRADE_REACHED_PRICE_PCT, 0)
+            self.data_dict_obj.add(DC.TRADE_RESULT_AMOUNT, 0)
+            self.data_dict_obj.add(DC.TRADE_RESULT_PCT, 0)
             self.data_dict_obj.add(DC.TRADE_RESULT, '')
             self.data_dict_obj.add(DC.TRADE_RESULT_ID, 0)
 

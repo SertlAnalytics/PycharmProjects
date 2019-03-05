@@ -8,25 +8,20 @@ Date: 2018-11-14
 from dash.dependencies import Input, Output, State
 from pattern_dash.my_dash_base import MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi
+from pattern_dash.my_dash_components import MyDCC, MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLTabLogHeaderTable
 from pattern_dash.my_dash_tab_dd_for_log import LogTabDropDownHandler, LOGDD
 from pattern_detection_controller import PatternDetectionController
 from pattern_trade_handler import PatternTradeHandler
-from pattern_database.stock_access_layer import AccessLayer4Process, AccessLayer4Wave
+from pattern_database.stock_access_layer import AccessLayer4Process, AccessLayer4Wave, AccessLayer4Pattern
 from dash import Dash
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.pattern_constants import PRD, INDICES, LOGT, LOGDC, DC, PRDC, DTRG
+from sertl_analytics.constants.pattern_constants import LOGT, LOGDC, DC, PRDC, DTRG
 from pattern_logging.pattern_log import PatternLog
 from pattern_news_handler import NewsHandler
 from pattern_dash.my_dash_tab_table_for_log import LogTable
 import pandas as pd
 import os
-
-
-class RMBT:  # RecommenderManageButtonText
-    SWITCH_TO_ACTIVE_MANAGEMENT = 'Start active management'
-    SWITCH_TO_NO_MANAGEMENT = 'Stop active management'
 
 
 class MyDashTab4Log(MyDashBaseTab):
@@ -35,17 +30,17 @@ class MyDashTab4Log(MyDashBaseTab):
     _default_log_type = LOGT.PATTERN_LOG
     _default_date_range = DTRG.TODAY
 
-    def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
+    def __init__(self, app: Dash, sys_config: SystemConfiguration):
         MyDashBaseTab.__init__(self, app, sys_config)
         self.__init_dash_element_ids__()
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.exchange_config = self.sys_config.exchange_config
         self._pattern_controller = PatternDetectionController(self.sys_config)
-        self._trade_handler_online = trade_handler_online
         self._dd_handler = LogTabDropDownHandler()
         self._log_data_frame_dict = {}
         self._access_layer_process = AccessLayer4Process(self.sys_config.db_stock)
         self._access_layer_wave = AccessLayer4Wave(self.sys_config.db_stock)
+        self._access_layer_pattern = AccessLayer4Pattern(self.sys_config.db_stock)
         self.__fill_log_data_frame_dict__()
         self._log_table = LogTable(self._log_data_frame_dict, self._default_log_type, self._default_date_range)
         self._selected_log_type = self._default_log_type
@@ -188,6 +183,8 @@ class MyDashTab4Log(MyDashBaseTab):
                 self._log_data_frame_dict[log_types] = self._access_layer_process.get_all_as_data_frame()
             elif log_types == LOGT.WAVES:
                 self._log_data_frame_dict[log_types] = self._access_layer_wave.get_all_as_data_frame()
+            elif log_types == LOGT.PATTERNS:
+                self._log_data_frame_dict[log_types] = self._access_layer_pattern.get_all_as_data_frame()
             else:
                 self.__fill_log_data_frame_dict_by_file__(log_types)
 
@@ -211,9 +208,12 @@ class MyDashTab4Log(MyDashBaseTab):
         df = self._log_data_frame_dict[log_type]
         if actual_day:
             if DC.WAVE_END_TS in df.columns:
-                today_ts = MyDate.get_epoch_seconds_for_date() - 60 * 60 * 24  # minus one day...
+                today_ts = MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=1)  # minus one day
                 df = df[df[DC.WAVE_END_TS] >= today_ts]
-                # print('max ts = {}, midnight={}'.format(df[DC.WAVE_END_TS].max(), today_ts))
+                # print('max ts = {}, midnight={}'.format(df[DC.WAVE_END_TS].max(), today_ts)
+            elif DC.TS_PATTERN_TICK_LAST in df.columns:
+                today_ts = MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=1)  # minus one day
+                df = df[df[DC.TS_PATTERN_TICK_LAST] >= today_ts]
             elif PRDC.START_DT in df.columns:
                 df = df[df[PRDC.START_DT] == today_str]
             elif LOGDC.DATE in df.columns:

@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-10-03
 """
 
-from sertl_analytics.constants.pattern_constants import LOGT
+from sertl_analytics.constants.pattern_constants import LOGT, WAVEST, INDICES
 from datetime import datetime
 from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_components import MyHTMLTable, COLORS, MyHTML, MyDCC
@@ -160,8 +160,52 @@ class MyHTMLTabLogHeaderTable(MyHTMLTabHeaderTable):
                 LOGT.PROCESSES: 'Processes',
                 LOGT.SCHEDULER: 'Scheduler',
                 LOGT.PATTERN_LOG: 'Pattern log',
+                LOGT.PATTERNS: 'Pattern',
                 LOGT.WAVES: 'Waves',
                 LOGT.TRADES: 'Trades (add/buy)'}
+
+    def _get_cell_style_(self, row: int, col: int):
+        base_width = int(100/self._column_number)
+        width_list = ['{}%'.format(base_width) for k in range(0, self._column_number)]
+        width = width_list[col - 1]
+        bg_color = COLORS[2]['background'] if row == 1 or col == 1 else COLORS[1]['background']
+        color = COLORS[2]['text']
+        text_align = 'left' if col == 1 else 'center'
+        v_align = 'top'
+        return {'width': width, 'background-color': bg_color, 'color': color, 'text-align': text_align,
+                'vertical-align': v_align, 'padding': self.padding_cell}
+
+
+class MyHTMLTabWavesHeaderTable(MyHTMLTabHeaderTable):
+    def __init__(self):
+        self._header_dict = self.__get_table_header_dict__()
+        self._column_number = len(self._header_dict)
+        self._index_list = INDICES.get_index_list_for_waves_tab()
+        MyHTMLTable.__init__(self, len(self._index_list) + 1, self._column_number)
+
+    def _init_cells_(self):
+        column_number = 0
+        for wave_type, title in self._header_dict.items():
+            row_number = 1
+            column_number += 1
+            label_div = MyHTML.div('my_waves_{}_{}_label_div'.format(row_number, column_number), title, True)
+            self.set_value(row_number, column_number, label_div)
+            for index in INDICES.get_index_list_for_waves_tab():
+                row_number += 1
+                if column_number == 1:
+                    label_div = MyHTML.div('my_waves_{}_{}_label_div'.format(row_number, column_number), index, True)
+                    self.set_value(row_number, column_number, label_div)
+                else:
+                    value_div = MyHTML.div('my_waves_{}_{}_value_div'.format(row_number, column_number), index, True)
+                    self.set_value(row_number, column_number, value_div)
+
+    @staticmethod
+    def __get_table_header_dict__():
+        return {WAVEST.INDICES: 'Indices',
+                WAVEST.INTRADAY_ASC: 'Intraday (ascending)',
+                WAVEST.INTRADAY_DESC: 'Intraday (descending)',
+                WAVEST.DAILY_ASC: 'Daily (ascending)',
+                WAVEST.DAILY_DESC: 'Daily (descending)'}
 
     def _get_cell_style_(self, row: int, col: int):
         base_width = int(100/self._column_number)

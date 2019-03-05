@@ -1,15 +1,16 @@
 """
-Description: This module contains the dash table for most of the logs
+Description: This module contains the dash table for wave data for the waves tabs
+Remark: This wave table is different from the wave table in the database - it's more a congregation
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
-Date: 2019-03-01
+Date: 2019-03-04
 """
 
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import PRD, DC, LOGT, LOGDC, PRDC, DTRG
 
 
-class LogRow:
+class WaveTabRow:
     sort_column = LOGDC.DATE
 
     def __init__(self, columns: list):
@@ -56,7 +57,7 @@ class LogRow:
         return self._value_dict[self.sort_column] < other.value_dict[self.sort_column]
 
 
-class LogTable:
+class WaveTabTable:
     def __init__(self, df_dict: dict, log_type: str, date_range: str):
         self._df_dict = df_dict
         self._selected_log_type = log_type
@@ -96,8 +97,8 @@ class LogTable:
 
     def get_rows_for_selected_items(self):
         if len(self._rows_selected_log_type) == 0:
-            return [LogRow(self._columns).get_row_as_dict()]
-        LogRow.sort_column = self.__get_sort_column__()
+            return [WaveTabRow(self._columns).get_row_as_dict()]
+        WaveTabRow.sort_column = self.__get_sort_column__()
         sort_reverse = True
         sorted_list = sorted(self._rows_selected_log_type, reverse=sort_reverse)
         return [row.get_row_as_dict() for row in sorted_list]
@@ -122,8 +123,6 @@ class LogTable:
             return PRDC.TRIGGER
         elif log_type == LOGT.WAVES:
             return ''
-        elif log_type == LOGT.PATTERNS:
-            return ''
         return LOGDC.PROCESS
 
     @staticmethod
@@ -131,8 +130,6 @@ class LogTable:
         if log_type == LOGT.PROCESSES:
             return ''
         elif log_type == LOGT.WAVES:
-            return ''
-        elif log_type == LOGT.PATTERNS:
             return ''
         return LOGDC.PROCESS_STEP
 
@@ -147,8 +144,6 @@ class LogTable:
             return PRDC.START_DT
         elif self._selected_log_type == LOGT.WAVES:
             return DC.W1_BEGIN_DT
-        elif self._selected_log_type == LOGT.PATTERNS:
-            return DC.TS_PATTERN_TICK_FIRST
         return LOGDC.DATE
 
     def __adjust_log_df_to_selected_items__(self):
@@ -158,10 +153,7 @@ class LogTable:
             self._log_df = self._log_df[self._log_df[self._process_step_column] == self._selected_log_process_step]
         if self._selected_date_range == DTRG.TODAY:
             if self._date_column == DC.WAVE_END_TS:
-                offset_ts = MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=2)  # minus 2 day
-                self._log_df = self._log_df[self._log_df[self._date_column] >= offset_ts]
-            elif self._date_column == DC.TS_PATTERN_TICK_LAST:
-                offset_ts = MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=2)  # minus 2 day
+                offset_ts = MyDate.get_epoch_seconds_for_date() - 60 * 60 * 24 * 2  # minus 2 day...
                 self._log_df = self._log_df[self._log_df[self._date_column] >= offset_ts]
             else:
                 today_str = MyDate.get_date_as_string_from_date_time()
@@ -171,7 +163,7 @@ class LogTable:
         self._rows_selected_log_type = []
         if self._selected_log_type != '':
             for index, row in self._log_df.iterrows():
-                log_row = LogRow(self._columns)
+                log_row = WaveTabRow(self._columns)
                 for column in self._columns:
                     log_row.add_value(column, row[column])
                 self._rows_selected_log_type.append(log_row)
@@ -181,8 +173,6 @@ class LogTable:
             return PRDC.START_DT
         elif self._selected_log_type == LOGT.WAVES:
             return DC.WAVE_END_TS
-        elif self._selected_log_type == LOGT.PATTERNS:
-            return DC.TS_PATTERN_TICK_LAST
         return LOGDC.DATE
 
 

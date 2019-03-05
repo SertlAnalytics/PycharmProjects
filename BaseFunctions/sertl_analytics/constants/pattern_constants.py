@@ -510,16 +510,46 @@ class LOGT:  # Log Types (corresponds with the columns in the overview table for
     PROCESSES = 'processes'
     SCHEDULER = 'scheduler'
     PATTERN_LOG = 'pattern_log'
+    PATTERNS = 'patterns'
     WAVES = 'waves'
     TRADES = 'trades'
 
     @staticmethod
     def get_log_types_for_processing():
-        return [LOGT.ERRORS, LOGT.PROCESSES, LOGT.SCHEDULER, LOGT.PATTERN_LOG, LOGT.WAVES, LOGT.TRADES]
+        return [LOGT.ERRORS, LOGT.PROCESSES, LOGT.SCHEDULER, LOGT.PATTERN_LOG, LOGT.PATTERNS, LOGT.WAVES, LOGT.TRADES]
 
     @staticmethod
     def get_first_log_type_for_processing():
         return LOGT.get_log_types_for_processing()[0]
+
+
+
+class WAVEST:  # Waves Types (corresponds with the columns in the overview table for waves
+    INDICES = 'indices'
+    INTRADAY_ASC = 'intraday_ascending'
+    INTRADAY_DESC = 'intraday_descending'
+    DAILY_ASC = 'daily_ascending'
+    DAILY_DESC = 'daily_descending'
+
+    @staticmethod
+    def get_waves_types():
+        return [WAVEST.INDICES, WAVEST.INTRADAY_ASC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_DESC]
+
+    @staticmethod
+    def get_waves_types_for_processing():
+        return [WAVEST.INTRADAY_ASC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_DESC]
+
+    @staticmethod
+    def get_period_and_direction_for_wave_type(wave_type: str):
+        if wave_type == WAVEST.INTRADAY_ASC:
+            return PRD.INTRADAY, FD.ASC
+        if wave_type == WAVEST.INTRADAY_DESC:
+            return PRD.INTRADAY, FD.DESC
+        if wave_type == WAVEST.DAILY_ASC:
+            return PRD.DAILY, FD.ASC
+        if wave_type == WAVEST.DAILY_DESC:
+            return PRD.DAILY, FD.DESC
+        return '', ''
 
 
 class LOGDC:  # Log data columns
@@ -571,6 +601,20 @@ class INDICES:
     ALL = 'All'
     INDICES = 'Indices'
     NONE = 'None'
+
+    @staticmethod
+    def get_index_list_for_waves_tab():
+        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+
+    @staticmethod
+    def get_ticker_for_index(index: str):
+        if index == INDICES.DOW_JONES:
+            return 'DJI'
+        elif index == INDICES.NASDAQ100:
+            return 'NDX'
+        elif index == INDICES.CRYPTO_CCY:
+            return 'BTCUSD'
+        return ''
 
 
 class FD:
@@ -892,6 +936,7 @@ class PSC:  # Pattern Statistics Columns
 class DC:  # Data Columns
     ROWID = 'rowid'
     # for Stocks
+    INDEX = 'Index'
     SYMBOL = 'Symbol'
     TIMESTAMP = 'Timestamp'
     DATE = 'Date'

@@ -19,6 +19,17 @@ class MyDate:
         return int(datetime.now().timestamp())
 
     @staticmethod
+    def get_seconds_for_period(days=0.0, hours=0.0, min=0.0) -> int:
+        second_days = 60 * 60 * 24
+        second_hours = 60 * 60
+        second_min = 60
+        return int(days * second_days + hours * second_hours + min * second_min)
+
+    @staticmethod
+    def get_offset_timestamp(days=0.0, hours=0.0, min=0.0):
+        return MyDate.get_epoch_seconds_for_date() + MyDate.get_seconds_for_period(days, hours, min)
+
+    @staticmethod
     def time_now_str() -> str:
         dt_now = datetime.now()
         return '{}'.format(MyDate.get_time_from_datetime(dt_now))
@@ -94,13 +105,13 @@ class MyDate:
        return datetime.fromtimestamp(epoch_seconds)
 
     @staticmethod
-    def get_date_time_from_epoch_seconds_as_string(epoch_seconds: float) -> str:
+    def get_date_time_from_epoch_seconds_as_string(epoch_seconds: int) -> str:
         date_str = str(MyDate.get_date_from_epoch_seconds(epoch_seconds))
         time_str = str(MyDate.get_time_from_epoch_seconds(epoch_seconds))
         return '{} {}'.format(date_str, time_str[:8])
 
     @staticmethod
-    def get_date_time_t_from_epoch_seconds(epoch_seconds: float) -> datetime:
+    def get_date_time_t_from_epoch_seconds(epoch_seconds: float) -> str:
         dt = datetime.fromtimestamp(epoch_seconds)
         return str(dt.date()) + 'T' + str(dt.time())[:8]
 
@@ -112,11 +123,11 @@ class MyDate:
         return abs(date_as_number_1 - date_as_number_2)
 
     @staticmethod
-    def get_date_from_epoch_seconds(epoch_seconds: int) -> datetime:
+    def get_date_from_epoch_seconds(epoch_seconds: int) -> date:
         return datetime.fromtimestamp(epoch_seconds).date()
 
     @staticmethod
-    def get_time_from_epoch_seconds(epoch_seconds: int) -> datetime:
+    def get_time_from_epoch_seconds(epoch_seconds: int):
         return datetime.fromtimestamp(epoch_seconds).time()
 
     @staticmethod
@@ -179,16 +190,24 @@ class MyDate:
         return (date_time + timedelta(seconds=seconds))
 
     @staticmethod
-    def is_tuesday_till_saturday():
-        return datetime.today().weekday() in [1, 2, 3, 4, 5]
+    def is_tuesday_till_saturday(date_obj=None):
+        date_obj = datetime.today() if date_obj is None else MyDate.get_datetime_object(date_obj)
+        return date_obj.weekday() in [1, 2, 3, 4, 5]
 
     @staticmethod
-    def is_sunday():
-        return datetime.today().weekday() == 6
+    def is_monday_till_friday(date_obj=None):
+        date_obj = datetime.today() if date_obj is None else MyDate.get_datetime_object(date_obj)
+        return date_obj.weekday() in [0, 1, 2, 3, 4]
 
     @staticmethod
-    def is_monday():
-        return datetime.today().weekday() == 0
+    def is_sunday(date_obj=None):
+        date_obj = datetime.today() if date_obj is None else MyDate.get_datetime_object(date_obj)
+        return date_obj.weekday() == 6
+
+    @staticmethod
+    def is_monday(date_obj=None):
+        date_obj = datetime.today() if date_obj is None else MyDate.get_datetime_object(date_obj)
+        return date_obj.weekday() == 0
 
 
 class MyClock:

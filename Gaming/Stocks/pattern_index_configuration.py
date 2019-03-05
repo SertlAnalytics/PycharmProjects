@@ -44,6 +44,13 @@ class IndexConfiguration:
             return self._ticker_equity_type_dict[symbol]
         return EQUITY_TYPE.SHARE
 
+    def get_index_for_symbol(self, symbol: str) -> str:
+        for index in self._index_ticker_dict:
+            index_dict = self._index_ticker_dict[index]
+            if symbol in index_dict:
+                return index
+        return INDICES.NONE
+
     def is_symbol_crypto(self, symbol: str) -> bool:
         if symbol in self._ticker_equity_type_dict:
             return self._ticker_equity_type_dict[symbol] == EQUITY_TYPE.CRYPTO

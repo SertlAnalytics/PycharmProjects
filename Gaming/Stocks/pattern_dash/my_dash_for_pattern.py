@@ -25,6 +25,7 @@ from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_dash.my_dash_tab_for_portfolio import MyDashTab4Portfolio
 from pattern_dash.my_dash_tab_for_recommender import MyDashTab4Recommender
 from pattern_dash.my_dash_tab_for_log import MyDashTab4Log
+from pattern_dash.my_dash_tab_for_waves import MyDashTab4Waves
 from pattern_trade_handler import PatternTradeHandler
 
 
@@ -38,13 +39,14 @@ class MyDash4Pattern(MyDashBase):
         self.tab_pattern = MyDashTab4Pattern(self.app, self.sys_config, self.trade_handler_online)
         self.tab_portfolio = MyDashTab4Portfolio(self.app, self.sys_config, self.trade_handler_online)
         self.tab_recommender = MyDashTab4Recommender(self.app, self.sys_config, self.trade_handler_online)
+        self.tab_waves = MyDashTab4Waves(self.app, self.sys_config, self.color_handler)
         self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.trade_handler_online)
         self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_asset_statistics = MyDashTab4AssetStatistics(self.app, self.sys_config,
                                                               self.color_handler, self.trade_handler_online)
         self.tab_models_statistics = MyDashTab4ModelStatistics(self.app, self.sys_config, self.color_handler)
-        self.tab_log = MyDashTab4Log(self.app, self.sys_config, self.trade_handler_online)
+        self.tab_log = MyDashTab4Log(self.app, self.sys_config)
         self.tab_configuration = MyDashTab4Configuration(self.app, self.sys_config, self.trade_handler_online)
 
     def get_pattern(self):
@@ -54,6 +56,7 @@ class MyDash4Pattern(MyDashBase):
         self.tab_pattern.init_callbacks()
         self.tab_portfolio.init_callbacks()
         self.tab_recommender.init_callbacks()
+        self.tab_waves.init_callbacks()
         self.tab_trades.init_callbacks()
         self.tab_trade_statistics.init_callbacks()
         self.tab_pattern_statistics.init_callbacks()
@@ -102,6 +105,7 @@ class MyDash4Pattern(MyDashBase):
             MyDCC.tab('Detector', [self.tab_pattern.get_div_for_tab()]),
             MyDCC.tab('Portfolio', [self.tab_portfolio.get_div_for_tab()]),
             MyDCC.tab('Recommender', [self.tab_recommender.get_div_for_tab()]),
+            MyDCC.tab('Waves', [self.tab_waves.get_div_for_tab()]),
             MyDCC.tab('Trading', [self.tab_trades.get_div_for_tab()]),
             MyDCC.tab('Trades', [self.tab_trade_statistics.get_div_for_tab()]),
             MyDCC.tab('Patterns', [self.tab_pattern_statistics.get_div_for_tab()]),

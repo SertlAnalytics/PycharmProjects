@@ -35,6 +35,8 @@ class IndicesComponentFetcher:
             return client.get_trading_pair_name_dict()
         elif index == INDICES.MIXED:
             return {"TSLA": "Tesla", "FCEL": "Full Cell", "ONVO": "Organovo", "MRAM": "MRAM"}
+        elif index == INDICES.INDICES:
+            return {"DJI": "Dow", "NDX": "Nasdaq"}
         else:
             raise MyException('No index fetcher defined for "{}"'.format(index))
 

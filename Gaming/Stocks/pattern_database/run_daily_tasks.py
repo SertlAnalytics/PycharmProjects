@@ -19,8 +19,12 @@ stock_db = StockDatabase()
 predictor_optimizer = PatternPredictorOptimizer(stock_db)
 stock_db_updater = StockDatabaseUpdater()
 
+stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.CRYPTO_CCY)
+stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.INDICES)
+stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.DOW_JONES)
+stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.NASDAQ100)
 
-if False:
+if True:
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
     # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
     # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)
@@ -28,7 +32,8 @@ if False:
     # stock_db_updater.complete_wave_records(symbol='', ts_start=0, ts_end=0)
     # stock_db_updater.update_trade_policy_metric_for_today(
     #     [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
-    stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
+    pass
+    # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
     # stock_db_updater.add_wave_prediction_data_to_wave_records(symbol='')
     # stock_db_updater.update_trade_records(4, 16)
     # stock_db_updater.update_trade_policy_metric_for_today(
@@ -62,7 +67,7 @@ else:
 
     # print(stock_db.get_wave_counter_dict(PRD.DAILY, 400))
 
-    # stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.CRYPTO_CCY, 400)
+    stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.CRYPTO_CCY, 400)
     if MyDate.is_tuesday_till_saturday():
         stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.INDICES, 400)
         stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.DOW_JONES, 400)

@@ -6,13 +6,16 @@ Date: 2018-06-17
 """
 
 import plotly.graph_objs as go
-from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC, MDC
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC, MDC, WAVEST, PRD
+from sertl_analytics.constants.pattern_constants import EQUITY_TYPE, INDICES
+from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
 from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_trade_handler import PatternTradeHandler
 from pattern_database.stock_database import StockDatabase
 from pattern_database.stock_tables import PatternTable, TradeTable
 from pattern_predictor_optimizer import PatternPredictorOptimizer
+from fibonacci.fibonacci_wave_handler import FibonacciWaveHandler
 import pandas as pd
 import itertools
 import numpy as np
@@ -52,6 +55,8 @@ class MyDashTabStatisticsPlotter:
             return self.__get_chart_type_stack_group__()
         elif self.chart_type == CHT.PREDICTOR:
             return self.__get_chart_type_predictor__()
+        elif self.chart_type == CHT.HEAT_MAP:
+            return self.__get_chart_type_heatmap__()
         elif self.chart_type == CHT.PIE:
             return self.__get_chart_type_pie__()
         elif self.chart_type == CHT.AREA_WINNER_LOSER:
@@ -64,6 +69,13 @@ class MyDashTabStatisticsPlotter:
     def __get_chart_type_area_winner_loser__(self):
         graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
         graph_api.figure_data = self.__get_area_winner_loser_figure_data__()
+        graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
+        graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
+        return [MyDCC.graph(graph_api)]
+
+    def __get_chart_type_heatmap__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Heatmap'))
+        graph_api.figure_data = self.__get_heatmap_figure_data__('Test')
         graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
         graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
         return [MyDCC.graph(graph_api)]
@@ -198,6 +210,22 @@ class MyDashTabStatisticsPlotter:
                    marker=dict(colors=colors),
                    pull=pull
                    )]
+
+    def __get_heatmap_figure_data__(self, index: str):
+        x_data, y_data, z_data = self.__get_data_for_heatmap_figure__(index)
+        return [
+            go.Heatmap(
+                x=x_data,
+                y=y_data,
+                z=z_data,
+                colorscale=self._color_handler.get_color_scale_for_heatmap()
+                )]
+
+    def __get_data_for_heatmap_figure__(self, scope: str):
+        x_data = []
+        y_data = []
+        z_data = []
+        return x_data, y_data, z_data
 
     def __get_data_for_pie_figure__(self, scope: str):
         pull_distance = 0.1
@@ -548,3 +576,79 @@ class MyDashTabStatisticsPlotter4Pattern(MyDashTabStatisticsPlotter):
     @staticmethod
     def __get_result_id_from_row__(row) -> int:
         return 1 if row[DC.EXPECTED_WIN_REACHED] == 1 else -1
+
+
+class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
+    def __init__(self, wave_handler: FibonacciWaveHandler, color_handler: DashColorHandler, days_retrospective: int, index=''):
+        self._wave_handler = wave_handler
+        self._days_retrospective = days_retrospective
+        self._index = index
+        MyDashTabStatisticsPlotter.__init__(self, self._wave_handler.df_wave, color_handler)
+
+    def __init_parameter__(self):
+        self._chart_id = 'waves_heatmap'
+        self._chart_name = 'Waves'
+        self.chart_type = CHT.HEAT_MAP
+
+    def __print_df_base__(self):
+        columns = [DC.EQUITY_TYPE, DC.PERIOD, DC.WAVE_TYPE, DC.WAVE_END_DT]
+        df_reduced = self._df_base[columns]
+        print('__print_df_base__: _df_base\n{}'.format(df_reduced.head(100)))
+
+    def __get_chart_type_heatmap__(self):
+        graph_list = []
+        index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100] if self._index == '' else [self._index]
+        for index in index_list:
+            index_for_key = index.replace(' ', '_').lower()
+            index_for_key = index_for_key if self._index == '' else '{}_{}'.format(index_for_key, 'single')
+            chart_id = '{}_{}'.format(self._chart_id, index_for_key)
+            # print('__get_chart_type_heatmap__: chart_id={}'.format(chart_id))
+            chart_name = index
+            graph_api = DccGraphApi(chart_id, chart_name)
+            graph_api.figure_data = self.__get_heatmap_figure_data__(index)
+            graph_api.figure_layout_height = 200
+            graph_api.figure_layout_margin = {'b': 50, 'r': 50, 'l': 50, 't': 50}
+            graph_list.append(MyDCC.graph(graph_api))
+        return graph_list
+
+    def __get_data_for_heatmap_figure__(self, index: str):
+        x_data = self._wave_handler.date_list
+        y_data = WAVEST.get_waves_types_for_processing()
+        z_data = [self._wave_handler.get_waves_numbers_for_wave_type_and_index(
+            wave_type, index) for wave_type in y_data]
+        # print('__get_data_for_heatmap_figure__: {}: {}\n{}'.format(index, x_data, z_data))
+        return x_data, y_data, z_data
+
+    def __get_data_for_heatmap_figure_old__(self, index: str):
+        z_data = []
+        x_data = []
+        y_data = []
+
+        offset_timestamp_start = self.__get_offset_timestamp_for_period__(PRD.DAILY)
+        seconds_day = MyDate.get_seconds_for_period(days=1)
+        day_range_dict = {}
+        df_base = self._df_base[self._df_base[DC.INDEX] == index]
+        for days in range(0, self._days_retrospective):
+            ts_start = offset_timestamp_start + days * seconds_day
+            ts_end = ts_start + seconds_day
+            date_str = MyDate.get_date_from_epoch_seconds(ts_start)
+            x_data.append(date_str)
+            day_range_dict[date_str] = [ts_start, ts_end]
+
+        for wave_type in WAVEST.get_waves_types_for_processing():
+            y_data.append(wave_type)
+            z_data_single = []
+            period, direction = WAVEST.get_period_and_direction_for_wave_type(wave_type)
+            for days in x_data:
+                ts_start, ts_end = day_range_dict[days][0], day_range_dict[days][1]
+                df = df_base[df_base[DC.WAVE_END_TS] >= ts_start]
+                df = df[df[DC.WAVE_END_TS] < ts_end]
+                df = df[df[DC.PERIOD] == period]
+                df = df[df[DC.WAVE_TYPE] == direction]
+                z_data_single.append(df.shape[0])
+            z_data.append(z_data_single)
+        return z_data, x_data, y_data
+
+    def __get_offset_timestamp_for_period__(self, period: str):
+        return MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=self._days_retrospective)
+
