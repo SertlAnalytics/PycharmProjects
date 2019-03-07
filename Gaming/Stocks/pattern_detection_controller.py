@@ -113,15 +113,17 @@ class PatternDetectionController:
 
     def __run_pattern_detector__(self):
         self.__init_loop_list_for_ticker__()
+        limit = self.sys_config.data_provider.limit
         for value_dic in self._loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
             and_clause = value_dic[LL.AND_CLAUSE]
-            limit = self.sys_config.data_provider.limit
             self.sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit=limit)
             if self.sys_config.pdh is None:
                 print('No data available for: {} and {}'.format(ticker, and_clause))
                 continue
             print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime_config.actual_ticker_name))
+            elements = self.sys_config.pdh.pattern_data.df_length
+            self.sys_config.fibonacci_wave_handler.init_list_and_dictionaries_for_retrospective_days(elements)
             self.sys_config.init_predictors_without_condition_list()
             detector = PatternDetector(self.sys_config)
             detector.parse_for_fibonacci_waves()
@@ -186,6 +188,8 @@ class PatternDetectionController:
             ticker, sys_config.runtime_config.actual_ticker_name, '' if and_clause == '' else ' for {}'.format(and_clause)))
         sys_config.init_predictors_without_condition_list()
         detector = PatternDetector(sys_config)
+        elements = sys_config.pdh.pattern_data.df_length
+        sys_config.fibonacci_wave_handler.init_list_and_dictionaries_for_retrospective_days(elements)
         detector.parse_for_fibonacci_waves()
         detector.add_prediction_data_to_wave()
         detector.parse_for_pattern()

@@ -45,6 +45,10 @@ class IndexConfiguration:
         return EQUITY_TYPE.SHARE
 
     def get_index_for_symbol(self, symbol: str) -> str:
+        if symbol == 'DJI':
+            return INDICES.DOW_JONES
+        if symbol == 'NDX':
+            return INDICES.NASDAQ100
         for index in self._index_ticker_dict:
             index_dict = self._index_ticker_dict[index]
             if symbol in index_dict:

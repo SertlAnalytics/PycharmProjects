@@ -7,7 +7,8 @@ Date: 2018-05-14
 
 import pandas as pd
 import numpy as np
-from sertl_analytics.constants.pattern_constants import CN, TT, DIR, PRD, PTS
+from sertl_analytics.constants.pattern_constants import CN, TT, DIR, PRD, WAVEST
+from matplotlib.patches import Arrow, FancyArrow
 from sertl_analytics.mymath import MyMath, MyPoly1d
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 from sertl_analytics.mydates import MyDate
@@ -27,6 +28,7 @@ class WaveTick:
         self.limit_value = 0
         self.stop_loss_value = 0
         self._position = int(self.tick[CN.POSITION]) if CN.POSITION in tick else 0
+        self._wave_type_number_dict = {}
 
     @property
     def date(self):
@@ -145,6 +147,14 @@ class WaveTick:
         return str(MyDate.get_time_from_epoch_seconds(self.f_var))[:5]
         # return str(MyPyDate.get_datetime_from_epoch_number(self.f_var).time())[:5]
 
+    def add_to_wave_type_number_dict(self, wave_type: str, number: int):
+        self._wave_type_number_dict[wave_type] = number
+
+    def get_wave_number_for_wave_type(self, wave_type: str):
+        if wave_type in self._wave_type_number_dict:
+            return self._wave_type_number_dict[wave_type]
+        return 0
+
     def get_forecast_volume(self, seconds_for_period: int):
         actual_time_stamp = int(datetime.now().timestamp())
         if actual_time_stamp >= self.time_stamp + seconds_for_period:
@@ -248,6 +258,8 @@ class WaveTickList:
     def __init__(self, df_or_list):  # input = pd.DataFrame or tick_list[]
         self.df = None
         self.tick_list = []
+        self._wave_type_number_min_dict = {}
+        self._wave_type_number_max_dict = {}
         if df_or_list.__class__.__name__ == 'DataFrame':
             self.__init_by_df__(df_or_list)
         else:
@@ -282,8 +294,78 @@ class WaveTickList:
         return round(self.max - self.min, 2)
 
     @property
+    def first_wave_tick(self):
+        return self.tick_list[0]
+
+    @property
     def last_wave_tick(self):
         return self.tick_list[-1]
+
+    def fill_wave_type_number_dicts(self):
+        for wave_type in WAVEST.get_waves_types_for_processing():
+            wave_type_number_list = []
+            for tick in self.tick_list:
+                wave_type_number_list.append(tick.get_wave_number_for_wave_type(wave_type))
+            self._wave_type_number_min_dict[wave_type] = np.min(wave_type_number_list)
+            self._wave_type_number_max_dict[wave_type] = np.max(wave_type_number_list)
+
+    def get_arrow_size_parameter_for_wave_peaks(self, wave_type: str, number_waves: int):
+        height_value = self.value_range / 10
+        head_length = height_value / 4
+        head_width = 4000 / self.elements
+        min_number, max_number = self._wave_type_number_min_dict[wave_type], self._wave_type_number_max_dict[wave_type]
+        if max_number == min_number:
+            factor = 1
+        else:
+            factor = 0.3 + 0.7 * (number_waves - min_number)/(max_number - min_number)
+        return height_value * factor, head_length * factor, head_width * factor
+
+    def get_circle_shape_parameters_for_wave_peak(self, tick: WaveTick, wave_type: str):
+        number_waves = tick.get_wave_number_for_wave_type(wave_type)
+        height, head_length, head_width = self.get_arrow_size_parameter_for_wave_peaks(wave_type, number_waves)
+        x = tick.date_str
+        y = tick.high if wave_type in [WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC] else tick.low
+        r = height
+        return x, y, r
+
+    def get_xy_parameters_for_wave_peak(self, tick: WaveTick, wave_type: str):
+        number_waves = tick.get_wave_number_for_wave_type(wave_type)
+        height, head_length, head_width = self.get_arrow_size_parameter_for_wave_peaks(wave_type, number_waves)
+        ts_day = MyDate.get_seconds_for_period(days=1)
+        x = [tick.f_var - ts_day, tick.f_var, tick.f_var + ts_day]
+        if wave_type in [WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC]:
+            y = [tick.high + height, tick.high, tick.high + height]
+        else:
+            y = [tick.low - height, tick.low, tick.low - height]
+        x.append(x[0])  # close the triangle
+        y.append(y[0])  # close the triangle
+        return list(zip(x, y))
+
+    def get_fancy_arrow_for_wave_peak(self, tick: WaveTick, wave_type: str):
+        number_waves = tick.get_wave_number_for_wave_type(wave_type)
+        height, head_length, head_width = self.get_arrow_size_parameter_for_wave_peaks(wave_type, number_waves)
+        x = MyDate.get_date_as_number_from_epoch_seconds(tick.f_var)
+        kwargs = self.__get_kw_args_for_arrows__(wave_type)
+        if wave_type == WAVEST.DAILY_ASC:
+            return FancyArrow(x=x, y=tick.high + height + head_length, dx=0, dy=-height, width=1,
+                              head_width=head_width, head_length=head_length, **kwargs)
+        elif wave_type == WAVEST.DAILY_DESC:
+            return FancyArrow(x=x, y=tick.low - height - head_length, dx=0, dy=height, width=1,
+                              head_width=head_width, head_length=head_length, **kwargs)
+
+    def get_arrow_for_wave_peak(self, tick: WaveTick, wave_type: str):
+        number_waves = tick.get_wave_number_for_wave_type(wave_type)
+        height, head_length, head_width = self.get_arrow_size_parameter_for_wave_peaks(wave_type, number_waves)
+        x = MyDate.get_date_as_number_from_epoch_seconds(tick.f_var)
+        kwargs = self.__get_kw_args_for_arrows__(wave_type)
+        if wave_type == WAVEST.DAILY_ASC:
+            return Arrow(x=x, y=tick.high + height, dx=0, dy=-height, width=1, **kwargs)
+        elif wave_type == WAVEST.DAILY_DESC:
+            return Arrow(x=x, y=tick.low - height, dx=0, dy=height, width=1, **kwargs)
+
+    @staticmethod
+    def __get_kw_args_for_arrows__(wave_type: str):
+        return {'color': 'magenta'} if wave_type == WAVEST.DAILY_ASC else {'color': 'cyan'}
 
     def get_tick_list_as_data_frame_for_replay(self):
         tick_table = []

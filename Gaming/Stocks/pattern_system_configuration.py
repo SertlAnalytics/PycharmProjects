@@ -24,6 +24,7 @@ from pattern_sound.pattern_sound_machine import PatternSoundMachine
 from pattern_dash.my_dash_caches import MyGraphCache, MyDataFrameCache
 from pattern_index_configuration import IndexConfiguration
 from fibonacci.fibonacci_predictor import FibonacciPredictor
+from fibonacci.fibonacci_wave_handler import FibonacciWaveHandler
 
 
 class SystemConfiguration:
@@ -47,6 +48,7 @@ class SystemConfiguration:
         self.data_provider = PatternDataProvider(self.config, self.index_config, self.db_stock, self.df_cache)
         self.predictor_optimizer = PatternPredictorOptimizer(self.db_stock)
         self.fibonacci_predictor = FibonacciPredictor(self.db_stock, 5)
+        self.fibonacci_wave_handler = FibonacciWaveHandler()
         self.master_predictor_handler = PatternMasterPredictorHandler(self.__get_pattern_predictor_api__(self.config))
         self.trade_strategy_optimizer = TradeOptimizer(self.db_stock, self.expected_win_pct)
 
@@ -210,6 +212,7 @@ class SystemConfiguration:
         sys_config_copy.data_provider.ticker_dict = self.data_provider.ticker_dict  # we have to copy this as well
         sys_config_copy.predictor_optimizer = self.predictor_optimizer  # we use the same optimizer  !!!
         sys_config_copy.fibonacci_predictor = self.fibonacci_predictor
+        sys_config_copy.fibonacci_wave_handler = self.fibonacci_wave_handler
         sys_config_copy.master_predictor_handler = PatternMasterPredictorHandler(
             self.__get_pattern_predictor_api__(sys_config_copy.config))
         sys_config_copy.trade_strategy_optimizer = self.trade_strategy_optimizer

@@ -66,6 +66,7 @@ class LogTable:
         self._log_df = df_dict[log_type]
         self._columns = self._log_df.columns
         self._date_column = self.__get_date_column__()
+        self._sort_column = self.__get_sort_column__()
         self._process_column = self.get_process_column_for_log_type(self._selected_log_type)
         self._process_step_column = self.get_process_step_column_for_log_type(self._selected_log_type)
         self._rows_selected_log_type = []
@@ -97,7 +98,7 @@ class LogTable:
     def get_rows_for_selected_items(self):
         if len(self._rows_selected_log_type) == 0:
             return [LogRow(self._columns).get_row_as_dict()]
-        LogRow.sort_column = self.__get_sort_column__()
+        LogRow.sort_column = self._sort_column
         sort_reverse = True
         sorted_list = sorted(self._rows_selected_log_type, reverse=sort_reverse)
         return [row.get_row_as_dict() for row in sorted_list]

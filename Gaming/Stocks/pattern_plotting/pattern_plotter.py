@@ -5,11 +5,11 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, FD, PRD, DC
+from sertl_analytics.constants.pattern_constants import CN, FD, PRD, DC, WAVEST, INDICES
 from sertl_analytics.mydates import MyDate
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Polygon, Ellipse
+from matplotlib.patches import Polygon, Ellipse, Arrow, FancyArrow
 from pattern_colors import PatternColorHandler
 from pattern_system_configuration import SystemConfiguration
 from pattern_wave_tick import WaveTick, WaveTickList
@@ -73,6 +73,8 @@ class PatternPlotter:
         if self.sys_config.config.plot_min_max:
             self.__plot_min_max__()
             self.__plot_ranges__()
+        if self.sys_config.data_provider.period == PRD.DAILY:
+            self.__plot_wave_peaks__()
         self.__plot_patterns__()
         if self.sys_config.config.with_trading and self.detector.trade_handler is not None:
             self.__plot_pattern_trades__()
@@ -261,6 +263,18 @@ class PatternPlotter:
             self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.low), width, height, color='w'))
         for ticks in self.pdh.pattern_data.tick_list_max_without_hidden_ticks:
             self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.high), width, height, color='w'))
+
+    def __plot_wave_peaks__(self):
+        index = self.sys_config.index_config.get_index_for_symbol(self.symbol)
+        threshold = 1 if index == INDICES.CRYPTO_CCY else 4
+        wave_handler = self.sys_config.fibonacci_wave_handler
+        wave_tick_list = WaveTickList(self.pdh.pattern_data.df)
+        wave_handler.fill_wave_type_number_dict_for_ticks_in_wave_tick_list(wave_tick_list, index)
+        for ticks in wave_tick_list.tick_list:
+            for wave_type in WAVEST.get_waves_types_for_processing():
+                arrow = wave_tick_list.get_fancy_arrow_for_wave_peak(ticks, wave_type, threshold)
+                if arrow is not None:
+                    self.axes_for_candlesticks.add_patch(arrow)
 
     def __plot_ranges__(self):
         pattern_range_list = self.detector.__get_combined_possible_pattern_ranges__()

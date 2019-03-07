@@ -25,6 +25,7 @@ from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_dash.my_dash_tab_for_portfolio import MyDashTab4Portfolio
 from pattern_dash.my_dash_tab_for_recommender import MyDashTab4Recommender
 from pattern_dash.my_dash_tab_for_log import MyDashTab4Log
+from pattern_dash.my_dash_tab_for_db import MyDashTab4DB
 from pattern_dash.my_dash_tab_for_waves import MyDashTab4Waves
 from pattern_trade_handler import PatternTradeHandler
 
@@ -47,6 +48,7 @@ class MyDash4Pattern(MyDashBase):
                                                               self.color_handler, self.trade_handler_online)
         self.tab_models_statistics = MyDashTab4ModelStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_log = MyDashTab4Log(self.app, self.sys_config)
+        self.tab_db = MyDashTab4DB(self.app, self.sys_config)
         self.tab_configuration = MyDashTab4Configuration(self.app, self.sys_config, self.trade_handler_online)
 
     def get_pattern(self):
@@ -63,6 +65,7 @@ class MyDash4Pattern(MyDashBase):
         self.tab_asset_statistics.init_callbacks()
         self.tab_models_statistics.init_callbacks()
         self.tab_log.init_callbacks()
+        self.tab_db.init_callbacks()
         self.tab_configuration.init_callbacks()
 
     @staticmethod
@@ -104,7 +107,7 @@ class MyDash4Pattern(MyDashBase):
         tab_list = [
             MyDCC.tab('Detector', [self.tab_pattern.get_div_for_tab()]),
             MyDCC.tab('Portfolio', [self.tab_portfolio.get_div_for_tab()]),
-            MyDCC.tab('Recommender', [self.tab_recommender.get_div_for_tab()]),
+            MyDCC.tab('Recom.', [self.tab_recommender.get_div_for_tab()]),
             MyDCC.tab('Waves', [self.tab_waves.get_div_for_tab()]),
             MyDCC.tab('Trading', [self.tab_trades.get_div_for_tab()]),
             MyDCC.tab('Trades', [self.tab_trade_statistics.get_div_for_tab()]),
@@ -112,6 +115,7 @@ class MyDash4Pattern(MyDashBase):
             MyDCC.tab('Assets', [self.tab_asset_statistics.get_div_for_tab()]),
             MyDCC.tab('Models', [self.tab_models_statistics.get_div_for_tab()]),
             MyDCC.tab('Logs', [self.tab_log.get_div_for_tab()]),
-            MyDCC.tab('Configuration', [self.tab_configuration.get_div_for_tab()])
+            MyDCC.tab('DB', [self.tab_db.get_div_for_tab()]),
+            MyDCC.tab('Config', [self.tab_configuration.get_div_for_tab()])
         ]
         return MyDCC.tabs('my_app_tabs', tab_list)

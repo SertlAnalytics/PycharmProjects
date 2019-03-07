@@ -14,13 +14,14 @@ import base64
 import flask
 from pattern_system_configuration import SystemConfiguration
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
-from sertl_analytics.constants.pattern_constants import CN, PRD, FD, INDI
+from sertl_analytics.constants.pattern_constants import CN, PRD, FD, INDI, INDICES, WAVEST
 from sertl_analytics.mydates import MyDate
 from pattern_detector import PatternDetector
 from pattern_dash.my_dash_interface_for_pattern import DashInterface
 from pattern_colors import PatternColorHandler
 from pattern_trade import PatternTrade
 from pattern_news_handler import NewsHandler
+from pattern_wave_tick import WaveTickList, WaveTick
 
 
 class MyDashBaseTab:
@@ -56,6 +57,9 @@ class MyDashBaseTab:
         shapes += self.__get_pattern_regression_shape_list__(pattern_list)
         if detector:
             shapes += self.__get_fibonacci_shape_list__(detector)
+            print('detector.sys_config.data_provider.period == {}'.format(detector.sys_config.data_provider.period))
+            if detector.sys_config.data_provider.period == PRD.DAILY:
+                shapes += self.__get_wave_peak_shape_list__(detector)
         if graph_api.pattern_trade:
             # graph_api.pattern_trade.ticker_actual.print_ticker('__get_pattern_trade_shape_list__...: last ticker')
             shapes += self.__get_pattern_trade_shape_list__(graph_api.pattern_trade)
@@ -112,6 +116,27 @@ class MyDashBaseTab:
             color = 'green' if fib_waves.wave_type == FD.ASC else 'red'
             return_list.append(DashInterface.get_fibonacci_wave_shape(detector.sys_config, fib_waves, color))
             # print('Fibonacci: {}'.format(return_list[-1].shape_parameters))
+        return return_list
+
+    @staticmethod
+    def __get_wave_peak_shape_list__(detector: PatternDetector):
+        return_list = []
+        symbol = detector.sys_config.runtime_config.actual_ticker
+        index = detector.sys_config.index_config.get_index_for_symbol(symbol)
+        # print('__get_wave_peak_shape_list__: symbol={}, index={}'.format(symbol, index))
+        threshold = 1 if index == INDICES.CRYPTO_CCY else 4
+        wave_handler = detector.sys_config.fibonacci_wave_handler
+        wave_tick_list = WaveTickList(detector.pdh.pattern_data.df)
+        wave_handler.fill_wave_type_number_dict_for_ticks_in_wave_tick_list(wave_tick_list, index)
+        for tick in wave_tick_list.tick_list:
+            for wave_type in WAVEST.get_waves_types_for_processing(PRD.DAILY):
+                number_waves = tick.get_wave_number_for_wave_type(wave_type)
+                if number_waves >= threshold:
+                    color = 'cyan' if wave_type in [WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC] else 'magenta'
+                    shape = DashInterface.get_wave_peak_shape(
+                        detector.sys_config, wave_tick_list, tick, wave_type, color)
+                    if shape is not None:
+                        return_list.append(shape)
         return return_list
 
     @staticmethod

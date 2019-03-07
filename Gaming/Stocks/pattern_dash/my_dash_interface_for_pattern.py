@@ -6,7 +6,7 @@ Date: 2018-06-17
 """
 
 import numpy as np
-from pattern_dash.pattern_shapes import MyPolygonShape, MyPolygonLineShape, MyLineShape
+from pattern_dash.pattern_shapes import MyPolygonShape, MyPolygonLineShape, MyLineShape, MyCircleShape
 from sertl_analytics.constants.pattern_constants import PRD
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
@@ -14,7 +14,7 @@ from pattern import Pattern
 from pattern_trade import PatternTrade
 from pattern_part import PatternPart
 from pattern_range import PatternRange
-from pattern_wave_tick import WaveTickList
+from pattern_wave_tick import WaveTickList, WaveTick
 from pattern_detector import PatternDetector
 from fibonacci.fibonacci_wave import FibonacciWave
 
@@ -116,6 +116,16 @@ class DashInterface:
     @staticmethod
     def get_fibonacci_wave_shape(sys_config: SystemConfiguration, fib_wave: FibonacciWave, color: str):
         x, y = DashInterface.get_xy_separated_from_timestamp(sys_config, fib_wave.get_xy_parameter())
+        return MyPolygonLineShape(x, y, color)
+
+    @staticmethod
+    def get_wave_peak_shape(sys_config: SystemConfiguration, wave_tick_list: WaveTickList,
+                            wave_tick: WaveTick, wave_type: str, color: str):
+        # x, y, r = wave_tick_list.get_circle_shape_parameters_for_wave_peak(wave_tick, wave_type)
+        # print('get_wave_peak_shape: x={}, y={}, r={}'.format(x, y, r))
+        # return MyCircleShape(x, y, r, color)
+        x, y = DashInterface.get_xy_separated_from_timestamp(
+            sys_config, wave_tick_list.get_xy_parameters_for_wave_peak(wave_tick, wave_type))
         return MyPolygonLineShape(x, y, color)
 
     @staticmethod

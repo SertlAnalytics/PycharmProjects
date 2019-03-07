@@ -38,6 +38,9 @@ class EquityTable(MyTable):
     def _get_name_():
         return STBL.EQUITY
 
+    def __get_column_date__(self):
+        return EDC.VALID_TO_DT
+
     def _add_columns_(self):
         self._columns.append(MyTableColumn(EDC.EQUITY_KEY, CDT.STRING, 10))
         self._columns.append(MyTableColumn(EDC.EQUITY_NAME, CDT.STRING, 50))
@@ -93,6 +96,12 @@ class AssetTable(MyTable):
     def _get_name_():
         return STBL.ASSET
 
+    def __get_column_date__(self):
+        return ''
+
+    def __get_column_time_stamp__(self):
+        return DC.VALIDITY_TS
+
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.VALIDITY_DT, CDT.STRING, 20))
         self._columns.append(MyTableColumn(DC.VALIDITY_TS, CDT.INTEGER))
@@ -127,6 +136,12 @@ class WaveTable(MyTable):
     @staticmethod
     def _get_name_():
         return STBL.WAVE
+
+    def __get_column_date__(self):
+        return ''
+
+    def __get_column_time_stamp__(self):
+        return DC.WAVE_END_TS
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.EQUITY_TYPE, CDT.STRING, 20))
@@ -228,6 +243,12 @@ class TradeTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def _get_name_():
         return STBL.TRADE
+
+    def __get_column_date__(self):
+        return ''
+
+    def __get_column_time_stamp__(self):
+        return DC.TS_PATTERN_TICK_LAST
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 200))
@@ -481,6 +502,12 @@ class PatternTable(MyTable, PredictionFeatureTable):
     @staticmethod
     def get_columns_for_statistics_text_variable() -> list:
         return [DC.PATTERN_TYPE, DC.BREAKOUT_DIRECTION]
+
+    def __get_column_date__(self):
+        return ''
+
+    def __get_column_time_stamp__(self):
+        return DC.TS_PATTERN_TICK_LAST
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.ID, CDT.STRING, 50))

@@ -44,7 +44,7 @@ class WaveTabDropDownHandler(DropDownHandler):
             WAVEDD.RETROSPECTIVE_DAYS: default_value if default_value else 100,
             WAVEDD.THRESHOLD_INDEX: default_value if default_value else 10,
             WAVEDD.THRESHOLD_SINGLE: default_value if default_value else 2,
-            WAVEDD.INDICES: default_value if default_value else INDICES.DOW_JONES,
+            WAVEDD.INDICES: default_value if default_value else INDICES.ALL,
         }
         return default_dict.get(drop_down_type, None)
 
@@ -104,6 +104,7 @@ class WaveTabDropDownHandler(DropDownHandler):
     @staticmethod
     def __get_index_options__():
         return [
+            {'label': INDICES.ALL, 'value': INDICES.ALL},
             {'label': INDICES.CRYPTO_CCY, 'value': INDICES.CRYPTO_CCY},
             {'label': INDICES.DOW_JONES, 'value': INDICES.DOW_JONES},
             {'label': INDICES.NASDAQ100, 'value': INDICES.NASDAQ100}

@@ -27,8 +27,6 @@ import os
 class MyDashTab4Log(MyDashBaseTab):
     _data_table_name = 'my_log_table'
     _data_table_div = '{}_div'.format(_data_table_name)
-    _default_log_type = LOGT.PATTERN_LOG
-    _default_date_range = DTRG.TODAY
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         MyDashBaseTab.__init__(self, app, sys_config)
@@ -42,8 +40,12 @@ class MyDashTab4Log(MyDashBaseTab):
         self._access_layer_wave = AccessLayer4Wave(self.sys_config.db_stock)
         self._access_layer_pattern = AccessLayer4Pattern(self.sys_config.db_stock)
         self.__fill_log_data_frame_dict__()
-        self._log_table = LogTable(self._log_data_frame_dict, self._default_log_type, self._default_date_range)
-        self._selected_log_type = self._default_log_type
+        self._selected_log_type = LOGT.PATTERN_LOG
+        self._selected_process = ''
+        self._selected_process_step = ''
+        self._selected_date_range = DTRG.TODAY
+        self._log_table = LogTable(self._log_data_frame_dict, self._selected_log_type, self._selected_date_range)
+
 
     @staticmethod
     def __get_adjusted_sys_config_copy__(sys_config: SystemConfiguration) -> SystemConfiguration:
@@ -58,6 +60,7 @@ class MyDashTab4Log(MyDashBaseTab):
         self._my_log_process_selection = 'my_log_process_selection'
         self._my_log_process_step_selection = 'my_log_process_step_selection'
         self._my_log_date_range_selection = 'my_log_date_range_selection'
+        self._my_log_entry_markdown = 'my_log_entry_markdown'
 
     @staticmethod
     def __get_news_handler__():
@@ -67,14 +70,12 @@ class MyDashTab4Log(MyDashBaseTab):
         children_list = [
             MyHTMLTabLogHeaderTable().get_table(),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
-                LOGDD.LOG_TYPE, default_value=self._default_log_type)),
+                LOGDD.LOG_TYPE, default_value=self._selected_log_type)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(LOGDD.PROCESS)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(LOGDD.PROCESS_STEP)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(LOGDD.DATE_RANGE)),
-            MyHTML.div(self._data_table_div,
-                       self.__get_table_for_log__(self._default_log_type, '', '', self._default_date_range),
-                       False),
-            MyDCC.markdown('my_log_entry_markdown')
+            MyHTML.div(self._data_table_div, self.__get_table_for_log__(), False),
+            MyDCC.markdown(self._my_log_entry_markdown)
         ]
         return MyHTML.div('my_log_div', children_list)
 
@@ -155,24 +156,28 @@ class MyDashTab4Log(MyDashBaseTab):
                 process = ''
                 step = ''
                 self._selected_log_type = log_type
-            return self.__get_table_for_log__(log_type, process, step, date_range)
+            self._selected_process = process
+            self._selected_process_step = step
+            self._selected_date_range = date_range
+            return self.__get_table_for_log__()
 
     def __init_callback_for_log_entry_selection__(self):
         @self.app.callback(
-            Output('my_log_entry_markdown', 'children'),
+            Output(self._my_log_entry_markdown, 'children'),
             [Input(self._data_table_name, 'rows'),
              Input(self._data_table_name, 'selected_row_indices')],
             [State(self._my_log_type_selection, 'value')])
         def handle_callback_for_graph_first(rows: list, selected_row_indices: list, log_type: str):
-            if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices):
+            if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:
                 return ''
             selected_row = rows[selected_row_indices[0]]
             column_value_list = ['_**{}**_: {}'.format(col, selected_row[col]) for col in self._log_table.columns]
             return '  \n'.join(column_value_list)
 
-    def __get_table_for_log__(self, log_type: str, process: str, step: str, date_range: str):
+    def __get_table_for_log__(self):
         self._log_table.update_rows_for_selected_log_type(
-            self._log_data_frame_dict, log_type, process, step, date_range)
+            self._log_data_frame_dict, self._selected_log_type, self._selected_process, self._selected_process_step,
+            self._selected_date_range)
         rows = self._log_table.get_rows_for_selected_items()
         min_height = self._log_table.height_for_display
         return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)

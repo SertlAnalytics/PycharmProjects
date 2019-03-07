@@ -9,7 +9,7 @@ from dash.dependencies import Input, Output, State
 from pattern_dash.my_dash_base import MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
 from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi
-from pattern_dash.my_dash_header_tables import MyHTMLTabWavesHeaderTable
+from sertl_analytics.mycache import MyCacheObjectApi, MyCache
 from pattern_dash.my_dash_tab_dd_for_waves import WaveTabDropDownHandler, WAVEDD
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Waves
 from pattern_detection_controller import PatternDetectionController
@@ -30,13 +30,18 @@ class MyDashTab4Waves(MyDashBaseTab):
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.__init_dash_element_ids__()
         self._retrospective_days_selected = 100
-        self._index_selected = INDICES.DOW_JONES
+        self._retrospective_days_selected_for_index_chart = self._retrospective_days_selected
+        self._index_selected = INDICES.ALL
+        self._index_selected_for_index_chart = self._index_selected
         self._threshold_index_selected = 10
         self._threshold_single_selected = 1
         self._fibonacci_wave_handler = FibonacciWaveHandler(self._retrospective_days_selected)
         self._dash_color_handler = color_handler
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self._dd_handler = WaveTabDropDownHandler()
+        self._head_map_cache = MyCache()
+        self._index_chart_cache = MyCache()
+
         # self._wave_table = WaveTabTable(self._waves_data_frame_dict, 'log_type', 'date_range')
 
     @staticmethod
@@ -78,9 +83,17 @@ class MyDashTab4Waves(MyDashBaseTab):
         return MyHTML.div('my_waves_div', children_list)
 
     def __get_heatmap__(self):
-        plotter = MyDashTabStatisticsPlotter4Waves(
-            self._fibonacci_wave_handler, self._dash_color_handler, self._retrospective_days_selected)
-        return plotter.get_chart_list()
+        cache_key = self.__get_id_for_caches__()
+        heat_map = self._head_map_cache.get_cached_object_by_key(cache_key)
+        if heat_map is None:
+            plotter = MyDashTabStatisticsPlotter4Waves(
+                wave_handler=self._fibonacci_wave_handler,
+                color_handler=self._dash_color_handler,
+                days_retrospective=self._retrospective_days_selected,
+                index=self._index_selected)
+            heat_map = plotter.get_chart_list()
+            self.__add_element_to_cache__(self._head_map_cache, cache_key, heat_map)
+        return heat_map
 
     def init_callbacks(self):
         # self.__init_callback_for_waves_header_table__()
@@ -91,34 +104,53 @@ class MyDashTab4Waves(MyDashBaseTab):
         @self.app.callback(
             Output(self._my_waves_heatmap_div, 'children'),
             [Input('my_interval_refresh', 'n_intervals'),
-             Input(self._my_waves_retrospective_days_selection, 'value')],
+             Input(self._my_waves_retrospective_days_selection, 'value'),
+             Input(self._my_waves_index_selection, 'value')],
             [State(self._my_waves_heatmap_div, 'children')])
-        def handle_callback_for_position_manage_button_hidden(n_intervals: int, days: int, children):
-            if self._fibonacci_wave_handler.are_data_actual and self._retrospective_days_selected == days:
+        def handle_callback_for_position_manage_button_hidden(n_intervals: int, days: int, index: str, children):
+            if self._fibonacci_wave_handler.are_data_actual and self._retrospective_days_selected == days \
+                    and self._index_selected == index:
                 print('Return old heatmap...')
                 return children
             if not self._fibonacci_wave_handler.are_data_actual:
                 self._fibonacci_wave_handler.reload_data()
             self._retrospective_days_selected = days
+            self._index_selected = index
             self._fibonacci_wave_handler.init_list_and_dictionaries_for_retrospective_days(days)
             return self.__get_heatmap__()
 
     def __init_callbacks_for_waves_index_chart__(self):
         @self.app.callback(
             Output(self._my_waves_index_chart_div, 'children'),
-            [Input(self._my_waves_index_selection, 'value')],
+            [Input(self._my_waves_heatmap_div, 'children')],
             [State(self._my_waves_index_chart_div, 'children')])
-        def handle_callback_for_waves_index_chart(index: str, children):
-            if self._index_selected == index:
+        def handle_callback_for_waves_index_chart(heatmap, children):
+            if self._index_selected == self._index_selected_for_index_chart and \
+                    self._retrospective_days_selected == self._retrospective_days_selected_for_index_chart:
                 print('Return old index chart...')
                 return children
-            self._index_selected = index
-            return self.__get_graph_for_index__(index)
+            self._retrospective_days_selected_for_index_chart = self._retrospective_days_selected
+            self._index_selected_for_index_chart = self._index_selected
+            return self.__get_graph_for_index__(self._index_selected)
 
     def __get_graph_for_index__(self, index: str):
+        if index in ['', INDICES.ALL]:
+            return ''
         ticker = INDICES.get_ticker_for_index(index)
-        graph, graph_key = self.__get_graph__(ticker, limit=self._retrospective_days_selected)
+        cache_key = self.__get_id_for_caches__()
+        graph = self._index_chart_cache.get_cached_object_by_key(cache_key)
+        if graph is None:
+            graph, graph_key = self.__get_graph__(ticker, limit=self._retrospective_days_selected)
+            self.__add_element_to_cache__(self._index_chart_cache, cache_key, graph)
         return graph
+
+    @staticmethod
+    def __add_element_to_cache__(cache, cache_key, element):
+        cache_api = MyCacheObjectApi()
+        cache_api.object = element
+        cache_api.key = cache_key
+        cache_api.valid_until_ts = MyDate.get_offset_timestamp(hours=6)
+        cache.add_cache_object(cache_api)
 
     def __get_graph__(self, ticker_id: str, limit=400):
         period = self.sys_config.period
@@ -158,3 +190,9 @@ class MyDashTab4Waves(MyDashBaseTab):
                 dynamically_generated_function = self.create_callback_for_numbers_in_header_table(index, wave_type)
                 self.app.callback(Output(output_element, 'children'), [Input('my_interval_refresh', 'n_intervals')])\
                     (dynamically_generated_function)
+
+    def __get_id_for_caches__(self):
+        return '{}-{}-{}-{}'.format(self._retrospective_days_selected,
+                                    self._threshold_index_selected,
+                                    self._threshold_index_selected,
+                                    self._index_selected)

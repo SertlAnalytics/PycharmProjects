@@ -579,7 +579,8 @@ class MyDashTabStatisticsPlotter4Pattern(MyDashTabStatisticsPlotter):
 
 
 class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
-    def __init__(self, wave_handler: FibonacciWaveHandler, color_handler: DashColorHandler, days_retrospective: int, index=''):
+    def __init__(self, wave_handler: FibonacciWaveHandler, color_handler: DashColorHandler,
+                 days_retrospective: int, index=''):
         self._wave_handler = wave_handler
         self._days_retrospective = days_retrospective
         self._index = index
@@ -597,7 +598,10 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
 
     def __get_chart_type_heatmap__(self):
         graph_list = []
-        index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100] if self._index == '' else [self._index]
+        if self._index in ['', INDICES.ALL]:
+            index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+        else:
+            index_list = [self._index]
         for index in index_list:
             index_for_key = index.replace(' ', '_').lower()
             index_for_key = index_for_key if self._index == '' else '{}_{}'.format(index_for_key, 'single')
@@ -614,8 +618,7 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
     def __get_data_for_heatmap_figure__(self, index: str):
         x_data = self._wave_handler.date_list
         y_data = WAVEST.get_waves_types_for_processing()
-        z_data = [self._wave_handler.get_waves_numbers_for_wave_type_and_index(
-            wave_type, index) for wave_type in y_data]
+        z_data = [self._wave_handler.get_waves_number_list_for_wave_type_and_index(wt, index) for wt in y_data]
         # print('__get_data_for_heatmap_figure__: {}: {}\n{}'.format(index, x_data, z_data))
         return x_data, y_data, z_data
 

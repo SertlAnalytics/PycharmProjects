@@ -19,10 +19,7 @@ stock_db = StockDatabase()
 predictor_optimizer = PatternPredictorOptimizer(stock_db)
 stock_db_updater = StockDatabaseUpdater()
 
-stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.CRYPTO_CCY)
-stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.INDICES)
-stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.DOW_JONES)
-stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.NASDAQ100)
+stock_db.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
 
 if True:
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)

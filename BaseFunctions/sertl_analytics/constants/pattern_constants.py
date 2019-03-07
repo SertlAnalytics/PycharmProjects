@@ -103,6 +103,10 @@ class STBL:  # stocks tables
                 STBL.WAVE, STBL.ASSET, STBL.METRIC, STBL.TRADE_POLICY_METRIC, STBL.PROCESS]
 
     @staticmethod
+    def get_as_options():
+        return [{'label': table, 'value': table} for table in STBL.get_all()]
+
+    @staticmethod
     def get_for_model_statistics():
         return [STBL.PATTERN, STBL.TRADE]
 
@@ -154,7 +158,15 @@ class DTRG:  # Date Ranges
         return [{'label': date_range, 'value': date_range} for date_range in DTRG.get_for_log_tab()]
 
     @staticmethod
+    def get_as_options_for_db_tab():
+        return [{'label': date_range, 'value': date_range} for date_range in DTRG.get_for_db_tab()]
+
+    @staticmethod
     def get_for_log_tab():
+        return [DTRG.ALL, DTRG.TODAY, DTRG.CURRENT_WEEK]
+
+    @staticmethod
+    def get_for_db_tab():
         return [DTRG.ALL, DTRG.TODAY, DTRG.CURRENT_WEEK]
 
 
@@ -536,7 +548,11 @@ class WAVEST:  # Waves Types (corresponds with the columns in the overview table
         return [WAVEST.INDICES, WAVEST.INTRADAY_ASC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_DESC]
 
     @staticmethod
-    def get_waves_types_for_processing():
+    def get_waves_types_for_processing(period=''):
+        if period == PRD.DAILY:
+            return [WAVEST.DAILY_ASC, WAVEST.DAILY_DESC]
+        elif period == PRD.INTRADAY:
+            return [WAVEST.INTRADAY_ASC, WAVEST.INTRADAY_DESC]
         return [WAVEST.INTRADAY_ASC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_DESC]
 
     @staticmethod

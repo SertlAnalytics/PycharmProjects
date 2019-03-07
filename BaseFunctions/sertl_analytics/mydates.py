@@ -4,6 +4,7 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-21
 """
+from sertl_analytics.constants.pattern_constants import DTRG
 from datetime import datetime, timedelta, date
 from time import mktime
 import matplotlib.dates as m_dates
@@ -174,7 +175,30 @@ class MyDate:
         return (datetime(1, 1, 1) + timedelta(days=num)).date()
 
     @staticmethod
+    def get_offset_date_for_date_range(date_range: str):
+        if date_range == DTRG.TODAY:
+            return MyDate.adjust_by_days(None, -1)
+        if date_range == DTRG.CURRENT_WEEK:
+            return MyDate.adjust_by_days(None, -7)
+        if date_range == DTRG.CURRENT_MONTH:
+            return MyDate.adjust_by_days(None, -31)
+
+    @staticmethod
+    def get_offset_time_stamp_for_date_range(date_range: str):
+        time_stamp_now = MyDate.time_stamp_now()
+        time_stamp_day = MyDate.get_seconds_for_period(days=1)
+        if date_range == DTRG.TODAY:
+            return time_stamp_now - time_stamp_day
+        if date_range == DTRG.CURRENT_WEEK:
+            return time_stamp_now - 7 * time_stamp_day
+        if date_range == DTRG.CURRENT_MONTH:
+            return time_stamp_now - 31 * time_stamp_day
+        return 0
+
+    @staticmethod
     def adjust_by_days(date_time, days: int):
+        if date_time is None:
+            date_time = MyDate.get_date_from_datetime()
         if type(date_time) is str:
             date_time = MyDate.get_date_from_datetime(date_time)
         if type(date_time) is date:

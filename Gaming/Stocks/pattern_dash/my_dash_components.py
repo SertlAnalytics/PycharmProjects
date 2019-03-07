@@ -292,6 +292,15 @@ class MyHTML:
         )
 
     @staticmethod
+    def div_with_input(element_id: str, placeholder='Please enter some value', value='', size=500, height=30):
+        style = {'display': 'inline-block', 'verticalAlign': 'bottom', 'width': size, 'padding-bottom': 10}
+        return html.Div(
+            [MyDCC.input(element_id, placeholder=placeholder, value=value, size=size, height=height)],
+            style=style,
+            id='{}_div'.format(element_id)
+        )
+
+    @staticmethod
     def div_with_slider(element_id: str, min_value=0, max_value=20, step=1, value=0, show=True):
         if (max_value - min_value)/step > 3:
             width = '350'
@@ -347,8 +356,9 @@ class MyHTML:
         return html.Pre(id=element_id, children=children, style={'padding-top': 20})
 
     @staticmethod
-    def span(children=''):
-        return html.Span(children=children)
+    def span(children='', margin_left=0):
+        style = {'margin-left': '{}px'.format(margin_left)}
+        return html.Span(children=children, style=style)
 
     @staticmethod
     def div_with_html_pre(element_id: str):
@@ -375,6 +385,13 @@ class MyHTML:
 
 
 class MyDCC:
+    @staticmethod
+    def input(element_id: str, placeholder: str, value: str, size: int, height: int):
+        style = {'width': size, 'height': height}
+        return dcc.Input(
+            id=element_id, placeholder=placeholder, type='text', value=value, style=style
+        )
+
     @staticmethod
     def tabs(element_id: str, children: list):
         return dcc.Tabs(

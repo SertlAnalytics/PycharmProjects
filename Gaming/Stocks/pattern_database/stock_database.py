@@ -108,6 +108,7 @@ class StockDatabase(BaseDatabase):
         self._alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
         self._alphavantage_stock_fetcher = AlphavantageStockFetcher()
         self._sleep_seconds = 5
+        self._table_dict = self.__get_table_dict__()
 
     @property
     def trade_table(self):
@@ -121,6 +122,9 @@ class StockDatabase(BaseDatabase):
     def wave_table(self):
         return self._wave_table
 
+    def get_table_by_name(self, table_name: str) -> MyTable:
+        return self._table_dict.get(table_name, self._stocks_table)
+
     def is_symbol_loaded(self, symbol: str):
         last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
         return len(last_loaded_time_stamp_dic) == 1
@@ -130,6 +134,17 @@ class StockDatabase(BaseDatabase):
             return symbol
         company_dic = self.__get_company_dict__(symbol)
         return '' if len(company_dic) == 0 else company_dic[symbol].Name
+
+    def __get_table_dict__(self) -> dict:
+        return {STBL.STOCKS: self._stocks_table,
+                STBL.PROCESS: self._process_table,
+                STBL.WAVE: self._wave_table,
+                STBL.EQUITY: self._entity_table,
+                STBL.TRADE_POLICY_METRIC: self._trade_policy_metric_table,
+                STBL.TRADE: self._trade_table,
+                STBL.PATTERN: self._pattern_table,
+                STBL.ASSET: self._asset_table,
+                STBL.METRIC: self._metric_table}
 
     def __get_engine__(self):
         db_path = self.__get_db_path__()

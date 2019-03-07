@@ -40,6 +40,18 @@ class MyTableColumn:
         return self._type in [CDT.FLOAT, CDT.INTEGER, CDT.BOOLEAN]
 
     @property
+    def is_string(self):
+        return self._type == CDT.STRING
+
+    @property
+    def is_date(self):
+        return self.is_string and self._name.lower().find('date') > -1
+
+    @property
+    def is_time_stamp(self):
+        return self.is_numeric and (self._name.lower().find('_ts') > -1 or self._name.lower().find('timestamp') > -1)
+
+    @property
     def description(self):
         return self._description
 
@@ -57,6 +69,9 @@ class MyTable:
         self._add_columns_()
         self._column_dict = {column.name: column for column in self._columns}
         self._column_name_list = [columns.name for columns in self._columns]
+        self._column_sort = self.__get_column_sort__()
+        self._column_date = self.__get_column_date__()
+        self._column_time_stamp = self.__get_column_time_stamp__()
         self._key_column_name_list = self.__get_key_column_name_list__()
         self._key_columns = [column for column in self._columns if column.name in self._key_column_name_list]
         self._description = self.__get_description__()
@@ -65,6 +80,18 @@ class MyTable:
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def column_sort(self) -> str:
+        return self._column_sort
+
+    @property
+    def column_date(self) -> str:
+        return self._column_date
+
+    @property
+    def column_time_stamp(self) -> str:
+        return self._column_time_stamp
 
     @property
     def column_name_list(self) -> list:
@@ -108,6 +135,21 @@ class MyTable:
     def get_update_set_clause_from_data_dict(self, data_dict: dict):
         set_clause_list = self.__get_clause_list_for_data_dict__(data_dict)
         return ', '.join(set_clause_list)
+
+    def __get_column_sort__(self):
+        return self._column_name_list[0]
+
+    def __get_column_date__(self):
+        for column in self._columns:
+            if column.is_date:
+                return column.name
+        return ''
+
+    def __get_column_time_stamp__(self):
+        for column in self._columns:
+            if column.is_time_stamp:
+                return column.name
+        return ''
 
     def __get_where_clause_for_data_dict__(self, data_dict: dict):
         and_clause_list = self.__get_clause_list_for_data_dict__(data_dict)

@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 from pattern_database.stock_access_layer import AccessLayer4Wave
 from pattern_database.stock_database import StockDatabase
+from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_index_configuration import IndexConfiguration
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import WAVEST, DC, INDICES
@@ -14,7 +15,7 @@ import numpy as np
 
 
 class FibonacciWaveHandler:
-    def __init__(self, retrospective_days: int):
+    def __init__(self, retrospective_days=0):
         self._db_stock = StockDatabase()
         self._index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
         self._index_config = IndexConfiguration(self._db_stock, self._index_list)
@@ -23,7 +24,7 @@ class FibonacciWaveHandler:
         self._offset_timestamp_start = 0
         self._retrospective_date_list = []
         self._retrospective_date_range_dict = {}
-        self._retrospective_index_wave_type_number_dict = {}
+        self._retrospective_index_wave_type_number_dict = {}  # this dictionary contains a dictionary {date: number, ..}
         self.__init_wave_variables__()
         self.__fill_variables_according_to_retrospective_days__(retrospective_days)
 
@@ -67,16 +68,40 @@ class FibonacciWaveHandler:
         return return_dict
 
     def get_waves_numbers_with_dates_for_wave_type_and_index_for_days(self, wave_type: str, index: str):
-        number_list = self.get_waves_numbers_for_wave_type_and_index(wave_type, index)
+        date_number_dict = self.get_waves_date_number_dict_for_wave_type_and_index(wave_type, index)
         count_list = []
-        for idx, date_str in enumerate(self._retrospective_date_list):
+        for date_str in self._retrospective_date_list:
             if index == INDICES.CRYPTO_CCY or MyDate.is_monday_till_friday(date_str):
-                count_list.append('{}: {}'.format(date_str, number_list[idx]))
+                count_list.append('{}: {}'.format(date_str, date_number_dict[date_str]))
         return '\n'.join(count_list)
 
-    def get_waves_numbers_for_wave_type_and_index(self, wave_type: str, index: str):
+    def get_waves_date_number_dict_for_wave_type_and_index(self, wave_type: str, index: str):
         key = '{}_{}'.format(index, wave_type)
         return self._retrospective_index_wave_type_number_dict[key]
+
+    def get_waves_number_list_for_wave_type_and_index(self, wave_type: str, index: str):
+        key = '{}_{}'.format(index, wave_type)
+        date_number_dict = self._retrospective_index_wave_type_number_dict[key]
+        return [date_number_dict[date_str] for date_str in self._retrospective_date_list]
+
+    def get_waves_numbers_for_wave_tick(self, wave_type: str, index: str, wave_tick: WaveTick):
+        if wave_tick.date_str in self.date_list:
+            key = '{}_{}'.format(index, wave_type)
+            date_number_dict = self._retrospective_index_wave_type_number_dict[key]
+            return date_number_dict[wave_tick.date_str]
+        return 0
+
+    def fill_wave_type_number_dict_for_ticks_in_wave_tick_list(self, wave_tick_list: WaveTickList, index: str):
+        for wave_type in WAVEST.get_waves_types_for_processing():
+            key = '{}_{}'.format(index, wave_type)
+            if key in self._retrospective_index_wave_type_number_dict:
+                date_number_dict = self._retrospective_index_wave_type_number_dict[key]
+                for wave_tick in wave_tick_list.tick_list:
+                    if wave_tick.date_str in date_number_dict:
+                        number = date_number_dict[wave_tick.date_str]
+                        if number > 0:
+                            wave_tick.add_to_wave_type_number_dict(wave_type, number)
+        wave_tick_list.fill_wave_type_number_dicts()  # we need some min max values for the wave numbers
 
     def __fill_variables_according_to_retrospective_days__(self, retrospective_days: int):
         if self._retrospective_days == retrospective_days:
@@ -108,14 +133,14 @@ class FibonacciWaveHandler:
             for index in self._index_list:
                 key = '{}_{}'.format(index, wave_type)
                 df_index = df_base[df_base[DC.INDEX] == index]
-                if key not in self._retrospective_index_wave_type_number_dict:
-                    self._retrospective_index_wave_type_number_dict[key] = []
+                date_number_dict = {}
                 for date_str in self._retrospective_date_list:
                     ts_range = self._retrospective_date_range_dict[date_str]
                     df_final = df_index[np.logical_and(
                                     df_index[DC.WAVE_END_TS] >= ts_range[0],
                                     df_index[DC.WAVE_END_TS] < ts_range[1])]
-                    self._retrospective_index_wave_type_number_dict[key].append(df_final.shape[0])
+                    date_number_dict[date_str] = df_final.shape[0]
+                self._retrospective_index_wave_type_number_dict[key] = date_number_dict
 
     def __get_df_wave__(self):
         access_layer_wave = AccessLayer4Wave(self._db_stock)
