@@ -24,6 +24,7 @@ from pattern_plotting.patch_helper import PatchHelper
 from pattern_plotting.fibonacci_patches import FibonacciWavePatch, FibonacciWavePatchContainer
 from pattern_plotting.pattern_plot_container import PatternPlotContainer, PatternPlotContainerLoopList
 from matplotlib.widgets import Cursor
+from fibonacci.fibonacci_wave_handler import FibonacciWaveHandler
 
 
 class PatternPlotter:
@@ -43,7 +44,7 @@ class PatternPlotter:
         self.__currently_visible_ranges_polygon_list = []
         self.axes_for_candlesticks = None
 
-    def plot_data_frame(self):
+    def plot_data_frame(self, fibonacci_wave_handler: FibonacciWaveHandler):
         with_close_plot = self.sys_config.config.plot_close
         with_volume_plot = self.sys_config.config.plot_volume
         with_breakout_plot = self.sys_config.config.plot_breakouts
@@ -74,7 +75,7 @@ class PatternPlotter:
             self.__plot_min_max__()
             self.__plot_ranges__()
         if self.sys_config.data_provider.period == PRD.DAILY:
-            self.__plot_wave_peaks__()
+            self.__plot_wave_peaks__(fibonacci_wave_handler)
         self.__plot_patterns__()
         if self.sys_config.config.with_trading and self.detector.trade_handler is not None:
             self.__plot_pattern_trades__()
@@ -264,17 +265,21 @@ class PatternPlotter:
         for ticks in self.pdh.pattern_data.tick_list_max_without_hidden_ticks:
             self.axes_for_candlesticks.add_patch(Ellipse((ticks.f_var, ticks.high), width, height, color='w'))
 
-    def __plot_wave_peaks__(self):
+    def __plot_wave_peaks__(self, wave_handler: FibonacciWaveHandler):
         index = self.sys_config.index_config.get_index_for_symbol(self.symbol)
         threshold = 1 if index == INDICES.CRYPTO_CCY else 4
-        wave_handler = self.sys_config.fibonacci_wave_handler
         wave_tick_list = WaveTickList(self.pdh.pattern_data.df)
         wave_handler.fill_wave_type_number_dict_for_ticks_in_wave_tick_list(wave_tick_list, index)
-        for ticks in wave_tick_list.tick_list:
-            for wave_type in WAVEST.get_waves_types_for_processing():
-                arrow = wave_tick_list.get_fancy_arrow_for_wave_peak(ticks, wave_type, threshold)
-                if arrow is not None:
-                    self.axes_for_candlesticks.add_patch(arrow)
+        for tick in wave_tick_list.tick_list:
+            for wave_type in WAVEST.get_waves_types_for_processing(PRD.DAILY):
+                color = 'magenta' if wave_type == WAVEST.DAILY_ASC else 'cyan'
+                number_waves = tick.get_wave_number_for_wave_type(wave_type)
+                if number_waves >= threshold:
+                    xy = wave_tick_list.get_xy_parameters_for_wave_peak(tick, wave_type)
+                    self.__add_xy_values_as_polygon__(xy, color, closed=True, fill=True)
+                    # arrow = wave_tick_list.get_fancy_arrow_for_wave_peak(tick, wave_type)
+                    # if arrow is not None:
+                    #     self.axes_for_candlesticks.add_patch(arrow)
 
     def __plot_ranges__(self):
         pattern_range_list = self.detector.__get_combined_possible_pattern_ranges__()
@@ -340,9 +345,9 @@ class PatternPlotter:
         self.__add_xy_values_as_polygon__(xy_upper, 'deeppink')
         self.__add_xy_values_as_polygon__(xy_lower, 'deeppink')
 
-    def __add_xy_values_as_polygon__(self, xy: list, color: str):
+    def __add_xy_values_as_polygon__(self, xy: list, color: str, closed=False, fill=False):
         xy = PlotterInterface.get_xy_from_timestamp_to_date_number(xy)
-        polygon = Polygon(np.array(xy), closed=False, fill=False)
+        polygon = Polygon(np.array(xy), closed=closed, fill=fill)
         polygon.set_visible(True)
         polygon.set_color(color)
         polygon.set_alpha(0.2)

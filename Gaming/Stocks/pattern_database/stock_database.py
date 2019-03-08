@@ -171,7 +171,8 @@ class StockDatabase(BaseDatabase):
             print('\nUpdating {}...\n'.format(index))
             ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(index)
             for ticker in ticker_dic:
-                self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
+                name = ticker_dic[ticker]
+                self.__update_stock_data_for_single_value__(period, aggregation, ticker, name, index,
                                                             company_dict, last_loaded_date_stamp_dic)
         self.__handle_error_cases__()
 
@@ -185,13 +186,15 @@ class StockDatabase(BaseDatabase):
                 company_dict[key] = new_dict[key]
 
     def update_crypto_currencies(self, period=PRD.DAILY, aggregation=1, symbol_list=None):
+        index = INDICES.CRYPTO_CCY
         company_dic = self.__get_company_dict__(like_input='USD')
         last_loaded_date_stamp_dic = self.__get_last_loaded_time_stamp_dic__(like_input='USD', period=period)
-        print('\nUpdating {}...\n'.format(INDICES.CRYPTO_CCY))
-        ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(INDICES.CRYPTO_CCY)
+        print('\nUpdating {}...\n'.format(index))
+        ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(index)
         for ticker in ticker_dic:
             if symbol_list is None or ticker in symbol_list:
-                self.__update_stock_data_for_single_value__(period, aggregation, ticker, ticker_dic[ticker],
+                name = ticker_dic[ticker]
+                self.__update_stock_data_for_single_value__(period, aggregation, ticker, name, index,
                                                             company_dic, last_loaded_date_stamp_dic)
         self.__handle_error_cases__()
 
@@ -209,7 +212,9 @@ class StockDatabase(BaseDatabase):
         company_dic = self.__get_company_dict__(symbol)
         name = company_dic[symbol] if symbol in company_dic else name_input
         last_loaded_dict = self.__get_last_loaded_time_stamp_dic__(symbol)
-        self.__update_stock_data_for_single_value__(period, aggregation, symbol, name, company_dic, last_loaded_dict)
+        index = INDICES.UNDEFINED
+        self.__update_stock_data_for_single_value__(
+            period, aggregation, symbol, name, index, company_dic, last_loaded_dict)
 
     def insert_pattern_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.PATTERN, input_dict_list)
@@ -232,7 +237,7 @@ class StockDatabase(BaseDatabase):
     def insert_data_into_table(self, table_name: str, input_dict_list: list):
         self.__insert_data_into_table__(table_name, input_dict_list)
 
-    def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str,
+    def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str, index: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
         name = self._company_table.get_alternate_name(ticker, name)
         last_loaded_time_stamp = last_loaded_date_stamp_dic[ticker] if ticker in last_loaded_date_stamp_dic else 100000
@@ -244,7 +249,7 @@ class StockDatabase(BaseDatabase):
         if ticker in company_dic and not company_dic[ticker].ToBeLoaded:
             return  # must not be loaded
         try:
-            if ticker[-3:] == 'USD':  # ToDo - with function
+            if index == INDICES.CRYPTO_CCY:
                 # fetcher = self._alphavantage_crypto_fetcher
                 fetcher = self._bitfinex_crypto_fetcher
                 kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker)

@@ -44,7 +44,7 @@ class MyDashTabStatisticsPlotter:
     def __print_df_base__(self):
         columns = self._df_base.columns[:2]
         df_reduced = self._df_base[columns]
-        print('__print_df_base__: _df_base\n{}'.format(df_reduced.head(100)))
+        print('__print_df_base__: _df_wave\n{}'.format(df_reduced.head(100)))
 
     def get_chart_list(self):
         if self.chart_type == CHT.SCATTER:
@@ -498,7 +498,7 @@ class MyDashTabStatisticsPlotter4Assets(MyDashTabStatisticsPlotter):
     def __print_df_base__(self):
         columns = [DC.VALIDITY_DT, DC.VALIDITY_TS, DC.EQUITY_NAME, DC.VALUE_TOTAL]
         df_reduced = self._df_base[columns]
-        print('__print_df_base__: _df_base\n{}'.format(df_reduced.head(100)))
+        print('__print_df_base__: _df_wave\n{}'.format(df_reduced.head(100)))
 
     @staticmethod
     def __get_result_id_from_row__(row) -> int:
@@ -583,6 +583,7 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
                  days_retrospective: int, index=''):
         self._wave_handler = wave_handler
         self._days_retrospective = days_retrospective
+        self._wave_handler.set_retrospective_tick_number(self._days_retrospective)
         self._index = index
         MyDashTabStatisticsPlotter.__init__(self, self._wave_handler.df_wave, color_handler)
 
@@ -594,7 +595,7 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
     def __print_df_base__(self):
         columns = [DC.EQUITY_TYPE, DC.PERIOD, DC.WAVE_TYPE, DC.WAVE_END_DT]
         df_reduced = self._df_base[columns]
-        print('__print_df_base__: _df_base\n{}'.format(df_reduced.head(100)))
+        print('__print_df_base__: _df_wave\n{}'.format(df_reduced.head(100)))
 
     def __get_chart_type_heatmap__(self):
         graph_list = []

@@ -617,9 +617,14 @@ class INDICES:
     ALL = 'All'
     INDICES = 'Indices'
     NONE = 'None'
+    UNDEFINED = 'Undefined'
 
     @staticmethod
     def get_index_list_for_waves_tab():
+        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+
+    @staticmethod
+    def get_index_list_for_index_configuration():
         return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
 
     @staticmethod

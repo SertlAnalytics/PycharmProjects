@@ -26,8 +26,8 @@ import numpy as np
 
 
 class StockDatabaseUpdater:
-    def __init__(self):
-        self.sys_config = SystemConfiguration()
+    def __init__(self, sys_config=None):
+        self.sys_config = SystemConfiguration() if sys_config is None else sys_config
         self.db_stock = self.sys_config.db_stock
         self.pattern_controller = PatternDetectionController(self.sys_config)
 

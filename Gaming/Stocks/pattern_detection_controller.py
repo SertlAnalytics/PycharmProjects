@@ -13,7 +13,6 @@ from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.mydates import MyDate
 from datetime import timedelta
 from sertl_analytics.pybase.loop_list import LL, LoopList4Dictionaries
-from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from sertl_analytics.constants.pattern_constants import PSC, PRD, TP, PDP, FT
 from pattern_system_configuration import SystemConfiguration
 from pattern_statistics import PatternStatistics, DetectorStatistics, ConstraintsStatistics
@@ -24,6 +23,7 @@ from pattern_trade_handler import PatternTradeHandler
 from datetime import datetime
 from time import sleep
 from sertl_analytics.mycache import MyCache
+from fibonacci.fibonacci_wave_handler import FibonacciWaveHandler
 
 
 """
@@ -114,6 +114,7 @@ class PatternDetectionController:
     def __run_pattern_detector__(self):
         self.__init_loop_list_for_ticker__()
         limit = self.sys_config.data_provider.limit
+        fibonacci_wave_handler = FibonacciWaveHandler(self.sys_config, self.sys_config.period)
         for value_dic in self._loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
             and_clause = value_dic[LL.AND_CLAUSE]
@@ -122,8 +123,6 @@ class PatternDetectionController:
                 print('No data available for: {} and {}'.format(ticker, and_clause))
                 continue
             print('\nProcessing {} ({})...\n'.format(ticker, self.sys_config.runtime_config.actual_ticker_name))
-            elements = self.sys_config.pdh.pattern_data.df_length
-            self.sys_config.fibonacci_wave_handler.init_list_and_dictionaries_for_retrospective_days(elements)
             self.sys_config.init_predictors_without_condition_list()
             detector = PatternDetector(self.sys_config)
             detector.parse_for_fibonacci_waves()
@@ -151,7 +150,7 @@ class PatternDetectionController:
                         print('...no formations found.')
                     else:
                         plotter = PatternPlotter(self.sys_config, detector)
-                        plotter.plot_data_frame()
+                        plotter.plot_data_frame(fibonacci_wave_handler)
                 elif self.sys_config.period == PRD.INTRADAY:
                     sleep(15)
 
@@ -188,8 +187,6 @@ class PatternDetectionController:
             ticker, sys_config.runtime_config.actual_ticker_name, '' if and_clause == '' else ' for {}'.format(and_clause)))
         sys_config.init_predictors_without_condition_list()
         detector = PatternDetector(sys_config)
-        elements = sys_config.pdh.pattern_data.df_length
-        sys_config.fibonacci_wave_handler.init_list_and_dictionaries_for_retrospective_days(elements)
         detector.parse_for_fibonacci_waves()
         detector.add_prediction_data_to_wave()
         detector.parse_for_pattern()

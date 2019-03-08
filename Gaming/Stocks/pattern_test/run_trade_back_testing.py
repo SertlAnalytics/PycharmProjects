@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.constants.pattern_constants import FT, BT, TSTR, TTC, TP, INDICES
-from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentList
+from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentFetcher
 from pattern_test.trade_test import TradeTest, TradeTestApi
 
 
@@ -26,8 +26,8 @@ api.trade_strategy = TSTR.TRAILING_STOP
 
 # ******** END setup **********
 
-ticker_dic = IndicesComponentList.get_ticker_name_dic(INDICES.DOW_JONES)
-# ticker_dic = IndicesComponentList.get_ticker_name_dic(INDICES.CRYPTO_CCY)
+ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(INDICES.DOW_JONES)
+# ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(INDICES.CRYPTO_CCY)
 # ticker_dic = {'CVX': 'a'}
 api.and_clause = "Date BETWEEN '2018-06-07' AND '2019-09-04'"
 

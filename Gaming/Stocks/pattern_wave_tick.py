@@ -8,7 +8,7 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 from sertl_analytics.constants.pattern_constants import CN, TT, DIR, PRD, WAVEST
-from matplotlib.patches import Arrow, FancyArrow
+from matplotlib.patches import Arrow, FancyArrow, Polygon
 from sertl_analytics.mymath import MyMath, MyPoly1d
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 from sertl_analytics.mydates import MyDate

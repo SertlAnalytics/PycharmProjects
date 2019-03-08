@@ -35,7 +35,7 @@ class MyDashTab4Waves(MyDashBaseTab):
         self._index_selected_for_index_chart = self._index_selected
         self._threshold_index_selected = 10
         self._threshold_single_selected = 1
-        self._fibonacci_wave_handler = FibonacciWaveHandler(self._retrospective_days_selected)
+        self._fibonacci_wave_handler = FibonacciWaveHandler(self.sys_config)
         self._dash_color_handler = color_handler
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self._dd_handler = WaveTabDropDownHandler()
@@ -50,6 +50,8 @@ class MyDashTab4Waves(MyDashBaseTab):
         sys_config_copy.data_provider.from_db = True
         sys_config_copy.data_provider.period = PRD.DAILY
         sys_config_copy.data_provider.aggregation = 1
+        sys_config_copy.data_provider.and_clause = ''
+        sys_config_copy.data_provider.limit = WaveTabDropDownHandler.get_max_retrospective_days()
         return sys_config_copy
 
     def __init_dash_element_ids__(self):
@@ -116,7 +118,7 @@ class MyDashTab4Waves(MyDashBaseTab):
                 self._fibonacci_wave_handler.reload_data()
             self._retrospective_days_selected = days
             self._index_selected = index
-            self._fibonacci_wave_handler.init_list_and_dictionaries_for_retrospective_days(days)
+            self._fibonacci_wave_handler.set_retrospective_tick_number(days)
             return self.__get_heatmap__()
 
     def __init_callbacks_for_waves_index_chart__(self):

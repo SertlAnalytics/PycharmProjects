@@ -80,6 +80,11 @@ class WaveTabDropDownHandler(DropDownHandler):
         ]
 
     @staticmethod
+    def get_max_retrospective_days():
+        options = WaveTabDropDownHandler.__get_waves_retrospective_days_options__()
+        return max([options['value'] for options in options])
+
+    @staticmethod
     def __get_waves_threshold_single_options__():
         return [
             {'label': '1', 'value': 1},

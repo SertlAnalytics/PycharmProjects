@@ -14,10 +14,10 @@ from datetime import date, datetime
 from sertl_analytics.mydates import MyDate
 
 sys_config = SystemConfiguration()
+stock_db = sys_config.db_stock
 exchange_config = BitfinexConfiguration()
-stock_db = StockDatabase()
 predictor_optimizer = PatternPredictorOptimizer(stock_db)
-stock_db_updater = StockDatabaseUpdater()
+stock_db_updater = StockDatabaseUpdater(sys_config)
 
 stock_db.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
 

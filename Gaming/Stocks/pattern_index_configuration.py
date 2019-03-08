@@ -18,6 +18,7 @@ class IndexConfiguration:
         self._index_list = []
         self._index_ticker_dict = {}
         self._ticker_equity_type_dict = {}
+        self._ticker_index_dict = {}
         self.__init_by_indices__(indices)
 
     def get_ticker_dict_for_index(self, index: str, ticker_id_list=None):
@@ -37,7 +38,7 @@ class IndexConfiguration:
             index_dict = IndicesComponentFetcher.get_ticker_name_dic(index)
         self._index_list.append(index)
         self._index_ticker_dict[index] = index_dict
-        self.__add_index_dict_to_symbol_equity_type_dict__(index)
+        self.__fill_ticker_dictionaries_for_index__(index)
 
     def get_equity_type_for_symbol(self, symbol: str) -> str:
         if symbol in self._ticker_equity_type_dict:
@@ -49,15 +50,11 @@ class IndexConfiguration:
             return INDICES.DOW_JONES
         if symbol == 'NDX':
             return INDICES.NASDAQ100
-        for index in self._index_ticker_dict:
-            index_dict = self._index_ticker_dict[index]
-            if symbol in index_dict:
-                return index
-        return INDICES.NONE
+        return self._ticker_index_dict.get(symbol, INDICES.NONE)
 
     def is_symbol_crypto(self, symbol: str) -> bool:
-        if symbol in self._ticker_equity_type_dict:
-            return self._ticker_equity_type_dict[symbol] == EQUITY_TYPE.CRYPTO
+        if self.get_index_for_symbol(symbol) == INDICES.CRYPTO_CCY:
+            return True
         return '{}USD'.format(symbol) in self._ticker_equity_type_dict or symbol[-3:] == 'USD'
 
     def get_indices_as_options(self):
@@ -72,13 +69,12 @@ class IndexConfiguration:
 
     def __init_by_indices__(self, indices: list):
         for index in indices:
-            index_dict = self.get_ticker_dict_for_index(index)
+            self.__init_variables_for_index__(index)
 
-    def __add_index_dict_to_symbol_equity_type_dict__(self, index):
+    def __fill_ticker_dictionaries_for_index__(self, index):
         for symbol, name in self._index_ticker_dict[index].items():
-            if index == INDICES.CRYPTO_CCY:
-                self._ticker_equity_type_dict[symbol] = EQUITY_TYPE.CRYPTO
-            else:
-                self._ticker_equity_type_dict[symbol] = EQUITY_TYPE.SHARE
+            self._ticker_index_dict[symbol] = index
+            self._ticker_equity_type_dict[symbol] = EQUITY_TYPE.CRYPTO \
+                if index == INDICES.CRYPTO_CCY else EQUITY_TYPE.SHARE
 
 

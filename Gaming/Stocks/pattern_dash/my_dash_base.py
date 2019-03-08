@@ -33,6 +33,7 @@ class MyDashBaseTab:
         self._time_stamp_last_refresh = MyDate.time_stamp_now()
         self._dd_handler = None
         self._button_handler = None
+        self._fibonacci_wave_handler = None
 
     def init_callbacks(self):
         pass
@@ -118,16 +119,14 @@ class MyDashBaseTab:
             # print('Fibonacci: {}'.format(return_list[-1].shape_parameters))
         return return_list
 
-    @staticmethod
-    def __get_wave_peak_shape_list__(detector: PatternDetector):
+    def __get_wave_peak_shape_list__(self, detector: PatternDetector):
         return_list = []
         symbol = detector.sys_config.runtime_config.actual_ticker
         index = detector.sys_config.index_config.get_index_for_symbol(symbol)
         # print('__get_wave_peak_shape_list__: symbol={}, index={}'.format(symbol, index))
         threshold = 1 if index == INDICES.CRYPTO_CCY else 4
-        wave_handler = detector.sys_config.fibonacci_wave_handler
         wave_tick_list = WaveTickList(detector.pdh.pattern_data.df)
-        wave_handler.fill_wave_type_number_dict_for_ticks_in_wave_tick_list(wave_tick_list, index)
+        self._fibonacci_wave_handler.fill_wave_type_number_dict_for_ticks_in_wave_tick_list(wave_tick_list, index)
         for tick in wave_tick_list.tick_list:
             for wave_type in WAVEST.get_waves_types_for_processing(PRD.DAILY):
                 number_waves = tick.get_wave_number_for_wave_type(wave_type)

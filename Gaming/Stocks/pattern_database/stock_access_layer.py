@@ -229,9 +229,11 @@ class AccessLayer4Wave(AccessLayer):
         stmt = "UPDATE {} SET {} WHERE rowid={}".format(self._table.name, set_clause, record_id)
         self._stock_db.update_table_by_statement(self._table.name, stmt)
 
-    def get_intraday_wave_data_frame(self) -> pd.DataFrame:
-        order_by_columns = ','.join([DC.TICKER_ID, DC.WAVE_END_DT])
-        query = "SELECT * FROM {} WHERE {}={} ORDER BY {}".format(self._table.name, DC.PERIOD_ID, 0, order_by_columns)
+    def get_intraday_wave_data_frame(self, where_clause_input='') -> pd.DataFrame:
+        where_clause_input = '' if where_clause_input == '' else ' AND {}'.format(where_clause_input)
+        where_clause = 'WHERE {}={}{}'.format(DC.PERIOD_ID, 0, where_clause_input)
+        order_by_columns = ','.join([DC.TICKER_ID, DC.WAVE_END_TS])
+        query = "SELECT * FROM {} {} ORDER BY {}".format(self._table.name, where_clause, order_by_columns)
         return self.select_data_by_query(query)
 
     def get_grouped_by_for_wave_plotting(self):
@@ -240,9 +242,11 @@ class AccessLayer4Wave(AccessLayer):
         df_for_grouping = df[[DC.EQUITY_TYPE, DC.PERIOD, DC.WAVE_TYPE, DC.DATE, DC.TICKER_ID]]
         return df_for_grouping.groupby([DC.EQUITY_TYPE, DC.PERIOD, DC.WAVE_TYPE, DC.DATE]).count()
 
-    def get_daily_wave_data_frame(self) -> pd.DataFrame:
-        order_by_columns = ','.join([DC.TICKER_ID, DC.WAVE_END_DT])
-        query = "SELECT * FROM {} WHERE {}={} ORDER BY {}".format(self._table.name, DC.PERIOD_ID, 1, order_by_columns)
+    def get_daily_wave_data_frame(self, where_clause_input='') -> pd.DataFrame:
+        where_clause_input = '' if where_clause_input == '' else ' AND {}'.format(where_clause_input)
+        where_clause = 'WHERE {}={}{}'.format(DC.PERIOD_ID, 1, where_clause_input)
+        order_by_columns = ','.join([DC.TICKER_ID, DC.WAVE_END_TS])
+        query = "SELECT * FROM {} {} ORDER BY {}".format(self._table.name, where_clause, order_by_columns)
         return self.select_data_by_query(query)
 
     def get_multiple_wave_data_frame(self, period_id=0, days=5) -> pd.DataFrame:
