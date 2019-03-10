@@ -19,7 +19,7 @@ exchange_config = BitfinexConfiguration()
 predictor_optimizer = PatternPredictorOptimizer(stock_db)
 stock_db_updater = StockDatabaseUpdater(sys_config)
 
-stock_db.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
+stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
 
 if True:
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)

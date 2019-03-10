@@ -16,8 +16,7 @@ from pattern_detection_controller import PatternDetectionController
 from pattern_dash.my_dash_colors import DashColorHandler
 from dash import Dash
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.pattern_constants import WAVEST, DC, PRD, INDICES
-from fibonacci.fibonacci_wave_handler import FibonacciWaveHandler
+from sertl_analytics.constants.pattern_constants import WAVEST, PRD, INDICES
 from pattern_news_handler import NewsHandler
 
 
@@ -27,18 +26,12 @@ class MyDashTab4Waves(MyDashBaseTab):
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration, color_handler: DashColorHandler):
         MyDashBaseTab.__init__(self, app, sys_config)
+        self._dd_handler = WaveTabDropDownHandler()
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.__init_dash_element_ids__()
-        self._retrospective_days_selected = 100
-        self._retrospective_days_selected_for_index_chart = self._retrospective_days_selected
-        self._index_selected = INDICES.ALL
-        self._index_selected_for_index_chart = self._index_selected
-        self._threshold_index_selected = 10
-        self._threshold_single_selected = 1
-        self._fibonacci_wave_handler = FibonacciWaveHandler(self.sys_config)
         self._dash_color_handler = color_handler
         self._pattern_controller = PatternDetectionController(self.sys_config)
-        self._dd_handler = WaveTabDropDownHandler()
+        self._heat_map_was_updated = False
         self._head_map_cache = MyCache()
         self._index_chart_cache = MyCache()
 
@@ -51,14 +44,14 @@ class MyDashTab4Waves(MyDashBaseTab):
         sys_config_copy.data_provider.period = PRD.DAILY
         sys_config_copy.data_provider.aggregation = 1
         sys_config_copy.data_provider.and_clause = ''
-        sys_config_copy.data_provider.limit = WaveTabDropDownHandler.get_max_retrospective_days()
+        sys_config_copy.data_provider.limit = WaveTabDropDownHandler.get_max_retrospective_ticks()
         return sys_config_copy
 
     def __init_dash_element_ids__(self):
-        self._my_waves_retrospective_days_selection = 'my_waves_retrospective_days_selection'
-        self._my_waves_threshold_index_selection = 'my_waves_threshold_index_selection'
-        self._my_waves_threshold_single_selection = 'my_waves_threshold_single_selection'
-        self._my_waves_index_selection = 'my_waves_index_selection'
+        self._my_waves_period_selection = self._dd_handler.my_waves_period_selection_id
+        self._my_waves_aggregation_selection = self._dd_handler.my_waves_aggregation_selection_id
+        self._my_waves_retrospective_ticks_selection = self._dd_handler.my_waves_retrospective_ticks_selection_id
+        self._my_waves_index_selection = self._dd_handler.my_waves_index_selection_id
         self._my_waves_heatmap_div = 'my_waves_heatmap_div'
         self._my_waves_index_chart_div = 'my_waves_index_chart_div'
         self._my_waves_entry_markdown = 'my_waves_entry_markdown'
@@ -71,15 +64,15 @@ class MyDashTab4Waves(MyDashBaseTab):
         children_list = [
             # MyHTMLTabWavesHeaderTable().get_table(),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
-                WAVEDD.RETROSPECTIVE_DAYS, default_value=self._retrospective_days_selected)),
+                WAVEDD.PERIOD, default_value=self._dd_handler.selected_period)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
-                WAVEDD.THRESHOLD_INDEX, default_value=self._threshold_index_selected)),
+                WAVEDD.AGGREGATION, default_value=self._dd_handler.selected_aggregation)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
-                WAVEDD.THRESHOLD_SINGLE, default_value=self._threshold_single_selected)),
+                WAVEDD.RETROSPECTIVE_TICKS, default_value=self._dd_handler.selected_retrospective_ticks)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
-                WAVEDD.INDICES, default_value=self._index_selected)),
+                WAVEDD.INDICES, default_value=self._dd_handler.selected_index)),
             MyHTML.div(self._my_waves_heatmap_div, self.__get_heatmap__()),
-            MyHTML.div(self._my_waves_index_chart_div, self.__get_graph_for_index__(self._index_selected)),
+            MyHTML.div(self._my_waves_index_chart_div, self.__get_graph_for_index__(self._dd_handler.selected_index)),
             MyDCC.markdown(self._my_waves_entry_markdown)
         ]
         return MyHTML.div('my_waves_div', children_list)
@@ -91,8 +84,8 @@ class MyDashTab4Waves(MyDashBaseTab):
             plotter = MyDashTabStatisticsPlotter4Waves(
                 wave_handler=self._fibonacci_wave_handler,
                 color_handler=self._dash_color_handler,
-                days_retrospective=self._retrospective_days_selected,
-                index=self._index_selected)
+                retrospective_ticks=self._dd_handler.selected_retrospective_ticks,
+                index=self._dd_handler.selected_index)
             heat_map = plotter.get_chart_list()
             self.__add_element_to_cache__(self._head_map_cache, cache_key, heat_map)
         return heat_map
@@ -106,19 +99,22 @@ class MyDashTab4Waves(MyDashBaseTab):
         @self.app.callback(
             Output(self._my_waves_heatmap_div, 'children'),
             [Input('my_interval_refresh', 'n_intervals'),
-             Input(self._my_waves_retrospective_days_selection, 'value'),
+             Input(self._my_waves_period_selection, 'value'),
+             Input(self._my_waves_aggregation_selection, 'value'),
+             Input(self._my_waves_retrospective_ticks_selection, 'value'),
              Input(self._my_waves_index_selection, 'value')],
             [State(self._my_waves_heatmap_div, 'children')])
-        def handle_callback_for_position_manage_button_hidden(n_intervals: int, days: int, index: str, children):
-            if self._fibonacci_wave_handler.are_data_actual and self._retrospective_days_selected == days \
-                    and self._index_selected == index:
+        def handle_callback_for_position_manage_button_hidden(n_intervals: int, period: str, aggregation: int,
+                                                              ticks: int, index: str, children):
+            if self._fibonacci_wave_handler.are_data_actual and not self._dd_handler.was_any_value_changed(
+                    period, aggregation, ticks, index):
+                self._heat_map_was_updated = False
                 print('Return old heatmap...')
                 return children
             if not self._fibonacci_wave_handler.are_data_actual:
                 self._fibonacci_wave_handler.reload_data()
-            self._retrospective_days_selected = days
-            self._index_selected = index
-            self._fibonacci_wave_handler.set_retrospective_tick_number(days)
+            self._heat_map_was_updated = True
+            self._fibonacci_wave_handler.set_retrospective_tick_number(ticks)
             return self.__get_heatmap__()
 
     def __init_callbacks_for_waves_index_chart__(self):
@@ -127,13 +123,10 @@ class MyDashTab4Waves(MyDashBaseTab):
             [Input(self._my_waves_heatmap_div, 'children')],
             [State(self._my_waves_index_chart_div, 'children')])
         def handle_callback_for_waves_index_chart(heatmap, children):
-            if self._index_selected == self._index_selected_for_index_chart and \
-                    self._retrospective_days_selected == self._retrospective_days_selected_for_index_chart:
+            if not self._heat_map_was_updated:
                 print('Return old index chart...')
                 return children
-            self._retrospective_days_selected_for_index_chart = self._retrospective_days_selected
-            self._index_selected_for_index_chart = self._index_selected
-            return self.__get_graph_for_index__(self._index_selected)
+            return self.__get_graph_for_index__(self._dd_handler.selected_index)
 
     def __get_graph_for_index__(self, index: str):
         if index in ['', INDICES.ALL]:
@@ -142,7 +135,7 @@ class MyDashTab4Waves(MyDashBaseTab):
         cache_key = self.__get_id_for_caches__()
         graph = self._index_chart_cache.get_cached_object_by_key(cache_key)
         if graph is None:
-            graph, graph_key = self.__get_graph__(ticker, limit=self._retrospective_days_selected)
+            graph, graph_key = self.__get_graph__(ticker, limit=self._dd_handler.selected_retrospective_ticks)
             self.__add_element_to_cache__(self._index_chart_cache, cache_key, graph)
         return graph
 
@@ -177,8 +170,8 @@ class MyDashTab4Waves(MyDashBaseTab):
 
     def create_callback_for_numbers_in_header_table(self, index: str, wave_type: str):
         def callback(n_intervals: int):
-            return self._fibonacci_wave_handler.get_waves_numbers_with_dates_for_wave_type_and_index_for_days(
-                wave_type, index)
+            return self.sys_config.fibonacci_wave_handler.\
+                get_waves_numbers_with_dates_for_wave_type_and_index_for_days(wave_type, index)
         return callback
 
     def __init_callback_for_waves_header_table__(self):
@@ -194,7 +187,7 @@ class MyDashTab4Waves(MyDashBaseTab):
                     (dynamically_generated_function)
 
     def __get_id_for_caches__(self):
-        return '{}-{}-{}-{}'.format(self._retrospective_days_selected,
-                                    self._threshold_index_selected,
-                                    self._threshold_index_selected,
-                                    self._index_selected)
+        return '{}-{}-{}-{}'.format(self._dd_handler.selected_period,
+                                    self._dd_handler.selected_aggregation,
+                                    self._dd_handler.selected_retrospective_ticks,
+                                    self._dd_handler.selected_index)

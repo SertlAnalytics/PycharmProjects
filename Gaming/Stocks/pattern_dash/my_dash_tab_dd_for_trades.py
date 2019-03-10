@@ -14,8 +14,18 @@ class TDD:  # Trades Drop Down
     BUY_TRIGGER = 'Buy_Trigger'
     TRADE_STRATEGY = 'Trade_Strategy'
 
+    @staticmethod
+    def get_all_as_list():
+        return [TDD.TRADE_TYPE, TDD.BUY_TRIGGER, TDD.TRADE_STRATEGY]
+
 
 class TradeDropDownHandler(DropDownHandler):
+    def __get_drop_down_key_list__(self):
+        return TDD.get_all_as_list()
+
+    def __get_selected_value_dict__(self):
+        return {TDD.TRADE_TYPE: '', TDD.BUY_TRIGGER: '', TDD.TRADE_STRATEGY: ''}
+
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
             TDD.TRADE_TYPE: 'Trade Type',

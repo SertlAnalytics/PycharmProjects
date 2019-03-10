@@ -16,12 +16,23 @@ class PDD:  # pattern drop down
     REFRESH_INTERVAL = 'Refresh_Interval'
     SECOND_GRAPH_RANGE = 'Second_Graph_Range'
 
+    @staticmethod
+    def get_all_as_list():
+        return [PDD.INDEX, PDD.STOCK_SYMBOL, PDD.PERIOD_AGGREGATION, PDD.REFRESH_INTERVAL, PDD.SECOND_GRAPH_RANGE]
+
 
 class PatternTabDropDownHandler(DropDownHandler):
     def __init__(self, index_options: list, ticker_options: list):
         self._index_options = index_options
         self._ticker_options = ticker_options
         DropDownHandler.__init__(self)
+
+    def __get_drop_down_key_list__(self):
+        return PDD.get_all_as_list()
+
+    def __get_selected_value_dict__(self):
+        return {PDD.INDEX: '', PDD.STOCK_SYMBOL: '', PDD.PERIOD_AGGREGATION: '',
+                PDD.REFRESH_INTERVAL: '', PDD.SECOND_GRAPH_RANGE: ''}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {

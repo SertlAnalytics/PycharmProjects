@@ -124,8 +124,10 @@ class DashInterface:
         # x, y, r = wave_tick_list.get_circle_shape_parameters_for_wave_peak(wave_tick, wave_type)
         # print('get_wave_peak_shape: x={}, y={}, r={}'.format(x, y, r))
         # return MyCircleShape(x, y, r, color)
+        period = sys_config.period
+        aggregation = sys_config.period_aggregation
         x, y = DashInterface.get_xy_separated_from_timestamp(
-            sys_config, wave_tick_list.get_xy_parameters_for_wave_peak(wave_tick, wave_type))
+            sys_config, wave_tick_list.get_xy_parameters_for_wave_peak(wave_tick, wave_type, period, aggregation))
         return MyPolygonLineShape(x, y, color)
 
     @staticmethod

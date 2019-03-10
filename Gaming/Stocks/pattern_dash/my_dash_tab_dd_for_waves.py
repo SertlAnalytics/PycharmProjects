@@ -6,62 +6,104 @@ Date: 2018-10-17
 """
 
 from pattern_dash.my_dash_components import DropDownHandler
-from sertl_analytics.constants.pattern_constants import INDICES
+from sertl_analytics.constants.pattern_constants import INDICES, PRD
 
 
 class WAVEDD:  # Wave tab drop down
-    RETROSPECTIVE_DAYS = 'Retrospective_Days'
-    THRESHOLD_SINGLE = 'Threshold_Single'
-    THRESHOLD_INDEX = 'Threshold_Index'
+    PERIOD = 'Period'
+    AGGREGATION = 'Aggregation'
+    RETROSPECTIVE_TICKS = 'Retrospective_Ticks'
     INDICES = 'Indices'
+
+    @staticmethod
+    def get_all_as_list():
+        return [WAVEDD.PERIOD, WAVEDD.AGGREGATION, WAVEDD.RETROSPECTIVE_TICKS, WAVEDD.INDICES]
 
 
 class WaveTabDropDownHandler(DropDownHandler):
     def __init__(self):
-        self._position_options = []
         DropDownHandler.__init__(self)
+
+    @property
+    def selected_period(self):
+        return self._selected_value_dict[WAVEDD.PERIOD]
+
+    @property
+    def selected_aggregation(self):
+        return self._selected_value_dict[WAVEDD.AGGREGATION]
+
+    @property
+    def selected_retrospective_ticks(self):
+        return self._selected_value_dict[WAVEDD.RETROSPECTIVE_TICKS]
+
+    @property
+    def selected_index(self):
+        return self._selected_value_dict[WAVEDD.INDICES]
+
+    @property
+    def my_waves_period_selection_id(self):
+        return 'my_waves_period_selection'
+
+    @property
+    def my_waves_aggregation_selection_id(self):
+        return 'my_waves_aggregation_selection'
+
+    @property
+    def my_waves_retrospective_ticks_selection_id(self):
+        return 'my_waves_retrospective_ticks_selection'
+
+    @property
+    def my_waves_index_selection_id(self):
+        return 'my_waves_index_selection'
+
+    def __get_drop_down_key_list__(self):
+        return WAVEDD.get_all_as_list()
+
+    def __get_selected_value_dict__(self):
+        return {WAVEDD.PERIOD: PRD.DAILY, WAVEDD.AGGREGATION: 1,
+                WAVEDD.RETROSPECTIVE_TICKS: 100, WAVEDD.INDICES: INDICES.ALL}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
-            WAVEDD.RETROSPECTIVE_DAYS: 'Retrospective Days',
-            WAVEDD.THRESHOLD_INDEX: 'Threshold Index',
-            WAVEDD.THRESHOLD_SINGLE: 'Threshold Single',
+            WAVEDD.PERIOD: 'Period',
+            WAVEDD.AGGREGATION: 'Aggregation',
+            WAVEDD.RETROSPECTIVE_TICKS: 'Retrospective Ticks',
             WAVEDD.INDICES: 'Index',
         }
         return value_dict.get(drop_down_type, None)
 
     def __get_element_id__(self, drop_down_type: str):
         value_dict = {
-            WAVEDD.RETROSPECTIVE_DAYS: 'my_waves_retrospective_days_selection',
-            WAVEDD.THRESHOLD_INDEX: 'my_waves_threshold_index_selection',
-            WAVEDD.THRESHOLD_SINGLE: 'my_waves_threshold_single_selection',
-            WAVEDD.INDICES: 'my_waves_index_selection',
+            WAVEDD.PERIOD: self.my_waves_period_selection_id,
+            WAVEDD.AGGREGATION: self.my_waves_aggregation_selection_id,
+            WAVEDD.RETROSPECTIVE_TICKS: self.my_waves_retrospective_ticks_selection_id,
+            WAVEDD.INDICES: self.my_waves_index_selection_id,
         }
         return value_dict.get(drop_down_type, None)
 
     def __get_default_value__(self, drop_down_type: str, default_value=None):
         default_dict = {
-            WAVEDD.RETROSPECTIVE_DAYS: default_value if default_value else 100,
-            WAVEDD.THRESHOLD_INDEX: default_value if default_value else 10,
-            WAVEDD.THRESHOLD_SINGLE: default_value if default_value else 2,
-            WAVEDD.INDICES: default_value if default_value else INDICES.ALL,
+            WAVEDD.PERIOD: default_value if default_value else self.selected_period,
+            WAVEDD.AGGREGATION: default_value if default_value else self.selected_aggregation,
+            WAVEDD.RETROSPECTIVE_TICKS: default_value if default_value else self.selected_retrospective_ticks,
+            WAVEDD.INDICES: default_value if default_value else self.selected_index,
         }
         return default_dict.get(drop_down_type, None)
 
     def __get_width__(self, drop_down_type: str):
         value_dict = {
-            WAVEDD.RETROSPECTIVE_DAYS: 250,
-            WAVEDD.THRESHOLD_INDEX: 250,
-            WAVEDD.THRESHOLD_SINGLE: 250,
+            WAVEDD.PERIOD: 250,
+            WAVEDD.AGGREGATION: 250,
+            WAVEDD.RETROSPECTIVE_TICKS: 250,
             WAVEDD.INDICES: 150,
         }
         return value_dict.get(drop_down_type, 250)
 
     def __get_drop_down_value_dict__(self) -> dict:
         return {
-            WAVEDD.RETROSPECTIVE_DAYS: self.__get_waves_retrospective_days_options__(),
-            WAVEDD.THRESHOLD_INDEX: self.__get_waves_threshold_index_options__(),
-            WAVEDD.THRESHOLD_SINGLE: self.__get_waves_threshold_single_options__(),
+            WAVEDD.PERIOD: self.__get_waves_period_options__(),
+            WAVEDD.AGGREGATION: self.__get_waves_aggregation_options__(),
+            WAVEDD.RETROSPECTIVE_TICKS: self.__get_waves_retrospective_ticks_options__(),
             WAVEDD.INDICES: self.__get_index_options__(),
           }
 
@@ -69,7 +111,28 @@ class WaveTabDropDownHandler(DropDownHandler):
         return False
 
     @staticmethod
-    def __get_waves_retrospective_days_options__():
+    def __get_waves_period_options__():
+        return [
+            {'label': PRD.DAILY, 'value': PRD.DAILY},
+            {'label': PRD.INTRADAY, 'value': PRD.INTRADAY},
+        ]
+
+    @staticmethod
+    def __get_waves_aggregation_options__():
+        return [
+            {'label': '1', 'value': 1},
+            {'label': '5', 'value': 5},
+            {'label': '15', 'value': 15},
+            {'label': '30', 'value': 30},
+        ]
+
+    @staticmethod
+    def get_max_aggregation_value():
+        options = WaveTabDropDownHandler.__get_waves_aggregation_options__()
+        return max([options['value'] for options in options])
+
+    @staticmethod
+    def __get_waves_retrospective_ticks_options__():
         return [
             {'label': '10', 'value': 10},
             {'label': '30', 'value': 30},
@@ -80,31 +143,10 @@ class WaveTabDropDownHandler(DropDownHandler):
         ]
 
     @staticmethod
-    def get_max_retrospective_days():
-        options = WaveTabDropDownHandler.__get_waves_retrospective_days_options__()
+    def get_max_retrospective_ticks():
+        options = WaveTabDropDownHandler.__get_waves_retrospective_ticks_options__()
         return max([options['value'] for options in options])
 
-    @staticmethod
-    def __get_waves_threshold_single_options__():
-        return [
-            {'label': '1', 'value': 1},
-            {'label': '2', 'value': 2},
-            {'label': '3', 'value': 3},
-            {'label': '4', 'value': 4},
-            {'label': '5', 'value': 5},
-        ]
-
-    @staticmethod
-    def __get_waves_threshold_index_options__():
-        return [
-            {'label': '1', 'value': 1},
-            {'label': '5', 'value': 5},
-            {'label': '10', 'value': 10},
-            {'label': '15', 'value': 15},
-            {'label': '20', 'value': 20},
-            {'label': '30', 'value': 30},
-            {'label': '50', 'value': 50},
-        ]
 
     @staticmethod
     def __get_index_options__():

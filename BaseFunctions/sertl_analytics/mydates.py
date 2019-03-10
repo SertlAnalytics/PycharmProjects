@@ -4,7 +4,7 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-21
 """
-from sertl_analytics.constants.pattern_constants import DTRG
+from sertl_analytics.constants.pattern_constants import DTRG, PRD
 from datetime import datetime, timedelta, date
 from time import mktime
 import matplotlib.dates as m_dates
@@ -18,6 +18,16 @@ class MyDate:
     @staticmethod
     def time_stamp_now() -> int:
         return int(datetime.now().timestamp())
+
+    @staticmethod
+    def get_seconds_for_period_aggregation(period: str, aggregation=1):
+        if period == PRD.DAILY:
+            return MyDate.get_seconds_for_period(days=1)
+        elif period == PRD.INTRADAY:
+            return MyDate.get_seconds_for_period(min=aggregation)
+        elif period == PRD.WEEKLY:
+            return MyDate.get_seconds_for_period(days=7)
+        return 0
 
     @staticmethod
     def get_seconds_for_period(days=0.0, hours=0.0, min=0.0) -> int:

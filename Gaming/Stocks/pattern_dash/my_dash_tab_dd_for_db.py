@@ -14,11 +14,21 @@ class DBDD:  # recommender drop down
     LIMIT = 'Limit'
     DATE_RANGE = 'Date_Range'
 
+    @staticmethod
+    def get_all_as_list():
+        return [DBDD.TABLE, DBDD.LIMIT, DBDD.DATE_RANGE]
+
 
 class DBTabDropDownHandler(DropDownHandler):
     def __init__(self):
         self._position_options = []
         DropDownHandler.__init__(self)
+
+    def __get_drop_down_key_list__(self):
+        return DBDD.get_all_as_list()
+
+    def __get_selected_value_dict__(self):
+        return {DBDD.TABLE: '', DBDD.LIMIT: '', DBDD.DATE_RANGE: ''}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {

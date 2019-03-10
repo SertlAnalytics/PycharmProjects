@@ -96,6 +96,8 @@ class DropDownHandler:
     def version(cls): return 1.0
 
     def __init__(self):
+        self._drop_down_key_list = self.__get_drop_down_key_list__()
+        self._selected_value_dict = self.__get_selected_value_dict__()
         self._drop_down_value_dict = self.__get_drop_down_value_dict__()
 
     def get_element_id(self, drop_down_type: str):
@@ -128,6 +130,23 @@ class DropDownHandler:
             'width': self.__get_width__(drop_down_type),
             'for_multi': self.__get_for_multi__(drop_down_type)
         }
+
+    @abstractmethod
+    def __get_drop_down_key_list__(self) -> list:
+        raise NotImplementedError
+
+    def was_any_value_changed(self, *selected_value_list) -> bool:
+        return_value = False
+        for index, selected_value in enumerate(selected_value_list):
+            key = self._drop_down_key_list[index]
+            if self._selected_value_dict[key] != selected_value:
+                return_value = True
+                self._selected_value_dict[key] = selected_value
+        return return_value
+
+    @abstractmethod
+    def __get_selected_value_dict__(self) -> dict:
+        raise NotImplementedError
 
     @abstractmethod
     def __get_drop_down_value_dict__(self) -> dict:

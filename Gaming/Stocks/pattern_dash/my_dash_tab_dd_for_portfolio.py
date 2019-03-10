@@ -15,11 +15,22 @@ class PODD:  # portfolio drop down
     SECOND_GRAPH_RANGE = 'Second_Graph_Range'
     INDICATOR = 'Indicator'
 
+    @staticmethod
+    def get_all_as_list():
+        return [PODD.PERIOD_AGGREGATION, PODD.REFRESH_INTERVAL, PODD.SECOND_GRAPH_RANGE, PODD.INDICATOR]
+
 
 class PortfolioTabDropDownHandler(DropDownHandler):
     def __init__(self):
         self._indicator_options = INDI.get_as_options()
         DropDownHandler.__init__(self)
+
+    def __get_drop_down_key_list__(self):
+        return PODD.get_all_as_list()
+
+    def __get_selected_value_dict__(self):
+        return {PODD.PERIOD_AGGREGATION: '', PODD.REFRESH_INTERVAL: '',
+                PODD.SECOND_GRAPH_RANGE: '', PODD.INDICATOR: ''}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {

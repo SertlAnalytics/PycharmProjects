@@ -198,7 +198,7 @@ class TradeTestCaseFactory:
 
     @staticmethod
     def fill_value_list_from_base_list(base_list, tc):
-        tc.period_seconds = PRD.get_seconds_for_period(PRD.DAILY, 1)
+        tc.period_seconds = MyDate.get_seconds_for_period_aggregation(PRD.DAILY, 1)
         tc.ticks_per_period = 4
         seconds_per_step = tc.period_seconds/tc.ticks_per_period
         converter = TickerWaveTickConverter(PRD.DAILY, 1, 0, tc.time_stamp_start)

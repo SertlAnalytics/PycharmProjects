@@ -64,20 +64,21 @@ class MyEquityUpdateJob(MyDashPatternJob):
         self._stock_db_updater.update_equity_records()
 
 
-class MyWaveUpdateJob(MyDashPatternJob):
+class MyDailyWaveUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
-        self._stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.CRYPTO_CCY, 400)
-        if MyDate.is_tuesday_till_saturday():
-            self._stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.INDICES, 400)
-            self._stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.DOW_JONES, 400)
-            self._stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.NASDAQ100, 400)
+        index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+        for index in index_list:
+            if index == INDICES.CRYPTO_CCY or MyDate.is_tuesday_till_saturday():
+                self._stock_db_updater.update_wave_data_by_index_for_daily_period(index, 400)
+        self._stock_db_updater.add_wave_end_data_to_wave_records(symbol='', ts_start=0, ts_end=0, scheduled_job=True)
 
-        self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
-        if MyDate.is_tuesday_till_saturday():
-            self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.INDICES)
-            self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)
-            self._stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.NASDAQ100)
 
+class MyIntradayWaveUpdateJob(MyDashPatternJob):
+    def __perform_task__(self):
+        index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+        for index in index_list:
+            if index == INDICES.CRYPTO_CCY or MyDate.is_monday_till_friday():
+                self._stock_db_updater.update_wave_data_by_index_for_intraday(index)
         self._stock_db_updater.add_wave_end_data_to_wave_records(symbol='', ts_start=0, ts_end=0, scheduled_job=True)
 
 
@@ -112,7 +113,11 @@ class MyDashJobHandler:
         self._scheduler.add_job(MyDashStockDataUpdateJob(start_time='01:30', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyEquityUpdateJob(start_time='03:00', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyPatternUpdateJob(start_time='03:15', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyWaveUpdateJob(start_time='04:00', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyDailyWaveUpdateJob(start_time='04:00', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyIntradayWaveUpdateJob(start_time='04:30', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyIntradayWaveUpdateJob(start_time='10:00', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyIntradayWaveUpdateJob(start_time='16:00', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyIntradayWaveUpdateJob(start_time='20:00', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyDashTradePolicyUpdateJob(start_time='05:00', stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyDashPredictorOptimizerJob(
             start_time='05:30', stock_db_updater=self._stock_db_updater))

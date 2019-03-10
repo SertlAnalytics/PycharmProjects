@@ -20,8 +20,21 @@ class DDT:  # Drop Down Types
     MODEL_TYPE = 'Model_Type'
     PATTERN_TYPE = 'Pattern_Type'
 
+    @staticmethod
+    def get_all_as_list():
+        return [DDT.CHART_TYPE, DDT.PREDICTOR, DDT.CATEGORY, DDT.X_VARIABLE, DDT.Y_VARIABLE,
+                DDT.CHART_TEXT_VARIABLE, DDT.MODEL_TYPE, DDT.PATTERN_TYPE]
+
 
 class StatisticsDropDownHandler(DropDownHandler):
+    def __get_drop_down_key_list__(self):
+        return DDT.get_all_as_list()
+
+    def __get_selected_value_dict__(self):
+        return {DDT.CHART_TYPE: '', DDT.PREDICTOR: '', DDT.CATEGORY: '',
+                DDT.X_VARIABLE: '', DDT.Y_VARIABLE: '',
+                DDT.CHART_TEXT_VARIABLE: '', DDT.MODEL_TYPE: '', DDT.PATTERN_TYPE: ''}
+
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
             DDT.CHART_TYPE: 'Chart Type',

@@ -483,6 +483,7 @@ class PRD:  # Periods
     WEEKLY = 'WEEKLY'
     DAILY = 'DAILY'
     INTRADAY = 'INTRADAY'
+    ALL = 'ALL'
 
     @staticmethod
     def get_id(period: str):
@@ -494,14 +495,7 @@ class PRD:  # Periods
 
     @staticmethod
     def get_value_key_dict() -> dict:
-        return {PRD.INTRADAY: 0, PRD.DAILY: 1, PRD.WEEKLY: 2}
-
-    @staticmethod
-    def get_seconds_for_period(period: str, aggregation=1):
-        if period == PRD.DAILY:
-            return 86400
-        elif period == PRD.INTRADAY:
-            return 60 * aggregation
+        return {PRD.INTRADAY: 0, PRD.DAILY: 1, PRD.WEEKLY: 2, PRD.ALL: 10}
 
     @staticmethod
     def get_time_stamp_list_for_time_stamp(time_stamp: int, numbers: int, period: str, aggregation=1):
@@ -1144,6 +1138,7 @@ class DC:  # Data Columns
     W5_BEGIN_VALUE = 'W5_Begin_Value'
     WAVE_END_TS = 'Wave_End_Timestamp'
     WAVE_END_DT = 'Wave_End_Datetime'
+    WAVE_END_DATE = 'Wave_End_Date'  # this is NOT a real column - it's computed.
     WAVE_END_VALUE = 'Wave_End_Value'
     W1_RANGE = 'W1_Range'
     W2_RANGE = 'W2_Range'

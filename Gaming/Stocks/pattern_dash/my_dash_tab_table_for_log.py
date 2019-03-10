@@ -110,6 +110,7 @@ class LogTable:
         self._selected_log_process_step = '' if step == 'All' else step
         self._selected_date_range = date_range
         self._date_column = self.__get_date_column__()
+        self._sort_column = self.__get_sort_column__()
         self._process_column = self.get_process_column_for_log_type(self._selected_log_type)
         self._process_step_column = self.get_process_step_column_for_log_type(self._selected_log_type)
         if self._selected_log_type == '' or self._selected_log_type not in self._df_dict:

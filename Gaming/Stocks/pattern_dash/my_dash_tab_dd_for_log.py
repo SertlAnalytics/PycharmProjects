@@ -16,11 +16,21 @@ class LOGDD:  # recommender drop down
     PROCESS_STEP = 'Process_Step'
     DATE_RANGE = 'Date_Range'
 
+    @staticmethod
+    def get_all_as_list():
+        return [LOGDD.LOG_TYPE, LOGDD.PROCESS, LOGDD.PROCESS_STEP, LOGDD.DATE_RANGE]
+
 
 class LogTabDropDownHandler(DropDownHandler):
     def __init__(self):
         self._position_options = []
         DropDownHandler.__init__(self)
+
+    def __get_drop_down_key_list__(self):
+        return LOGDD.get_all_as_list()
+
+    def __get_selected_value_dict__(self):
+        return {LOGDD.LOG_TYPE: '', LOGDD.PROCESS: '', LOGDD.PROCESS_STEP: '', LOGDD.DATE_RANGE: ''}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {

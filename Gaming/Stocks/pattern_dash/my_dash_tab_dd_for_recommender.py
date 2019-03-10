@@ -16,11 +16,22 @@ class REDD:  # recommender drop down
     SECOND_GRAPH_RANGE = 'Second_Graph_Range'
     SCORING = 'Scoring'
 
+    @staticmethod
+    def get_all_as_list():
+        return [REDD.INDEX, REDD.PERIOD_AGGREGATION, REDD.REFRESH_INTERVAL, REDD.SECOND_GRAPH_RANGE, REDD.SCORING]
+
 
 class RecommenderTabDropDownHandler(DropDownHandler):
     def __init__(self):
         self._position_options = []
         DropDownHandler.__init__(self)
+
+    def __get_drop_down_key_list__(self):
+        return REDD.get_all_as_list()
+
+    def __get_selected_value_dict__(self):
+        return {REDD.INDEX: '', REDD.PERIOD_AGGREGATION: '',
+                REDD.REFRESH_INTERVAL: '', REDD.SECOND_GRAPH_RANGE: '', REDD.SCORING: ''}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {

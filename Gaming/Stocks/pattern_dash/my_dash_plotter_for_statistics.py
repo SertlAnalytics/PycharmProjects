@@ -195,7 +195,7 @@ class MyDashTabStatisticsPlotter:
         pass
 
     def __get_roc_figure_data__(self):
-        pass
+        return ''
 
     def __get_scatter_figure_data_for_predictor__(self):
         self.category = DC.PATTERN_TYPE
@@ -580,10 +580,10 @@ class MyDashTabStatisticsPlotter4Pattern(MyDashTabStatisticsPlotter):
 
 class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
     def __init__(self, wave_handler: FibonacciWaveHandler, color_handler: DashColorHandler,
-                 days_retrospective: int, index=''):
+                 retrospective_ticks: int, index=''):
         self._wave_handler = wave_handler
-        self._days_retrospective = days_retrospective
-        self._wave_handler.set_retrospective_tick_number(self._days_retrospective)
+        self._retrospective_ticks = retrospective_ticks
+        self._wave_handler.set_retrospective_tick_number(self._retrospective_ticks)
         self._index = index
         MyDashTabStatisticsPlotter.__init__(self, self._wave_handler.df_wave, color_handler)
 
@@ -632,7 +632,7 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
         seconds_day = MyDate.get_seconds_for_period(days=1)
         day_range_dict = {}
         df_base = self._df_base[self._df_base[DC.INDEX] == index]
-        for days in range(0, self._days_retrospective):
+        for days in range(0, self._retrospective_ticks):
             ts_start = offset_timestamp_start + days * seconds_day
             ts_end = ts_start + seconds_day
             date_str = MyDate.get_date_from_epoch_seconds(ts_start)
@@ -654,5 +654,5 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
         return z_data, x_data, y_data
 
     def __get_offset_timestamp_for_period__(self, period: str):
-        return MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=self._days_retrospective)
+        return MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=self._retrospective_ticks)
 

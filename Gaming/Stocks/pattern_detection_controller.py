@@ -23,7 +23,6 @@ from pattern_trade_handler import PatternTradeHandler
 from datetime import datetime
 from time import sleep
 from sertl_analytics.mycache import MyCache
-from fibonacci.fibonacci_wave_handler import FibonacciWaveHandler
 
 
 """
@@ -77,6 +76,14 @@ class PatternDetectionController:
         self._number_pattern_total = 0
         self._df_source_cache = MyCache()
 
+    @property
+    def period(self):
+        return self.sys_config.period
+
+    @property
+    def period_aggregation(self):
+        return self.sys_config.period_aggregation
+
     def run_pattern_detector(self, excel_file_test_data: PatternExcelFile = None):
         len_pattern_id = len(self.sys_config.config.pattern_ids_to_find)
         if len_pattern_id > 0:
@@ -114,7 +121,7 @@ class PatternDetectionController:
     def __run_pattern_detector__(self):
         self.__init_loop_list_for_ticker__()
         limit = self.sys_config.data_provider.limit
-        fibonacci_wave_handler = FibonacciWaveHandler(self.sys_config, self.sys_config.period)
+        self.sys_config.fibonacci_wave_handler.load_data(period=self.period, aggregation=self.period_aggregation)
         for value_dic in self._loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
             and_clause = value_dic[LL.AND_CLAUSE]
@@ -150,7 +157,7 @@ class PatternDetectionController:
                         print('...no formations found.')
                     else:
                         plotter = PatternPlotter(self.sys_config, detector)
-                        plotter.plot_data_frame(fibonacci_wave_handler)
+                        plotter.plot_data_frame()
                 elif self.sys_config.period == PRD.INTRADAY:
                     sleep(15)
 

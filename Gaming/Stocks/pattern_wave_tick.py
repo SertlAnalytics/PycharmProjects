@@ -194,7 +194,7 @@ class TickerWaveTickConverter:
     def __init__(self, period: str, aggregation: int, pos_last: int, time_stamp_last: int):
         self._period = period
         self._aggregation = aggregation
-        self._aggregation_time_stamp_range = PRD.get_seconds_for_period(self._period, self._aggregation)
+        self._aggregation_time_stamp_range = MyDate.get_seconds_for_period_aggregation(self._period, self._aggregation)
         self._current_position = pos_last
         self._current_time_stamp = time_stamp_last
         self._current_open = 0
@@ -328,11 +328,12 @@ class WaveTickList:
         r = height
         return x, y, r
 
-    def get_xy_parameters_for_wave_peak(self, tick: WaveTick, wave_type: str):
+    def get_xy_parameters_for_wave_peak(self, tick: WaveTick, wave_type: str, period: str, aggregation: int):
         number_waves = tick.get_wave_number_for_wave_type(wave_type)
         height, head_length, head_width = self.get_arrow_size_parameter_for_wave_peaks(wave_type, number_waves)
-        ts_day = MyDate.get_seconds_for_period(days=1)
-        x = [tick.f_var - ts_day, tick.f_var, tick.f_var + ts_day]
+        ts_period = MyDate.get_seconds_for_period(days=1) if period == PRD.DAILY else \
+            MyDate.get_seconds_for_period(min=aggregation)
+        x = [tick.f_var - ts_period, tick.f_var, tick.f_var + ts_period]
         if wave_type in [WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC]:
             y = [tick.high + height, tick.high, tick.high + height]
         else:

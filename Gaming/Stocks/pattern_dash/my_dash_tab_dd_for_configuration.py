@@ -13,6 +13,10 @@ class CDD:  # configuration drop down
     ORDER_MAXIMUM = 'Order_Maximum_Value'
     SOUND_MACHINE = 'Sound_Machine'
 
+    @staticmethod
+    def get_all_as_list():
+        return [CDD.ORDER_MAXIMUM, CDD.SOUND_MACHINE]
+
 
 class ConfigurationTabDropDownHandler(DropDownHandler):
     def __init__(self, order_max: int, sound_machine_active: bool):
@@ -23,6 +27,12 @@ class ConfigurationTabDropDownHandler(DropDownHandler):
             self._order_max_list.append(self._order_max_default)
         self._sound_machine_state_list = ['active', 'inactive']
         DropDownHandler.__init__(self)
+
+    def __get_drop_down_key_list__(self):
+        return CDD.get_all_as_list()
+
+    def __get_selected_value_dict__(self):
+        return {CDD.ORDER_MAXIMUM: 0, CDD.SOUND_MACHINE: 'inactive'}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {

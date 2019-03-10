@@ -23,7 +23,7 @@ class DataFetcherCacheKey:
     def valid_until_ts(self) -> int:
         time_stamp_now = MyDate.time_stamp_now()
         if self.period == PRD.DAILY:
-            return time_stamp_now + int(PRD.get_seconds_for_period(PRD.DAILY, 1)/2)
+            return time_stamp_now + int(MyDate.get_seconds_for_period_aggregation(PRD.DAILY, 1)/2)
         return time_stamp_now + self.__get_intraday_cache_seconds__()
 
     @staticmethod
