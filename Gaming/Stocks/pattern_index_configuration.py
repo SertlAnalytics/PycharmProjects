@@ -21,6 +21,10 @@ class IndexConfiguration:
         self._ticker_index_dict = {}
         self.__init_by_indices__(indices)
 
+    @property
+    def index_list(self):
+        return self._index_list
+
     def get_ticker_dict_for_index(self, index: str, ticker_id_list=None):
         if index not in self._index_list:
             self.__init_variables_for_index__(index)
@@ -52,9 +56,16 @@ class IndexConfiguration:
             return INDICES.NASDAQ100
         return self._ticker_index_dict.get(symbol, INDICES.NONE)
 
+    @staticmethod
+    def is_symbol_currency(symbol: str) -> bool:
+        currency_list = ['USD', 'EUR', 'CHF', 'GBP', 'AUD']
+        return symbol[:3] in currency_list and symbol[3:] in currency_list
+
     def is_symbol_crypto(self, symbol: str) -> bool:
         if self.get_index_for_symbol(symbol) == INDICES.CRYPTO_CCY:
             return True
+        if self.is_symbol_currency(symbol):
+            return False
         return '{}USD'.format(symbol) in self._ticker_equity_type_dict or symbol[-3:] == 'USD'
 
     def get_indices_as_options(self):

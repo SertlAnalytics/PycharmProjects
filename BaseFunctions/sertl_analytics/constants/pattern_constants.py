@@ -85,6 +85,9 @@ class TPA:  # TradePolicyAction
     LIMIT_DOWN = 'Limit_downwards'
 
 
+class SVW:  # stocks views
+    V_WAVE = 'v_wave'
+
 class STBL:  # stocks tables
     EQUITY = 'Equity'
     STOCKS = 'Stocks'
@@ -310,11 +313,13 @@ class EQUITY_TYPE:
     SHARE = 'Shares'
     COMMODITY = 'Commodity'
     CRYPTO = 'Crypto_Currencies'
+    CURRENCY = 'Currencies'
     CASH = 'CASH'
 
     @staticmethod
     def get_id(key: str):
-        return {EQUITY_TYPE.SHARE: 1, EQUITY_TYPE.COMMODITY: 10, EQUITY_TYPE.CRYPTO: 20, EQUITY_TYPE.CASH: 30}.get(key)
+        return {EQUITY_TYPE.SHARE: 1, EQUITY_TYPE.COMMODITY: 10, EQUITY_TYPE.CURRENCY: 15,
+                EQUITY_TYPE.CRYPTO: 20, EQUITY_TYPE.CASH: 30}.get(key)
 
 
 class OT:  # order type
@@ -479,6 +484,25 @@ class FT:
                 }
 
 
+class WPDT:  # WavePeakDateType
+    DAILY_DATE = 'Daily_Date'
+    INTRADAY_DATE = 'Intraday_Date'
+    INTRADAY_15_TS = 'Intraday_15_Timestamp'
+    INTRADAY_30_TS = 'Intraday_30_Timestamp'
+
+    @staticmethod
+    def get_period_for_wave_period_key(wave_period_key: str):
+        return {WPDT.DAILY_DATE: PRD.DAILY}.get(wave_period_key, PRD.INTRADAY)
+
+    @staticmethod
+    def get_types_for_period(period: str) -> list:
+        if period == PRD.DAILY:
+            return [WPDT.DAILY_DATE, WPDT.INTRADAY_DATE]
+        elif period == PRD.INTRADAY:
+            return [WPDT.INTRADAY_30_TS]
+        return [WPDT.DAILY_DATE, WPDT.INTRADAY_DATE, WPDT.INTRADAY_30_TS]
+
+
 class PRD:  # Periods
     WEEKLY = 'WEEKLY'
     DAILY = 'DAILY'
@@ -542,25 +566,31 @@ class WAVEST:  # Waves Types (corresponds with the columns in the overview table
         return [WAVEST.INDICES, WAVEST.INTRADAY_ASC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_DESC]
 
     @staticmethod
-    def get_waves_types_for_processing(period=''):
-        if period == PRD.DAILY:
-            return [WAVEST.DAILY_ASC, WAVEST.DAILY_DESC]
-        elif period == PRD.INTRADAY:
-            return [WAVEST.INTRADAY_ASC, WAVEST.INTRADAY_DESC]
-        return [WAVEST.INTRADAY_ASC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_DESC]
+    def get_waves_types_for_processing(period_list: list):
+        if len(period_list) in [0, 2]:
+            return [WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC]
+        if period_list[0] == PRD.DAILY:
+            return [WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC]
+        elif period_list[0] == PRD.INTRADAY:
+            return [WAVEST.INTRADAY_DESC, WAVEST.INTRADAY_ASC]
+
+    @staticmethod
+    def get_waves_types_for_period(period: str):
+        if period == PRD.INTRADAY:
+            return [WAVEST.INTRADAY_DESC, WAVEST.INTRADAY_ASC]
+        return [WAVEST.DAILY_DESC, WAVEST.DAILY_ASC]
+
+    @staticmethod
+    def get_period_for_wave_type(wave_type: str):
+        return PRD.INTRADAY if wave_type in [WAVEST.INTRADAY_ASC, WAVEST.INTRADAY_DESC] else PRD.DAILY
+
+    @staticmethod
+    def get_direction_for_wave_type(wave_type: str):
+        return FD.DESC if wave_type in [WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC] else FD.ASC
 
     @staticmethod
     def get_period_and_direction_for_wave_type(wave_type: str):
-        if wave_type == WAVEST.INTRADAY_ASC:
-            return PRD.INTRADAY, FD.ASC
-        if wave_type == WAVEST.INTRADAY_DESC:
-            return PRD.INTRADAY, FD.DESC
-        if wave_type == WAVEST.DAILY_ASC:
-            return PRD.DAILY, FD.ASC
-        if wave_type == WAVEST.DAILY_DESC:
-            return PRD.DAILY, FD.DESC
-        return '', ''
-
+        return WAVEST.get_period_for_wave_type(wave_type), WAVEST.get_direction_for_wave_type(wave_type)
 
 class LOGDC:  # Log data columns
     DATE = 'Date'
@@ -605,6 +635,7 @@ class INDICES:
     NASDAQ100 = 'Nasdaq 100'
     NASDAQ = 'Nasdaq (all)'
     SP500 = 'S&P 500'
+    FOREX = 'Forex'
     MIXED = 'Mixed'
     CRYPTO_CCY = 'Crypto Currencies'
     ALL_DATABASE = 'All in database'
@@ -615,11 +646,11 @@ class INDICES:
 
     @staticmethod
     def get_index_list_for_waves_tab():
-        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.FOREX]
 
     @staticmethod
     def get_index_list_for_index_configuration():
-        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.FOREX]
 
     @staticmethod
     def get_ticker_for_index(index: str):
@@ -629,6 +660,8 @@ class INDICES:
             return 'NDX'
         elif index == INDICES.CRYPTO_CCY:
             return 'BTCUSD'
+        elif index == INDICES.FOREX:
+            return 'USDEUR'
         return ''
 
 
@@ -951,7 +984,7 @@ class PSC:  # Pattern Statistics Columns
 class DC:  # Data Columns
     ROWID = 'rowid'
     # for Stocks
-    INDEX = 'Index'
+    EQUITY_INDEX = 'Equity_Index'  # Index is a keyword for SQLite
     SYMBOL = 'Symbol'
     TIMESTAMP = 'Timestamp'
     DATE = 'Date'

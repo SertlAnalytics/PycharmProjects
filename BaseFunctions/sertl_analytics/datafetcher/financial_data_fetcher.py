@@ -54,9 +54,10 @@ class APIBaseFetcher:
         url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
         self.__print_request_details__(url)
         self._df = self.__get_data_frame__(request_data=requests.get(url))
-        self._df_columns = list(self._df.columns.values)
-        self.__format_columns__()
-        self.__round_df_column_values__()
+        if self._df is not None:
+            self._df_columns = list(self._df.columns.values)
+            self.__format_columns__()
+            self.__round_df_column_values__()
 
     @property
     def df(self) -> pd.DataFrame:
@@ -127,7 +128,7 @@ class APIBaseFetcher:
 
     def __get_decimals_for_df_column_rounding__(self):
         high_mean = self._df[CN.HIGH].mean()
-        if high_mean < 1:
+        if high_mean < 2:
             return 4
         elif high_mean < 10:
             return 3
@@ -146,6 +147,7 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
         # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):
         APIBaseFetcher.retrieve_data(self, **kwargs)
         self._df_data = self._df[self._get_column_list_for_data_()]
+        column_for_volume = self._get_column_for_volume_()
         self._df_volume = self._df[self._get_column_for_volume_()]
 
     @property
@@ -221,6 +223,54 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
     def _get_url_(self):
         symbol = self._kwargs['symbol']
         url = 'https://www.alphavantage.co/query?function={}&symbol={}'.format(self.get_url_function(), symbol)
+        if self.kw_output_size == OPS.FULL:
+            url = url + '&outputsize=full'
+        if self.kw_period == PRD.INTRADAY:
+            url = url + '&interval={}min'.format(self.kw_aggregation)
+        return url + '&apikey=' + self._api_key
+
+
+class AlphavantageForexFetcher (AlphavantageJSONFetcher):
+    def _get_column_list_for_data_(self):
+        return self._df_columns
+
+    def _get_column_for_data_(self):
+        return self._df_columns[-2]
+
+    def _get_column_for_volume_(self):
+        return self._df_columns[-1]
+
+    def get_url_function(self):
+        dict = {PRD.WEEKLY: 'FX_WEEKLY',
+                PRD.DAILY: 'FX_DAILY',
+                PRD.INTRADAY: 'FX_INTRADAY'}
+        return dict[self.kw_period]
+
+    def get_json_data_key(self):
+        dict = {PRD.DAILY: 'Time Series FX (Daily)',
+                PRD.WEEKLY: 'Time Series FX (Weekly)',
+                PRD.INTRADAY: 'Time Series FX ({}min)'.format(self.kw_aggregation)}
+        return dict[self.kw_period]
+
+    def __get_data_frame__(self, request_data) -> pd.DataFrame:
+        json_data = request_data.json()
+        meta_data = json_data["Meta Data"]
+        self.api_symbol = '{}{}'.format(meta_data["2. From Symbol"], meta_data["3. To Symbol"])
+        time_series = json_data[self.get_json_data_key()]  # e.g. Time Series (Daily)
+        df = pd.DataFrame.from_dict(time_series, orient="index")
+        df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
+        df[CN.TIMESTAMP] = df[CN.TIMESTAMP].apply(int)
+        df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
+        df[CN.VOL] = 0
+        df.columns = CN.get_standard_column_names()
+        return df
+
+    def _get_url_(self):
+        symbol = self._kwargs['symbol']
+        from_symbol = symbol[:3]
+        to_symbol = symbol[3:]
+        url = 'https://www.alphavantage.co/query?function={}&from_symbol={}&to_symbol={}'.format(
+            self.get_url_function(), from_symbol, to_symbol)
         if self.kw_output_size == OPS.FULL:
             url = url + '&outputsize=full'
         if self.kw_period == PRD.INTRADAY:
@@ -388,6 +438,8 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
             if self.api_symbol in self._latest_successful_request_data_dict:
                 print('Use latest successfully retrieved data for {}'.format(self.api_symbol))
                 json_data = self._latest_successful_request_data_dict[self.api_symbol]
+            else:
+                return None
         if type(json_data[0]) is list:
             df = pd.DataFrame(json_data)
         else:
@@ -404,7 +456,7 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         # _df.sort_index(inplace=True)
         return df
 
-    def __are_retrieved_data_correct__(self, json_data: object):
+    def __are_retrieved_data_correct__(self, json_data):
         # JSON in error case: ["error", 11010, "ratelimit: error"] or []
         return len(json_data) > 0 and "error" not in json_data
 

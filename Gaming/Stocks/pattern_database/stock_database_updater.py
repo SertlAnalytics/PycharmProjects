@@ -135,14 +135,20 @@ class StockDatabaseUpdater:
         return {
             TRC.BITFINEX: EQUITY_TYPE.CRYPTO,
             INDICES.DOW_JONES: EQUITY_TYPE.SHARE,
-            INDICES.NASDAQ100: EQUITY_TYPE.SHARE
+            INDICES.NASDAQ100: EQUITY_TYPE.SHARE,
+            INDICES.FOREX: EQUITY_TYPE.CURRENCY
         }
 
     def __update_equity_records_for_equity_type__(
             self, access_layer: AccessLayer4Equity, dt_today_str: str, dt_valid_until_str: str,
             exchange: str, equity_type: str):
         # a) get symbol - name dictionaries
-        index = exchange if equity_type == EQUITY_TYPE.SHARE else INDICES.CRYPTO_CCY
+        if equity_type == EQUITY_TYPE.SHARE:
+            index = exchange
+        elif equity_type == EQUITY_TYPE.CURRENCY:
+            index = INDICES.FOREX
+        else:
+            index = INDICES.CRYPTO_CCY
         source_data_dict = self.sys_config.index_config.get_ticker_dict_for_index(index)
 
         # b) get existing records
@@ -156,7 +162,7 @@ class StockDatabaseUpdater:
                 data_dict = {EDC.EQUITY_KEY: key, EDC.EQUITY_NAME: value,
                              EDC.VALID_FROM_DT: dt_today_str, EDC.VALID_TO_DT: dt_valid_until_str,
                              EDC.EXCHANGE: exchange, EDC.EQUITY_TYPE: equity_type, EDC.EQUITY_STATUS: EST.ACTIVE}
-                self.db_stock.insert_equity_data(data_dict)
+                self.db_stock.insert_equity_data([data_dict])
 
     def update_trade_records(self, mean: int, sma_number: int, trade_strategies: dict=None):
         self.sys_config.init_detection_process_for_automated_trade_update(mean, sma_number)
@@ -211,7 +217,10 @@ class StockDatabaseUpdater:
         print('Update wave data for index: {} ({}min)'.format(index, aggregation))
         ticker_dic = self.__get_configured_ticker_dict_for_index__(index)
         for ticker in ticker_dic:
-            self.update_wave_records_for_intraday(ticker, aggregation)
+            try:
+                self.update_wave_records_for_intraday(ticker, aggregation)
+            except:
+                PatternLog.log_error()
 
     def __get_configured_ticker_dict_for_index__(self, index):
         if index == INDICES.CRYPTO_CCY:

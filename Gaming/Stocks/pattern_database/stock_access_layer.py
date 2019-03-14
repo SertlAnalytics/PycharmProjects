@@ -15,7 +15,7 @@ import pandas as pd
 import math
 import numpy as np
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC, TPMDC, PRDC, FD
+from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC, TPMDC, PRDC, FD, WPDT
 
 
 class AccessLayer:
@@ -27,9 +27,11 @@ class AccessLayer:
     def table_name(self):
         return self._table.name
 
-    def get_all_as_data_frame(self, index_col='', columns=None):
+    def get_all_as_data_frame(self, index_col='', columns=None, where_clause=''):
         selected_columns = '*' if columns is None else ','.join(columns)
-        return self.select_data_by_query("SELECT {} from {}".format(selected_columns, self._table.name), index_col)
+        where_clause_new = '' if where_clause == '' else ' WHERE {}'.format(where_clause)
+        return self.select_data_by_query("SELECT {} from {}{}".format(
+            selected_columns, self._table.name, where_clause_new), index_col)
 
     def get_all_as_data_dict(self, index_col: str):
         df = self.select_data_by_query("SELECT * from {}".format(self._table.name), index_col)
@@ -168,12 +170,14 @@ class AccessLayer4Stock(AccessLayer):
     def __get_table__(self):
         return StocksTable()
 
-    def get_all_as_data_frame(self, symbol='', columns=None):
+    def get_all_as_data_frame(self, symbol='', columns=None, where_clause=''):
         if symbol == '':
-            return self.select_data_by_query("SELECT * from {} ORDER BY {}".format(self._table.name, DC.TIMESTAMP))
+            where_clause_new = '' if where_clause == '' else ' WHERE {}'.format(where_clause)
         else:
-            return self.select_data_by_query("SELECT * from {} WHERE symbol = '{}' ORDER BY {}".format(
-                self._table.name, symbol, DC.TIMESTAMP))
+            where_clause_new = " WHERE symbol = '{}'".format(symbol)
+            where_clause_new += '' if where_clause == '' else ' AND {}'.format(where_clause)
+        return self.select_data_by_query("SELECT * from {}{} ORDER BY {}".format(
+            self._table.name, where_clause_new, DC.TIMESTAMP))
 
     def get_actual_price_for_symbol(self, symbol: str, ts_from: int) -> float:
         query = "SELECT * FROM {} WHERE symbol='{}' AND Timestamp >= {} LIMIT 1".format(
@@ -225,36 +229,28 @@ class AccessLayer4Wave(AccessLayer):
     def __get_table__(self):
         return WaveTable()
 
-    def get_all_as_data_frame(self, index_col='', columns=None):
+    def is_wave_available_after_wave_end_ts(self, wave_end_ts, period='') -> bool:
+        where_clause = ' WHERE {}>{}'.format(DC.WAVE_END_TS, wave_end_ts)
+        if period != '':
+            where_clause += " AND {}='{}'".format(DC.PERIOD, period)
+        query = "SELECT count(*) as Number from {}{}".format(self._table.name, where_clause)
+        df = self.select_data_by_query(query)
+        number = df.values[0, 0]
+        return number > 0
+
+    def get_all_as_data_frame(self, index_col='', columns=None, where_clause=''):
         # With calculated columns "Index" and "Wave_End_Date"
-        query = self.__get_query__('', columns)
+        query = self.__get_query_for_wave_view__(where_clause=where_clause, columns=columns)
+        # print('get_all_as_data_frame: query={}'.format(query))
         return self.select_data_by_query(query, index_col)
 
-    def __get_query__(self, where_clause: str, columns):
-        # ToDo use a view for this issue
-        case_for_index = "CASE WHEN E.Exchange = 'Bitfinex' THEN 'Crypto Currencies' ELSE E.Exchange END as 'Index'"
-        end_date_str = "substr(W.Wave_End_Datetime, 1, 10) AS 'Wave_End_Date'"
-        if columns is None:
-            selected_columns = '{}, {}, W.*'.format(case_for_index, end_date_str)
-        else:
-            columns = list(columns)  # we modify this list - but this is used in the caller as well
-            calculated_columns = []
-            if DC.INDEX in columns:
-                calculated_columns.append(case_for_index)
-                columns.remove(DC.INDEX)
-            if DC.WAVE_END_DATE in columns:
-                calculated_columns.append(end_date_str)
-                columns.remove(DC.WAVE_END_DATE)
-            columns_joined = ','.join(['W.' + col for col in columns])
-            if len(calculated_columns) > 0:
-                calculated_columns_joined = ','.join(calculated_columns)
-                selected_columns = '{}, {}'.format(calculated_columns_joined, columns_joined)
-            else:
-                selected_columns = '{}'.format(columns_joined)
-        query = "SELECT {} FROM Wave as W JOIN Equity AS E ON E.KEY = W.Ticker_ID".format(selected_columns)
+    @staticmethod
+    def __get_query_for_wave_view__(where_clause: str, columns):  # With calculated columns "Index" and "Wave_End_Date"
+        selected_columns = '*' if columns is None else ','.join(columns)
+        query = "SELECT {} FROM v_wave".format(selected_columns)
         if where_clause != '':
             query += ' WHERE {}'.format(where_clause)
-        return query + ';'
+        return query + ' ORDER BY {};'.format(DC.WAVE_END_TS)
 
     def update_record(self, record_id: str, data_dict: dict):
         set_clause = self.get_update_set_clause_from_data_dict(data_dict)
@@ -269,20 +265,26 @@ class AccessLayer4Wave(AccessLayer):
         return self.select_data_by_query(query)
 
     def get_grouped_by_for_wave_plotting(self):
-        columns = [DC.INDEX, DC.PERIOD, DC.PERIOD_AGGREGATION, DC.WAVE_TYPE, DC.WAVE_END_DATE, DC.TICKER_ID]
+        columns = [DC.EQUITY_INDEX, DC.PERIOD, DC.PERIOD_AGGREGATION, DC.WAVE_TYPE, DC.WAVE_END_DATE, DC.TICKER_ID]
         df = self.get_all_as_data_frame(columns=columns)
         return df.groupby(columns[:-1]).count()
 
-    def get_grouped_by_for_wave_peak_plotting(self, period: str):
-        if period == PRD.DAILY:  # here we take as well the intraday waves for that day...
-            columns = [DC.INDEX, DC.PERIOD, DC.PERIOD_AGGREGATION, DC.WAVE_TYPE, DC.WAVE_END_DATE, DC.TICKER_ID]
-            df = self.get_all_as_data_frame(columns=columns)
-        else:  # here we take only the intraday waves
-            columns = [DC.INDEX, DC.PERIOD, DC.PERIOD_AGGREGATION, DC.WAVE_TYPE, DC.WAVE_END_TS, DC.WAVE_END_DT, DC.TICKER_ID]
+    def get_grouped_by_for_wave_peak_plotting(self, wave_peak_date_type: str, aggregation=1, offset_date=''):
+        if wave_peak_date_type in [WPDT.DAILY_DATE, WPDT.INTRADAY_DATE]:
+            where_clause = "{}='{}'".format(
+                DC.PERIOD, PRD.DAILY if wave_peak_date_type == WPDT.DAILY_DATE else PRD.INTRADAY)
+            columns = [DC.EQUITY_INDEX, DC.PERIOD, DC.PERIOD_AGGREGATION, DC.WAVE_TYPE, DC.WAVE_END_DATE, DC.TICKER_ID]
+        else:  # here we take only the intraday waves with the proper aggregation
+            columns = [DC.EQUITY_INDEX, DC.PERIOD, DC.PERIOD_AGGREGATION, DC.WAVE_TYPE, DC.WAVE_END_TS,
+                       DC.WAVE_END_DT, DC.TICKER_ID]
             offset_ts = MyDate.get_offset_timestamp(days=-10)
-            where_clause = "{}='{}' AND {} > {}".format(DC.PERIOD, PRD.INTRADAY, DC.WAVE_END_TS, offset_ts)
-            query = self.__get_query__(where_clause, columns)
-            df = self.select_data_by_query(query)
+            where_clause = "{}='{}' AND {}>{} AND {}={}".format(
+                DC.PERIOD, PRD.INTRADAY, DC.WAVE_END_TS, offset_ts, DC.PERIOD_AGGREGATION, aggregation)
+        if offset_date != '':
+            where_clause += " AND {}>'{}'".format(DC.WAVE_END_DATE, offset_date)
+        df = self.get_all_as_data_frame(columns=columns, where_clause=where_clause)
+        if df.empty:
+            return df
         df = df.groupby(columns[:-1]).count()
         return df.reset_index(drop=False)
 

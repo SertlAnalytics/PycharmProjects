@@ -267,17 +267,18 @@ class PatternPlotter:
         index = self.sys_config.index_config.get_index_for_symbol(self.symbol)
         period = self.sys_config.period
         aggregation = self.sys_config.period_aggregation
-        threshold = 1 if index == INDICES.CRYPTO_CCY or period == PRD.INTRADAY else 4
         wave_tick_list = WaveTickList(self.pdh.pattern_data.df)
-        self.sys_config.fibonacci_wave_handler.fill_wave_type_number_dict_for_ticks_in_wave_tick_list(
-            wave_tick_list, index, period)
+        wave_data_handler = self.sys_config.fibonacci_wave_data_handler
+        wave_data_handler.fill_wave_type_number_dict_for_ticks_in_wave_tick_list(wave_tick_list, index, period)
         for tick in wave_tick_list.tick_list:
-            for wave_type in WAVEST.get_waves_types_for_processing(period):
-                color = 'magenta' if wave_type in [WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC] else 'cyan'
+            for wave_type in WAVEST.get_waves_types_for_processing([period]):
+                color = wave_data_handler.get_color_for_wave_type_and_period(wave_type, period)
+                # if tick.date_str == '2019-03-07':
+                #     print(color)
                 number_waves = tick.get_wave_number_for_wave_type(wave_type)
-                if number_waves >= threshold:
+                if number_waves >= 1:  # thresholds were calculated in a pre-process
                     xy = wave_tick_list.get_xy_parameters_for_wave_peak(tick, wave_type, period, aggregation)
-                    self.__add_xy_values_as_polygon__(xy, color, closed=True, fill=True)
+                    self.__add_xy_values_as_polygon__(xy, color, closed=True, fill=False, alpha=1, line_width=1)
                     # arrow = wave_tick_list.get_fancy_arrow_for_wave_peak(tick, wave_type)
                     # if arrow is not None:
                     #     self.axes_for_candlesticks.add_patch(arrow)
@@ -346,13 +347,13 @@ class PatternPlotter:
         self.__add_xy_values_as_polygon__(xy_upper, 'deeppink')
         self.__add_xy_values_as_polygon__(xy_lower, 'deeppink')
 
-    def __add_xy_values_as_polygon__(self, xy: list, color: str, closed=False, fill=False):
+    def __add_xy_values_as_polygon__(self, xy: list, color: str, closed=False, fill=False, alpha=0.2, line_width=2):
         xy = PlotterInterface.get_xy_from_timestamp_to_date_number(xy)
         polygon = Polygon(np.array(xy), closed=closed, fill=fill)
         polygon.set_visible(True)
         polygon.set_color(color)
-        polygon.set_alpha(0.2)
-        polygon.set_linewidth(2)
+        polygon.set_alpha(alpha)
+        polygon.set_linewidth(line_width)
         self.axes_for_candlesticks.add_patch(polygon)
 
     def __plot_volume__(self, axis):

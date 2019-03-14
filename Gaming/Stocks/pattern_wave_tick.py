@@ -107,23 +107,23 @@ class WaveTick:
 
     @property
     def open(self):
-        return round(self.tick[CN.OPEN], 2)
+        return MyMath.round_smart(self.tick[CN.OPEN])
 
     @property
     def high(self):
-        return round(self.tick[CN.HIGH], 2)
+        return MyMath.round_smart(self.tick[CN.HIGH])
 
     @property
     def low(self):
-        return round(self.tick[CN.LOW], 2)
+        return MyMath.round_smart(self.tick[CN.LOW])
 
     @property
     def close(self):
-        return round(self.tick[CN.CLOSE], 2)
+        return MyMath.round_smart(self.tick[CN.CLOSE])
 
     @property
     def mean(self):
-        return round((self.high + self.low)/2, 2)
+        return MyMath.round_smart((self.high + self.low)/2)
 
     @property
     def volume(self):
@@ -279,19 +279,19 @@ class WaveTickList:
 
     @property
     def mean(self):
-        return round(np.mean([tick.mean for tick in self.tick_list])[0], 2)
+        return MyMath.round_smart(np.mean([tick.mean for tick in self.tick_list])[0])
 
     @property
     def max(self):
-        return round(np.max([tick.high for tick in self.tick_list]), 2)
+        return MyMath.round_smart(np.max([tick.high for tick in self.tick_list]))
 
     @property
     def min(self):
-        return round(np.min([tick.low for tick in self.tick_list]), 2)
+        return MyMath.round_smart(np.min([tick.low for tick in self.tick_list]))
 
     @property
     def value_range(self):
-        return round(self.max - self.min, 2)
+        return MyMath.round_smart(self.max - self.min)
 
     @property
     def first_wave_tick(self):
@@ -302,7 +302,7 @@ class WaveTickList:
         return self.tick_list[-1]
 
     def fill_wave_type_number_dicts(self):
-        for wave_type in WAVEST.get_waves_types_for_processing():
+        for wave_type in WAVEST.get_waves_types_for_processing([]):
             wave_type_number_list = []
             for tick in self.tick_list:
                 wave_type_number_list.append(tick.get_wave_number_for_wave_type(wave_type))
@@ -401,7 +401,7 @@ class WaveTickList:
                 value_list.append(default_value)
             else:
                 value_list.append(tick.open)
-        return round(np.average(value_list), 2)
+        return MyMath.round_smart(np.average(value_list))
 
     def get_markdown_text_for_second_last_wave_tick(self, period=PRD.INTRADAY):
         prev_tick = self.tick_list[-2]
@@ -487,9 +487,9 @@ class WaveTickList:
         slope_dec_main = MyPoly1d.get_slope_in_decimal_percentage(f_param, offset, self.length)
         slope_dec_bound = MyPoly1d.get_slope_in_decimal_percentage(f_param_boundary, offset, self.length)
         if f_param(offset) > f_param_boundary(offset):
-            slope_main_bound = round(slope_dec_main - slope_dec_bound, 4)
+            slope_main_bound = MyMath.round_smart(slope_dec_main - slope_dec_bound)
         else:
-            slope_main_bound = round(slope_dec_bound - slope_dec_main, 4)
+            slope_main_bound = MyMath.round_smart(slope_dec_bound - slope_dec_main)
         return slope_main_bound < 0.04  # we don't accept wide opening patterns
 
     def __get_tick_list_without_valleys__(self, tick_list, for_high: bool):

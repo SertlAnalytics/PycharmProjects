@@ -9,6 +9,7 @@ import numpy as np
 from scipy.stats import entropy
 import pandas as pd
 import math
+from sertl_analytics.test.my_test_abc import TestInterface
 
 
 class MyEntropy:
@@ -236,12 +237,77 @@ class MyMath:
     def round_smart(value: float) -> float:
         if value == 0:
             return 0
-        decimals = math.ceil(math.log10(abs(value)))
+        decimals = int(math.ceil(math.log10(abs(value))))
         if decimals > 3:
             return round(value)
         elif decimals > 0:
-            return round(value, 2)
-        return round(value, -decimals + 2)
+            return round(value, 5 - decimals)
+        return round(value, min(5, -decimals + 3))  # not more then 5 decimals after comma
+
+
+class MyMathTest(MyMath, TestInterface):
+    DIVIDE = 'divide'
+    ROUND_SMART = 'round_smart'
+
+    def __init__(self, print_all_test_cases_for_units=False):
+        TestInterface.__init__(self, print_all_test_cases_for_units)
+
+    def test_divide(self):
+        """
+         def divide(dividend: float, divisor: float, round_decimals = 2, return_value_on_error = 0):
+        if divisor == 0:
+            return return_value_on_error
+        return round(dividend/divisor, round_decimals)
+        :return:
+        """
+        test_case_dict = {
+            'divisor=0, return_value_on_error=default(0)': [self.divide(7, 0), 0],
+            'divisor=0, return_value_on_error=2)': [self.divide(7, 0, return_value_on_error=2), 2],
+            'round=default(2)': [self.divide(2, 3), 0.67],
+            'round=3': [self.divide(2, 3, 3), 0.667],
+            'round=4': [self.divide(2, 3, 4), 0.6667],
+             }
+        return self.__verify_test_cases__(self.DIVIDE, test_case_dict)
+
+    def test_round_smart(self, print_all=False):
+        """
+        if value == 0:
+            return 0
+        decimals = int(math.ceil(math.log10(abs(value))))
+        if decimals > 3:
+            return round(value)
+        elif decimals > 0:
+            return round(value, 5 - decimals)
+        return round(value, min(5, -decimals + 3))  # not more then 5 decimals after comma
+        :return:
+        """
+        test_case_dict = {
+            'value=0': [self.round_smart(0), 0],
+            'decimals before comma > 3': [self.round_smart(1234.66666), 1235],
+            'decimals before comma = 3': [self.round_smart(234.66666), 234.67],
+            'decimals before comma = 2': [self.round_smart(34.66666), 34.667],
+            'decimals before comma = 1': [self.round_smart(4.66666), 4.6667],
+            'number < 1 and zeros after comma=0 (like 0.55555555)': [self.round_smart(0.55555555), 0.556],
+            'number < 1 and zeros after comma=1 (like 0.05555555)': [self.round_smart(0.05555555), 0.0556],
+            'number < 1 and zeros after comma=2 (like 0.00555555)': [self.round_smart(0.00555555), 0.00556],
+            'number < 1 and zeros after comma=3 (like 0.00055555)': [self.round_smart(0.00055555), 0.00056],
+            'number < 1 and zeros after comma=4 (like 0.00005555)': [self.round_smart(0.00005555), 0.00006],
+            'number < 1 and zeros after comma=5 (like 0.00000555)': [self.round_smart(0.00000555), 0.00001],
+            'number < 1 and zeros after comma=6 (like 0.00000055)': [self.round_smart(0.00000055), 0],
+        }
+        return self.__verify_test_cases__(self.ROUND_SMART, test_case_dict)
+
+    def __get_class_name_tested__(self):
+        return MyMath.__name__
+
+    def __run_test_for_unit__(self, unit: str) -> bool:
+        if unit == self.DIVIDE:
+            return self.test_divide()
+        elif unit == self.ROUND_SMART:
+            return self.test_round_smart()
+
+    def __get_test_unit_list__(self):
+        return [self.DIVIDE, self.ROUND_SMART]
 
 
 class MyPoly1d:

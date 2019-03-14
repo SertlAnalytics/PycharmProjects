@@ -56,7 +56,7 @@ sys_config.config.fibonacci_tolerance_pct = 0.1  # default is 0.20
 sys_config.config.fibonacci_detail_print = True
 # sys_config.config.use_index(Indices.DOW_JONES)
 sys_config.data_provider.use_index(INDICES.CRYPTO_CCY)
-sys_config.fibonacci_wave_handler.load_data(PRD.ALL)
+sys_config.fibonacci_wave_data_handler.load_data(PRD.ALL)
 my_dash_job_handler = MyDashJobHandler(check_interval_min=15)
 my_dash_job_handler.start_scheduler()
 my_dash = MyDash4Pattern(sys_config)

@@ -15,7 +15,7 @@ from pattern_trade_handler import PatternTradeHandler
 from pattern_database.stock_database import StockDatabase
 from pattern_database.stock_tables import PatternTable, TradeTable
 from pattern_predictor_optimizer import PatternPredictorOptimizer
-from fibonacci.fibonacci_wave_handler import FibonacciWaveHandler
+from fibonacci.fibonacci_wave_data import FibonacciWaveDataHandler
 import pandas as pd
 import itertools
 import numpy as np
@@ -579,11 +579,8 @@ class MyDashTabStatisticsPlotter4Pattern(MyDashTabStatisticsPlotter):
 
 
 class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
-    def __init__(self, wave_handler: FibonacciWaveHandler, color_handler: DashColorHandler,
-                 retrospective_ticks: int, index=''):
+    def __init__(self, wave_handler: FibonacciWaveDataHandler, color_handler: DashColorHandler, index=''):
         self._wave_handler = wave_handler
-        self._retrospective_ticks = retrospective_ticks
-        self._wave_handler.set_retrospective_tick_number(self._retrospective_ticks)
         self._index = index
         MyDashTabStatisticsPlotter.__init__(self, self._wave_handler.df_wave, color_handler)
 
@@ -617,42 +614,8 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
         return graph_list
 
     def __get_data_for_heatmap_figure__(self, index: str):
-        x_data = self._wave_handler.date_list
-        y_data = WAVEST.get_waves_types_for_processing()
+        x_data = self._wave_handler.tick_key_list_for_retrospection
+        y_data = WAVEST.get_waves_types_for_processing([self._wave_handler.period_for_retrospection])
         z_data = [self._wave_handler.get_waves_number_list_for_wave_type_and_index(wt, index) for wt in y_data]
         # print('__get_data_for_heatmap_figure__: {}: {}\n{}'.format(index, x_data, z_data))
         return x_data, y_data, z_data
-
-    def __get_data_for_heatmap_figure_old__(self, index: str):
-        z_data = []
-        x_data = []
-        y_data = []
-
-        offset_timestamp_start = self.__get_offset_timestamp_for_period__(PRD.DAILY)
-        seconds_day = MyDate.get_seconds_for_period(days=1)
-        day_range_dict = {}
-        df_base = self._df_base[self._df_base[DC.INDEX] == index]
-        for days in range(0, self._retrospective_ticks):
-            ts_start = offset_timestamp_start + days * seconds_day
-            ts_end = ts_start + seconds_day
-            date_str = MyDate.get_date_from_epoch_seconds(ts_start)
-            x_data.append(date_str)
-            day_range_dict[date_str] = [ts_start, ts_end]
-
-        for wave_type in WAVEST.get_waves_types_for_processing():
-            y_data.append(wave_type)
-            z_data_single = []
-            period, direction = WAVEST.get_period_and_direction_for_wave_type(wave_type)
-            for days in x_data:
-                ts_start, ts_end = day_range_dict[days][0], day_range_dict[days][1]
-                df = df_base[df_base[DC.WAVE_END_TS] >= ts_start]
-                df = df[df[DC.WAVE_END_TS] < ts_end]
-                df = df[df[DC.PERIOD] == period]
-                df = df[df[DC.WAVE_TYPE] == direction]
-                z_data_single.append(df.shape[0])
-            z_data.append(z_data_single)
-        return z_data, x_data, y_data
-
-    def __get_offset_timestamp_for_period__(self, period: str):
-        return MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=self._retrospective_ticks)
-

@@ -52,6 +52,7 @@ class MyDashStockDataUpdateJob(MyDashPatternJob):
         db_stock.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
         if MyDate.is_tuesday_till_saturday():
             db_stock.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
+            db_stock.update_stock_data_by_index(INDICES.FOREX, PRD.DAILY)
             db_stock.update_stock_data_by_index(INDICES.DOW_JONES, PRD.DAILY)
             db_stock.update_stock_data_for_symbol('FCEL')
             db_stock.update_stock_data_for_symbol('TSLA')
@@ -66,7 +67,7 @@ class MyEquityUpdateJob(MyDashPatternJob):
 
 class MyDailyWaveUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
-        index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+        index_list = [INDICES.CRYPTO_CCY, INDICES.FOREX, INDICES.DOW_JONES, INDICES.NASDAQ100]
         for index in index_list:
             if index == INDICES.CRYPTO_CCY or MyDate.is_tuesday_till_saturday():
                 self._stock_db_updater.update_wave_data_by_index_for_daily_period(index, 400)
@@ -75,7 +76,7 @@ class MyDailyWaveUpdateJob(MyDashPatternJob):
 
 class MyIntradayWaveUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
-        index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+        index_list = [INDICES.CRYPTO_CCY, INDICES.FOREX, INDICES.DOW_JONES, INDICES.NASDAQ100]
         for index in index_list:
             if index == INDICES.CRYPTO_CCY or MyDate.is_monday_till_friday():
                 self._stock_db_updater.update_wave_data_by_index_for_intraday(index)
@@ -86,6 +87,7 @@ class MyPatternUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
         self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.CRYPTO_CCY)
         if MyDate.is_tuesday_till_saturday():
+            self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.FOREX)
             self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.INDICES)
             self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.DOW_JONES)
             self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.NASDAQ100)

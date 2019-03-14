@@ -188,19 +188,25 @@ class PatternFunctionContainer:
     def __set_tick_for_breakout__(self, tick):
         self._tick_for_breakout = tick
         if tick.close > self.get_upper_value(tick.f_var):
-            self._f_breakout = np.poly1d([0, self.get_upper_value(tick.f_var)])
+            self._f_breakout = np.poly1d([0, self.get_upper_value(tick.f_var, True)])
         else:
-            self._f_breakout = np.poly1d([0, self.get_lower_value(tick.f_var)])
+            self._f_breakout = np.poly1d([0, self.get_lower_value(tick.f_var, True)])
 
     tick_for_breakout = property(__get_tick_for_breakout__, __set_tick_for_breakout__)
 
     def adjust_functions_when_required(self, tick: WaveTick):
         pass
 
-    def get_upper_value(self, f_var: float):
+    def get_upper_value(self, f_var: float, with_smart_rounding=False):
+        # ToDo - get rid of with_smart_rounding - always this way - currently we face problems with pattern detection
+        if with_smart_rounding:
+            return MyMath.round_smart(self._f_upper(f_var))
         return round(self._f_upper(f_var), 2)
 
-    def get_lower_value(self, f_var: float):
+    def get_lower_value(self, f_var: float, with_smart_rounding=False):
+        # ToDo - get rid of with_smart_rounding - always this way - currently we face problems with pattern detection
+        if with_smart_rounding:
+            return MyMath.round_smart(self._f_lower(f_var))
         return round(self._f_lower(f_var), 2)
 
     def get_tick_list_for_xy_regression_parameter(self, tick_first: WaveTick, tick_last: WaveTick):
@@ -270,12 +276,18 @@ class FibonacciAscPatternFunctionContainer(FibonacciPatternFunctionContainer):
                 return wave_tick, f_lower_constant
         return None, None
 
-    def get_upper_value(self, f_var: int):
+    def get_upper_value(self, f_var: int, with_smart_rounding=False):
+        if with_smart_rounding:
+            if f_var < self.tick_for_helper.f_var:
+                return MyMath.round_smart(self._f_upper(f_var))
+            return MyMath.round_smart(self._h_upper(f_var))
         if f_var < self.tick_for_helper.f_var:
             return round(self._f_upper(f_var), 4)
         return round(self._h_upper(f_var), 4)
 
-    def get_lower_value(self, f_var: float):
+    def get_lower_value(self, f_var: float, with_smart_rounding=False):
+        if with_smart_rounding:
+            return MyMath.round_smart(min(self._f_lower(f_var), self._h_lower(f_var)))
         return round(min(self._f_lower(f_var), self._h_lower(f_var)), 4)
 
     def is_tick_breakout(self, tick: WaveTick):
@@ -307,10 +319,16 @@ class FibonacciDescPatternFunctionContainer(FibonacciPatternFunctionContainer):
                 return wave_tick, f_upper_constant
         return None, None
 
-    def get_upper_value(self, f_var: int):
+    def get_upper_value(self, f_var: int, with_smart_rounding=False):
+        if with_smart_rounding:
+            return MyMath.round_smart(max(self._f_upper(f_var), self._h_upper(f_var)))
         return round(max(self._f_upper(f_var), self._h_upper(f_var)), 4)
 
-    def get_lower_value(self, f_var: float):
+    def get_lower_value(self, f_var: float, with_smart_rounding=False):
+        if with_smart_rounding:
+            if f_var < self.tick_for_helper.f_var:
+                return MyMath.round_smart(self._f_lower(f_var))
+            return MyMath.round_smart(self._h_lower(f_var))
         if f_var < self.tick_for_helper.f_var:
             return round(self._f_lower(f_var), 4)
         return round(self._h_lower(f_var), 4)
@@ -343,7 +361,9 @@ class TKETopPatternFunctionContainer(PatternFunctionContainer):
     def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
         return tick.high > self.get_upper_value(tick.f_var)
 
-    def get_lower_value(self, f_var: int):
+    def get_lower_value(self, f_var: int, with_smart_rounding=False):
+        if with_smart_rounding:
+            return MyMath.round_smart(min(self._f_lower(f_var), self._h_lower(f_var)))
         return round(min(self._f_lower(f_var), self._h_lower(f_var)), 2)
 
     def adjust_functions_when_required(self, tick: WaveTick):
@@ -378,7 +398,9 @@ class TKEBottomPatternFunctionContainer(PatternFunctionContainer):
     def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
         return tick.low < self.get_lower_value(tick.f_var)
 
-    def get_upper_value(self, f_var: int):
+    def get_upper_value(self, f_var: int, with_smart_rounding=False):
+        if with_smart_rounding:
+            return MyMath.round_smart(max(self._f_upper(f_var), self._h_upper(f_var)))
         return round(max(self._f_upper(f_var), self._h_upper(f_var)), 2)
 
     def adjust_functions_when_required(self, tick: WaveTick):

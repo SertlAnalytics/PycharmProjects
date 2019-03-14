@@ -143,7 +143,9 @@ class PatternTrade:
 
     @property
     def executed_amount(self):
-        return 0 if self._order_status_buy is None else self._order_status_buy.executed_amount
+        if self._order_status_buy is None or self._order_status_buy.executed_amount == 0:
+            return self.data_dict_obj.get(DC.BUY_AMOUNT)
+        return self._order_status_buy.executed_amount
 
     @property
     def order_status_buy(self):
@@ -742,9 +744,13 @@ class PatternTrade:
             self.data_dict_obj.add(DC.SELL_ORDER_TPYE_ID, OT.get_id(order_status.type))
             self.data_dict_obj.add(DC.SELL_DT, MyDate.get_date_from_epoch_seconds(order_status.time_stamp))
             self.data_dict_obj.add(DC.SELL_TIME, str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp)))
-            self.data_dict_obj.add(DC.SELL_AMOUNT, order_status.executed_amount)
+            sell_amount = order_status.executed_amount if order_status.executed_amount == 0 \
+                else order_status.executed_amount
+            self.data_dict_obj.add(DC.SELL_AMOUNT, sell_amount)
             self.data_dict_obj.add(DC.SELL_PRICE, order_status.avg_execution_price)
-            self.data_dict_obj.add(DC.SELL_TOTAL_VALUE, order_status.value_total)
+            sell_total_value = sell_amount * order_status.avg_execution_price if order_status.value_total == 0 \
+                else order_status.value_total
+            self.data_dict_obj.add(DC.SELL_TOTAL_VALUE, sell_total_value)
             self.data_dict_obj.add(DC.SELL_TRIGGER, order_status.order_trigger)
             self.data_dict_obj.add(DC.SELL_TRIGGER_ID, ST.get_id(order_status.order_trigger))
             self.data_dict_obj.add(DC.SELL_COMMENT, order_status.order_comment)

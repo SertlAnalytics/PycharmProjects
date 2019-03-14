@@ -6,19 +6,22 @@ Date: 2018-05-14
 """
 
 from sqlalchemy import create_engine, MetaData
-from sqlalchemy import Table, Column, String, Integer, Float, Boolean, Date, DateTime, Time
+from sertl_analytics.test.my_test_abc import TestInterface
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageForexFetcher
 from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
     CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable, TradePolicyMetricTable, ProcessTable
+from pattern_database.stock_views import WaveView
+from pattern_logging.pattern_log import PatternLog
 import pandas as pd
 import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentFetcher
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, OPS, FT, TRT, TSTR
+from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, OPS, FT, TRT, TSTR, SVW, EDC
 import os
 import time
 
@@ -107,6 +110,7 @@ class StockDatabase(BaseDatabase):
         self._bitfinex_crypto_fetcher = BitfinexCryptoFetcher()
         self._alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
         self._alphavantage_stock_fetcher = AlphavantageStockFetcher()
+        self._alphavantage_forex_fetcher = AlphavantageForexFetcher()
         self._sleep_seconds = 5
         self._table_dict = self.__get_table_dict__()
 
@@ -212,9 +216,8 @@ class StockDatabase(BaseDatabase):
         company_dic = self.__get_company_dict__(symbol)
         name = company_dic[symbol] if symbol in company_dic else name_input
         last_loaded_dict = self.__get_last_loaded_time_stamp_dic__(symbol)
-        index = INDICES.UNDEFINED
         self.__update_stock_data_for_single_value__(
-            period, aggregation, symbol, name, index, company_dic, last_loaded_dict)
+            period, aggregation, symbol, name, INDICES.UNDEFINED, company_dic, last_loaded_dict)
 
     def insert_pattern_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.PATTERN, input_dict_list)
@@ -239,6 +242,10 @@ class StockDatabase(BaseDatabase):
 
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str, index: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
+        if ticker in ['CSX']:
+            PatternLog.log_message('exception - is not used {}'.format(ticker),
+                                   process='__update_stock_data_for_single_value__')
+            return
         name = self._company_table.get_alternate_name(ticker, name)
         last_loaded_time_stamp = last_loaded_date_stamp_dic[ticker] if ticker in last_loaded_date_stamp_dic else 100000
         process_type = self._stocks_table.get_process_type_for_update(
@@ -249,10 +256,18 @@ class StockDatabase(BaseDatabase):
         if ticker in company_dic and not company_dic[ticker].ToBeLoaded:
             return  # must not be loaded
         try:
+            if index == INDICES.UNDEFINED:
+                index = self.get_index_for_symbol(ticker)
+                if index == INDICES.UNDEFINED:
+                    return
             if index == INDICES.CRYPTO_CCY:
                 # fetcher = self._alphavantage_crypto_fetcher
                 fetcher = self._bitfinex_crypto_fetcher
                 kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker)
+            elif index == INDICES.FOREX:
+                fetcher = self._alphavantage_forex_fetcher
+                output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
+                kw_args = self._alphavantage_forex_fetcher.get_kw_args(period, aggregation, ticker, output_size)
             else:
                 fetcher = self._alphavantage_stock_fetcher
                 output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
@@ -283,6 +298,14 @@ class StockDatabase(BaseDatabase):
             self.__insert_data_into_table__(STBL.STOCKS, input_list)
             print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
         time.sleep(self._sleep_seconds)
+
+    def get_index_for_symbol(self, symbol: str) -> str:
+        query = "SELECT {} FROM {} WHERE {}='{}'".format(EDC.EXCHANGE, self._entity_table.name, EDC.EQUITY_KEY, symbol)
+        df = self.select_data_by_query(query)
+        if df.shape[0] == 0:
+            return INDICES.UNDEFINED
+        exchange = df.iloc[0].values[0]
+        return INDICES.CRYPTO_CCY if exchange == 'Bitfinex' else exchange
 
     def __get_kw_args_for_data_fetcher__(self, period: str, aggregation: int, output_size: str, ticker: str):
         kw_args = {'symbol': ticker, 'period': period, 'aggregation': aggregation, 'output_size': output_size}
@@ -371,6 +394,9 @@ class StockDatabase(BaseDatabase):
 
     def create_process_table(self):
         self.__create_table__(STBL.PROCESS)
+
+    def create_wave_view(self):
+        self.__create_view__(SVW.V_WAVE)
 
     def __insert_pattern_in_pattern_table__(self, ticker: str, input_dic: dict):
         try:
@@ -582,6 +608,15 @@ class StockDatabase(BaseDatabase):
         table_obj = metadata.tables.get(table_name)
         print(repr(table_obj))
 
+    def __create_view__(self, view_name: str):
+        metadata = MetaData()
+        view = self.__get_view_by_name__(view_name)
+        create_view_obj = view.get_create_view_obj(metadata)
+        self.engine.execute(create_view_obj)
+        self.create_database_elements(metadata)
+        view_obj = metadata.tables.get(view_name)
+        print(repr(view_obj))
+
     def __get_table_by_name__(self, table_name: str):
         return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table,
                 STBL.EQUITY: self._entity_table,
@@ -590,6 +625,10 @@ class StockDatabase(BaseDatabase):
                 STBL.METRIC: self._metric_table,
                 STBL.TRADE_POLICY_METRIC: self._trade_policy_metric_table,
                 STBL.PROCESS: self._process_table}.get(table_name, None)
+
+    @staticmethod
+    def __get_view_by_name__(view_name: str):
+        return {SVW.V_WAVE: WaveView()}.get(view_name, None)
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):
@@ -606,5 +645,34 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
             self.df.set_index(CN.TIMESTAMP, drop=False, inplace=True)
             self.column_data = [CN.CLOSE]
             self.df_data = self.df[[CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL, CN. TIMESTAMP, CN.BIG_MOVE, CN.DIRECTION]]
+
+
+class StockDatabaseTest(TestInterface):
+    GET_INDEX_FOR_SYMBOL = 'get_index_for_symbol'
+
+    def __init__(self, print_all_test_cases_for_units=False):
+        TestInterface.__init__(self, print_all_test_cases_for_units)
+        self._db_stock = StockDatabase()
+
+    def test_get_index_for_symbol(self):
+        test_case_dict = {
+            'Dow-Jones': [self._db_stock.get_index_for_symbol('MMM'), INDICES.DOW_JONES],
+            'NASDAQ100': [self._db_stock.get_index_for_symbol('NVDA'), INDICES.NASDAQ100],
+            'FOREX': [self._db_stock.get_index_for_symbol('EURUSD'), INDICES.FOREX],
+            'CRYPTO_CCY': [self._db_stock.get_index_for_symbol('BTCUSD'), INDICES.CRYPTO_CCY],
+            'UNDEFINED': [self._db_stock.get_index_for_symbol('BTCUSDx'), INDICES.UNDEFINED],
+        }
+        return self.__verify_test_cases__(self.GET_INDEX_FOR_SYMBOL, test_case_dict)
+
+    def __get_class_name_tested__(self):
+        return StockDatabase.__name__
+
+    def __run_test_for_unit__(self, unit: str) -> bool:
+        if unit == self.GET_INDEX_FOR_SYMBOL:
+            return self.test_get_index_for_symbol()
+
+    def __get_test_unit_list__(self):
+        return [self.GET_INDEX_FOR_SYMBOL]
+
 
 

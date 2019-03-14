@@ -112,6 +112,8 @@ class FibonacciRegressionComponent(FibonacciWaveComponent):
     def get_regression_pct(self, comp: FibonacciWaveComponent):
         range_comp = comp.get_end_to_end_range()
         range_ret_comp = self.get_end_to_end_range()
+        if range_comp == 0:
+            return 0
         return round(range_ret_comp / range_comp, 3)
 
     def is_component_internally_consistent(self):
@@ -170,6 +172,8 @@ class FibonacciRetracementComponent(FibonacciWaveComponent):
     def get_retracement_pct(self, reg_comp: FibonacciRegressionComponent):
         range_reg_comp = reg_comp.get_end_to_end_range()
         range_ret_comp = self.get_end_to_end_range()
+        if range_reg_comp == 0:
+            return 0
         return round(abs(range_ret_comp/range_reg_comp), 3)
 
     def get_retracement_value(self, reg_comp: FibonacciRegressionComponent):

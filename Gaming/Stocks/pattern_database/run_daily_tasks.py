@@ -18,8 +18,17 @@ stock_db = sys_config.db_stock
 exchange_config = BitfinexConfiguration()
 predictor_optimizer = PatternPredictorOptimizer(stock_db)
 stock_db_updater = StockDatabaseUpdater(sys_config)
-
-stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
+stock_db.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
+# stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
+# stock_db.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
+# stock_db.update_stock_data_by_index(INDICES.DOW_JONES, PRD.DAILY)
+# stock_db.update_stock_data_by_index(INDICES.NASDAQ100, PRD.DAILY)
+# stock_db.update_stock_data_by_index(INDICES.FOREX, PRD.DAILY)
+# stock_db.update_stock_data_by_index(INDICES.FOREX, PRD.DAILY)
+# stock_db_updater.update_equity_records()
+# stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
+# pattern_type_list = [FT.ALL] + sys_config.trade_strategy_optimizer.optimal_pattern_type_list_for_long_trading
+# predictor_optimizer.calculate_class_metrics_for_predictor_and_label_for_today(pattern_type_list)
 
 if True:
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
@@ -69,18 +78,22 @@ else:
         stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.INDICES, 400)
         stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.DOW_JONES, 400)
         stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.NASDAQ100, 400)
+        stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.FOREX, 400)
 
     stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.CRYPTO_CCY)
     if MyDate.is_tuesday_till_saturday():
         stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.INDICES)
         stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.DOW_JONES)
         stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.NASDAQ100)
+        stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.FOREX)
 
     stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
     if MyDate.is_tuesday_till_saturday():
         stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.INDICES)
+        stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.FOREX)
         stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)
         stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.NASDAQ100)
+
 
     stock_db_updater.update_trade_policy_metric_for_today(
         [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])

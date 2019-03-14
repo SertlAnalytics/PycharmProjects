@@ -90,15 +90,15 @@ class PatternPart:
         self.tick_high = WaveTick(self.df.loc[self.df[CN.HIGH].idxmax(axis=0)])
         self.tick_low = WaveTick(self.df.loc[self.df[CN.LOW].idxmin(axis=0)])
         tick_breakout = self.function_cont.tick_for_breakout
-        f_upper_first = self.function_cont.get_upper_value(self.tick_first.f_var)
-        f_lower_first = self.function_cont.get_lower_value(self.tick_first.f_var)
+        f_upper_first = self.function_cont.get_upper_value(self.tick_first.f_var, True)
+        f_lower_first = self.function_cont.get_lower_value(self.tick_first.f_var, True)
         self.height_at_first_position = f_upper_first - f_lower_first
         if tick_breakout is None:
-            f_upper_last = self.function_cont.get_upper_value(self.tick_last.f_var)
-            f_lower_last = self.function_cont.get_lower_value(self.tick_last.f_var)
+            f_upper_last = self.function_cont.get_upper_value(self.tick_last.f_var, True)
+            f_lower_last = self.function_cont.get_lower_value(self.tick_last.f_var, True)
         else:
-            f_upper_last = self.function_cont.get_upper_value(tick_breakout.f_var)
-            f_lower_last = self.function_cont.get_lower_value(tick_breakout.f_var)
+            f_upper_last = self.function_cont.get_upper_value(tick_breakout.f_var, True)
+            f_lower_last = self.function_cont.get_lower_value(tick_breakout.f_var, True)
         self.height_at_last_position = f_upper_last - f_lower_last
         self.bound_upper = f_upper_last
         self.bound_lower = f_lower_last
@@ -205,7 +205,7 @@ class PatternPart:
         return '\n'.join(annotation_text_list)
 
     def get_annotation_text_as_dict(self, prediction_text_dict: dict) -> dict:
-        std_dev = round(self.df[CN.CLOSE].std(), 2)
+        std_dev = MyMath.round_smart(self.df[CN.CLOSE].std())
         f_upper_percent, f_lower_percent, f_reg_percent = self.get_slope_values()
         if self.sys_config.period == PRD.INTRADAY:
             date_str_first = self.tick_first.time_str_for_f_var
@@ -276,7 +276,7 @@ class PatternPart:
         return True
 
     def is_high_close_to_linear_function(self, f_lin: np.poly1d, tolerance_pct: float = 0.01):
-        value_function = round(f_lin(self.tick_high.high), 2)
+        value_function = MyMath.round_smart(f_lin(self.tick_high.high))
         mean = (value_function + self.tick_high.high) / 2
         value = abs(self.tick_high.high - value_function) / mean
         return value < tolerance_pct

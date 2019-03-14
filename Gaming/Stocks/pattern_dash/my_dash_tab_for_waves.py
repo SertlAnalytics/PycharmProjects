@@ -81,10 +81,13 @@ class MyDashTab4Waves(MyDashBaseTab):
         cache_key = self.__get_id_for_caches__()
         heat_map = self._head_map_cache.get_cached_object_by_key(cache_key)
         if heat_map is None:
+            ticks = self._dd_handler.selected_retrospective_ticks
+            period = self._dd_handler.selected_period
+            aggregation = self._dd_handler.selected_aggregation
+            self._fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(ticks, period, aggregation)
             plotter = MyDashTabStatisticsPlotter4Waves(
-                wave_handler=self._fibonacci_wave_handler,
+                wave_handler=self._fibonacci_wave_data_handler,
                 color_handler=self._dash_color_handler,
-                retrospective_ticks=self._dd_handler.selected_retrospective_ticks,
                 index=self._dd_handler.selected_index)
             heat_map = plotter.get_chart_list()
             self.__add_element_to_cache__(self._head_map_cache, cache_key, heat_map)
@@ -106,15 +109,14 @@ class MyDashTab4Waves(MyDashBaseTab):
             [State(self._my_waves_heatmap_div, 'children')])
         def handle_callback_for_position_manage_button_hidden(n_intervals: int, period: str, aggregation: int,
                                                               ticks: int, index: str, children):
-            if self._fibonacci_wave_handler.are_data_actual and not self._dd_handler.was_any_value_changed(
+            data_updated = self._fibonacci_wave_data_handler.reload_data_when_outdated()
+            if not data_updated and not self._dd_handler.was_any_value_changed(
                     period, aggregation, ticks, index):
                 self._heat_map_was_updated = False
                 print('Return old heatmap...')
                 return children
-            if not self._fibonacci_wave_handler.are_data_actual:
-                self._fibonacci_wave_handler.reload_data()
             self._heat_map_was_updated = True
-            self._fibonacci_wave_handler.set_retrospective_tick_number(ticks)
+            self._fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(ticks, period, aggregation)
             return self.__get_heatmap__()
 
     def __init_callbacks_for_waves_index_chart__(self):
@@ -170,13 +172,13 @@ class MyDashTab4Waves(MyDashBaseTab):
 
     def create_callback_for_numbers_in_header_table(self, index: str, wave_type: str):
         def callback(n_intervals: int):
-            return self.sys_config.fibonacci_wave_handler.\
+            return self.sys_config.fibonacci_wave_data_handler.\
                 get_waves_numbers_with_dates_for_wave_type_and_index_for_days(wave_type, index)
         return callback
 
     def __init_callback_for_waves_header_table__(self):
         column = 1
-        for wave_type in WAVEST.get_waves_types_for_processing():
+        for wave_type in WAVEST.get_waves_types_for_processing([]):
             column += 1
             row = 1
             for index in INDICES.get_index_list_for_waves_tab():

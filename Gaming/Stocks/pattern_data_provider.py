@@ -11,6 +11,7 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageForexFetcher
 from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher, CryptoCompareCryptoFetcher
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.user_input.confirmation import UserInput
@@ -25,6 +26,7 @@ from pattern_data_handler import PatternDataHandler
 from pattern_configuration import PatternConfiguration
 from pattern_index_configuration import IndexConfiguration
 from pattern_dash.my_dash_caches import MyDataFrameCache
+from pattern_logging.pattern_log import PatternLog
 
 
 class DP:  # DataProvider
@@ -157,11 +159,17 @@ class PatternDataProvider:
         return PyBaseDataFrame.get_rows_as_dictionary(db_data_frame.df, 'Symbol', ['Symbol'])
 
     def init_pattern_data_handler_for_ticker_id(self, ticker_id: str, and_clause: str, limit=400):
-        df = self.__get_df_for_ticker_id__(ticker_id, and_clause, limit)
-        if df is None:
-            self.pdh = None
-        else:
-            self.pdh = PatternDataHandler(self.config, df)
+        df = None
+        try:
+            df = self.__get_df_for_ticker_id__(ticker_id, and_clause, limit)
+        except IndexError:
+            PatternLog.log_message('Error with ticker_id={}'.format(ticker_id), 'init_pattern_data_handler_for_ticker_id')
+            PatternLog.log_error()
+        finally:
+            if df is None:
+                self.pdh = None
+            else:
+                self.pdh = PatternDataHandler(self.config, df)
 
     def __get_df_for_ticker_id__(self, ticker_id: str, and_clause: str, limit: int):
         self.ticker_id = ticker_id
@@ -210,7 +218,10 @@ class PatternDataProvider:
             fetcher.retrieve_data(**kw_args)
             return fetcher.df_data
         else:
-            fetcher = AlphavantageStockFetcher()
+            if self.index_config.is_symbol_currency(ticker_id):
+                fetcher = AlphavantageForexFetcher()
+            else:
+                fetcher = AlphavantageStockFetcher()
             fetcher.retrieve_data(**kw_args)
             if self.period == PRD.INTRADAY:
                 return self.__get_with_concatenated_intraday_data__(fetcher.df_data)

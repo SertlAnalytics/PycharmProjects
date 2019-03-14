@@ -9,6 +9,7 @@ import numpy as np
 from sertl_analytics.constants.pattern_constants import FD, FR, CM, FWST, DC, PRD
 from sertl_analytics.mymath import MyPoly1d
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mymath import MyMath
 from fibonacci.fibonacci_wave_component import FibonacciWaveComponent, FibonacciRegressionComponent, \
     FibonacciRetracementComponent
 from fibonacci.fibonacci_wave_component import FibonacciAscendingRegressionComponent
@@ -685,8 +686,10 @@ class FibonacciDescendingWave(FibonacciWave):
             ret_comp_prev = self.comp_dic[self.comp_id_list_ret[index_comp_id - 1]]
             reg_comp.regression_value_against_last_regression = round(reg_comp_prev.min - reg_comp.min, 2)
             reg_comp.regression_value_against_last_retracement = round(ret_comp_prev.min - reg_comp.min, 2)
-            reg_comp.regression_pct_against_last_regression = round(reg_comp.get_end_to_end_range()
-                                                    / reg_comp_prev.get_end_to_end_range(), 3)
+            # if reg_comp_prev.get_end_to_end_range() == 0:  # ToDo - why is this happen ???
+            #     print('if reg_comp_prev.get_end_to_end_range() == 0')
+            reg_comp.regression_pct_against_last_regression = \
+                MyMath.divide(reg_comp.get_end_to_end_range(), reg_comp_prev.get_end_to_end_range(), 3)
 
     def __calculate_retracement_values_for_component__(self, ret_comp: FibonacciDescendingRetracementComponent):
         index_wave_id = self.comp_id_list_ret.index(ret_comp.comp_id)

@@ -41,6 +41,13 @@ class MyDate:
         return MyDate.get_epoch_seconds_for_date() + MyDate.get_seconds_for_period(days, hours, min)
 
     @staticmethod
+    def get_offset_timestamp_for_period_aggregation(number: int, period: str, aggregation: int):
+        if period == PRD.DAILY:
+            return MyDate.get_offset_timestamp(days=-number)
+        else:
+            return MyDate.get_offset_timestamp(min=-number * aggregation)
+
+    @staticmethod
     def time_now_str() -> str:
         dt_now = datetime.now()
         return '{}'.format(MyDate.get_time_from_datetime(dt_now))
@@ -136,6 +143,12 @@ class MyDate:
     @staticmethod
     def get_date_from_epoch_seconds(epoch_seconds: int) -> date:
         return datetime.fromtimestamp(epoch_seconds).date()
+
+    @staticmethod
+    def get_time_stamp_rounded_to_previous_hour(epoch_seconds: int):
+        seconds_per_hour = MyDate.get_seconds_for_period(hours=1)
+        remaining_seconds = epoch_seconds % seconds_per_hour
+        return epoch_seconds - remaining_seconds
 
     @staticmethod
     def get_time_from_epoch_seconds(epoch_seconds: int):

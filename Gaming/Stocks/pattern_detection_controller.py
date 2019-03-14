@@ -121,7 +121,7 @@ class PatternDetectionController:
     def __run_pattern_detector__(self):
         self.__init_loop_list_for_ticker__()
         limit = self.sys_config.data_provider.limit
-        self.sys_config.fibonacci_wave_handler.load_data(period=self.period, aggregation=self.period_aggregation)
+        self.sys_config.fibonacci_wave_data_handler.load_data(self.period, self.period_aggregation)
         for value_dic in self._loop_list_ticker.value_list:
             ticker = value_dic[LL.TICKER]
             and_clause = value_dic[LL.AND_CLAUSE]

@@ -10,89 +10,90 @@ from pattern_database.stock_database import StockDatabase
 from pattern_wave_tick import WaveTick, WaveTickList
 from pattern_index_configuration import IndexConfiguration
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.pattern_constants import WAVEST, DC, INDICES, PRD
+from sertl_analytics.constants.pattern_constants import WAVEST, DC, INDICES, PRD, WPDT
 import pandas as pd
 
 
 class FibonacciWaveHandler:
     def __init__(self, db_stock: StockDatabase):
-        self._retrospective_ticks = 0
         self._access_layer_wave = AccessLayer4Wave(db_stock)
-        self._for_dash = False
+        self._period_list = []
         self._period = ''
         self._aggregation = 0
         self._limit = 0
-        self._wave_types = WAVEST.get_waves_types_for_processing(self._period)
+        self._wave_types = []
         self._index_list = INDICES.get_index_list_for_waves_tab()
         self._index_config = IndexConfiguration(db_stock, self._index_list)
         self._seconds_unit = 0
-        self._df_fetched_date_str = ''
+        self._data_last_fetched_time_stamp = 0
         self._tick_key_list_for_retrospection = []  # either date_str from Daily or timestamp for Intraday
         self._daily_index_wave_type_number_dict = {}  # contains itself a dictionary {date: number, ..}
         self._intraday_index_wave_type_number_dict = {}  # contains itself a dictionary {ts: number, ..}
-        self._df_wave = None
+        self._df_wave_dict = {}
 
     def load_data(self, period=PRD.ALL, aggregation=1):  # with group by data frames
-        print('Fibonacci_load_handler.load_data...')
-        period = PRD.DAILY
-        self._for_dash = True if period == PRD.ALL else False
-        self._period = period
+        self._period_list = [PRD.INTRADAY, PRD.DAILY] if period==PRD.ALL else [period]
+        self._wave_types = WAVEST.get_waves_types_for_processing(self._period_list)
+        self._period = self._period_list[0]
         self._aggregation = aggregation
         self._seconds_unit = self.__get_seconds_for_unit__()
-        self._df_wave = self._access_layer_wave.get_grouped_by_for_wave_peak_plotting(self._period)
+        for period in self._period_list:
+            if period == PRD.DAILY:
+                wave_period_key = WPDT.DAILY_DATE
+            else:
+                wave_period_key = WPDT.INTRADAY_TS
+            self._df_wave_dict[period] = self._access_layer_wave.get_grouped_by_for_wave_peak_plotting(
+                wave_period_key, aggregation)
         self.__fill_waves_into_index_wave_type_number_dict__()
-        self._df_fetched_date_str = MyDate.get_date_as_string_from_date_time()
-        print('END Fibonacci_load_handler.load_data...')
+        self._data_last_fetched_time_stamp = MyDate.time_stamp_now()
 
     def __fill_waves_into_index_wave_type_number_dict__(self):
         self._daily_index_wave_type_number_dict = {}
         self._intraday_index_wave_type_number_dict = {}
-        period_list = [PRD.INTRADAY, PRD.DAILY] if self._for_dash else [self._period]
         for wave_type in self._wave_types:
-            df = self.__get_df_wave_for_wave_type__(wave_type)
             for index in self._index_list:
                 key = '{}_{}'.format(index, wave_type)
-                for period in period_list:
-                    if period == PRD.INTRADAY:
+                for period_in_list in self._period_list:
+                    df = self.__get_df_wave_for_wave_type__(period_in_list, wave_type)
+                    print('__fill_waves_into_index_wave_type_number_dict__: key={}, period_in_list={}'.format(key, period_in_list))
+                    if period_in_list == PRD.INTRADAY:
                         self._intraday_index_wave_type_number_dict[key] = \
-                            self.__get_key_number_dict_for_index_and_wave_type__(df, index, period)
+                            self.__get_key_number_dict_for_index_and_wave_type__(df, index, period_in_list)
                     else:
                         self._daily_index_wave_type_number_dict[key] = \
-                            self.__get_key_number_dict_for_index_and_wave_type__(df, index, period)
+                            self.__get_key_number_dict_for_index_and_wave_type__(df, index, period_in_list)
 
     @staticmethod
     def __get_key_number_dict_for_index_and_wave_type__(df: pd.DataFrame, index: str, period: str):
         key_entry_number_dict = {}
-        df_index = df[df[DC.INDEX] == index]
+        df_index = df[df[DC.EQUITY_INDEX] == index]
         for row_index, row in df_index.iterrows():
             key_entry = row[DC.WAVE_END_DATE] if period == PRD.DAILY else row[DC.WAVE_END_TS]
             key_entry_number_dict[key_entry] = row[DC.TICKER_ID]
         return key_entry_number_dict
 
-    def __get_df_wave_for_wave_type__(self, wave_type: str) -> pd.DataFrame:
+    def __get_df_wave_for_wave_type__(self, show_period: str, wave_type: str) -> pd.DataFrame:
         period, direction = WAVEST.get_period_and_direction_for_wave_type(wave_type)
-        df = self._df_wave[self._df_wave[DC.PERIOD] == period]
+        df_for_period = self._df_wave_dict[show_period]
+        df = df_for_period[df_for_period[DC.PERIOD] == period]
         return df[df[DC.WAVE_TYPE] == direction]
 
     @property
     def df_wave(self):
-        return self._df_wave
+        return self._df_wave_dict
 
     @property
-    def are_data_actual(self) -> bool:
-        if self._period == PRD.INTRADAY:
-            return False
-        return self._df_fetched_date_str == MyDate.get_date_as_string_from_date_time()
+    def are_wave_data_actual(self) -> bool:
+        return not self._access_layer_wave.is_wave_available_after_wave_end_ts(self._data_last_fetched_time_stamp)
 
     @property
     def date_list(self):
         return self._tick_key_list_for_retrospection
 
     def reload_data(self):
-        self.load_data(period=self._period, aggregation=self._aggregation)
+        self.load_data()
 
-    def set_retrospective_tick_number(self, retrospective_ticks: int):
-        self._retrospective_ticks = retrospective_ticks
+    def init_tick_key_list_for_retrospection(self, retrospective_ticks: int):
         offset_time_stamp = MyDate.get_offset_timestamp(days=-retrospective_ticks)
         self._tick_key_list_for_retrospection = []
         while offset_time_stamp < MyDate.time_stamp_now():

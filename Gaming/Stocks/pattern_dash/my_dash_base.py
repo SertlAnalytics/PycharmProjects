@@ -33,7 +33,7 @@ class MyDashBaseTab:
         self._time_stamp_last_refresh = MyDate.time_stamp_now()
         self._dd_handler = None
         self._button_handler = None
-        self._fibonacci_wave_handler = sys_config.fibonacci_wave_handler
+        self._fibonacci_wave_data_handler = sys_config.fibonacci_wave_data_handler
 
     def init_callbacks(self):
         pass
@@ -58,8 +58,7 @@ class MyDashBaseTab:
         shapes += self.__get_pattern_regression_shape_list__(pattern_list)
         if detector:
             shapes += self.__get_fibonacci_shape_list__(detector)
-            if detector.sys_config.period == PRD.DAILY:  # ToDo get rid of this condition... - but then the wave handler must be everywhere...
-                shapes += self.__get_wave_peak_shape_list__(detector)
+            shapes += self.__get_wave_peak_shape_list__(detector)
         if graph_api.pattern_trade:
             # graph_api.pattern_trade.ticker_actual.print_ticker('__get_pattern_trade_shape_list__...: last ticker')
             shapes += self.__get_pattern_trade_shape_list__(graph_api.pattern_trade)
@@ -124,14 +123,14 @@ class MyDashBaseTab:
         index = detector.sys_config.index_config.get_index_for_symbol(symbol)
         period = detector.sys_config.period
         # print('__get_wave_peak_shape_list__: symbol={}, index={}'.format(symbol, index))
-        threshold = 1 if index == INDICES.CRYPTO_CCY or period == PRD.INTRADAY else 4
         wave_tick_list = WaveTickList(detector.pdh.pattern_data.df)
-        self._fibonacci_wave_handler.fill_wave_type_number_dict_for_ticks_in_wave_tick_list(wave_tick_list, index, period)
+        self._fibonacci_wave_data_handler.fill_wave_type_number_dict_for_ticks_in_wave_tick_list(
+            wave_tick_list, index, period)
         for tick in wave_tick_list.tick_list:
-            for wave_type in WAVEST.get_waves_types_for_processing(PRD.DAILY):
+            for wave_type in WAVEST.get_waves_types_for_processing([PRD.DAILY]):
                 number_waves = tick.get_wave_number_for_wave_type(wave_type)
-                if number_waves >= threshold:
-                    color = 'cyan' if wave_type in [WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC] else 'magenta'
+                if number_waves >= 1:  # in the pre-process we have already used thresholds
+                    color = self._fibonacci_wave_data_handler.get_color_for_wave_type_and_period(wave_type, period)
                     shape = DashInterface.get_wave_peak_shape(
                         detector.sys_config, wave_tick_list, tick, wave_type, color)
                     if shape is not None:

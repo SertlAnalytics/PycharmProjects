@@ -29,8 +29,9 @@ def get_index_for_symbol(ticker_id: str):
     print(ticker_id)
     return index_config.get_index_for_symbol(ticker_id)
 
+
+flag = access_layer_wave.is_wave_available_after_wave_end_ts(0)
 df = access_layer_wave.get_all_as_data_frame()
-df[DC.INDEX] = df[DC.TICKER_ID].apply(get_index_for_symbol)
 print(df.head())
 
 # df_return = access_layer_wave.get_intraday_wave_data_frame_with_corresponding_daily_wave_data()

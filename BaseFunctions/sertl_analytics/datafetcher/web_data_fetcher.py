@@ -33,6 +33,8 @@ class IndicesComponentFetcher:
         elif index == INDICES.CRYPTO_CCY:
             client = MyBitfinexTradeClient(BitfinexConfiguration())
             return client.get_trading_pair_name_dict()
+        elif index == INDICES.FOREX:
+            return {"EURUSD": "EUR/USD", "EURCHF": "EUR/CHF", "EURAUD": "EUR/AUD", "EURGBP": "EUR/GBP"}
         elif index == INDICES.MIXED:
             return {"TSLA": "Tesla", "FCEL": "Full Cell", "ONVO": "Organovo", "MRAM": "MRAM"}
         elif index == INDICES.INDICES:

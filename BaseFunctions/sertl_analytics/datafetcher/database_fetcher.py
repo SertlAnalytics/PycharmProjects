@@ -6,7 +6,8 @@ Date: 2018-03-11
 """
 
 import pandas as pd
-from sqlalchemy import MetaData, Table, insert, exc
+from sqlalchemy import MetaData, Table, insert, exc, text
+from sqlalchemy_views import CreateView, DropView
 import os
 import sys
 from sertl_analytics.myexceptions import ErrorHandler
@@ -60,6 +61,26 @@ class MyTableColumn:
         if self._default == '':
             return "Column('{}', {}({}))".format(self._name, self._type, self._size)
         return "Column('{}', {}({}), default={})".format(self._name, self._type, self._size, self._default)
+
+
+class MyView:
+    def __init__(self):
+        self._name = self.__get_name__()
+        self._select_statement = text(self.__get_select_statement__())
+
+    def get_create_view_obj(self, meta_data: MetaData):
+        view = Table(self._name, meta_data)
+        create_view_obj = CreateView(view, self._select_statement, or_replace=False)
+        print(str(create_view_obj.compile()).strip())
+        return create_view_obj
+
+    @staticmethod
+    def __get_name__():
+        return 'MyView'
+
+    @staticmethod
+    def __get_select_statement__():
+        return "SELECT * FROM my_table"
 
 
 class MyTable:
