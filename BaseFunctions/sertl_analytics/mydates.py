@@ -8,6 +8,7 @@ from sertl_analytics.constants.pattern_constants import DTRG, PRD
 from datetime import datetime, timedelta, date
 from time import mktime
 import matplotlib.dates as m_dates
+from sertl_analytics.test.my_test_abc import TestInterface
 
 
 class MyDate:
@@ -37,15 +38,17 @@ class MyDate:
         return int(days * second_days + hours * second_hours + min * second_min)
 
     @staticmethod
-    def get_offset_timestamp(days=0.0, hours=0.0, min=0.0):
-        return MyDate.get_epoch_seconds_for_date() + MyDate.get_seconds_for_period(days, hours, min)
+    def get_offset_timestamp(days=0.0, hours=0.0, minutes=0.0):
+        if days == 0:
+            return MyDate.time_stamp_now() + MyDate.get_seconds_for_period(days, hours, minutes)
+        return MyDate.get_epoch_seconds_for_date() + MyDate.get_seconds_for_period(days, hours, minutes)
 
     @staticmethod
     def get_offset_timestamp_for_period_aggregation(number: int, period: str, aggregation: int):
         if period == PRD.DAILY:
             return MyDate.get_offset_timestamp(days=-number)
         else:
-            return MyDate.get_offset_timestamp(min=-number * aggregation)
+            return MyDate.get_offset_timestamp(minutes=-number * aggregation)
 
     @staticmethod
     def time_now_str() -> str:
@@ -256,6 +259,14 @@ class MyDate:
         date_obj = datetime.today() if date_obj is None else MyDate.get_datetime_object(date_obj)
         return date_obj.weekday() == 0
 
+    @staticmethod
+    def get_time_stamp_list_for_time_stamp(time_stamp: int, numbers: int, period: str, aggregation=1):
+        period_seconds_part = int(MyDate.get_seconds_for_period_aggregation(period, aggregation)/numbers)
+        if period == PRD.DAILY:
+            return [(time_stamp + k * period_seconds_part) for k in range(0, numbers)]
+        else:
+            return [(time_stamp - k * period_seconds_part) for k in range(0, numbers)]
+
 
 class MyClock:
     def __init__(self, process: str = ''):
@@ -279,3 +290,58 @@ class MyClock:
     def print(self):
         print('{}: {} - {}: Difference: {} sec.'.format(
             self.__process, self.__start_date_time.time(), self.__end_date_time.time(), self.__time_difference_seconds))
+
+
+class MyDateTest(MyDate, TestInterface):
+    GET_TIME_STAMP_ROUNDED_TO_PREVIOUS_HOUR = 'get_time_stamp_rounded_to_previous_hour'
+    GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION = 'get_offset_timestamp_for_period_aggregation'
+
+    def __init__(self, print_all_test_cases_for_units=False):
+        TestInterface.__init__(self, print_all_test_cases_for_units)
+
+    def test_get_time_stamp_rounded_to_previous_hour(self):
+        test_list = [[1552423400, 1552420800],
+                     [1552424400, 1552424400],
+                     [1552435400, 1552435200],
+                     [1552446400, 1552446000]
+                    ]
+
+        test_case_dict = {}
+        for test in test_list:
+            key = '{}: {} expected {}'.format(
+                test[0], MyDate.get_date_time_from_epoch_seconds_as_string(test[0]),
+                MyDate.get_date_time_from_epoch_seconds_as_string(test[1]))
+            test_case_dict[key] = [self.get_time_stamp_rounded_to_previous_hour(test[0]), test[1]]
+        return self.__verify_test_cases__(self.GET_TIME_STAMP_ROUNDED_TO_PREVIOUS_HOUR, test_case_dict)
+
+    def test_get_offset_timestamp_for_period_aggregation(self):
+        """
+        def get_offset_timestamp_for_period_aggregation(number: int, period: str, aggregation: int):
+        if period == PRD.DAILY:
+            return MyDate.get_offset_timestamp(days=-number)
+        else:
+            return MyDate.get_offset_timestamp(min=-number * aggregation)
+        """
+        test_list = [[1, PRD.DAILY, 1],
+                     [-1, PRD.DAILY, 1],
+                     [1, PRD.INTRADAY, 15],
+                     [-1, PRD.INTRADAY, 30],
+                     ]
+
+        test_case_dict = {}
+        for test in test_list:
+            key = '{}: {} expected {}'.format(test, 'a', 'b')
+            test_case_dict[key] = [self.get_offset_timestamp_for_period_aggregation(test[0], test[1], test[2]), '']
+        return self.__verify_test_cases__(self.GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION, test_case_dict)
+
+    def __get_class_name_tested__(self):
+        return MyDate.__name__
+
+    def __run_test_for_unit__(self, unit: str) -> bool:
+        if unit == self.GET_TIME_STAMP_ROUNDED_TO_PREVIOUS_HOUR:
+            return self.test_get_time_stamp_rounded_to_previous_hour()
+        elif unit == self.GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION:
+            return self.test_get_offset_timestamp_for_period_aggregation()
+
+    def __get_test_unit_list__(self):
+        return [self.GET_TIME_STAMP_ROUNDED_TO_PREVIOUS_HOUR, self.GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION]

@@ -157,8 +157,7 @@ class TradingBox:
         return stop_loss_changed or limit_changed
 
     def __adjust_stop_loss_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
-        ticker_last_price_mean = statistics.mean(self._ticker_last_price_list[-self._api.last_price_mean_aggregation:])
-        print('{}: ticker_last_price_mean={}'.format(self._ticker_id, ticker_last_price_mean))
+        ticker_last_price_mean = self.__get_ticker_last_price_mean__(ticker_last_price)
         self.__adjust_distance_bottom_to_current_result__(ticker_last_price)
         if self._trade_strategy == TSTR.LIMIT:  # with trailing stop
             if self._stop_loss < ticker_last_price_mean - self._distance_bottom:
@@ -181,9 +180,22 @@ class TradingBox:
                 return True
         return False
 
+    def __get_ticker_last_price_mean__(self, ticker_last_price):
+        if self._api.last_price_mean_aggregation == 1:
+            return ticker_last_price
+        current_result = self.__get_current_result_pct_for_last_price__(ticker_last_price)
+        if current_result > 1:  # after 1% gain we want to follow the actual price - no means at all
+            print('{}: ticker_last_price_mean = current_price = {} since current_result = {:.2f}% > 1% => '.format(
+                self._ticker_id, ticker_last_price, current_result))
+            return ticker_last_price
+        mean_ticker = statistics.mean(self._ticker_last_price_list[-self._api.last_price_mean_aggregation:])
+        print('{}: ticker_last_price_mean = {} - mean_aggregation = {}'.format(
+            self._ticker_id, mean_ticker, self._api.last_price_mean_aggregation))
+        return mean_ticker
+
     def __adjust_distance_bottom_to_current_result__(self, last_price: float):
         # the idea is to get closer to the curve when we are in a winning trade... but not closer than 1 %
-        current_result = (last_price - self._buy_price)/self._buy_price * 100  # we want to have full % numbers
+        current_result = self.__get_current_result_pct_for_last_price__(last_price)
         if current_result > 2:
             adjusted_distance = self._distance_bottom / (current_result - 1)
             if adjusted_distance/self._buy_price > 0.01:
@@ -197,6 +209,9 @@ class TradingBox:
         else:
             if abs(last_price - self._stop_loss)/last_price < 0.005:
                 self._price_was_close_to_stop = True
+
+    def __get_current_result_pct_for_last_price__(self, last_price: float) -> float:
+        return (last_price - self._buy_price) / self._buy_price * 100  # we want to have full % numbers
 
     def __adjust_limit_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
         if self._trade_strategy in [TSTR.LIMIT, TSTR.LIMIT_FIX]:  # _limit doesn't change

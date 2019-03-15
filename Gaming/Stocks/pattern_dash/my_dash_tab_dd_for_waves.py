@@ -60,7 +60,7 @@ class WaveTabDropDownHandler(DropDownHandler):
         return WAVEDD.get_all_as_list()
 
     def __get_selected_value_dict__(self):
-        return {WAVEDD.PERIOD: PRD.DAILY, WAVEDD.AGGREGATION: 1,
+        return {WAVEDD.PERIOD: PRD.DAILY, WAVEDD.AGGREGATION: 30,
                 WAVEDD.RETROSPECTIVE_TICKS: 100, WAVEDD.INDICES: INDICES.ALL}
 
     def __get_div_text__(self, drop_down_type: str):
@@ -120,10 +120,8 @@ class WaveTabDropDownHandler(DropDownHandler):
     @staticmethod
     def __get_waves_aggregation_options__():
         return [
-            {'label': '1', 'value': 1},
-            {'label': '5', 'value': 5},
-            {'label': '15', 'value': 15},
             {'label': '30', 'value': 30},
+            {'label': '15', 'value': 15},
         ]
 
     @staticmethod

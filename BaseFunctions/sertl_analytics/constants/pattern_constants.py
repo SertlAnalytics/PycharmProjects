@@ -522,14 +522,6 @@ class PRD:  # Periods
         return {PRD.INTRADAY: 0, PRD.DAILY: 1, PRD.WEEKLY: 2, PRD.ALL: 10}
 
     @staticmethod
-    def get_time_stamp_list_for_time_stamp(time_stamp: int, numbers: int, period: str, aggregation=1):
-        period_seconds_part = int(PRD.get_seconds_for_period(period, aggregation)/numbers)
-        if period == PRD.DAILY:
-            return [(time_stamp + k * period_seconds_part) for k in range(0, numbers)]
-        else:
-            return [(time_stamp - k * period_seconds_part) for k in range(0, numbers)]
-
-    @staticmethod
     def hallo():
         return 'Hallo'
 
@@ -567,12 +559,10 @@ class WAVEST:  # Waves Types (corresponds with the columns in the overview table
 
     @staticmethod
     def get_waves_types_for_processing(period_list: list):
-        if len(period_list) in [0, 2]:
-            return [WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC]
-        if period_list[0] == PRD.DAILY:
-            return [WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC]
+        if len(period_list) in [0, 2] or period_list[0] == PRD.DAILY:
+            return [WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC, WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC]
         elif period_list[0] == PRD.INTRADAY:
-            return [WAVEST.INTRADAY_DESC, WAVEST.INTRADAY_ASC]
+            return [WAVEST.INTRADAY_ASC, WAVEST.INTRADAY_DESC]
 
     @staticmethod
     def get_waves_types_for_period(period: str):

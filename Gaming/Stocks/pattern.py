@@ -156,6 +156,8 @@ class Pattern:
         return (self.part_entry.tick_last.position - self.part_entry.tick_first.position) / self.df_length
 
     def get_center_shape_height(self):
+        if self.pattern_type in [FT.TKE_BOTTOM, FT.TKE_TOP, FT.FIBONACCI_ASC, FT.FIBONACCI_DESC]:
+            return (self.part_entry.height_at_first_position + self.part_entry.height_at_last_position) / 5
         return self.part_entry.height / 5
 
     def get_center_shape_width(self):
@@ -270,7 +272,7 @@ class Pattern:
         return [tick.open, tick_2nd, tick_3rd, tick.close]
 
     def __get_time_stamp_list_for_back_testing_value_pairs__(self, time_stamp: int, numbers: int):
-        return PRD.get_time_stamp_list_for_time_stamp(time_stamp, numbers, self.sys_config.period)
+        return MyDate.get_time_stamp_list_for_time_stamp(time_stamp, numbers, self.sys_config.period)
 
     def __calculate_predictions_after_breakout__(self):
         self.__calculate_y_predict__(PT.AFTER_BREAKOUT)

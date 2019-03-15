@@ -615,7 +615,10 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
 
     def __get_data_for_heatmap_figure__(self, index: str):
         x_data = self._wave_handler.tick_key_list_for_retrospection
+        if self._wave_handler.period_for_retrospection == PRD.INTRADAY:
+            x_data = [str(MyDate.get_date_time_from_epoch_seconds(key)) for key in x_data]
         y_data = WAVEST.get_waves_types_for_processing([self._wave_handler.period_for_retrospection])
+        y_data = y_data[::-1]  # we want them in this order
         z_data = [self._wave_handler.get_waves_number_list_for_wave_type_and_index(wt, index) for wt in y_data]
-        # print('__get_data_for_heatmap_figure__: {}: {}\n{}'.format(index, x_data, z_data))
+        # print('__get_data_for_heatmap_figure__: {}: \n{}\n{}\n{}'.format(index, x_data, y_data, z_data))
         return x_data, y_data, z_data

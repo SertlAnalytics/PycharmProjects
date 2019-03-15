@@ -274,14 +274,14 @@ class AccessLayer4Wave(AccessLayer):
             where_clause = "{}='{}'".format(
                 DC.PERIOD, PRD.DAILY if wave_peak_date_type == WPDT.DAILY_DATE else PRD.INTRADAY)
             columns = [DC.EQUITY_INDEX, DC.PERIOD, DC.PERIOD_AGGREGATION, DC.WAVE_TYPE, DC.WAVE_END_DATE, DC.TICKER_ID]
+            if offset_date != '':
+                where_clause += " AND {}>'{}'".format(DC.WAVE_END_DATE, offset_date)
         else:  # here we take only the intraday waves with the proper aggregation
             columns = [DC.EQUITY_INDEX, DC.PERIOD, DC.PERIOD_AGGREGATION, DC.WAVE_TYPE, DC.WAVE_END_TS,
                        DC.WAVE_END_DT, DC.TICKER_ID]
             offset_ts = MyDate.get_offset_timestamp(days=-10)
             where_clause = "{}='{}' AND {}>{} AND {}={}".format(
                 DC.PERIOD, PRD.INTRADAY, DC.WAVE_END_TS, offset_ts, DC.PERIOD_AGGREGATION, aggregation)
-        if offset_date != '':
-            where_clause += " AND {}>'{}'".format(DC.WAVE_END_DATE, offset_date)
         df = self.get_all_as_data_frame(columns=columns, where_clause=where_clause)
         if df.empty:
             return df

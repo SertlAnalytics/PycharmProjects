@@ -17,6 +17,7 @@ from pattern_trade_box import ExpectedWinTradingBox, TouchPointTradingBox, Tradi
 from pattern_wave_tick import WaveTick, WaveTickList, TickerWaveTickConverter
 from sertl_analytics.plotter.my_plot import MyPlotHelper
 import math
+from sertl_analytics.mymath import MyMath
 from pattern_news_handler import NewsHandler
 import statistics
 
@@ -661,12 +662,12 @@ class PatternTrade:
 
     @staticmethod
     def __get_corrected_distance_bottom__(distance_bottom: float, off_set_value: float) -> float:
-        if abs(distance_bottom/off_set_value) > 0.02:  # we accept only 2% distance...
-            distance_bottom_new = round(off_set_value * 0.02, 4)
+        if abs(distance_bottom/off_set_value) > 0.015:  # we accept only 1.5% distance...
+            distance_bottom_new = MyMath.round_smart(off_set_value * 0.015)
             print('Distance bottom changed: {} -> {}'.format(distance_bottom, distance_bottom_new))
             return distance_bottom_new
         elif abs(distance_bottom/off_set_value) < 0.005:  # we need at least 0.5% distance...
-            distance_bottom_new = round(off_set_value * 0.005, 4)
+            distance_bottom_new = MyMath.round_smart(off_set_value * 0.005)
             print('Distance bottom changed: {} -> {}'.format(distance_bottom, distance_bottom_new))
             return distance_bottom_new
         return distance_bottom
@@ -744,7 +745,7 @@ class PatternTrade:
             self.data_dict_obj.add(DC.SELL_ORDER_TPYE_ID, OT.get_id(order_status.type))
             self.data_dict_obj.add(DC.SELL_DT, MyDate.get_date_from_epoch_seconds(order_status.time_stamp))
             self.data_dict_obj.add(DC.SELL_TIME, str(MyDate.get_time_from_epoch_seconds(order_status.time_stamp)))
-            sell_amount = order_status.executed_amount if order_status.executed_amount == 0 \
+            sell_amount = self.data_dict_obj.get(DC.BUY_AMOUNT) if order_status.executed_amount == 0 \
                 else order_status.executed_amount
             self.data_dict_obj.add(DC.SELL_AMOUNT, sell_amount)
             self.data_dict_obj.add(DC.SELL_PRICE, order_status.avg_execution_price)

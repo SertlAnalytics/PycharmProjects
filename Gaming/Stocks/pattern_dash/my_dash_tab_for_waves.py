@@ -18,6 +18,7 @@ from dash import Dash
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import WAVEST, PRD, INDICES
 from pattern_news_handler import NewsHandler
+from sertl_analytics.test.my_test_abc import TestInterface
 
 
 class MyDashTab4Waves(MyDashBaseTab):
@@ -72,7 +73,7 @@ class MyDashTab4Waves(MyDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
                 WAVEDD.INDICES, default_value=self._dd_handler.selected_index)),
             MyHTML.div(self._my_waves_heatmap_div, self.__get_heatmap__()),
-            MyHTML.div(self._my_waves_index_chart_div, self.__get_graph_for_index__(self._dd_handler.selected_index)),
+            MyHTML.div(self._my_waves_index_chart_div, self.__get_graph_for_index__()),
             MyDCC.markdown(self._my_waves_entry_markdown)
         ]
         return MyHTML.div('my_waves_div', children_list)
@@ -128,16 +129,20 @@ class MyDashTab4Waves(MyDashBaseTab):
             if not self._heat_map_was_updated:
                 print('Return old index chart...')
                 return children
-            return self.__get_graph_for_index__(self._dd_handler.selected_index)
+            return self.__get_graph_for_index__()
 
-    def __get_graph_for_index__(self, index: str):
+    def __get_graph_for_index__(self):
+        index = self._dd_handler.selected_index
         if index in ['', INDICES.ALL]:
             return ''
+        ticks = self._dd_handler.selected_retrospective_ticks
+        period = self._dd_handler.selected_period
+        aggregation = self._dd_handler.selected_aggregation
         ticker = INDICES.get_ticker_for_index(index)
         cache_key = self.__get_id_for_caches__()
         graph = self._index_chart_cache.get_cached_object_by_key(cache_key)
         if graph is None:
-            graph, graph_key = self.__get_graph__(ticker, limit=self._dd_handler.selected_retrospective_ticks)
+            graph, graph_key = self.__get_graph__(ticker, period=period, aggregation=aggregation, limit=ticks)
             self.__add_element_to_cache__(self._index_chart_cache, cache_key, graph)
         return graph
 
@@ -149,16 +154,20 @@ class MyDashTab4Waves(MyDashBaseTab):
         cache_api.valid_until_ts = MyDate.get_offset_timestamp(hours=6)
         cache.add_cache_object(cache_api)
 
-    def __get_graph__(self, ticker_id: str, limit=400):
-        period = self.sys_config.period
-        aggregation = self.sys_config.period_aggregation
+    def __get_graph__(self, ticker_id: str, period: str, aggregation: int, limit=400):
         graph_cache_id = self.sys_config.graph_cache.get_cache_id(ticker_id, period, aggregation, limit)
         graph = self.sys_config.graph_cache.get_cached_object_by_key(graph_cache_id)
         if graph is not None:
             return graph, graph_cache_id
-        self.sys_config.data_provider.from_db = True
-        date_start = MyDate.adjust_by_days(MyDate.get_datetime_object().date(), -limit)
-        and_clause = "Date > '{}'".format(date_start)
+        self.sys_config.data_provider.period = period
+        self.sys_config.data_provider.aggregation = aggregation
+        if period == PRD.INTRADAY:
+            self.sys_config.data_provider.from_db = False
+            and_clause = ''
+        else:
+            self.sys_config.data_provider.from_db = True
+            date_start = MyDate.adjust_by_days(MyDate.get_datetime_object().date(), -limit)
+            and_clause = "Date > '{}'".format(date_start)
         graph_title = self.sys_config.graph_cache.get_cache_title(ticker_id, period, aggregation, limit)
         detector = self._pattern_controller.get_detector_for_fibonacci_and_pattern(
             self.sys_config, ticker_id, and_clause, limit)
@@ -193,3 +202,45 @@ class MyDashTab4Waves(MyDashBaseTab):
                                     self._dd_handler.selected_aggregation,
                                     self._dd_handler.selected_retrospective_ticks,
                                     self._dd_handler.selected_index)
+
+    def init_parameters_for_testing(self, period: str, aggregation: int, ticks: int, index: str):
+        self._dd_handler._selected_value_dict[WAVEDD.PERIOD] = period
+        self._dd_handler._selected_value_dict[WAVEDD.AGGREGATION] = aggregation
+        self._dd_handler._selected_value_dict[WAVEDD.RETROSPECTIVE_TICKS] = ticks
+        self._dd_handler._selected_value_dict[WAVEDD.INDICES] = index
+
+
+class MyDashTab4WavesTest(TestInterface):
+    GET_HEATMAP = '__get_heatmap__'
+
+    def __init__(self, print_all_test_cases_for_units=False):
+        TestInterface.__init__(self, print_all_test_cases_for_units)
+        self._sys_config = SystemConfiguration()
+        self._sys_config.fibonacci_wave_data_handler.load_data(PRD.ALL)
+        self._color_handler = DashColorHandler()
+        self._dash_tab_for_waves = MyDashTab4Waves(
+            app=None, sys_config=self._sys_config, color_handler=self._color_handler)
+
+    def test_get_heatmap(self):
+        test_case_parameter_lists = [
+            # [PRD.DAILY, 1, 100, INDICES.ALL],
+            # [PRD.DAILY, 1, 200, INDICES.CRYPTO_CCY],
+            # [PRD.INTRADAY, 30, 100, INDICES.ALL],
+            [PRD.INTRADAY, 30, 100, INDICES.DOW_JONES],
+        ]
+        test_case_dict = {}
+        for params in test_case_parameter_lists:
+            key = '{}-{}-{}-{}'.format(params[0], params[1], params[2], params[3])
+            self._dash_tab_for_waves.init_parameters_for_testing(params[0], params[1], params[2], params[3])
+            test_case_dict[key] = [self._dash_tab_for_waves.__get_heatmap__(), '']
+        return self.__verify_test_cases__(self.GET_HEATMAP, test_case_dict)
+
+    def __get_class_name_tested__(self):
+        return MyDashTab4Waves.__name__
+
+    def __run_test_for_unit__(self, unit: str) -> bool:
+        if unit == self.GET_HEATMAP:
+            return self.test_get_heatmap()
+
+    def __get_test_unit_list__(self):
+        return [self.GET_HEATMAP]

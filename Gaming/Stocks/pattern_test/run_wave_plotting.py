@@ -27,7 +27,11 @@ df_grouped_direct_daily = access_layer.get_grouped_by_for_wave_peak_plotting(WPD
 df_grouped_direct_daily.to_excel(writer, sheet_name='Daily')
 print(MyDate.time_stamp_now())
 df_grouped_direct_intraday = access_layer.get_grouped_by_for_wave_peak_plotting(WPDT.INTRADAY_DATE, 1, offset_date)
-df_grouped_direct_intraday.to_excel(writer, sheet_name='Intraday')
+df_grouped_direct_intraday.to_excel(writer, sheet_name='Intraday Date')
+df_grouped_direct_intraday = access_layer.get_grouped_by_for_wave_peak_plotting(WPDT.INTRADAY_15_TS, 15)
+df_grouped_direct_intraday.to_excel(writer, sheet_name='INTRADAY_15_TS')
+df_grouped_direct_intraday = access_layer.get_grouped_by_for_wave_peak_plotting(WPDT.INTRADAY_30_TS, 30)
+df_grouped_direct_intraday.to_excel(writer, sheet_name='INTRADAY_30_TS')
 writer.save()
 
 # for index, row in df_grouped_direct_intraday.iterrows():
