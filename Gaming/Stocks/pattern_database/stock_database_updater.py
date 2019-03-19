@@ -20,6 +20,7 @@ from pattern_database.stock_access_layer import AccessLayer4TradePolicyMetric
 from pattern_reinforcement.trade_policy import TradePolicyFactory
 from pattern_reinforcement.trade_policy_handler import TradePolicyHandler
 from pattern_database.stock_wave_entity import WaveEntity
+from pattern_scheduling.pattern_job_result import StockDatabaseUpdateJobResult
 from pattern_logging.pattern_log import PatternLog
 from time import sleep
 import numpy as np
@@ -115,6 +116,7 @@ class StockDatabaseUpdater:
                 process_step='add_wave_prediction')
 
     def update_equity_records(self):
+        result_obj = StockDatabaseUpdateJobResult()
         access_layer = AccessLayer4Equity(self.db_stock)
         dt_today = MyDate.get_date_from_datetime()
         # dt_today = MyDate.adjust_by_days(dt_today, 40)
@@ -122,6 +124,7 @@ class StockDatabaseUpdater:
         dt_today_str = str(dt_today)
         dt_valid_until_str = str(dt_valid_until)
         exchange_equity_type_dict = self.__get_equity_dict__()
+        result_obj.number_processed_records = len(exchange_equity_type_dict)
         for exchange, equity_type in exchange_equity_type_dict.items():
             value_dict = access_layer.get_index_dict(exchange)
             if not access_layer.are_any_records_available_for_date(dt_today, exchange, equity_type):
@@ -129,6 +132,8 @@ class StockDatabaseUpdater:
                 sleep(2)
                 self.__update_equity_records_for_equity_type__(
                     access_layer, dt_today_str, dt_valid_until_str, exchange, equity_type)
+                result_obj.number_saved_records += 1
+        return result_obj
 
     @staticmethod
     def __get_equity_dict__():

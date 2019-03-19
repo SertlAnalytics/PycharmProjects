@@ -12,6 +12,8 @@ from datetime import datetime
 from sertl_analytics.mydates import MyDate
 import pandas as pd
 from abc import ABCMeta, abstractmethod
+import plotly.io as pio
+
 
 
 COLORS = [
@@ -401,6 +403,15 @@ class MyHTML:
         style = {'display': 'inline-block', 'verticalAlign': 'top', 'width': width,
                  'padding-bottom': 10, 'padding-left': 10}
         return html.Div(div_element_list, style=style, id='{}_div'.format(element_id))
+
+
+class MyDCCGraph:
+    def __init__(self, graph: dcc.Graph):
+        self._graph = graph
+        self._figure = self._graph.figure
+
+    def save_figure(self, file_path='images/fig1.pdf'):
+        pio.write_image(self._figure, file_path)
 
 
 class MyDCC:

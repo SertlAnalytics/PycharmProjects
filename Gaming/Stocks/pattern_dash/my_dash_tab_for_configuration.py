@@ -70,6 +70,9 @@ class MyDashTab4Configuration(MyDashBaseTab):
         ]
 
     def init_callbacks(self):
+        self.__init_callback_for_my_sound_div__()
+        self.__init_callbacks_for_my_mode_div__()
+        self.__init_callbacks_for_my_max_buy_div__()
         self.__init_callback_for_switch_trading_mode_button__()
         self.__init_callback_for_configuration_tables__()
         self.__init_callback_for_dash_board_sub_title__()
@@ -89,6 +92,44 @@ class MyDashTab4Configuration(MyDashBaseTab):
             if self._trade_handler_online.is_simulation:
                 return 'simulation{}'.format(sound_str)
             return 'active!!! - max. buy value: {:d}{}'.format(order_maximum, sound_str)
+
+    def __init_callback_for_my_sound_div__(self):
+        @self.app.callback(
+            Output('my_sound_div', 'children'),
+            [Input('my_configuration_sound_machine_state', 'value')])
+        def handle_callback_for_dash_board_sound(state_sound: str):
+            return state_sound
+
+    def __init_callbacks_for_my_mode_div__(self):
+        @self.app.callback(
+            Output('my_mode_div', 'children'),
+            [Input('my_switch_trading_mode_button', 'children')])
+        def handle_callback_for_dash_board_mode_value(button_text: str):
+            return 'simulation' if self._trade_handler_online.is_simulation else 'active (real trading)'
+
+        @self.app.callback(
+            Output('my_mode_div', 'style'),
+            [Input('my_switch_trading_mode_button', 'children')])
+        def handle_callback_for_dash_board_mode_style(button_text: str):
+            return self.__get_style_for_mode_and_max_buy_values__()
+
+    def __init_callbacks_for_my_max_buy_div__(self):
+        @self.app.callback(
+            Output('my_max_buy_div', 'children'),
+            [Input('my_configuration_order_maximum', 'value')])
+        def handle_callback_for_dash_board_max_buy_value(order_maximum: int):
+            return '{:d}'.format(order_maximum)
+
+        @self.app.callback(
+            Output('my_max_buy_div', 'style'),
+            [Input('my_switch_trading_mode_button', 'children')])
+        def handle_callback_for_dash_board_max_buy_style(button_text: str):
+            return self.__get_style_for_mode_and_max_buy_values__()
+
+    def __get_style_for_mode_and_max_buy_values__(self):
+        if self._trade_handler_online.is_simulation:
+            return {'font-weight': 'normal', 'color': 'black', 'display': 'inline-block'}
+        return {'font-weight': 'bold', 'color': 'red', 'display': 'inline-block'}
 
     def __init_callback_for_configuration_tables__(self):
         @self.app.callback(

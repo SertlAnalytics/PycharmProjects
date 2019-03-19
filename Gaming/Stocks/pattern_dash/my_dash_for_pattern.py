@@ -26,8 +26,10 @@ from pattern_dash.my_dash_tab_for_portfolio import MyDashTab4Portfolio
 from pattern_dash.my_dash_tab_for_recommender import MyDashTab4Recommender
 from pattern_dash.my_dash_tab_for_log import MyDashTab4Log
 from pattern_dash.my_dash_tab_for_db import MyDashTab4DB
+from pattern_dash.my_dash_tab_for_jobs import MyDashTab4Jobs
 from pattern_dash.my_dash_tab_for_waves import MyDashTab4Waves
 from pattern_trade_handler import PatternTradeHandler
+from pattern_dash.my_dash_job_handler import MyDashJobHandler
 
 
 class MyDash4Pattern(MyDashBase):
@@ -49,6 +51,7 @@ class MyDash4Pattern(MyDashBase):
         self.tab_models_statistics = MyDashTab4ModelStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_log = MyDashTab4Log(self.app, self.sys_config)
         self.tab_db = MyDashTab4DB(self.app, self.sys_config)
+        self.tab_jobs = MyDashTab4Jobs(self.app, self.sys_config)
         self.tab_configuration = MyDashTab4Configuration(self.app, self.sys_config, self.trade_handler_online)
 
     def get_pattern(self):
@@ -66,6 +69,7 @@ class MyDash4Pattern(MyDashBase):
         self.tab_models_statistics.init_callbacks()
         self.tab_log.init_callbacks()
         self.tab_db.init_callbacks()
+        self.tab_jobs.init_callbacks()
         self.tab_configuration.init_callbacks()
 
     @staticmethod
@@ -116,6 +120,7 @@ class MyDash4Pattern(MyDashBase):
             MyDCC.tab('Models', [self.tab_models_statistics.get_div_for_tab()]),
             MyDCC.tab('Logs', [self.tab_log.get_div_for_tab()]),
             MyDCC.tab('DB', [self.tab_db.get_div_for_tab()]),
+            MyDCC.tab('Jobs', [self.tab_jobs.get_div_for_tab()]),
             MyDCC.tab('Config', [self.tab_configuration.get_div_for_tab()])
         ]
         return MyDCC.tabs('my_app_tabs', tab_list)

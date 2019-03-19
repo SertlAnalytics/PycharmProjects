@@ -8,8 +8,10 @@ Date: 2019-01-23
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from pattern_database.stock_access_layer import AccessLayer4Process
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.pattern_constants import PRD, PRDC
+from sertl_analytics.constants.pattern_constants import PRD, PRDC, JDC
 from pattern_logging.pattern_log import PatternLog
+from pattern_scheduling.pattern_job_result import JobResult
+import math
 
 
 class JobRuntime:
@@ -53,63 +55,145 @@ class JobRuntime:
 
 
 class MyPatternJob:
-    def __init__(self, period=PRD.DAILY, weekdays=list([0, 1, 2, 3, 4, 5, 6]), start_time='01:00'):
-        self._scheduled_period = period
-        self._scheduled_start_time = start_time
-        self._scheduled_weekdays = weekdays
-        self._executor = ThreadPoolExecutor(max_workers=1)
-        self._is_running = False
+    def __init__(self, period: str, weekdays: list, start_times: list):
         self._access_layer_process = AccessLayer4Process()
+        self._scheduled_period = PRD.DAILY if period == '' else period
+        self._scheduled_start_time_list = ['01:00'] if start_times is None else start_times
+        self._scheduled_start_time = self.__init_scheduled_start_time__()
+        self._scheduled_weekdays = weekdays
+        self._for_test = False
+        self._executor = None
+        self._is_running = False
         self._job_runtime = JobRuntime()
+        self._last_run_start_date_time = None
+        self._last_run_end_date_time = None
+        self._last_run_runtime_seconds = 0
+        self._last_run_processed_details = ''
 
     @property
     def job_name(self):
         return self.__class__.__name__
 
     @property
+    def start_time(self):
+        return self._scheduled_start_time
+
+    @property
+    def last_run_runtime_seconds(self):
+        if not(self._last_run_start_date_time is None or self._last_run_end_date_time is None):
+            return MyDate.get_time_difference_in_seconds(self._last_run_end_date_time,
+                                                         self._last_run_start_date_time)
+
+    @property
     def is_running(self):
         return self._is_running
 
     @property
-    def done(self):
-        return self._access_layer_process.is_process_available_for_today(self.job_name)
+    def for_test(self) -> bool:
+        return self._for_test
 
-    def is_ready(self, check_interval_min: int):
+    @for_test.setter
+    def for_test(self, value: bool):
+        self._for_test = value
+
+    @property
+    def done(self):
+        return False
+
+    def is_ready(self, last_run_time_stamp: int):
         if self.done or self.is_running:
             return False
         if MyDate.weekday() in self._scheduled_weekdays:
-            diff_to_now_minutes = MyDate.get_time_difference_to_now_in_minutes(self._scheduled_start_time)
-            return 0 <= diff_to_now_minutes <= check_interval_min
+            now_time_stamp = MyDate.time_stamp_now()
+            start_time_stamp = MyDate.get_epoch_seconds_for_current_day_time(self._scheduled_start_time)
+            return last_run_time_stamp < start_time_stamp <= now_time_stamp
         return False
 
-    def start_task(self): # Run the function in another thread
+    def start_job(self): # Run the function in another thread
         self._is_running = True
         self._job_runtime.start()
-        self._executor.submit(self.__run_task__)
+        self._executor = ThreadPoolExecutor(max_workers=1)
+        self._executor.submit(self.__run_job__)
 
-    def init_task(self):
-        self._is_running = False
+    def get_data_dict_for_table_rows(self):
+        return {column: self.__get_data_for_table_column__(column) for column in JDC.get_all()}
 
-    def __run_task__(self):
+    def __init_scheduled_start_time__(self):
+        if len(self._scheduled_start_time_list) == 1:
+            return self._scheduled_start_time_list[0]
+        return MyDate.get_nearest_time_in_list(self._scheduled_start_time_list)
+
+    def __get_data_for_table_column__(self, column: str):
+        if column == JDC.NAME:
+            return self.job_name
+        elif column == JDC.PERIOD:
+            return self._scheduled_period
+        elif column == JDC.WEEKDAYS:
+            return ','.join(MyDate.get_weekdays_for_list(self._scheduled_weekdays))
+        elif column == JDC.START_TIMES:
+            return ', '.join(self._scheduled_start_time_list)
+        elif column == JDC.NEXT_START_TIME:
+            return self._scheduled_start_time
+        elif column == JDC.LAST_RUN:
+            return '-' if self._last_run_end_date_time is None else \
+                MyDate.get_date_time_as_string_from_date_time(self._last_run_end_date_time)
+        elif column == JDC.LAST_RUN_TIME:
+            return self.last_run_runtime_seconds
+        elif column == JDC.PROCESSED:
+            return self._last_run_processed_details
+
+    def __run_job__(self):
         process_step = 'End'
+        self.__init_run_parameters__()
         print("{}: Thread started at {}...(scheduled: {})".format(
             self.job_name, MyDate.time_now_str(), self._scheduled_start_time))
-        PatternLog.log_message(self.job_name, process='Scheduler', process_step='Start')
+        if not self._for_test:
+            PatternLog.log_message(self.job_name, process='Scheduler', process_step='Start')
+
         try:
             self.__perform_task__()
+            self._last_run_end_date_time = MyDate.get_datetime_object()
         except:
-            PatternLog.log_error()
-            process_step = 'End with error'
+            if self._for_test:
+                print("{}: Error at {}".format(self.job_name, MyDate.time_now_str()))
+            else:
+                PatternLog.log_error()
+                process_step = 'End with error'
         finally:
-            PatternLog.log_message(self.job_name, process='Scheduler', process_step=process_step)
+            if not self._for_test:
+                PatternLog.log_message(self.job_name, process='Scheduler', process_step=process_step)
             self._is_running = False
             self._job_runtime.stop()
             self._executor.shutdown(wait=False)
-            self.__write_statistics_to_database__()
+            if not self._for_test:
+                self.__write_statistics_to_database__()
             print("{}: Thread shutdown at {}".format(self.job_name, MyDate.time_now_str()))
+            self.__schedule_next_time__()
+
+    def __init_run_parameters__(self):
+        self._last_run_start_date_time = MyDate.get_datetime_object()
+        self._last_run_end_date_time = None
+        self._last_run_runtime_seconds = 0
+        self._last_run_processed_details = ''
 
     def __perform_task__(self):
         print('Do something - the first time...')
+
+    def __handle_job_result__(self, job_result: JobResult):
+        if job_result is None:
+            return
+        self._last_run_processed_details = job_result.job_details
+
+    def __schedule_next_time__(self):
+        if len(self._scheduled_start_time_list) == 1:  # no rescheduling necessary
+            return
+        position = self._scheduled_start_time_list.index(self._scheduled_start_time)
+        if position < len(self._scheduled_start_time_list) - 1:
+            self._scheduled_start_time = self._scheduled_start_time_list[position + 1]
+            print('{}: Rescheduled for next run at {}'.format(self.job_name, self._scheduled_start_time))
+        else:
+            self._scheduled_start_time = self._scheduled_start_time_list[0]
+            print('{}: scheduled for first start_time at {}'.format(self.job_name, self._scheduled_start_time))
 
     def __write_statistics_to_database__(self):
         input_dict = {PRDC.PROCESS: self.job_name,
@@ -119,7 +203,7 @@ class MyPatternJob:
                       PRDC.END_DT: self._job_runtime.end_date,
                       PRDC.END_TIME: self._job_runtime.end_time,
                       PRDC.RUNTIME_SECONDS: self._job_runtime.runtime_seconds,
-                      PRDC.COMMENT: 'scheduled at {}'.format(self._scheduled_start_time)
+                      PRDC.COMMENT: 'scheduled at {}'.format(self._scheduled_start_time_list)
                       }
         self._access_layer_process.insert_data([input_dict])
 

@@ -12,23 +12,27 @@ from pattern_dash.my_dash_job_handler import MyDashJobHandler
 from time import sleep
 from sertl_analytics.mydates import MyDate
 
-time_str = '11:00'
-diff = MyDate.get_time_difference_to_now_in_minutes(time_str)
+
+scheduler_run_interval_sec = 10
 dt_now = MyDate.get_datetime_object()
-dt_now = MyDate.adjust_by_seconds(dt_now, 10)
-start_time = str(dt_now.time())[:8]
+dt_start_01 = MyDate.adjust_by_seconds(dt_now, 10)
+dt_start_02 = MyDate.adjust_by_seconds(dt_start_01, scheduler_run_interval_sec)
+start_time_01 = str(dt_start_01.time())[:8]
+start_time_02 = str(dt_start_02.time())[:8]
+# start_time_list = [start_time_01, start_time_02]
+start_time_list = [start_time_02]
 weekday_list = [0, 1, 2, 3, 4, 5, 6]
 
 for_dash_test = False
 if for_dash_test:
-    my_handler = MyDashJobHandler(1, for_test=True)
-    my_handler.start_scheduler()
+    my_handler = MyDashJobHandler(for_test=True)
+    my_handler.check_scheduler_tasks()
 else:
-    scheduler = MyPatternScheduler(1)
-    scheduler.add_job(MyPatternJob(period=PRD.DAILY, weekdays=weekday_list, start_time=start_time))
-    scheduler.add_job(MySecondJob(period=PRD.DAILY, weekdays=weekday_list, start_time=start_time))
-    scheduler.start_scheduler()
-
-for k in range(10):
-    print('Waiting main process for 10 seconds...')
-    sleep(10)
+    scheduler = MyPatternScheduler('PatternSchedulerTest', for_test=True)
+    scheduler.add_job(MyPatternJob(period=PRD.DAILY, weekdays=weekday_list, start_times=start_time_list))
+    # scheduler.add_job(MySecondJob(period=PRD.DAILY, weekdays=weekday_list, start_time=start_time))
+    for k in range(5):
+        scheduler.check_tasks()
+        print('{}: Waiting main process for {} seconds...'.format(
+            MyDate.get_date_time_as_string_from_date_time(), scheduler_run_interval_sec))
+        sleep(scheduler_run_interval_sec)

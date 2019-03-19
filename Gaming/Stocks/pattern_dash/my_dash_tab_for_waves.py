@@ -8,7 +8,7 @@ Date: 2018-11-14
 from dash.dependencies import Input, Output, State
 from pattern_dash.my_dash_base import MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi
+from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, MyDCCGraph
 from sertl_analytics.mycache import MyCacheObjectApi, MyCache
 from pattern_dash.my_dash_tab_dd_for_waves import WaveTabDropDownHandler, WAVEDD
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Waves
@@ -19,6 +19,7 @@ from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import WAVEST, PRD, INDICES
 from pattern_news_handler import NewsHandler
 from sertl_analytics.test.my_test_abc import TestInterface
+import plotly.io as pio
 
 
 class MyDashTab4Waves(MyDashBaseTab):
@@ -218,21 +219,27 @@ class MyDashTab4WavesTest(TestInterface):
         self._sys_config = SystemConfiguration()
         self._sys_config.fibonacci_wave_data_handler.load_data(PRD.ALL)
         self._color_handler = DashColorHandler()
+        pio.orca.config.executable = 'D:\Programs\Miniconda3\orca_app'
+        pio.orca.config.save()
+        print('plotly.io.orca.config.executable={}'.format(pio.orca.config.executable))
         self._dash_tab_for_waves = MyDashTab4Waves(
             app=None, sys_config=self._sys_config, color_handler=self._color_handler)
 
     def test_get_heatmap(self):
         test_case_parameter_lists = [
-            # [PRD.DAILY, 1, 100, INDICES.ALL],
+            [PRD.DAILY, 1, 100, INDICES.ALL],
             # [PRD.DAILY, 1, 200, INDICES.CRYPTO_CCY],
             # [PRD.INTRADAY, 30, 100, INDICES.ALL],
-            [PRD.INTRADAY, 30, 100, INDICES.DOW_JONES],
+            # [PRD.INTRADAY, 30, 100, INDICES.DOW_JONES],
         ]
         test_case_dict = {}
         for params in test_case_parameter_lists:
             key = '{}-{}-{}-{}'.format(params[0], params[1], params[2], params[3])
             self._dash_tab_for_waves.init_parameters_for_testing(params[0], params[1], params[2], params[3])
-            test_case_dict[key] = [self._dash_tab_for_waves.__get_heatmap__(), '']
+            heat_map_graph_list = self._dash_tab_for_waves.__get_heatmap__()
+            my_graph = MyDCCGraph(heat_map_graph_list[0])
+            my_graph.save_figure()
+            test_case_dict[key] = [heat_map_graph_list, '']
         return self.__verify_test_cases__(self.GET_HEATMAP, test_case_dict)
 
     def __get_class_name_tested__(self):

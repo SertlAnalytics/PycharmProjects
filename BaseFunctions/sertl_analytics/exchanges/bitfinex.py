@@ -28,7 +28,7 @@ from sertl_analytics.mycache import MyCacheObjectApi, MyCache
 
 
 class TP:  # trading pairs - they are all put to lowercase when sent to Bitfinex
-    BCH_USD = 'BCHUSD'
+    BAB_USD = 'BABUSD'
     BTC_USD = 'BTCUSD'
     EOS_USD = 'EOSUSD'
     ETH_USD = 'ETHUSD'
@@ -36,16 +36,18 @@ class TP:  # trading pairs - they are all put to lowercase when sent to Bitfinex
     LTC_USD = 'LTCUSD'
     NEO_USD = 'NEOUSD'
     ZEC_USD = 'ZECUSD'
+    XRP_USD = 'XRPUSD'
 
 
 class SYM:
-    BCH = 'BCH'
+    BAB = 'BAB'
     BTC = 'BTC'
     EOS = 'EOS'
     ETH = 'ETH'
     IOT = 'IOT'
     LTC = 'LTC'
     NEO = 'NEO'
+    XRP = 'XRP'
 
 
 class BitfinexConfiguration(ExchangeConfiguration):
@@ -60,11 +62,11 @@ class BitfinexConfiguration(ExchangeConfiguration):
         self.finish_vanished_trades = False  # True <=> if a pattern is vanished after buying sell the position (market)
         self.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP]}
         self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP, BT.TOUCH_POINT: TSTR.LIMIT}
-        self.ticker_id_list = ['BTCUSD', 'EOSUSD', 'ETHUSD', 'LTCUSD', 'NEOUSD', 'TRXUSDx', 'XMRUSD',
+        self.ticker_id_list = ['BABUSD', 'BTCUSD', 'EOSUSD', 'ETHUSD', 'LTCUSD', 'NEOUSD', 'TRXUSDx', 'XMRUSD',
                                'ZECUSD', 'IOTUSD', 'XRPUSD']
         self.ticker_id_excluded_from_trade_list = ['NEOUSDx', 'BTCUSD']  # in case we have some issues with the data...
-        self.fibonacci_indicators = {'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
-        self.bollinger_band_indicators = {'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
+        self.fibonacci_indicators = {'BABUSD': [15, 30], 'BTCUSD': [15, 30], 'XMRUSD': [15]}
+        self.bollinger_band_indicators = {'BABUSD': [15], 'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
 
     def get_exchange_name(self):
         return 'Bitfinex'

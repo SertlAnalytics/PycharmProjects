@@ -17,8 +17,8 @@ from sertl_analytics.mydates import MyDate
 
 
 class MyDashPatternJob(MyPatternJob):
-    def __init__(self, start_time: str, stock_db_updater: StockDatabaseUpdater):
-        MyPatternJob.__init__(self, period=PRD.DAILY, weekdays=list([0, 1, 2, 3, 4, 5, 6]), start_time=start_time)
+    def __init__(self, weekdays: list, start_times: list, stock_db_updater: StockDatabaseUpdater):
+        MyPatternJob.__init__(self, period=PRD.DAILY, weekdays=weekdays, start_times=start_times)
         self._stock_db_updater = stock_db_updater
 
 
@@ -62,7 +62,7 @@ class MyDashStockDataUpdateJob(MyDashPatternJob):
 
 class MyEquityUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
-        self._stock_db_updater.update_equity_records()
+        result_obj = self._stock_db_updater.update_equity_records()
 
 
 class MyDailyWaveUpdateJob(MyDashPatternJob):
@@ -75,12 +75,32 @@ class MyDailyWaveUpdateJob(MyDashPatternJob):
 
 
 class MyIntradayWaveUpdateJob(MyDashPatternJob):
+    @property
+    def index_list(self):
+        return [INDICES.CRYPTO_CCY, INDICES.FOREX, INDICES.DOW_JONES, INDICES.NASDAQ100]
+
     def __perform_task__(self):
-        index_list = [INDICES.CRYPTO_CCY, INDICES.FOREX, INDICES.DOW_JONES, INDICES.NASDAQ100]
-        for index in index_list:
-            if index == INDICES.CRYPTO_CCY or MyDate.is_monday_till_friday():
-                self._stock_db_updater.update_wave_data_by_index_for_intraday(index)
+        for index in self.index_list:
+            self._stock_db_updater.update_wave_data_by_index_for_intraday(index)
         self._stock_db_updater.add_wave_end_data_to_wave_records(symbol='', ts_start=0, ts_end=0, scheduled_job=True)
+
+
+class MyIntradayWaveUpdateJobForCrypto(MyIntradayWaveUpdateJob):
+    @property
+    def index_list(self):
+        return [INDICES.CRYPTO_CCY]
+
+
+class MyIntradayWaveUpdateJobForShares(MyIntradayWaveUpdateJob):
+    @property
+    def index_list(self):
+        return [INDICES.DOW_JONES, INDICES.NASDAQ100]
+
+
+class MyIntradayWaveUpdateJobForCurrencies(MyIntradayWaveUpdateJob):
+    @property
+    def index_list(self):
+        return [INDICES.FOREX]
 
 
 class MyPatternUpdateJob(MyDashPatternJob):
@@ -99,36 +119,64 @@ class MyTradeRecordsUpdateJob(MyDashPatternJob):
 
 
 class MyDashJobHandler:
-    def __init__(self, check_interval_min=15, for_test=False):
-        self._scheduler = MyPatternScheduler(check_interval_min)
+    def __init__(self, for_test=False):
+        self._weekdays_all = [0, 1, 2, 3, 4, 5, 6]
+        self._weekdays_week = [0, 1, 2, 3, 4]  # Monday till Friday
+        self._scheduler = MyPatternScheduler('DashStockDatabaseUpdater')
         self._stock_db_updater = StockDatabaseUpdater()
         if for_test:
             self.__add_jobs_for_testing__()
         else:
             self.__add_jobs__()
 
-    def start_scheduler(self):
-        self._scheduler.start_scheduler()
+    def check_scheduler_tasks(self):
+        self._scheduler.check_tasks()
+
+    def start_job_manually(self, job_to_start: str):
+        self._scheduler.start_job_manually(job_to_start)
+
+    @property
+    def last_run_date_time(self):
+        return self._scheduler.last_run_date_time
+
+    @property
+    def job_list(self):
+        return self._scheduler.job_list
 
     def __add_jobs__(self):
-        self._scheduler.add_job(MyDashDeleteDuplicatesJob(start_time='01:00', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyDashStockDataUpdateJob(start_time='01:30', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyEquityUpdateJob(start_time='03:00', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyPatternUpdateJob(start_time='03:15', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyDailyWaveUpdateJob(start_time='04:00', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyIntradayWaveUpdateJob(start_time='04:30', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyIntradayWaveUpdateJob(start_time='10:00', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyIntradayWaveUpdateJob(start_time='16:00', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyIntradayWaveUpdateJob(start_time='20:00', stock_db_updater=self._stock_db_updater))
-        self._scheduler.add_job(MyDashTradePolicyUpdateJob(start_time='05:00', stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyDashDeleteDuplicatesJob(
+            weekdays=self._weekdays_all, start_times=['01:00'], stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyDashStockDataUpdateJob(
+            weekdays=self._weekdays_all, start_times=['01:30'], stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyEquityUpdateJob(
+            weekdays=self._weekdays_all, start_times=['03:00'], stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyPatternUpdateJob(
+            weekdays=self._weekdays_all, start_times=['03:15'], stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyDailyWaveUpdateJob(
+            weekdays=self._weekdays_all, start_times=['04:00'], stock_db_updater=self._stock_db_updater))
+        self.__add_jobs_for_intraday_wave_update__()
+        self._scheduler.add_job(MyDashTradePolicyUpdateJob(
+            weekdays=self._weekdays_all, start_times=['05:00'], stock_db_updater=self._stock_db_updater))
         self._scheduler.add_job(MyDashPredictorOptimizerJob(
-            start_time='05:30', stock_db_updater=self._stock_db_updater))
-        # self._scheduler.add_job(MyTradeRecordsUpdateJob(start_time='05:30', stock_db_updater=self._stock_db_updater))
+            weekdays=self._weekdays_all, start_times=['05:30'], stock_db_updater=self._stock_db_updater))
+        # self._scheduler.add_job(MyTradeRecordsUpdateJob(
+        # weekdays=self._weekdays, start_times=['05:30'], stock_db_updater=self._stock_db_updater))
+
+    def __add_jobs_for_intraday_wave_update__(self):
+        start_times_crypto = ['04:30', '10:00', '16:00', '22:00']
+        start_times_shares = ['18:00', '20:00', '23:00']
+        start_times_currencies = ['06:00', '18:30']
+        self._scheduler.add_job(MyIntradayWaveUpdateJobForCrypto(
+            weekdays=self._weekdays_all, start_times=start_times_crypto, stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyIntradayWaveUpdateJobForShares(
+            weekdays=self._weekdays_week, start_times=start_times_shares, stock_db_updater=self._stock_db_updater))
+        self._scheduler.add_job(MyIntradayWaveUpdateJobForCurrencies(
+            weekdays=self._weekdays_week, start_times=start_times_currencies, stock_db_updater=self._stock_db_updater))
 
     def __add_jobs_for_testing__(self):
         start_time = self.__get_start_time_for_testing__()
         self._scheduler.add_job(MyDashPredictorOptimizerJob(
-            start_time=start_time, stock_db_updater=self._stock_db_updater))
+            weekdays=self._weekdays_all, start_times=[start_time], stock_db_updater=self._stock_db_updater))
 
     @staticmethod
     def __get_start_time_for_testing__():

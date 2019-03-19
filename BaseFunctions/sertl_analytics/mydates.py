@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, date
 from time import mktime
 import matplotlib.dates as m_dates
 from sertl_analytics.test.my_test_abc import TestInterface
+import math
 
 
 class MyDate:
@@ -84,14 +85,26 @@ class MyDate:
         return int(MyDate.get_time_difference_in_seconds(time_01)/60)
 
     @staticmethod
-    def get_time_difference_in_seconds(time_01: str, time_02=None) -> int:
-        dt_str = MyDate.get_date_as_string_from_date_time()
-        epoch_seconds_01 = MyDate.get_epoch_seconds_from_datetime('{} {}'.format(dt_str, time_01))
+    def get_time_difference_in_seconds(time_01, time_02=None) -> int:
+        if type(time_01) is datetime:
+            epoch_seconds_01 = MyDate.get_epoch_seconds_from_datetime(time_01)
+        else:
+            epoch_seconds_01 = MyDate.get_epoch_seconds_for_current_day_time(time_01)
+
         if time_02 is None:
             epoch_seconds_02 = MyDate.get_epoch_seconds_from_datetime()
         else:
-            epoch_seconds_02 = MyDate.get_epoch_seconds_from_datetime('{} {}'.format(dt_str, time_02))
+            if type(time_02) is datetime:
+                epoch_seconds_02 = MyDate.get_epoch_seconds_from_datetime(time_02)
+            else:
+                epoch_seconds_02 = MyDate.get_epoch_seconds_for_current_day_time(time_02)
         return epoch_seconds_01 - epoch_seconds_02
+
+    @staticmethod
+    def get_epoch_seconds_for_current_day_time(time: str) -> int:
+        time = time if len(time) == 8 else '{}:00'.format(time)
+        dt_str = MyDate.get_date_as_string_from_date_time()
+        return MyDate.get_epoch_seconds_from_datetime('{} {}'.format(dt_str, time))
 
     @staticmethod
     def get_epoch_seconds_for_date(date_time=None) -> int:
@@ -179,9 +192,9 @@ class MyDate:
             return datetime.strptime(str(date_time)[:19], '%Y-%m-%d %H:%M:%S').date()
 
     @staticmethod
-    def get_time_from_datetime(date_time):
+    def get_time_from_datetime(date_time=None):
         if date_time is None:
-            return None
+            date_time = datetime.now()
         if date_time.__class__.__name__ == 'time':  # no change
             return date_time
         return datetime.strptime(str(date_time)[:19], '%Y-%m-%d %H:%M:%S').time()
@@ -267,6 +280,32 @@ class MyDate:
         else:
             return [(time_stamp - k * period_seconds_part) for k in range(0, numbers)]
 
+    @staticmethod
+    def get_weekdays_for_list(weekday_list: list):
+        return [MyDate.get_weekday_for_number(number) for number in weekday_list]
+
+    @staticmethod
+    def get_weekday_for_number(weekday_number: int):
+        weekday_dict = {0: 'Mon', 1: 'Tue', 2: 'Wed', 3: 'Thu', 4: 'Fri', 5: 'Sat', 6: 'Sun'}
+        return weekday_dict.get(weekday_number, 'Sun')
+
+    @staticmethod
+    def get_nearest_time_in_list(time_list: list, forward=True):
+        time_now_str = str(MyDate.get_time_from_datetime())
+        diff_list = [0, math.inf]
+        diff_start_time_list = ['', '']
+        # 1. check: Is there any time this day after now?
+        for start_time in time_list:
+            seconds_start_time_to_now = MyDate.get_time_difference_in_seconds(start_time, time_now_str)
+            if 0 < seconds_start_time_to_now <= diff_list[1]:
+                # here want the smallest positive number
+                diff_list[1] = seconds_start_time_to_now
+                diff_start_time_list[1] = start_time[:5]
+            elif seconds_start_time_to_now <= diff_list[0]:  # here we want to have the smallest negative number
+                diff_list[0] = seconds_start_time_to_now
+                diff_start_time_list[0] = start_time[:5]
+        return diff_start_time_list[0] if diff_start_time_list[1] == '' else diff_start_time_list[1]
+
 
 class MyClock:
     def __init__(self, process: str = ''):
@@ -295,9 +334,41 @@ class MyClock:
 class MyDateTest(MyDate, TestInterface):
     GET_TIME_STAMP_ROUNDED_TO_PREVIOUS_HOUR = 'get_time_stamp_rounded_to_previous_hour'
     GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION = 'get_offset_timestamp_for_period_aggregation'
+    GET_NEAREST_TIME_IN_LIST = 'get_nearest_time_in_list'
+    GET_TIME_DIFFERNCE_IN_SECONDS = 'get_time_difference_in_seconds'
 
     def __init__(self, print_all_test_cases_for_units=False):
         TestInterface.__init__(self, print_all_test_cases_for_units)
+
+    def test_get_time_difference_in_seconds(self):
+        time_now_str = str(MyDate.get_time_from_datetime())
+
+        test_list = [[['01:00', '01:10'], -600],
+                     [['01:00', '00:55'], 300],
+                     [[datetime.now(), datetime.now() + timedelta(seconds=10)], -10],
+                     [['01:00', None], MyDate.get_epoch_seconds_for_current_day_time('01:00') - MyDate.time_stamp_now()],
+                     [[datetime.now() + timedelta(seconds=10), None], 10],
+                     ]
+        test_case_dict = {}
+        for test in test_list:
+            test_data = test[0]
+            key = '{}'.format(test_data)
+            test_case_dict[key] = [self.get_time_difference_in_seconds(test_data[0], test_data[1]), test[1]]
+        return self.__verify_test_cases__(self.GET_NEAREST_TIME_IN_LIST, test_case_dict)
+
+    def test_get_nearest_time_in_list(self):
+        time_now_str = str(MyDate.get_time_from_datetime())
+        test_list = [[['01:00', '05:00', '12:00', '18:00', '22:00'], '18:00'],
+                     [['01:00', '05:00'], '01:00'],
+                     [['03:00', '01:00', '05:00'], '01:00'],
+                      [['18:00', '22:00'], '18:00'],
+                    ]
+
+        test_case_dict = {}
+        for test in test_list:
+            key = '{}'.format(test[0])
+            test_case_dict[key] = [self.get_nearest_time_in_list(test[0]), test[1]]
+        return self.__verify_test_cases__(self.GET_NEAREST_TIME_IN_LIST, test_case_dict)
 
     def test_get_time_stamp_rounded_to_previous_hour(self):
         test_list = [[1552423400, 1552420800],
@@ -342,6 +413,14 @@ class MyDateTest(MyDate, TestInterface):
             return self.test_get_time_stamp_rounded_to_previous_hour()
         elif unit == self.GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION:
             return self.test_get_offset_timestamp_for_period_aggregation()
+        elif unit == self.GET_NEAREST_TIME_IN_LIST:
+            return self.test_get_nearest_time_in_list()
+        elif unit == self.GET_TIME_DIFFERNCE_IN_SECONDS:
+            return self.test_get_time_difference_in_seconds()
 
     def __get_test_unit_list__(self):
-        return [self.GET_TIME_STAMP_ROUNDED_TO_PREVIOUS_HOUR, self.GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION]
+        return [self.GET_TIME_DIFFERNCE_IN_SECONDS]
+        return [self.GET_TIME_STAMP_ROUNDED_TO_PREVIOUS_HOUR,
+                self.GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION,
+                self.GET_NEAREST_TIME_IN_LIST,
+                self.GET_TIME_DIFFERNCE_IN_SECONDS]

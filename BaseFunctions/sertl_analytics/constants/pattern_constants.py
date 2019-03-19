@@ -526,6 +526,13 @@ class PRD:  # Periods
         return 'Hallo'
 
 
+
+class ITV:  # Interval
+    HOURLY = 'HOURLY'
+    MINUTELY = 'MINUTELY'
+    NONE = 'NONE'
+
+
 class LOGT:  # Log Types (corresponds with the columns in the overview table for logs
     DATE_RANGE = 'date_range'
     ERRORS = 'errors'
@@ -1255,3 +1262,17 @@ class PRDC:  # Process data column
     COMMENT = 'Comment'
 
 
+class JDC:  # Jobs data column
+    NAME = 'Name'
+    PERIOD = 'Period'
+    WEEKDAYS = 'Weekdays'
+    START_TIMES = 'Start_Times'
+    NEXT_START_TIME = 'Next_Start_Time'
+    LAST_RUN = 'Last_Run'
+    LAST_RUN_TIME = 'Last_Run_Time'
+    PROCESSED = 'Processed'
+
+    @staticmethod
+    def get_all():
+        return [JDC.NAME, JDC.PERIOD, JDC.WEEKDAYS, JDC.START_TIMES,
+                JDC.NEXT_START_TIME, JDC.LAST_RUN, JDC.LAST_RUN_TIME, JDC.PROCESSED]
