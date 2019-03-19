@@ -1266,10 +1266,10 @@ class JDC:  # Jobs data column
     NAME = 'Name'
     PERIOD = 'Period'
     WEEKDAYS = 'Weekdays'
-    START_TIMES = 'Start_Times'
-    NEXT_START_TIME = 'Next_Start_Time'
-    LAST_RUN = 'Last_Run'
-    LAST_RUN_TIME = 'Last_Run_Time'
+    START_TIMES = 'Start times'
+    NEXT_START_TIME = 'Next start'
+    LAST_RUN = 'Last start'
+    LAST_RUN_TIME = 'Last run time (seconds)'
     PROCESSED = 'Processed'
 
     @staticmethod

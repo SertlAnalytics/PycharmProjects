@@ -135,9 +135,11 @@ class MyPatternJob:
         elif column == JDC.NEXT_START_TIME:
             return self._scheduled_start_time
         elif column == JDC.LAST_RUN:
-            return '-' if self._last_run_end_date_time is None else \
-                MyDate.get_date_time_as_string_from_date_time(self._last_run_end_date_time)
+            return '-' if self._last_run_start_date_time is None else \
+                MyDate.get_time_str_from_datetime(self._last_run_start_date_time)
         elif column == JDC.LAST_RUN_TIME:
+            if self._is_running:
+                return '- running -'
             return self.last_run_runtime_seconds
         elif column == JDC.PROCESSED:
             return self._last_run_processed_details

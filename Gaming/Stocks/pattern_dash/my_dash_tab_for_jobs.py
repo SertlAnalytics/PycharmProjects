@@ -90,7 +90,7 @@ class MyDashTab4Jobs(MyDashBaseTab):
                 selected_job_row = rows[selected_row_indices[0]]
                 job_name = selected_job_row[JDC.NAME]
                 self._job_handler.start_job_manually(job_name)
-                print('Start job: {}'.format(job_name))
+                print('Start job manually: {}'.format(job_name))
             return self.__get_table_for_jobs__()
 
     def __init_callback_for_jobs_markdown__(self):

@@ -192,6 +192,11 @@ class MyDate:
             return datetime.strptime(str(date_time)[:19], '%Y-%m-%d %H:%M:%S').date()
 
     @staticmethod
+    def get_time_str_from_datetime(date_time=None):
+        time_str = str(MyDate.get_time_from_datetime(datetime))
+        return time_str[:8]
+
+    @staticmethod
     def get_time_from_datetime(date_time=None):
         if date_time is None:
             date_time = datetime.now()
@@ -393,16 +398,24 @@ class MyDateTest(MyDate, TestInterface):
         else:
             return MyDate.get_offset_timestamp(min=-number * aggregation)
         """
-        test_list = [[1, PRD.DAILY, 1],
-                     [-1, PRD.DAILY, 1],
-                     [1, PRD.INTRADAY, 15],
-                     [-1, PRD.INTRADAY, 30],
+        base_day = MyDate.get_epoch_seconds_for_date()
+        seconds_for_day = MyDate.get_seconds_for_period(days=1)
+        time_stamp_now = MyDate.time_stamp_now()
+        test_list = [[[1, PRD.DAILY, 1], base_day - seconds_for_day],
+                     [[-1, PRD.DAILY, 1], base_day + seconds_for_day],
+                     [[1, PRD.INTRADAY, 15], time_stamp_now - 15 * 60],
+                     [[-1, PRD.INTRADAY, 30], time_stamp_now + 30 * 60],
                      ]
 
         test_case_dict = {}
-        for test in test_list:
-            key = '{}: {} expected {}'.format(test, 'a', 'b')
-            test_case_dict[key] = [self.get_offset_timestamp_for_period_aggregation(test[0], test[1], test[2]), '']
+        for entry in test_list:
+            test = entry[0]
+            expected = entry[1]
+            key = '{}'.format(test)
+            offset_time_stamp = self.get_offset_timestamp_for_period_aggregation(test[0], test[1], test[2])
+            offset_date_time = MyDate.get_date_time_from_epoch_seconds_as_string(offset_time_stamp)
+            expected_offset_date_time = MyDate.get_date_time_from_epoch_seconds_as_string(expected)
+            test_case_dict[key] = [offset_time_stamp, expected]
         return self.__verify_test_cases__(self.GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION, test_case_dict)
 
     def __get_class_name_tested__(self):
@@ -419,7 +432,7 @@ class MyDateTest(MyDate, TestInterface):
             return self.test_get_time_difference_in_seconds()
 
     def __get_test_unit_list__(self):
-        return [self.GET_TIME_DIFFERNCE_IN_SECONDS]
+        # return [self.GET_TIME_DIFFERNCE_IN_SECONDS]
         return [self.GET_TIME_STAMP_ROUNDED_TO_PREVIOUS_HOUR,
                 self.GET_OFFSET_TIMESTAMP_FOR_PERIOD_AGGREGATION,
                 self.GET_NEAREST_TIME_IN_LIST,
