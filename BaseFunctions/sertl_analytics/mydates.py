@@ -193,7 +193,7 @@ class MyDate:
 
     @staticmethod
     def get_time_str_from_datetime(date_time=None):
-        time_str = str(MyDate.get_time_from_datetime(datetime))
+        time_str = str(MyDate.get_time_from_datetime(date_time))
         return time_str[:8]
 
     @staticmethod

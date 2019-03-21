@@ -198,6 +198,8 @@ class DccGraphApi:
         self.figure_layout_legend = {'x': +5}
         self.figure_layout_hovermode = 'closest'
         self.figure_layout_shapes = None
+        self.figure_layout_barmode = 'overlay'
+        self.figure_layout_bargap = 0.1
         self.figure_layout_annotations = None
         self.figure_layout_x_axis_dict = None
         self.figure_layout_y_axis_dict = None
@@ -487,7 +489,9 @@ class MyDCC:
                     'legend': graph_api.figure_layout_legend,
                     'hovermode': graph_api.figure_layout_hovermode,
                     'shapes': graph_api.figure_layout_shapes,
-                    'annotations': graph_api.figure_layout_annotations
+                    'annotations': graph_api.figure_layout_annotations,
+                    'barmode': graph_api.figure_layout_barmode,
+                    'bargap': graph_api.figure_layout_bargap
                 }
             }
         )

@@ -174,6 +174,7 @@ class MyPatternJob:
 
     def __init_run_parameters__(self):
         self._last_run_start_date_time = MyDate.get_datetime_object()
+        print('__init_run_parameters__: self._last_run_start_date_time = {}'.format(self._last_run_start_date_time))
         self._last_run_end_date_time = None
         self._last_run_runtime_seconds = 0
         self._last_run_processed_details = ''

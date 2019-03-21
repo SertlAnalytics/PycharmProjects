@@ -16,7 +16,7 @@ from pattern_detection_controller import PatternDetectionController
 from pattern_dash.my_dash_colors import DashColorHandler
 from dash import Dash
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.pattern_constants import WAVEST, PRD, INDICES
+from sertl_analytics.constants.pattern_constants import WAVEST, PRD, INDICES, CHT
 from pattern_news_handler import NewsHandler
 from sertl_analytics.test.my_test_abc import TestInterface
 import plotly.io as pio
@@ -34,7 +34,6 @@ class MyDashTab4Waves(MyDashBaseTab):
         self._dash_color_handler = color_handler
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self._heat_map_was_updated = False
-        self._head_map_cache = MyCache()
         self._index_chart_cache = MyCache()
 
         # self._wave_table = WaveTabTable(self._waves_data_frame_dict, 'log_type', 'date_range')
@@ -55,6 +54,7 @@ class MyDashTab4Waves(MyDashBaseTab):
         self._my_waves_retrospective_ticks_selection = self._dd_handler.my_waves_retrospective_ticks_selection_id
         self._my_waves_index_selection = self._dd_handler.my_waves_index_selection_id
         self._my_waves_heatmap_div = 'my_waves_heatmap_div'
+        self._my_waves_mood_chart_div = 'my_waves_mood_chart_div'
         self._my_waves_index_chart_div = 'my_waves_index_chart_div'
         self._my_waves_entry_markdown = 'my_waves_entry_markdown'
 
@@ -74,33 +74,43 @@ class MyDashTab4Waves(MyDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(
                 WAVEDD.INDICES, default_value=self._dd_handler.selected_index)),
             MyHTML.div(self._my_waves_heatmap_div, self.__get_heatmap__()),
+            MyHTML.div(self._my_waves_mood_chart_div, self.__get_mood_chart__()),
             MyHTML.div(self._my_waves_index_chart_div, self.__get_graph_for_index__()),
             MyDCC.markdown(self._my_waves_entry_markdown)
         ]
         return MyHTML.div('my_waves_div', children_list)
 
     def __get_heatmap__(self):
-        cache_key = self.__get_id_for_caches__()
-        heat_map = self._head_map_cache.get_cached_object_by_key(cache_key)
-        if heat_map is None:
-            ticks = self._dd_handler.selected_retrospective_ticks
-            period = self._dd_handler.selected_period
-            aggregation = self._dd_handler.selected_aggregation
-            self._fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(ticks, period, aggregation)
-            plotter = MyDashTabStatisticsPlotter4Waves(
-                wave_handler=self._fibonacci_wave_data_handler,
-                color_handler=self._dash_color_handler,
-                index=self._dd_handler.selected_index)
-            heat_map = plotter.get_chart_list()
-            self.__add_element_to_cache__(self._head_map_cache, cache_key, heat_map)
+        ticks = self._dd_handler.selected_retrospective_ticks
+        period = self._dd_handler.selected_period
+        aggregation = self._dd_handler.selected_aggregation
+        self._fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(ticks, period, aggregation)
+        plotter = MyDashTabStatisticsPlotter4Waves(
+            wave_handler=self._fibonacci_wave_data_handler,
+            color_handler=self._dash_color_handler,
+            index=self._dd_handler.selected_index)
+        heat_map = plotter.get_chart_list()
         return heat_map
+
+    def __get_mood_chart__(self):
+        ticks = self._dd_handler.selected_retrospective_ticks
+        period = self._dd_handler.selected_period
+        aggregation = self._dd_handler.selected_aggregation
+        self._fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(ticks, period, aggregation)
+        plotter = MyDashTabStatisticsPlotter4Waves(
+            wave_handler=self._fibonacci_wave_data_handler,
+            color_handler=self._dash_color_handler,
+            index=self._dd_handler.selected_index)
+        mood_chart = plotter.get_chart_list_by_chart_type(CHT.MOOD_CHART)
+        return mood_chart
 
     def init_callbacks(self):
         # self.__init_callback_for_waves_header_table__()
-        self.__init_callbacks_for_waves_heatmap__()
-        self.__init_callbacks_for_waves_index_chart__()
+        self.__init_callback_for_waves_heatmap__()
+        self.__init_callback_for_waves_mood_chart__()
+        self.__init_callback_for_waves_index_chart__()
 
-    def __init_callbacks_for_waves_heatmap__(self):
+    def __init_callback_for_waves_heatmap__(self):
         @self.app.callback(
             Output(self._my_waves_heatmap_div, 'children'),
             [Input('my_interval_refresh', 'n_intervals'),
@@ -121,7 +131,17 @@ class MyDashTab4Waves(MyDashBaseTab):
             self._fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(ticks, period, aggregation)
             return self.__get_heatmap__()
 
-    def __init_callbacks_for_waves_index_chart__(self):
+    def __init_callback_for_waves_mood_chart__(self):
+        @self.app.callback(
+            Output(self._my_waves_mood_chart_div, 'children'),
+            [Input(self._my_waves_heatmap_div, 'children')],
+            [State(self._my_waves_mood_chart_div, 'children')])
+        def handle_callback_for_waves_mood_chart(heat_map, children):
+            if self._heat_map_was_updated:
+                return self.__get_mood_chart__()
+            return children
+
+    def __init_callback_for_waves_index_chart__(self):
         @self.app.callback(
             Output(self._my_waves_index_chart_div, 'children'),
             [Input(self._my_waves_heatmap_div, 'children')],

@@ -236,6 +236,7 @@ class AccessLayer4Wave(AccessLayer):
         query = "SELECT count(*) as Number from {}{}".format(self._table.name, where_clause)
         df = self.select_data_by_query(query)
         number = df.values[0, 0]
+        print('is_wave_available_after_wave_end_ts: query={} -> result={}'.format(query, number))  # ToDo - remove...
         return number > 0
 
     def get_all_as_data_frame(self, index_col='', columns=None, where_clause=''):

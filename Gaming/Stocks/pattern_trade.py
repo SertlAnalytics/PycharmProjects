@@ -14,6 +14,7 @@ from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
 from pattern_database.stock_tables import TradeTable
 from pattern_data_dictionary import PatternDataDictionary
 from pattern_trade_box import ExpectedWinTradingBox, TouchPointTradingBox, TradingBoxApi
+from pattern_logging.pattern_log import PatternLog
 from pattern_wave_tick import WaveTick, WaveTickList, TickerWaveTickConverter
 from sertl_analytics.plotter.my_plot import MyPlotHelper
 import math
@@ -401,7 +402,13 @@ class PatternTrade:
             'SMA': self.__is_precondition_for_sma_fulfilled__(),
             'Breakout_counter < 20': self.__get_breakout_counter__(PTHP.HANDLE_BUY_TRIGGERS) < 20
         }
+        self.__log_problem_cases__(check_dict, 'are_preconditions_for_breakout_buy_fulfilled')
         return False not in check_dict.values()
+
+    def __log_problem_cases__(self, check_dict: dict, process: str):
+        for key in check_dict:
+            if not check_dict[key]:
+                PatternLog.log_message('{}: problem {}'.format(self.ticker_id, key), process)
 
     def __is_precondition_for_sma_fulfilled__(self):
         if self.trade_strategy != TSTR.SMA:
@@ -583,7 +590,8 @@ class PatternTrade:
 
     def adjust_trade_box_to_actual_ticker(self):
         sma = self.__get_simple_moving_average_value__() if self.trade_strategy == TSTR.SMA else 0
-        was_adjusted = self._trade_box.adjust_to_next_ticker_last_price(self.wave_tick_actual.close, sma)
+        small_profit = self.sys_config.exchange_config.small_profit_taking_active
+        was_adjusted = self._trade_box.adjust_to_next_ticker_last_price(self.wave_tick_actual.close, sma, small_profit)
         if was_adjusted and self.trade_process == TP.ONLINE:
             self.print_state_details_for_actual_wave_tick(PTHP.ADJUST_STOPS_AND_LIMITS)
 
@@ -618,6 +626,8 @@ class PatternTrade:
             api.last_price_mean_aggregation = self.last_price_mean_aggregation
         else:
             api.last_price_mean_aggregation = self.sys_config.config.trading_last_price_mean_aggregation
+        api.small_profit_taking_active = self.sys_config.exchange_config.small_profit_taking_active
+        api.small_profit_taking_parameters = self.sys_config.exchange_config.small_profit_taking_parameters
         if self.trade_box_type == TBT.EXPECTED_WIN:
             return ExpectedWinTradingBox(api)
         elif self.trade_box_type == TBT.TOUCH_POINT:

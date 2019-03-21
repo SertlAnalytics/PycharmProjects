@@ -12,32 +12,36 @@ from sertl_analytics.constants.pattern_constants import INDICES, SCORING
 class CDD:  # configuration drop down
     ORDER_MAXIMUM = 'Order_Maximum_Value'
     SOUND_MACHINE = 'Sound_Machine'
+    SMALL_PROFIT = 'Small_Profit'
 
     @staticmethod
     def get_all_as_list():
-        return [CDD.ORDER_MAXIMUM, CDD.SOUND_MACHINE]
+        return [CDD.ORDER_MAXIMUM, CDD.SOUND_MACHINE, CDD.SMALL_PROFIT]
 
 
 class ConfigurationTabDropDownHandler(DropDownHandler):
-    def __init__(self, order_max: int, sound_machine_active: bool):
+    def __init__(self, order_max: int, sound_machine_active: bool, small_profit: bool):
         self._order_max_default = order_max
         self._sound_machine_active_default = sound_machine_active
+        self._small_profit_active_default = small_profit
         self._order_max_list = [100, 200, 500, 1000, 2000]
         if self._order_max_default not in self._order_max_list:
             self._order_max_list.append(self._order_max_default)
         self._sound_machine_state_list = ['active', 'inactive']
+        self._small_profit_state_list = ['active', 'inactive']
         DropDownHandler.__init__(self)
 
     def __get_drop_down_key_list__(self):
         return CDD.get_all_as_list()
 
     def __get_selected_value_dict__(self):
-        return {CDD.ORDER_MAXIMUM: 0, CDD.SOUND_MACHINE: 'inactive'}
+        return {CDD.ORDER_MAXIMUM: 0, CDD.SOUND_MACHINE: 'inactive', CDD.SMALL_PROFIT: 'inactive'}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
             CDD.ORDER_MAXIMUM: 'Order Maximum',
             CDD.SOUND_MACHINE: 'Sound Machine',
+            CDD.SMALL_PROFIT: 'Small Profit',
         }
         return value_dict.get(drop_down_type, None)
 
@@ -45,13 +49,15 @@ class ConfigurationTabDropDownHandler(DropDownHandler):
         value_dict = {
             CDD.ORDER_MAXIMUM: 'my_configuration_order_maximum',
             CDD.SOUND_MACHINE: 'my_configuration_sound_machine_state',
+            CDD.SMALL_PROFIT: 'my_configuration_small_profit_state',
         }
         return value_dict.get(drop_down_type, None)
 
     def __get_default_value__(self, drop_down_type: str, default_value=None):
         default_dict = {
             CDD.ORDER_MAXIMUM: self._order_max_default,
-            CDD.SOUND_MACHINE: 'active' if self._sound_machine_active_default else 'inactive'
+            CDD.SOUND_MACHINE: 'active' if self._sound_machine_active_default else 'inactive',
+            CDD.SMALL_PROFIT: 'active' if self._small_profit_active_default else 'inactive'
         }
         # print('__get_default_value__: {}: {}'.format(drop_down_type, default_dict.get(drop_down_type, None)))
         return default_dict.get(drop_down_type, None)
@@ -60,6 +66,7 @@ class ConfigurationTabDropDownHandler(DropDownHandler):
         value_dict = {
             CDD.ORDER_MAXIMUM: 150,
             CDD.SOUND_MACHINE: 150,
+            CDD.SMALL_PROFIT: 150,
         }
         return value_dict.get(drop_down_type, 140)
 
@@ -67,6 +74,7 @@ class ConfigurationTabDropDownHandler(DropDownHandler):
         return {
             CDD.ORDER_MAXIMUM: self.__get_order_maximum_options__(),
             CDD.SOUND_MACHINE: self.__get_sound_machine_options__(),
+            CDD.SMALL_PROFIT: self.__get_small_profit_options__(),
         }
 
     def __get_for_multi__(self, drop_down_type: str):
@@ -77,4 +85,7 @@ class ConfigurationTabDropDownHandler(DropDownHandler):
 
     def __get_sound_machine_options__(self):
         return [{'label': state, 'value': state} for state in self._sound_machine_state_list]
+
+    def __get_small_profit_options__(self):
+        return [{'label': state, 'value': state} for state in self._small_profit_state_list]
 

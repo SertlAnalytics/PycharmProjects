@@ -8,6 +8,7 @@ Date: 2018-09-10
 from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT, CN, PRD
 from pattern_wave_tick import WaveTick, WaveTickList
 from sertl_analytics.mydates import MyDate
+from pattern_logging.pattern_log import PatternLog
 import math
 from scipy import stats
 import statistics
@@ -24,6 +25,8 @@ class TradingBoxApi:
         self.height = 0  # is used for touch point
         self.distance_bottom = 0  # is used for touch point
         self.last_price_mean_aggregation = 8  # will be overwritten by config or optimizer data
+        self.small_profit_taking_active = False  # will be overwritten by config
+        self.small_profit_taking_parameters = []  # will be overwritten by config
 
 
 class TradingBox:
@@ -50,6 +53,9 @@ class TradingBox:
         self._init_parameters_()
         self.__calculate_stops_and_limits__()
         self._price_was_close_to_stop = False
+        self._small_profit_taking_active = api.small_profit_taking_active
+        self._small_profit_taking_parameters = api.small_profit_taking_parameters
+        self._was_adjusted_to_small_profit_taking = False
 
     def round(self, value: float):
         return round(value, self._round_decimals)
@@ -144,11 +150,12 @@ class TradingBox:
                 'dist_trailing_stop': self.distance_trailing_stop
         }
 
-    def adjust_to_next_ticker_last_price(self, ticker_last_price: float, sma_value=0) -> bool:
+    def adjust_to_next_ticker_last_price(self, ticker_last_price: float, sma_value=0, small_profit=False) -> bool:
         if ticker_last_price <= self._ticker_last_price_list[-1]:  # no adjustments necessary
             return False
         self._ticker_last_price_list.append(ticker_last_price)
         self._sma_value = sma_value
+        self._small_profit_taking_active = small_profit
         return self.__adjust_to_next_ticker_last_price__(ticker_last_price)
 
     def __adjust_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
@@ -158,6 +165,7 @@ class TradingBox:
 
     def __adjust_stop_loss_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
         ticker_last_price_mean = self.__get_ticker_last_price_mean__(ticker_last_price)
+        return_flag = self.__adjust_stop_loss_to_small_profit_taking__(ticker_last_price)
         self.__adjust_distance_bottom_to_current_result__(ticker_last_price)
         if self._trade_strategy == TSTR.LIMIT:  # with trailing stop
             if self._stop_loss < ticker_last_price_mean - self._distance_bottom:
@@ -178,14 +186,40 @@ class TradingBox:
             if self._stop_loss < self._sma_value:
                 self._stop_loss = self._sma_value
                 return True
-        return False
+        return return_flag
+
+    def __adjust_stop_loss_to_small_profit_taking__(self, last_price: float) -> bool:
+        # 1. param: this limit reached => stop loss at 2. param,
+        if not self._small_profit_taking_active:
+            return False
+
+        if self._was_adjusted_to_small_profit_taking or len(self._small_profit_taking_parameters) != 2:
+            return False
+
+        current_result_pct = self.__get_current_result_pct_for_last_price__(last_price)
+        limit_pct = self._small_profit_taking_parameters[0]
+        if current_result_pct <= limit_pct:
+            return False
+
+        stop_loss_pct = self._small_profit_taking_parameters[1]
+        stop_loss_for_small_profit_parameters = self._buy_price * (1.0 + stop_loss_pct/100)
+        if self._stop_loss >= stop_loss_for_small_profit_parameters:
+            return False
+
+        message = '{}: Stop loss adjusted for small profit: old stop={}, new stop={}'.format(
+            self._ticker_id, self._stop_loss, stop_loss_for_small_profit_parameters)
+        print(message)
+        PatternLog.log_message(message, '__adjust_stop_loss_to_small_profit_taking__')
+        self._stop_loss = stop_loss_for_small_profit_parameters
+        self._was_adjusted_to_small_profit_taking = True
+        return True
 
     def __get_ticker_last_price_mean__(self, ticker_last_price):
         if self._api.last_price_mean_aggregation == 1:
             return ticker_last_price
         current_result = self.__get_current_result_pct_for_last_price__(ticker_last_price)
         if current_result > 1:  # after 1% gain we want to follow the actual price - no means at all
-            print('{}: ticker_last_price_mean = current_price = {} since current_result = {:.2f}% > 1% => '.format(
+            print('{}: ticker_last_price_mean = current_price = {} since current_result = {:.2f}% > 1%'.format(
                 self._ticker_id, ticker_last_price, current_result))
             return ticker_last_price
         mean_ticker = statistics.mean(self._ticker_last_price_list[-self._api.last_price_mean_aggregation:])

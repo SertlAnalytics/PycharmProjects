@@ -8,6 +8,7 @@ from sertl_analytics.exchanges.bitfinex import MyBitfinex, BitfinexConfiguration
 from sertl_analytics.exchanges.bitfinex import Ticker, Balance
 from sertl_analytics.exchanges.bitfinex import BuyMarketOrder, BuyLimitOrder, BuyStopOrder
 from sertl_analytics.exchanges.bitfinex import SellMarketOrder, SellStopLossOrder, SellTrailingStopOrder
+from sertl_analytics.exchanges.exchange_abc import MyExchangeTest
 from sertl_analytics.constants.pattern_constants import CN
 from pattern_wave_tick import WaveTick, WaveTickList
 
@@ -20,6 +21,10 @@ class MyBitfinexTradeClient:
         self._api_key_secret = os.environ['bitfinex_apikeysecret']
         self._bitfinex = MyBitfinex(self._api_key, self._api_key_secret, self.exchange_config)
         self._trading_pairs = self._bitfinex.trading_pairs
+
+    @property
+    def bitfinex(self):
+        return self._bitfinex
 
     def get_ticker(self, symbol: str) -> Ticker:
         return self._bitfinex.get_ticker(symbol)
@@ -145,4 +150,19 @@ class MyBitfinexTradeClient:
                 'XRP': 'Ripple',
                 'XMR': 'XMR',
                 'ZEC': 'ZEC'}
+
+
+class MyBitfinexTest(MyExchangeTest):
+    @staticmethod
+    def __get_exchange__():
+        trade_client = MyBitfinexTradeClient(BitfinexConfiguration())
+        return trade_client.bitfinex
+
+    @staticmethod
+    def __get_symbol__():
+        return 'BTCUSD'
+
+    @staticmethod
+    def __get_order_id__():
+        return ''
 

@@ -7,6 +7,8 @@ Date: 2019-03-13
 
 from mymath import MyMathTest
 from mydates import MyDateTest
+from sertl_analytics.exchanges.bitfinex_trade_client import MyBitfinexTest
+from sertl_analytics.exchanges.interactive_broker_trade_client import MyIBKRTest
 from pattern_database.stock_database import StockDatabaseTest
 
 
@@ -24,4 +26,12 @@ class TestFactory:
 
     def run_test_for_my_dates(self):
         test = MyDateTest(self._print_all_test_cases_for_units)
-        test.run_test_for_all_units((test.class_name_tested))
+        test.run_test_for_all_units(test.class_name_tested)
+
+    def run_test_for_bitfinex(self):
+        test = MyBitfinexTest(self._print_all_test_cases_for_units)
+        test.run_test_for_all_units(test.class_name_tested)
+
+    def run_test_for_ibkr(self):
+        test = MyIBKRTest(self._print_all_test_cases_for_units)
+        test.run_test_for_all_units(test.class_name_tested)

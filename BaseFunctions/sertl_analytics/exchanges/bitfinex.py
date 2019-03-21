@@ -25,6 +25,7 @@ from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFet
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mycache import MyCacheObjectApi, MyCache
+from pattern_logging.pattern_log import PatternLog
 
 
 class TP:  # trading pairs - they are all put to lowercase when sent to Bitfinex
@@ -357,7 +358,9 @@ class MyBitfinex(ExchangeInterface):
             available_money = min(self.get_available_money(), self.exchange_config.buy_order_value_max)
 
         if available_money < 10:
-            print('\nNot enough (>{}$) balance for {} available'.format(10, self.base_currency))
+            message = '{}: Not enough (>{}$) balance for {} available'.format(symbol, 10, self.base_currency)
+            print('\n{}'.format(message))
+            PatternLog.log_message(message, 'Bitfinex.buy_available')
         else:
             ticker = self.get_ticker(symbol) if last_price == 0 else None
             last_price = ticker.last_price if ticker else last_price
@@ -367,10 +370,11 @@ class MyBitfinex(ExchangeInterface):
             order_buy.actual_ticker = ticker
             return self.create_order(order_buy, is_order_simulation)
 
-    def __get_rounded_amount_for_buying__(self, available_money: float, last_price: float):
-        last_price_modified = last_price * (1.02)  # the part 0.02 is for amount safety - we want to be below _limit
+    @staticmethod
+    def __get_rounded_amount_for_buying__(available_money: float, last_price: float):
+        last_price_modified = last_price * 1.02  # the part 0.02 is for amount safety - we want to be below _limit
         amount_before_rounding = available_money / last_price_modified
-        round_digits = 1 - math.floor(math.log10(amount_before_rounding))  # we have to round the number to 3 digits...
+        round_digits = int(1 - math.floor(math.log10(amount_before_rounding)))  # we have to round the number to 3 digits...
         amount = round(amount_before_rounding, round_digits)
         print('buy_available: amount-before rounding={}, after rounding={}'.format(amount_before_rounding, amount))
         return amount
@@ -481,13 +485,15 @@ class MyBitfinex(ExchangeInterface):
         return data
 
     def get_candles(self, symbol: str, period: str, aggregation: int, section='hist',
-                    limit=200, ms_start=0, ms_end=0, sort=1):
+                    limit=0, ms_start=0, ms_end=0, sort=1):
         data_fetcher_cache_key = BitfinexDataFetcherCacheKey(symbol, period, aggregation, section, limit)
         df_from_cache = self.ticker_cache.get_cached_object_by_key(data_fetcher_cache_key.key)
         if df_from_cache is not None:
             # print('df_source from cache: {}'.format(data_fetcher_cache_key.key))
             return df_from_cache
         kw_args = {'symbol': symbol, 'period': period, 'aggregation': aggregation, 'section': section}
+        if limit > 0:
+            kw_args['limit'] = limit
         self.bitfinex_crypto_fetcher.retrieve_data(**kw_args)
         df_data = self.bitfinex_crypto_fetcher.df_data
         self.__add_data_frame_to_cache__(df_data, data_fetcher_cache_key)
@@ -668,3 +674,5 @@ class MyBitfinex(ExchangeInterface):
         keys_sorted = list(parameters.keys())
         keys_sorted.sort()
         return '&'.join(['{}={}'.format(k, parameters[k]) for k in keys_sorted])
+
+

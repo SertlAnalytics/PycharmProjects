@@ -18,11 +18,8 @@ stock_db = sys_config.db_stock
 exchange_config = BitfinexConfiguration()
 predictor_optimizer = PatternPredictorOptimizer(stock_db)
 stock_db_updater = StockDatabaseUpdater(sys_config)
-
-# stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.NASDAQ100)
-stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.CRYPTO_CCY, 400)
-stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.CRYPTO_CCY)
-stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
+# sys_config.exchange_config.small_profit_taking_active = True
+stock_db_updater.update_trade_records(4, 16, pattern_end_date='')  # 2018-10-31
 
 if True:
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)

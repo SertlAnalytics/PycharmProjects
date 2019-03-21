@@ -169,12 +169,16 @@ class StockDatabaseUpdater:
                              EDC.EXCHANGE: exchange, EDC.EQUITY_TYPE: equity_type, EDC.EQUITY_STATUS: EST.ACTIVE}
                 self.db_stock.insert_equity_data([data_dict])
 
-    def update_trade_records(self, mean: int, sma_number: int, trade_strategies: dict=None):
+    def update_trade_records(self, mean: int, sma_number: int, trade_strategies: dict=None, pattern_end_date=str):
+        if pattern_end_date == '':
+            pattern_end_date = str(MyDate.adjust_by_days(None, -90))  # only the ones which are 3 month back
         self.sys_config.init_detection_process_for_automated_trade_update(mean, sma_number)
         if trade_strategies is None:
             trade_strategies = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP]}
         for pattern_type in FT.get_long_trade_able_types():
             where_clause = "pattern_type = '{}' and period = 'DAILY' and trade_type in ('', 'long')".format(pattern_type)
+            if pattern_end_date != '':
+                where_clause += " AND {} > '{}'".format(DC.PATTERN_END_DT, pattern_end_date)
             df_pattern_for_pattern_type = self.db_stock.get_pattern_records_as_dataframe(where_clause)
             pattern_id_dict = {row[DC.ID]: row[DC.TRADE_TYPE] for index, row in df_pattern_for_pattern_type.iterrows()}
             # pattern_id_list = ['20_1_1_LTCUSD_20_2016-11-02_00:00_2016-12-04_00:00']

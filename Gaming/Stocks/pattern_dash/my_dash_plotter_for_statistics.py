@@ -6,7 +6,7 @@ Date: 2018-06-17
 """
 
 import plotly.graph_objs as go
-from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC, MDC, WAVEST, PRD
+from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC, MDC, WAVEST, PRD, FD
 from sertl_analytics.constants.pattern_constants import EQUITY_TYPE, INDICES
 from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_components import MyDCC, DccGraphApi
@@ -41,29 +41,38 @@ class MyDashTabStatisticsPlotter:
     def __init_parameter__(self):
         pass
 
+    def __init_parameter_by_chart_type__(self, chart_type):
+        pass
+
     def __print_df_base__(self):
         columns = self._df_base.columns[:2]
         df_reduced = self._df_base[columns]
         print('__print_df_base__: _df_wave\n{}'.format(df_reduced.head(100)))
 
     def get_chart_list(self):
-        if self.chart_type == CHT.SCATTER:
+        return self.get_chart_list_by_chart_type(self.chart_type)
+
+    def get_chart_list_by_chart_type(self, chart_type: str):
+        self.__init_parameter_by_chart_type__(chart_type)
+        if chart_type == CHT.SCATTER:
             return self.__get_chart_type_scatter__()
-        elif self.chart_type == CHT.LINE:
+        elif chart_type == CHT.LINE:
             return self.__get_chart_type_line__()
-        elif self.chart_type == CHT.STACK_GROUP:
+        elif chart_type == CHT.STACK_GROUP:
             return self.__get_chart_type_stack_group__()
-        elif self.chart_type == CHT.PREDICTOR:
+        elif chart_type == CHT.PREDICTOR:
             return self.__get_chart_type_predictor__()
-        elif self.chart_type == CHT.HEAT_MAP:
+        elif chart_type == CHT.HEAT_MAP:
             return self.__get_chart_type_heatmap__()
-        elif self.chart_type == CHT.PIE:
+        elif chart_type == CHT.MOOD_CHART:
+            return self.__get_chart_type_mood__()
+        elif chart_type == CHT.PIE:
             return self.__get_chart_type_pie__()
-        elif self.chart_type == CHT.AREA_WINNER_LOSER:
+        elif chart_type == CHT.AREA_WINNER_LOSER:
             return self.__get_chart_type_area_winner_loser__()
-        elif self.chart_type == CHT.CONFUSION:
+        elif chart_type == CHT.CONFUSION:
             return self.__get_chart_type_confusion_matrix__()
-        elif self.chart_type == CHT.ROC:
+        elif chart_type == CHT.ROC:
             return self.__get_chart_type_roc__()
 
     def __get_chart_type_area_winner_loser__(self):
@@ -79,6 +88,9 @@ class MyDashTabStatisticsPlotter:
         graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
         graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
         return [MyDCC.graph(graph_api)]
+
+    def __get_chart_type_mood__(self):
+        pass
 
     def __get_chart_type_pie__(self):
         graph_api_all = DccGraphApi(self._chart_id + '_all', self._chart_name + ' (all)')
@@ -212,7 +224,7 @@ class MyDashTabStatisticsPlotter:
                    )]
 
     def __get_heatmap_figure_data__(self, index: str):
-        x_data, y_data, z_data = self.__get_data_for_heatmap_figure__(index)
+        [x_data, y_data, z_data] = self.__get_data_for_heatmap_figure__(index)
         return [
             go.Heatmap(
                 x=x_data,
@@ -221,11 +233,60 @@ class MyDashTabStatisticsPlotter:
                 colorscale=self._color_handler.get_color_scale_for_heatmap()
                 )]
 
-    def __get_data_for_heatmap_figure__(self, scope: str):
+    def __get_mood_chart_figure_data__(self, index: str):
+        [x_data, y_data] = self.__get_data_for_heatmap_figure__(index, for_mood_graph=True)  # we use the same data
+        # print('x_data={}, \ny_data={}'.format(x_data, y_data))
+        all_ascending = np.array(y_data[FD.ASC])
+        all_descending = -1 * np.array(y_data[FD.DESC])
+        daily_ascending = np.array(y_data[WAVEST.DAILY_ASC])
+        daily_descending = -1 * np.array(y_data[WAVEST.DAILY_DESC])
+        max_value = max(max(y_data[FD.ASC]), max(y_data[FD.DESC]))
+        opacity = 0.4
+        # print('x_data={}, \ny_data={}'.format(x_data, y_data))
+        return [
+            go.Bar(x=x_data,
+                   y=all_ascending,
+                   orientation='v',
+                   name='All ascending',
+                   # hoverinfo='x',
+                   marker=dict(color='green'),
+                   opacity=opacity,
+                   ),
+            go.Bar(x=x_data,
+                   y=all_descending,
+                   orientation='v',
+                   name='All descending',
+                   text=-1 * all_descending.astype('int'),
+                   # hoverinfo='text',
+                   marker=dict(color='red'),
+                   opacity=opacity,
+                   ),
+            go.Bar(x=x_data,
+                   y=daily_ascending,
+                   orientation='v',
+                   name='daily ascending',
+                   # text='{}: {}'.format('daily ascending', daily_ascending.astype('int')),
+                   # text=daily_ascending.astype('int'),
+                   # hoverinfo='x',
+                   showlegend=True,
+                   marker=dict(color='green')
+                   ),
+            go.Bar(x=x_data,
+                   y=daily_descending,
+                   orientation='v',
+                   name='daily descending',
+                   text=-1 * daily_descending.astype('int'),
+                   # hoverinfo='text',
+                   showlegend=True,
+                   marker=dict(color='red')
+                   )
+        ], max_value
+
+    def __get_data_for_heatmap_figure__(self, scope: str, for_mood_graph=False):
         x_data = []
         y_data = []
         z_data = []
-        return x_data, y_data, z_data
+        return [x_data, y_data, z_data]
 
     def __get_data_for_pie_figure__(self, scope: str):
         pull_distance = 0.1
@@ -585,9 +646,19 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
         MyDashTabStatisticsPlotter.__init__(self, self._wave_handler.df_wave, color_handler)
 
     def __init_parameter__(self):
+        self.__init_parameter_by_chart_type__(CHT.HEAT_MAP)
         self._chart_id = 'waves_heatmap'
         self._chart_name = 'Waves'
         self.chart_type = CHT.HEAT_MAP
+
+    def __init_parameter_by_chart_type__(self, chart_type: str):
+        self.chart_type = chart_type
+        if self.chart_type == CHT.HEAT_MAP:
+            self._chart_id = 'waves_heatmap'
+            self._chart_name = 'Waves'
+        elif self.chart_type == CHT.MOOD_CHART:
+            self._chart_id = 'waves_mood_chart'
+            self._chart_name = 'Mood Chart'
 
     def __print_df_base__(self):
         columns = [DC.EQUITY_TYPE, DC.PERIOD, DC.WAVE_TYPE, DC.WAVE_END_DT]
@@ -613,7 +684,7 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
             graph_list.append(MyDCC.graph(graph_api))
         return graph_list
 
-    def __get_data_for_heatmap_figure__(self, index: str):
+    def __get_data_for_heatmap_figure__(self, index: str, for_mood_graph=False):
         x_data = self._wave_handler.tick_key_list_for_retrospection
         if self._wave_handler.period_for_retrospection == PRD.INTRADAY:
             x_data = [str(MyDate.get_date_time_from_epoch_seconds(key)) for key in x_data]
@@ -621,4 +692,52 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
         y_data = y_data[::-1]  # we want them in this order
         z_data = [self._wave_handler.get_waves_number_list_for_wave_type_and_index(wt, index) for wt in y_data]
         # print('__get_data_for_heatmap_figure__: {}: \n{}\n{}\n{}'.format(index, x_data, y_data, z_data))
-        return x_data, y_data, z_data
+        if for_mood_graph:
+            return self.__get_heatmap_data_for_mood_graph__(x_data, y_data, z_data)
+        return [x_data, y_data, z_data]
+
+    @staticmethod
+    def __get_heatmap_data_for_mood_graph__(x_data: list, y_data: list, z_data: list):
+        """
+        :param x_data=['2018-12-11', '2018-12-12', '2018-12-13', '2018-12-14',
+        :param y_data=['intraday_descending', 'daily_descending', 'intraday_ascending', 'daily_ascending']
+        :param z_data=[[2, 0, 1, 13, 4, 0, 0, 0, 0, 0, 1, 0, 0,...], [...], [...], [...]]
+        :return:
+        """
+        z_data_dict = {wave_type: z_data[ind] for ind, wave_type in enumerate(y_data)}
+        y_data_dict = {FD.ASC: list(np.add(z_data_dict[WAVEST.DAILY_ASC], z_data_dict[WAVEST.INTRADAY_ASC])),
+                       FD.DESC: list(np.add(z_data_dict[WAVEST.DAILY_DESC], z_data_dict[WAVEST.INTRADAY_DESC])),
+                       WAVEST.DAILY_ASC: z_data_dict[WAVEST.DAILY_ASC],
+                       WAVEST.DAILY_DESC: z_data_dict[WAVEST.DAILY_DESC],
+                       }
+        return [x_data, y_data_dict]
+
+    def __get_chart_type_mood__(self):
+        graph_list = []
+        if self._index in ['', INDICES.ALL]:
+            index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+        else:
+            index_list = [self._index]
+        for index in index_list:
+            index_for_key = index.replace(' ', '_').lower()
+            index_for_key = index_for_key if self._index == '' else '{}_{}'.format(index_for_key, 'single')
+            chart_id = '{}_{}'.format(self._chart_id, index_for_key)
+            # print('__get_chart_type_heatmap__: chart_id={}'.format(chart_id))
+            chart_name = index
+            graph_api = DccGraphApi(chart_id, chart_name)
+            figure_data, max_value = self.__get_mood_chart_figure_data__(index)
+            max_value = int(round(max_value + 5, -1))
+            value_interval = max(10, int(round(max_value/3, -1)))
+            tick_vals = list(range(-max_value, max_value, value_interval))
+            tick_text = [abs(value) for value in tick_vals]
+            graph_api.figure_data = figure_data
+            graph_api.figure_layout_height = 300
+            graph_api.figure_layout_margin = {'b': 50, 'r': 50, 'l': 50, 't': 50}
+            graph_api.figure_layout_barmode = 'overlay'
+            graph_api.figure_layout_bargap = 0.1
+            graph_api.figure_layout_x_axis_dict = {}
+            graph_api.figure_layout_y_axis_dict = {'range': 'Date',
+                                                   'tickvals': tick_vals,
+                                                   'ticktext': tick_text}
+            graph_list.append(MyDCC.graph(graph_api))
+        return graph_list

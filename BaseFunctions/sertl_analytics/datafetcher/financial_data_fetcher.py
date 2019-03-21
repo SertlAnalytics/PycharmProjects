@@ -11,6 +11,7 @@ import os
 import io
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import CN, PRD, OPS
+from sertl_analytics.exchanges.exchange_cls import Ticker
 import time
 import seaborn as sns
 
@@ -42,6 +43,8 @@ class APIBaseFetcher:
 
     @property
     def kw_output_size(self) -> str:
+        if self.kw_limit > 100:
+            return self._kwargs.get('output_size', OPS.FULL)
         return self._kwargs.get('output_size', OPS.COMPACT)
 
     @property
@@ -58,6 +61,12 @@ class APIBaseFetcher:
             self._df_columns = list(self._df.columns.values)
             self.__format_columns__()
             self.__round_df_column_values__()
+
+    def retrieve_ticker(self, symbol: str):
+        self.__sleep__()
+        self._kwargs = {'function': 'GLOBAL_QUOTE', 'symbol': symbol}
+        url = self._get_url_()
+        return self.__retrieve_ticker__(request_data=requests.get(url))
 
     @property
     def df(self) -> pd.DataFrame:
@@ -103,6 +112,9 @@ class APIBaseFetcher:
         return APIBaseFetcher._request_interval_required
 
     def __get_data_frame__(self, request_data):
+        pass
+
+    def __retrieve_ticker__(self, request_data) -> Ticker:
         pass
 
     def __format_columns__(self):
@@ -197,10 +209,11 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         return self._df_columns[-1]
 
     def get_url_function(self):
-        dict = {PRD.WEEKLY: 'TIME_SERIES_WEEKLY',
-                PRD.DAILY: 'TIME_SERIES_DAILY',
-                PRD.INTRADAY: 'TIME_SERIES_INTRADAY'}
-        return dict[self.kw_period]
+        if 'function' in self._kwargs:
+            return self._kwargs['function']
+        function_dict = {PRD.WEEKLY: 'TIME_SERIES_WEEKLY', PRD.DAILY: 'TIME_SERIES_DAILY',
+                         PRD.INTRADAY: 'TIME_SERIES_INTRADAY'}
+        return function_dict[self.kw_period]
 
     def get_json_data_key(self):
         dict = {PRD.DAILY: 'Time Series (Daily)',
@@ -219,6 +232,18 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
         df.columns = CN.get_standard_column_names()
         return df
+
+    def __retrieve_ticker__(self, request_data) -> Ticker:
+        json_data = request_data.json()
+        global_quote = json_data["Global Quote"]
+        symbol = global_quote["01. symbol"]
+        open = float(global_quote["02. open"])
+        high = float(global_quote['03. high'])
+        low = float(global_quote['04. low'])
+        price = float(global_quote["05. price"])
+        volume = float(global_quote["06. volume"])
+        return Ticker(ticker_id=symbol, bid=price, ask=price, last_price=price,
+                      low=low, high=high, vol=volume, ts=MyDate.time_stamp_now())
 
     def _get_url_(self):
         symbol = self._kwargs['symbol']
@@ -465,6 +490,7 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         # _symbol: e.g. tBTCUSD
         # time_frame: '1m', '5m', '15m', '30m', '1h', '3h', '6h', '12h', '1D', '7D', '14D', '1M'
         # section = hist or last
+        # limit = any number
         # return: MTS	int	millisecond time stamp
         # OPEN	float	First execution during the time frame
         # CLOSE	float	Last execution during the time frame

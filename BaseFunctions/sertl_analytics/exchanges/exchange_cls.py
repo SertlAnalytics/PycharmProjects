@@ -26,6 +26,7 @@ class SmallProfitHandler:
 class ExchangeConfiguration:
     buy_order_value_max = 100
     automatic_trading_on = False
+    small_profit_taking_active = False
 
     def __init__(self):
         self.exchange_name = self.get_exchange_name()
@@ -34,7 +35,7 @@ class ExchangeConfiguration:
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
         self.ticker_refresh_rate_in_seconds = 5
-        self.small_profit_taking_parameters = [1.00, 1.5]  # 1. param: at least this profit i.e. stop loss,
+        self.small_profit_taking_parameters = [1.2, 1.0]  # 1. param: this limit reached => stop loss at 2. param,
         # 2. param: when this stop loss is enabled
         self.cache_ticker_seconds = 30  # keep ticker in the cache
         self.cache_balance_seconds = 300  # keep balances in the cache (it's overwriten when changes happen)

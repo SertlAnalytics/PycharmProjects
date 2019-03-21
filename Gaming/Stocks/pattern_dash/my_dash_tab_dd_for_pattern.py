@@ -56,9 +56,9 @@ class PatternTabDropDownHandler(DropDownHandler):
 
     def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
         default_dict = {
-            PDD.INDEX: self._index_options[0]['value'],
-            PDD.STOCK_SYMBOL: self._ticker_options[0]['value'],
-            PDD.PERIOD_AGGREGATION: default_value if default_value else 5,
+            PDD.INDEX: INDICES.CRYPTO_CCY if default_value is None else default_value,
+            PDD.STOCK_SYMBOL: 'BTCUSD' if default_value is None else default_value,
+            PDD.PERIOD_AGGREGATION: 5 if default_value is None else default_value,
             PDD.REFRESH_INTERVAL: 300,
             PDD.SECOND_GRAPH_RANGE: 1
         }

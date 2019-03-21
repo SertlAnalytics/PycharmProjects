@@ -8,8 +8,9 @@ from sertl_analytics.exchanges.interactive_broker import MyIBKR, IBKRConfigurati
 from sertl_analytics.exchanges.bitfinex import Ticker, Balance
 from sertl_analytics.exchanges.interactive_broker import IBKRBuyMarketOrder, IBKRBuyLimitOrder, IBKRBuyStopOrder
 from sertl_analytics.exchanges.interactive_broker import IBKRSellMarketOrder, IBKRSellStopLossOrder, IBKRSellTrailingStopOrder
-from sertl_analytics.constants.pattern_constants import CN, TP
+from sertl_analytics.constants.pattern_constants import CN, TP, PRD
 from pattern_wave_tick import WaveTick, WaveTickList
+from sertl_analytics.exchanges.exchange_abc import MyExchangeTest
 
 
 # log = logging.getLogger(__name__)
@@ -35,6 +36,10 @@ class MyIBKRTradeClient:
         self._api_key_secret = os.environ['alphavantage_apikey']
         self._ibkr = MyIBKR(self.exchange_config)
         self._trading_pairs = self._ibkr.trading_pairs
+
+    @property
+    def ibkr(self):
+        return self._ibkr
 
     def get_ticker(self, symbol: str) -> Ticker:
         return self._ibkr.get_ticker(symbol)
@@ -112,19 +117,42 @@ class MyIBKRTradeClient:
         return order_status_list
 
     def create_buy_market_order(self, trading_pair: str, amount: float, is_order_simulation: bool):
-        return self._ibkr.create_order(IBKRBuyMarketOrder(trading_pair, amount), '', is_order_simulation)
+        return self._ibkr.create_order(IBKRBuyMarketOrder(trading_pair, amount), is_order_simulation)
 
     def create_buy_stop_order(self, trading_pair: str, amount: float, buy_stop_price: float, is_order_simulation: bool):
-        return self._ibkr.create_order(IBKRBuyStopOrder(trading_pair, amount, buy_stop_price), '', is_order_simulation)
+        return self._ibkr.create_order(IBKRBuyStopOrder(trading_pair, amount, buy_stop_price), is_order_simulation)
 
     def create_buy_limit_order(self, trading_pair: str, amount: float, limit_price: float, is_order_simulation: bool):
-        return self._ibkr.create_order(IBKRBuyLimitOrder(trading_pair, amount, limit_price), '', is_order_simulation)
+        return self._ibkr.create_order(IBKRBuyLimitOrder(trading_pair, amount, limit_price), is_order_simulation)
 
     def create_sell_market_order(self, trading_pair: str, amount: float, is_order_simulation: bool):
-        return self._ibkr.create_order(IBKRSellMarketOrder(trading_pair, amount), '', is_order_simulation)
+        return self._ibkr.create_order(IBKRSellMarketOrder(trading_pair, amount), is_order_simulation)
 
     def create_sell_stop_loss_order(self, trading_pair: str, amount: float, stop_price: float, is_order_simulation: bool):
-        return self._ibkr.create_order(IBKRSellStopLossOrder(trading_pair, amount, stop_price), '', is_order_simulation)
+        return self._ibkr.create_order(IBKRSellStopLossOrder(trading_pair, amount, stop_price), is_order_simulation)
 
     def create_sell_trailing_stop_order(self, trading_pair: str, amount: float, distance: float, is_order_simulation: bool):
-        return self._ibkr.create_order(IBKRSellTrailingStopOrder(trading_pair, amount, distance), '', is_order_simulation)
+        return self._ibkr.create_order(IBKRSellTrailingStopOrder(trading_pair, amount, distance), is_order_simulation)
+
+
+class MyIBKRTest(MyExchangeTest):
+    @staticmethod
+    def __get_exchange__():
+        trade_client = MyIBKRTradeClient(IBKRConfiguration())
+        return trade_client.ibkr
+
+    @staticmethod
+    def __get_symbol__():
+        return 'AAPL'
+
+    @staticmethod
+    def __get_order_id__():
+        return ''
+
+    def __get_test_list_for_get_candles__(self):
+        return [
+            [[self._symbol, PRD.DAILY, 1, '', 0], [self._symbol, 100]],
+            [[self._symbol, PRD.DAILY, 1, '', 150], [self._symbol, 100]],
+            [[self._symbol, PRD.INTRADAY, 15, '', 0], [self._symbol, 100]],
+            [[self._symbol, PRD.INTRADAY, 30, '', 0], [self._symbol, 100]],
+        ]

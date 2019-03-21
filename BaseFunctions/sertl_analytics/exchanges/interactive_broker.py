@@ -15,14 +15,14 @@ import hmac
 import hashlib
 import time
 import pandas as pd
-from sertl_analytics.constants.pattern_constants import OS, OT, TSTR, BT
+from sertl_analytics.constants.pattern_constants import OS, OT, TSTR, BT, PRD
 from sertl_analytics.exchanges.exchange_abc import ExchangeInterface
 from sertl_analytics.exchanges.exchange_cls import Order, OrderApi, OrderStatus
 from sertl_analytics.exchanges.exchange_cls import OrderBook, Balance, Ticker
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageForexFetcher
 from sertl_analytics.mycache import MyCacheObjectApi, MyCacheObject, MyCache
 
 
@@ -162,6 +162,12 @@ class IBKRFactory:
                       0, 0, 0, int(json['timestamp']))
 
     @staticmethod
+    def get_ticker_by_data_frame_row(ticker_id: str, row: dict) -> Ticker:
+        # {'mid': 7052.45, 'bid': 7052.4, 'ask': 7052.5, 'last_price': 7051.3, 'timestamp': 1535469615.659593}
+        return Ticker(ticker_id, float(row['bid']), float(row['ask']), float(row['last_price']),
+                      0, 0, 0, int(row['timestamp']))
+
+    @staticmethod
     def get_order_status_by_json_dict(config: IBKRConfiguration, order_id: int, json: dict) -> IBKROrderStatus:
         order_status = IBKROrderStatus()
         order_status.order_id = order_id
@@ -258,6 +264,7 @@ class MyIBKR(ExchangeInterface):
         self.http_timeout = 5.0 # HTTP _request timeout in seconds
         self.url = 'https://api.bitfinex.com/v1'
         self.alphavantage_stock_fetcher = AlphavantageStockFetcher()
+        self.alphavantage_forex_fetcher = AlphavantageForexFetcher()
         self._hodl_dict = self.exchange_config.hodl_dict
         self.trading_pairs = self.get_symbols()
         self.ticker_cache = IBKRTickerCache(self.exchange_config.cache_ticker_seconds)
@@ -435,11 +442,7 @@ class MyIBKR(ExchangeInterface):
         ticker_from_cache = self.ticker_cache.get_cached_object_by_key(symbol)
         if ticker_from_cache:
             return ticker_from_cache
-        data = self.__get_requests_result__(self.__get_full_url__('ticker/{}'.format(symbol)))
-        data_converted = self.__convert_to_floats__(data)
-        ticker = IBKRFactory.get_ticker_by_json_dict(symbol, data_converted)
-        self.ticker_cache.add_ticker(ticker)
-        return ticker
+        return self.alphavantage_stock_fetcher.retrieve_ticker(symbol)
 
     def get_order_book(self, symbol: str, parameter_dict: dict=None):
         """
@@ -462,15 +465,17 @@ class MyIBKR(ExchangeInterface):
         return data
 
     def get_candles(self, symbol: str, period: str, aggregation: int, section='hist',
-                    limit=200, ms_start=0, ms_end=0, sort=1):
+                    limit=100, ms_start=0, ms_end=0, sort=1):
         data_fetcher_cache_key = IBKRDataFetcherCacheKey(symbol, period, aggregation, section, limit)
         df_from_cache = self.ticker_cache.get_cached_object_by_key(data_fetcher_cache_key.key)
         if df_from_cache is not None:
             print('df_source from cache: {}'.format(data_fetcher_cache_key.key))
             return df_from_cache
-        fetcher = AlphavantageStockFetcher(symbol=symbol, period=period, aggregation=aggregation)
-        self.__add_data_frame_to_cache__(fetcher.df_data, data_fetcher_cache_key)
-        return fetcher.df_data
+        kw_args = {'symbol': symbol, 'period': period, 'aggregation': aggregation, 'section': section, 'limit': limit}
+        self.alphavantage_stock_fetcher.retrieve_data(**kw_args)
+        df = self.alphavantage_stock_fetcher.df_data
+        self.__add_data_frame_to_cache__(df, data_fetcher_cache_key)
+        return df
 
     def __add_data_frame_to_cache__(self, df: pd.DataFrame, data_fetcher_cache_key: IBKRDataFetcherCacheKey):
         cache_api = MyCacheObjectApi()

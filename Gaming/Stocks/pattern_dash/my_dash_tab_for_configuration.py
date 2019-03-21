@@ -33,8 +33,9 @@ class MyDashTab4Configuration(MyDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
         MyDashBaseTab.__init__(self, app, sys_config)
         self._trade_handler_online = trade_handler_online
-        self._dd_handler = ConfigurationTabDropDownHandler(
-            ExchangeConfiguration.buy_order_value_max, PatternSoundMachine.is_active)
+        self._dd_handler = ConfigurationTabDropDownHandler(ExchangeConfiguration.buy_order_value_max,
+                                                           PatternSoundMachine.is_active,
+                                                           ExchangeConfiguration.small_profit_taking_active)
 
     @staticmethod
     def __get_news_handler__():
@@ -52,6 +53,7 @@ class MyDashTab4Configuration(MyDashBaseTab):
                                                self.__get_switch_mode_button_text__(), hidden=''),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(CDD.ORDER_MAXIMUM)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(CDD.SOUND_MACHINE)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(CDD.SMALL_PROFIT)),
             self.get_div_for_tables()
         ]
         return MyHTML.div('my_configuration_div', children_list)
@@ -73,6 +75,7 @@ class MyDashTab4Configuration(MyDashBaseTab):
         self.__init_callback_for_my_sound_div__()
         self.__init_callbacks_for_my_mode_div__()
         self.__init_callbacks_for_my_max_buy_div__()
+        self.__init_callbacks_for_my_small_profit_div__()
         self.__init_callback_for_switch_trading_mode_button__()
         self.__init_callback_for_configuration_tables__()
         self.__init_callback_for_dash_board_sub_title__()
@@ -126,6 +129,22 @@ class MyDashTab4Configuration(MyDashBaseTab):
         def handle_callback_for_dash_board_max_buy_style(button_text: str):
             return self.__get_style_for_mode_and_max_buy_values__()
 
+    def __init_callbacks_for_my_small_profit_div__(self):
+        @self.app.callback(
+            Output('my_small_profit_div', 'children'),
+            [Input('my_configuration_small_profit_state', 'value')])
+        def handle_callback_for_dash_board_small_profit_value(small_profit_state: str):
+            ExchangeConfiguration.small_profit_taking_active = True if small_profit_state == 'active' else False
+            return small_profit_state
+
+        @self.app.callback(
+            Output('my_small_profit_div', 'style'),
+            [Input('my_configuration_small_profit_state', 'value')])
+        def handle_callback_for_dash_board_small_profit_style(small_profit_state: str):
+            if small_profit_state == 'active':
+                return {'font-weight': 'bold', 'color': 'red', 'display': 'inline-block'}
+            return {'font-weight': 'normal', 'color': 'black', 'display': 'inline-block'}
+
     def __get_style_for_mode_and_max_buy_values__(self):
         if self._trade_handler_online.is_simulation:
             return {'font-weight': 'normal', 'color': 'black', 'display': 'inline-block'}
@@ -137,9 +156,10 @@ class MyDashTab4Configuration(MyDashBaseTab):
             [Input('my_switch_trading_mode_button', 'children'),
              Input('my_configuration_order_maximum', 'value'),
              Input('my_configuration_sound_machine_state', 'value'),
+             Input('my_configuration_small_profit_state', 'value'),
              Input('my_refresh_button', 'n_clicks')])
         def handle_callback_for_configuration_tables(
-                button_text: str, order_max: int, sound_machine: str, n_clicks: int):
+                button_text: str, order_max: int, sound_machine: str, small_profit: str, n_clicks: int):
             PatternSoundMachine.is_active = True if sound_machine == 'active' else False
             BitfinexConfiguration.buy_order_value_max = order_max
             IBKRConfiguration.buy_order_value_max = order_max

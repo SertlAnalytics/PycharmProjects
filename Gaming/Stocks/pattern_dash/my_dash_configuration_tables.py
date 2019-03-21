@@ -109,6 +109,7 @@ class MyHTMLBitfinexConfigurationTable(MyHTMLConfigurationTable):
     def __add_class_specific_entries__(self):
         self.__add_key_value_pair__('buy_order_value_max', self.config.buy_order_value_max)
         self.__add_key_value_pair__('automatic_trading_on', self.config.automatic_trading_on)
+        self.__add_key_value_pair__('small_profit_taking_active', self.config.small_profit_taking_active)
 
 
 class MyIBRKConfigurationTable(MyHTMLConfigurationTable):
@@ -119,6 +120,7 @@ class MyIBRKConfigurationTable(MyHTMLConfigurationTable):
     def __add_class_specific_entries__(self):
         self.__add_key_value_pair__('buy_order_value_max', self.config.buy_order_value_max)
         self.__add_key_value_pair__('automatic_trading_on', self.config.automatic_trading_on)
+        self.__add_key_value_pair__('small_profit_taking_active', self.config.small_profit_taking_active)
 
 
 class MyHTMLTradeOptimizerTable(MyHTMLConfigurationTable):

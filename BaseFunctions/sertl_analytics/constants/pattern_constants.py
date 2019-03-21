@@ -202,6 +202,7 @@ class CHT:  # chart type
     BAR = 'Bar'
     LINE = 'Line'
     HEAT_MAP = 'Heatmap'
+    MOOD_CHART = 'Mood Chart'
     TABLE = 'Table'
     CONTOUR = 'Contour'
     PIE = 'Pie'

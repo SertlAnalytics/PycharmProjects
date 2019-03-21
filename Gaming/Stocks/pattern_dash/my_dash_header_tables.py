@@ -27,12 +27,15 @@ class MyHTMLHeaderTable(MyHTMLTable):
         mode_div = MyHTML.div('my_mode_div', '', False)
         max_buy_label_div = MyHTML.div('my_max_buy_label_div', 'Max buy value:', True, True)
         max_buy_div = MyHTML.div('my_max_buy_div', '', False)
+        small_profit_label_div = MyHTML.div('my_small_profit_label_div', 'Small profit taking:', True, True)
+        small_profit_div = MyHTML.div('my_small_profit_div', '', False)
 
         my_user_div = MyHTML.div_embedded([user_label_div, MyHTML.span(' '), user_div])
         my_login_div = MyHTML.div_embedded([login_label_div, MyHTML.span(' '), login_time_div])
         my_sound_div = MyHTML.div_embedded([sound_label_div, MyHTML.span(' '), sound_div])
         my_mode_div = MyHTML.div_embedded([mode_label_div, MyHTML.span(' '), mode_div])
         my_max_buy_div = MyHTML.div_embedded([max_buy_label_div, MyHTML.span(' '), max_buy_div])
+        my_small_profit_div = MyHTML.div_embedded([small_profit_label_div, MyHTML.span(' '), small_profit_div])
 
         dash_board_title_div = MyHTML.div('my_dashboard_title_div', 'Pattern Detection Dashboard', inline=False)
         dash_board_sub_title_div = MyHTML.div('my_dashboard_sub_title_div', '', bold=False, color='red')
@@ -61,7 +64,8 @@ class MyHTMLHeaderTable(MyHTMLTable):
         trade_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
         pattern_div = MyHTML.div_embedded([stored_pattern_label_div, MyHTML.span(' '), stored_pattern_div])
 
-        self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div, my_sound_div, my_mode_div, my_max_buy_div]))
+        self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div, my_sound_div,
+                                                  my_mode_div, my_max_buy_div, my_small_profit_div]))
         self.set_value(1, 2, MyHTML.div_embedded([dash_board_title_div, dash_board_sub_title_div]))
         self.set_value(1, 3, MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div]))
         self.set_value(2, 1, MyDCC.markdown('my_position_markdown'))
