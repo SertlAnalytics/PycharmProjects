@@ -54,15 +54,28 @@ class MyHTMLHeaderTable(MyHTMLTable):
         online_trade_label_div = MyHTML.div('my_online_trade_label_div', 'Trades - Online:', True)
         online_trade_active_div = MyHTML.div('my_online_trade_active_div', '0')
         online_trade_all_div = MyHTML.div('my_online_trade_all_div', '0')
+
         stored_trade_label_div = MyHTML.div('my_stored_trade_label_div', 'Trades - Replay:', True)
         stored_trade_div = MyHTML.div('my_stored_trade_div', '0')
+
         stored_pattern_label_div = MyHTML.div('my_stored_pattern_label_div', 'Pattern - Replay:', True)
         stored_pattern_div = MyHTML.div('my_stored_pattern_div', '0')
+
+        trade_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
+        pattern_div = MyHTML.div_embedded([stored_pattern_label_div, MyHTML.span(' '), stored_pattern_div])
+
+        real_online_trade_label_div = MyHTML.div('my_real_online_trade_label_div', 'Trades - real:', True)
+        real_online_trade_div = MyHTML.div('my_real_online_trade_div', '')
+        simulation_online_trade_label_div = MyHTML.div('my_simulation_online_trade_label_div', 'Trades - simul.:', True)
+        simulation_online_trade_div = MyHTML.div('my_simulation_online_trade_div', '')
+
         online_div = MyHTML.div_embedded([
             online_trade_label_div, MyHTML.span(' '),
             online_trade_active_div, MyHTML.span('/'), online_trade_all_div], inline=True)
-        trade_div = MyHTML.div_embedded([stored_trade_label_div, MyHTML.span(' '), stored_trade_div])
-        pattern_div = MyHTML.div_embedded([stored_pattern_label_div, MyHTML.span(' '), stored_pattern_div])
+        real_online_trade_div = MyHTML.div_embedded(
+            [real_online_trade_label_div, MyHTML.span(' '), real_online_trade_div])
+        simulation_online_trade_div = MyHTML.div_embedded(
+            [simulation_online_trade_label_div, MyHTML.span(' '), simulation_online_trade_div])
 
         self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div, my_sound_div,
                                                   my_mode_div, my_max_buy_div, my_small_profit_div]))
@@ -70,7 +83,8 @@ class MyHTMLHeaderTable(MyHTMLTable):
         self.set_value(1, 3, MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div]))
         self.set_value(2, 1, MyDCC.markdown('my_position_markdown'))
         self.set_value(2, 2, MyDCC.markdown('my_dashboard_markdown'))
-        self.set_value(2, 3, MyHTML.div_embedded([online_div, trade_div, pattern_div]))
+        self.set_value(2, 3, MyHTML.div_embedded(
+            [online_div, trade_div, pattern_div, real_online_trade_div, simulation_online_trade_div]))
 
     def _get_cell_style_(self, row: int, col: int):
         width = ['20%', '60%', '20%'][col-1]

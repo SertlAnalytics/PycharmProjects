@@ -6,8 +6,9 @@ Date: 2019-01-22
 """
 
 from pattern_scheduling.pattern_job import MyPatternJob
+from pattern_process_manager import PatternProcessManager
 from pattern_scheduling.pattern_scheduler import MyPatternScheduler
-from sertl_analytics.constants.pattern_constants import PRD, INDICES, FT
+from sertl_analytics.constants.pattern_constants import PRD, INDICES, FT, PPR, STBL
 from pattern_database.stock_database import StockDatabase
 from pattern_database.stock_database_updater import StockDatabaseUpdater
 from pattern_predictor_optimizer import PatternPredictorOptimizer
@@ -27,6 +28,10 @@ class MyDashTradePolicyUpdateJob(MyDashPatternJob):
         self._stock_db_updater.update_trade_policy_metric_for_today(
             [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
 
+    @property
+    def process_name(self):
+        return PPR.UPDATE_TRADE_POLICY_METRIC
+
 
 class MyDashPredictorOptimizerJob(MyDashPatternJob):
     def __perform_task__(self):
@@ -34,6 +39,10 @@ class MyDashPredictorOptimizerJob(MyDashPatternJob):
         predictor_optimizer = PatternPredictorOptimizer(sys_config.db_stock)
         pattern_type_list = [FT.ALL] + sys_config.trade_strategy_optimizer.optimal_pattern_type_list_for_long_trading
         predictor_optimizer.calculate_class_metrics_for_predictor_and_label_for_today(pattern_type_list)
+
+    @property
+    def process_name(self):
+        return PPR.UPDATE_CLASS_METRICS_FOR_PREDICTOR_AND_LABEL
 
 
 class MyDashDeleteDuplicatesJob(MyDashPatternJob):
@@ -43,12 +52,15 @@ class MyDashDeleteDuplicatesJob(MyDashPatternJob):
         db_stock.delete_duplicate_records(db_stock.pattern_table)
         db_stock.delete_duplicate_records(db_stock.wave_table)
 
+    @property
+    def process_name(self):
+        return PPR.DELETE_DUPLICATE_RECORDS_IN_TABLES
+
 
 class MyDashStockDataUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
         db_stock = StockDatabase()
         exchange_config = BitfinexConfiguration()
-
         db_stock.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
         if MyDate.is_tuesday_till_saturday():
             db_stock.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
@@ -59,10 +71,18 @@ class MyDashStockDataUpdateJob(MyDashPatternJob):
             db_stock.update_stock_data_for_symbol('GE')
             db_stock.update_stock_data_by_index(INDICES.NASDAQ100, PRD.DAILY)
 
+    @property
+    def process_name(self):
+        return PPR.UPDATE_STOCK_DATA_DAILY
+
 
 class MyEquityUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
-        result_obj = self._stock_db_updater.update_equity_records()
+        self.process.increment_inserted_records(self._stock_db_updater.update_equity_records())
+
+    @property
+    def process_name(self):
+        return PPR.UPDATE_EQUITY_DATA
 
 
 class MyDailyWaveUpdateJob(MyDashPatternJob):
@@ -71,7 +91,14 @@ class MyDailyWaveUpdateJob(MyDashPatternJob):
         for index in index_list:
             if index == INDICES.CRYPTO_CCY or MyDate.is_tuesday_till_saturday():
                 self._stock_db_updater.update_wave_data_by_index_for_daily_period(index, 400)
-        self._stock_db_updater.add_wave_end_data_to_wave_records(symbol='', ts_start=0, ts_end=0, scheduled_job=True)
+        self.process.increment_updated_records(
+            self._stock_db_updater.add_wave_end_data_to_wave_records(
+                symbol='', ts_start=0, ts_end=0, scheduled_job=True)
+        )
+
+    @property
+    def process_name(self):
+        return PPR.UPDATE_WAVE_DAILY
 
 
 class MyIntradayWaveUpdateJob(MyDashPatternJob):
@@ -90,17 +117,29 @@ class MyIntradayWaveUpdateJobForCrypto(MyIntradayWaveUpdateJob):
     def index_list(self):
         return [INDICES.CRYPTO_CCY]
 
+    @property
+    def process_name(self):
+        return PPR.UPDATE_WAVE_INTRADAY_CRYPTO
+
 
 class MyIntradayWaveUpdateJobForShares(MyIntradayWaveUpdateJob):
     @property
     def index_list(self):
         return [INDICES.DOW_JONES, INDICES.NASDAQ100]
 
+    @property
+    def process_name(self):
+        return PPR.UPDATE_WAVE_INTRADAY_SHARES
+
 
 class MyIntradayWaveUpdateJobForCurrencies(MyIntradayWaveUpdateJob):
     @property
     def index_list(self):
         return [INDICES.FOREX]
+
+    @property
+    def process_name(self):
+        return PPR.UPDATE_WAVE_INTRADAY_CCY
 
 
 class MyPatternUpdateJob(MyDashPatternJob):
@@ -112,17 +151,26 @@ class MyPatternUpdateJob(MyDashPatternJob):
             self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.DOW_JONES)
             self._stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.NASDAQ100)
 
+    @property
+    def process_name(self):
+        return PPR.UPDATE_PATTERN_DAILY
+
 
 class MyTradeRecordsUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
         self._stock_db_updater.update_trade_records(4, 16)
 
+    @property
+    def process_name(self):
+        return PPR.UPDATE_TRADE_RECORDS
+
 
 class MyDashJobHandler:
-    def __init__(self, for_test=False):
+    def __init__(self, process_manager: PatternProcessManager, for_test=False):
+        self._process_manager = process_manager
         self._weekdays_all = [0, 1, 2, 3, 4, 5, 6]
         self._weekdays_week = [0, 1, 2, 3, 4]  # Monday till Friday
-        self._scheduler = MyPatternScheduler('DashStockDatabaseUpdater')
+        self._scheduler = MyPatternScheduler('DashStockDatabaseUpdater', self._process_manager)
         self._stock_db_updater = StockDatabaseUpdater()
         if for_test:
             self.__add_jobs_for_testing__()

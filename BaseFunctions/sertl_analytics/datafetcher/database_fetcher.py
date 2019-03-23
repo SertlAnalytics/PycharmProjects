@@ -11,6 +11,7 @@ from sqlalchemy_views import CreateView, DropView
 import os
 import sys
 from sertl_analytics.myexceptions import ErrorHandler
+from pattern_logging.pattern_log import PatternLog
 from time import sleep
 from sertl_analytics.constants.pattern_constants import DC
 
@@ -254,28 +255,26 @@ class BaseDatabase:
             df.set_index(index_col, drop=False, inplace=True)
         return df
 
-    def delete_records(self, query: str):
+    def delete_records(self, query: str) -> int:
         connection = self.engine.connect()
-        done = False
-        counter = 0
-        while not done:
+        counter = -1
+        loop_counter = 0
+        while counter == -1:
             try:
                 results = connection.execute(query)
-                done = True
-                print('Deleted {} records for query {}'.format(results.rowcount, query))
+                counter = results.rowcount
+                PatternLog.log_message('Deleted {} records for query {}'.format(counter, query), 'Delete')
             except exc.OperationalError:
                 sleep(1)
-                counter += 1
-                if counter == 3:
-                    print('OperationalError - break retry: {}'.format(sys.exc_info()[0]))
-                    done = True
+                loop_counter += 1
+                if loop_counter == 3:
+                    PatternLog.log_error()
+                    counter = 0
             except:
-                done = True
-                print('Unexpected error: {}'.format(sys.exc_info()[0]))
+                PatternLog.log_error()
             finally:
-                done = True
                 connection.close()
-
+                return counter
 
     def get_result_set_for_table(self, table: str):
         connection = self.engine.connect()
@@ -293,22 +292,23 @@ class BaseDatabase:
         metadata.create_all(self.engine)
 
     def __insert_data_into_table__(self, table_name: str, insert_data_dic_list: list):
-        return_value = True
-        if len(insert_data_dic_list) == 0:
-            return True
+        counter = len(insert_data_dic_list)
+        if counter == 0:
+            return 0
         connection = self.engine.connect()
         metadata = MetaData()
         table_object = Table(table_name, metadata, autoload=True, autoload_with=self.engine)
         stmt = insert(table_object)
         try:
             results = connection.execute(stmt, insert_data_dic_list)
-            print('Loaded into {}: {} records.'.format(table_name, results.rowcount))
+            counter = results.rowcount
+            PatternLog.log_message('Loaded into {}: {} records.'.format(table_name, counter), 'Insert')
         except exc.OperationalError:
-            print('Problem with inserting...')
-            return_value = False
+            PatternLog.log_error()
+            counter = -1
         finally:
             connection.close()
-        return return_value
+        return counter
 
     def update_table_column(self, table_name: str, column: str, value, where_clause: str):
         value = "'{}'".format(value) if type(value) is str else value
@@ -316,17 +316,18 @@ class BaseDatabase:
         return self.update_table_by_statement(table_name, stmt)
 
     def update_table_by_statement(self, table_name: str, stmt: str):
-        return_value = True
+        counter = 0
         connection = self.engine.connect()
         try:
             results = connection.execute(stmt)
-            print('Updated in {}: {} records.'.format(table_name, results.rowcount))
+            counter = results.rowcount
+            PatternLog.log_message('Updated in {}: {} records.'.format(table_name, counter), 'Update')
         except exc.OperationalError:
-            print('Problem with updating...')
-            return_value = False
+            PatternLog.log_error()
+            counter = -1
         finally:
             connection.close()
-        return return_value
+        return counter
 
 """
 Example for a derived class - connecting to a SQLite database

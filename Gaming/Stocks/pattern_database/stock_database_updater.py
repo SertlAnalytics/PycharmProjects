@@ -32,7 +32,7 @@ class StockDatabaseUpdater:
         self.db_stock = self.sys_config.db_stock
         self.pattern_controller = PatternDetectionController(self.sys_config)
 
-    def add_wave_end_data_to_wave_records(self, symbol='', ts_start=0, ts_end=0, scheduled_job=False):
+    def add_wave_end_data_to_wave_records(self, symbol='', ts_start=0, ts_end=0, scheduled_job=False) -> int:
         """
         Some attributes have to be calculated AFTER the waves completes:
         DC.WAVE_END_FLAG, DC.WAVE_MAX_RETR_PCT, DC.WAVE_MAX_RETR_TS_PCT
@@ -85,12 +85,12 @@ class StockDatabaseUpdater:
                              DC.WAVE_MAX_RETR_TS_PCT: max_retracement_ts_pct}
                 access_layer_wave.update_record(wave_entity.row_id, data_dict)
                 update_counter += 1
-
         if scheduled_job:
             PatternLog.log_scheduler_process(
                 log_message='Updated: {}/{}'.format(update_counter, df_wave_to_process.shape[0]),
                 process='Update wave records',
                 process_step='add_wave_end_data')
+        return update_counter
 
     def add_wave_prediction_data_to_wave_records(self, symbol='', ts_start=0, ts_end=0, scheduled_job=False):
         """
@@ -208,7 +208,6 @@ class StockDatabaseUpdater:
         pattern_controller.run_pattern_detector()
 
     def update_wave_data_by_index_for_daily_period(self, index: str, limit: int):
-        print('Update wave data for index: {} ({}days)'.format(index, limit))
         ticker_dic = self.__get_configured_ticker_dict_for_index__(index)
         for ticker in ticker_dic:
             self.update_wave_records_for_daily_period(ticker, limit)

@@ -139,6 +139,11 @@ class StockDatabase(BaseDatabase):
         company_dic = self.__get_company_dict__(symbol)
         return '' if len(company_dic) == 0 else company_dic[symbol].Name
 
+    def get_number_of_records_for_table(self, table_name: str) -> int:
+        query = "SELECT count(*) as Number from {}".format(table_name)
+        df = self.select_data_by_query(query)
+        return df.values[0, 0]
+
     def __get_table_dict__(self) -> dict:
         return {STBL.STOCKS: self._stocks_table,
                 STBL.PROCESS: self._process_table,
@@ -284,6 +289,7 @@ class StockDatabase(BaseDatabase):
             time.sleep(self._sleep_seconds)
             return
         df = fetcher.df
+
         if ticker not in company_dic:
             to_be_loaded = df[CN.VOL].mean() > 10000
             self.__insert_company_in_company_table__(ticker, name, to_be_loaded)
@@ -531,10 +537,10 @@ class StockDatabase(BaseDatabase):
         if self.is_trade_already_available(trade_id):
             self.delete_records(self._trade_table.get_query_delete_by_id(trade_id))
 
-    def delete_duplicate_records(self, table: MyTable):
+    def delete_duplicate_records(self, table: MyTable) -> int:
         db_df_duplicate_id = DatabaseDataFrame(self, table.query_duplicate_id)
         if db_df_duplicate_id.df.shape[0] == 0:
-            return
+            return 0
         id_oid_keep_dict = {}
         row_id_delete_list = []
         db_df_id_oid = DatabaseDataFrame(self, table.query_id_oid)
@@ -559,8 +565,7 @@ class StockDatabase(BaseDatabase):
                     id_oid_keep_dict[record_id] = row_id
         row_id_delete_concatenated = ','.join(row_id_delete_list)
         query = 'DELETE FROM {} WHERE oid in ({});'.format(table.name, row_id_delete_concatenated)
-        print(query)
-        self.delete_records(query)
+        return self.delete_records(query)
 
     def get_missing_trade_strategies_for_pattern_id(self, pattern_id: str, check_against_strategy_dict: dict,
                                                     mean: int, sma_number: int) -> dict:

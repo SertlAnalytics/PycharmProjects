@@ -19,6 +19,7 @@ from pattern_predictor import PatternMasterPredictorHandler, PatternPredictorApi
 from pattern_predictor_optimizer import PatternPredictorOptimizer
 from pattern_data_provider import PatternDataProvider
 from pattern_trade_optimizer import TradeOptimizer
+from pattern_process_manager import PatternProcessManager
 from copy import deepcopy
 from pattern_sound.pattern_sound_machine import PatternSoundMachine
 from pattern_dash.my_dash_caches import MyGraphCache, MyDataFrameCache
@@ -34,6 +35,7 @@ class SystemConfiguration:
         self.exchange_config = self.crypto_config
         self.shares_config = IBKRConfiguration()
         self.sound_machine = PatternSoundMachine()
+        self.process_manager = PatternProcessManager()
         if for_semi_deep_copy:
             return
         self.config = PatternConfiguration()
@@ -198,6 +200,7 @@ class SystemConfiguration:
         sys_config_copy = SystemConfiguration(True)
         sys_config_copy.config = deepcopy(self.config)  # we change save modes... ToDo ???
         sys_config_copy.exchange_config = deepcopy(self.exchange_config)  # we change the simulation mode... ToDo ???
+        sys_config_copy.process_manager = self.process_manager
         sys_config_copy.index_config = self.index_config
         sys_config_copy.pattern_table = self.pattern_table
         sys_config_copy.db_stock = self.db_stock

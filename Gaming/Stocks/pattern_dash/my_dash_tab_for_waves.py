@@ -13,10 +13,11 @@ from sertl_analytics.mycache import MyCacheObjectApi, MyCache
 from pattern_dash.my_dash_tab_dd_for_waves import WaveTabDropDownHandler, WAVEDD
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Waves
 from pattern_detection_controller import PatternDetectionController
+from pattern_process_manager import PatternProcessManager
 from pattern_dash.my_dash_colors import DashColorHandler
 from dash import Dash
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.pattern_constants import WAVEST, PRD, INDICES, CHT
+from sertl_analytics.constants.pattern_constants import WAVEST, PRD, INDICES, CHT, PPR
 from pattern_news_handler import NewsHandler
 from sertl_analytics.test.my_test_abc import TestInterface
 import plotly.io as pio
@@ -28,6 +29,7 @@ class MyDashTab4Waves(MyDashBaseTab):
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration, color_handler: DashColorHandler):
         MyDashBaseTab.__init__(self, app, sys_config)
+        self._process_for_head_map = sys_config.process_manager.get_process_by_name(PPR.UPDATE_HEATMAP_IN_WAVE_TAB)
         self._dd_handler = WaveTabDropDownHandler()
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.__init_dash_element_ids__()
@@ -81,16 +83,19 @@ class MyDashTab4Waves(MyDashBaseTab):
         return MyHTML.div('my_waves_div', children_list)
 
     def __get_heatmap__(self):
-        ticks = self._dd_handler.selected_retrospective_ticks
-        period = self._dd_handler.selected_period
-        aggregation = self._dd_handler.selected_aggregation
-        self._fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(ticks, period, aggregation)
-        plotter = MyDashTabStatisticsPlotter4Waves(
-            wave_handler=self._fibonacci_wave_data_handler,
-            color_handler=self._dash_color_handler,
-            index=self._dd_handler.selected_index)
-        heat_map = plotter.get_chart_list()
-        return heat_map
+        @self._process_for_head_map.process_decorator
+        def __get_heatmap_with_process__(process=None):
+            ticks = self._dd_handler.selected_retrospective_ticks
+            period = self._dd_handler.selected_period
+            aggregation = self._dd_handler.selected_aggregation
+            self._fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(ticks, period, aggregation)
+            plotter = MyDashTabStatisticsPlotter4Waves(
+                wave_handler=self._fibonacci_wave_data_handler,
+                color_handler=self._dash_color_handler,
+                index=self._dd_handler.selected_index)
+            heat_map = plotter.get_chart_list()
+            return heat_map
+        return __get_heatmap_with_process__()
 
     def __get_mood_chart__(self):
         ticks = self._dd_handler.selected_retrospective_ticks
@@ -121,7 +126,10 @@ class MyDashTab4Waves(MyDashBaseTab):
             [State(self._my_waves_heatmap_div, 'children')])
         def handle_callback_for_position_manage_button_hidden(n_intervals: int, period: str, aggregation: int,
                                                               ticks: int, index: str, children):
-            data_updated = self._fibonacci_wave_data_handler.reload_data_when_outdated()
+            enforce_reload = self._process_for_head_map.was_triggered_by_another_process()
+            data_updated = self._fibonacci_wave_data_handler.reload_data_when_outdated(enforce_reload)
+            print('handle_callback_for_position_manage_button_hidden: enforce_reload={}, data_updated={}'.format(
+                enforce_reload, data_updated))
             if not data_updated and not self._dd_handler.was_any_value_changed(
                     period, aggregation, ticks, index):
                 self._heat_map_was_updated = False

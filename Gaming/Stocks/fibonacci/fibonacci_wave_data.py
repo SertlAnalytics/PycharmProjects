@@ -56,10 +56,10 @@ class FibonacciWaveDataHandler:
             if fibonacci_wave_data.is_defined_for_period_and_aggregation(period, aggregation):
                 fibonacci_wave_data.load_data()
 
-    def reload_data_when_outdated(self) -> bool:
+    def reload_data_when_outdated(self, enforce_reload=False) -> bool:
         data_reloaded = False
         for fibonacci_wave_data in self._fibonacci_wave_data_dict.values():
-            if fibonacci_wave_data.reload_data_when_outdated():
+            if fibonacci_wave_data.reload_data_when_outdated(enforce_reload):
                 data_reloaded = True
         return data_reloaded
 
@@ -165,8 +165,8 @@ class FibonacciWaveDataBase:
             return True
         return False
 
-    def reload_data_when_outdated(self) -> bool:
-        if not self.__are_wave_data_actual__():
+    def reload_data_when_outdated(self, enforce_reload=False) -> bool:
+        if not self.__are_wave_data_actual__() or enforce_reload:
             print('Reload wave data for {}'.format(self.wave_peak_date_type))
             self.load_data()
             return True

@@ -8,9 +8,10 @@ Date: 2019-01-23
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from pattern_database.stock_access_layer import AccessLayer4Process
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.pattern_constants import PRD, PRDC, JDC
+from sertl_analytics.constants.pattern_constants import PRD, PRDC, JDC, PPR
 from pattern_logging.pattern_log import PatternLog
 from pattern_scheduling.pattern_job_result import JobResult
+from pattern_process_manager import PatternProcess
 import math
 
 
@@ -69,10 +70,23 @@ class MyPatternJob:
         self._last_run_end_date_time = None
         self._last_run_runtime_seconds = 0
         self._last_run_processed_details = ''
+        self._process = None
 
     @property
     def job_name(self):
         return self.__class__.__name__
+
+    @property
+    def process_name(self):
+        return PPR.RUN_UNDEFINED_PROCESS
+
+    @property
+    def process(self) -> PatternProcess:
+        return self._process
+
+    @process.setter
+    def process(self, process: PatternProcess):
+        self._process = process
 
     @property
     def start_time(self):
@@ -110,6 +124,7 @@ class MyPatternJob:
         return False
 
     def start_job(self): # Run the function in another thread
+        self._process.__start_process__()
         self._is_running = True
         self._job_runtime.start()
         self._executor = ThreadPoolExecutor(max_workers=1)
@@ -138,11 +153,9 @@ class MyPatternJob:
             return '-' if self._last_run_start_date_time is None else \
                 MyDate.get_time_str_from_datetime(self._last_run_start_date_time)
         elif column == JDC.LAST_RUN_TIME:
-            if self._is_running:
-                return '- running -'
-            return self.last_run_runtime_seconds
+            return '- running -' if self._is_running else self.last_run_runtime_seconds
         elif column == JDC.PROCESSED:
-            return self._last_run_processed_details
+            return '' if self._last_run_end_date_time is None else ','.join(self.process.get_record_numbers_as_string())
 
     def __run_job__(self):
         process_step = 'End'
@@ -151,7 +164,6 @@ class MyPatternJob:
             self.job_name, MyDate.time_now_str(), self._scheduled_start_time))
         if not self._for_test:
             PatternLog.log_message(self.job_name, process='Scheduler', process_step='Start')
-
         try:
             self.__perform_task__()
             self._last_run_end_date_time = MyDate.get_datetime_object()
@@ -167,6 +179,7 @@ class MyPatternJob:
             self._is_running = False
             self._job_runtime.stop()
             self._executor.shutdown(wait=False)
+            self._process.__end_process__()
             if not self._for_test:
                 self.__write_statistics_to_database__()
             print("{}: Thread shutdown at {}".format(self.job_name, MyDate.time_now_str()))
@@ -174,12 +187,13 @@ class MyPatternJob:
 
     def __init_run_parameters__(self):
         self._last_run_start_date_time = MyDate.get_datetime_object()
-        print('__init_run_parameters__: self._last_run_start_date_time = {}'.format(self._last_run_start_date_time))
         self._last_run_end_date_time = None
         self._last_run_runtime_seconds = 0
         self._last_run_processed_details = ''
 
     def __perform_task__(self):
+        if self._process is not None:
+            self._process.increment_processed_records()
         print('Do something - the first time...')
 
     def __handle_job_result__(self, job_result: JobResult):

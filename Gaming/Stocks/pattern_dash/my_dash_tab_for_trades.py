@@ -16,15 +16,9 @@ from pattern_dash.my_dash_header_tables import MyHTMLTabTradeHeaderTable
 from pattern_dash.my_dash_tab_dd_for_trades import TradeDropDownHandler, TDD
 from pattern_dash.my_dash_tab_button_for_trades import TradeButtonHandler, TBTN
 from pattern_trade_handler import PatternTradeHandler
-from pattern_trade import PatternTrade
 from pattern_database.stock_tables import TradeTable, PatternTable
-from pattern_database.stock_database import StockDatabaseDataFrame
 from dash import Dash
-from sertl_analytics.constants.pattern_constants import DC, TP, PRD, RST
-from pattern_wave_tick import WaveTick, WaveTickList
-from pattern_test.trade_test_cases import TradeTestCaseFactory
-from pattern_test.trade_test import TradeTest
-from pattern_data_container import PatternData
+from sertl_analytics.constants.pattern_constants import DC, TP
 from sertl_analytics.mydates import MyDate
 from pattern_news_handler import NewsHandler
 
@@ -177,7 +171,6 @@ class MyDashTab4Trades(MyDashBaseTab):
 
         @self.app.callback(
             Output('my_online_trade_active_div', 'children'),
-            # [Input('my_interval_refresh', 'n_intervals')])
             [Input('my_interval_timer', 'n_intervals')])
         def handle_callback_for_online_trade_active_numbers(n_intervals: int):
             return str(self._trade_replay_handler_online.trade_handler.trade_numbers_active)
@@ -193,6 +186,18 @@ class MyDashTab4Trades(MyDashBaseTab):
             [Input('my_interval_refresh', 'n_intervals')])
         def handle_callback_for_stored_pattern_numbers(n_intervals: int):
             return str(len(self._pattern_rows_for_data_table))
+
+        @self.app.callback(
+            Output('my_real_online_trade_div', 'children'),
+            [Input('my_interval_timer', 'n_intervals')])
+        def handle_callback_for_real_online_trade_numbers(n_intervals: int):
+            return self._trade_replay_handler_online.trade_handler.get_real_trade_numbers_active_for_dashboard()
+
+        @self.app.callback(
+            Output('my_simulation_online_trade_div', 'children'),
+            [Input('my_interval_timer', 'n_intervals')])
+        def handle_callback_for_simulation_online_trade_numbers(n_intervals: int):
+            return self._trade_replay_handler_online.trade_handler.get_simulation_trade_numbers_active_for_dashboard()
 
     def __init_callback_for_trade_table__(self):
         @self.app.callback(
@@ -221,8 +226,9 @@ class MyDashTab4Trades(MyDashBaseTab):
                 self._trade_handler_online.remove_trade_from_dash_data_table(pattern_trade_id)
                 self.__init_selected_row__(trade_type)
                 return self.__get_table_for_trades__()
-            elif self._selected_trade_type == TP.ONLINE and \
-                    (self._trades_online_active_number != online_active or self._trades_online_all_number != online_all):
+            elif self._selected_trade_type == TP.ONLINE: # we refresh each time (since we calculate the result...
+                    # and \
+                    # (self._trades_online_active_number != online_active or self._trades_online_all_number != online_all):
                 self._trades_online_active_number = online_active
                 self._trades_online_all_number = online_all
                 return self.__get_table_for_trades__()

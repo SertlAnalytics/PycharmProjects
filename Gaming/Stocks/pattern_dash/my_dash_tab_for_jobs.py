@@ -26,7 +26,7 @@ class MyDashTab4Jobs(MyDashBaseTab):
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         MyDashBaseTab.__init__(self, app, sys_config)
-        self._job_handler = MyDashJobHandler()
+        self._job_handler = MyDashJobHandler(sys_config.process_manager)
         self.__init_dash_element_ids__()
         self.sys_config = sys_config
         self._db = self.sys_config.db_stock

@@ -57,6 +57,18 @@ class TradingBox:
         self._small_profit_taking_parameters = api.small_profit_taking_parameters
         self._was_adjusted_to_small_profit_taking = False
 
+    @property
+    def buy_price(self) -> float:
+        return self._buy_price
+
+    @property
+    def last_price(self) -> float:
+        return self._ticker_last_price_list[-1]
+
+    @property
+    def current_result_pct(self) -> float:
+        return round((self.last_price - self._buy_price) / self._buy_price * 100, 2) # we want to have full % numbers
+
     def round(self, value: float):
         return round(value, self._round_decimals)
 
@@ -196,9 +208,7 @@ class TradingBox:
         if self._was_adjusted_to_small_profit_taking or len(self._small_profit_taking_parameters) != 2:
             return False
 
-        current_result_pct = self.__get_current_result_pct_for_last_price__(last_price)
-        limit_pct = self._small_profit_taking_parameters[0]
-        if current_result_pct <= limit_pct:
+        if self.current_result_pct <= self._small_profit_taking_parameters[0]:
             return False
 
         stop_loss_pct = self._small_profit_taking_parameters[1]
@@ -217,10 +227,9 @@ class TradingBox:
     def __get_ticker_last_price_mean__(self, ticker_last_price):
         if self._api.last_price_mean_aggregation == 1:
             return ticker_last_price
-        current_result = self.__get_current_result_pct_for_last_price__(ticker_last_price)
-        if current_result > 1:  # after 1% gain we want to follow the actual price - no means at all
+        if self.current_result_pct > 1:  # after 1% gain we want to follow the actual price - no means at all
             print('{}: ticker_last_price_mean = current_price = {} since current_result = {:.2f}% > 1%'.format(
-                self._ticker_id, ticker_last_price, current_result))
+                self._ticker_id, ticker_last_price, self.current_result_pct))
             return ticker_last_price
         mean_ticker = statistics.mean(self._ticker_last_price_list[-self._api.last_price_mean_aggregation:])
         print('{}: ticker_last_price_mean = {} - mean_aggregation = {}'.format(
@@ -229,9 +238,8 @@ class TradingBox:
 
     def __adjust_distance_bottom_to_current_result__(self, last_price: float):
         # the idea is to get closer to the curve when we are in a winning trade... but not closer than 1 %
-        current_result = self.__get_current_result_pct_for_last_price__(last_price)
-        if current_result > 2:
-            adjusted_distance = self._distance_bottom / (current_result - 1)
+        if self.current_result_pct > 2:
+            adjusted_distance = self._distance_bottom / (self.current_result_pct - 1)
             if adjusted_distance/self._buy_price > 0.01:
                 print('distance_bottom_adjusted: {:.2f} -> {:.2f}'.format(self._distance_bottom, adjusted_distance))
                 self._distance_bottom = adjusted_distance
@@ -243,9 +251,6 @@ class TradingBox:
         else:
             if abs(last_price - self._stop_loss)/last_price < 0.005:
                 self._price_was_close_to_stop = True
-
-    def __get_current_result_pct_for_last_price__(self, last_price: float) -> float:
-        return (last_price - self._buy_price) / self._buy_price * 100  # we want to have full % numbers
 
     def __adjust_limit_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
         if self._trade_strategy in [TSTR.LIMIT, TSTR.LIMIT_FIX]:  # _limit doesn't change

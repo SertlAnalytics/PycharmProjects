@@ -5,16 +5,16 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-01-17
 """
 
-import time
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from pattern_scheduling.pattern_job import MyPatternJob
 from sertl_analytics.mydates import MyDate
 from pattern_logging.pattern_log import PatternLog
+from pattern_process_manager import PatternProcessManager
 
 
 class MyPatternScheduler:
-    def __init__(self, process: str, for_test=False):
+    def __init__(self, process: str, process_manager: PatternProcessManager, for_test=False):
         self._process = process
+        self._process_manager = process_manager
         self._last_run_time_stamp = None
         self._last_run_date_time = ''
         self._for_test = for_test
@@ -30,6 +30,7 @@ class MyPatternScheduler:
 
     def add_job(self, scheduled_job: MyPatternJob):
         print('add_job: {} - start_time={}'.format(scheduled_job.job_name, scheduled_job.start_time))
+        scheduled_job.process = self._process_manager.get_process_by_name(scheduled_job.process_name)
         scheduled_job.for_test = self._for_test
         self._job_list.append(scheduled_job)
 
@@ -52,7 +53,9 @@ class MyPatternScheduler:
                 if not job.is_running:
                     print('...{}: Starting job: {}'.format('Manually', job.job_name))
                     job.start_job()
-                    return
+                    break
+
+
 
 
 

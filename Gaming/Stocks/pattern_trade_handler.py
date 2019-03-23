@@ -20,6 +20,7 @@ from pattern_trade_candidate import TradeCandidateController, TradeCandidate
 from pattern import Pattern
 import pandas as pd
 from pattern_logging.pattern_log import PatternLog
+import statistics
 
 
 class PatternTradeHandler:
@@ -75,6 +76,19 @@ class PatternTradeHandler:
     @property
     def pattern_trade_for_replay(self) -> PatternTrade:
         return self._pattern_trade_for_replay
+
+    def get_real_trade_numbers_active_for_dashboard(self):
+        return self.__get_trade_numbers_active_for_dashboard__(is_simulation=False)
+
+    def get_simulation_trade_numbers_active_for_dashboard(self):
+        return self.__get_trade_numbers_active_for_dashboard__(is_simulation=True)
+
+    def __get_trade_numbers_active_for_dashboard__(self, is_simulation: bool) -> str:
+        trade_dict = {key: trade for key, trade in self.pattern_trade_dict.items()
+                      if trade.status == PTS.EXECUTED and trade.is_simulation == is_simulation}
+        number = len(trade_dict)
+        result_pct = 0 if number == 0 else statistics.mean([trade.trade_result_pct for trade in trade_dict.values()])
+        return '{}/{:+.2f}%'.format(number, result_pct)
 
     def get_balance_total(self):
         if self.balances is None:
@@ -468,6 +482,7 @@ class PatternTradeHandler:
     def __adjust_stops_and_limits__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
             pattern_trade.adjust_trade_box_to_actual_ticker()
+            pattern_trade.adjust_data_dict_to_actual_ticker()
 
     def __create_trailing_stop_order_for_all_executed_trades__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
@@ -484,7 +499,5 @@ class PatternTradeHandler:
                 self.ticker_id_list.append(pattern_trade.ticker_id)
 
     def __get_pattern_trade_dict_by_status__(self, status: str) -> dict:
-        return {key: value for key, value in self.pattern_trade_dict.items() if value.status == status}
-
-
+        return {key: trade for key, trade in self.pattern_trade_dict.items() if trade.status == status}
 

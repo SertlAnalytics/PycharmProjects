@@ -307,7 +307,7 @@ class PatternTrade:
         elif self.trade_sub_process == TSP.BUYING:
             self.__initialize_breakout_values_for_tick_list__()
         elif self.trade_sub_process == TSP.SELLING:
-            self.__initialize_limit_stop_loss_values_for_tick_list__(tick_list_base)
+            self.__initialize_limit_and_stop_loss_values_for_tick_list__(tick_list_base)
         elif self.trade_sub_process == TSP.RE_BUYING:
             pass  # ToDo - for re-buying
 
@@ -326,10 +326,11 @@ class PatternTrade:
             tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_selling.position]
             self._xy_after_selling = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, TSP.RE_BUYING)
 
-    def __initialize_limit_stop_loss_values_for_tick_list__(self, tick_list: list):
+    def __initialize_limit_and_stop_loss_values_for_tick_list__(self, tick_list: list):
         for wave_tick in tick_list:
             if wave_tick.limit_value == 0:
-                wave_tick.limit_value = self._trade_box.limit_for_graph
+                if self._trade_box is not None:
+                    wave_tick.limit_value = self._trade_box.limit_for_graph
             if wave_tick.stop_loss_value == 0:
                 wave_tick.stop_loss_value = self._trade_box.stop_loss
 
@@ -594,6 +595,11 @@ class PatternTrade:
         was_adjusted = self._trade_box.adjust_to_next_ticker_last_price(self.wave_tick_actual.close, sma, small_profit)
         if was_adjusted and self.trade_process == TP.ONLINE:
             self.print_state_details_for_actual_wave_tick(PTHP.ADJUST_STOPS_AND_LIMITS)
+
+    def adjust_data_dict_to_actual_ticker(self):   # we need the current result in the trade table on the trading tab
+        if self._status == PTS.EXECUTED:
+            self.data_dict_obj.add(DC.TRADE_RESULT_PCT, self._trade_box.current_result_pct)
+            self.data_dict_obj.add(DC.TRADE_RESULT, 'open')
 
     def __get_simple_moving_average_value__(self) -> float:
         elements = min(self._wave_tick_list.length, self.sys_config.config.simple_moving_average_number)

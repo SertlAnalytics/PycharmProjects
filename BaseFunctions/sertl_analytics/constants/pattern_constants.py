@@ -8,6 +8,24 @@ Date: 2018-05-14
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
+class PPR:  # PatternProcesses
+    UPDATE_PATTERN_INTRADAY = 'Update_Pattern_Intraday'
+    UPDATE_PATTERN_DAILY = 'Update_Pattern_Daily'
+    UPDATE_WAVE_INTRADAY_CRYPTO = 'Update_Wave_Intraday_Crypto'
+    UPDATE_WAVE_INTRADAY_SHARES = 'Update_Wave_Intraday_Shares'
+    UPDATE_WAVE_INTRADAY_CCY = 'Update_Wave_Intraday_Currencies'
+    UPDATE_WAVE_DAILY = 'Update_Wave_Daily'
+    DELETE_DUPLICATE_RECORDS_IN_TABLES = 'Delete_Duplicate_Records_in_Tables'
+    UPDATE_EQUITY_DATA = 'Update_Equity_Data'
+    UPDATE_STOCK_DATA_DAILY = 'Update_Stock_Data_Daily'
+    UPDATE_HEATMAP_IN_WAVE_TAB = 'Update_Heatmap_in_Wave_Tab'
+    UPDATE_CLASS_METRICS_FOR_PREDICTOR_AND_LABEL = 'Update_Class_Metrics_For_Predictor_and_Label'
+    UPDATE_TRADE_POLICY_METRIC = 'Update_Trade_Policy_Metric'
+    UPDATE_TRADE_RECORDS = 'Update_Trade_Records'
+    UPDATE_PREDICTORS = 'Update_Predictors'
+    RUN_UNDEFINED_PROCESS = 'Run_Undefined_Process'
+
+
 class TFOP:
     GRADIENT_DESCENT_MANUAL = 'Gradient_Descent_Manual'
     GRADIENT_DESCENT = 'Gradient_Descent'
