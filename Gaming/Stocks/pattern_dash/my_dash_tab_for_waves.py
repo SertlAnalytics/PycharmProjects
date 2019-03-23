@@ -128,15 +128,13 @@ class MyDashTab4Waves(MyDashBaseTab):
                                                               ticks: int, index: str, children):
             enforce_reload = self._process_for_head_map.was_triggered_by_another_process()
             data_updated = self._fibonacci_wave_data_handler.reload_data_when_outdated(enforce_reload)
-            print('handle_callback_for_position_manage_button_hidden: enforce_reload={}, data_updated={}'.format(
-                enforce_reload, data_updated))
             if not data_updated and not self._dd_handler.was_any_value_changed(
                     period, aggregation, ticks, index):
                 self._heat_map_was_updated = False
-                print('Return old heatmap...')
                 return children
             self._heat_map_was_updated = True
             self._fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(ticks, period, aggregation)
+            print('Return updated heatmap...')
             return self.__get_heatmap__()
 
     def __init_callback_for_waves_mood_chart__(self):
@@ -156,8 +154,8 @@ class MyDashTab4Waves(MyDashBaseTab):
             [State(self._my_waves_index_chart_div, 'children')])
         def handle_callback_for_waves_index_chart(heatmap, children):
             if not self._heat_map_was_updated:
-                print('Return old index chart...')
                 return children
+            print('Return updated index chart...')
             return self.__get_graph_for_index__()
 
     def __get_graph_for_index__(self):

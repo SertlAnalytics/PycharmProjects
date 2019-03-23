@@ -167,7 +167,6 @@ class FibonacciWaveDataBase:
 
     def reload_data_when_outdated(self, enforce_reload=False) -> bool:
         if not self.__are_wave_data_actual__() or enforce_reload:
-            print('Reload wave data for {}'.format(self.wave_peak_date_type))
             self.load_data()
             return True
         return False
