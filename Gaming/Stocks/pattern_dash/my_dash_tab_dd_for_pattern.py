@@ -59,7 +59,7 @@ class PatternTabDropDownHandler(DropDownHandler):
             PDD.INDEX: INDICES.CRYPTO_CCY if default_value is None else default_value,
             PDD.STOCK_SYMBOL: 'BTCUSD' if default_value is None else default_value,
             PDD.PERIOD_AGGREGATION: 5 if default_value is None else default_value,
-            PDD.REFRESH_INTERVAL: 300,
+            PDD.REFRESH_INTERVAL: 600,
             PDD.SECOND_GRAPH_RANGE: 1
         }
         return default_dict.get(drop_down_type, None)
@@ -100,12 +100,10 @@ class PatternTabDropDownHandler(DropDownHandler):
     def __get_refresh_interval_options__():
         return [
             {'label': '15 min', 'value': 900},
+            {'label': '10 min', 'value': 600},
             {'label': '5 min', 'value': 300},
             {'label': '2 min', 'value': 120},
             {'label': '1 min', 'value': 60},
-            {'label': '30 sec.', 'value': 30},
-            {'label': '15 sec.', 'value': 15},
-            {'label': '10 sec.', 'value': 10},
         ]
 
     @staticmethod

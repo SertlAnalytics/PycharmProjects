@@ -306,6 +306,8 @@ class StockDatabase(BaseDatabase):
         time.sleep(self._sleep_seconds)
 
     def get_index_for_symbol(self, symbol: str) -> str:
+        if symbol in ['FCEL', 'GE']:
+            return INDICES.SHARES_GENERAL
         query = "SELECT {} FROM {} WHERE {}='{}'".format(EDC.EXCHANGE, self._entity_table.name, EDC.EQUITY_KEY, symbol)
         df = self.select_data_by_query(query)
         if df.shape[0] == 0:

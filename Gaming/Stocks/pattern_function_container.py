@@ -73,11 +73,15 @@ class PatternFunctionContainer:
 
     @property
     def height_start(self):
-        return round(abs(self.get_upper_value(self._tick_first.f_var) - self.get_lower_value(self._tick_first.f_var)), 2)
+        return MyMath.round_smart(
+            abs(self.get_upper_value(self._tick_first.f_var) - self.get_lower_value(self._tick_first.f_var))
+        )
 
     @property
     def height_end(self):
-        return round(abs(self.get_upper_value(self._tick_last.f_var) - self.get_lower_value(self._tick_last.f_var)), 2)
+        return MyMath.round_smart(
+            abs(self.get_upper_value(self._tick_last.f_var) - self.get_lower_value(self._tick_last.f_var))
+        )
 
     @property
     def f_var_cross_f_upper_f_lower(self):
@@ -199,13 +203,13 @@ class PatternFunctionContainer:
 
     def get_upper_value(self, f_var: float, with_smart_rounding=False):
         # ToDo - get rid of with_smart_rounding - always this way - currently we face problems with pattern detection
-        if with_smart_rounding:
+        if with_smart_rounding or True:
             return MyMath.round_smart(self._f_upper(f_var))
         return round(self._f_upper(f_var), 2)
 
     def get_lower_value(self, f_var: float, with_smart_rounding=False):
         # ToDo - get rid of with_smart_rounding - always this way - currently we face problems with pattern detection
-        if with_smart_rounding:
+        if with_smart_rounding or True:
             return MyMath.round_smart(self._f_lower(f_var))
         return round(self._f_lower(f_var), 2)
 

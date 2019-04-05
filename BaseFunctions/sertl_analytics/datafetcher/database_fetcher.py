@@ -225,6 +225,8 @@ class MyTable:
 
 
 class BaseDatabase:
+    database_activated = True
+
     def __init__(self):
         self.engine = self.__get_engine__()
         self.db_name = self.__get_db_name__()
@@ -256,6 +258,9 @@ class BaseDatabase:
         return df
 
     def delete_records(self, query: str) -> int:
+        if not self.database_activated:
+            print('database_deactivated for delete_records')
+            return
         connection = self.engine.connect()
         counter = -1
         loop_counter = 0
@@ -292,6 +297,9 @@ class BaseDatabase:
         metadata.create_all(self.engine)
 
     def __insert_data_into_table__(self, table_name: str, insert_data_dic_list: list):
+        if not self.database_activated:
+            print('database_deactivated for {}'.format('__insert_data_into_table__'))
+            return 0
         counter = len(insert_data_dic_list)
         if counter == 0:
             return 0
@@ -299,16 +307,28 @@ class BaseDatabase:
         metadata = MetaData()
         table_object = Table(table_name, metadata, autoload=True, autoload_with=self.engine)
         stmt = insert(table_object)
-        try:
-            results = connection.execute(stmt, insert_data_dic_list)
-            counter = results.rowcount
+        counter = self.__handle_connection_execution__(connection, stmt, insert_data_dic_list)
+        connection.close()
+        if counter > 1:  # we don't want to have single entries in the log
             PatternLog.log_message('Loaded into {}: {} records.'.format(table_name, counter), 'Insert')
-        except exc.OperationalError:
-            PatternLog.log_error()
-            counter = -1
-        finally:
-            connection.close()
         return counter
+
+    def __handle_connection_execution__(self, connection, stmt, insert_data_dic_list):
+        retrials_max = 3
+        number = 1
+        while number <= retrials_max:
+            try:
+                results = connection.execute(stmt, insert_data_dic_list)
+                return results.rowcount
+            except exc.OperationalError:
+                if number == retrials_max:
+                    runtime_info = '{} retried: {}'.format(stmt, number)
+                    PatternLog.log_error(runtime_info)
+                    return -1
+                sleep(1)
+            finally:
+                number += 1
+        return 0
 
     def update_table_column(self, table_name: str, column: str, value, where_clause: str):
         value = "'{}'".format(value) if type(value) is str else value
@@ -316,6 +336,9 @@ class BaseDatabase:
         return self.update_table_by_statement(table_name, stmt)
 
     def update_table_by_statement(self, table_name: str, stmt: str):
+        if not self.database_activated:
+            print('database_deactivated for {}'.format('update_table_by_statement'))
+            return 0
         counter = 0
         connection = self.engine.connect()
         try:

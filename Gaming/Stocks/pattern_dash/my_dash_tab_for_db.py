@@ -124,11 +124,11 @@ class MyDashTab4DB(MyDashBaseTab):
         where_clause = self.__get_where_clause__()
         if where_clause != '':
             where_clause = " WHERE {}".format(where_clause)
-        limit_clause = ' LIMIT {}'.format(self._selected_limit)
+        limit_clause = '' if self._selected_limit == 0 else ' LIMIT {}'.format(self._selected_limit)
         query = "SELECT * from {}{}{}".format(self._selected_table_name, where_clause, limit_clause)
         try:
             self._df_for_grid_table = self._db.select_data_by_query(query)
-            return query
+            return '{}: Found {} records'.format(query, self._df_for_grid_table.shape[0])
         except:
             self._df_for_grid_table = None
             return 'Problem with query: {}'.format(query)

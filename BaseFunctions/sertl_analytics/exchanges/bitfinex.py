@@ -31,6 +31,7 @@ from pattern_logging.pattern_log import PatternLog
 class TP:  # trading pairs - they are all put to lowercase when sent to Bitfinex
     BAB_USD = 'BABUSD'
     BTC_USD = 'BTCUSD'
+    DSH_USD = 'DSHUSD'
     EOS_USD = 'EOSUSD'
     ETH_USD = 'ETHUSD'
     IOT_USD = 'IOTUSD'
@@ -43,6 +44,7 @@ class TP:  # trading pairs - they are all put to lowercase when sent to Bitfinex
 class SYM:
     BAB = 'BAB'
     BTC = 'BTC'
+    DSH = 'Dash'
     EOS = 'EOS'
     ETH = 'ETH'
     IOT = 'IOT'
@@ -63,14 +65,19 @@ class BitfinexConfiguration(ExchangeConfiguration):
         self.finish_vanished_trades = False  # True <=> if a pattern is vanished after buying sell the position (market)
         self.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP]}
         self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP, BT.TOUCH_POINT: TSTR.LIMIT}
-        self.ticker_id_list = ['BABUSD', 'BTCUSD', 'EOSUSD', 'ETHUSD', 'LTCUSD', 'NEOUSD', 'TRXUSDx', 'XMRUSD',
-                               'ZECUSD', 'IOTUSD', 'XRPUSD']
+        self.ticker_id_list = self.__get_ticker_id_list__()
         self.ticker_id_excluded_from_trade_list = ['NEOUSDx', 'BTCUSD']  # in case we have some issues with the data...
         self.fibonacci_indicators = {'BABUSD': [15, 30], 'BTCUSD': [15, 30], 'XMRUSD': [15]}
         self.bollinger_band_indicators = {'BABUSD': [15], 'BTCUSD': [5, 15, 30], 'XMRUSD': [15]}
 
     def get_exchange_name(self):
         return 'Bitfinex'
+
+    @staticmethod
+    def __get_ticker_id_list__() -> list:
+        ticker_id_list = ['BABUSD', 'BTCUSD', 'DSHUSD', 'EOSUSD', 'ETHUSD', 'LTCUSD',
+                          'NEOUSD', 'XMRUSD', 'ZECUSD', 'IOTUSD', 'XRPUSD']
+        return ticker_id_list
 
 
 class BitfinexOrder(Order):

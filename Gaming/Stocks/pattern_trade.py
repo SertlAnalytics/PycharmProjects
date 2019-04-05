@@ -252,9 +252,10 @@ class PatternTrade:
 
     def correct_simulation_flag_according_to_forecast(self):
         is_simulation_old = self._is_simulation
-        direction = self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID)  # ASC == 1
+        direction_id = self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID)  # ASC == 1
         false_breakout = self.data_dict_obj.get(DC.FC_FALSE_BREAKOUT_ID)
-        if direction == 1 and false_breakout != 1:
+        # if direction == 1 and false_breakout != 1:  # OLD
+        if self.pattern.is_prediction_in_favour_of_ascending_breakout(direction_id):  # NEW since 26.03.2019
             self._is_simulation = False
         else:
             self._is_simulation = True
@@ -773,7 +774,7 @@ class PatternTrade:
             self.data_dict_obj.add(DC.SELL_COMMENT, order_status.order_comment)
             buy_total_costs = self.data_dict_obj.get(DC.BUY_TOTAL_COSTS)
             sell_total_value = self.data_dict_obj.get(DC.SELL_TOTAL_VALUE)
-            trade_result_amount = sell_total_value - buy_total_costs
+            trade_result_amount = MyMath.round_smart(sell_total_value - buy_total_costs)
             if trade_result_amount > 0:
                 trade_result = TR.WINNER
             else:
@@ -781,7 +782,7 @@ class PatternTrade:
             self.data_dict_obj.add(DC.TRADE_REACHED_PRICE, self._trade_box.max_ticker_last_price)
             self.data_dict_obj.add(DC.TRADE_REACHED_PRICE_PCT, self._trade_box.max_ticker_last_price_pct)
             self.data_dict_obj.add(DC.TRADE_RESULT_AMOUNT, trade_result_amount)
-            self.data_dict_obj.add(DC.TRADE_RESULT_PCT, round(trade_result_amount/buy_total_costs*100,1))
+            self.data_dict_obj.add(DC.TRADE_RESULT_PCT, round(trade_result_amount/buy_total_costs*100, 2))
             self.data_dict_obj.add(DC.TRADE_RESULT, trade_result)
             self.data_dict_obj.add(DC.TRADE_RESULT_ID, TR.get_id(trade_result))
         else:
@@ -853,14 +854,14 @@ class PatternTrade:
             bought_at = self._order_status_buy.avg_execution_price
             current_win_pct = self.__get_current_win_pct__(last_price)
             text_list.append('**Process**: {} **Bought at**: {:2.2f} **Limit**: {:2.2f} **Current**: {:2.2f}'
-                             ' **Stop**: {:2.2f} **Trailing**: {:2.2f} **Result**: {:.1f}%'.format(
+                             ' **Stop**: {:2.2f} **Trailing**: {:2.2f} **Result**: {:.2f}%'.format(
                                 self.current_trade_process, bought_at, limit, last_price, stop_loss,
                                 trailing_stop_distance, current_win_pct))
         else:
             bought_at = self._order_status_buy.avg_execution_price
             sold_at = self._order_status_sell.avg_execution_price
             win_pct = round(((sold_at - bought_at) / bought_at * 100), 2)
-            text_list.append('**Bought at**: {:2.2f} **Sold at**: {:2.2f} **Result**: {:2.2f}%'.format(
+            text_list.append('**Bought at**: {:2.2f} **Sold at**: {:2.2f} **Result**: {:.2f}%'.format(
                 bought_at, sold_at, win_pct))
             text_list.append('**Process**: {} **Breakout**: {:2.2f} **Current**: {:2.2f}  **Wrong breakout**: {:2.2f}'.
                 format(self.current_trade_process, limit, last_price, stop_loss))

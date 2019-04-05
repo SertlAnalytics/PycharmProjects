@@ -115,7 +115,7 @@ class StockDatabaseUpdater:
                 process='Update wave records',
                 process_step='add_wave_prediction')
 
-    def update_equity_records(self):
+    def update_equity_records(self) -> StockDatabaseUpdateJobResult:
         result_obj = StockDatabaseUpdateJobResult()
         access_layer = AccessLayer4Equity(self.db_stock)
         dt_today = MyDate.get_date_from_datetime()
@@ -128,7 +128,7 @@ class StockDatabaseUpdater:
         for exchange, equity_type in exchange_equity_type_dict.items():
             value_dict = access_layer.get_index_dict(exchange)
             if not access_layer.are_any_records_available_for_date(dt_today, exchange, equity_type):
-                access_layer.delete_existing_equities(equity_type, exchange)
+                result_obj.number_deleted_records += access_layer.delete_existing_equities(equity_type, exchange)
                 sleep(2)
                 self.__update_equity_records_for_equity_type__(
                     access_layer, dt_today_str, dt_valid_until_str, exchange, equity_type)

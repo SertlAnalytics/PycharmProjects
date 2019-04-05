@@ -86,6 +86,11 @@ class SystemConfiguration:
     def period_aggregation(self) -> int:
         return self.data_provider.aggregation
 
+    @staticmethod
+    def deactivate_pattern_log_and_pattern_database():
+        PatternLog.log_activated = False
+        StockDatabase.database_activated = False
+
     def init_detection_process_for_automated_trade_update(self, mean: int, sma_number: int):
         self.config.detection_process = PDP.UPDATE_TRADE_DATA
         self.config.pattern_type_list = FT.get_long_trade_able_types()

@@ -484,6 +484,14 @@ class FT:
         return pattern_type in FT.get_fibonacci_types()
 
     @staticmethod
+    def is_pattern_type_any_triangle(pattern_type: str) -> bool:
+        return pattern_type in FT.get_triangle_types()
+
+    @staticmethod
+    def get_triangle_types() -> list:
+        return [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.TRIANGLE_UP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_TOP]
+
+    @staticmethod
     def get_id(key: str):
         return FT.get_value_key_dict().get(key, 0)
 
@@ -642,6 +650,7 @@ class PT:  # PredictorType
 
 class PAT:  # PredictionAnnotationType
     BEFORE_BREAKOUT = 'Prediction before breakout'
+    BEFORE_BREAKOUT_DETAILS = '...details'
     AFTER_BREAKOUT = 'Prediction after breakout'
     RETRACEMENT = 'Prediction retracement'
 
@@ -659,6 +668,7 @@ class INDICES:
     INDICES = 'Indices'
     NONE = 'None'
     UNDEFINED = 'Undefined'
+    SHARES_GENERAL = 'Shares'
 
     @staticmethod
     def get_index_list_for_waves_tab():
@@ -1088,6 +1098,8 @@ class DC:  # Data Columns
     FALSE_BREAKOUT = 'False_Breakout'
     EXPECTED_WIN_REACHED = 'Expected_Win_Reached'
     TRADE_TYPE = 'Trade_Type'  # long, short, .... see TRT
+    APEX_VALUE = 'APEX_Value'
+    APEX_TS = 'APEX_Timestamp'
     # and additional for Trades
     TRADE_ID = 'Trade_ID'
     TRADE_STATUS = 'Trade_Status'
@@ -1288,8 +1300,8 @@ class JDC:  # Jobs data column
     START_TIMES = 'Start times'
     NEXT_START_TIME = 'Next start'
     LAST_RUN = 'Last start'
-    LAST_RUN_TIME = 'Last run time (seconds)'
-    PROCESSED = 'Processed'
+    LAST_RUN_TIME = 'Runtime (sec.)'
+    PROCESSED = 'pro/ins/upd/del'
 
     @staticmethod
     def get_all():

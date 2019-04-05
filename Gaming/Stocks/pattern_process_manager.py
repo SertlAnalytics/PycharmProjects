@@ -8,6 +8,7 @@ Date: 2019-03-22
 from sertl_analytics.constants.pattern_constants import PPR, STBL
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_database import StockDatabase
+from pattern_logging.pattern_log import PatternLog
 
 """
     UPDATE_PATTERN_INTRADAY = 'Update_Pattern_Intraday'
@@ -92,6 +93,7 @@ class PatternProcess:
         self.__calculate_insert_delete_numbers__()
         self._triggered_by_process_names = []  # done for this dependencies
         self.__trigger_child_processes__()
+        PatternLog.log_message(self.get_statistics(), 'End Process', self.process_name)  # ToDo - get rid of this log...
 
     def __get_table_record_numbers__(self):
         counter = 0
@@ -234,6 +236,16 @@ class ProcessUpdateHeatMapInWaveTab(PatternProcess):
         return PPR.UPDATE_HEATMAP_IN_WAVE_TAB
 
 
+class ProcessUpdateStockDataDaily(PatternProcess):
+    @property
+    def process_name(self):
+        return PPR.UPDATE_STOCK_DATA_DAILY
+
+    @staticmethod
+    def __get_table_names__():
+        return [STBL.STOCKS]
+
+
 class ProcessUpdateTradeRecords(PatternProcess):
     @property
     def process_name(self):
@@ -242,6 +254,26 @@ class ProcessUpdateTradeRecords(PatternProcess):
     @staticmethod
     def __get_table_names__():
         return [STBL.TRADE]
+
+
+class ProcessUpdateClassMetricForPredictorAndLabel(PatternProcess):
+    @property
+    def process_name(self):
+        return PPR.UPDATE_CLASS_METRICS_FOR_PREDICTOR_AND_LABEL
+
+    @staticmethod
+    def __get_table_names__():
+        return [STBL.METRIC]
+
+
+class ProcessUpdateTradePolicyMetric(PatternProcess):
+    @property
+    def process_name(self):
+        return PPR.UPDATE_TRADE_POLICY_METRIC
+
+    @staticmethod
+    def __get_table_names__():
+        return [STBL.TRADE_POLICY_METRIC]
 
 
 class PatternProcessManager:
@@ -272,6 +304,10 @@ class PatternProcessManager:
             PPR.UPDATE_WAVE_DAILY: ProcessUpdateWaveDaily(self._db_stock),
             PPR.UPDATE_HEATMAP_IN_WAVE_TAB: ProcessUpdateHeatMapInWaveTab(self._db_stock),
             PPR.UPDATE_TRADE_RECORDS: ProcessUpdateTradeRecords(self._db_stock),
+            PPR.UPDATE_STOCK_DATA_DAILY: ProcessUpdateStockDataDaily(self._db_stock),
+            PPR.UPDATE_CLASS_METRICS_FOR_PREDICTOR_AND_LABEL:
+                ProcessUpdateClassMetricForPredictorAndLabel(self._db_stock),
+            PPR.UPDATE_TRADE_POLICY_METRIC: ProcessUpdateTradePolicyMetric(self._db_stock),
             PPR.RUN_UNDEFINED_PROCESS: ProcessRunUndefinedProcess(self._db_stock)
         }
 

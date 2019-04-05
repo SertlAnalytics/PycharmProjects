@@ -49,7 +49,7 @@ class DBTabDropDownHandler(DropDownHandler):
     def __get_default_value__(self, drop_down_type: str, default_value=None):
         default_dict = {
             DBDD.TABLE: default_value if default_value else STBL.PROCESS,
-            DBDD.LIMIT: default_value if default_value else 10,
+            DBDD.LIMIT: default_value if default_value else 0,
             DBDD.DATE_RANGE: default_value if default_value else DTRG.TODAY,
         }
         return default_dict.get(drop_down_type, None)
@@ -79,6 +79,7 @@ class DBTabDropDownHandler(DropDownHandler):
     @staticmethod
     def __get_limit_options__():
         return [
+            {'label': 'None', 'value': 0},
             {'label': '1', 'value': 1},
             {'label': '10', 'value': 10},
             {'label': '100', 'value': 100},

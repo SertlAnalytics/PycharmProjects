@@ -78,7 +78,9 @@ class MyDashStockDataUpdateJob(MyDashPatternJob):
 
 class MyEquityUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
-        self.process.increment_inserted_records(self._stock_db_updater.update_equity_records())
+        result_obj = self._stock_db_updater.update_equity_records()
+        self.process.increment_deleted_records(result_obj.number_deleted_records)
+        self.process.increment_inserted_records(result_obj.number_saved_records)
 
     @property
     def process_name(self):

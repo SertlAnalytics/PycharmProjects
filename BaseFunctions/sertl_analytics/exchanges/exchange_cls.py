@@ -48,7 +48,7 @@ class ExchangeConfiguration:
         self.fibonacci_indicators = {}
         self.bollinger_band_indicators = {}
         self.massive_breakout_pct = 10  # = 10%
-        self.ticker_id_list = []  # we want to track only these symbols...
+        self.ticker_id_list = self.__get_ticker_id_list__()
         self.ticker_id_excluded_from_trade_list = []  # in case we have some issues the datas...
         self.__set_values__()
 
@@ -62,6 +62,10 @@ class ExchangeConfiguration:
     def activate_automatic_trading(self):
         ExchangeConfiguration.automatic_trading_on = True
         self.print_actual_mode(mode_was_changed=True)
+
+    @staticmethod
+    def __get_ticker_id_list__() -> list:
+        return []  # we want to track only these symbols...
 
     def __set_values__(self):
         pass

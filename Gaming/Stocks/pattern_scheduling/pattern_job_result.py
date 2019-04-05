@@ -9,6 +9,7 @@ Date: 2019-01-22
 class JobResult:
     def __init__(self):
         self.number_processed_records = 0
+        self.number_deleted_records = 0
         self.comment = ''
 
     @property

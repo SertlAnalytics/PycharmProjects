@@ -447,24 +447,36 @@ class Pattern:
     def __get_annotation_prediction_text_dict__(self) -> dict:
         annotation_prediction_text_dict = {
             PAT.BEFORE_BREAKOUT: self.__get_annotation_text_for_prediction_before_breakout__(),
+            # PAT.BEFORE_BREAKOUT_DETAILS: self.__get_annotation_text_for_prediction_before_breakout__(True),
             PAT.AFTER_BREAKOUT: self.__get_annotation_text_for_prediction_after_breakout__()}
         if self.is_fibonacci:
             annotation_prediction_text_dict[PAT.RETRACEMENT] = \
                 self.__get_annotation_text_for_retracement_prediction__()
         return annotation_prediction_text_dict
 
-    def __get_annotation_text_for_prediction_before_breakout__(self):
+    def __get_annotation_text_for_prediction_before_breakout__(self, for_details=False):
         if self.y_predict_before_breakout is None:
             return 'sorry - not enough previous data'
         points_top = self.data_dict_obj.get(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_TOP)
         points_bottom = self.data_dict_obj.get(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM)
         ticks = self.data_dict_obj.get(DC.FC_TICKS_TILL_BREAKOUT)
-        direction = self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID)
-        direction_str = 'ASC' if direction == 1 else 'DESC'
-        false_breakout = self.data_dict_obj.get(DC.FC_FALSE_BREAKOUT_ID)
-        false_breakout_str = 'false !!!' if false_breakout == 1 else 'true - GO'
+        direction_id = self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID)
+        direction_str = 'ASC' if direction_id == 1 else 'DESC'
+        false_breakout_str = self.__get_false_breakout_string__(direction_id)
         return '{}-Breakout after {} ticks and {}/{} touches - {}'.format(
             direction_str, ticks, points_top, points_bottom, false_breakout_str)
+
+    def __get_false_breakout_string__(self, direction_id: int):
+        is_in_favour = self.is_prediction_in_favour_of_ascending_breakout(direction_id)
+        if direction_id == 1 and is_in_favour:
+            return 'ASC and breakout ASC likely - Go'
+        elif direction_id == -1 and is_in_favour:
+            return 'DESC and breakout ASC likely - Go'
+        else:
+            if direction_id == 1:
+                return 'ASC and breakout DESC likely - NO Go'
+            else:
+                return 'DESC and breakout DESC likely - NO Go'
 
     def __get_annotation_text_for_prediction_after_breakout__(self):
         if not(self.was_breakout_done() and self.y_predict_after_breakout is not None):
@@ -486,6 +498,62 @@ class Pattern:
         return '+{}-{}% / -{}-{}% after {}-{} / {}-{} ticks - {}'.format(
             pos_pct_half, pos_pct_full, neg_pct_half, neg_pct_full,
             pos_ticks_half, pos_ticks_full, neg_ticks_half, neg_ticks_full, false_breakout_str)
+
+    def is_prediction_in_favour_of_ascending_breakout(self, direction_id: int) -> bool:
+        false_breakout_id = self.data_dict_obj.get(DC.FC_FALSE_BREAKOUT_ID)  # 1: True
+        if direction_id == 1 and false_breakout_id != 1:
+            return True
+        elif direction_id == -1 and false_breakout_id == 1:
+            return True
+        return False
+
+    def __is_prediction_after_breakout_in_favour_of_buying__(self, direction_id: int) -> bool:  # long and short
+        # ToDo: depending on that flag we enable buying or prohibit buying....
+        # - even if we have a go from the step ahead (before breakout)
+        if not (self.was_breakout_done() and self.y_predict_after_breakout is not None):
+            return False
+        """
+            REMARK: WE DON'T have the data in that moment, only the data for the prediction before breakout...
+            ERROR.....
+            direction_id: 1 = ASC, -1 = DESC
+            This is quite complex: We want to handle these cases:
+            a) DC.FC_FALSE_BREAKOUT_ID == 0 (i.e. expected breakout in the expected direction):
+            a.1) max(pos_pct_full, pos_pct_half) must be larger than max(neg_pct_full, neg_pct_half)
+            a.2) we want to avoid pullback cases (where the price falls into the negative part):
+            a.2.1) 0 < min(neg_ticks_half, neg_ticks_full) < min(pos_ticks_half, pos_ticks_full) but only when
+            a.2.2) max(neg_pct_full, neg_pct_half) > 0
+            ---- and now the other case
+            b) DC.FC_FALSE_BREAKOUT_ID == 1 (i.e. expected breakout NOT in the expected direction):
+            b.1) max(pos_pct_full, pos_pct_half) must be smaller than max(neg_pct_full, neg_pct_half)
+            b.2) we want to avoid pullback cases (where the price falls into the negative part):
+            b.2.1) 0 < min(pos_ticks_half, pos_ticks_full) < min(neg_ticks_half, neg_ticks_full) but only when
+            b.2.2) max(neg_pct_full, neg_pct_half) > 0
+            """
+        pos_pct_half = self.data_dict_obj.get(DC.FC_HALF_POSITIVE_PCT)
+        pos_pct_full = self.data_dict_obj.get(DC.FC_FULL_POSITIVE_PCT)
+        neg_pct_half = self.data_dict_obj.get(DC.FC_HALF_NEGATIVE_PCT)
+        neg_pct_full = self.data_dict_obj.get(DC.FC_FULL_NEGATIVE_PCT)
+        # Rule: If expected negative value is larger then positive value => False
+        if direction_id == 1:
+            if max(pos_pct_full, pos_pct_half) < max(neg_pct_full, neg_pct_half):
+                return False
+        else:  # direction_id == -1
+            if max(pos_pct_full, pos_pct_half) > max(neg_pct_full, neg_pct_half):
+                return False
+        pos_ticks_half = self.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_HALF)
+        pos_ticks_full = self.data_dict_obj.get(DC.FC_TICKS_TO_POSITIVE_FULL)
+        neg_ticks_half = self.data_dict_obj.get(DC.FC_TICKS_TO_NEGATIVE_HALF)
+        neg_ticks_full = self.data_dict_obj.get(DC.FC_TICKS_TO_NEGATIVE_FULL)
+        # Rule: If expected neg. ticks are smaller than expected positive ticks => False
+        if direction_id == 1:  # false_breakout_id != 1:
+            if 0 < min(neg_ticks_half, neg_ticks_full) < min(pos_ticks_half, pos_ticks_full):
+                if max(neg_pct_full, neg_pct_half) > 0:  # but only if there are some value forecasts
+                    return False
+        else:  # direction_id == -1 and false_breakout_id == 1:
+            if 0 < min(pos_ticks_half, pos_ticks_full) < min(neg_ticks_half, neg_ticks_full):
+                if max(pos_pct_full, pos_pct_half) > 0:  # but only if there are some value forecasts
+                    return False
+        return True
 
     def __get_annotation_text_for_retracement_prediction__(self):
         return ''
@@ -599,6 +667,9 @@ class Pattern:
 
     def get_expected_win(self):
         return round(self._part_entry.height, 4)
+
+    def get_apex_parameters(self):
+        return [0, 0]
 
     def get_expected_win_for_touch_point(self):
         u_value = self.function_cont.get_upper_value(self._part_entry.tick_last.f_var)
@@ -762,6 +833,12 @@ class Pattern:
         self.data_dict_obj.add(DC.AVAILABLE_FIBONACCI_TYPE_ID, EXTREMA.get_id(self.available_fibonacci_end_type))
         self.data_dict_obj.add(DC.EXPECTED_WIN, self.get_expected_win())
         self.data_dict_obj.add(DC.TRADE_TYPE, '')  # this will be changed by a backend process
+        apex_parameters = self.get_apex_parameters()
+        # if apex_parameters[1] > 0:
+        #     print('Apex_parameters: {:.2f} at {}'.format(
+        #         apex_parameters[0], MyDate.get_date_time_from_epoch_seconds(apex_parameters[1])))
+        self.data_dict_obj.add(DC.APEX_VALUE, apex_parameters[0])
+        self.data_dict_obj.add(DC.APEX_TS, apex_parameters[1])
 
     def __add_data_dict_entries_after_filling_trade_result__(self):
         self.data_dict_obj.add(DC.EXPECTED_WIN, self.trade_result.expected_win)
@@ -826,6 +903,26 @@ class HeadShoulderBottomDescPattern(HeadShoulderBottomPattern):
 class TrianglePattern(Pattern):
     def get_expected_win(self):
         return round(self._part_entry.height / 2, 2)
+
+    def get_apex_parameters(self):
+        period = self.data_dict_obj.get(DC.PERIOD)
+        aggregation = self.data_dict_obj.get(DC.PERIOD_AGGREGATION)
+        ts_for_calculation = self.data_dict_obj.get(DC.TS_PATTERN_TICK_LAST)
+        ts_per_aggregation = MyDate.get_seconds_for_period_aggregation(period, aggregation)
+        calculate = True
+        f_upper = self.part_entry.function_cont.f_upper
+        f_lower = self.part_entry.function_cont.f_lower
+        counter = 0
+        while calculate and counter < 1000:  # the second condition is needed to avoid a never ending loop
+            counter += 1
+            u_value = f_upper(ts_for_calculation)
+            l_value = f_lower(ts_for_calculation)
+            if l_value > u_value:
+                return [l_value, ts_for_calculation]
+            ts_for_calculation += ts_per_aggregation
+            if counter == 1000:
+                print('Problem with wrong triangle...')  # ToDo: Find the reason for this error .... constraints???
+        return [0, 0]
 
 
 class TriangleBottomPattern(TrianglePattern):

@@ -2,20 +2,49 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7606fc5c-fb0c-4c55-828d-6a7e7df44d0f" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/bitfinex_trade_client.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/interactive_broker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_doc_span_token.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_matcher_by_pattern.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_models_and_rules.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_processing_pipelines.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_run_examples.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_scaling_and_performance.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_semantic_similarity.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_training_models.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_training_models_best_practices.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_vocab_lexemes_stringstore.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Stocks/pattern_test/run_function_name_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Salesman/.idea/Salesman.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Salesman/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Salesman/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/pattern_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/bitfinex.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/exchange_cls.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/exchanges/exchange_cls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stocks/.idea/Stocks.iml" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/.idea/Stocks.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Courses/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Courses/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Courses/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Courses/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Courses/DC_Spacy/a_token.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Courses/DC_spaCy/spacy_basics.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stocks/pattern_bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_bitfinex.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_for_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_for_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_job_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_job_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_dd_for_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_dd_for_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_dd_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_dd_for_pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_dd_for_waves.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_dd_for_waves.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_for_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_dash/my_dash_tab_for_db.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Stocks/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_database/run_daily_tasks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_database/stock_access_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_database/stock_access_layer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_database/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_database/stock_database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_database/stock_database_updater.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_detector.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_function_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_function_container.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_logging/pattern_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_logging/pattern_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_part.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_part.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_process_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_process_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_scheduling/pattern_job_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_scheduling/pattern_job_result.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_system_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stocks/pattern_trade_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_trade_handler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Stocks/run_bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/run_bitfinex.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_trade.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stocks/pattern_trade_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/Stocks/pattern_trade_box.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -29,13 +58,20 @@
       <file leaf-file-name="run_fifa_world_cup_2018_prediction.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1099">
+            <state relative-caret-position="1122">
               <caret line="443" selection-start-line="443" selection-end-line="443" />
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -63,7 +99,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -74,12 +109,13 @@
             <path>
               <item name="Gaming" type="b2602c69:ProjectViewProjectNode" />
               <item name="Gaming" type="462c0819:PsiDirectoryNode" />
-              <item name="World_Cup_2018" type="462c0819:PsiDirectoryNode" />
+              <item name="Soccer" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -137,9 +173,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.48322684" />
@@ -177,6 +212,13 @@
     <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="7225">
+          <caret line="443" selection-start-line="443" selection-end-line="443" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7225">
           <caret line="443" lean-forward="true" selection-start-line="443" selection-end-line="443" />
         </state>
       </provider>
@@ -202,9 +244,12 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Soccer/.idea/misc.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/World_Cup_2018/run_fifa_world_cup_2018_prediction.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1099">
+        <state relative-caret-position="1122">
           <caret line="443" selection-start-line="443" selection-end-line="443" />
         </state>
       </provider>

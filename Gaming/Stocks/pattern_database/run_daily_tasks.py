@@ -19,7 +19,7 @@ exchange_config = BitfinexConfiguration()
 predictor_optimizer = PatternPredictorOptimizer(stock_db)
 stock_db_updater = StockDatabaseUpdater(sys_config)
 # sys_config.exchange_config.small_profit_taking_active = True
-stock_db_updater.update_trade_records(4, 16, pattern_end_date='')  # 2018-10-31
+# stock_db_updater.update_trade_records(4, 16, pattern_end_date='')  # 2018-10-31
 
 if True:
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
@@ -29,7 +29,9 @@ if True:
     # stock_db_updater.complete_wave_records(symbol='', ts_start=0, ts_end=0)
     # stock_db_updater.update_trade_policy_metric_for_today(
     #     [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
-    pass
+    stock_db.update_stock_data_for_symbol('FCEL')
+    stock_db.update_stock_data_for_symbol('TSLA')
+    stock_db.update_stock_data_for_symbol('GE')
     # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
     # stock_db_updater.add_wave_prediction_data_to_wave_records(symbol='')
     # stock_db_updater.update_trade_records(4, 16)

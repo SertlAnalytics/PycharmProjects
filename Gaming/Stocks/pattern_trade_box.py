@@ -5,9 +5,10 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-10
 """
 
-from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT, CN, PRD
+from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT, CN, PRD, FT
 from pattern_wave_tick import WaveTick, WaveTickList
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mymath import MyMath
 from pattern_logging.pattern_log import PatternLog
 import math
 from scipy import stats
@@ -34,6 +35,7 @@ class TradingBox:
         self.box_type = ''
         self._api = api
         self._data_dict = api.data_dict
+        self._pattern_type = self._data_dict[DC.PATTERN_TYPE]
         self._ticker_id = self._data_dict[DC.TICKER_ID]
         self._off_set_value = api.off_set_value  # basis for distance_top and _bottom
         self._buy_price = api.buy_price
@@ -41,6 +43,7 @@ class TradingBox:
         self._round_decimals = 2 if self._off_set_value > 100 else 4
         self._trade_strategy = api.trade_strategy
         self._ticker_last_price_list = [api.off_set_value, api.buy_price]  # off_set is used to guarantee: max >= offset
+        self._ticker_last_price = api.buy_price
         self._height = self.round(api.height)
         self._time_stamp_end = self.__get_time_stamp_end__()
         self._date_time_end = MyDate.get_date_time_from_epoch_seconds(self._time_stamp_end)
@@ -63,7 +66,7 @@ class TradingBox:
 
     @property
     def last_price(self) -> float:
-        return self._ticker_last_price_list[-1]
+        return self._ticker_last_price
 
     @property
     def current_result_pct(self) -> float:
@@ -84,11 +87,11 @@ class TradingBox:
 
     @property
     def max_ticker_last_price(self):
-        return self.round(max(self._ticker_last_price_list))
+        return MyMath.round_smart(max(self._ticker_last_price_list))
 
     @property
-    def max_ticker_last_price_pct(self) -> int:
-        return int((self.max_ticker_last_price - self._off_set_value) / self._distance_top * 100)
+    def max_ticker_last_price_pct(self) -> float:
+        return round((self.max_ticker_last_price - self._off_set_value) / self._off_set_value * 100, 2)
 
     @property
     def height(self):
@@ -163,21 +166,23 @@ class TradingBox:
         }
 
     def adjust_to_next_ticker_last_price(self, ticker_last_price: float, sma_value=0, small_profit=False) -> bool:
-        if ticker_last_price <= self._ticker_last_price_list[-1]:  # no adjustments necessary
+        self._ticker_last_price = ticker_last_price
+        if self._ticker_last_price <= self._ticker_last_price_list[-1]:  # no adjustments necessary
             return False
         self._ticker_last_price_list.append(ticker_last_price)
         self._sma_value = sma_value
         self._small_profit_taking_active = small_profit
-        return self.__adjust_to_next_ticker_last_price__(ticker_last_price)
+        return self.__adjust_to_next_ticker_last_price__()
 
-    def __adjust_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
-        stop_loss_changed = self.__adjust_stop_loss_to_next_ticker_last_price__(ticker_last_price)
-        limit_changed = self.__adjust_limit_to_next_ticker_last_price__(ticker_last_price)
+    def __adjust_to_next_ticker_last_price__(self) -> bool:
+        stop_loss_changed = self.__adjust_stop_loss_to_next_ticker_last_price__(self._ticker_last_price)
+        limit_changed = self.__adjust_limit_to_next_ticker_last_price__(self._ticker_last_price)
         return stop_loss_changed or limit_changed
 
     def __adjust_stop_loss_to_next_ticker_last_price__(self, ticker_last_price: float) -> bool:
         ticker_last_price_mean = self.__get_ticker_last_price_mean__(ticker_last_price)
-        return_flag = self.__adjust_stop_loss_to_small_profit_taking__(ticker_last_price)
+        small_profit_adjusted = self.__adjust_stop_loss_to_small_profit_taking__(ticker_last_price)
+        pattern_type_specific_adjusted = self.__adjust_stop_loss_to_pattern_type_specifics__(ticker_last_price)
         self.__adjust_distance_bottom_to_current_result__(ticker_last_price)
         if self._trade_strategy == TSTR.LIMIT:  # with trailing stop
             if self._stop_loss < ticker_last_price_mean - self._distance_bottom:
@@ -198,7 +203,7 @@ class TradingBox:
             if self._stop_loss < self._sma_value:
                 self._stop_loss = self._sma_value
                 return True
-        return return_flag
+        return small_profit_adjusted or pattern_type_specific_adjusted
 
     def __adjust_stop_loss_to_small_profit_taking__(self, last_price: float) -> bool:
         # 1. param: this limit reached => stop loss at 2. param,
@@ -215,14 +220,35 @@ class TradingBox:
         stop_loss_for_small_profit_parameters = self._buy_price * (1.0 + stop_loss_pct/100)
         if self._stop_loss >= stop_loss_for_small_profit_parameters:
             return False
-
-        message = '{}: Stop loss adjusted for small profit: old stop={}, new stop={}'.format(
-            self._ticker_id, self._stop_loss, stop_loss_for_small_profit_parameters)
-        print(message)
-        PatternLog.log_message(message, '__adjust_stop_loss_to_small_profit_taking__')
+        self.__log_stop_loss_adjustment__(
+            'stop_loss_for_small_profit_parameters', 'small profit', stop_loss_for_small_profit_parameters)
         self._stop_loss = stop_loss_for_small_profit_parameters
         self._was_adjusted_to_small_profit_taking = True
         return True
+
+    def __adjust_stop_loss_to_pattern_type_specifics__(self, last_price: float) -> bool:
+        module = '__adjust_stop_loss_to_pattern_type_specifics__'
+        if FT.is_pattern_type_any_triangle(self._pattern_type):
+            # expected breakout = high of the triangle, but stop loss at apex
+            apex_value = self._data_dict.get(DC.APEX_VALUE)
+            pattern_begin_high = self._data_dict.get(DC.PATTERN_BEGIN_HIGH)
+            max_apex_and_high = max(apex_value, pattern_begin_high)
+            if last_price > max_apex_and_high > self._stop_loss:
+                self.__log_stop_loss_adjustment__(module, self._pattern_type, max_apex_and_high)
+                self._stop_loss = max_apex_and_high
+                return True
+        if self._pattern_type == FT.TRIANGLE_DOWN:  # we want to have a close stop_loss
+            adjusted_price = self.buy_price * 0.998
+            if adjusted_price > self._stop_loss:
+                self.__log_stop_loss_adjustment__(module, self._pattern_type, adjusted_price)
+                self._stop_loss = adjusted_price
+        return False
+
+    def __log_stop_loss_adjustment__(self, module_name: str, reason: str, new_stop_loss: float):
+        message = '{}: Stop loss adjusted for {}: old stop={}, new stop={}'.format(
+                self._ticker_id, reason, self._stop_loss, new_stop_loss)
+        print(message)
+        PatternLog.log_message(message, module_name)
 
     def __get_ticker_last_price_mean__(self, ticker_last_price):
         if self._api.last_price_mean_aggregation == 1:

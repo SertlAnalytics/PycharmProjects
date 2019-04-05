@@ -244,6 +244,13 @@ class MyMath:
             return round(value, 5 - decimals)
         return round(value, min(5, -decimals + 3))  # not more then 5 decimals after comma
 
+    @staticmethod
+    def get_float_for_string(value_str: str, delimiter='.'):
+        price_components = value_str.split(delimiter)
+        integer_part = price_components[0] if price_components[0].isnumeric() else 0
+        fractional_part = price_components[1] if price_components[1].isnumeric() else 0
+        return float('{}.{}'.format(integer_part, fractional_part))
+
 
 class MyMathTest(MyMath, TestInterface):
     DIVIDE = 'divide'

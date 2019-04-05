@@ -13,14 +13,18 @@ import traceback
 
 
 class PatternLog:
+    log_activated = True
+
     @staticmethod
-    def log_error():
+    def log_error(runtime_info=''):
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         message = lines[-2]
         process = lines[-1]
         process = process.replace('\n', ' ').strip()
-        PatternLog.__log_message__(PatternLog.__get_file_path_for_errors__(), message, process, '')
+        # ToDo - runtime info can contain comma. Which is not allowed...
+        runtime_info = runtime_info.replace(',', '#')
+        PatternLog.__log_message__(PatternLog.__get_file_path_for_errors__(), message, process, runtime_info)
 
     @staticmethod
     def log_message(log_message: str, process='', process_step='run'):
@@ -40,6 +44,9 @@ class PatternLog:
 
     @staticmethod
     def __log_message__(file_path, log_message: str, process='', process_step='run'):
+        if not PatternLog.log_activated:
+            print('Pattern_log is deactivated')
+            return
         for old, new in {',': ' ', '; ': ' ', '  ': ' ', '\n': ' ', '"': ''}.items():
             log_message = log_message.replace(old, new).strip()
         log_message = log_message.strip()

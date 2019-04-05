@@ -61,7 +61,7 @@ class PatternDetector:
         possible_pattern_range_list_dict = self.__get_possible_pattern_range_list_dict__()
         for pattern_type in self.pattern_type_list:
             for pattern_range in possible_pattern_range_list_dict[pattern_type]:
-                # print('parsing for pattern: {}'.format(pattern_type))
+                # print('parsing for pattern: {} - {}'.format(pattern_type, pattern_range.position_list))
                 self.__check_pattern_range_for_pattern_type__(pattern_type, pattern_range)
 
     def __get_possible_pattern_range_list_dict__(self) -> dict:
@@ -80,6 +80,8 @@ class PatternDetector:
         pfcf_api.constraints = ConstraintsFactory.get_constraints_by_pattern_type(pattern_type, self.sys_config)
         # pattern_range.print_range_details()
         debugger.check_range_position_list(pattern_range.position_list)
+        # if pattern_range.position_list[-1] - pattern_range.position_list[0] == 20:
+        #     print(pattern_range.position_list)
         complementary_function_list = pattern_range.get_complementary_function_list(pattern_type)
         for f_complementary in complementary_function_list:
             pfcf_api.complementary_function = f_complementary

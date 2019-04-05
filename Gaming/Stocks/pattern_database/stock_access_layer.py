@@ -118,11 +118,11 @@ class AccessLayer4Equity(AccessLayer):
         full_dict = self.get_as_data_dict_by_data_dict(data_dict, [EDC.EQUITY_KEY], EDC.EQUITY_KEY)
         return {value_dict[EDC.EQUITY_KEY]: value_dict[EDC.EQUITY_NAME] for value_dict in full_dict.values()}
 
-    def delete_existing_equities(self, equity_type: str, exchange: str):
+    def delete_existing_equities(self, equity_type: str, exchange: str) -> int:
         query = "DELETE FROM {} WHERE {}='{}' and {}='{}';".format(
             self._table.name, EDC.EQUITY_TYPE, equity_type, EDC.EXCHANGE, exchange)
         print(query)
-        self._stock_db.delete_records(query)
+        return self._stock_db.delete_records(query)
 
     def __get_table__(self):
         return EquityTable()

@@ -21,7 +21,12 @@ class MyUrlBrowser:
         self._user_name = user_name
         self._password = password
         self._enforce_password_in_url = enforce_password_in_url
+        print('Opening {}'.format(self._url))
         self.driver.get(self.__get_url__())
+
+    @property
+    def url(self):
+        return self._url
 
     def __get_url__(self):
         if self._enforce_password_in_url:
@@ -55,8 +60,12 @@ class MyUrlBrowser:
                 print(element.text)
 
     def __click_submit__(self):
-        python_button = self.driver.find_elements_by_xpath("//input[@type='submit']")[0]
-        python_button.click()
+        self.__find_button_by_xpath_and_press_click__("//input[@type='submit']")
+        
+    def __find_button_by_xpath_and_press_click__(self, xpath: str, sleep_seconds=1):
+        sleep(sleep_seconds)
+        button = self.driver.find_element_by_xpath(xpath=xpath)
+        button.click()
 
 
 class MyUrlBrowser4SertlAnalytics(MyUrlBrowser):
