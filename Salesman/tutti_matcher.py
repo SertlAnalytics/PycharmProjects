@@ -51,9 +51,19 @@ class TuttiMatcher4Size(TuttiMatcher):
         return {
             'GROESSE': [{'LOWER': 'grösse'}, {'POS': POS.NUM}],
             'GR': [{'LOWER': 'gr'}, {'POS': POS.PUNCT}, {'POS': POS.NUM}],
-            'MASSE': [{'LOWER': 'masse'}, {'POS': POS.PUNCT, 'OP': '?'}, {'POS': POS.PROPN}],
-            'CM': [{'POS': POS.PROPN}, {'LOWER': 'cm'}]
+            'CM': [{'POS': POS.PROPN}, {'LOWER': 'cm'}],
+            # 'MASSE': [{'LOWER': 'masse'}, {'POS': POS.PUNCT, 'OP': '?'}, {'POS': POS.PROPN}],
+            'NOUND_CM': [{'POS': POS.PROPN, 'OP': '?'}, {'LIKE_NUM': True}, {'LOWER': 'cm'}],
         }
+
+    def __get_pattern_result_for_doc_as_text__(self, doc: Doc):
+        for match_id, start, end in self._matcher(doc):
+            # print('{}: doc[end - 1].text={}'.format(doc.text, doc[end-1].text))
+            if doc[end-1].text == 'cm':
+                span = Span(doc, start, end)
+                return span.text
+            return doc[end - 1].text
+        return ''
 
     def get_pattern_result_for_doc(self, doc: Doc):
         return self.__get_pattern_result_for_doc_as_text__(doc)

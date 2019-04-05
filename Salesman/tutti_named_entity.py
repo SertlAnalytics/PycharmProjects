@@ -26,7 +26,7 @@ class TuttiNamedEntity:
 class TuttiCompanyEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
-        return ['Eames', 'Lowa', 'USM', 'Zimtstern', 'BMW', 'Mercedes', 'Waldmann']
+        return ['Eames', 'Lowa', 'USM', 'Zimstern', 'Zimtstern', 'BMW', 'Mercedes', 'Waldmann']
 
 
 class TuttiProductEntity(TuttiNamedEntity):
