@@ -9,11 +9,9 @@ from tutti_browser import MyUrlBrowser4Tutti
 from tutti_offer import TuttiOffer
 from spacy import displacy
 from tutti_spacy import TuttiSpacy
-from sertl_analytics.mydates import MyDate
 from tutti_constants import TC
 import pandas as pd
 import xlsxwriter
-from xlsxwriter import Workbook
 
 
 class Tutti:

@@ -5,13 +5,17 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-02
 """
 
-from spacy import displacy
 from spacy.tokens import Doc, Span
-from spacy.matcher import Matcher, PhraseMatcher
-from tutti_constants import EL, POS
+from spacy.matcher import PhraseMatcher
+from tutti_constants import EL
 from tutti_named_entity import TuttiCompanyEntity, TuttiProductEntity
-from tutti_matcher import TuttiMatcher4IsNew, TuttiMatcher4IsUsed, TuttiMatcher4OriginalPrize, \
-    TuttiMatcher4Size, TuttiMatcher4Number, TuttiMatcher4IsTotalPrice, TuttiMatcher4SinglePrize
+from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
+from matcher.tutti_matcher_4_is_used import TuttiMatcher4IsUsed
+from matcher.tutti_matcher_4_original_price import TuttiMatcher4OriginalPrize
+from matcher.tutti_matcher_4_size import TuttiMatcher4Size
+from matcher.tutti_matcher_4_number import TuttiMatcher4Number
+from matcher.tutti_matcher_4_is_total_price import TuttiMatcher4IsTotalPrice
+from matcher.tutti_matcher_4_single_prize import TuttiMatcher4SinglePrize
 import spacy
 
 
