@@ -8,7 +8,7 @@ Date: 2019-04-05
 from spacy import displacy
 from spacy.tokens import Doc, Span
 from spacy.matcher import Matcher, PhraseMatcher
-from tutti_constants import EL, POS
+from tutti_constants import EL, POS, DEP
 from sertl_analytics.mymath import MyMath
 from tutti_named_entity import TuttiCompanyEntity, TuttiProductEntity
 import spacy
@@ -88,6 +88,28 @@ class TuttiMatcher4OriginalPrize(TuttiMatcher):
         return self.__get_pattern_result_for_doc_as_int__(doc)
 
 
+class TuttiMatcher4SinglePrize(TuttiMatcher):
+    @staticmethod
+    def __get_pattern_dict__() -> dict:
+        return {
+            'VERKAUFSPREIS': [{'LOWER': 'verkaufspreis'}, {'POS': POS.NUM}],  # Verkaufspreispreis 79.- pro Stück
+            'VERKAUFSPREIS_NOUN': [{'LOWER': 'verkaufspreis'}, {'POS': POS.NOUN}],  # Verkaufspreispreis 79.- pro Stück
+            'STUECK': [{'LOWER': 'stück'}, {'POS': POS.PUNCT}, {'POS': POS.X}],  # Preis pro Stück: 2000.-
+            'PRO_STUECK': [{'POS': POS.NUM}, {'LOWER': 'pro'}, {'LOWER': 'stück'}],  # Verkaufspreispreis 79.- pro Stück
+            'PRO_STUECK_nk': [{'DEP': DEP.nk}, {'LOWER': 'pro'}, {'LOWER': 'stück'}],  # Verkaufspreispreis 79.- pro Stück
+        }
+
+    def __get_pattern_result_for_doc_as_text__(self, doc: Doc):
+        for match_id, start, end in self._matcher(doc):
+            if doc[end - 1].text.lower() in ['stück']:
+                return doc[start].text
+            return doc[end - 1].text
+        return ''
+
+    def get_pattern_result_for_doc(self, doc: Doc):
+        return self.__get_pattern_result_for_doc_as_int__(doc)
+
+
 class TuttiMatcher4Number(TuttiMatcher):
     @staticmethod
     def __get_pattern_dict__() -> dict:
@@ -117,6 +139,7 @@ class TuttiMatcher4IsNew(TuttiMatcher):
             'NEUWERTIG': [{'LOWER': 'neuwertig'}],
             'NEUWERTIGEN': [{'LOWER': 'neuwertigen'}],
             'NEUWERTIGEM': [{'LOWER': 'neuwertigem'}],
+            'ORIGINALVERPACKT': [{'LOWER': 'originalverpackt'}],
             'ORIGINALVERPACKUNG': [{'LOWER': 'originalverpackung'}],
             'WIE_NEU': [{'POS': 'ADJ', 'OP': '?'}, {'LOWER': 'neu'}],
             'ZUSTAND_SEHR_GUT':
@@ -135,17 +158,33 @@ class TuttiMatcher4IsUsed(TuttiMatcher):
             return {
             'BESCHAEDIGUNG': [{'LOWER': 'beschädigung'}],
             'FAST_NEU': [{'LOWER': 'fast'}, {'POS': 'CONJ', 'OP': '?'}, {'LOWER': 'neu'}],  # fast wie neu
-            'GEBRAUCHT': [{'LOWER': 'gebraucht'}],
+            'GEBRAUCHT': [{'LOWER': 'gebraucht', 'POS': POS.VERB}],
             'GEBRAUCHSSPUREN': [{'LOWER': 'gebrauchsspuren'}],
             'GEBRAUCHSPUREN': [{'LOWER': 'gebrauchspuren'}],
-            'GETRAGEN': [{'LOWER': 'getragen'}],
-            'GUT_ERHALTEN': [{'LOWER': 'gut'}, {'LEMMA': 'erhalten'}],
-            'GUTER_ZUSTAND': [{'LEMMA': 'gut'}, {'LEMMA': 'zustand'}],
+            'GETRAGEN': [{'LOWER': 'getragen', 'POS': POS.VERB}],
+            'GUT_ERHALTEN': [{'LOWER': 'gut'}, {'LOWER': 'erhalten', 'POS': POS.VERB}],
+            'GUTER_ZUSTAND': [{'LEMMA': 'gut'}, {'LOWER': 'zustand'}],
             'IN_GUTEM_ZUSTAND': [{'LOWER': 'in'}, {'LOWER': 'gutem'}, {'POS': 'ADJ', 'OP': '?'}, {'LOWER': 'zustand'}],
-            'KRATZER': [{'LOWER': 'kratzer'}],
-            'NEUPREIS': [{'LOWER': 'neupreis'}],
+            'KRATZER': [{'LOWER': 'kratzer', 'POS': POS.NOUN}],
+            'NEUPREIS': [{'LOWER': 'neupreis', 'POS': POS.NOUN}],
             'NICHT_MEHR': [{'LOWER': 'nicht'}, {'LOWER': 'mehr'}, {'POS': 'ADV', 'OP': '?'}, {'LOWER': 'neu'}],
-            'SCHADEN': [{'LOWER': 'schaden'}],
+            'SCHADEN': [{'LOWER': 'schaden', 'POS': POS.NOUN}],
+            'FLECKEN': [{'LOWER': 'flecken', 'POS': POS.NOUN}],
+        }
+
+    def get_pattern_result_for_doc(self, doc: Doc):
+        return self.__get_pattern_result_for_doc_as_bool__(doc)
+
+
+class TuttiMatcher4IsTotalPrice(TuttiMatcher):
+    @staticmethod
+    def __get_pattern_dict__() -> dict:
+            return {
+            'PREIS_FUER_ALLE': [{'LOWER': 'preis'}, {'LOWER': 'für'}, {'LOWER': 'alle'}],
+            'ZUSAMMEN': [{'LOWER': 'zusammen'}],
+            'SET_PROPN': [{'LOWER': 'set', 'POS': POS.PROPN}],
+            'SET_X': [{'LOWER': 'set', 'POS': POS.X}],
+            'GESAMTPREIS': [{'LOWER': 'gesamtpreis'}]
         }
 
     def get_pattern_result_for_doc(self, doc: Doc):

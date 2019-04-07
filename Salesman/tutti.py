@@ -18,47 +18,49 @@ from xlsxwriter import Workbook
 
 class Tutti:
     def __init__(self, with_browser=True, with_nlp=True, write_to_excel=False, load_sm=True):
+        self._my_offers_source = 'Tutti'
         self._write_to_excel = write_to_excel
         self._spacy = TuttiSpacy(load_sm=load_sm) if with_nlp else None
-        self._my_offers = None
-        self._my_virtual_offers = None
-        self._similar_offer_dict = {}  # key is the ID of my_offer
         self._browser = MyUrlBrowser4Tutti(self._spacy.nlp) if with_browser else None
         if self._browser is not None:
             self._browser.enter_and_submit_credentials()
-        self._virtual_offers_file_path = "tutti_virtual_offers.csv"
-        self._excel_file_path = 'tutti_offers.xlsx'
+        self._virtual_offers_file_path = "Files/tutti_virtual_offers.csv"
 
     @property
     def nlp(self):
         return None if self._spacy is None else self._spacy.nlp
+
+    @property
+    def excel_file_path(self):
+        return 'Files/tutti_offers_result.xlsx' if self._my_offers_source == 'Tutti' \
+            else 'Files/tutti_offers_virtual_resuls.xlsx'
 
     def check_my_nth_offer_against_similar_offers(self, number=1):
         offer = self._browser.get_my_nth_offer_from_tutti(number)
         if offer is None:
             return
         offer.print_offer_in_original_structure()
-        self._similar_offer_dict = self._browser.get_similar_offer_dict_from_tutti([offer])
-        self.__check_similarity__([offer], self._similar_offer_dict)
-        self.__write_to_excel__([offer], self._similar_offer_dict)
+        similar_offer_dict = self._browser.get_similar_offer_dict_from_tutti([offer])
+        self.__process_my_offers_and_similar_offers__([offer], similar_offer_dict)
 
     def check_my_nth_virtual_offer_against_similar_offers(self, number=1):
         list_with_nth_offer = self.__get_my_virtual_offers__(number)
-        self._similar_offer_dict = self._browser.get_similar_offer_dict_from_tutti(list_with_nth_offer)
-        self.__check_similarity__(list_with_nth_offer, self._similar_offer_dict)
-        self.__write_to_excel__(list_with_nth_offer, self._similar_offer_dict)
+        similar_offer_dict = self._browser.get_similar_offer_dict_from_tutti(list_with_nth_offer)
+        self.__process_my_offers_and_similar_offers__(list_with_nth_offer, similar_offer_dict)
 
     def check_my_offers_against_similar_offers(self):
-        self._my_offers = self._browser.get_my_offers_from_tutti()
-        self._similar_offer_dict = self._browser.get_similar_offer_dict_from_tutti(self._my_offers)
-        self.__check_similarity__(self._my_offers, self._similar_offer_dict)
-        self.__write_to_excel__(self._my_offers, self._similar_offer_dict)
+        my_offers = self._browser.get_my_offers_from_tutti()
+        similar_offer_dict = self._browser.get_similar_offer_dict_from_tutti(my_offers)
+        self.__process_my_offers_and_similar_offers__(my_offers, similar_offer_dict)
 
     def check_my_virtual_offers_against_similar_offers(self):
-        self._my_virtual_offers = self.__get_my_virtual_offers__()
-        self._similar_offer_dict = self._browser.get_similar_offer_dict_from_tutti(self._my_virtual_offers)
-        self.__check_similarity__(self._my_virtual_offers, self._similar_offer_dict)
-        self.__write_to_excel__(self._my_virtual_offers, self._similar_offer_dict)
+        my_virtual_offers = self.__get_my_virtual_offers__()
+        similar_offer_dict = self._browser.get_similar_offer_dict_from_tutti(my_virtual_offers)
+        self.__process_my_offers_and_similar_offers__(my_virtual_offers, similar_offer_dict)
+
+    def __process_my_offers_and_similar_offers__(self, my_offers: list, similar_offer_dict: dict):
+        self.__check_similarity__(my_offers, similar_offer_dict)
+        self.__write_to_excel__(my_offers, similar_offer_dict)
 
     def __check_similarity__(self, my_offers: list, similar_offer_dict: dict):
         if self._spacy.sm_loaded:
@@ -77,7 +79,7 @@ class Tutti:
     def __write_to_excel__(self, my_offers: list, similar_offer_dict: dict):
         if not self._write_to_excel:
             return
-        excel_workbook = xlsxwriter.Workbook(self._excel_file_path)
+        excel_workbook = xlsxwriter.Workbook(self.excel_file_path)
         excel_workbook.add_worksheet('Similar offers')
         worksheet = excel_workbook.get_worksheet_by_name('Similar offers')
         row_list = []
@@ -100,6 +102,7 @@ class Tutti:
             excel_workbook.close()
 
     def __get_my_virtual_offers__(self, number=0):
+        self._my_offers_source = 'virtual'
         tutti_offers = []
         virtual_offer_df = self.__get_offer_elements_from_file__()
         for idx, row in virtual_offer_df.iterrows():
@@ -121,8 +124,8 @@ class Tutti:
         offer.print_offer_in_original_structure()
         return offer
 
-    def __visualize_dependencies__(self):
-        for offer in self._my_offers:
+    def __visualize_dependencies__(self, my_offers: list):
+        for offer in my_offers:
             doc_dict = {'Title': self.nlp(offer.title), 'Description': self.nlp(offer.description)}
             for key, doc in doc_dict.items():
                 displacy.render(doc, style='dep')

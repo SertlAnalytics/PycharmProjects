@@ -11,7 +11,7 @@ from spacy.matcher import Matcher, PhraseMatcher
 from tutti_constants import EL, POS
 from tutti_named_entity import TuttiCompanyEntity, TuttiProductEntity
 from tutti_matcher import TuttiMatcher4IsNew, TuttiMatcher4IsUsed, TuttiMatcher4OriginalPrize, \
-    TuttiMatcher4Size, TuttiMatcher4Number
+    TuttiMatcher4Size, TuttiMatcher4Number, TuttiMatcher4IsTotalPrice, TuttiMatcher4SinglePrize
 import spacy
 
 
@@ -84,10 +84,12 @@ class TuttiSpacy:
 
     def __set_doc_extensions__(self): # Register some Doc property extensions
         Doc.set_extension('get_size', getter=self.__get_size__)
+        Doc.set_extension('get_single_price', getter=self.__get_single_price__)
         Doc.set_extension('get_number', getter=self.__get_number__)
         Doc.set_extension('get_original_price', getter=self.__get_original_price__)
         Doc.set_extension('is_new', getter=self.__is_new__)
         Doc.set_extension('is_used', getter=self.__is_used__)
+        Doc.set_extension('is_total_price', getter=self.__is_total_price__)
 
     def __get_size__(self, doc):
         return TuttiMatcher4Size(self._nlp).get_pattern_result_for_doc(doc)
@@ -103,4 +105,11 @@ class TuttiSpacy:
 
     def __is_used__(self, doc):
         return TuttiMatcher4IsUsed(self._nlp).get_pattern_result_for_doc(doc)
+
+    def __is_total_price__(self, doc):
+        return TuttiMatcher4IsTotalPrice(self._nlp).get_pattern_result_for_doc(doc)
+
+    def __get_single_price__(self, doc):
+        return TuttiMatcher4SinglePrize(self._nlp).get_pattern_result_for_doc(doc)
+
 

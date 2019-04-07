@@ -24,6 +24,8 @@ class TuttiOffer:
         self._title = ''
         self._description = ''
         self._price = 0
+        self._price_single = 0
+        self._is_total_price = False
         self._price_new = 0
         self._price_original = 0
         self._size = ''
@@ -96,6 +98,11 @@ class TuttiOffer:
         self._number = doc_title_description._.get_number
         self._is_new = doc_title_description._.is_new
         self._is_used = doc_title_description._.is_used
+        single_price = doc_title_description._.get_single_price
+        self._price_single = self._price if single_price == 0 else single_price
+        self._is_total_price = doc_title_description._.is_total_price
+        if self._is_total_price and self._number != 0:
+            self._price_single = int(self._price/self._number)
 
     def add_href(self, href: str):
         self._href = href
@@ -115,6 +122,7 @@ class TuttiOffer:
 
     def add_price(self, input_str: str):
         self._price = MyMath.get_float_for_string(input_str, delimiter='.')
+        self._price_single = self._price
         self._price_new = self._price
 
     def add_visits_text(self, input_str: str):
@@ -197,6 +205,8 @@ class TuttiOffer:
             TC.LOCATION: self._location,
             TC.STATE: self.state,
             TC.PRICE: self._price,
+            TC.IS_TOTAL_PRICE: self._is_total_price,
+            TC.PRICE_SINGLE: self._price_single,
             TC.PRICE_ORIGINAL: self._price_original,
             TC.NUMBER: self._number,
             TC.SIZE: self._size,
@@ -244,6 +254,8 @@ class TuttiOffer:
             self.source, self._id, self._location, self._date_str, self._title,
             self._description, self._price, visits_bookmarks)
         )
+        print('Is price total price: {}'.format(self._is_total_price))
+        print('Single price: {}'.format(self._price_single))
         print('Original price: {}'.format(self._price_original))
         print('Size: {}'.format(self._size))
         print('Number: {}'.format(self._number))

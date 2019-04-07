@@ -8,7 +8,7 @@ Date: 2019-04-02
 from tutti_spacy import TuttiSpacy
 from tutti_named_entity import TuttiCompanyEntity
 from tutti_matcher import TuttiMatcher4IsNew, TuttiMatcher4IsUsed, TuttiMatcher4OriginalPrize, \
-    TuttiMatcher4Size, TuttiMatcher4Number
+    TuttiMatcher4Size, TuttiMatcher4Number, TuttiMatcher4IsTotalPrice, TuttiMatcher4SinglePrize
 
 
 class TC:
@@ -19,9 +19,11 @@ class TC:
     TC_MATCHER_NUMBER = 'TC_MATCHER_NUMBER'
     TC_MATCHER_ORIGINAL_PRICE = 'TC_MATCHER_ORIGINAL_PRICE'
     TC_MATCHER_IS_USED = 'TC_MATCHER_IS_USED'
+    TC_MATCHER_IS_TOTAL_PRICE = 'TC_MATCHER_IS_TOTAL_PRICE'
+    TC_MATCHER_SINGLE_PRICE = 'TC_MATCHER_SINGLE_PRICE'
 
 
-tc = TC.TC_MATCHER_NUMBER
+tc = TC.TC_MATCHER_IS_NEW
 
 spacy = TuttiSpacy()
 
@@ -44,11 +46,29 @@ elif tc == TC.TC_MATCHER_IS_NEW:
         'der Tisch ist wie neu': True,
         'Zustand: sehr gut': True,
         'der Tisch ist in sehr gutem Zustand': True,
+        'ist noch originalverpackt': True,
+        'die Originalverpackung ist vorhanden': True,
         'der Tisch ist veraltet': False
     }
     matcher = TuttiMatcher4IsNew(spacy.nlp)
     for key, value in test_value_dict.items():
         doc = spacy.nlp(key)
+        is_new = matcher.get_pattern_result_for_doc(doc)
+        print('Test: {} - expected: {} - result: {}'.format(key, value, is_new))
+elif tc == TC.TC_MATCHER_IS_USED:
+    test_value_dict = {
+        'wenig gebraucht': True,
+        'ist gut erhalten': True,
+        'wie neu': False,
+        'ist noch originalverpackt': False,
+        'ein kleiner Schaden vorhanden': True,
+        'die Flecken auf der Oberseite': True,
+        'noch nicht gebraucht': True,
+    }
+    matcher = TuttiMatcher4IsUsed(spacy.nlp)
+    for key, value in test_value_dict.items():
+        doc = spacy.nlp(key)
+        # spacy.print_tokens_for_doc(doc)
         is_new = matcher.get_pattern_result_for_doc(doc)
         print('Test: {} - expected: {} - result: {}'.format(key, value, is_new))
 elif tc == TC.TC_MATCHER_SIZE:
@@ -92,6 +112,34 @@ elif tc == TC.TC_MATCHER_NUMBER:
         # spacy.print_tokens_for_doc(doc)
         size = matcher.get_pattern_result_for_doc(doc)
         print('Test: {} - expected: {} - result: {}, result_ok: {}'.format(key, value, size, value == size))
+elif tc == TC.TC_MATCHER_SINGLE_PRICE:
+    test_value_dict = {
+        'Verkaufspreis 79.-': 79,
+        'Preis pro Stück: 2000.-': 2000,
+        'wir verkaufen auch einzeln für 79.- pro Stück': 79,
+    }
+    matcher = TuttiMatcher4SinglePrize(spacy.nlp)
+    for key, value in test_value_dict.items():
+        doc = spacy.nlp(key)
+        # spacy.print_tokens_for_doc(doc)
+        size = matcher.get_pattern_result_for_doc(doc)
+        print('Test: {} - expected: {} - result: {}, result_ok: {}'.format(key, value, size, value == size))
+elif tc == TC.TC_MATCHER_IS_TOTAL_PRICE:
+    test_value_dict = {
+        "2'500 Fr. Preis für alle 4 Stühle zusammen": True,
+        'Preis pro Stück: 2000.-': False,
+        'Preis ist für 4 er Set': True,
+        'Preis ist für 3 er set': True,
+        'der Preis versteht sich als Gesamtpreis': True,
+        'Der Preis ist für alle Stücke zusammen': True,
+    }
+    matcher = TuttiMatcher4IsTotalPrice(spacy.nlp)
+    for key, value in test_value_dict.items():
+        doc = spacy.nlp(key)
+        # spacy.print_tokens_for_doc(doc)
+        size = matcher.get_pattern_result_for_doc(doc)
+        print('Test: {} - expected: {} - result: {}, result_ok: {}'.format(key, value, size, value == size))
+
 else:
     company_entity = TuttiCompanyEntity()
     print(company_entity.get_entity_names_for_phrase_matcher())

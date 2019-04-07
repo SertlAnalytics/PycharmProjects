@@ -25,6 +25,8 @@ class TC:  # Tutti columns
     TITLE = 'Title'
     DESCRIPTION = 'Description'
     PRICE = 'Price'
+    PRICE_SINGLE = 'Price (single)'
+    IS_TOTAL_PRICE = 'Is total price'
     PRICE_ORIGINAL = 'Price (orig.)'
     SIZE = 'Size'
     NUMBER = 'Number'
@@ -43,7 +45,7 @@ class TC:  # Tutti columns
     @staticmethod
     def get_columns_for_excel():
         return [TC.ID, TC.ID_MASTER, TC.DATE, TC.LOCATION, TC.STATE,
-                TC.PRICE, TC.PRICE_ORIGINAL, TC.NUMBER, TC.SIZE,
+                TC.PRICE, TC.PRICE_SINGLE, TC.IS_TOTAL_PRICE, TC.PRICE_ORIGINAL, TC.NUMBER, TC.SIZE,
                 TC.TITLE, TC.DESCRIPTION,
                 TC.IS_NEW, TC.IS_USED, TC.VISITS, TC.BOOK_MARKS,
                 TC.SEARCH_LABELS, TC.ENTITY_LABELS, TC.FOUND_BY_LABELS, TC.HREF]
@@ -80,6 +82,7 @@ class POS:
     PROPN = 'PROPN'  # proper noun, e.g. 'Wanderschuhe'
     PUNCT = 'PUNCT'  # punctuation, e.g. ','
     VERB = 'VERB'  # verb, e.g. 'verkaufen'
+    X = 'X'         # X = ???
 
     @staticmethod
     def is_pos_noun(pos: str) -> bool:
@@ -103,6 +106,7 @@ class DEP:
     pnc = 'pnc'  # punctuation, mostly POS=NOUN or PROPN
     punct = 'punct'  # punctuation, mostly POS=PUNKT
     subtok = 'subtok'  # subtoken (part of a larger token), e.g. 10 in '10-12' - head.text is the right neighbor
+    nk = 'nk'  # nk = ????
 
 
 

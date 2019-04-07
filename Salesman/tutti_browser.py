@@ -35,7 +35,7 @@ class MyUrlBrowser4Tutti(MyUrlBrowser):
     def get_my_nth_offer_from_tutti(self, number: int) -> TuttiOffer:
         return self.__get_nth_offer_from_tutti__(OCLS.OFFERS, number)
 
-    def get_similar_offer_dict_from_tutti(self, offers: list):
+    def get_similar_offer_dict_from_tutti(self, offers: list):  # key is the ID of my_offer
         return {offer.id: self.__get_similar_offers_for_offer__(offer) for offer in offers}
 
     def __get_similar_offers_for_offer__(self, offer: TuttiOffer) -> list:
