@@ -8,7 +8,8 @@ Date: 2019-04-05
 from spacy import displacy
 from spacy.tokens import Doc, Span
 from spacy.matcher import Matcher, PhraseMatcher
-from tutti_contants import EL, POS
+from tutti_constants import EL, POS
+from sertl_analytics.mymath import MyMath
 from tutti_named_entity import TuttiCompanyEntity, TuttiProductEntity
 import spacy
 
@@ -33,9 +34,10 @@ class TuttiMatcher:
 
     def __get_pattern_result_for_doc_as_float__(self, doc: Doc):
         text_result = self.__get_pattern_result_for_doc_as_text__(doc)
-        text_result = text_result.replace("'", "")  # remove 1000 delimiters
-        text_result = text_result.replace("-", "")  # remove -- signs
-        return float(text_result) if text_result.isnumeric() else 0
+        return MyMath.get_float_for_string(text_result)
+
+    def __get_pattern_result_for_doc_as_int__(self, doc: Doc):
+        return int(self.__get_pattern_result_for_doc_as_float__(doc))
 
     def __get_pattern_result_for_doc_as_bool__(self, doc: Doc):
         return self.__get_pattern_result_for_doc_as_text__(doc) != ''
@@ -73,13 +75,39 @@ class TuttiMatcher4OriginalPrize(TuttiMatcher):
     @staticmethod
     def __get_pattern_dict__() -> dict:
         return {
+            'CA': [{'LOWER': 'ca.'}, {'POS': POS.NUM}],  # ca. 2800.- 18 Stk vorhanden
             'NEUPREIS': [{'LOWER': 'neupreis'}, {'POS': POS.NUM}],
+            'NEUPREIS_ADJ': [{'LOWER': 'neupreis'}, {'POS': POS.ADJ}],
             'GEKAUFT': [{'LOWER': 'gekauft'}, {'POS': POS.ADP}, {'POS': POS.NUM}],
-            'CHF': [{'LOWER': 'chf'}, {'POS': POS.NUM}]
+            'CHF': [{'LOWER': 'chf'}, {'POS': POS.NUM}],
+            'CHF_NOUN': [{'LOWER': 'chf'}, {'POS': POS.PROPN}],
+            'NP': [{'LOWER': 'np'}, {'POS': POS.PUNCT}, {'POS': POS.NUM}],  # NP: 2800.- 18 Stk vorhanden
         }
 
     def get_pattern_result_for_doc(self, doc: Doc):
-        return self.__get_pattern_result_for_doc_as_float__(doc)
+        return self.__get_pattern_result_for_doc_as_int__(doc)
+
+
+class TuttiMatcher4Number(TuttiMatcher):
+    @staticmethod
+    def __get_pattern_dict__() -> dict:
+        return {
+            'MAL': [{'POS': POS.NUM}, {'LOWER': 'mal'}],  # 2 er set
+            'SET': [{'POS': POS.NUM}, {'LOWER': 'er', 'OP': '?'}, {'LOWER': 'set'}],  # 2 er set
+            'PREIS_FUER_ALLE': [{'LOWER': 'preis'}, {'LOWER': 'für'}, {'LOWER': 'alle'}, {'POS': POS.NUM}],  # Preis für alle
+            'STUECK': [{'POS': POS.NUM}, {'LOWER': 'stück'}],
+        }
+
+    def __get_pattern_result_for_doc_as_text__(self, doc: Doc):
+        for match_id, start, end in self._matcher(doc):
+            if doc[end-1].text.lower() in ['stück', 'set', 'mal']:
+                return doc[start].text
+            return doc[end - 1].text
+        return ''
+
+    def get_pattern_result_for_doc(self, doc: Doc):
+        number_found = self.__get_pattern_result_for_doc_as_int__(doc)
+        return 1 if number_found == 0 else number_found
 
 
 class TuttiMatcher4IsNew(TuttiMatcher):
@@ -89,6 +117,7 @@ class TuttiMatcher4IsNew(TuttiMatcher):
             'NEUWERTIG': [{'LOWER': 'neuwertig'}],
             'NEUWERTIGEN': [{'LOWER': 'neuwertigen'}],
             'NEUWERTIGEM': [{'LOWER': 'neuwertigem'}],
+            'ORIGINALVERPACKUNG': [{'LOWER': 'originalverpackung'}],
             'WIE_NEU': [{'POS': 'ADJ', 'OP': '?'}, {'LOWER': 'neu'}],
             'ZUSTAND_SEHR_GUT':
                 [{'LOWER': 'zustand'}, {'POS': POS.PUNCT, 'OP': '?'}, {'LOWER': 'sehr'}, {'LOWER': 'gut'}],

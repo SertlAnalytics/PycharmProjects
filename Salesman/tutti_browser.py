@@ -8,10 +8,8 @@ Date: 2019-04-02
 from sertl_analytics.pyurl.url_process import MyUrlBrowser
 from sertl_analytics.pyurl.url_username_passwords import WebPasswords
 from tutti_offer import TuttiOffer
-from tutti_contants import OCLS, SCLS
+from tutti_constants import OCLS, SCLS
 from time import sleep
-from spacy.tokens import Doc, Span
-from tutti_contants import POS, EL
 
 
 class MyUrlBrowser4Tutti(MyUrlBrowser):
@@ -151,56 +149,9 @@ class MyUrlBrowser4Tutti(MyUrlBrowser):
             return self.__get_tutti_offer_from_offer_element__(offer_elements[number-1], None)
 
     def __get_tutti_offer_from_offer_element__(self, offer_element, search_labels):
-        offer = TuttiOffer(search_labels)
-        offer_id_obj = offer_element.find_element_by_class_name(OCLS.MAIN_ANKER)
-        offer.add_href(offer_id_obj.get_attribute('href'))
-        offer.add_location_text(offer_element.find_element_by_class_name(OCLS.LOCATION).text)
-        offer.add_date_text(offer_element.find_element_by_class_name(OCLS.DATE).text)
-        offer.add_title_text(offer_element.find_element_by_class_name(OCLS.LINK).text)
-        offer.add_description_text(offer_element.find_element_by_class_name(OCLS.DESCRIPTION).text)
-        offer.add_price(offer_element.find_element_by_class_name(OCLS.PRICE).text)
-        if search_labels is None:
-            numbers = offer_element.find_elements_by_class_name(OCLS.NUMBERS)
-            offer.add_visits_text(numbers[0].text)
-            offer.add_bookmarks_text(numbers[1].text)
-            self.__add_search_labels_to_offer__(offer)
-        self.__process_doc_extensions_for_offer__(offer)
+        offer = TuttiOffer(self._nlp, search_labels)
+        offer.init_by_offer_element(offer_element)
         return offer
-
-    def __add_search_labels_to_offer__(self, offer: TuttiOffer):
-        doc_title = self._nlp(offer.title)
-        doc_description = self._nlp(offer.description)
-        self.__add_search_labels_for_doc_to_offer__(doc_title, offer, for_title=True)
-        self.__add_search_labels_for_doc_to_offer__(doc_description, offer, for_title=False)
-        offer.reduce_search_labels_by_entity_names()
-
-    def __process_doc_extensions_for_offer__(self, offer: TuttiOffer):
-        doc_title_description = self._nlp(offer.title + ' ' + offer.description)
-        offer.price_original = doc_title_description._.get_original_price
-        offer.size = doc_title_description._.get_size
-        offer.is_new = doc_title_description._.is_new
-        offer.is_used = doc_title_description._.is_used
-
-    @staticmethod
-    def __add_search_labels_for_doc_to_offer__(doc: Doc, offer: TuttiOffer, for_title=False):
-        print('\nDoc for {}: {}'.format('title' if for_title else 'description', doc.text))
-        token_text_list = []
-        token_head_text_list = []
-        for token in doc:
-            print('Token: text={}, lemma={}, pos={}, tag={}, dep={}, head.text={}'.format(
-                token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.head.text))
-            if POS.is_pos_noun(token.pos_):
-                token_text_list.append(token.text)
-                token_head_text_list.append(token.head.text)
-        # it is more important for a token when it is a head text
-        for token_text in token_text_list:
-            if token_text in token_head_text_list:
-                offer.add_search_label(token_text, for_title, is_label_head_text=True)
-            else:
-                offer.add_search_label(token_text, for_title, is_label_head_text=False)
-        for ent in doc.ents:
-            if EL.is_entity_label_tutti_relevant(ent.label_):
-                offer.add_entity_name_label(ent.text, ent.label_)
 
     def __get_offer_elements_by_class_name__(self, class_name: str):
         return self.driver.find_elements_by_class_name(class_name)

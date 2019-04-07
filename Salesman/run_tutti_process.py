@@ -9,7 +9,9 @@ from sertl_analytics.myprofiler import MyProfiler
 from tutti import Tutti
 from time import sleep
 
-tutti = Tutti()
-tutti.check_my_offers_against_similar_offers()
-# tutti.check_my_nth_offer(1)
+tutti = Tutti(with_browser=True, with_nlp=True, write_to_excel=False, load_sm=True)
+# tutti.check_my_offers_against_similar_offers()
+# tutti.check_my_virtual_offers_against_similar_offers()
+# tutti.check_my_nth_offer_against_similar_offers(1)
+tutti.check_my_nth_virtual_offer_against_similar_offers(1)
 sleep(2)

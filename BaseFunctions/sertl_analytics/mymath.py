@@ -246,6 +246,17 @@ class MyMath:
 
     @staticmethod
     def get_float_for_string(value_str: str, delimiter='.'):
+        value_str = value_str.replace("'", "")  # remove thousand separators
+        value_str = value_str.replace("-", "")  # remove -- signs
+        if value_str == '':
+            return 0
+        if value_str[-1] == delimiter:
+            value_str = value_str[:-1]
+        if value_str.isnumeric():
+            return float(value_str)
+        if value_str.find(delimiter) < 0:
+            print('Wrong price {}'.format(value_str))
+            return 0
         price_components = value_str.split(delimiter)
         integer_part = price_components[0] if price_components[0].isnumeric() else 0
         fractional_part = price_components[1] if price_components[1].isnumeric() else 0

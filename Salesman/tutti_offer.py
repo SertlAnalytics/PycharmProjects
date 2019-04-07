@@ -6,11 +6,15 @@ Date: 2019-04-02
 """
 
 from sertl_analytics.mymath import MyMath
-import numpy as np
+from sertl_analytics.mydates import MyDate
+from tutti_constants import TC, OCLS, POS, EL
+from spacy.tokens import Doc, Span
+from xlsxwriter.worksheet import Worksheet
 
 
 class TuttiOffer:
-    def __init__(self, found_by_labels=None):
+    def __init__(self, nlp, found_by_labels=None):
+        self._nlp = nlp
         self._my_offer = found_by_labels is None
         self._found_by_labels = found_by_labels
         self._id = 0
@@ -23,6 +27,7 @@ class TuttiOffer:
         self._price_new = 0
         self._price_original = 0
         self._size = ''
+        self._number = 1
         self._is_new = False
         self._is_used = False
         self._visits = 0
@@ -31,6 +36,66 @@ class TuttiOffer:
         self._entity_names = []
         self._search_labels_in_description = []
         self._search_labels_in_head_text = []
+
+    def init_by_file_row(self, row_number: int, row):
+        self.add_href(str(row_number))
+        self.add_location_text('virtual')
+        self.add_date_text(MyDate.get_date_as_string_from_date_time())
+        self.add_title_text(row[TC.TITLE])
+        self.add_description_text(row[TC.DESCRIPTION])
+        self.add_price(str(row[TC.PRICE]))
+        self.__add_search_labels__()
+        self.__process_doc_extensions__()
+
+    def init_by_offer_element(self, offer_element):
+        offer_id_obj = offer_element.find_element_by_class_name(OCLS.MAIN_ANKER)
+        self.add_href(offer_id_obj.get_attribute('href'))
+        self.add_location_text(offer_element.find_element_by_class_name(OCLS.LOCATION).text)
+        self.add_date_text(offer_element.find_element_by_class_name(OCLS.DATE).text)
+        self.add_title_text(offer_element.find_element_by_class_name(OCLS.LINK).text)
+        self.add_description_text(offer_element.find_element_by_class_name(OCLS.DESCRIPTION).text)
+        self.add_price(offer_element.find_element_by_class_name(OCLS.PRICE).text)
+        if self._my_offer:
+            numbers = offer_element.find_elements_by_class_name(OCLS.NUMBERS)
+            self.add_visits_text(numbers[0].text)
+            self.add_bookmarks_text(numbers[1].text)
+            self.__add_search_labels__()
+        self.__process_doc_extensions__()
+
+    def __add_search_labels__(self):
+        doc_title = self._nlp(self._title)
+        doc_description = self._nlp(self._description)
+        self.__add_search_labels_for_doc__(doc_title, for_title=True)
+        self.__add_search_labels_for_doc__(doc_description, for_title=False)
+        self.reduce_search_labels_by_entity_names()
+
+    def __add_search_labels_for_doc__(self, doc: Doc, for_title=False):
+        print('\nDoc for {}: {}'.format('title' if for_title else 'description', doc.text))
+        token_text_list = []
+        token_head_text_list = []
+        for token in doc:
+            print('Token: text={}, lemma={}, pos={}, tag={}, dep={}, head.text={}'.format(
+                token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.head.text))
+            if POS.is_pos_noun(token.pos_):
+                token_text_list.append(token.text)
+                token_head_text_list.append(token.head.text)
+        # it is more important for a token when it is a head text
+        for token_text in token_text_list:
+            if token_text in token_head_text_list:
+                self.add_search_label(token_text, for_title, is_label_head_text=True)
+            else:
+                self.add_search_label(token_text, for_title, is_label_head_text=False)
+        for ent in doc.ents:
+            if EL.is_entity_label_tutti_relevant(ent.label_):
+                self.add_entity_name_label(ent.text, ent.label_)
+
+    def __process_doc_extensions__(self):
+        doc_title_description = self._nlp(self._title + ' ' + self._description)
+        self._price_original = doc_title_description._.get_original_price
+        self._size = doc_title_description._.get_size
+        self._number = doc_title_description._.get_number
+        self._is_new = doc_title_description._.is_new
+        self._is_used = doc_title_description._.is_used
 
     def add_href(self, href: str):
         self._href = href
@@ -49,8 +114,7 @@ class TuttiOffer:
         self._description = input_str
 
     def add_price(self, input_str: str):
-        input_str = input_str.replace("'", "")  # remove thousand separators
-        self._price = 0 if input_str.find('.') < 0 else MyMath.get_float_for_string(input_str, delimiter='.')
+        self._price = MyMath.get_float_for_string(input_str, delimiter='.')
         self._price_new = self._price
 
     def add_visits_text(self, input_str: str):
@@ -61,7 +125,9 @@ class TuttiOffer:
 
     def get_start_search_label_lists(self):
         return_list = []
-        if len(self._entity_names) == 0:
+        if len(self._entity_names) > 1:
+            return [self._entity_names]
+        elif len(self._entity_names) == 0:
             start_lists = [[label] for label in self._search_labels if label in self._search_labels_in_head_text]
         else:
             start_lists = [self._entity_names]
@@ -94,7 +160,7 @@ class TuttiOffer:
 
     @property
     def key(self):
-        return '{}_{}'.format(self._id, self.title)
+        return '{}_{}'.format(self._id, self._title)
 
     @property
     def state(self):
@@ -108,28 +174,12 @@ class TuttiOffer:
         return self._found_by_labels
 
     @property
-    def href(self):
-        return self._href
-
-    @property
-    def location(self):
-        return self._location
-
-    @property
-    def date_str(self):
-        return self._date_str
-
-    @property
     def title(self):
         return self._title
 
     @property
     def description(self):
         return self._description
-
-    @property
-    def price(self):
-        return self._price
 
     @property
     def price_new(self):
@@ -139,53 +189,28 @@ class TuttiOffer:
     def price_new(self, value: float):
         self._price_new = value
 
-    @property
-    def price_original(self):
-        return self._price_original
-
-    @price_original.setter
-    def price_original(self, value: float):
-        self._price_original = value
-
-    @property
-    def size(self):
-        return self._size
-
-    @size.setter
-    def size(self, value):
-            self._size = value
-
-    @property
-    def is_new(self):
-        return self._is_new
-
-    @is_new.setter
-    def is_new(self, value):
-        self._is_new = value
-
-    @property
-    def is_used(self):
-        return self._is_used
-
-    @is_used.setter
-    def is_used(self, value):
-        self._is_used = value
-
-    @property
-    def visits(self):
-        return self._visits
-
-    @property
-    def bookmarks(self):
-        return self._bookmarks
-
-    @property
-    def search_query(self):
-        return self._title if len(self._search_labels) == 0 else ' '.join(self._search_labels)
-
-    @property
-    def search_labels(self):
-        return self._search_labels
+    def get_value_dict_for_worksheet(self, master_id=None):
+        return {
+            TC.ID: self._id,
+            TC.ID_MASTER: self._id if master_id is None else master_id,
+            TC.DATE: self._date_str,
+            TC.LOCATION: self._location,
+            TC.STATE: self.state,
+            TC.PRICE: self._price,
+            TC.PRICE_ORIGINAL: self._price_original,
+            TC.NUMBER: self._number,
+            TC.SIZE: self._size,
+            TC.TITLE: self._title,
+            TC.DESCRIPTION: self._description,
+            TC.IS_NEW: self._is_new,
+            TC.IS_USED: self._is_used,
+            TC.VISITS: self._visits,
+            TC.BOOK_MARKS: self._bookmarks,
+            TC.SEARCH_LABELS: ','.join(self._search_labels),
+            TC.ENTITY_LABELS: ','.join(self._entity_names),
+            TC.FOUND_BY_LABELS: '' if self._found_by_labels is None else ','.join(self._found_by_labels),
+            TC.HREF: self._href,
+        }
 
     def add_search_label(self, label: str, for_title: bool, is_label_head_text: bool):
         if self.__is_label_candidate_for_label_list__(label, for_title):
@@ -221,6 +246,7 @@ class TuttiOffer:
         )
         print('Original price: {}'.format(self._price_original))
         print('Size: {}'.format(self._size))
+        print('Number: {}'.format(self._number))
         print('New: {}/Used: {} - Conclusion: {}'.format(self._is_new, self._is_used, self.state))
         print('{}'.format(search_details))
         if self._my_offer:
@@ -240,7 +266,7 @@ class TuttiOffer:
     def __get_visits_bookmarks_and_search_details_for_printing__(self):
         if self._my_offer:
             visits_bookmarks = ', {} Besuche, {} Merkliste'.format(self._visits, self._bookmarks)
-            search_details = '\nSearch labels: {}'.format(self.search_labels)
+            search_details = '\nSearch labels: {}'.format(self._search_labels)
         else:
             visits_bookmarks = ''
             search_details = '\nFound by: {}'.format(self._found_by_labels)

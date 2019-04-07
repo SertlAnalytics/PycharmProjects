@@ -15,6 +15,40 @@ class EL:  # entity labels
         return ent_level in [EL.PRODUCT, EL.COMPANY]
 
 
+class TC:  # Tutti columns
+    ID = 'ID'
+    ID_MASTER = 'ID master'
+    HREF = 'Link'
+    DATE = 'Date'
+    LOCATION = 'Location'
+    STATE = 'State'
+    TITLE = 'Title'
+    DESCRIPTION = 'Description'
+    PRICE = 'Price'
+    PRICE_ORIGINAL = 'Price (orig.)'
+    SIZE = 'Size'
+    NUMBER = 'Number'
+    IS_NEW = 'Is new'
+    IS_USED = 'Is used'
+    VISITS = 'Visits'
+    BOOK_MARKS = 'Bookmarks'
+    SEARCH_LABELS = 'Search labels'
+    ENTITY_LABELS = 'Entity labels'
+    FOUND_BY_LABELS = 'Found by labels'
+
+    @staticmethod
+    def get_columns_for_virtual_offers_in_file():
+        return [TC.TITLE, TC.DESCRIPTION, TC.PRICE]
+
+    @staticmethod
+    def get_columns_for_excel():
+        return [TC.ID, TC.ID_MASTER, TC.DATE, TC.LOCATION, TC.STATE,
+                TC.PRICE, TC.PRICE_ORIGINAL, TC.NUMBER, TC.SIZE,
+                TC.TITLE, TC.DESCRIPTION,
+                TC.IS_NEW, TC.IS_USED, TC.VISITS, TC.BOOK_MARKS,
+                TC.SEARCH_LABELS, TC.ENTITY_LABELS, TC.FOUND_BY_LABELS, TC.HREF]
+
+
 class OCLS:  # css classes used within offers
     OFFERS = '_2qT0v'
     MAIN_ANKER = '_16dGT'

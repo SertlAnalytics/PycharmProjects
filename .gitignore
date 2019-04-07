@@ -114,3 +114,4 @@ BaseFunctions/sertl_analytics/mypasswords.py
 Gaming/Stocks/pattern_dash/run_pattern_detection_with_dash.py
 Gaming/Stocks/pattern_database/run_create_stock_table.py
 Gaming/Stocks/run_bitfinex.py
+*.xlsx

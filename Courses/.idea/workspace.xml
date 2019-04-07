@@ -5,10 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="77bbd6b1-225b-4ef4-b90b-1ce33e4b4bf8" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/mymath.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Salesman/run_tutti_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/run_tutti_process.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Salesman/run_tutti_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/run_tutti_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Salesman/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/tutti.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Salesman/tutti_browser.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/tutti_browser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Salesman/tutti_contants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/tutti_constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Salesman/tutti_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/tutti_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Salesman/tutti_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/tutti_named_entity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Salesman/tutti_offer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/tutti_offer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Salesman/tutti_spacy.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Salesman/tutti_spacy.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,11 +31,20 @@
       <file leaf-file-name="spacy_basics.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_basics.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="680">
-              <caret line="43" selection-start-line="43" selection-end-line="56" selection-end-column="76" />
+            <state relative-caret-position="153">
+              <caret line="12" column="55" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="55" />
               <folding>
                 <element signature="e#218#251#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="spacy_training_models.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_training_models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="462">
+              <caret line="183" selection-start-line="183" selection-end-line="183" />
             </state>
           </provider>
         </entry>
@@ -55,14 +73,32 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="spacy_matcher_by_pattern.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="spacy_models_and_rules.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_models_and_rules.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="40">
+              <caret line="26" column="48" selection-start-line="26" selection-start-column="35" selection-end-line="26" selection-end-column="48" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="spacy_matcher_by_pattern.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_matcher_by_pattern.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="836">
-              <caret line="59" column="55" lean-forward="true" selection-start-line="59" selection-start-column="55" selection-end-line="59" selection-end-column="55" />
+            <state relative-caret-position="989">
+              <caret line="59" column="55" selection-start-line="59" selection-start-column="55" selection-end-line="59" selection-end-column="55" />
               <folding>
                 <element signature="e#1014#1047#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="spacy_semantic_similarity.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_semantic_similarity.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="685">
+              <caret line="83" column="28" lean-forward="true" selection-start-line="73" selection-start-column="4" selection-end-line="83" selection-end-column="28" />
             </state>
           </provider>
         </entry>
@@ -75,6 +111,15 @@
               <folding>
                 <element signature="e#1597#1630#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="spacy_training_models_best_practices.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_training_models_best_practices.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1091">
+              <caret line="89" column="9" selection-start-line="89" selection-start-column="9" selection-end-line="89" selection-end-column="9" />
             </state>
           </provider>
         </entry>
@@ -109,7 +154,6 @@
         <option value="$PROJECT_DIR$/DC_spaCy/spacy_pattern.py" />
         <option value="$PROJECT_DIR$/DC_spaCy/spacy_vocab_lexemes_stringstore.py" />
         <option value="$PROJECT_DIR$/DC_spaCy/spacy_doc_span_token.py" />
-        <option value="$PROJECT_DIR$/DC_spaCy/spacy_semantic_similarity.py" />
         <option value="$PROJECT_DIR$/DC_spaCy/spacy_models_and_rules.py" />
         <option value="$PROJECT_DIR$/DC_spaCy/spacy_processing_pipelines.py" />
         <option value="$PROJECT_DIR$/DC_spaCy/spacy_scaling_and_performance.py" />
@@ -119,6 +163,7 @@
         <option value="$PROJECT_DIR$/DC_spaCy/__init__.py" />
         <option value="$PROJECT_DIR$/DC_spaCy/spacy_run_examples.py" />
         <option value="$PROJECT_DIR$/DC_spaCy/spacy_basics.py" />
+        <option value="$PROJECT_DIR$/DC_spaCy/spacy_semantic_similarity.py" />
       </list>
     </option>
   </component>
@@ -133,6 +178,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -149,7 +195,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="RecentsManager">
@@ -254,7 +299,7 @@
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.49920383" weight="0.32941177" />
+      <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.49920383" visible="true" weight="0.32941177" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -637,31 +682,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_semantic_similarity.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="969">
-          <caret line="58" column="35" selection-start-line="58" selection-start-column="35" selection-end-line="58" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_vocab_lexemes_stringstore.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="425">
           <caret line="28" column="6" selection-start-line="28" selection-start-column="6" selection-end-line="28" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_training_models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1190">
-          <caret line="183" selection-start-line="183" selection-end-line="183" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_training_models_best_practices.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1190">
-          <caret line="89" column="9" selection-start-line="89" selection-start-column="9" selection-end-line="89" selection-end-column="9" />
         </state>
       </provider>
     </entry>
@@ -671,6 +695,47 @@
           <caret line="33" column="12" selection-start-line="33" selection-start-column="12" selection-end-line="33" selection-end-column="12" />
           <folding>
             <element signature="e#175#208#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_processing_pipelines.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2091">
+          <caret line="126" column="23" selection-start-line="126" selection-start-column="23" selection-end-line="126" selection-end-column="23" />
+          <folding>
+            <element signature="e#1597#1630#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_training_models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="462">
+          <caret line="183" selection-start-line="183" selection-end-line="183" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_training_models_best_practices.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1091">
+          <caret line="89" column="9" selection-start-line="89" selection-start-column="9" selection-end-line="89" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_models_and_rules.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="40">
+          <caret line="26" column="48" selection-start-line="26" selection-start-column="35" selection-end-line="26" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_matcher_by_pattern.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="989">
+          <caret line="59" column="55" selection-start-line="59" selection-start-column="55" selection-end-line="59" selection-end-column="55" />
+          <folding>
+            <element signature="e#1014#1047#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -687,38 +752,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_basics.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="680">
-          <caret line="43" selection-start-line="43" selection-end-line="56" selection-end-column="76" />
+        <state relative-caret-position="153">
+          <caret line="12" column="55" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="55" />
           <folding>
             <element signature="e#218#251#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_models_and_rules.py">
+    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_semantic_similarity.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-128">
-          <caret line="26" column="48" selection-start-line="26" selection-start-column="35" selection-end-line="26" selection-end-column="48" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_processing_pipelines.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2091">
-          <caret line="126" column="23" selection-start-line="126" selection-start-column="23" selection-end-line="126" selection-end-column="23" />
-          <folding>
-            <element signature="e#1597#1630#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/DC_spaCy/spacy_matcher_by_pattern.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="836">
-          <caret line="59" column="55" lean-forward="true" selection-start-line="59" selection-start-column="55" selection-end-line="59" selection-end-column="55" />
-          <folding>
-            <element signature="e#1014#1047#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="685">
+          <caret line="83" column="28" lean-forward="true" selection-start-line="73" selection-start-column="4" selection-end-line="83" selection-end-column="28" />
         </state>
       </provider>
     </entry>
