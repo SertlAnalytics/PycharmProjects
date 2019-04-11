@@ -13,11 +13,13 @@ log_message_list = [['message1, with comma and with process', 'process 1', 'star
                     ['message2; without comma and without process'],
                     ['message1, with comma and with process', 'process 1', 'end']]
 
+file_log = PatternLog()
+
 for messages in log_message_list:
     if len(messages) > 1:
-        PatternLog.log_test_message(messages[0], messages[1], messages[2])
+        file_log.log_test_message(messages[0], messages[1], messages[2])
     else:
-        PatternLog.log_test_message(messages[0])
+        file_log.log_test_message(messages[0])
     sleep(1)
 
 try:
@@ -26,10 +28,10 @@ try:
     c = a/b
     print('{}/{}={}'.format(a, b, c))
 except (IOError, ValueError):
-    PatternLog.log_error()
+    file_log.log_error()
 except Exception as e:
     print("An unspecified exception occurred")
-    PatternLog.log_error()
+    file_log.log_error()
 
 
 

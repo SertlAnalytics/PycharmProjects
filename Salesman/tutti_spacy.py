@@ -8,7 +8,8 @@ Date: 2019-04-02
 from spacy.tokens import Doc, Span
 from spacy.matcher import PhraseMatcher
 from tutti_constants import EL
-from tutti_named_entity import TuttiCompanyEntity, TuttiProductEntity
+from tutti_named_entity import TuttiEntityHandler
+from tutti_named_entity import TuttiCompanyEntity, TuttiProductEntity, TuttiObjectTypeEntity
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
 from matcher.tutti_matcher_4_is_used import TuttiMatcher4IsUsed
 from matcher.tutti_matcher_4_original_price import TuttiMatcher4OriginalPrize
@@ -25,8 +26,10 @@ class TuttiSpacy:
         self._nlp = spacy.load('de_core_news_sm') if load_sm else spacy.load('de_core_news_md')
         self._matcher_company = self.__get_matcher_for_entity_type__(EL.COMPANY)
         self._matcher_product = self.__get_matcher_for_entity_type__(EL.PRODUCT)
+        self._matcher_object = self.__get_matcher_for_entity_type__(EL.OBJECT)
         self._nlp.add_pipe(self.company_component, name='CUSTOM_COMPANY', after='ner')
         self._nlp.add_pipe(self.product_component, name='CUSTOM_PRODUCT', after='CUSTOM_COMPANY')
+        self._nlp.add_pipe(self.object_component, name='CUSTOM_OBJECT', after='CUSTOM_PRODUCT')
         self.__set_doc_extensions__()
 
     @property
@@ -51,10 +54,7 @@ class TuttiSpacy:
 
     def __get_matcher_for_entity_type__(self, entity_type: str):
         matcher = PhraseMatcher(self.nlp.vocab)
-        if entity_type == EL.COMPANY:
-            entity_names = TuttiCompanyEntity().get_entity_names_for_phrase_matcher()
-        else:
-            entity_names = TuttiProductEntity().get_entity_names_for_phrase_matcher()
+        entity_names = TuttiEntityHandler.get_entity_names_for_entity_label(entity_type)
         patterns = list(self.nlp.pipe(entity_names))
         matcher.add(entity_type, None, *patterns)
         return matcher
@@ -68,14 +68,27 @@ class TuttiSpacy:
     def product_component(self, doc):
         matches = self._matcher_product(doc)
         spans = [Span(doc, start, end, label=EL.PRODUCT) for match_id, start, end in matches]
-        doc.ents = list(doc.ents) + spans  # Overwrite the doc.ents with the matched spans
-        return doc
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
+    def object_component(self, doc):
+        matches = self._matcher_object(doc)
+        spans = [Span(doc, start, end, label=EL.OBJECT) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
+    def __get_doc_with_added_span_list_as_entities__(self, doc: Doc, spans: list):
+        try:
+            doc.ents = list(doc.ents) + spans  # Overwrite the doc.ents with the matched spans
+        except ValueError:
+            print('Error with span: {} - already as entity available.'.format(spans))
+            self.print_tokens_for_doc(doc)
+        finally:
+            return doc
 
     @staticmethod
     def print_tokens_for_doc(doc: Doc):
         for token in doc:
-            print('token.text={}, token.lemma_={}, pos_={}, dep_={}, head.text={}'.format(
-                token.text, token.lemma_, token.pos_, token.dep_, token.head.text))
+            print('token.text={}, token.lemma_={}, pos_={}, dep_={}, head.text={}, ent_type_={}'.format(
+                token.text, token.lemma_, token.pos_, token.dep_, token.head.text, token.ent_type_))
 
     @staticmethod
     def print_text_for_doc(doc: Doc):

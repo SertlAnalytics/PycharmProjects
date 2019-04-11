@@ -18,6 +18,7 @@ class TuttiMatcher4Number(TuttiMatcher):
             'SET': [{'POS': POS.NUM}, {'LOWER': 'er', 'OP': '?'}, {'LOWER': 'set'}],  # 2 er set
             'PREIS_FUER_ALLE': [{'LOWER': 'preis'}, {'LOWER': 'für'}, {'LOWER': 'alle'}, {'POS': POS.NUM}],  # Preis für alle
             'STUECK': [{'POS': POS.NUM}, {'LOWER': 'stück'}],
+            'STK': [{'POS': POS.NUM}, {'LOWER': 'stk'}],
         }
 
     def __get_pattern_type_test_case_dict__(self):
@@ -26,11 +27,12 @@ class TuttiMatcher4Number(TuttiMatcher):
             'SET': {'Wie bieten an ein 2 er set': 2},
             'PREIS_FUER_ALLE': {'Preis für alle 34 Stück: 2000.-': 34},
             'STUECK': {'es sind insgesamt 4 Stück': 4},
+            'STK': {'Stühle CONFERENCE - 3 Stk.': 3},
         }
 
     def __get_pattern_result_for_doc_as_text__(self, doc: Doc):
         for match_id, start, end in self._matcher(doc):
-            if doc[end-1].text.lower() in ['stück', 'set', 'mal']:
+            if doc[end-1].text.lower() in ['stk', 'stück', 'set', 'mal']:
                 return doc[start].text
             return doc[end - 1].text
         return ''

@@ -8,10 +8,10 @@ Date: 2018-09-26
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
 import pandas as pd
-from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_dash.my_dash_replay_handler import ReplayHandler
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi
 from pattern_dash.my_dash_header_tables import MyHTMLTabTradeHeaderTable
 from pattern_dash.my_dash_tab_dd_for_trades import TradeDropDownHandler, TDD
 from pattern_dash.my_dash_tab_button_for_trades import TradeButtonHandler, TBTN
@@ -23,11 +23,11 @@ from sertl_analytics.mydates import MyDate
 from pattern_news_handler import NewsHandler
 
 
-class MyDashTab4Trades(MyDashBaseTab):
+class MyDashTab4Trades(MyPatternDashBaseTab):
     _data_table_name = 'actual_trade_table'
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self.exchange_config = self.sys_config.exchange_config
         self._trade_handler_online = trade_handler_online
         self._df_trade = self.sys_config.db_stock.get_trade_records_for_replay_as_dataframe()

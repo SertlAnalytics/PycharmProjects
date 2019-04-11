@@ -7,9 +7,9 @@ Date: 2019-03-06
 
 from dash.dependencies import Input, Output, State
 from sertl_analytics.mydates import MyDate
-from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from pattern_dash.my_dash_tab_dd_for_jobs import JOBDD, JobsTabDropDownHandler
 from pattern_detection_controller import PatternDetectionController
 from pattern_database.stock_access_layer import AccessLayer4Process, AccessLayer4Wave, AccessLayer4Pattern
@@ -20,12 +20,12 @@ from pattern_dash.my_dash_tab_table_for_jobs import JobTable
 from pattern_dash.my_dash_job_handler import MyDashJobHandler
 
 
-class MyDashTab4Jobs(MyDashBaseTab):
+class MyDashTab4Jobs(MyPatternDashBaseTab):
     _data_table_name = 'my_jobs_table'
     _data_table_div = '{}_div'.format(_data_table_name)
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self._job_handler = MyDashJobHandler(sys_config.process_manager)
         self.__init_dash_element_ids__()
         self.sys_config = sys_config
@@ -115,6 +115,6 @@ class MyDashTab4Jobs(MyDashBaseTab):
     def __get_table_for_jobs__(self):
         self._grid_table = JobTable(self._job_handler)
         rows = self._grid_table.get_rows_for_selected_items()
-        min_height = self._grid_table.height_for_display
+        min_height = self._grid_table.effective_height_for_display
         return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
 

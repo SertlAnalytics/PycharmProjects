@@ -1,8 +1,8 @@
 """
-Description: This module contains all shapes which are used for pattern dash.
+Description: This module contains all shapes which are used for salesman dash.
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
-Date: 2018-06-17
+Date: 2019-04-09
 """
 
 

@@ -16,5 +16,9 @@ class MyAPPS:
         return {'key': 'PD@Dash', 'name': 'Pattern dectector with dash@SERTL_ANALYTICS'}
 
     @staticmethod
+    def SALESMAN_DASH():
+        return {'key': 'SM@Dash', 'name': 'Salesman with dash@SERTL_ANALYTICS'}
+
+    @staticmethod
     def NONE():
         return {'key': 'NONE', 'name': 'NONE'}

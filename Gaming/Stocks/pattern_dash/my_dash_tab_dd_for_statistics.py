@@ -7,7 +7,7 @@ Date: 2018-10-03
 
 from pattern_database.stock_tables import TradeTable, PatternTable, AssetTable
 from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC
-from pattern_dash.my_dash_components import DropDownHandler
+from sertl_analytics.mydash.my_dash_components import DropDownHandler
 
 
 class DDT:  # Drop Down Types
@@ -89,12 +89,12 @@ class TradeStatisticsDropDownHandler(StatisticsDropDownHandler):
 
     def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
         default_dict = {
-            DDT.CHART_TYPE: CHT.AREA_WINNER_LOSER,
+            DDT.CHART_TYPE: CHT.MY_TRADES,
             DDT.PREDICTOR: PRED.FOR_TRADE,
             DDT.CATEGORY: DC.PATTERN_TYPE,
             DDT.X_VARIABLE: DC.PATTERN_RANGE_BEGIN_DT,
-            DDT.Y_VARIABLE: DC.TRADE_RESULT,
-            DDT.CHART_TEXT_VARIABLE: DC.TRADE_STRATEGY,
+            DDT.Y_VARIABLE: DC.TRADE_RESULT_PCT,
+            DDT.CHART_TEXT_VARIABLE: DC.TRADE_RESULT,
             DDT.PATTERN_TYPE: FT.ALL
         }
         return default_dict.get(drop_down_type, None)

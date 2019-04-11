@@ -7,8 +7,8 @@ Date: 2019-04-05
 
 from spacy.tokens import Doc
 from spacy.matcher import Matcher
-from tutti_constants import POS, DEP
 from sertl_analytics.mymath import MyMath
+from sertl_analytics.test.my_test_case import MyTestCaseHandler, MyTestCase
 
 
 class TuttiMatcher:
@@ -21,22 +21,16 @@ class TuttiMatcher:
         pass
 
     def run_test(self, spacy, print_token=False):
-        number_test_cases = 0
-        number_ok = 0
         pattern_type_testcase_dict = self.__get_pattern_type_test_case_dict__()
-        print('\nTesting "{}":'.format(self.__class__.__name__))
+        tc_handler = MyTestCaseHandler('Testing "{}":'.format(self.__class__.__name__))
         for pattern_type, test_case_dict in pattern_type_testcase_dict.items():
             for test_string, expected_value in test_case_dict.items():
-                number_test_cases += 1
                 doc = spacy.nlp(test_string)
                 if print_token:
                     spacy.print_tokens_for_doc(doc)
                 result = self.get_pattern_result_for_doc(doc)
-                result_ok = result == expected_value
-                number_ok += 1 if result_ok else 0
-                print('{}: Test: "{}" / expected: {} / result: {}, result_OK: {}'.format(
-                    pattern_type, test_string, expected_value, result, result_ok))
-        print('***Result: {}/{} ok - {} nok***'.format(number_ok, number_test_cases, number_test_cases - number_ok))
+                tc_handler.add_test_case(MyTestCase(pattern_type, test_string, expected_value, result))
+        tc_handler.print_result()
 
     def __get_pattern_type_test_case_dict__(self):
         return {

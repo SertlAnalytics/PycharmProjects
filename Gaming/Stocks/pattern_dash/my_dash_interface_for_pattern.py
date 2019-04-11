@@ -6,7 +6,7 @@ Date: 2018-06-17
 """
 
 import numpy as np
-from pattern_dash.pattern_shapes import MyPolygonShape, MyPolygonLineShape, MyLineShape, MyCircleShape
+from sertl_analytics.mydash.my_dash_shapes import MyPolygonShape, MyPolygonLineShape, MyLineShape, MyCircleShape
 from sertl_analytics.constants.pattern_constants import PRD
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate

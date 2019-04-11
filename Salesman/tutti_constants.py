@@ -9,10 +9,11 @@ Date: 2019-04-02
 class EL:  # entity labels
     COMPANY = 'COMPANY'
     PRODUCT = 'PRODUCT'
+    OBJECT = 'OBJECT'
 
     @staticmethod
     def is_entity_label_tutti_relevant(ent_level: str) -> bool:
-        return ent_level in [EL.PRODUCT, EL.COMPANY]
+        return ent_level in [EL.PRODUCT, EL.COMPANY, EL.OBJECT]
 
 
 class TC:  # Tutti columns
@@ -32,6 +33,7 @@ class TC:  # Tutti columns
     NUMBER = 'Number'
     IS_NEW = 'Is new'
     IS_USED = 'Is used'
+    IS_OUTLIER = 'Is outlier'
     VISITS = 'Visits'
     BOOK_MARKS = 'Bookmarks'
     SEARCH_LABELS = 'Search labels'
@@ -45,7 +47,7 @@ class TC:  # Tutti columns
     @staticmethod
     def get_columns_for_excel():
         return [TC.ID, TC.ID_MASTER, TC.DATE, TC.LOCATION, TC.STATE,
-                TC.PRICE, TC.PRICE_SINGLE, TC.IS_TOTAL_PRICE, TC.PRICE_ORIGINAL, TC.NUMBER, TC.SIZE,
+                TC.PRICE, TC.PRICE_SINGLE, TC.IS_OUTLIER, TC.IS_TOTAL_PRICE, TC.PRICE_ORIGINAL, TC.NUMBER, TC.SIZE,
                 TC.TITLE, TC.DESCRIPTION,
                 TC.IS_NEW, TC.IS_USED, TC.VISITS, TC.BOOK_MARKS,
                 TC.SEARCH_LABELS, TC.ENTITY_LABELS, TC.FOUND_BY_LABELS, TC.HREF]
@@ -56,7 +58,8 @@ class OCLS:  # css classes used within offers
     MAIN_ANKER = '_16dGT'
     LOCATION = '_3f6Er'
     DATE = '_1kvIw'
-    LINK = '_16dGT'
+    LINK = '_16dGT'  # or '_2SE_L'
+    TITLE = '_2SE_L'
     DESCRIPTION = '_2c4Jo'
     PRICE = '_6HJe5'
     NUMBERS = '_1WJLw'

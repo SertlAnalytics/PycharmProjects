@@ -43,7 +43,7 @@ class JobRow:
 class JobTable:
     def __init__(self, job_handler: MyDashJobHandler):
         self._job_handler = job_handler
-        self._columns = JDC.get_all()
+        self._columns = JDC.get_columns_for_job_table()
         self._sort_column = JDC.NAME
         self._rows = []
         self.__fill_rows_for_selected_table__()
@@ -54,16 +54,20 @@ class JobTable:
 
     @property
     def height_for_display(self):
-        height = max(100, 50 + len(self._rows) * 40)
+        height = max(100, self.effective_height_for_display)
         if height > 400:
             return 400
         return max(100, height)
+
+    @property
+    def effective_height_for_display(self):
+        return 50 + len(self._rows) * 40
 
     def get_rows_for_selected_items(self):
         if len(self._rows) == 0:
             return [JobRow(self._columns).get_row_as_dict()]
         JobRow.sort_column = self._sort_column
-        sort_reverse = True
+        sort_reverse = False
         sorted_list = sorted(self._rows, reverse=sort_reverse)
         return [row.get_row_as_dict() for row in sorted_list]
 
@@ -71,7 +75,7 @@ class JobTable:
         self._rows = []
         for job in self._job_handler.job_list:
             db_row = JobRow(self._columns)
-            job_data_dict = job.get_data_dict_for_table_rows()
+            job_data_dict = job.get_data_dict_for_job_table_rows(self._columns)
             for column in job_data_dict:
                 db_row.add_value(column, job_data_dict[column])
             self._rows.append(db_row)

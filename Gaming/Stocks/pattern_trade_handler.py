@@ -262,11 +262,10 @@ class PatternTradeHandler:
             self.pattern_trade_dict[pattern_trade.id] = pattern_trade
             self.__print_details_after_adding_to_trade_dict__(pattern_trade, 'Add')
 
-    @staticmethod
-    def __print_details_after_adding_to_trade_dict__(pattern_trade: PatternTrade, scope: str):
+    def __print_details_after_adding_to_trade_dict__(self, pattern_trade: PatternTrade, scope: str):
         prefix = 'Adding to trade_dict' if scope == 'Add' else 'Replacing in trade_dict'
         print('{}{}...: {}'.format(prefix, pattern_trade.id_suffix, pattern_trade.id))
-        PatternLog.log_trade(pattern_trade.id_for_logging, process='Trade_Handler', process_step=scope)
+        self.sys_config.file_log.log_trade(pattern_trade.id_for_logging, process='Trade_Handler', process_step=scope)
 
     def __remove_outdated_pattern_trades_in_status_new__(self):
         # remove trades which doesn't belong to an actual pattern anymore
@@ -348,7 +347,7 @@ class PatternTradeHandler:
             pattern_trade.save_trade()
             self.sys_config.sound_machine.play_alarm_after_sell(pattern_trade.trade_result_pct)
 
-        PatternLog.log_trade(log_message='{}: {}, Result: {}'.format(
+        self.sys_config.file_log.log_trade(log_message='{}: {}, Result: {}'.format(
             pattern_trade.id_for_logging, sell_trigger, pattern_trade.trade_result_pct),
                              process='Trade_Handler', process_step='Sell')
 
@@ -372,8 +371,8 @@ class PatternTradeHandler:
         for key in deletion_key_list:
             pattern_trade = self.pattern_trade_dict[key]
             print('Removed from trade_dict ({}): {}'.format(deletion_reason, pattern_trade.get_trade_meta_data()))
-            PatternLog.log_trade('{}: {}'.format(pattern_trade.id_for_logging, deletion_reason),
-                                 process='Trade_Handler', process_step='Delete')
+            self.sys_config.file_log.log_trade('{}: {}'.format(pattern_trade.id_for_logging, deletion_reason),
+                                               process='Trade_Handler', process_step='Delete')
             if self.trade_candidate_controller.is_deletion_reason_candidate_for_black_buy_pattern_id_list(
                     pattern_trade, key):
                 self.trade_candidate_controller.add_pattern_trade_to_black_buy_trigger_list(
@@ -444,7 +443,7 @@ class PatternTradeHandler:
                                                         pattern_trade.buy_trigger, pattern_trade.trade_strategy,
                                                         ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
-        PatternLog.log_trade('{}'.format(pattern_trade.id_for_logging), process='Trade_Handler', process_step='Buy')
+        self.sys_config.file_log.log_trade('{}'.format(pattern_trade.id_for_logging), process='Trade_Handler', process_step='Buy')
         if self.trade_process == TP.ONLINE:
             order_status = pattern_trade.trade_client.buy_available(
                 ticker.ticker_id, ticker.last_price, pattern_trade.is_simulation)

@@ -390,7 +390,9 @@ class TradeTable(MyTable, PredictionFeatureTable):
                 DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_END_DT, DC.TRADE_BOX_TYPE, DC.SELL_TRIGGER, DC.TRADE_RESULT]
 
     @staticmethod
-    def get_columns_for_statistics_category() -> list:
+    def get_columns_for_statistics_category(with_trade_process=False) -> list:
+        if with_trade_process:
+            return [DC.PATTERN_TYPE, DC.TRADE_STRATEGY, DC.TRADE_PROCESS]
         return [DC.PATTERN_TYPE, DC.TRADE_STRATEGY, DC.BUY_TRIGGER, DC.SELL_TRIGGER, DC.TRADE_BOX_TYPE]
 
     @staticmethod

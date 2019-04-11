@@ -19,6 +19,7 @@ class TuttiMatcher4OriginalPrize(TuttiMatcher):
             'NEUPREIS_ADJ': [{'LOWER': 'neupreis'}, {'POS': POS.ADJ}],
             'GEKAUFT': [{'LOWER': 'gekauft'}, {'POS': POS.ADP}, {'POS': POS.NUM}],
             'CHF': [{'LOWER': 'chf'}, {'POS': POS.NUM}],
+            'CHF_PROPN': [{'LOWER': 'chf'}, {'POS': POS.PROPN}],
             'CHF_NOUN': [{'LOWER': 'chf'}, {'POS': POS.NOUN}],
             'NP': [{'LOWER': 'np'}, {'POS': POS.PUNCT}, {'POS': POS.NUM}],  # NP: 2800.- 18 Stk vorhanden
         }
@@ -29,8 +30,10 @@ class TuttiMatcher4OriginalPrize(TuttiMatcher):
             'NEUPREIS': {'Rückenlehne verstellbar Neupreis 2300.- gestern': 2300},
             'NEUPREIS_ADJ': {'Neupreis 1234.- 18 Stk vorhanden': 1234},
             'GEKAUFT': {'gekauft für 1000.- 18 Stk vorhanden': 1000},
-            'CHF': {'CHF 245.- war Neupreis': 245},
-            'CHF_NOUN': {'CHF 34.- war Neupreis': 34},
+            'CHF': {'CHF 245.- war Neupreis': 245,
+                    'Neupreis gemäss Vitra-Homepage: CHF 3858.-': 3858},
+            'CHF_PROPN': {'CHF 34.- war Neupreis': 34},
+            'CHF_NOUN': {'CHF 32.- war Neupreis': 32},
             'NP': {'Topstühle! NP: 2800.- 18 Stk vorhanden': 2800},
         }
 

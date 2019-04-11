@@ -16,7 +16,7 @@ import datetime as dt
 import json
 from pattern_dash.pattern_shapes import MyPolygonShape, MyCircleShape, MyLineShape
 from sertl_analytics.myconstants import MyAPPS
-from pattern_dash.my_dash_base import MyDashBase
+from pattern_dash.my_dash_base_tab_for_pattern import MyDashBase
 from pattern_sound.pattern_sound_machine import PatternSoundMachine
 
 """

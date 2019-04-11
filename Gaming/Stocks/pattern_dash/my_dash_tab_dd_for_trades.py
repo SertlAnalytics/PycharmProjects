@@ -6,7 +6,7 @@ Date: 2018-10-03
 """
 
 from sertl_analytics.constants.pattern_constants import BT, TSTR, TP
-from pattern_dash.my_dash_components import DropDownHandler
+from sertl_analytics.mydash.my_dash_components import DropDownHandler
 
 
 class TDD:  # Trades Drop Down

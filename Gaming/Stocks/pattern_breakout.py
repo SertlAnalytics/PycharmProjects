@@ -33,12 +33,12 @@ class PatternBreakout:
         self.breakout_date = self.tick_breakout.date
         self.volume_change_pct = MyMath.divide(self.tick_breakout.volume, self.tick_previous.volume, 2, 0)
         self.tolerance_pct = self.constraints.tolerance_pct
-        self.bound_upper = round(self.function_cont.get_upper_value(self.tick_breakout.f_var), 2)
-        self.bound_lower = round(self.function_cont.get_lower_value(self.tick_breakout.f_var), 2)
-        self.pattern_breadth = round(self.bound_upper - self.bound_lower, 2)
-        self.tolerance_range = round(self.pattern_breadth * self.tolerance_pct, 2)
-        self.limit_upper = round(self.bound_upper + self.tolerance_range, 2)
-        self.limit_lower = round(self.bound_lower - self.tolerance_range, 2)
+        self.bound_upper = MyMath.round_smart(self.function_cont.get_upper_value(self.tick_breakout.f_var))
+        self.bound_lower = MyMath.round_smart(self.function_cont.get_lower_value(self.tick_breakout.f_var))
+        self.pattern_breadth = MyMath.round_smart(self.bound_upper - self.bound_lower)
+        self.tolerance_range = MyMath.round_smart(self.pattern_breadth * self.tolerance_pct)
+        self.limit_upper = MyMath.round_smart(self.bound_upper + self.tolerance_range)
+        self.limit_lower = MyMath.round_smart(self.bound_lower - self.tolerance_range)
         self.breakout_direction = self.__get_breakout_direction__()
         self.sign = 1 if self.breakout_direction == FD.ASC else -1
         self.check_dict = {}

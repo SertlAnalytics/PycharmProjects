@@ -2,55 +2,146 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f337eff7-2e2d-415d-b4ab-cf8d55a29aa3" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_doc_span_token.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_matcher_by_pattern.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_models_and_rules.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_processing_pipelines.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_run_examples.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_scaling_and_performance.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_semantic_similarity.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_training_models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_training_models_best_practices.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_vocab_lexemes_stringstore.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_function_name_test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/.idea/Salesman.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/run_tutti_process.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/tutti.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/constants/my_constants.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/constants/salesman_constants.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mydash/my_dash_base.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mydash/my_dash_base_tab.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mydash/my_dash_color_handler.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/myfilelog.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/myhtml.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/processes/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/processes/my_job.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/processes/my_job_result.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/processes/my_job_runtime.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/processes/my_process.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/processes/my_process_manager.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/my_test_case.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_jobs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_logging/pattern_log_comment.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_process.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/test_pattern_job.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_colors.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_for_salesman.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_header_tables.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_interface_for_salesman.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_job_handler.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_jobs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_jobs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_log.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_tutti.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_jobs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_log.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_tutti.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_table_for_jobs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_table_for_log.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_table_for_tutti.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/run_salesman_with_dash.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/salesman_colors.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/run_create_salesman_table.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_access_entity.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_access_layer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_data_provider.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_database_updater.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_db.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_tables.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_views.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_logging/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_logging/salesman_debugger.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_logging/salesman_log.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_logging/salesman_log_comment.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_job.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_job_result.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_process.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_process_manager.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_scheduler.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_buy.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_fibonacci.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_new_pattern.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_sell_nok.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_sell_ok.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_touchpoint.wav" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/salesman_sound_machine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_system_configuration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/testing/test_salesman_log.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/pattern_constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/datafetcher/database_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/datafetcher/database_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exchanges/bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/exchanges/bitfinex.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exchanges/exchange_cls.py" beforeDir="false" afterPath="$PROJECT_DIR$/exchanges/exchange_cls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyurl/url_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyurl/url_process.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Courses/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Courses/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/myconstants.py" beforeDir="false" afterPath="$PROJECT_DIR$/myconstants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/mymath.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Courses/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Courses/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Courses/DC_Spacy/a_token.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Courses/DC_spaCy/spacy_basics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_breakout.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_base_tab_for_pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_components.py" beforeDir="false" afterPath="$PROJECT_DIR$/mydash/my_dash_components.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_configuration_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_configuration_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_for_nasdaq.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_for_nasdaq.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_header_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_header_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_interface_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_interface_for_pattern.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_plotter_for_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_plotter_for_statistics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_replay_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_replay_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_button_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_button_for_trades.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_configuration.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_jobs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_log.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_portfolio.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_portfolio.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_recommender.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_recommender.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_statistics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_trades.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_waves.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_waves.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_configuration.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_access_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_access_layer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_jobs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_portfolio.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_portfolio.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_recommender.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_recommender.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_asset.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_asset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_trades.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_waves.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_waves.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_table_for_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_table_for_jobs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/pattern_shapes.py" beforeDir="false" afterPath="$PROJECT_DIR$/mydash/my_dash_shapes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_dictionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_dictionary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_provider.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_provider.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_create_stock_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_create_stock_table.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_detector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_function_container.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_function_container.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_logging/pattern_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_logging/pattern_log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_part.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_part.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_plotting/pattern_plotter.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_plotting/pattern_plotter.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_process_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_process_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_job.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_job.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_job_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_job_result.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_logging_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_logging_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_box.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/World_Cup_2018/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/World_Cup_2018/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_number.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_number.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_original_price.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_original_price.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_size.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_size.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/testing/run_tutti_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/testing/test_search_in_backend.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_browser.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_browser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_named_entity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_offer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_offer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_spacy.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_spacy.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -64,17 +155,17 @@
       <file leaf-file-name="run_test_from_factory.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="6" selection-start-line="6" selection-end-line="6" />
+            <state relative-caret-position="221">
+              <caret line="13" column="38" selection-start-line="13" selection-start-column="38" selection-end-line="13" selection-end-column="38" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="bitfinex.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
+      <file leaf-file-name="pattern_constants.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/constants/pattern_constants.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="12" column="13" lean-forward="true" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
+            <state relative-caret-position="704">
+              <caret line="581" lean-forward="true" selection-start-line="581" selection-end-line="581" />
             </state>
           </provider>
         </entry>
@@ -127,12 +218,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/__init__.py" />
-        <option value="$PROJECT_DIR$/myprofiler.py" />
-        <option value="$PROJECT_DIR$/myexceptions.py" />
-        <option value="$PROJECT_DIR$/MyBokeh/basics.py" />
-        <option value="$PROJECT_DIR$/MyBokeh/server.py" />
-        <option value="$PROJECT_DIR$/MyBokeh/server_streaming.py" />
         <option value="$PROJECT_DIR$/mystring.py" />
         <option value="$PROJECT_DIR$/pybase/df_base.py" />
         <option value="$PROJECT_DIR$/mycache.py" />
@@ -168,12 +253,28 @@
         <option value="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" />
         <option value="$PROJECT_DIR$/exchanges/exchange_cls.py" />
         <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
+        <option value="$PROJECT_DIR$/mytestcase.py" />
+        <option value="$PROJECT_DIR$/myhtml.py" />
+        <option value="$PROJECT_DIR$/mydash/my_dash_colors.py" />
+        <option value="$PROJECT_DIR$/mydash/my_dash_color_handler.py" />
+        <option value="$PROJECT_DIR$/mydash/my_dash_base_tab.py" />
+        <option value="$PROJECT_DIR$/mydash/my_dash_base.py" />
+        <option value="$PROJECT_DIR$/myfilelog.py" />
+        <option value="$PROJECT_DIR$/mypasswords.py" />
+        <option value="$PROJECT_DIR$/constants/salesman_constants.py" />
+        <option value="$PROJECT_DIR$/processes/my_job_runtime.py" />
+        <option value="$PROJECT_DIR$/processes/my_job_result.py" />
+        <option value="$PROJECT_DIR$/processes/my_job.py" />
+        <option value="$PROJECT_DIR$/processes/my_process_manager.py" />
+        <option value="$PROJECT_DIR$/constants/my_constants.py" />
+        <option value="$PROJECT_DIR$/processes/my_process.py" />
+        <option value="$PROJECT_DIR$/constants/pattern_constants.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1268" />
-    <option name="width" value="1299" />
+    <option name="x" value="1273" />
+    <option name="width" value="1294" />
     <option name="height" value="1407" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -192,7 +293,66 @@
             </path>
             <path>
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="constants" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="processes" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.6 &gt;" type="70bed36:NamedLibraryElementNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.6 &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.6 &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.6 &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="constants" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.6 &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="processes" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="&lt; Python 3.6 &gt;" type="70bed36:NamedLibraryElementNode" />
+              <item name="BaseFunctions" type="462c0819:PsiDirectoryNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -205,15 +365,16 @@
     <property name="settings.editor.selected.configurable" value="vcs.Git" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
+    <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\test" />
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\datafetcher" />
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\models" />
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\exchanges" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
     </key>
-    <key name="MoveFile.RECENT_KEYS">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\constants" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\processes" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\mydash" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\test" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -330,16 +491,16 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1268" y="0" width="1299" height="1407" extended-state="0" />
+    <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.48313725" visible="true" weight="0.24900873" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.47764707" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.477707" side_tool="true" weight="0.32784313" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.522293" weight="0.5294118" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49761146" weight="0.32784313" />
-      <window_info id="Structure" order="1" sideWeight="0.51686275" side_tool="true" visible="true" weight="0.24900873" />
+      <window_info id="Structure" order="1" sideWeight="0.52235293" side_tool="true" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.70616496" weight="0.24078432" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49761146" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -431,139 +592,10 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="33" />
+      <option name="time" value="34" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/plotter/plotting_examples.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="10829">
-          <caret line="655" lean-forward="true" selection-start-line="655" selection-end-line="655" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/plotter/plotting_examples.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/mycache.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="731">
-          <caret line="43" column="49" lean-forward="true" selection-start-line="43" selection-start-column="49" selection-end-line="43" selection-end-column="49" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/datafetcher/data_fetcher_cache.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="27" selection-start-line="27" selection-end-line="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pybase/df_base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="33" column="45" selection-start-line="33" selection-start-column="45" selection-end-line="33" selection-end-column="45" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/searches/smart_searches.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="40" selection-start-column="40" selection-end-column="40" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pybase/loop_list.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="39" column="24" selection-start-line="39" selection-start-column="24" selection-end-line="39" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/user_input/confirmation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="18" column="13" lean-forward="true" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/ibapi-9.73.7-py3.6.egg!/ibapi/wrapper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="309">
-          <caret line="398" lean-forward="true" selection-start-line="398" selection-end-line="398" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/ibapi-9.73.7-py3.6.egg!/ibapi/common.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-489">
-          <caret line="44" column="6" selection-start-line="44" selection-start-column="6" selection-end-line="44" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/ibapi-9.73.7-py3.6.egg!/ibapi/client.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="590">
-          <caret line="2189" lean-forward="true" selection-start-line="2189" selection-end-line="2191" selection-end-column="100" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/ibapi-9.73.7-py3.6.egg!/ibapi/contract.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="59" column="8" selection-start-line="59" selection-start-column="8" selection-end-line="59" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/constants/pattern_constants.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3808">
-          <caret line="224" selection-start-line="224" selection-end-line="224" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/roc_auc_score_multi.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="11" selection-start-line="11" selection-end-line="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/performance_measure.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="184">
-          <caret line="47" column="81" selection-start-line="47" selection-start-column="81" selection-end-line="47" selection-end-column="81" />
-          <folding>
-            <element signature="e#179#197#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/models/learning_machine_factory.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="13" lean-forward="true" selection-start-line="13" selection-end-line="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/site-packages/sklearn/model_selection/_validation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="278">
-          <caret line="570" column="57" selection-start-line="570" selection-start-column="57" selection-end-line="570" selection-end-column="57" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/models/nn_collector.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="777">
@@ -772,13 +804,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/my_test_abc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="23" selection-start-line="23" selection-end-line="23" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test/test_factory.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="442">
@@ -789,13 +814,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" selection-start-line="6" selection-end-line="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1030">
@@ -803,10 +821,162 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test/my_test_case.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="442">
+          <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
       <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="6" selection-end-column="3" />
+          <folding>
+            <element signature="e#287#325#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/my_test_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="23" selection-start-line="23" selection-end-line="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mydash/my_dash_components.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="714">
+          <caret line="519" column="29" lean-forward="true" selection-start-line="519" selection-start-column="29" selection-end-line="519" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mydash/my_dash_color_handler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" selection-start-line="6" selection-end-line="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mydash/my_dash_base_tab.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" column="31" lean-forward="true" selection-start-line="17" selection-start-column="31" selection-end-line="17" selection-end-column="31" />
+          <folding>
+            <element signature="e#165#186#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mydash/my_dash_base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="731">
+          <caret line="43" column="33" lean-forward="true" selection-start-line="43" selection-start-column="33" selection-end-line="43" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/myhtml.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" column="52" selection-start-line="4" selection-start-column="52" selection-end-line="4" selection-end-column="52" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/myfilelog.py">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
-          <caret line="12" column="13" lean-forward="true" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
+          <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mydash/my_dash_shapes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-136">
+          <caret line="11" column="14" lean-forward="true" selection-start-line="11" selection-start-column="14" selection-end-line="11" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/constants/salesman_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="680">
+          <caret line="40" column="8" selection-start-line="40" selection-start-column="8" selection-end-line="40" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mypasswords.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="408">
+          <caret line="24" column="58" selection-start-line="24" selection-start-column="58" selection-end-line="24" selection-end-column="58" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/processes/my_job_runtime.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" selection-start-line="8" selection-end-line="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/processes/my_job_result.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="3" lean-forward="true" selection-start-line="5" selection-start-column="3" selection-end-line="5" selection-end-column="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/constants/my_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" selection-start-line="12" selection-end-line="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/processes/my_job.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="65" column="31" selection-start-line="65" selection-start-column="31" selection-end-line="65" selection-end-column="31" />
+          <folding>
+            <element signature="e#163#233#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/processes/my_process_manager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" lean-forward="true" selection-start-line="6" selection-end-line="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/processes/my_process.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1805">
+          <caret line="145" lean-forward="true" selection-start-line="145" selection-end-line="145" />
+          <folding>
+            <element signature="e#189#244#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="13" column="38" selection-start-line="13" selection-start-column="38" selection-end-line="13" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/constants/pattern_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="704">
+          <caret line="581" lean-forward="true" selection-start-line="581" selection-end-line="581" />
         </state>
       </provider>
     </entry>

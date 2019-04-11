@@ -6,30 +6,29 @@ Date: 2018-11-14
 """
 
 from dash.dependencies import Input, Output, State
-from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLTabLogHeaderTable
 from pattern_dash.my_dash_tab_dd_for_log import LogTabDropDownHandler, LOGDD
 from pattern_detection_controller import PatternDetectionController
-from pattern_trade_handler import PatternTradeHandler
 from pattern_database.stock_access_layer import AccessLayer4Process, AccessLayer4Wave, AccessLayer4Pattern
 from dash import Dash
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import LOGT, LOGDC, DC, PRDC, DTRG
-from pattern_logging.pattern_log import PatternLog
+from pattern_logging.pattern_log_comment import LogComment
 from pattern_news_handler import NewsHandler
 from pattern_dash.my_dash_tab_table_for_log import LogTable
 import pandas as pd
 import os
 
 
-class MyDashTab4Log(MyDashBaseTab):
+class MyDashTab4Log(MyPatternDashBaseTab):
     _data_table_name = 'my_log_table'
     _data_table_div = '{}_div'.format(_data_table_name)
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self.__init_dash_element_ids__()
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.exchange_config = self.sys_config.exchange_config
@@ -40,7 +39,7 @@ class MyDashTab4Log(MyDashBaseTab):
         self._access_layer_wave = AccessLayer4Wave(self.sys_config.db_stock)
         self._access_layer_pattern = AccessLayer4Pattern(self.sys_config.db_stock)
         self.__fill_log_data_frame_dict__()
-        self._selected_log_type = LOGT.PATTERN_LOG
+        self._selected_log_type = LOGT.MESSAGE_LOG
         self._selected_process = ''
         self._selected_process_step = ''
         self._selected_date_range = DTRG.TODAY
@@ -131,7 +130,7 @@ class MyDashTab4Log(MyDashBaseTab):
         def callback(n_intervals: int):
             if log_type == LOGT.get_first_log_type_for_processing():  # for each cycle we update the lists once
                 self.__fill_log_data_frame_dict__()
-                print('Update log dataframes for {}'.format(log_type))
+                print('Update file_log dataframes for {}'.format(log_type))
             return self.__get_log_entry_numbers_for_log_type__(log_type, actual_day)
         return callback
 
@@ -194,7 +193,7 @@ class MyDashTab4Log(MyDashBaseTab):
                 self.__fill_log_data_frame_dict_by_file__(log_types)
 
     def __fill_log_data_frame_dict_by_file__(self, log_type: str):
-        file_path = PatternLog.get_file_path_for_log_type(log_type)
+        file_path = self.sys_config.file_log.get_file_path_for_log_type(log_type)
         if file_path == '':
             return
         if os.path.getsize(file_path) == 0:
@@ -204,7 +203,44 @@ class MyDashTab4Log(MyDashBaseTab):
             columns = self.__get_columns_for_log_type__(log_type)
             if len(columns) > 0:
                 df.columns = columns
+                df = self.__get_adjusted_log_data_frame__(df, log_type)
             self._log_data_frame_dict[log_type] = df
+
+    def __get_adjusted_log_data_frame__(self, df: pd.DataFrame, log_type: str):
+        if log_type == LOGT.TRADES:
+            df[LOGDC.SYMBOL] = df[LOGDC.COMMENT].apply(self.__get_symbol_from_comment__)
+            df[LOGDC.PATTERN] = df[LOGDC.COMMENT].apply(self.__get_pattern_type_from_comment__)
+            df[LOGDC.TRADE_TYPE] = df[LOGDC.COMMENT].apply(self.__get_simulation_flag_from_comment__)
+            df[LOGDC.RESULT] = df[LOGDC.COMMENT].apply(self.__get_result_from_comment__)
+            df[LOGDC.START] = df[LOGDC.COMMENT].apply(self.__get_start_from_comment__)
+            df[LOGDC.END] = df[LOGDC.COMMENT].apply(self.__get_end_from_comment__)
+            df = df[[LOGDC.DATE, LOGDC.TIME, LOGDC.PROCESS_STEP, LOGDC.SYMBOL, LOGDC.PATTERN, LOGDC.TRADE_TYPE,
+                     LOGDC.RESULT, LOGDC.START, LOGDC.END, LOGDC.COMMENT, LOGDC.PROCESS]]
+        return df
+
+    @staticmethod
+    def __get_symbol_from_comment__(comment: str):
+        return LogComment(comment).get_value_for_log_column(LOGDC.SYMBOL)
+
+    @staticmethod
+    def __get_pattern_type_from_comment__(comment: str):
+        return LogComment(comment).get_value_for_log_column(LOGDC.PATTERN)
+
+    @staticmethod
+    def __get_start_from_comment__(comment: str):
+        return LogComment(comment).get_value_for_log_column(LOGDC.START)
+
+    @staticmethod
+    def __get_end_from_comment__(comment: str):
+        return LogComment(comment).get_value_for_log_column(LOGDC.END)
+
+    @staticmethod
+    def __get_simulation_flag_from_comment__(comment: str):
+        return LogComment(comment).get_value_for_log_column(LOGDC.TRADE_TYPE)
+
+    @staticmethod
+    def __get_result_from_comment__(comment: str):
+        return LogComment(comment).get_value_for_log_column(LOGDC.RESULT)
 
     def __get_log_entry_numbers_for_log_type__(self, log_type: str, actual_day=True):
         today_str = MyDate.get_date_as_string_from_date_time()
@@ -232,6 +268,6 @@ class MyDashTab4Log(MyDashBaseTab):
     @staticmethod
     def __get_columns_for_log_type__(log_type: str) -> list:
         # Example: Scheduler: 2019-02-24,00:10:24,Scheduler,Start,__check_scheduled_jobs__
-        if log_type in [LOGT.ERRORS, LOGT.SCHEDULER, LOGT.PATTERN_LOG, LOGT.TRADES]:
+        if log_type in [LOGT.ERRORS, LOGT.SCHEDULER, LOGT.MESSAGE_LOG, LOGT.TRADES]:
             return [LOGDC.DATE, LOGDC.TIME, LOGDC.PROCESS, LOGDC.PROCESS_STEP, LOGDC.COMMENT]
         return []

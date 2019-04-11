@@ -16,19 +16,19 @@ from sertl_analytics.constants.pattern_constants import BT, PRD, INDICES
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
 from pattern_dash.my_dash_tools import MyGraphCache, MyDashStateHandler, MyGraphCacheObjectApi
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi
 from pattern_dash.my_dash_tab_dd_for_pattern import PatternTabDropDownHandler, PDD
 from pattern_dash.my_dash_header_tables import MyHTMLTabPatternHeaderTable
 from pattern_trade_handler import PatternTradeHandler
 from textwrap import dedent
-from pattern_dash.my_dash_base import MyDashBaseTab, Dash
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab, Dash
 from pattern_dash.my_dash_configuration_tables import MyHTMLSystemConfigurationTable
 from sertl_analytics.mydates import MyDate
 
 
-class MyDashTab4Pattern(MyDashBaseTab):
+class MyDashTab4Pattern(MyPatternDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self.bitfinex_config = self.sys_config.exchange_config
         self.trade_handler_online = trade_handler_online
         self.sys_config_second = sys_config.get_semi_deep_copy()

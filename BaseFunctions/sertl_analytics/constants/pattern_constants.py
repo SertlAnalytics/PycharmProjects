@@ -17,13 +17,14 @@ class PPR:  # PatternProcesses
     UPDATE_WAVE_DAILY = 'Update_Wave_Daily'
     DELETE_DUPLICATE_RECORDS_IN_TABLES = 'Delete_Duplicate_Records_in_Tables'
     UPDATE_EQUITY_DATA = 'Update_Equity_Data'
-    UPDATE_STOCK_DATA_DAILY = 'Update_Stock_Data_Daily'
+    UPDATE_STOCK_DATA_DAILY_CRYPTO = 'Update_Stock_Data_Daily_Crypto'
+    UPDATE_STOCK_DATA_DAILY_SHARES = 'Update_Stock_Data_Daily_Shares'
+    UPDATE_STOCK_DATA_DAILY_CCY = 'Update_Stock_Data_Daily_Currencies'
     UPDATE_HEATMAP_IN_WAVE_TAB = 'Update_Heatmap_in_Wave_Tab'
     UPDATE_CLASS_METRICS_FOR_PREDICTOR_AND_LABEL = 'Update_Class_Metrics_For_Predictor_and_Label'
     UPDATE_TRADE_POLICY_METRIC = 'Update_Trade_Policy_Metric'
     UPDATE_TRADE_RECORDS = 'Update_Trade_Records'
     UPDATE_PREDICTORS = 'Update_Predictors'
-    RUN_UNDEFINED_PROCESS = 'Run_Undefined_Process'
 
 
 class TFOP:
@@ -216,6 +217,7 @@ class CHT:  # chart type
     SCATTER = 'Scatter'
     AREA_WINNER_LOSER = 'Area winner and losers'
     PREDICTOR = 'Predictor'
+    MY_TRADES = 'My Trades'
     AREA = 'Area'
     BAR = 'Bar'
     LINE = 'Line'
@@ -243,7 +245,7 @@ class CHT:  # chart type
 
     @staticmethod
     def get_all():
-        li = [CHT.SCATTER, CHT.AREA_WINNER_LOSER, CHT.PREDICTOR_PIE,
+        li = [CHT.SCATTER, CHT.MY_TRADES, CHT.AREA_WINNER_LOSER, CHT.PREDICTOR_PIE,
               CHT.BAR, CHT.LINE, CHT.AREA, CHT.HEAT_MAP, CHT.TABLE, CHT.CONTOUR, CHT.PIE, CHT.D3_SCATTER,
               CHT.D3_LINE, CHT.D3_SURFACE, CHT.BOX, CHT.VIOLINE, CHT.HISTOGRAM, CHT.D2_CONTOUR_HISTOGRAM,
               CHT.POLAR_SCATTER]
@@ -251,7 +253,7 @@ class CHT:  # chart type
 
     @staticmethod
     def get_chart_types_for_trade_statistics():
-        return [CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PREDICTOR, CHT.PIE]
+        return [CHT.MY_TRADES, CHT.AREA_WINNER_LOSER, CHT.SCATTER, CHT.PREDICTOR, CHT.PIE]
 
     @staticmethod
     def get_chart_types_for_pattern_statistics():
@@ -565,19 +567,18 @@ class LOGT:  # Log Types (corresponds with the columns in the overview table for
     ERRORS = 'errors'
     PROCESSES = 'processes'
     SCHEDULER = 'scheduler'
-    PATTERN_LOG = 'pattern_log'
+    MESSAGE_LOG = 'message_log'
     PATTERNS = 'patterns'
     WAVES = 'waves'
     TRADES = 'trades'
 
     @staticmethod
     def get_log_types_for_processing():
-        return [LOGT.ERRORS, LOGT.PROCESSES, LOGT.SCHEDULER, LOGT.PATTERN_LOG, LOGT.PATTERNS, LOGT.WAVES, LOGT.TRADES]
+        return [LOGT.ERRORS, LOGT.PROCESSES, LOGT.SCHEDULER, LOGT.MESSAGE_LOG, LOGT.PATTERNS, LOGT.WAVES, LOGT.TRADES]
 
     @staticmethod
     def get_first_log_type_for_processing():
         return LOGT.get_log_types_for_processing()[0]
-
 
 
 class WAVEST:  # Waves Types (corresponds with the columns in the overview table for waves
@@ -622,6 +623,14 @@ class LOGDC:  # Log data columns
     PROCESS = 'Process'
     PROCESS_STEP = 'Process Step'
     COMMENT = 'Comment'
+    # These are artificial columns
+    STRATEGY = 'Strategy'
+    PATTERN = 'Pattern'
+    SYMBOL = 'Symbol'
+    TRADE_TYPE = 'Trade type'
+    RESULT = 'Result'
+    START = 'Start'
+    END = 'End'
 
 
 class SCORING:
@@ -1307,3 +1316,8 @@ class JDC:  # Jobs data column
     def get_all():
         return [JDC.NAME, JDC.PERIOD, JDC.WEEKDAYS, JDC.START_TIMES,
                 JDC.NEXT_START_TIME, JDC.LAST_RUN, JDC.LAST_RUN_TIME, JDC.PROCESSED]
+
+    @staticmethod
+    def get_columns_for_job_table():
+        return [JDC.NAME, JDC.START_TIMES, JDC.NEXT_START_TIME, JDC.LAST_RUN, JDC.LAST_RUN_TIME,
+                JDC.PROCESSED, JDC.WEEKDAYS]

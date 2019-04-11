@@ -9,10 +9,10 @@ from dash.dependencies import Input, Output, State
 from datetime import datetime
 import json
 from sertl_analytics.myconstants import MyAPPS
-from pattern_dash.my_dash_base import MyDashBase
+from sertl_analytics.mydash.my_dash_base import MyDashBase
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
-from pattern_dash.my_dash_components import MyDCC, MyHTML
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLHeaderTable
 from pattern_dash.my_dash_tab_for_pattern import MyDashTab4Pattern
 from pattern_dash.my_dash_tab_for_trades import MyDashTab4Trades

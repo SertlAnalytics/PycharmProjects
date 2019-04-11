@@ -30,6 +30,7 @@ from fibonacci.fibonacci_wave_data import FibonacciWaveDataHandler
 
 class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
+        self.file_log = PatternLog()
         self.runtime_config = RuntimeConfiguration()
         self.crypto_config = BitfinexConfiguration()
         self.exchange_config = self.crypto_config
@@ -205,6 +206,7 @@ class SystemConfiguration:
         sys_config_copy = SystemConfiguration(True)
         sys_config_copy.config = deepcopy(self.config)  # we change save modes... ToDo ???
         sys_config_copy.exchange_config = deepcopy(self.exchange_config)  # we change the simulation mode... ToDo ???
+        sys_config_copy.file_log = self.file_log
         sys_config_copy.process_manager = self.process_manager
         sys_config_copy.index_config = self.index_config
         sys_config_copy.pattern_table = self.pattern_table

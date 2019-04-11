@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-01-17
 """
 
-from pattern_scheduling.pattern_job import MyPatternJob
+from sertl_analytics.processes.my_job import MyJob
 from sertl_analytics.mydates import MyDate
 from pattern_logging.pattern_log import PatternLog
 from pattern_process_manager import PatternProcessManager
@@ -28,7 +28,7 @@ class MyPatternScheduler:
     def last_run_date_time(self):
         return self._last_run_date_time
 
-    def add_job(self, scheduled_job: MyPatternJob):
+    def add_job(self, scheduled_job: MyJob):
         print('add_job: {} - start_time={}'.format(scheduled_job.job_name, scheduled_job.start_time))
         scheduled_job.process = self._process_manager.get_process_by_name(scheduled_job.process_name)
         scheduled_job.for_test = self._for_test
@@ -37,7 +37,7 @@ class MyPatternScheduler:
     def check_tasks(self):
         date_time_str = MyDate.get_date_time_as_string_from_date_time()
         if not self._for_test:
-            PatternLog.log_scheduler_process('__check_scheduled_jobs__', process='Scheduler', process_step='Start')
+            PatternLog().log_scheduler_process('__check_scheduled_jobs__', process='Scheduler', process_step='Start')
         print("{}: Checking for scheduled tasks at {}".format(self._process, date_time_str))
         if self._last_run_time_stamp is not None:
             for job in self._job_list:

@@ -8,12 +8,9 @@ Date: 2018-06-17
 import colorlover as cl
 from dash import Dash
 import pandas as pd
-import dash_auth
-from sertl_analytics.mypasswords import MyPasswordHandler
-import base64
-import flask
+from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, DccGraphApi
+from sertl_analytics.mydash.my_dash_components import MyDCC, DccGraphApi
 from sertl_analytics.constants.pattern_constants import CN, PRD, FD, INDI, INDICES, WAVEST
 from sertl_analytics.mydates import MyDate
 from pattern_detector import PatternDetector
@@ -24,15 +21,11 @@ from pattern_news_handler import NewsHandler
 from pattern_wave_tick import WaveTickList, WaveTick
 
 
-class MyDashBaseTab:
+class MyPatternDashBaseTab(MyDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
-        self.app = app
+        MyDashBaseTab.__init__(self, app)
         self.sys_config = sys_config
-        self._color_handler = PatternColorHandler()
         self._news_handler = self.__get_news_handler__()
-        self._time_stamp_last_refresh = MyDate.time_stamp_now()
-        self._dd_handler = None
-        self._button_handler = None
         self._fibonacci_wave_data_handler = sys_config.fibonacci_wave_data_handler
 
     def init_callbacks(self):
@@ -40,6 +33,9 @@ class MyDashBaseTab:
 
     def get_div_for_tab(self):
         pass
+
+    def __get_color_handler__(self):
+        return PatternColorHandler()
 
     @staticmethod
     def __get_news_handler__():
@@ -189,57 +185,4 @@ class MyDashBaseTab:
         upper_band = rolling_mean + (rolling_std * num_of_std)
         lower_band = rolling_mean - (rolling_std * num_of_std)
         return [rolling_mean, upper_band, lower_band]
-
-
-class MyDashBase:
-    def __init__(self, app_dict: dict):
-        print(app_dict)
-        self.app_name = app_dict['name']
-        self.app = Dash()
-        self.app.title = app_dict['key']
-        self.app.config.suppress_callback_exceptions = True
-        self.auth = dash_auth.BasicAuth(self.app, MyPasswordHandler.get_pw_list(self.app_name))
-        self._user_name = ''  # can only be filled AFTER a HTTP request - see below...
-        if __name__ != '__main__':
-            self.server = self.app.server
-
-    @staticmethod
-    def _get_user_name_():
-        header = flask.request.headers.get('Authorization', None)
-        if not header:
-            return ''
-        username_password = base64.b64decode(header.split('Basic ')[1])
-        username_password_utf8 = username_password.decode('utf-8')
-        username, password = username_password_utf8.split(':')
-        return username
-
-    def start_app(self):
-        print('get_anything...')
-        self.__set_app_layout__()
-        self.__init_interval_callback__()
-        self.__init_hover_over_callback__()
-        self.__init_update_graph_callback__()
-
-    @staticmethod
-    def __get_bollinger_band_values__(price_df: pd.DataFrame, window_size=10, num_of_std=5):
-        rolling_mean = price_df.rolling(window=window_size).mean()
-        rolling_std = price_df.rolling(window=window_size).std()
-        upper_band = rolling_mean + (rolling_std * num_of_std)
-        lower_band = rolling_mean - (rolling_std * num_of_std)
-        return [rolling_mean, upper_band, lower_band]
-
-    def __set_app_layout__(self):
-        pass
-
-    def run_on_server(self):
-        self.app.run_server()
-
-    def __init_update_graph_callback__(self):
-        pass
-
-    def __init_hover_over_callback__(self):
-        pass
-
-    def __init_interval_callback__(self):
-        pass
 

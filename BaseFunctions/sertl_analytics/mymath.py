@@ -248,6 +248,7 @@ class MyMath:
     def get_float_for_string(value_str: str, delimiter='.'):
         value_str = value_str.replace("'", "")  # remove thousand separators
         value_str = value_str.replace("-", "")  # remove -- signs
+        value_str = value_str.replace(" ", "")  # remove spaces
         if value_str == '':
             return 0
         if value_str[-1] == delimiter:

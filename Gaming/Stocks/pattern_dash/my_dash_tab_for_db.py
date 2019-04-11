@@ -7,9 +7,9 @@ Date: 2019-03-06
 
 from dash.dependencies import Input, Output, State
 from sertl_analytics.mydates import MyDate
-from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from pattern_dash.my_dash_tab_dd_for_db import DBDD, DBTabDropDownHandler
 from pattern_detection_controller import PatternDetectionController
 from pattern_database.stock_access_layer import AccessLayer4Process, AccessLayer4Wave, AccessLayer4Pattern
@@ -19,12 +19,12 @@ from pattern_news_handler import NewsHandler
 from pattern_dash.my_dash_tab_table_for_db import DBTable
 
 
-class MyDashTab4DB(MyDashBaseTab):
+class MyDashTab4DB(MyPatternDashBaseTab):
     _data_table_name = 'my_db_table'
     _data_table_div = '{}_div'.format(_data_table_name)
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self.__init_dash_element_ids__()
         self.sys_config = sys_config
         self._db = self.sys_config.db_stock

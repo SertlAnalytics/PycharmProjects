@@ -8,7 +8,7 @@ Date: 2018-10-03
 from sertl_analytics.constants.pattern_constants import LOGT, WAVEST, INDICES
 from datetime import datetime
 from sertl_analytics.mydates import MyDate
-from pattern_dash.my_dash_components import MyHTMLTable, COLORS, MyHTML, MyDCC
+from sertl_analytics.mydash.my_dash_components import MyHTMLTable, COLORS, MyHTML, MyDCC
 
 
 class MyHTMLHeaderTable(MyHTMLTable):
@@ -187,7 +187,7 @@ class MyHTMLTabLogHeaderTable(MyHTMLTabHeaderTable):
                 LOGT.ERRORS: 'Errors',
                 LOGT.PROCESSES: 'Processes',
                 LOGT.SCHEDULER: 'Scheduler',
-                LOGT.PATTERN_LOG: 'Pattern log',
+                LOGT.MESSAGE_LOG: 'Pattern file_log',
                 LOGT.PATTERNS: 'Pattern',
                 LOGT.WAVES: 'Waves',
                 LOGT.TRADES: 'Trades (add/buy)'}
@@ -261,16 +261,25 @@ class MyHTMLTabTradeStatisticsHeaderTable(MyHTMLTabHeaderTable):
     def _init_cells_(self):
         chart_label_div = MyHTML.div('my_trade_statistics_chart_type_label_div', 'Chart:', True)
         chart_div = MyHTML.div('my_trade_statistics_chart_type_div', '', False)
+
         statistics_label_div = MyHTML.div('my_trade_statistics_label_div', 'Trades:', True)
         statistics_div = MyHTML.div('my_trade_statistics_div', '0 (+0/-0)')
         statistics_summary_div = MyHTML.div_embedded([statistics_label_div, MyHTML.span(' '), statistics_div])
-        statistics_detail_label_div = MyHTML.div('my_trade_statistics_detail_label_div', 'Type:', True)
-        statistics_detail_div = MyHTML.div('my_trade_statistics_detail_div', '0')
-        statistics_detail_summary_div = MyHTML.div_embedded([statistics_detail_label_div, MyHTML.span(' '),
-                                                             statistics_detail_div])
+
+        my_trades_number_label_div = MyHTML.div('my_trades_number_label_div', 'Trades (R/S):', True)
+        my_trades_number_div = MyHTML.div('my_trades_number_div', '0/0 0/0')
+        my_trades_number_summary_div = MyHTML.div_embedded(
+            [my_trades_number_label_div, MyHTML.span(' '), my_trades_number_div])
+
+        my_trades_mean_label_div = MyHTML.div('my_trades_mean_label_div', '...(mean %):', True)
+        my_trades_mean_div = MyHTML.div('my_trades_mean_div', '0/0 0/0')
+        my_trades_mean_summary_div = MyHTML.div_embedded(
+            [my_trades_mean_label_div, MyHTML.span(' '), my_trades_mean_div])
+
         self.set_value(1, 1, MyHTML.div_embedded([chart_label_div, MyHTML.span(' '), chart_div]))
         self.set_value(1, 2, MyDCC.markdown('my_trade_statistics_markdown'))
-        self.set_value(1, 3, MyHTML.div_embedded([statistics_summary_div, statistics_detail_summary_div]))
+        self.set_value(1, 3, MyHTML.div_embedded([statistics_summary_div, my_trades_number_summary_div,
+                                                 my_trades_mean_summary_div]))
 
 
 class MyHTMLTabAssetStatisticsHeaderTable(MyHTMLTabHeaderTable):

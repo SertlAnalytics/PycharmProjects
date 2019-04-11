@@ -6,9 +6,9 @@ Date: 2018-11-14
 """
 
 from dash.dependencies import Input, Output, State
-from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi, MyDCCGraph
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi, MyDCCGraph
 from sertl_analytics.mycache import MyCacheObjectApi, MyCache
 from pattern_dash.my_dash_tab_dd_for_waves import WaveTabDropDownHandler, WAVEDD
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Waves
@@ -23,12 +23,12 @@ from sertl_analytics.test.my_test_abc import TestInterface
 import plotly.io as pio
 
 
-class MyDashTab4Waves(MyDashBaseTab):
+class MyDashTab4Waves(MyPatternDashBaseTab):
     _data_table_name = 'my_waves_table'
     _data_table_div = '{}_div'.format(_data_table_name)
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration, color_handler: DashColorHandler):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self._process_for_head_map = sys_config.process_manager.get_process_by_name(PPR.UPDATE_HEATMAP_IN_WAVE_TAB)
         self._dd_handler = WaveTabDropDownHandler()
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)

@@ -410,7 +410,7 @@ class PatternTrade:
     def __log_problem_cases__(self, check_dict: dict, process: str):
         for key in check_dict:
             if not check_dict[key]:
-                PatternLog.log_message('{}: problem {}'.format(self.ticker_id, key), process)
+                self.sys_config.file_log.log_message('{}: problem {}'.format(self.ticker_id, key), process)
 
     def __is_precondition_for_sma_fulfilled__(self):
         if self.trade_strategy != TSTR.SMA:

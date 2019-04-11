@@ -67,7 +67,7 @@ class PatternPlotter:
                     fig, axes = plt.subplots(figsize=(15, 7))
                     self.axes_for_candlesticks = axes
 
-        # self.axes_for_candlesticks.set_yscale('log')
+        # self.axes_for_candlesticks.set_yscale('file_log')
         self.axes_for_candlesticks.set_ylim(self.__get_y_dlim_for_candlestick_plot__())
         self.__plot_candlesticks__()
         if self.sys_config.config.plot_min_max:

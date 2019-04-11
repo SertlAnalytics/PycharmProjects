@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-11-09
 """
 
-from pattern_dash.my_dash_components import MyHTMLTable, COLORS, MyHTML
+from sertl_analytics.mydash.my_dash_components import MyHTMLTable, COLORS, MyHTML
 from pattern_system_configuration import SystemConfiguration
 from pattern_configuration import PatternConfiguration
 from pattern_runtime_configuration import RuntimeConfiguration

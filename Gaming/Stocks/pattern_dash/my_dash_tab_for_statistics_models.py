@@ -16,7 +16,7 @@ from pattern_dash.my_dash_header_tables import MyHTMLTabModelsStatisticsHeaderTa
 from pattern_dash.my_dash_tab_dd_for_statistics import ModelsStatisticsDropDownHandler
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Models
 from pattern_dash.my_dash_tab_for_statistics_base import MyDashTab4StatisticsBase, DDT
-from pattern_dash.my_dash_components import MyHTML
+from sertl_analytics.mydash.my_dash_components import MyHTML
 from pattern_database.stock_database import StockDatabase
 import pandas as pd
 

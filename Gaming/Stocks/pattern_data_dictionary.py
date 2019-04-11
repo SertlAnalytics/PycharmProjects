@@ -59,9 +59,8 @@ class PatternDataDictionary(DataDictionary):
         trade_id = self._data_dict.get(DC.ID)
         for col in self.sys_config.trade_table.column_name_list:
             if col not in self._data_dict:
-                PatternLog.log_message(log_message='{}: Col {} not in _data_dict'.format(trade_id, col),
-                                       process='Save trade',
-                                       process_step='is_data_dict_ready_for_trade_table')
+                self.sys_config.file_log.log_message(log_message='{}: Col {} not in _data_dict'.format(trade_id, col),
+                                                     process='Save trade', process_step='is_data_dict_ready_for_trade_table')
                 return False
         return True
 

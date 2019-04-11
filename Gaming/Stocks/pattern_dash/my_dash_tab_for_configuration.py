@@ -9,9 +9,9 @@ from dash.dependencies import Input, Output, State
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from sertl_analytics.exchanges.interactive_broker import IBKRConfiguration
-from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyHTML
+from sertl_analytics.mydash.my_dash_components import MyHTML
 from pattern_dash.my_dash_tab_dd_for_configuration import ConfigurationTabDropDownHandler, CDD
 from pattern_dash.my_dash_configuration_tables import MyHTMLRuntimeConfigurationTable, MyHTMLBitfinexConfigurationTable
 from pattern_dash.my_dash_configuration_tables import MyHTMLSystemConfigurationTable, MyHTMLPatternConfigurationTable
@@ -29,9 +29,9 @@ class SSBT:  # SwitchSimulationButtonText
     SWITCH_TO_TRADING = 'Start automatic trading'
     
 
-class MyDashTab4Configuration(MyDashBaseTab):
+class MyDashTab4Configuration(MyPatternDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self._trade_handler_online = trade_handler_online
         self._dd_handler = ConfigurationTabDropDownHandler(ExchangeConfiguration.buy_order_value_max,
                                                            PatternSoundMachine.is_active,

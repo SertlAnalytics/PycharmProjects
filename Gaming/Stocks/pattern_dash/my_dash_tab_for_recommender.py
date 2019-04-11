@@ -6,9 +6,9 @@ Date: 2018-11-14
 """
 
 from dash.dependencies import Input, Output, State
-from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi
 from pattern_dash.my_dash_header_tables import MyHTMLTabRecommenderHeaderTable
 from pattern_dash.my_dash_tab_dd_for_recommender import RecommenderTabDropDownHandler, REDD
 from pattern_detection_controller import PatternDetectionController
@@ -25,12 +25,12 @@ class RMBT:  # RecommenderManageButtonText
     SWITCH_TO_NO_MANAGEMENT = 'Stop active management'
 
 
-class MyDashTab4Recommender(MyDashBaseTab):
+class MyDashTab4Recommender(MyPatternDashBaseTab):
     _data_table_name = 'my_recommender_table'
     _data_table_div = '{}_div'.format(_data_table_name)
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.exchange_config = self.sys_config.exchange_config
         self._pattern_controller = PatternDetectionController(self.sys_config)

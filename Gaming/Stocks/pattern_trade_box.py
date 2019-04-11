@@ -248,7 +248,7 @@ class TradingBox:
         message = '{}: Stop loss adjusted for {}: old stop={}, new stop={}'.format(
                 self._ticker_id, reason, self._stop_loss, new_stop_loss)
         print(message)
-        PatternLog.log_message(message, module_name)
+        PatternLog().log_message(message, module_name)
 
     def __get_ticker_last_price_mean__(self, ticker_last_price):
         if self._api.last_price_mean_aggregation == 1:

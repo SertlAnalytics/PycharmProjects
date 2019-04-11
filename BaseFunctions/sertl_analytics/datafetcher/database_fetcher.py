@@ -6,12 +6,12 @@ Date: 2018-03-11
 """
 
 import pandas as pd
-from sqlalchemy import MetaData, Table, insert, exc, text
+from sqlalchemy import MetaData, Table, insert, exc, text, Column, String, Float, Boolean, Integer, create_engine
 from sqlalchemy_views import CreateView, DropView
 import os
 import sys
 from sertl_analytics.myexceptions import ErrorHandler
-from pattern_logging.pattern_log import PatternLog
+from sertl_analytics.myfilelog import FileLog
 from time import sleep
 from sertl_analytics.constants.pattern_constants import DC
 
@@ -232,15 +232,29 @@ class BaseDatabase:
         self.db_name = self.__get_db_name__()
         self.db_path = self.__get_db_path__()
         self.error_handler = ErrorHandler()
+        self._file_log = FileLog()
+        self._table_dict = self.__get_table_dict__()
+
+    def get_table_by_name(self, table_name: str) -> MyTable:
+        return self._table_dict.get(table_name, None)
+
+    def get_number_of_records_for_table(self, table_name: str) -> int:
+        query = "SELECT count(*) as Number from {}".format(table_name)
+        df = self.select_data_by_query(query)
+        return df.values[0, 0]
 
     def __get_engine__(self):
-        pass  # will be overwritten by sub classes
+        db_path = self.__get_db_path__()
+        return create_engine('sqlite:///' + db_path)
 
     def __get_db_name__(self):
         pass  # will be overwritten by sub classes
 
     def __get_db_path__(self):
         pass  # will be overwritten by sub classes
+
+    def __get_table_dict__(self) -> dict:
+        return {}
 
     def get_result_set_for_query(self, query: str):
         connection = self.engine.connect()
@@ -268,15 +282,15 @@ class BaseDatabase:
             try:
                 results = connection.execute(query)
                 counter = results.rowcount
-                PatternLog.log_message('Deleted {} records for query {}'.format(counter, query), 'Delete')
+                self._file_log.log_message('Deleted {} records for query {}'.format(counter, query), 'Delete')
             except exc.OperationalError:
                 sleep(1)
                 loop_counter += 1
                 if loop_counter == 3:
-                    PatternLog.log_error()
+                    self._file_log.log_error()
                     counter = 0
             except:
-                PatternLog.log_error()
+                self._file_log.log_error()
             finally:
                 connection.close()
                 return counter
@@ -292,6 +306,24 @@ class BaseDatabase:
         self.engine = None
         os.remove(self.db_path)
         print('Database {} removed: {}'.format(self.db_name, self.db_path))
+
+    def __create_table__(self, table_name: str):
+        print('table_name={}'.format(table_name))
+        metadata = MetaData()
+        table = self.get_table_by_name(table_name)
+        exec(table.description)
+        self.create_database_elements(metadata)
+        table_obj = metadata.tables.get(table_name)
+        print(repr(table_obj))
+
+    def __create_view__(self, view_name: str):
+        metadata = MetaData()
+        view = self.__get_view_by_name__(view_name)
+        create_view_obj = view.get_create_view_obj(metadata)
+        self.engine.execute(create_view_obj)
+        self.create_database_elements(metadata)
+        view_obj = metadata.tables.get(view_name)
+        print(repr(view_obj))
 
     def create_database_elements(self, metadata: MetaData):
         metadata.create_all(self.engine)
@@ -310,7 +342,7 @@ class BaseDatabase:
         counter = self.__handle_connection_execution__(connection, stmt, insert_data_dic_list)
         connection.close()
         if counter > 1:  # we don't want to have single entries in the log
-            PatternLog.log_message('Loaded into {}: {} records.'.format(table_name, counter), 'Insert')
+            self._file_log.log_message('Loaded into {}: {} records.'.format(table_name, counter), 'Insert')
         return counter
 
     def __handle_connection_execution__(self, connection, stmt, insert_data_dic_list):
@@ -323,7 +355,7 @@ class BaseDatabase:
             except exc.OperationalError:
                 if number == retrials_max:
                     runtime_info = '{} retried: {}'.format(stmt, number)
-                    PatternLog.log_error(runtime_info)
+                    self._file_log.log_error(runtime_info)
                     return -1
                 sleep(1)
             finally:
@@ -344,9 +376,9 @@ class BaseDatabase:
         try:
             results = connection.execute(stmt)
             counter = results.rowcount
-            PatternLog.log_message('Updated in {}: {} records.'.format(table_name, counter), 'Update')
+            self._file_log.log_message('Updated in {}: {} records.'.format(table_name, counter), 'Update')
         except exc.OperationalError:
-            PatternLog.log_error()
+            self._file_log.log_error()
             counter = -1
         finally:
             connection.close()

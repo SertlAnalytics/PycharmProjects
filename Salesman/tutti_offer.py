@@ -9,12 +9,20 @@ from sertl_analytics.mymath import MyMath
 from sertl_analytics.mydates import MyDate
 from tutti_constants import TC, OCLS, POS, EL
 from spacy.tokens import Doc, Span
-from xlsxwriter.worksheet import Worksheet
+from tutti_named_entity import TuttiEntityHandler
+from lxml.html import HtmlElement
+from sertl_analytics.myhtml import MyHtmlElement
+from tutti_spacy import TuttiSpacy
+from salesman_data_dictionary import SalesmanDataDictionary
+from salesman_system_configuration import SystemConfiguration
 
 
 class TuttiOffer:
-    def __init__(self, nlp, found_by_labels=None):
-        self._nlp = nlp
+    def __init__(self, spacy: TuttiSpacy, sys_config: SystemConfiguration, found_by_labels=None):
+        self.sys_config = sys_config
+        self.data_dict_obj = SalesmanDataDictionary(self.sys_config)
+        self._spacy = spacy
+        self._nlp = spacy.nlp
         self._my_offer = found_by_labels is None
         self._found_by_labels = found_by_labels
         self._id = 0
@@ -32,15 +40,34 @@ class TuttiOffer:
         self._number = 1
         self._is_new = False
         self._is_used = False
+        self._is_outlier = False
         self._visits = 0
         self._bookmarks = 0
         self._search_labels = []
+        self._entity_label_dict = {}  # contains entities with {value: label, value: label}
         self._entity_names = []
         self._search_labels_in_description = []
         self._search_labels_in_head_text = []
 
+
+    @property
+    def domain(self):
+        return 'https://www.tutti.ch'
+
+    @property
+    def company_list(self):
+        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.COMPANY]
+
+    @property
+    def product_list(self):
+        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.PRODUCT]
+
+    @property
+    def object_list(self):
+        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.OBJECT]
+
     def init_by_file_row(self, row_number: int, row):
-        self.add_href(str(row_number))
+        self._id = (str(row_number))
         self.add_location_text('virtual')
         self.add_date_text(MyDate.get_date_as_string_from_date_time())
         self.add_title_text(row[TC.TITLE])
@@ -64,6 +91,31 @@ class TuttiOffer:
             self.__add_search_labels__()
         self.__process_doc_extensions__()
 
+    def init_by_html_element(self, html_element: HtmlElement):
+        my_html_element = MyHtmlElement(html_element)
+        self.add_href(my_html_element.get_attribute_for_sub_class(OCLS.MAIN_ANKER, 'href'))
+        self.add_location_text(my_html_element.get_text_for_sub_class(OCLS.LOCATION))
+        self.add_date_text(my_html_element.get_text_for_sub_class(OCLS.DATE))
+        self.add_title_text(my_html_element.get_text_for_sub_class(OCLS.TITLE))
+        self.add_description_text(my_html_element.get_text_for_sub_class(OCLS.DESCRIPTION))
+        self.add_price(my_html_element.get_text_for_sub_class(OCLS.PRICE))
+        self.__process_doc_extensions__()
+
+    def is_any_term_in_list_in_title_or_description(self, term_list: str):
+        return self.__is_any_term_in_list_in_text__(term_list, self._title.lower() + self._description.lower())
+
+    def is_any_term_in_list_in_title(self, term_list: str):
+        return self.__is_any_term_in_list_in_text__(term_list, self._title.lower())
+
+    @staticmethod
+    def __is_any_term_in_list_in_text__(term_list: str, check_string_lower: str):
+        if len(term_list) == 0:
+            return True
+        for term_lower in [term.lower() for term in term_list]:
+            if check_string_lower.find(term_lower) >= 0:
+                return True
+        return False
+
     def __add_search_labels__(self):
         doc_title = self._nlp(self._title)
         doc_description = self._nlp(self._description)
@@ -75,9 +127,8 @@ class TuttiOffer:
         print('\nDoc for {}: {}'.format('title' if for_title else 'description', doc.text))
         token_text_list = []
         token_head_text_list = []
+        self._spacy.print_tokens_for_doc(doc)
         for token in doc:
-            print('Token: text={}, lemma={}, pos={}, tag={}, dep={}, head.text={}'.format(
-                token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.head.text))
             if POS.is_pos_noun(token.pos_):
                 token_text_list.append(token.text)
                 token_head_text_list.append(token.head.text)
@@ -105,7 +156,7 @@ class TuttiOffer:
             self._price_single = int(self._price/self._number)
 
     def add_href(self, href: str):
-        self._href = href
+        self._href = '{}{}'.format(self.domain, href)
         self._id = self._href.split('/')[-1]
 
     def add_location_text(self, input_str: str):
@@ -133,15 +184,32 @@ class TuttiOffer:
 
     def get_start_search_label_lists(self):
         return_list = []
-        if len(self._entity_names) > 1:
-            return [self._entity_names]
-        elif len(self._entity_names) == 0:
+        print('self._entity_names: {}, dict: {}'.format(self._entity_names, self._entity_label_dict))
+        if len(self._entity_names) == 0:  # we use labels in head text
             start_lists = [[label] for label in self._search_labels if label in self._search_labels_in_head_text]
-        else:
+        elif len(self._entity_names) == 1:  # we use all entity names
             start_lists = [self._entity_names]
+        elif len(self._entity_names) == 2: # we start with all entity names
+            return [self._entity_names]
+        else:
+            return self.__get_start_list_for_several_entity_names__()
         for start_list in start_lists:
             return_list = return_list + self.get_label_list_with_child_labels(start_list)
         return return_list
+
+    def __get_start_list_for_several_entity_names__(self):
+        # If #{PROUDCT, OBJECT} > 1 then whe have several start_search_label_list - each combination...
+        c_list = [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.COMPANY]
+        p_list = [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.PRODUCT]
+        o_list = [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.OBJECT]
+
+        if len(c_list) == 0:  # we don't have a company name
+            return [[p, o] for p in p_list for o in o_list]
+
+        if len(p_list) == 0:  # we don't have products - but company and objects
+            return [[c, o] for c in c_list for o in o_list]
+
+        return [[c, p] for c in c_list for p in p_list]
 
     def get_label_list_with_child_labels(self, parent_label_list: list):
         if parent_label_list[-1] in self._search_labels:
@@ -197,6 +265,13 @@ class TuttiOffer:
     def price_new(self, value: float):
         self._price_new = value
 
+    @property
+    def price_single(self):
+        return self._price_single
+
+    def set_is_outlier(self, value: bool):
+        self._is_outlier = value
+
     def get_value_dict_for_worksheet(self, master_id=None):
         return {
             TC.ID: self._id,
@@ -207,6 +282,7 @@ class TuttiOffer:
             TC.PRICE: self._price,
             TC.IS_TOTAL_PRICE: self._is_total_price,
             TC.PRICE_SINGLE: self._price_single,
+            TC.IS_OUTLIER: self._is_outlier,
             TC.PRICE_ORIGINAL: self._price_original,
             TC.NUMBER: self._number,
             TC.SIZE: self._size,
@@ -233,6 +309,13 @@ class TuttiOffer:
         if entity_name not in self._entity_names:
             print('Entity is relevant for Tutti: {} {}'.format(entity_name, entity_label))
             self._entity_names.append(entity_name)
+            self._entity_label_dict[entity_name] = entity_label
+            entity_synonyms = TuttiEntityHandler.get_synonyms_for_entity_name(entity_label, entity_name)
+            if len(entity_synonyms) > 0:
+                print('Entity {} has synonym {}'.format(entity_name, entity_synonyms))
+                # self._entity_names.append(entity_synonym)
+                for entity_synonym in entity_synonyms:
+                    self._entity_label_dict[entity_synonym] = entity_label
 
     def reduce_search_labels_by_entity_names(self):
         # entity names are the most important part - they are mandatory for the search - delete them from the
@@ -260,6 +343,8 @@ class TuttiOffer:
         print('Size: {}'.format(self._size))
         print('Number: {}'.format(self._number))
         print('New: {}/Used: {} - Conclusion: {}'.format(self._is_new, self._is_used, self.state))
+        if not self._my_offer:
+            print('Is outlier: {}'.format(self._is_new, self._is_used, self._is_outlier))
         print('{}'.format(search_details))
         if self._my_offer:
             print('Entity names: {}'.format(self._entity_names))
@@ -278,10 +363,10 @@ class TuttiOffer:
     def __get_visits_bookmarks_and_search_details_for_printing__(self):
         if self._my_offer:
             visits_bookmarks = ', {} Besuche, {} Merkliste'.format(self._visits, self._bookmarks)
-            search_details = '\nSearch labels: {}'.format(self._search_labels)
+            search_details = 'Search labels: {}'.format(self._search_labels)
         else:
             visits_bookmarks = ''
-            search_details = '\nFound by: {}'.format(self._found_by_labels)
+            search_details = 'Found by: {}'.format(self._found_by_labels)
         return visits_bookmarks, search_details
 
     def __is_label_candidate_for_label_list__(self, label: str, for_title: bool):

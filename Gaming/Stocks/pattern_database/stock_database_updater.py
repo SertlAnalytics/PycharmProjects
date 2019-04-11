@@ -21,7 +21,6 @@ from pattern_reinforcement.trade_policy import TradePolicyFactory
 from pattern_reinforcement.trade_policy_handler import TradePolicyHandler
 from pattern_database.stock_wave_entity import WaveEntity
 from pattern_scheduling.pattern_job_result import StockDatabaseUpdateJobResult
-from pattern_logging.pattern_log import PatternLog
 from time import sleep
 import numpy as np
 
@@ -86,7 +85,7 @@ class StockDatabaseUpdater:
                 access_layer_wave.update_record(wave_entity.row_id, data_dict)
                 update_counter += 1
         if scheduled_job:
-            PatternLog.log_scheduler_process(
+            self.sys_config.file_log.log_scheduler_process(
                 log_message='Updated: {}/{}'.format(update_counter, df_wave_to_process.shape[0]),
                 process='Update wave records',
                 process_step='add_wave_end_data')
@@ -110,7 +109,7 @@ class StockDatabaseUpdater:
             update_counter += 1
 
         if scheduled_job:
-            PatternLog.log_scheduler_process(
+            self.sys_config.file_log.log_scheduler_process(
                 log_message='Updated: {}/{}'.format(update_counter, df_wave_to_process.shape[0]),
                 process='Update wave records',
                 process_step='add_wave_prediction')
@@ -228,7 +227,7 @@ class StockDatabaseUpdater:
             try:
                 self.update_wave_records_for_intraday(ticker, aggregation)
             except:
-                PatternLog.log_error()
+                self.sys_config.file_log.log_error()
 
     def __get_configured_ticker_dict_for_index__(self, index):
         if index == INDICES.CRYPTO_CCY:

@@ -6,11 +6,11 @@ Date: 2018-06-17
 """
 
 from dash.dependencies import Input, Output, State
-from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
 from dash import Dash
 from sertl_analytics.constants.pattern_constants import CHT, FT, DC
-from pattern_dash.my_dash_components import MyHTML
+from sertl_analytics.mydash.my_dash_components import MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLTabPatternStatisticsHeaderTable
 from pattern_dash.my_dash_tab_dd_for_statistics import DDT, PatternStatisticsDropDownHandler
 from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Pattern
@@ -20,9 +20,9 @@ from pattern_database.stock_tables import PatternTable
 import pandas as pd
 
 
-class MyDashTab4StatisticsBase(MyDashBaseTab):
+class MyDashTab4StatisticsBase(MyPatternDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, color_handler: DashColorHandler):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self._color_handler = color_handler
         self.__fill_tab__()
         self._df_base = None
@@ -112,6 +112,7 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
         self.__init_callbacks_for_drop_down_visibility__()
         self.__init_callbacks_for_chart__()
         self.__init_callback_for_markdown__()
+        self.__init_callback_for_category_options__()
         self.__init_callback_for_x_variable_options__()
         self.__init_callback_for_y_variable_options__()
 
@@ -146,6 +147,15 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
             self.__fill_df_base__(pattern_type)
             return self.__get_numbers_for_callback__()
 
+    def __init_callback_for_category_options__(self):
+        @self.app.callback(
+            Output(self._my_statistics_category_selection, 'options'),
+            [Input(self._my_statistics_chart_type_selection, 'value')]
+        )
+        def handle_callback_for_category_options(chart_type: str):
+            value_list = self.__get_value_list_for_category_options__(chart_type)
+            return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
+
     def __init_callback_for_y_variable_options__(self):
         @self.app.callback(
             Output(self._my_statistics_y_variable_selection, 'options'),
@@ -166,6 +176,10 @@ class MyDashTab4StatisticsBase(MyDashBaseTab):
             value_list = self.__get_value_list_for_x_variable_options__(chart_type, predictor)
             # print('handle_callback_for_x_variable_options ({}-{}): {}'.format(chart_type, predictor, value_list))
             return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
+
+    def __get_value_list_for_category_options__(self, chart_type: str):
+        return self.sys_config.db_stock.trade_table.get_columns_for_statistics_category(
+            with_trade_process=chart_type==CHT.MY_TRADES)
 
     @staticmethod
     def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):

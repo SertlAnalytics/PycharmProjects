@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-10-17
 """
 
-from pattern_dash.my_dash_components import DropDownHandler
+from sertl_analytics.mydash.my_dash_components import DropDownHandler
 from sertl_analytics.constants.pattern_constants import INDICES, LOGT, DTRG
 from pattern_dash.my_dash_header_tables import MyHTMLTabLogHeaderTable
 

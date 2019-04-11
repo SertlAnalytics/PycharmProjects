@@ -6,10 +6,11 @@ Date: 2018-06-17
 """
 
 import plotly.graph_objs as go
+from pattern_logging.pattern_log import PatternLog
 from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC, MDC, WAVEST, PRD, FD
 from sertl_analytics.constants.pattern_constants import EQUITY_TYPE, INDICES
 from sertl_analytics.mydates import MyDate
-from pattern_dash.my_dash_components import MyDCC, DccGraphApi
+from sertl_analytics.mydash.my_dash_components import MyDCC, DccGraphApi
 from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_trade_handler import PatternTradeHandler
 from pattern_database.stock_database import StockDatabase
@@ -24,6 +25,7 @@ import numpy as np
 class MyDashTabStatisticsPlotter:
     def __init__(self, df_base: pd.DataFrame, color_handler: DashColorHandler):
         self._df_base = df_base
+        self._df_secondary = self.__get_df_secondary__()
         self._color_handler = color_handler
         self._chart_id = ''
         self._chart_name = ''
@@ -44,6 +46,10 @@ class MyDashTabStatisticsPlotter:
     def __init_parameter_by_chart_type__(self, chart_type):
         pass
 
+    @staticmethod
+    def __get_df_secondary__():
+        pass
+
     def __print_df_base__(self):
         columns = self._df_base.columns[:2]
         df_reduced = self._df_base[columns]
@@ -56,6 +62,8 @@ class MyDashTabStatisticsPlotter:
         self.__init_parameter_by_chart_type__(chart_type)
         if chart_type == CHT.SCATTER:
             return self.__get_chart_type_scatter__()
+        elif chart_type == CHT.MY_TRADES:
+            return self.__get_chart_type_my_trades__()
         elif chart_type == CHT.LINE:
             return self.__get_chart_type_line__()
         elif chart_type == CHT.STACK_GROUP:
@@ -123,6 +131,13 @@ class MyDashTabStatisticsPlotter:
         graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
         return [MyDCC.graph(graph_api)]
 
+    def __get_chart_type_my_trades__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'MyTrades'))
+        graph_api.figure_data = self.__get_scatter_figure_data__()
+        graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+        graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+        return [MyDCC.graph(graph_api)]
+
     def __get_chart_type_line__(self):
         graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Assets'))
         graph_api.figure_data = self.__get_line_figure_data__()
@@ -167,10 +182,11 @@ class MyDashTabStatisticsPlotter:
             return 0.97, 1
 
     def __get_df_for_selection__(self):
+        df_base = self._df_secondary if self.chart_type == CHT.MY_TRADES else self._df_base
         if self.pattern_type in [FT.ALL, '']:
-            df = self._df_base
+            df = df_base
         else:
-            df = self._df_base[self._df_base[DC.PATTERN_TYPE] == self.pattern_type]
+            df = df_base[df_base[DC.PATTERN_TYPE] == self.pattern_type]
         return df
 
     def __get_scatter_figure_data__(self):
@@ -374,11 +390,11 @@ class MyDashTabStatisticsPlotter:
 
     def __get_figure_layout_y_axis_dict__(self, graph_api: DccGraphApi):
         if self.__can_axis_be_scaled_log_for_selected_variable__(self.y_variable):
-            return {'title': graph_api.figure_layout_yaxis_title, 'type': 'log', 'autorange': True}
+            return {'title': graph_api.figure_layout_yaxis_title, 'type': 'file_log', 'autorange': True}
 
     def __get_figure_layout_x_axis_dict__(self):
         if self.__can_axis_be_scaled_log_for_selected_variable__(self.x_variable):
-            return {'type': 'log', 'autorange': True}
+            return {'type': 'file_log', 'autorange': True}
 
     def __can_axis_be_scaled_log_for_selected_variable__(self, variable_for_axis: str) -> bool:
         if variable_for_axis in ['', DC.VALUE_TOTAL, DC.TOUCH_POINTS_TILL_BREAKOUT_TOP,
@@ -461,17 +477,38 @@ class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
     def __init_parameter__(self):
         self._chart_id = 'trade_statistics_graph'
         self._chart_name = 'Trades'
-        self.chart_type = CHT.AREA_WINNER_LOSER
+        self.chart_type = CHT.MY_TRADES
         self.category = DC.PATTERN_TYPE
-        self.x_variable = DC.FC_FULL_POSITIVE_PCT
-        self.y_variable = DC.TRADE_RESULT_ID
+        self.x_variable = DC.PATTERN_RANGE_BEGIN_DT
+        self.y_variable = DC.TRADE_RESULT_PCT
         self.z_variable = DC.EXPECTED_WIN
         self.text_variable = DC.TRADE_STRATEGY
         self.pattern_type = FT.ALL
 
     @staticmethod
+    def __get_df_secondary__():
+        return PatternLog().get_data_frame_for_trades()
+
+    @staticmethod
     def __get_result_id_from_row__(row) -> int:
         return row[DC.TRADE_RESULT_ID]
+
+    def __get_line_figure_data__(self):
+        df_base = self.__get_df_for_selection__()
+        df = pd.DataFrame(df_base.groupby([self.x_variable, self.category])[DC.TRADE_RESULT_PCT].sum())
+        df.reset_index(inplace=True)
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[self.category].unique()}
+        combined_list = list(df[self.category].unique())
+        return [
+            go.Scatter(
+                x=df[df[self.category] == element][self.x_variable],
+                y=df[df[self.category] == element][self.y_variable],
+                text=['{}: {:0.2f}'.format(element, y) for y in df[df[self.category] == element][self.y_variable]],
+                line={'color': color_dict[element], 'width': 2},
+                opacity=0.7,
+                name=element
+            ) for element in combined_list
+        ]
 
 
 class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):

@@ -163,8 +163,9 @@ class PatternDataProvider:
         try:
             df = self.__get_df_for_ticker_id__(ticker_id, and_clause, limit)
         except IndexError:
-            PatternLog.log_message('Error with ticker_id={}'.format(ticker_id), 'init_pattern_data_handler_for_ticker_id')
-            PatternLog.log_error()
+            PatternLog().log_message('Error with ticker_id={}'.format(ticker_id),
+                                     'init_pattern_data_handler_for_ticker_id')
+            PatternLog().log_error()
         finally:
             if df is None:
                 self.pdh = None

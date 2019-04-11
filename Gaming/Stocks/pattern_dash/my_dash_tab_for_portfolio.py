@@ -7,9 +7,9 @@ Date: 2018-11-09
 """
 
 from dash.dependencies import Input, Output, State
-from pattern_dash.my_dash_base import MyDashBaseTab
+from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import MyDCC, MyHTML, DccGraphApi
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi
 from pattern_dash.my_dash_header_tables import MyHTMLTabPortfolioHeaderTable
 from pattern_dash.my_dash_tab_dd_for_portfolio import PortfolioTabDropDownHandler, PODD
 from pattern_detection_controller import PatternDetectionController
@@ -35,12 +35,12 @@ class PDC:  # PortfolioDataColumn
     ACTIVELY_MANAGED = 'Actively managed'
 
 
-class MyDashTab4Portfolio(MyDashBaseTab):
+class MyDashTab4Portfolio(MyPatternDashBaseTab):
     _data_table_name = 'my_portfolio_table'
     _data_table_div = '{}_div'.format(_data_table_name)
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
-        MyDashBaseTab.__init__(self, app, sys_config)
+        MyPatternDashBaseTab.__init__(self, app, sys_config)
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.exchange_config = self.sys_config.exchange_config
         self._table_rows = []

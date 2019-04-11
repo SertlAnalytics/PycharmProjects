@@ -9,11 +9,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_table_experiments as dte
 from datetime import datetime
-from sertl_analytics.mydates import MyDate
 import pandas as pd
 from abc import ABCMeta, abstractmethod
 import plotly.io as pio
-
 
 
 COLORS = [

@@ -6,7 +6,7 @@ Date: 2018-11-07
 """
 
 from pattern_system_configuration import SystemConfiguration
-from pattern_dash.my_dash_components import DccGraphApi
+from sertl_analytics.mydash.my_dash_components import DccGraphApi
 from pattern_trade_handler import PatternTradeHandler
 from pattern_trade import PatternTrade
 from pattern_database.stock_database import StockDatabaseDataFrame

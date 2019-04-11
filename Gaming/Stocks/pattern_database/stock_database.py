@@ -5,7 +5,6 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sqlalchemy import create_engine, MetaData
 from sertl_analytics.test.my_test_abc import TestInterface
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
@@ -95,8 +94,6 @@ class StockInsertHandler:
 
 class StockDatabase(BaseDatabase):
     def __init__(self):
-        BaseDatabase.__init__(self)
-        self._dt_now_time_stamp = int(datetime.now().timestamp())
         self._entity_table = EquityTable()
         self._stocks_table = StocksTable()
         self._company_table = CompanyTable()
@@ -107,12 +104,14 @@ class StockDatabase(BaseDatabase):
         self._metric_table = MetricTable()
         self._trade_policy_metric_table = TradePolicyMetricTable()
         self._process_table = ProcessTable()
+        BaseDatabase.__init__(self)
+        self._file_log = PatternLog()
+        self._dt_now_time_stamp = int(datetime.now().timestamp())
         self._bitfinex_crypto_fetcher = BitfinexCryptoFetcher()
         self._alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
         self._alphavantage_stock_fetcher = AlphavantageStockFetcher()
         self._alphavantage_forex_fetcher = AlphavantageForexFetcher()
         self._sleep_seconds = 5
-        self._table_dict = self.__get_table_dict__()
 
     @property
     def trade_table(self):
@@ -126,9 +125,6 @@ class StockDatabase(BaseDatabase):
     def wave_table(self):
         return self._wave_table
 
-    def get_table_by_name(self, table_name: str) -> MyTable:
-        return self._table_dict.get(table_name, self._stocks_table)
-
     def is_symbol_loaded(self, symbol: str):
         last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
         return len(last_loaded_time_stamp_dic) == 1
@@ -138,11 +134,6 @@ class StockDatabase(BaseDatabase):
             return symbol
         company_dic = self.__get_company_dict__(symbol)
         return '' if len(company_dic) == 0 else company_dic[symbol].Name
-
-    def get_number_of_records_for_table(self, table_name: str) -> int:
-        query = "SELECT count(*) as Number from {}".format(table_name)
-        df = self.select_data_by_query(query)
-        return df.values[0, 0]
 
     def __get_table_dict__(self) -> dict:
         return {STBL.STOCKS: self._stocks_table,
@@ -154,10 +145,6 @@ class StockDatabase(BaseDatabase):
                 STBL.PATTERN: self._pattern_table,
                 STBL.ASSET: self._asset_table,
                 STBL.METRIC: self._metric_table}
-
-    def __get_engine__(self):
-        db_path = self.__get_db_path__()
-        return create_engine('sqlite:///' + db_path)
 
     def __get_db_name__(self):
         return 'MyStocks.sqlite'
@@ -248,8 +235,8 @@ class StockDatabase(BaseDatabase):
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str, index: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
         if ticker in ['CSX']:
-            PatternLog.log_message('exception - is not used {}'.format(ticker),
-                                   process='__update_stock_data_for_single_value__')
+            self._file_log.log_message('exception - is not used {}'.format(ticker),
+                                     process='__update_stock_data_for_single_value__')
             return
         name = self._company_table.get_alternate_name(ticker, name)
         last_loaded_time_stamp = last_loaded_date_stamp_dic[ticker] if ticker in last_loaded_date_stamp_dic else 100000
@@ -606,32 +593,6 @@ class StockDatabase(BaseDatabase):
         df_first = db_df.df.iloc[0]
         return {key: [str(df_first[key]), str(pattern_dict[key])] for key, values in pattern_dict.items()
                 if str(df_first[key]) != str(pattern_dict[key])}
-
-    def __create_table__(self, table_name: str):
-        metadata = MetaData()
-        table = self.__get_table_by_name__(table_name)
-        exec(table.description)
-        self.create_database_elements(metadata)
-        table_obj = metadata.tables.get(table_name)
-        print(repr(table_obj))
-
-    def __create_view__(self, view_name: str):
-        metadata = MetaData()
-        view = self.__get_view_by_name__(view_name)
-        create_view_obj = view.get_create_view_obj(metadata)
-        self.engine.execute(create_view_obj)
-        self.create_database_elements(metadata)
-        view_obj = metadata.tables.get(view_name)
-        print(repr(view_obj))
-
-    def __get_table_by_name__(self, table_name: str):
-        return {STBL.STOCKS: self._stocks_table, STBL.COMPANY: self._company_table,
-                STBL.EQUITY: self._entity_table,
-                STBL.PATTERN: self._pattern_table, STBL.TRADE: self._trade_table,
-                STBL.WAVE: self._wave_table, STBL.ASSET: self._asset_table,
-                STBL.METRIC: self._metric_table,
-                STBL.TRADE_POLICY_METRIC: self._trade_policy_metric_table,
-                STBL.PROCESS: self._process_table}.get(table_name, None)
 
     @staticmethod
     def __get_view_by_name__(view_name: str):
