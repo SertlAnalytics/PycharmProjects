@@ -205,7 +205,9 @@ class MyDate:
         return datetime.strptime(str(date_time)[:19], '%Y-%m-%d %H:%M:%S').time()
 
     @staticmethod
-    def get_date_str_from_datetime(date_time):
+    def get_date_str_from_datetime(date_time=None):
+        if date_time is None:
+            date_time = datetime.now()
         return str(MyDate.get_date_from_datetime(date_time))
 
     @staticmethod

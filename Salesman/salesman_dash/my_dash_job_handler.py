@@ -42,8 +42,9 @@ class MyDashJobHandler:
         return self._scheduler.job_list
 
     def __add_jobs__(self):
-        self._scheduler.add_job(MyDashUpdateSimilarOffersJob(
-            weekdays=self._weekdays_all, start_times=['01:00'], db_updater=self._db_updater))
+        self._scheduler.add_job(
+            MyDashUpdateSimilarOffersJob(
+                weekdays=self._weekdays_all, start_times=['01:00'], db_updater=self._db_updater))
         self._scheduler.add_job(
             MyDashOptimizeLogFilesJob(weekdays=[6], start_times=['23:00'], db_updater=self._db_updater))
 

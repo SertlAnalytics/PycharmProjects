@@ -10,7 +10,7 @@ from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from salesman_dash.my_dash_header_tables import MyHTMLTabLogHeaderTable
 from salesman_dash.my_dash_tab_dd_for_log import LogTabDropDownHandler, LOGDD
-from salesman_database.salesman_access_layer import AccessLayer4Offer
+from salesman_database.access_layer.access_layer_base import AccessLayer4Offer
 from salesman_database.salesman_db import SalesmanDatabase
 from dash import Dash
 from sertl_analytics.mydates import MyDate

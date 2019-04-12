@@ -921,7 +921,9 @@ class TrianglePattern(Pattern):
                 return [l_value, ts_for_calculation]
             ts_for_calculation += ts_per_aggregation
             if counter == 1000:
-                print('Problem with wrong triangle...')  # ToDo: Find the reason for this error .... constraints???
+                print('Problem with apex for {}...'.format(self.pattern_type))
+                # ToDo: Find the reason for this error .... constraints???
+                print(self.data_dict_obj.data_dict)
         return [0, 0]
 
 

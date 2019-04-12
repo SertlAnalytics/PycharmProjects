@@ -20,6 +20,11 @@ class SystemConfiguration:
         self.offer_table = OfferTable()
         self.company_table = CompanyTable()
         self.process_table = ProcessTable()
+        self.with_browser = False
+        self.with_nlp = True
+        self.write_to_excel = False
+        self.load_sm = True
+        self.write_offers_to_database = True
 
     @staticmethod
     def deactivate_log_and_database():

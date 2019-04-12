@@ -4,30 +4,34 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-02
 """
-
+from sertl_analytics.constants.salesman_constants import ODC
+from salesman_database.access_layer.access_layer_offer import AccessLayer4Offer
 from tutti_browser import MyUrlBrowser4Tutti
 from lxml import html
 from tutti_offer import TuttiOffer
 from spacy import displacy
 from tutti_spacy import TuttiSpacy
-from tutti_constants import TC, SCLS
+from tutti_constants import SCLS
 import pandas as pd
 import xlsxwriter
 import requests
 from time import sleep
 import numpy as np
+from salesman_system_configuration import SystemConfiguration
 
 
 class Tutti:
-    def __init__(self, with_browser=True, with_nlp=True, write_to_excel=False, load_sm=True):
+    def __init__(self, sys_config: SystemConfiguration):
+        self.sys_config = sys_config
         self._my_offers_source = 'Tutti'
-        self._write_to_excel = write_to_excel
-        self._spacy = TuttiSpacy(load_sm=load_sm) if with_nlp else None
-        self._browser = MyUrlBrowser4Tutti(self._spacy) if with_browser else None
+        self._write_to_excel = self.sys_config.write_to_excel
+        self._spacy = TuttiSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
+        self._browser = MyUrlBrowser4Tutti(self._spacy) if self.sys_config.with_browser else None
         self._url_search_switzerland = 'https://www.tutti.ch/de/li/ganze-schweiz/angebote?q='
         if self._browser is not None:
             self._browser.enter_and_submit_credentials()
         self._virtual_offers_file_path = "Files/tutti_virtual_offers.csv"
+        self._access_layer = AccessLayer4Offer(self.sys_config.db)
 
     @property
     def nlp(self):
@@ -64,6 +68,7 @@ class Tutti:
     def __process_my_offers_and_similar_offers__(self, my_offers: list, similar_offer_dict: dict):
         self.__check_similarity__(my_offers, similar_offer_dict)
         self.__write_to_excel__(my_offers, similar_offer_dict)
+        self.__write_to_database__(my_offers, similar_offer_dict)
 
     def __check_similarity__(self, my_offers: list, similar_offer_dict: dict):
         if self._spacy.sm_loaded:
@@ -97,7 +102,7 @@ class Tutti:
         excel_workbook.add_worksheet('Similar offers')
         worksheet = excel_workbook.get_worksheet_by_name('Similar offers')
         row_list = []
-        columns = TC.get_columns_for_excel()
+        columns = ODC.get_columns_for_excel()
         for col_number, col in enumerate(columns):
             worksheet.write(0, col_number, col)
         try:
@@ -116,26 +121,46 @@ class Tutti:
         finally:
             excel_workbook.close()
 
+    def __write_to_database__(self, my_offers: list, similar_offer_dict: dict):
+        if not self.sys_config.write_offers_to_database:
+            return
+        input_list = []
+        for my_offer in my_offers:
+            self.__add_offer_to_database_input_list__(my_offer, input_list)
+            similar_offers = similar_offer_dict[my_offer.id]
+            for similar_offer in similar_offers:
+                self.__add_offer_to_database_input_list__(similar_offer, input_list)
+        try:
+            if len(input_list) > 0:
+                self.sys_config.db.insert_offer_data(input_list)
+        finally:
+            print('{} offers written to database...'.format(len(input_list)))
+
+    def __add_offer_to_database_input_list__(self, offer: TuttiOffer, input_list: list):
+        if offer.is_offer_ready_for_offer_table():
+            offer_dict = offer.data_dict_obj.get_data_dict_for_offer_table()
+            if not self._access_layer.is_offer_with_offer_id_available(offer.id):
+                input_list.append(offer_dict)
+
     def __get_my_virtual_offers__(self, number=0):
         self._my_offers_source = 'virtual'
         tutti_offers = []
         virtual_offer_df = self.__get_offer_elements_from_file__()
         for idx, row in virtual_offer_df.iterrows():
-            print('idx={} - row={}'.format(idx, row[TC.TITLE]))
-        for idx, row in virtual_offer_df.iterrows():
+            print('idx={} - row={}'.format(idx, row[ODC.TITLE]))
             if number == 0 or idx == number - 1:
-                tutti_offer = self.__get_tutti_offer_from_file_row__(row, idx)
+                tutti_offer = self.__get_tutti_offer_from_file_row__(row)
                 tutti_offers.append(tutti_offer)
         return tutti_offers
 
     def __get_offer_elements_from_file__(self) -> pd.DataFrame:
         df = pd.read_csv(self._virtual_offers_file_path, delimiter='#', header=None)
-        df.columns = TC.get_columns_for_virtual_offers_in_file()
+        df.columns = ODC.get_columns_for_virtual_offers_in_file()
         return df
 
-    def __get_tutti_offer_from_file_row__(self, file_row, number: int):
-        offer = TuttiOffer(self._spacy)
-        offer.init_by_file_row(number, file_row)
+    def __get_tutti_offer_from_file_row__(self, file_row):
+        offer = TuttiOffer(self._spacy, self.sys_config)
+        offer.init_by_file_row(file_row)
         offer.print_offer_in_original_structure()
         return offer
 
@@ -167,6 +192,7 @@ class Tutti:
         added_flag = False
         for similar_offer in similar_offers:
             if self.__can_similar_offer_be_added_to_dict__(similar_offer_dict, offer, similar_offer):
+                similar_offer.set_master_id(offer.id)
                 similar_offer_dict[similar_offer.id] = similar_offer
                 added_flag = True
         if added_flag:  # recursive call !!!
@@ -185,7 +211,7 @@ class Tutti:
         tree = html.fromstring(request.content)
         offers = tree.xpath('//div[@class="{}"]'.format(class_name))
         for offer_element in offers:
-            offer = TuttiOffer(self._spacy, parent_search_label_list)
+            offer = TuttiOffer(self._spacy, self.sys_config, parent_search_label_list)
             offer.init_by_html_element(offer_element)
             tutti_offers.append(offer)
             # offer.print_offer_in_original_structure()

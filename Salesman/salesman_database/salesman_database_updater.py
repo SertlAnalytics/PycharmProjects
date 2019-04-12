@@ -5,16 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-12-10
 """
 
-from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE, TRC
-from sertl_analytics.constants.pattern_constants import INDICES, EDC, EST, FD
-from sertl_analytics.constants.pattern_constants import TPMDC
 from sertl_analytics.mydates import MyDate
-from tutti import Tutti
-from salesman_database.salesman_access_layer import AccessLayer4Offer
+from salesman_database.access_layer.access_layer_base import AccessLayer4Offer
 from salesman_scheduling.salesman_job_result import SalesmanDatabaseUpdateJobResult
-from salesman_logging.salesman_log import SalesmanLog
-from time import sleep
-import numpy as np
 
 
 class SalesmanDatabaseUpdater:

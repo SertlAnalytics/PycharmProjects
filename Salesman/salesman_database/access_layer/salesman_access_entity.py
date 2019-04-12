@@ -6,12 +6,6 @@ Date: 2019-01-17
 """
 
 import pandas as pd
-from sertl_analytics.constants.pattern_constants import DC, POC, CN
-from sertl_analytics.mymath import MyMath
-from sertl_analytics.mydates import MyDate
-from salesman_database.salesman_access_layer import AccessLayer4Wave
-from salesman_database.salesman_db import StockDatabase
-import math
 import random
 
 

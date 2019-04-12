@@ -35,6 +35,10 @@ class SMTBL:  # salesman tables
         return [SMTBL.OFFER]
 
 
+class DC:  # Data Columns
+    ROWID = 'rowid'
+    
+    
 class ODC:  # Offer data column
     OFFER_ID = 'Offer_ID'
     OFFER_ID_MASTER = 'ID_Master'
@@ -64,3 +68,16 @@ class ODC:  # Offer data column
     END_PRICE = 'End_Price'
     LAST_CHECK_DATE = 'Last_Check_Date'
     COMMENT = 'Comment'
+
+    @staticmethod
+    def get_columns_for_virtual_offers_in_file():
+        return [ODC.OFFER_ID, ODC.TITLE, ODC.DESCRIPTION, ODC.PRICE]
+
+    @staticmethod
+    def get_columns_for_excel():
+        return [ODC.OFFER_ID, ODC.OFFER_ID_MASTER, ODC.START_DATE, ODC.LOCATION, ODC.STATE,
+                ODC.PRICE, ODC.PRICE_SINGLE, ODC.IS_OUTLIER, ODC.IS_TOTAL_PRICE, ODC.PRICE_ORIGINAL, ODC.NUMBER,
+                ODC.SIZE,
+                ODC.TITLE, ODC.DESCRIPTION,
+                ODC.IS_NEW, ODC.IS_USED, ODC.VISITS, ODC.BOOK_MARKS,
+                ODC.SEARCH_LABELS, ODC.ENTITY_LABELS, ODC.FOUND_BY_LABELS, ODC.HREF]

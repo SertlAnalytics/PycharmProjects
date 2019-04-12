@@ -1,15 +1,13 @@
 """
-Description: This module contains the configuration tables for stock database
+Description: This module contains the configuration tables for salesman database
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC
+from sertl_analytics.constants.pattern_constants import DC, MDC, PRDC
 from sertl_analytics.constants.salesman_constants import SMTBL, ODC
-from sertl_analytics.mydates import MyDate
 
 
 class PredictionFeatureTable:
@@ -21,7 +19,7 @@ class PredictionFeatureTable:
 class ProcessTable(MyTable):
     @staticmethod
     def _get_name_():
-        return STBL.PROCESS
+        return SMTBL.PROCESS
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(PRDC.PROCESS, CDT.STRING, 50))
@@ -40,7 +38,7 @@ class OfferTable(MyTable):
         return SMTBL.OFFER
 
     def __get_column_date__(self):
-        return EDC.VALID_TO_DT
+        return ODC.START_DATE
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(ODC.OFFER_ID, CDT.STRING, 10))
@@ -76,7 +74,7 @@ class OfferTable(MyTable):
 class MetricTable(MyTable):
     @staticmethod
     def _get_name_():
-        return STBL.METRIC
+        return SMTBL.METRIC
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(MDC.VALID_DT, CDT.STRING, 20))
@@ -98,7 +96,7 @@ class MetricTable(MyTable):
 class CompanyTable(MyTable):
     @staticmethod
     def _get_name_():
-        return STBL.COMPANY
+        return SMTBL.COMPANY
 
     def _add_columns_(self):
         self._columns.append(MyTableColumn(DC.SYMBOL, CDT.STRING, 20))

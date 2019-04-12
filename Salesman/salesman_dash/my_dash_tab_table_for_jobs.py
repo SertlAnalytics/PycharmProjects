@@ -43,7 +43,7 @@ class JobRow:
 class JobTable:
     def __init__(self, job_handler: MyDashJobHandler):
         self._job_handler = job_handler
-        self._columns = JDC.get_all()
+        self._columns = JDC.get_columns_for_job_table()
         self._sort_column = JDC.NAME
         self._rows = []
         self.__fill_rows_for_selected_table__()
@@ -71,7 +71,7 @@ class JobTable:
         self._rows = []
         for job in self._job_handler.job_list:
             db_row = JobRow(self._columns)
-            job_data_dict = job.get_data_dict_for_table_rows()
+            job_data_dict = job.get_data_dict_for_job_table_rows(self._columns)
             for column in job_data_dict:
                 db_row.add_value(column, job_data_dict[column])
             self._rows.append(db_row)

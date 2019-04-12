@@ -6,7 +6,7 @@ Date: 2019-01-23
 """
 
 
-from salesman_database.salesman_access_layer import AccessLayer4Process
+from salesman_database.access_layer.access_layer_base import AccessLayer4Process
 from salesman_logging.salesman_log import SalesmanLog
 from sertl_analytics.processes.my_job import MyJob
 

@@ -29,6 +29,7 @@ class SalesmanDataDictionary(DataDictionary):
     def is_data_dict_ready_for_offer_table(self):
         for col in self.sys_config.offer_table.column_name_list:
             if col not in self._data_dict:
+                print('col not in data_dict: {}'.format(col))
                 return False
         return True
 

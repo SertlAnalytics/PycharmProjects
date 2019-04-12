@@ -7,7 +7,8 @@ Date: 2019-04-02
 
 from sertl_analytics.mymath import MyMath
 from sertl_analytics.mydates import MyDate
-from tutti_constants import TC, OCLS, POS, EL
+from sertl_analytics.constants.salesman_constants import ODC
+from tutti_constants import OCLS, POS, EL
 from spacy.tokens import Doc, Span
 from tutti_named_entity import TuttiEntityHandler
 from lxml.html import HtmlElement
@@ -66,15 +67,16 @@ class TuttiOffer:
     def object_list(self):
         return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.OBJECT]
 
-    def init_by_file_row(self, row_number: int, row):
-        self._id = (str(row_number))
+    def init_by_file_row(self, row):
+        self._id = row[ODC.OFFER_ID]
         self.add_location_text('virtual')
         self.add_date_text(MyDate.get_date_as_string_from_date_time())
-        self.add_title_text(row[TC.TITLE])
-        self.add_description_text(row[TC.DESCRIPTION])
-        self.add_price(str(row[TC.PRICE]))
+        self.add_title_text(row[ODC.TITLE])
+        self.add_description_text(row[ODC.DESCRIPTION])
+        self.add_price(str(row[ODC.PRICE]))
         self.__add_search_labels__()
         self.__process_doc_extensions__()
+        self.__add_data_dict_entries__()
 
     def init_by_offer_element(self, offer_element):
         offer_id_obj = offer_element.find_element_by_class_name(OCLS.MAIN_ANKER)
@@ -90,6 +92,7 @@ class TuttiOffer:
             self.add_bookmarks_text(numbers[1].text)
             self.__add_search_labels__()
         self.__process_doc_extensions__()
+        self.__add_data_dict_entries__()
 
     def init_by_html_element(self, html_element: HtmlElement):
         my_html_element = MyHtmlElement(html_element)
@@ -100,12 +103,16 @@ class TuttiOffer:
         self.add_description_text(my_html_element.get_text_for_sub_class(OCLS.DESCRIPTION))
         self.add_price(my_html_element.get_text_for_sub_class(OCLS.PRICE))
         self.__process_doc_extensions__()
+        self.__add_data_dict_entries__()
 
     def is_any_term_in_list_in_title_or_description(self, term_list: str):
         return self.__is_any_term_in_list_in_text__(term_list, self._title.lower() + self._description.lower())
 
     def is_any_term_in_list_in_title(self, term_list: str):
         return self.__is_any_term_in_list_in_text__(term_list, self._title.lower())
+
+    def set_master_id(self, master_id: str):
+        self.data_dict_obj.add(ODC.OFFER_ID_MASTER, master_id)
 
     @staticmethod
     def __is_any_term_in_list_in_text__(term_list: str, check_string_lower: str):
@@ -239,6 +246,10 @@ class TuttiOffer:
         return '{}_{}'.format(self._id, self._title)
 
     @property
+    def doc_state(self):
+        return 'open'
+
+    @property
     def state(self):
         if self._is_new:
             return 'new'
@@ -269,34 +280,16 @@ class TuttiOffer:
     def price_single(self):
         return self._price_single
 
+    def is_offer_ready_for_offer_table(self):
+        return self.data_dict_obj.is_data_dict_ready_for_offer_table()
+
     def set_is_outlier(self, value: bool):
         self._is_outlier = value
 
     def get_value_dict_for_worksheet(self, master_id=None):
-        return {
-            TC.ID: self._id,
-            TC.ID_MASTER: self._id if master_id is None else master_id,
-            TC.DATE: self._date_str,
-            TC.LOCATION: self._location,
-            TC.STATE: self.state,
-            TC.PRICE: self._price,
-            TC.IS_TOTAL_PRICE: self._is_total_price,
-            TC.PRICE_SINGLE: self._price_single,
-            TC.IS_OUTLIER: self._is_outlier,
-            TC.PRICE_ORIGINAL: self._price_original,
-            TC.NUMBER: self._number,
-            TC.SIZE: self._size,
-            TC.TITLE: self._title,
-            TC.DESCRIPTION: self._description,
-            TC.IS_NEW: self._is_new,
-            TC.IS_USED: self._is_used,
-            TC.VISITS: self._visits,
-            TC.BOOK_MARKS: self._bookmarks,
-            TC.SEARCH_LABELS: ','.join(self._search_labels),
-            TC.ENTITY_LABELS: ','.join(self._entity_names),
-            TC.FOUND_BY_LABELS: '' if self._found_by_labels is None else ','.join(self._found_by_labels),
-            TC.HREF: self._href,
-        }
+        self.set_master_id(self._id if master_id is None else master_id)
+        worksheet_columns = ODC.get_columns_for_excel()
+        return {column: self.data_dict_obj.get(column) for column in worksheet_columns}
 
     def add_search_label(self, label: str, for_title: bool, is_label_head_text: bool):
         if self.__is_label_candidate_for_label_list__(label, for_title):
@@ -359,6 +352,37 @@ class TuttiOffer:
         ID: 24840417, Location: Aargau, 5430, Date: 26.03.2019, Title: Lowa / Rufus III GTX / Gr. 37, 
         Description: Sehr gut erhalten. Tolles Profil., Price: 20.-, Visits: 10 Besuche, Bookmarks: 0 Merkliste
         """
+
+    def __add_data_dict_entries__(self):
+        self.data_dict_obj.add(ODC.OFFER_ID, self._id)
+        self.data_dict_obj.add(ODC.OFFER_ID_MASTER, self._id)  # default - will be overwritten...
+        self.data_dict_obj.add(ODC.START_DATE, self._date_str)
+        self.data_dict_obj.add(ODC.LOCATION, self._location)
+        self.data_dict_obj.add(ODC.STATE, self.state)
+        self.data_dict_obj.add(ODC.DOC_STATE, self.doc_state)
+        self.data_dict_obj.add(ODC.PRICE, self._price)
+        self.data_dict_obj.add(ODC.IS_TOTAL_PRICE, self._is_total_price)
+        self.data_dict_obj.add(ODC.PRICE_SINGLE, self._price_single)
+        self.data_dict_obj.add(ODC.IS_OUTLIER, self._is_outlier)
+        self.data_dict_obj.add(ODC.PRICE_ORIGINAL, self._price_original)
+        self.data_dict_obj.add(ODC.NUMBER, self._number)
+        self.data_dict_obj.add(ODC.SIZE, self._size)
+        self.data_dict_obj.add(ODC.TITLE, self._title)
+        self.data_dict_obj.add(ODC.DESCRIPTION, self._description)
+        self.data_dict_obj.add(ODC.IS_NEW, self._is_new)
+        self.data_dict_obj.add(ODC.IS_USED, self._is_used)
+        self.data_dict_obj.add(ODC.VISITS, self._visits)
+        self.data_dict_obj.add(ODC.BOOK_MARKS, self._bookmarks)
+        self.data_dict_obj.add(ODC.SEARCH_LABELS, ','.join(self._search_labels))
+        self.data_dict_obj.add(ODC.ENTITY_LABELS, ','.join(self._entity_names))
+        self.data_dict_obj.add(ODC.FOUND_BY_LABELS,
+                               '' if self._found_by_labels is None else ','.join(self._found_by_labels))
+        self.data_dict_obj.add(ODC.HREF, self._href)
+        self.data_dict_obj.add(ODC.PRICE_CHANGES, '')
+        self.data_dict_obj.add(ODC.END_DATE, '')
+        self.data_dict_obj.add(ODC.END_PRICE, 0)
+        self.data_dict_obj.add(ODC.LAST_CHECK_DATE, MyDate.get_date_str_from_datetime())
+        self.data_dict_obj.add(ODC.COMMENT, '1. load')
 
     def __get_visits_bookmarks_and_search_details_for_printing__(self):
         if self._my_offer:
