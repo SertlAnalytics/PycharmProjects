@@ -158,16 +158,15 @@ class LogTable:
             self._log_df = self._log_df[self._log_df[self._process_column] == self._selected_log_process]
         if self._process_step_column != '' and self._selected_log_process_step != '':
             self._log_df = self._log_df[self._log_df[self._process_step_column] == self._selected_log_process_step]
-        if self._selected_date_range == DTRG.TODAY:
+        if self._selected_date_range != DTRG.ALL:
+            date_obj = MyDate.get_offset_date_for_date_range(self._selected_date_range)
+            offset_ts = MyDate.get_offset_time_stamp_for_date_range(self._selected_date_range)
             if self._date_column == DC.WAVE_END_TS:
-                offset_ts = MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=2)  # minus 2 day
                 self._log_df = self._log_df[self._log_df[self._date_column] >= offset_ts]
             elif self._date_column == DC.TS_PATTERN_TICK_LAST:
-                offset_ts = MyDate.get_epoch_seconds_for_date() - MyDate.get_seconds_for_period(days=2)  # minus 2 day
                 self._log_df = self._log_df[self._log_df[self._date_column] >= offset_ts]
             else:
-                today_str = MyDate.get_date_as_string_from_date_time()
-                self._log_df = self._log_df[self._log_df[self._date_column] == today_str]
+                self._log_df = self._log_df[self._log_df[self._date_column] >= str(date_obj)]
 
     def __fill_rows_for_selected_log_type__(self):
         self._rows_selected_log_type = []

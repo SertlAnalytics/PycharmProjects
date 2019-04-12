@@ -20,6 +20,7 @@ from fibonacci.fibonacci_wave_data import FibonacciWaveDataHandler
 import pandas as pd
 import itertools
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 
 class MyDashTabStatisticsPlotter:
@@ -212,6 +213,44 @@ class MyDashTabStatisticsPlotter:
                 name=element[0]
             ) for element in combined_list
         ]
+
+    def __get_regression_traces_for_categories__(self, df: pd.DataFrame, category_list: list, color_dict: dict):
+        trace_list = []
+        x_orig = df[self.x_variable]
+        x_orig_predict = np.array(x_orig.values).reshape(-1, 1)
+        for i in range(len(x_orig_predict)):
+            x_orig_predict[i] = MyDate.get_number_for_date_time(x_orig_predict[i][0])
+        trace_list.append(self.__get_regression_trace_for_data_frame__(df, x_orig, x_orig_predict, 'ALL', 'red'))
+        for cat in category_list:
+            df_cat = df[df[self.category] == cat]
+            if df_cat.shape[0] > 0:
+                trace = self.__get_regression_trace_for_data_frame__(df_cat, x_orig, x_orig_predict, cat, color_dict[cat])
+                trace_list.append(trace)
+        return trace_list
+
+    def __get_regression_trace_for_data_frame__(
+            self, df: pd.DataFrame, x_orig: pd.Series, x_orig_predict: np.array, cat: str, color: str):
+        lin_reg = LinearRegression()
+        x_train = df[self.x_variable]
+        x_train_reshaped = np.array(x_train.values).reshape(-1, 1)
+        for i in range(len(x_train_reshaped)):
+            # print('date_time={}'.format(x_train[i][0]))
+            x_train_reshaped[i] = MyDate.get_number_for_date_time(x_train_reshaped[i][0])
+        y_train = df[self.y_variable]
+        y_train_reshaped = y_train.values.reshape(-1, 1)
+        lin_reg.fit(x_train_reshaped, y_train_reshaped)
+        print('cat: {}, coeff: {}'.format(cat, lin_reg.coef_))
+        y_predict = lin_reg.predict(x_orig_predict)
+        y_predict_values = np.array([y_value[0] for y_value in y_predict])
+
+        return go.Scatter(
+            x=x_orig.values,
+            y=y_predict_values,
+            mode='lines',
+            opacity=0.7,
+            line=dict(color=color, width=3),
+            name=cat
+        )
 
     def __get_line_figure_data__(self):
         pass
@@ -492,6 +531,30 @@ class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
     @staticmethod
     def __get_result_id_from_row__(row) -> int:
         return row[DC.TRADE_RESULT_ID]
+
+    def __get_scatter_figure_data__(self):
+        df = self.__get_df_for_selection__()
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[self.category].unique()}
+        category_list = list(df[self.category].unique())
+        regression_traces = self.__get_regression_traces_for_categories__(df, category_list, color_dict)
+        scatter_traces = self.__get_scatter_traces_for_categories__(df, category_list, color_dict)
+        return regression_traces + scatter_traces
+
+    def __get_scatter_traces_for_categories__(self, df: pd.DataFrame, category_list: list, color_dict: dict):
+        return [
+            go.Scatter(
+                x=df[df[self.category] == category][self.x_variable],
+                y=df[df[self.category] == category][self.y_variable],
+                text=df[df[self.category] == category][self.text_variable],
+                mode='markers',
+                opacity=0.7,
+                marker={'symbol': 'diamond',
+                        'size': 15,
+                        'color': color_dict[category],
+                        'line': {'width': 0.5, 'color': 'white'}},
+                name=category
+            ) for category in category_list
+        ]
 
     def __get_line_figure_data__(self):
         df_base = self.__get_df_for_selection__()

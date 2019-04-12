@@ -210,6 +210,8 @@ class MyDate:
 
     @staticmethod
     def get_number_for_date_time(date_time):
+        if type(date_time) is str:
+            date_time = MyDate.get_datetime_object(date_time)
         time_difference = date_time - datetime(2010, 1, 1)
         difference_in_seconds = (time_difference.days * 86400) + time_difference.seconds
         return difference_in_seconds

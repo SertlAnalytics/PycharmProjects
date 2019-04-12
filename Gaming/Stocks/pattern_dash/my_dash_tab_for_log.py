@@ -43,8 +43,8 @@ class MyDashTab4Log(MyPatternDashBaseTab):
         self._selected_process = ''
         self._selected_process_step = ''
         self._selected_date_range = DTRG.TODAY
+        self._refresh_button_clicks = 0
         self._log_table = LogTable(self._log_data_frame_dict, self._selected_log_type, self._selected_date_range)
-
 
     @staticmethod
     def __get_adjusted_sys_config_copy__(sys_config: SystemConfiguration) -> SystemConfiguration:
@@ -60,6 +60,7 @@ class MyDashTab4Log(MyPatternDashBaseTab):
         self._my_log_process_step_selection = 'my_log_process_step_selection'
         self._my_log_date_range_selection = 'my_log_date_range_selection'
         self._my_log_entry_markdown = 'my_log_entry_markdown'
+        self._my_log_refresh_button = 'my_log_refresh_button'
 
     @staticmethod
     def __get_news_handler__():
@@ -73,6 +74,7 @@ class MyDashTab4Log(MyPatternDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(LOGDD.PROCESS)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(LOGDD.PROCESS_STEP)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(LOGDD.DATE_RANGE)),
+            MyHTML.div_with_html_button_submit(self._my_log_refresh_button, 'Refresh', hidden=''),
             MyHTML.div(self._data_table_div, self.__get_table_for_log__(), False),
             MyDCC.markdown(self._my_log_entry_markdown)
         ]
@@ -130,7 +132,7 @@ class MyDashTab4Log(MyPatternDashBaseTab):
         def callback(n_intervals: int):
             if log_type == LOGT.get_first_log_type_for_processing():  # for each cycle we update the lists once
                 self.__fill_log_data_frame_dict__()
-                print('Update file_log dataframes for {}'.format(log_type))
+                # print('Update file_log dataframes for {}'.format(log_type))
             return self.__get_log_entry_numbers_for_log_type__(log_type, actual_day)
         return callback
 
@@ -149,12 +151,15 @@ class MyDashTab4Log(MyPatternDashBaseTab):
             [Input(self._my_log_type_selection, 'value'),
              Input(self._my_log_process_selection, 'value'),
              Input(self._my_log_process_step_selection, 'value'),
-             Input(self._my_log_date_range_selection, 'value')])
-        def handle_callback_for_positions_options(log_type: str, process: str, step: str, date_range: str):
-            if log_type != self._selected_log_type:
+             Input(self._my_log_date_range_selection, 'value'),
+             Input(self._my_log_refresh_button, 'n_clicks')])
+        def handle_callback_for_positions_options(
+                log_type: str, process: str, step: str, date_range: str, n_clicks: int):
+            if log_type != self._selected_log_type or self._refresh_button_clicks != n_clicks:
                 process = ''
                 step = ''
                 self._selected_log_type = log_type
+            self._refresh_button_clicks = n_clicks
             self._selected_process = process
             self._selected_process_step = step
             self._selected_date_range = date_range

@@ -2,150 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/my_constants.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/salesman_constants.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_base.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_base_tab.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_color_handler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/myfilelog.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/myhtml.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/processes/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/processes/my_job.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/processes/my_job_result.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/processes/my_job_runtime.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/processes/my_process.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/processes/my_process_manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/test/my_test_case.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pattern_dash/my_dash_jobs.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pattern_logging/__test_pattern_logging__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pattern_logging/pattern_log_comment.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pattern_process.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pattern_scheduling/test_pattern_job.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_colors.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_for_salesman.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_header_tables.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_interface_for_salesman.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_job_handler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_jobs.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_jobs.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_log.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_tutti.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_jobs.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_log.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_tutti.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_table_for_jobs.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_table_for_log.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_table_for_tutti.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/run_salesman_with_dash.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/salesman_colors.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_data_dictionary.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/run_create_salesman_table.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_access_entity.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_access_layer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_data_provider.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_database_updater.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_db.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_tables.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_logging/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_logging/salesman_debugger.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_logging/salesman_log.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_logging/salesman_log_comment.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_job.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_job_result.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_process.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_process_manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_scheduling/salesman_scheduler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_buy.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_fibonacci.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_new_pattern.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_sell_nok.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_sell_ok.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/alarm_touchpoint.wav" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sound/salesman_sound_machine.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_system_configuration.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/testing/test_salesman_log.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_matcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/models/__test_models__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/myconstants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/myconstants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Courses/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Courses/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydates.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydates.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_breakout.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_breakout.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_base_tab_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_components.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_components.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_configuration_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_configuration_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_for_nasdaq.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_for_nasdaq.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_header_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_header_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_interface_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_interface_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_job_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_job_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_replay_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_replay_handler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_button_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_button_for_trades.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_jobs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_portfolio.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_portfolio.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_recommender.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_recommender.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_statistics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_trades.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_waves.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_waves.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_jobs.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_portfolio.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_portfolio.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_recommender.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_recommender.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_asset.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_asset.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_trade.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_waves.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_waves.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_jobs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_dash/pattern_shapes.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_shapes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_data_dictionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_data_dictionary.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_data_provider.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_data_provider.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_database/run_create_stock_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/run_create_stock_table.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_database/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/stock_database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/stock_database_updater.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_database/stock_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_database/stock_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_logging/pattern_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_logging/pattern_log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_plotting/pattern_plotter.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_plotting/pattern_plotter.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_process_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_process_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_scheduling/pattern_job.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_scheduling/pattern_job.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_scheduling/pattern_job_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_scheduling/pattern_job_result.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_scheduling/pattern_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_scheduling/pattern_scheduler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_system_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_test/run_logging_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_test/run_logging_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_trade.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_trade_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_trade_box.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pattern_trade_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_trade_handler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/dictionaries/josef.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_number.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_number.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_original_price.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_original_price.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_size.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_size.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/testing/run_tutti_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/testing/test_search_in_backend.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_browser.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_browser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_named_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_offer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_offer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_spacy.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_spacy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_log.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -164,7 +28,7 @@
       <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="323">
+            <state relative-caret-position="629">
               <caret line="56" column="62" selection-start-line="56" selection-start-column="62" selection-end-line="56" selection-end-column="62" />
               <folding>
                 <element signature="e#198#247#0" expanded="true" />
@@ -176,8 +40,8 @@
       <file leaf-file-name="my_dash_tab_for_statistics_trade.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_trade.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="308">
-              <caret line="52" column="46" selection-start-line="52" selection-start-column="46" selection-end-line="52" selection-end-column="46" />
+            <state relative-caret-position="94">
+              <caret line="18" column="46" lean-forward="true" selection-start-line="18" selection-start-column="46" selection-end-line="18" selection-end-column="46" />
               <folding>
                 <element signature="e#175#225#0" expanded="true" />
               </folding>
@@ -185,11 +49,47 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="stock_tables.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pattern_database/stock_tables.py">
+      <file leaf-file-name="my_dash_tab_for_statistics_base.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="305">
-              <caret line="394" column="72" selection-start-line="394" selection-start-column="72" selection-end-line="394" selection-end-column="72" />
+            <state relative-caret-position="-60">
+              <caret line="22" column="19" lean-forward="true" selection-start-line="22" selection-start-column="19" selection-end-line="22" selection-end-column="19" />
+              <folding>
+                <element signature="e#177#227#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="my_dash_for_pattern.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="357">
+              <caret line="40" column="37" lean-forward="true" selection-start-line="40" selection-start-column="37" selection-end-line="40" selection-end-column="37" />
+              <folding>
+                <element signature="e#156#206#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="my_dash_plotter_for_statistics.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="519">
+              <caret line="548" column="31" lean-forward="true" selection-start-line="548" selection-start-column="31" selection-end-line="548" selection-end-column="31" />
+              <folding>
+                <element signature="e#179#209#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="my_dash_colors.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_colors.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="274">
+              <caret line="31" column="8" selection-start-line="31" selection-start-column="8" selection-end-line="31" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -205,8 +105,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>FC_FULL_POSITIVE_PCT</find>
-      <find>FC_FALSE_BREAKOUT_ID</find>
       <find>small_profit_taking_active</find>
       <find>Trade_Result_Amount</find>
       <find>ZECUSD</find>
@@ -235,6 +133,8 @@
       <find>my_trade_statistics_div</find>
       <find>sys_config.f</find>
       <find>DataFrameErrorLog</find>
+      <find>'Update</find>
+      <find>my_recommender_refresh_button</find>
     </findStrings>
     <replaceStrings>
       <replace>MyPyDate</replace>
@@ -287,13 +187,10 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_models.py" />
-        <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_portfolio.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_recommender.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_log.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_db.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_jobs.py" />
-        <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_waves.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_base.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_base.py" />
@@ -322,14 +219,12 @@
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_jobs.py" />
         <option value="$PROJECT_DIR$/pattern_process.py" />
         <option value="$PROJECT_DIR$/pattern_process_manager.py" />
-        <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_log.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_job_handler.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/processes/my_job.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_jobs.py" />
         <option value="$PROJECT_DIR$/pattern_logging/_test_pattern_logging.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/pattern_constants.py" />
         <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/myfilelog.py" />
-        <option value="$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py" />
         <option value="$PROJECT_DIR$/pattern_trade.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_header_tables.py" />
         <option value="$PROJECT_DIR$/pattern_logging/pattern_log_comment.py" />
@@ -338,6 +233,11 @@
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py" />
         <option value="$PROJECT_DIR$/pattern_logging/pattern_log.py" />
         <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_statistics.py" />
+        <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_waves.py" />
+        <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_for_log.py" />
+        <option value="$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_log.py" />
+        <option value="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydates.py" />
+        <option value="$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py" />
       </list>
     </option>
   </component>
@@ -418,7 +318,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run_pattern_detection">
+  <component name="RunManager" selected="Python.run_pattern_detection_with_dash">
     <configuration name="__test_pattern_logging__" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -569,7 +469,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.7387173" visible="true" weight="0.2388535" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32" />
@@ -720,7 +619,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py</url>
-          <line>400</line>
+          <line>439</line>
           <option name="timeStamp" value="1766" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -1080,54 +979,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_base_tab.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="11" lean-forward="true" selection-start-line="11" selection-end-line="11" />
-          <folding>
-            <element signature="e#164#185#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_configuration.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-765">
-          <caret line="12" column="60" selection-start-line="12" selection-start-column="60" selection-end-line="12" selection-end-column="60" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_data_provider.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-195">
-          <caret line="165" column="22" selection-start-line="165" selection-start-column="12" selection-end-line="165" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_database/stock_database_updater.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="366">
-          <caret line="23" selection-start-line="23" selection-end-line="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/datafetcher/database_fetcher.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="274">
-          <caret line="249" column="8" selection-start-line="249" selection-start-column="8" selection-end-line="249" selection-end-column="8" />
-          <folding>
-            <element signature="e#172#191#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_database/run_create_stock_table.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="12" column="12" selection-start-line="12" selection-start-column="12" selection-end-line="12" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_database/stock_database.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-4046">
@@ -1139,13 +990,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="391">
           <caret line="41" column="79" lean-forward="true" selection-start-line="41" selection-start-column="79" selection-end-line="41" selection-end-column="79" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="493">
-          <caret line="41" column="35" selection-start-line="41" selection-start-column="35" selection-end-line="41" selection-end-column="35" />
         </state>
       </provider>
     </entry>
@@ -1246,27 +1090,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_log.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="248">
-          <caret line="124" column="36" selection-start-line="124" selection-start-column="36" selection-end-line="124" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_data_dictionary.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="187">
           <caret line="20" column="8" selection-start-line="20" selection-start-column="8" selection-end-line="20" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_log.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="587">
-          <caret line="196" selection-start-line="196" selection-end-line="196" />
-          <folding>
-            <element signature="e#216#266#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1331,16 +1158,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_components.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="416">
-          <caret line="518" column="8" selection-start-line="518" selection-start-column="8" selection-end-line="518" selection-end-column="8" />
-          <folding>
-            <element signature="e#173#207#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_jobs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="553">
@@ -1355,37 +1172,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="25" column="45" lean-forward="true" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
-          <folding>
-            <element signature="e#183#213#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="321">
-          <caret line="511" selection-start-line="511" selection-end-line="511" />
-          <folding>
-            <element signature="e#179#209#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_system_configuration.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-3986">
           <caret line="32" column="21" selection-start-line="32" selection-start-column="13" selection-end-line="32" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_asset.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="356">
-          <caret line="48" column="43" lean-forward="true" selection-start-line="48" selection-start-column="43" selection-end-line="48" selection-end-column="43" />
         </state>
       </provider>
     </entry>
@@ -1420,26 +1210,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="56" column="62" selection-start-line="56" selection-start-column="62" selection-end-line="56" selection-end-column="62" />
-          <folding>
-            <element signature="e#198#247#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_trade.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="308">
-          <caret line="52" column="46" selection-start-line="52" selection-start-column="46" selection-end-line="52" selection-end-column="46" />
-          <folding>
-            <element signature="e#175#225#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pattern_logging/pattern_log.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="461">
@@ -1454,16 +1224,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="245">
           <caret line="109" column="6" selection-start-line="109" selection-start-column="6" selection-end-line="109" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="115" column="55" selection-start-line="115" selection-start-column="55" selection-end-line="115" selection-end-column="55" />
-          <folding>
-            <element signature="e#177#227#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1488,6 +1248,135 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="305">
           <caret line="394" column="72" selection-start-line="394" selection-start-column="72" selection-end-line="394" selection-end-column="72" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_components.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="263">
+          <caret line="147" column="8" selection-start-line="147" selection-start-column="8" selection-end-line="147" selection-end-column="8" />
+          <folding>
+            <element signature="e#173#207#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_dd_for_waves.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="416">
+          <caret line="64" lean-forward="true" selection-start-line="64" selection-end-line="64" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_waves.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_db.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="536">
+          <caret line="150" column="87" lean-forward="true" selection-start-line="150" selection-start-column="12" selection-end-line="150" selection-end-column="87" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_table_for_log.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="484">
+          <caret line="168" selection-start-line="168" selection-end-line="168" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_recommender.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="321">
+          <caret line="153" column="64" selection-start-line="153" selection-start-column="48" selection-end-line="153" selection-end-column="64" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_log.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2830">
+          <caret line="181" column="34" selection-start-line="181" selection-start-column="34" selection-end-line="181" selection-end-column="34" />
+          <folding>
+            <element signature="e#216#266#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_trades.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1105">
+          <caret line="25" column="45" lean-forward="true" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="629">
+          <caret line="56" column="62" selection-start-line="56" selection-start-column="62" selection-end-line="56" selection-end-column="62" />
+          <folding>
+            <element signature="e#198#247#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydates.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-196">
+          <caret line="64" column="8" selection-start-line="64" selection-start-column="8" selection-end-line="64" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_trade.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="94">
+          <caret line="18" column="46" lean-forward="true" selection-start-line="18" selection-start-column="46" selection-end-line="18" selection-end-column="46" />
+          <folding>
+            <element signature="e#175#225#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_colors.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="274">
+          <caret line="31" column="8" selection-start-line="31" selection-start-column="8" selection-end-line="31" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_for_pattern.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="40" column="37" lean-forward="true" selection-start-line="40" selection-start-column="37" selection-end-line="40" selection-end-column="37" />
+          <folding>
+            <element signature="e#156#206#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_asset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="24" column="26" selection-start-line="24" selection-start-column="26" selection-end-line="24" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_tab_for_statistics_base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-60">
+          <caret line="22" column="19" lean-forward="true" selection-start-line="22" selection-start-column="19" selection-end-line="22" selection-end-column="19" />
+          <folding>
+            <element signature="e#177#227#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pattern_dash/my_dash_plotter_for_statistics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="519">
+          <caret line="548" column="31" lean-forward="true" selection-start-line="548" selection-start-column="31" selection-end-line="548" selection-end-column="31" />
+          <folding>
+            <element signature="e#179#209#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
