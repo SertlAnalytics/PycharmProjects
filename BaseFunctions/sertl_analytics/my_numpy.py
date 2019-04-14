@@ -12,8 +12,6 @@ from sertl_analytics.mydates import MyDate
 class MyNumpy:
     @staticmethod
     def get_date_values_as_number_for_date_time_array(date_values: list) -> np.array:
-        number_array = np.array(date_values).reshape(-1, 1)
-        for i in range(len(number_array)):
-            number_array[i] = MyDate.get_number_for_date_time(number_array[i][0])
-        return number_array
+        number_list = [MyDate.get_number_for_date_time(date_value) for date_value in date_values]
+        return np.array(number_list).reshape(-1, 1)
 

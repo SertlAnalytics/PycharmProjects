@@ -239,10 +239,7 @@ class MyDashTabStatisticsPlotter:
             self, df: pd.DataFrame, x_orig: pd.Series, x_orig_predict: np.array, cat: str, color: str):
         lin_reg = LinearRegression()
         x_train = df[self.x_variable]
-        x_train_reshaped = np.array(x_train.values).reshape(-1, 1)
-        for i in range(len(x_train_reshaped)):
-            # print('date_time={}'.format(x_train[i][0]))
-            x_train_reshaped[i] = MyDate.get_number_for_date_time(x_train_reshaped[i][0])
+        x_train_reshaped = MyNumpy.get_date_values_as_number_for_date_time_array(list(x_train))
         y_train = df[self.y_variable]
         y_train_reshaped = y_train.values.reshape(-1, 1)
         lin_reg.fit(x_train_reshaped, y_train_reshaped)
@@ -642,6 +639,7 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
     def __get_confusion_regression_figure_data__(self):
         x_orig = self._predictor_optimizer.get_x_orig_data_for_confusion_regression()
         x_orig_predict = MyNumpy.get_date_values_as_number_for_date_time_array(list(x_orig))
+        print('x_orig={}\nx_orig_predict={}'.format(x_orig, x_orig_predict, type(x_orig_predict)))
         model_type_list = self.model_type
         x_dict, y_dict = self.__get_x_dict_and_y_dict_for_regression__(model_type_list, self.y_variable)
         color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in model_type_list}
@@ -656,9 +654,9 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
                 trace_list.append(
                     self.__get_trace_for_confusion_regression__(color, metric, model_type_value, x_dict, y_dict)
                 )
-                trace_list_regression.append(
-                    self.__get_regression_trace_for_x_y_data__(x_orig, x_orig_predict, color, x_data, y_data, y_key)
-                )
+                # trace_list_regression.append(
+                #     self.__get_regression_trace_for_x_y_data__(x_orig, x_orig_predict, color, x_data, y_data, y_key)
+                # )
         return trace_list  # ToDo - check with other list trace_list_regression
 
     @staticmethod
@@ -675,11 +673,17 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
 
     @staticmethod
     def __get_regression_trace_for_x_y_data__(
-            x_orig: pd.Series, x_orig_predict: np.array, color: str, x_train: list, y_train: list, y_key: str):
+            x_orig: pd.Series, x_orig_predict, color: str, x_train: list, y_train: list, y_key: str):
         lin_reg = LinearRegression()
         x_train, y_train = MyDashTabStatisticsPlotter4Models.__get_x_y_train_only_with_y_values__(x_train, y_train)
         x_train_reshaped = MyNumpy.get_date_values_as_number_for_date_time_array(x_train)
         y_train_reshaped = np.array(y_train).reshape(-1, 1)
+        print('type(x_train_reshaped)={}, type(y_train_reshaped)={}, type(x_orig_predict)={}'.format(
+            type(x_train_reshaped), type(y_train_reshaped), type(x_orig_predict)))
+        print('shape(x_train_reshaped)={}, shape(y_train_reshaped)={}, shape(x_orig_predict)={}'.format(
+            x_train_reshaped.shape, y_train_reshaped.shape, x_orig_predict.shape))
+        print('x_train_reshaped={}\ny_train_reshaped={}\nx_orig_predict={}'.format(
+            x_train_reshaped, y_train_reshaped, x_orig_predict))
         lin_reg.fit(x_train_reshaped, y_train_reshaped)
         y_predict = lin_reg.predict(x_orig_predict)
         y_predict_values = np.array([y_value[0] for y_value in y_predict])

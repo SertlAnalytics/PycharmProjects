@@ -211,7 +211,7 @@ class MyDate:
         return str(MyDate.get_date_from_datetime(date_time))
 
     @staticmethod
-    def get_number_for_date_time(date_time):
+    def get_number_for_date_time(date_time) -> int:
         if type(date_time) is str:
             date_time = MyDate.get_datetime_object(date_time)
         time_difference = date_time - datetime(2010, 1, 1)

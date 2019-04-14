@@ -136,6 +136,7 @@ class PatternPredictorOptimizer:
 
     def get_x_orig_data_for_confusion_regression(self):
         query = "SELECT DISTINCT {} from Metric ORDER BY {}".format(MDC.VALID_DT, MDC.VALID_DT)
+        print('query={}'.format(query))
         df = self._access_layer_metric.select_data_by_query(query)
         return df[MDC.VALID_DT]
 

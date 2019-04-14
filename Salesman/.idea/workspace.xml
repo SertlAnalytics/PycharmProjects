@@ -2,34 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6d5eace0-8cba-4361-96e5-e8ba9777a0db" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/my_numpy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/pattern_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/salesman_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/salesman_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/processes/my_job.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/processes/my_job.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/my_numpy.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/my_numpy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/mydates.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/mydates.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_plotter_for_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_plotter_for_statistics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_statistics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_tab_for_jobs.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_predictor_optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_predictor_optimizer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_tutti_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_tutti_process.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_jobs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_database/run_create_salesman_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_database/run_create_salesman_table.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_database/salesman_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_database/salesman_database_updater.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_database/salesman_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_database/salesman_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_database/salesman_views.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_database/salesman_views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_scheduling/salesman_job.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_scheduling/salesman_job.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/tutti.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tutti_browser.py" beforeDir="false" afterPath="$PROJECT_DIR$/tutti_browser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tutti_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/tutti_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tutti_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/tutti_named_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tutti_offer.py" beforeDir="false" afterPath="$PROJECT_DIR$/tutti_offer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tutti_spacy.py" beforeDir="false" afterPath="$PROJECT_DIR$/tutti_spacy.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -440,7 +418,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1272" y="0" width="1295" height="1407" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24980111" />
       <window_info anchor="bottom" id="TODO" order="6" />
