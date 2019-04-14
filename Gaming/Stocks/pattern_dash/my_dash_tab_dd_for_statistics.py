@@ -213,10 +213,10 @@ class ModelsStatisticsDropDownHandler(StatisticsDropDownHandler):
 
     def __get_default_value__(self, drop_down_type: str, default_value=None) -> str:
         default_dict = {
-            DDT.CHART_TYPE: CHT.CONFUSION,
+            DDT.CHART_TYPE: CHT.CONFUSION_REGRESSION,
             DDT.CATEGORY: STBL.PATTERN,
-            DDT.PREDICTOR: PRED.TOUCH_POINT,
-            DDT.X_VARIABLE: PatternTable.get_label_columns_touch_points_for_statistics()[0],
+            DDT.PREDICTOR: PRED.AFTER_BREAKOUT,
+            DDT.X_VARIABLE: PatternTable.get_label_columns_after_breakout_for_statistics()[0],
             DDT.Y_VARIABLE: MTC.PRECISION,
             DDT.CHART_TEXT_VARIABLE: DC.PATTERN_TYPE,
             DDT.MODEL_TYPE: MT.K_NEAREST_NEIGHBORS,

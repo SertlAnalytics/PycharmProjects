@@ -10,7 +10,7 @@ from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
 from salesman_database.salesman_db import SalesmanDatabase
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from salesman_dash.my_dash_tab_dd_for_jobs import JobsTabDropDownHandler
-from salesman_database.access_layer.access_layer_base import AccessLayer4Process
+from salesman_database.access_layer.access_layer_others import AccessLayer4Process
 from dash import Dash
 from sertl_analytics.constants.pattern_constants import STBL, DTRG, JDC
 from salesman_dash.my_dash_tab_table_for_jobs import JobTable

@@ -27,9 +27,11 @@ class TuttiSpacy:
         self._matcher_company = self.__get_matcher_for_entity_type__(EL.COMPANY)
         self._matcher_product = self.__get_matcher_for_entity_type__(EL.PRODUCT)
         self._matcher_object = self.__get_matcher_for_entity_type__(EL.OBJECT)
+        self._matcher_target_group = self.__get_matcher_for_entity_type__(EL.TARGET_GROUP)
         self._nlp.add_pipe(self.company_component, name='CUSTOM_COMPANY', after='ner')
         self._nlp.add_pipe(self.product_component, name='CUSTOM_PRODUCT', after='CUSTOM_COMPANY')
         self._nlp.add_pipe(self.object_component, name='CUSTOM_OBJECT', after='CUSTOM_PRODUCT')
+        self._nlp.add_pipe(self.object_target_group, name='CUSTOM_TARGET_GROUP', after='CUSTOM_OBJECT')
         self.__set_doc_extensions__()
 
     @property
@@ -73,6 +75,11 @@ class TuttiSpacy:
     def object_component(self, doc):
         matches = self._matcher_object(doc)
         spans = [Span(doc, start, end, label=EL.OBJECT) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
+    def object_target_group(self, doc):
+        matches = self._matcher_target_group(doc)
+        spans = [Span(doc, start, end, label=EL.TARGET_GROUP) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
     def __get_doc_with_added_span_list_as_entities__(self, doc: Doc, spans: list):

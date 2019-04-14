@@ -42,6 +42,7 @@ class DC:  # Data Columns
 class ODC:  # Offer data column
     OFFER_ID = 'Offer_ID'
     OFFER_ID_MASTER = 'ID_Master'
+    SOURCE = 'Source'  # Tutti, Ricardo, etc.
     STATE = 'State'
     HREF = 'Link'
     START_DATE = 'Start_Date'
@@ -71,11 +72,11 @@ class ODC:  # Offer data column
 
     @staticmethod
     def get_columns_for_virtual_offers_in_file():
-        return [ODC.OFFER_ID, ODC.TITLE, ODC.DESCRIPTION, ODC.PRICE]
+        return [ODC.OFFER_ID, ODC.TITLE, ODC.DESCRIPTION, ODC.PRICE, ODC.PRICE_ORIGINAL]
 
     @staticmethod
     def get_columns_for_excel():
-        return [ODC.OFFER_ID, ODC.OFFER_ID_MASTER, ODC.START_DATE, ODC.LOCATION, ODC.STATE,
+        return [ODC.OFFER_ID, ODC.OFFER_ID_MASTER, ODC.SOURCE, ODC.START_DATE, ODC.LOCATION, ODC.STATE,
                 ODC.PRICE, ODC.PRICE_SINGLE, ODC.IS_OUTLIER, ODC.IS_TOTAL_PRICE, ODC.PRICE_ORIGINAL, ODC.NUMBER,
                 ODC.SIZE,
                 ODC.TITLE, ODC.DESCRIPTION,

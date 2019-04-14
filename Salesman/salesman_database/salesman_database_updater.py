@@ -6,7 +6,7 @@ Date: 2018-12-10
 """
 
 from sertl_analytics.mydates import MyDate
-from salesman_database.access_layer.access_layer_base import AccessLayer4Offer
+from salesman_database.access_layer.access_layer_offer import AccessLayer4Offer
 from salesman_scheduling.salesman_job_result import SalesmanDatabaseUpdateJobResult
 
 

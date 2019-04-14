@@ -7,6 +7,7 @@ Date: 2019-04-02
 
 from sertl_analytics.pyurl.url_process import MyUrlBrowser
 from sertl_analytics.pyurl.url_username_passwords import WebPasswords
+from salesman_system_configuration import SystemConfiguration
 from tutti_offer import TuttiOffer
 from tutti_constants import OCLS
 from tutti_spacy import TuttiSpacy
@@ -14,7 +15,8 @@ from time import sleep
 
 
 class MyUrlBrowser4Tutti(MyUrlBrowser):
-    def __init__(self, spacy: TuttiSpacy):
+    def __init__(self, sys_config: SystemConfiguration, spacy: TuttiSpacy):
+        self.sys_config = sys_config
         self._url_login = 'https://www.tutti.ch/de/start/login'
         self._url_search = 'https://www.tutti.ch/de/li'
         self._spacy = spacy
@@ -82,6 +84,7 @@ class MyUrlBrowser4Tutti(MyUrlBrowser):
         offer_elements = self.__get_offer_elements_by_class_name__(class_name)
         for offer_element in offer_elements:
             tutti_offer = self.__get_tutti_offer_from_offer_element__(offer_element, search_labels)
+            tutti_offer.set_source('Tutti')
             tutti_offers.append(tutti_offer)
         return tutti_offers
 
@@ -91,7 +94,7 @@ class MyUrlBrowser4Tutti(MyUrlBrowser):
             return self.__get_tutti_offer_from_offer_element__(offer_elements[number-1], None)
 
     def __get_tutti_offer_from_offer_element__(self, offer_element, search_labels):
-        offer = TuttiOffer(self._spacy, search_labels)
+        offer = TuttiOffer(self._spacy, self.sys_config, search_labels)
         offer.init_by_offer_element(offer_element)
         return offer
 

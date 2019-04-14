@@ -10,6 +10,7 @@ from pattern_logging.pattern_log import PatternLog
 from sertl_analytics.constants.pattern_constants import DC, CHT, FT, PRED, MT, STBL, MTC, MDC, WAVEST, PRD, FD
 from sertl_analytics.constants.pattern_constants import EQUITY_TYPE, INDICES
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.my_numpy import MyNumpy
 from sertl_analytics.mydash.my_dash_components import MyDCC, DccGraphApi
 from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_trade_handler import PatternTradeHandler
@@ -26,7 +27,6 @@ from sklearn.linear_model import LinearRegression
 class MyDashTabStatisticsPlotter:
     def __init__(self, df_base: pd.DataFrame, color_handler: DashColorHandler):
         self._df_base = df_base
-        self._df_secondary = self.__get_df_secondary__()
         self._color_handler = color_handler
         self._chart_id = ''
         self._chart_name = ''
@@ -81,6 +81,8 @@ class MyDashTabStatisticsPlotter:
             return self.__get_chart_type_area_winner_loser__()
         elif chart_type == CHT.CONFUSION:
             return self.__get_chart_type_confusion_matrix__()
+        elif chart_type == CHT.CONFUSION_REGRESSION:
+            return self.__get_chart_type_confusion_regression__()
         elif chart_type == CHT.ROC:
             return self.__get_chart_type_roc__()
 
@@ -153,6 +155,13 @@ class MyDashTabStatisticsPlotter:
         # graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
         return [MyDCC.graph(graph_api)]
 
+    def __get_chart_type_confusion_regression__(self):
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self.predictor, self.x_variable))
+        graph_api.figure_data = self.__get_confusion_regression_figure_data__()
+        graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
+        # graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
+        return [MyDCC.graph(graph_api)]
+
     def __get_chart_type_roc__(self):
         graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'Models'))
         graph_api.figure_data = self.__get_roc_figure_data__()
@@ -183,7 +192,7 @@ class MyDashTabStatisticsPlotter:
             return 0.97, 1
 
     def __get_df_for_selection__(self):
-        df_base = self._df_secondary if self.chart_type == CHT.MY_TRADES else self._df_base
+        df_base = self.__get_df_secondary__() if self.chart_type == CHT.MY_TRADES else self._df_base
         if self.pattern_type in [FT.ALL, '']:
             df = df_base
         else:
@@ -217,9 +226,7 @@ class MyDashTabStatisticsPlotter:
     def __get_regression_traces_for_categories__(self, df: pd.DataFrame, category_list: list, color_dict: dict):
         trace_list = []
         x_orig = df[self.x_variable]
-        x_orig_predict = np.array(x_orig.values).reshape(-1, 1)
-        for i in range(len(x_orig_predict)):
-            x_orig_predict[i] = MyDate.get_number_for_date_time(x_orig_predict[i][0])
+        x_orig_predict = MyNumpy.get_date_values_as_number_for_date_time_array(list(x_orig))
         trace_list.append(self.__get_regression_trace_for_data_frame__(df, x_orig, x_orig_predict, 'ALL', 'red'))
         for cat in category_list:
             df_cat = df[df[self.category] == cat]
@@ -239,7 +246,7 @@ class MyDashTabStatisticsPlotter:
         y_train = df[self.y_variable]
         y_train_reshaped = y_train.values.reshape(-1, 1)
         lin_reg.fit(x_train_reshaped, y_train_reshaped)
-        print('cat: {}, coeff: {}'.format(cat, lin_reg.coef_))
+        # print('cat: {}, coeff: {}'.format(cat, lin_reg.coef_))
         y_predict = lin_reg.predict(x_orig_predict)
         y_predict_values = np.array([y_value[0] for y_value in y_predict])
 
@@ -259,6 +266,9 @@ class MyDashTabStatisticsPlotter:
         pass
 
     def __get_confusion_matrix_figure_data__(self):
+        pass
+
+    def __get_confusion_regression_figure_data__(self):
         pass
 
     def __get_roc_figure_data__(self):
@@ -626,17 +636,101 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
             df_metric = self._predictor_optimizer.get_metrics_for_model_and_label_as_data_frame(
                 model_type, self.category, self.predictor, self.x_variable, self.pattern_type)
             x_dict[model_type] = list(df_metric[MDC.VALUE])
-            for metric in metric_list:
-                key = '{}-{}'.format(model_type, metric)
-                if metric == MTC.PRECISION:
-                    y_dict[key] = list(df_metric[MDC.PRECISION])
-                elif metric == MTC.RECALL:
-                    y_dict[key] = list(df_metric[MDC.RECALL])
-                elif metric == MTC.F1_SCORE:
-                    y_dict[key] = list(df_metric[MDC.F1_SCORE])
-                elif metric == MTC.ROC_AUC:
-                    y_dict[key] = list(df_metric[MDC.ROC_AUC])
+            self.__fill_y_dict_for_metrics__(df_metric, metric_list, model_type, y_dict)
         return x_dict, y_dict
+
+    def __get_confusion_regression_figure_data__(self):
+        x_orig = self._predictor_optimizer.get_x_orig_data_for_confusion_regression()
+        x_orig_predict = MyNumpy.get_date_values_as_number_for_date_time_array(list(x_orig))
+        model_type_list = self.model_type
+        x_dict, y_dict = self.__get_x_dict_and_y_dict_for_regression__(model_type_list, self.y_variable)
+        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in model_type_list}
+        trace_list = []
+        trace_list_regression = []
+        for model_type_value in x_dict:
+            color = self._color_handler.get_color_for_category(model_type_value)
+            x_data = x_dict[model_type_value]
+            for metric in self.y_variable:
+                y_key = '{}-{}'.format(model_type_value, metric)
+                y_data = y_dict[y_key]
+                trace_list.append(
+                    self.__get_trace_for_confusion_regression__(color, metric, model_type_value, x_dict, y_dict)
+                )
+                trace_list_regression.append(
+                    self.__get_regression_trace_for_x_y_data__(x_orig, x_orig_predict, color, x_data, y_data, y_key)
+                )
+        return trace_list  # ToDo - check with other list trace_list_regression
+
+    @staticmethod
+    def __get_trace_for_confusion_regression__(color, metric, model_type_value, x_dict, y_dict):
+        return go.Scatter(
+            x=x_dict[model_type_value],
+            y=y_dict['{}-{}'.format(model_type_value, metric)],
+            text=['{}-{}: {:0.2f}'.format(model_type_value, metric, y_value)
+                  for y_value in y_dict['{}-{}'.format(model_type_value, metric)]],
+            line={'color': color, 'width': 2},
+            opacity=0.7,
+            name='{}-{}'.format(model_type_value, metric)
+        )
+
+    @staticmethod
+    def __get_regression_trace_for_x_y_data__(
+            x_orig: pd.Series, x_orig_predict: np.array, color: str, x_train: list, y_train: list, y_key: str):
+        lin_reg = LinearRegression()
+        x_train, y_train = MyDashTabStatisticsPlotter4Models.__get_x_y_train_only_with_y_values__(x_train, y_train)
+        x_train_reshaped = MyNumpy.get_date_values_as_number_for_date_time_array(x_train)
+        y_train_reshaped = np.array(y_train).reshape(-1, 1)
+        lin_reg.fit(x_train_reshaped, y_train_reshaped)
+        y_predict = lin_reg.predict(x_orig_predict)
+        y_predict_values = np.array([y_value[0] for y_value in y_predict])
+
+        return go.Scatter(
+            x=x_orig.values,
+            y=y_predict_values,
+            mode='lines',
+            opacity=0.7,
+            line=dict(color=color, width=3),
+            name=y_key
+        )
+
+    @staticmethod
+    def __get_x_y_train_only_with_y_values__(x_train: list, y_train: list):
+        x_train_new = []
+        y_train_new = []
+        for idx, x_value in enumerate(x_train):
+            y_value = y_train[idx]
+            if y_value > 0:
+                x_train_new.append(x_value)
+                y_train_new.append(y_value)
+        return x_train_new, y_train_new
+
+    def __get_x_dict_and_y_dict_for_regression__(self, model_type_list: list, metric_list: list):
+        # both together since we need the same order....
+        x_dict = {}
+        y_dict = {}
+        for model_type in model_type_list:
+            df_metric = self._predictor_optimizer.get_metrics_for_model_and_label_as_data_frame_for_regression(
+                model_type, self.category, self.predictor, self.x_variable, self.pattern_type)
+            distinct_values = df_metric[MDC.VALUE].unique()
+            for value in distinct_values:
+                df_metric_specific_value = df_metric[df_metric[MDC.VALUE] == value]
+                model_type_value = '{}-{}'.format(model_type, value)
+                x_dict[model_type_value] = list(df_metric_specific_value[MDC.VALID_DT])
+                self.__fill_y_dict_for_metrics__(df_metric_specific_value, metric_list, model_type_value, y_dict)
+        return x_dict, y_dict
+
+    @staticmethod
+    def __fill_y_dict_for_metrics__(df: pd.DataFrame, metric_list: list, model_type_value: str, y_dict: dict):
+        for metric in metric_list:
+            key = '{}-{}'.format(model_type_value, metric)
+            if metric == MTC.PRECISION:
+                y_dict[key] = list(df[MDC.PRECISION])
+            elif metric == MTC.RECALL:
+                y_dict[key] = list(df[MDC.RECALL])
+            elif metric == MTC.F1_SCORE:
+                y_dict[key] = list(df[MDC.F1_SCORE])
+            elif metric == MTC.ROC_AUC:
+                y_dict[key] = list(df[MDC.ROC_AUC])
 
 
 class MyDashTabStatisticsPlotter4Assets(MyDashTabStatisticsPlotter):

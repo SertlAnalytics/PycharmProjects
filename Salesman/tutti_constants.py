@@ -10,10 +10,11 @@ class EL:  # entity labels
     COMPANY = 'COMPANY'
     PRODUCT = 'PRODUCT'
     OBJECT = 'OBJECT'
+    TARGET_GROUP = 'TARGET_GROUP'
 
     @staticmethod
     def is_entity_label_tutti_relevant(ent_level: str) -> bool:
-        return ent_level in [EL.PRODUCT, EL.COMPANY, EL.OBJECT]
+        return ent_level in [EL.PRODUCT, EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP]
 
 
 class OCLS:  # css classes used within offers

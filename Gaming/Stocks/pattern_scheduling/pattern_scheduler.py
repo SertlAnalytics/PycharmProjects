@@ -47,9 +47,17 @@ class MyPatternScheduler:
         self._last_run_time_stamp = MyDate.time_stamp_now()
         self._last_run_date_time = MyDate.get_date_time_from_epoch_seconds_as_string(self._last_run_time_stamp)
 
-    def start_job_manually(self, job_to_start: str):
+    def switch_job_state(self, job_name: str):
         for job in self._job_list:
-            if job.job_name == job_to_start:
+            if job.job_name == job_name:
+                if not job.is_running:
+                    print('...{}: Switch job state to : {}'.format(job.job_name, job.job_name, job.state))
+                    job.switch_job_state()
+                    break
+
+    def start_job_manually(self, job_name: str):
+        for job in self._job_list:
+            if job.job_name == job_name:
                 if not job.is_running:
                     print('...{}: Starting job: {}'.format('Manually', job.job_name))
                     job.start_job()

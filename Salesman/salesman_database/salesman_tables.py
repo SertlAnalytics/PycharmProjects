@@ -43,6 +43,7 @@ class OfferTable(MyTable):
     def _add_columns_(self):
         self._columns.append(MyTableColumn(ODC.OFFER_ID, CDT.STRING, 10))
         self._columns.append(MyTableColumn(ODC.OFFER_ID_MASTER, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(ODC.SOURCE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(ODC.STATE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(ODC.HREF, CDT.STRING, 150))
         self._columns.append(MyTableColumn(ODC.START_DATE, CDT.STRING, 20))

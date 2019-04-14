@@ -16,6 +16,7 @@ from pattern_part import PatternPart, PatternEntryPart, PatternTradePart
 import pattern_constraints as cstr
 from sertl_analytics.myexceptions import MyException
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mymath import MyMath
 from sertl_analytics.models.nn_collector import NearestNeighborContainer
 from pattern_wave_tick import WaveTick
 from pattern_function_container import PatternFunctionContainerFactoryApi
@@ -902,7 +903,7 @@ class HeadShoulderBottomDescPattern(HeadShoulderBottomPattern):
 
 class TrianglePattern(Pattern):
     def get_expected_win(self):
-        return round(self._part_entry.height / 2, 2)
+        return MyMath.round_smart(self._part_entry.height / 2)
 
     def get_apex_parameters(self):
         period = self.data_dict_obj.get(DC.PERIOD)

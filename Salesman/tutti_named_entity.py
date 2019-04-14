@@ -39,17 +39,39 @@ class TuttiCompanyEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
         return ['BMW', 'Eames', 'Lowa', 'Mercedes', 'Paidi', 'USM', 'Waldmann', 'Vitra', 'Zimstern', 'Zimtstern',
-                'Villiger', 'Omega']
+                'Villiger', 'Omega', 'Sunshine', 'Diono']
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+            'Sunshine': ['Diono'],
+        }
+
+
+class TuttiTargetGroupEntity(TuttiNamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return ['Frau', 'Frauen', 'Mann', 'Männer', 'Kind', 'Kinder']
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+            'Frau': ['Frauen'],
+            'Mann': ['Männer'],
+            'Kind': ['Kinder'],
+        }
 
 
 class TuttiProductEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
-        return ['alu chair', 'aluminium chair', 'gtx', 'meda']
+        return ['alu chair', 'aluminium chair', 'gtx', 'meda', 'Monterey', 'Booster']
 
     @staticmethod
     def __get_synonym_dict__():
-        return {'alu chair': ['aluminum chair']}
+        return {
+            'alu chair': ['aluminum chair']
+        }
 
 
 class TuttiObjectTypeEntity(TuttiNamedEntity):
@@ -60,10 +82,13 @@ class TuttiObjectTypeEntity(TuttiNamedEntity):
 
     @staticmethod
     def __get_synonym_dict__():
-        return {'fahrrad': ['velo'],
-                'tisch': ['bürotisch'],
-                'corpus': ['rollcontainer'],
-                'stuhl': ['bürostuhl', 'besucherstuhl', 'chair', 'bürodrehstuhl', 'drehstuhl']}
+        return {
+            'fahrrad': ['velo'],
+            'tisch': ['bürotisch'],
+            'corpus': ['rollcontainer'],
+            'stuhl': ['bürostuhl', 'besucherstuhl', 'chair', 'bürodrehstuhl', 'drehstuhl'],
+            'kindersitz': ['autokindersitz', 'auto-kindersitz']
+        }
 
 
 class TuttiEntityHandler:
@@ -83,8 +108,10 @@ class TuttiEntityHandler:
 
     @staticmethod
     def get_entity_for_entity_label(entity_type) -> TuttiNamedEntity:
-        return {EL.COMPANY: TuttiCompanyEntity(), EL.PRODUCT: TuttiProductEntity(),
-                EL.OBJECT: TuttiObjectTypeEntity()}.get(entity_type, TuttiCompanyEntity())
+        return {EL.COMPANY: TuttiCompanyEntity(),
+                EL.PRODUCT: TuttiProductEntity(),
+                EL.OBJECT: TuttiObjectTypeEntity(),
+                EL.TARGET_GROUP: TuttiTargetGroupEntity()}.get(entity_type, TuttiCompanyEntity())
 
 
 

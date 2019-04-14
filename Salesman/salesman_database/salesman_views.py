@@ -7,7 +7,8 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyView
-from sertl_analytics.constants.salesman_constants import SMVW
+from sertl_analytics.constants.salesman_constants import SMVW, ODC
+from salesman_database.salesman_tables import OfferTable
 
 
 class OfferView(MyView):
@@ -17,9 +18,7 @@ class OfferView(MyView):
 
     @staticmethod
     def __get_select_statement__():
-        index_column = "CASE WHEN E.Exchange = 'Bitfinex' THEN 'Crypto Currencies' ELSE E.Exchange END as Equity_Index"
-        wave_end_date_column = "substr(W.Wave_End_Datetime, 1, 10) AS Wave_End_Date"
-        return "SELECT {}, {}, W.* FROM Wave as W JOIN Equity AS E ON E.KEY = W.Ticker_ID".format(
-            index_column, wave_end_date_column
-        )
+        all_columns = OfferTable().column_name_list
+        all_columns.remove(ODC.DESCRIPTION)
+        return "SELECT {} FROM Offer".format(','.join(all_columns))
 

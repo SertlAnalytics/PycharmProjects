@@ -36,6 +36,9 @@ class MyDashJobHandler:
     def start_job_manually(self, job_to_start: str):
         self._scheduler.start_job_manually(job_to_start)
 
+    def switch_job_state(self, job_name: str):
+        self._scheduler.switch_job_state(job_name)
+
     @property
     def last_run_date_time(self):
         return self._scheduler.last_run_date_time

@@ -9,6 +9,6 @@ Date: 2018-06-10
 from salesman_database.salesman_db import SalesmanDatabase
 
 salesman_db = SalesmanDatabase()
-salesman_db.create_process_table()
-# stock_db.create_wave_view()
+# salesman_db.create_offer_table()
+salesman_db.create_offer_view()
 

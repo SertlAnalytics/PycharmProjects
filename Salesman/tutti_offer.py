@@ -114,6 +114,9 @@ class TuttiOffer:
     def set_master_id(self, master_id: str):
         self.data_dict_obj.add(ODC.OFFER_ID_MASTER, master_id)
 
+    def set_source(self, source: str):
+        self.data_dict_obj.add(ODC.SOURCE, source)
+
     @staticmethod
     def __is_any_term_in_list_in_text__(term_list: str, check_string_lower: str):
         if len(term_list) == 0:
@@ -235,7 +238,7 @@ class TuttiOffer:
 
     @property
     def source(self):
-        return 'My offer' if self._my_offer else 'Similar offer'
+        return '{} ({})'.format(self.data_dict_obj.get(ODC.SOURCE), 'My offer' if self._my_offer else 'Similar offer')
 
     @property
     def id(self):
@@ -356,6 +359,7 @@ class TuttiOffer:
     def __add_data_dict_entries__(self):
         self.data_dict_obj.add(ODC.OFFER_ID, self._id)
         self.data_dict_obj.add(ODC.OFFER_ID_MASTER, self._id)  # default - will be overwritten...
+        self.data_dict_obj.add(ODC.SOURCE, '')  # default - will be overwritten...
         self.data_dict_obj.add(ODC.START_DATE, self._date_str)
         self.data_dict_obj.add(ODC.LOCATION, self._location)
         self.data_dict_obj.add(ODC.STATE, self.state)

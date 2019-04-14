@@ -236,6 +236,7 @@ class CHT:  # chart type
     POLAR_SCATTER = 'Polar Scatter'
     STACK_GROUP = 'Stackgroup'
     CONFUSION = 'Confusion Matrix'
+    CONFUSION_REGRESSION = 'Confusion Regression'
     ROC = 'ROC Curve'
 
     @staticmethod
@@ -265,7 +266,7 @@ class CHT:  # chart type
 
     @staticmethod
     def get_chart_types_for_models_statistics():
-        return [CHT.CONFUSION, CHT.ROC]
+        return [CHT.CONFUSION_REGRESSION, CHT.CONFUSION, CHT.ROC]
 
 
 class CM:  # coverage mode
@@ -364,7 +365,7 @@ class OS:  # Order side
 class MT:  # Model Types
     ALL = 'All'
     LOGISTIC_REGRESSION = 'Logistic Regression'
-    K_NEAREST_NEIGHBORS = 'k-Nearest Neigbors'
+    K_NEAREST_NEIGHBORS = 'k-Nearest Neighbors'
     LINEAR_REGRESSION = 'Linear Regression'
     SVM = 'Support Vektor Machine'
     DECISION_TREE = 'Decision Tree'

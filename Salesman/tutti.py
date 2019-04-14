@@ -26,7 +26,7 @@ class Tutti:
         self._my_offers_source = 'Tutti'
         self._write_to_excel = self.sys_config.write_to_excel
         self._spacy = TuttiSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
-        self._browser = MyUrlBrowser4Tutti(self._spacy) if self.sys_config.with_browser else None
+        self._browser = MyUrlBrowser4Tutti(self.sys_config, self._spacy) if self.sys_config.with_browser else None
         self._url_search_switzerland = 'https://www.tutti.ch/de/li/ganze-schweiz/angebote?q='
         if self._browser is not None:
             self._browser.enter_and_submit_credentials()
@@ -161,6 +161,7 @@ class Tutti:
     def __get_tutti_offer_from_file_row__(self, file_row):
         offer = TuttiOffer(self._spacy, self.sys_config)
         offer.init_by_file_row(file_row)
+        offer.set_source(self._virtual_offers_file_path)
         offer.print_offer_in_original_structure()
         return offer
 
@@ -193,6 +194,7 @@ class Tutti:
         for similar_offer in similar_offers:
             if self.__can_similar_offer_be_added_to_dict__(similar_offer_dict, offer, similar_offer):
                 similar_offer.set_master_id(offer.id)
+                similar_offer.set_source('Tutti')
                 similar_offer_dict[similar_offer.id] = similar_offer
                 added_flag = True
         if added_flag:  # recursive call !!!

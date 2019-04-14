@@ -33,7 +33,8 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self._dd_handler = JobsTabDropDownHandler()
         self._access_layer_process = AccessLayer4Process(self.sys_config.db_stock)
-        self._n_clicks_refresh = 0
+        self._n_clicks_start = 0
+        self._n_clicks_activate = 0
         self._selected_table_name = STBL.PROCESS
         self._selected_limit = 10
         self._selected_date_range = DTRG.TODAY
@@ -43,6 +44,7 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
         self._my_jobs_last_check_label_div = 'my_jobs_last_check_label_div'
         self._my_jobs_last_check_value_div = 'my_jobs_last_check_value_div'
         self._my_jobs_start_job_button = 'my_jobs_start_job_button'
+        self._my_jobs_activate_job_button = 'my_jobs_activate_job_button'
         self._my_jobs_entry_markdown = 'my_jobs_entry_markdown'
 
     @staticmethod
@@ -60,8 +62,10 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
     def __get_embedded_div_for_last_run_and_start_job_button__(self):
         label_div = MyHTML.div(self._my_jobs_last_check_label_div, 'Last check:', True)
         value_div = MyHTML.div(self._my_jobs_last_check_value_div, '', False)
-        button_only = MyHTML.button_submit(self._my_jobs_start_job_button, 'Start selected job')
-        return MyHTML.div_embedded([label_div, MyHTML.span(' '), value_div, MyHTML.span(' '), button_only], inline=True)
+        button_start = MyHTML.button_submit(self._my_jobs_start_job_button, 'Start selected job')
+        button_activate = MyHTML.button_submit(self._my_jobs_activate_job_button, 'Deactivate selected job')
+        return MyHTML.div_embedded([label_div, MyHTML.span(' '), value_div, MyHTML.span(' '),
+                                    button_start, button_activate], inline=True)
 
     def init_callbacks(self):
         self.__init_callback_for_last_check_value_div__()
@@ -81,16 +85,23 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
         @self.app.callback(
             Output(self._data_table_div, 'children'),
             [Input(self._my_jobs_last_check_value_div, 'children'),
-             Input(self._my_jobs_start_job_button, 'n_clicks')],
+             Input(self._my_jobs_start_job_button, 'n_clicks'),
+             Input(self._my_jobs_activate_job_button, 'n_clicks')],
             [State(self._data_table_name, 'rows'),
              State(self._data_table_name, 'selected_row_indices')])
-        def handle_callback_for_jobs_table(last_check_value: str, n_clicks_refresh: int,
+        def handle_callback_for_jobs_table(last_check_value: str, n_clicks_start: int, n_clicks_activate: int,
                                            rows: list, selected_row_indices: list):
-            if self._n_clicks_refresh != n_clicks_refresh and len(selected_row_indices) > 0:
+            if len(selected_row_indices) > 0:
                 selected_job_row = rows[selected_row_indices[0]]
                 job_name = selected_job_row[JDC.NAME]
-                self._job_handler.start_job_manually(job_name)
-                print('Start job manually: {}'.format(job_name))
+                if self._n_clicks_start != n_clicks_start:
+                    print('Start job manually: {}'.format(job_name))
+                    self._job_handler.start_job_manually(job_name)
+                    self._n_clicks_start = n_clicks_start
+                elif self._n_clicks_activate != n_clicks_activate:
+                    print('Deactivate job: {}'.format(job_name))
+                    self._job_handler.start_job_manually(job_name)
+                    self._n_clicks_activate = n_clicks_activate
             return self.__get_table_for_jobs__()
 
     def __init_callback_for_jobs_markdown__(self):
@@ -109,7 +120,13 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
         @self.app.callback(
             Output(self._my_jobs_start_job_button, 'hidden'),
             [Input(self._data_table_name, 'selected_row_indices')])
-        def handle_callback_for_button_visibility(selected_row_indices: list):
+        def handle_callback_for_button_start_visibility(selected_row_indices: list):
+            return '' if len(selected_row_indices) == 1 else 'hidden'
+
+        @self.app.callback(
+            Output(self._my_jobs_activate_job_button, 'hidden'),
+            [Input(self._data_table_name, 'selected_row_indices')])
+        def handle_callback_for_button_activate_visibility(selected_row_indices: list):
             return '' if len(selected_row_indices) == 1 else 'hidden'
 
     def __get_table_for_jobs__(self):
