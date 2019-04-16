@@ -5,25 +5,24 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from datetime import datetime
 import json
 from sertl_analytics.myconstants import MyAPPS
 from sertl_analytics.mydash.my_dash_base import MyDashBase
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
-from salesman_dash.my_dash_header_tables import MyHTMLHeaderTable
-from salesman_dash.my_dash_tab_for_tutti import MyDashTab4Recommender
+from salesman_dash.header_tables.my_dash_header_tables import MyHTMLHeaderTable
+from salesman_dash.my_dash_tab_for_sales import MyDashTab4Sales
 from salesman_dash.my_dash_tab_for_jobs import MyDashTab4Jobs
 from salesman_system_configuration import SystemConfiguration
-from salesman_dash.my_dash_tab_for_log import MyDashTab4Log
 
 
 class MyDash4Salesman(MyDashBase):
     def __init__(self, sys_config: SystemConfiguration):
         MyDashBase.__init__(self, MyAPPS.SALESMAN_DASH())
         self.sys_config = sys_config
-        self.tab_recommender = MyDashTab4Recommender(self.app, self.sys_config)
+        self.tab_sales = MyDashTab4Sales(self.app, self.sys_config)
         # self.tab_log = MyDashTab4Log(self.app)
         self.tab_jobs = MyDashTab4Jobs(self.app)
 
@@ -31,7 +30,7 @@ class MyDash4Salesman(MyDashBase):
         self.__set_app_layout__()
         self.__init_interval_callback_for_user_name__()
         self.__init_interval_callback_for_time_div__()
-        # self.tab_recommender.init_callbacks()
+        self.tab_sales.init_callbacks()
         self.tab_jobs.init_callbacks()
 
     def run_on_server(self):
@@ -74,7 +73,7 @@ class MyDash4Salesman(MyDashBase):
 
     def __get_tabs_for_app__(self):
         tab_list = [
-            MyDCC.tab('Recom.', [self.tab_recommender.get_div_for_tab()]),
+            MyDCC.tab('Sales', [self.tab_sales.get_div_for_tab()]),
             # MyDCC.tab('Logs', [self.tab_log.get_div_for_tab()]),
             MyDCC.tab('Jobs', [self.tab_jobs.get_div_for_tab()]),
 

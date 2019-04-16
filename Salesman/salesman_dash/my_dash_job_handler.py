@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-01-22
 """
 
-from salesman_dash.my_dash_jobs import MyDashUpdateSimilarOffersJob, MyDashOptimizeLogFilesJob
+from salesman_dash.my_dash_jobs import MyDashUpdateSimilarSalesJob, MyDashOptimizeLogFilesJob
 from salesman_scheduling.salesman_process_manager import SalesmanProcessManager
 from salesman_scheduling.salesman_scheduler import MySalesmanScheduler
 from sertl_analytics.constants.pattern_constants import PRD, INDICES, FT, PPR, STBL
@@ -43,7 +43,7 @@ class MyDashJobHandler:
 
     def __add_jobs__(self):
         self._scheduler.add_job(
-            MyDashUpdateSimilarOffersJob(
+            MyDashUpdateSimilarSalesJob(
                 weekdays=self._weekdays_all, start_times=['01:00'], db_updater=self._db_updater))
         self._scheduler.add_job(
             MyDashOptimizeLogFilesJob(weekdays=[6], start_times=['23:00'], db_updater=self._db_updater))

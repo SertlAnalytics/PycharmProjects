@@ -18,13 +18,13 @@ class MyDashSalesmanJob(MySalesmanJob):
         self._db_updater = db_updater
 
 
-class MyDashUpdateSimilarOffersJob(MyDashSalesmanJob):
+class MyDashUpdateSimilarSalesJob(MyDashSalesmanJob):
     def __perform_task__(self):
-        self._db_updater.update_similar_offers()
+        self._db_updater.update_similar_sales()
 
     @property
     def process_name(self):
-        return SMPR.UPDATE_OFFER_DAILY
+        return SMPR.UPDATE_SALES_DAILY
 
 
 class MyDashOptimizeLogFilesJob(MyDashSalesmanJob):

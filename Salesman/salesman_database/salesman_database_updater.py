@@ -6,7 +6,7 @@ Date: 2018-12-10
 """
 
 from sertl_analytics.mydates import MyDate
-from salesman_database.access_layer.access_layer_offer import AccessLayer4Offer
+from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from salesman_scheduling.salesman_job_result import SalesmanDatabaseUpdateJobResult
 
 
@@ -14,12 +14,12 @@ class SalesmanDatabaseUpdater:
     def __init__(self, db_salesman):
         self.db_salesman = db_salesman
 
-    def update_similar_offers(self):
-        print('ToDo: update similar offers...')  # ToDo
+    def update_similar_sales(self):
+        print('ToDo: update similar sales...')  # ToDo
 
     def update_equity_records(self) -> SalesmanDatabaseUpdateJobResult:
         result_obj = SalesmanDatabaseUpdateJobResult()
-        access_layer = AccessLayer4Offer(self.db_salesman)
+        access_layer = AccessLayer4Sale(self.db_salesman)
         dt_today = MyDate.get_date_from_datetime()
         # dt_today = MyDate.adjust_by_days(dt_today, 40)
         dt_valid_until = MyDate.adjust_by_days(dt_today, 30)

@@ -19,7 +19,7 @@ class SalesmanProcessManager(MyProcessManager):
 
     def __get_process_dict__(self) -> dict:
         return {
-            SMPR.UPDATE_OFFER_DAILY: smpr.ProcessUpdateOfferDaily(self._db),
+            SMPR.UPDATE_SALES_DAILY: smpr.ProcessUpdateSaleDaily(self._db),
             SMPR.UPDATE_COMPANY_DAILY: smpr.ProcessUpdateCompanyDaily(self._db),
             MYPR.OPTIMIZE_LOG_FILES: smpr.ProcessOptimizeLogFiles(self._db),
             MYPR.RUN_UNDEFINED_PROCESS: ProcessRunUndefinedProcess(self._db)

@@ -13,10 +13,12 @@ from sertl_analytics.mydash.my_dash_color_handler import DashColorHandler
 class MyDashBaseTab:
     def __init__(self, app: Dash):
         self.app = app
-        self._color_handler = self.__get_color_handler__()
         self._time_stamp_last_refresh = MyDate.time_stamp_now()
-        self._dd_handler = None
-        self._button_handler = None
+        self._tab = self.__get_tab_name__()
+        self._color_handler = self.__get_color_handler__()
+        self._dd_handler = self.__get_drop_down_handler__()
+        self._button_handler = self.__get_button_handler__()
+        self.__init_dash_element_ids__()
 
     def init_callbacks(self):
         pass
@@ -24,6 +26,21 @@ class MyDashBaseTab:
     def get_div_for_tab(self):
         pass
 
+    @staticmethod
+    def __get_tab_name__():
+        return ''
+
+    @staticmethod
+    def __get_drop_down_handler__():
+        pass
+
+    @staticmethod
+    def __get_button_handler__():
+        pass
+
     def __get_color_handler__(self):
         return DashColorHandler()
+
+    def __init_dash_element_ids__(self):
+        pass
 

@@ -11,7 +11,7 @@ from sertl_analytics.processes.my_process import MyProcess
 from salesman_logging.salesman_log import SalesmanLog
 
 """
-    UPDATE_OFFER_DAILY = 'Update_Offer_Daily'
+    UPDATE_SALES_DAILY = 'Update_Sale_Daily'
     UPDATE_COMPANY_DAILY = 'Update_Company_Daily'
 """
 
@@ -21,14 +21,14 @@ class SalesmanProcess(MyProcess):
         return SalesmanLog()
 
 
-class ProcessUpdateOfferDaily(SalesmanProcess):
+class ProcessUpdateSaleDaily(SalesmanProcess):
     @property
     def process_name(self):
-        return SMPR.UPDATE_OFFER_DAILY
+        return SMPR.UPDATE_SALES_DAILY
 
     @staticmethod
     def __get_table_names__():
-        return [SMTBL.OFFER]
+        return [SMTBL.SALE]
 
 
 class ProcessUpdateCompanyDaily(SalesmanProcess):

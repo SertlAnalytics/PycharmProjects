@@ -25,7 +25,6 @@ class MyDashTab4DB(MyPatternDashBaseTab):
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         MyPatternDashBaseTab.__init__(self, app, sys_config)
-        self.__init_dash_element_ids__()
         self.sys_config = sys_config
         self._db = self.sys_config.db_stock
         self._pattern_controller = PatternDetectionController(self.sys_config)

@@ -11,9 +11,8 @@ from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi, MyDCCGraph
 from sertl_analytics.mycache import MyCacheObjectApi, MyCache
 from pattern_dash.my_dash_tab_dd_for_waves import WaveTabDropDownHandler, WAVEDD
-from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Waves
+from pattern_dash.plotter_dash.my_dash_plotter_for_statistics_waves import MyDashTabStatisticsPlotter4Waves
 from pattern_detection_controller import PatternDetectionController
-from pattern_process_manager import PatternProcessManager
 from pattern_dash.my_dash_colors import DashColorHandler
 from dash import Dash
 from sertl_analytics.mydates import MyDate
@@ -30,15 +29,15 @@ class MyDashTab4Waves(MyPatternDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, color_handler: DashColorHandler):
         MyPatternDashBaseTab.__init__(self, app, sys_config)
         self._process_for_head_map = sys_config.process_manager.get_process_by_name(PPR.UPDATE_HEATMAP_IN_WAVE_TAB)
-        self._dd_handler = WaveTabDropDownHandler()
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
-        self.__init_dash_element_ids__()
         self._dash_color_handler = color_handler
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self._heat_map_was_updated = False
         self._index_chart_cache = MyCache()
 
-        # self._wave_table = WaveTabTable(self._waves_data_frame_dict, 'log_type', 'date_range')
+    @staticmethod
+    def __get_drop_down_handler__():
+        return WaveTabDropDownHandler()
 
     @staticmethod
     def __get_adjusted_sys_config_copy__(sys_config: SystemConfiguration) -> SystemConfiguration:

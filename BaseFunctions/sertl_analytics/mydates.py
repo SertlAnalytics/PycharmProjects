@@ -187,7 +187,10 @@ class MyDate:
         if date_time.__class__.__name__ == 'date':  # no change
             return date_time
         if len(str(date_time)) == 10:
-            return datetime.strptime(str(date_time), '%Y-%m-%d').date()
+            try:
+                return datetime.strptime(str(date_time), '%Y-%m-%d').date()
+            except ValueError:
+                return datetime.strptime(str(date_time), '%d.%m.%Y').date()
         else:
             return datetime.strptime(str(date_time)[:19], '%Y-%m-%d %H:%M:%S').date()
 
@@ -209,6 +212,17 @@ class MyDate:
         if date_time is None:
             date_time = datetime.now()
         return str(MyDate.get_date_from_datetime(date_time))
+    
+    @staticmethod
+    def get_date_str_for_date_term(term: str):
+        for date_term in ['heute', 'today']:
+            if term.lower().find(date_term) >= 0 :
+                return MyDate.get_date_str_from_datetime()
+        for date_term in ['gestern', 'yesterday']:
+            if term.lower().find(date_term) >= 0 :
+                return MyDate.get_date_str_from_datetime(MyDate.adjust_by_days(None, -1))
+        date_obj = MyDate.get_date_from_datetime(term)
+        return str(date_obj)
 
     @staticmethod
     def get_number_for_date_time(date_time) -> int:

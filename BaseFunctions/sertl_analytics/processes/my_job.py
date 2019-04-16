@@ -32,7 +32,7 @@ class MyJob:
         self._last_run_runtime_seconds = 0
         self._last_run_processed_details = ''
         self._process = None
-        self._state = 'active'
+        self._is_active = True
 
     @property
     def job_name(self):
@@ -73,11 +73,11 @@ class MyJob:
         self._for_test = value
 
     @property
-    def done(self):
-        return False
+    def is_active(self):
+        return self._is_active
 
     def is_ready(self, last_run_time_stamp: int):
-        if self.done or self.is_running or self._state == 'inactive':
+        if self._is_running or not self._is_active:
             return False
         if MyDate.weekday() in self._scheduled_weekdays:
             now_time_stamp = MyDate.time_stamp_now()
@@ -86,7 +86,7 @@ class MyJob:
         return False
 
     def switch_job_state(self):
-        self._state = 'active' if self._state != 'active' else 'inactive'
+        self._is_active = not self._is_active
 
     def start_job(self): # Run the function in another thread
         self._process.__start_process__()
@@ -124,7 +124,7 @@ class MyJob:
             return '-' if self._last_run_start_date_time is None else \
                 MyDate.get_time_str_from_datetime(self._last_run_start_date_time)
         elif column == JDC.LAST_RUN_TIME:
-            if self._state == 'inactive':
+            if not self._is_active:
                 return 'deactivated'
             return '- running -' if self._is_running else self.last_run_runtime_seconds
         elif column == JDC.PROCESSED:

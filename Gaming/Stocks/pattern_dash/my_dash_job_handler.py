@@ -15,6 +15,7 @@ from pattern_process_manager import PatternProcessManager
 from pattern_scheduling.pattern_scheduler import MyPatternScheduler
 from pattern_database.stock_database_updater import StockDatabaseUpdater
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.processes.my_job import MyJob
 
 
 class MyDashJobHandler:
@@ -38,6 +39,9 @@ class MyDashJobHandler:
 
     def switch_job_state(self, job_name: str):
         self._scheduler.switch_job_state(job_name)
+
+    def get_job(self, job_name: str) -> MyJob:
+        return self._scheduler.get_job(job_name)
 
     @property
     def last_run_date_time(self):

@@ -26,8 +26,8 @@ class SalesmanDataDictionary(DataDictionary):
             return 1000 if value > 1000 else round(value, 0)
         return value
 
-    def is_data_dict_ready_for_offer_table(self):
-        for col in self.sys_config.offer_table.column_name_list:
+    def is_data_dict_ready_for_sale_table(self):
+        for col in self.sys_config.sale_table.column_name_list:
             if col not in self._data_dict:
                 print('col not in data_dict: {}'.format(col))
                 return False
@@ -37,8 +37,9 @@ class SalesmanDataDictionary(DataDictionary):
         trade_id = self._data_dict.get(DC.ID)
         for col in self.sys_config.company_table.column_name_list:
             if col not in self._data_dict:
-                self.sys_config.file_log.log_message(log_message='{}: Col {} not in _data_dict'.format(trade_id, col),
-                                                     process='Save trade', process_step='is_data_dict_ready_for_trade_table')
+                self.sys_config.file_log.log_message(
+                    log_message='{}: Col {} not in _data_dict'.format(trade_id, col),
+                    process='Save trade', process_step='is_data_dict_ready_for_trade_table')
                 return False
         return True
 
@@ -51,8 +52,8 @@ class SalesmanDataDictionary(DataDictionary):
     def get_data_list_for_columns(self, columns: list):
         return [self._data_dict[col] for col in columns]
 
-    def get_data_dict_for_offer_table(self):
-        return {col: self._data_dict[col] for col in self.sys_config.offer_table.column_name_list}
+    def get_data_dict_for_sale_table(self):
+        return {col: self._data_dict[col] for col in self.sys_config.sale_table.column_name_list}
 
     def get_data_dict_for_company_table(self):
         return {col: self._data_dict[col] for col in self.sys_config.company_table.column_name_list}

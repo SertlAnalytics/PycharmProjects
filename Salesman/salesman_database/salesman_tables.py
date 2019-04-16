@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
 from sertl_analytics.constants.pattern_constants import DC, MDC, PRDC
-from sertl_analytics.constants.salesman_constants import SMTBL, ODC
+from sertl_analytics.constants.salesman_constants import SMTBL, SLDC
 
 
 class PredictionFeatureTable:
@@ -32,44 +32,44 @@ class ProcessTable(MyTable):
         self._columns.append(MyTableColumn(PRDC.COMMENT, CDT.STRING, 200))
 
 
-class OfferTable(MyTable):
+class SaleTable(MyTable):
     @staticmethod
     def _get_name_():
-        return SMTBL.OFFER
+        return SMTBL.SALE
 
     def __get_column_date__(self):
-        return ODC.START_DATE
+        return SLDC.START_DATE
 
     def _add_columns_(self):
-        self._columns.append(MyTableColumn(ODC.OFFER_ID, CDT.STRING, 10))
-        self._columns.append(MyTableColumn(ODC.OFFER_ID_MASTER, CDT.STRING, 10))
-        self._columns.append(MyTableColumn(ODC.SOURCE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(ODC.STATE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(ODC.HREF, CDT.STRING, 150))
-        self._columns.append(MyTableColumn(ODC.START_DATE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(ODC.LOCATION, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(ODC.DOC_STATE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(ODC.TITLE, CDT.STRING, 100))
-        self._columns.append(MyTableColumn(ODC.DESCRIPTION, CDT.STRING, 1000))
-        self._columns.append(MyTableColumn(ODC.PRICE, CDT.FLOAT))
-        self._columns.append(MyTableColumn(ODC.PRICE_SINGLE, CDT.FLOAT))
-        self._columns.append(MyTableColumn(ODC.IS_TOTAL_PRICE, CDT.BOOLEAN))
-        self._columns.append(MyTableColumn(ODC.PRICE_ORIGINAL, CDT.FLOAT))
-        self._columns.append(MyTableColumn(ODC.SIZE, CDT.STRING, 50))
-        self._columns.append(MyTableColumn(ODC.NUMBER, CDT.INTEGER))
-        self._columns.append(MyTableColumn(ODC.IS_NEW, CDT.BOOLEAN))
-        self._columns.append(MyTableColumn(ODC.IS_USED, CDT.BOOLEAN))
-        self._columns.append(MyTableColumn(ODC.IS_OUTLIER, CDT.BOOLEAN))
-        self._columns.append(MyTableColumn(ODC.VISITS, CDT.INTEGER))
-        self._columns.append(MyTableColumn(ODC.BOOK_MARKS, CDT.INTEGER))
-        self._columns.append(MyTableColumn(ODC.SEARCH_LABELS, CDT.STRING, 100))
-        self._columns.append(MyTableColumn(ODC.ENTITY_LABELS, CDT.STRING, 100))
-        self._columns.append(MyTableColumn(ODC.FOUND_BY_LABELS, CDT.STRING, 100))
-        self._columns.append(MyTableColumn(ODC.PRICE_CHANGES, CDT.STRING, 1000))
-        self._columns.append(MyTableColumn(ODC.END_DATE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(ODC.END_PRICE, CDT.FLOAT))
-        self._columns.append(MyTableColumn(ODC.LAST_CHECK_DATE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(ODC.COMMENT, CDT.STRING, 200))
+        self._columns.append(MyTableColumn(SLDC.SALE_ID, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(SLDC.MASTER_ID, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(SLDC.SOURCE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.SALE_STATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.HREF, CDT.STRING, 150))
+        self._columns.append(MyTableColumn(SLDC.START_DATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.LOCATION, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.OBJECT_STATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.TITLE, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(SLDC.DESCRIPTION, CDT.STRING, 1000))
+        self._columns.append(MyTableColumn(SLDC.PRICE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(SLDC.PRICE_SINGLE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(SLDC.IS_TOTAL_PRICE, CDT.BOOLEAN))
+        self._columns.append(MyTableColumn(SLDC.PRICE_ORIGINAL, CDT.FLOAT))
+        self._columns.append(MyTableColumn(SLDC.SIZE, CDT.STRING, 50))
+        self._columns.append(MyTableColumn(SLDC.NUMBER, CDT.INTEGER))
+        self._columns.append(MyTableColumn(SLDC.IS_NEW, CDT.BOOLEAN))
+        self._columns.append(MyTableColumn(SLDC.IS_USED, CDT.BOOLEAN))
+        self._columns.append(MyTableColumn(SLDC.IS_OUTLIER, CDT.BOOLEAN))
+        self._columns.append(MyTableColumn(SLDC.VISITS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(SLDC.BOOK_MARKS, CDT.INTEGER))
+        self._columns.append(MyTableColumn(SLDC.SEARCH_LABELS, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(SLDC.ENTITY_LABELS, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(SLDC.FOUND_BY_LABELS, CDT.STRING, 100))
+        self._columns.append(MyTableColumn(SLDC.PRICE_CHANGES, CDT.STRING, 1000))
+        self._columns.append(MyTableColumn(SLDC.END_DATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.END_PRICE, CDT.FLOAT))
+        self._columns.append(MyTableColumn(SLDC.LAST_CHECK_DATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.COMMENT, CDT.STRING, 200))
 
 
 class MetricTable(MyTable):

@@ -8,9 +8,9 @@ Date: 2018-11-14
 from dash.dependencies import Input, Output, State
 from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
-from salesman_dash.my_dash_header_tables import MyHTMLTabLogHeaderTable
+from salesman_dash.header_tables.my_dash_header_tables import MyHTMLTabLogHeaderTable
 from salesman_dash.my_dash_tab_dd_for_log import LogTabDropDownHandler, LOGDD
-from salesman_database.access_layer.access_layer_offer import AccessLayer4Offer
+from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from salesman_database.salesman_db import SalesmanDatabase
 from dash import Dash
 from sertl_analytics.mydates import MyDate
@@ -32,7 +32,7 @@ class MyDashTab4Log(MyDashBaseTab):
         self.__init_dash_element_ids__()
         self._dd_handler = LogTabDropDownHandler()
         self._log_data_frame_dict = {}
-        self._access_layer_offer = AccessLayer4Offer(SalesmanDatabase())
+        self._access_layer_offer = AccessLayer4Sale(SalesmanDatabase())
         # self.__fill_log_data_frame_dict__()
         self._selected_log_type = LOGT.MESSAGE_LOG
         self._selected_process = ''

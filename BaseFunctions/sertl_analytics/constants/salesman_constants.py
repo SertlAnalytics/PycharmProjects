@@ -6,16 +6,16 @@ Date: 2019-04-09
 """
 
 class SMPR:  # Salesman Processes
-    UPDATE_OFFER_DAILY = 'Update_Offer_Daily'
+    UPDATE_SALES_DAILY = 'Update_Sales_Daily'
     UPDATE_COMPANY_DAILY = 'Update_Company_Daily'
 
     
 class SMVW:  # salesman views
-    V_OFFER = 'v_offer'
+    V_SALE = 'v_sale'
 
 
 class SMTBL:  # salesman tables
-    OFFER = 'Offer'
+    SALE = 'Sale'
     COMPANY = 'Company'
     PRODUCT = 'Product'
     OBJECT = 'Object'
@@ -24,7 +24,7 @@ class SMTBL:  # salesman tables
 
     @staticmethod
     def get_all():
-        return [SMTBL.OFFER, SMTBL.COMPANY, SMTBL.PRODUCT, SMTBL.OBJECT, SMTBL.PROCESS, SMTBL.METRIC]
+        return [SMTBL.SALE, SMTBL.COMPANY, SMTBL.PRODUCT, SMTBL.OBJECT, SMTBL.PROCESS, SMTBL.METRIC]
 
     @staticmethod
     def get_as_options():
@@ -32,22 +32,53 @@ class SMTBL:  # salesman tables
 
     @staticmethod
     def get_for_model_statistics():
-        return [SMTBL.OFFER]
+        return [SMTBL.SALE]
 
 
 class DC:  # Data Columns
     ROWID = 'rowid'
     
     
-class ODC:  # Offer data column
-    OFFER_ID = 'Offer_ID'
-    OFFER_ID_MASTER = 'ID_Master'
+class SLSRC:  # sale sources
+    DB = 'Database'
+    FILE = 'File'
+    ONLINE = 'Online'
+    TUTTI_CH = 'Tutti.ch'
+    RICARDO_CH = 'Ricardo.ch'
+    EBAY_CH = 'Ebay.ch'
+
+    @staticmethod
+    def get_my_sale_sources():
+        return [SLSRC.DB, SLSRC.FILE, SLSRC.ONLINE]
+
+    @staticmethod
+    def get_similar_sale_sources():
+        return [SLSRC.DB, SLSRC.TUTTI_CH, SLSRC.RICARDO_CH, SLSRC.EBAY_CH]
+    
+class SLST:  # Sale Status
+    NEW = 'new'
+    OPEN = 'open'
+    SOLD = 'sold'
+    VANISHED = 'vanished'
+    WITHDRAWN = 'withdrawn'
+    ON_HOLD = 'onhold'
+    
+    
+class OBJST:  # Object Status
+    NEW = 'new'
+    USED = 'used'
+    NOT_QUALIFIED = 'not qualified'
+
+    
+class SLDC:  # Sale data column
+    SALE_ID = 'Sale_ID'
+    MASTER_ID = 'Master_ID'
     SOURCE = 'Source'  # Tutti, Ricardo, etc.
-    STATE = 'State'
+    SALE_STATE = 'Sale_State'  # see SLST
     HREF = 'Link'
     START_DATE = 'Start_Date'
     LOCATION = 'Location'
-    DOC_STATE = 'Doc_State'
+    OBJECT_STATE = 'Object_State'  # see OBJST
     TITLE = 'Title'
     DESCRIPTION = 'Description'
     PRICE = 'Price'
@@ -71,14 +102,21 @@ class ODC:  # Offer data column
     COMMENT = 'Comment'
 
     @staticmethod
-    def get_columns_for_virtual_offers_in_file():
-        return [ODC.OFFER_ID, ODC.TITLE, ODC.DESCRIPTION, ODC.PRICE, ODC.PRICE_ORIGINAL]
+    def get_columns_for_virtual_sales_in_file():
+        return [SLDC.SALE_ID, SLDC.TITLE, SLDC.DESCRIPTION, SLDC.PRICE, SLDC.PRICE_ORIGINAL]
 
     @staticmethod
     def get_columns_for_excel():
-        return [ODC.OFFER_ID, ODC.OFFER_ID_MASTER, ODC.SOURCE, ODC.START_DATE, ODC.LOCATION, ODC.STATE,
-                ODC.PRICE, ODC.PRICE_SINGLE, ODC.IS_OUTLIER, ODC.IS_TOTAL_PRICE, ODC.PRICE_ORIGINAL, ODC.NUMBER,
-                ODC.SIZE,
-                ODC.TITLE, ODC.DESCRIPTION,
-                ODC.IS_NEW, ODC.IS_USED, ODC.VISITS, ODC.BOOK_MARKS,
-                ODC.SEARCH_LABELS, ODC.ENTITY_LABELS, ODC.FOUND_BY_LABELS, ODC.HREF]
+        return [SLDC.SALE_ID, SLDC.MASTER_ID, SLDC.SOURCE, SLDC.START_DATE, SLDC.LOCATION, SLDC.OBJECT_STATE,
+                SLDC.PRICE, SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER, SLDC.IS_TOTAL_PRICE, SLDC.PRICE_ORIGINAL, SLDC.NUMBER,
+                SLDC.SIZE,
+                SLDC.TITLE, SLDC.DESCRIPTION,
+                SLDC.IS_NEW, SLDC.IS_USED, SLDC.VISITS, SLDC.BOOK_MARKS,
+                SLDC.SEARCH_LABELS, SLDC.ENTITY_LABELS, SLDC.FOUND_BY_LABELS, SLDC.HREF]
+
+    @staticmethod
+    def get_columns_for_sales_tab_table():
+        return [SLDC.SALE_ID, SLDC.MASTER_ID, SLDC.SOURCE, SLDC.START_DATE, SLDC.LOCATION, SLDC.OBJECT_STATE,
+                SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER, SLDC.TITLE, SLDC.HREF]
+
+

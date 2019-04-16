@@ -27,7 +27,6 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         MyPatternDashBaseTab.__init__(self, app, sys_config)
         self._job_handler = MyDashJobHandler(sys_config.process_manager)
-        self.__init_dash_element_ids__()
         self.sys_config = sys_config
         self._db = self.sys_config.db_stock
         self._pattern_controller = PatternDetectionController(self.sys_config)
@@ -99,8 +98,8 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
                     self._job_handler.start_job_manually(job_name)
                     self._n_clicks_start = n_clicks_start
                 elif self._n_clicks_activate != n_clicks_activate:
-                    print('Deactivate job: {}'.format(job_name))
-                    self._job_handler.start_job_manually(job_name)
+                    print('Switch job status: {}'.format(job_name))
+                    self._job_handler.switch_job_state(job_name)
                     self._n_clicks_activate = n_clicks_activate
             return self.__get_table_for_jobs__()
 
@@ -128,6 +127,18 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
             [Input(self._data_table_name, 'selected_row_indices')])
         def handle_callback_for_button_activate_visibility(selected_row_indices: list):
             return '' if len(selected_row_indices) == 1 else 'hidden'
+
+        @self.app.callback(
+            Output(self._my_jobs_activate_job_button, 'children'),
+            [Input(self._data_table_name, 'selected_row_indices')],
+            [State(self._data_table_name, 'rows')])
+        def handle_callback_for_button_activate_text(selected_row_indices: list, rows: list):
+            if len(selected_row_indices) == 0:
+                return ''
+            selected_job_row = rows[selected_row_indices[0]]
+            job_name = selected_job_row[JDC.NAME]
+            job = self._job_handler.get_job(job_name)
+            return 'Deactivate selected job' if job.is_active else 'Activate selected job'
 
     def __get_table_for_jobs__(self):
         self._grid_table = JobTable(self._job_handler)

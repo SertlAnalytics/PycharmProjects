@@ -38,8 +38,6 @@ class MyDashTab4Trades(MyPatternDashBaseTab):
         self._pattern_rows_for_data_table = MyDCC.get_rows_from_df_for_data_table(self._df_pattern_for_replay)
         self.__init_selected_row__()
         self.__init_trade_handler_for_replay__()
-        self.__init_dd_handler__()
-        self.__init_button_handler__()
         self._selected_pattern_trade = None
         self._selected_buy_trigger = None
         self._selected_trade_strategy = None
@@ -57,11 +55,13 @@ class MyDashTab4Trades(MyPatternDashBaseTab):
     def __get_news_handler__():
         return NewsHandler('  \n', '')
 
-    def __init_dd_handler__(self):
-        self._dd_handler = TradeDropDownHandler()
+    @staticmethod
+    def __get_drop_down_handler__():
+        return TradeDropDownHandler()
 
-    def __init_button_handler__(self):
-        self._button_handler = TradeButtonHandler()
+    @staticmethod
+    def __get_button_handler__():
+        return TradeButtonHandler()
 
     def __init_selected_row__(self, trade_type=''):
         self._selected_trade_type = trade_type

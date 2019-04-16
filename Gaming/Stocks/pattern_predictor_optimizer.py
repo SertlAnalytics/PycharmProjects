@@ -127,16 +127,19 @@ class PatternPredictorOptimizer:
         return df_filtered.sort_values([MDC.VALUE])
 
     def get_metrics_for_model_and_label_as_data_frame_for_regression(
-            self, model_name: str, table_name: str, predictor: str, label: str, pattern_type: str):
-        where_clause = "WHERE {}='{}' AND {}='{}' AND {}='{}'".format(
-            MDC.PREDICTOR, predictor, MDC.LABEL, label, MDC.PATTERN_TYPE, pattern_type)
-        query = "SELECT * from Metric {} ORDER BY {}".format(where_clause, MDC.VALID_DT)
-        print('query={}'.format(query))
+            self, model_name: str, predictor: str, label: str, pattern_type: str):
+        where_clause = "WHERE {}='{}' AND {}='{}' AND {}='{}' AND {}='{}' AND {} > 0".format(
+            MDC.MODEL, model_name, MDC.PREDICTOR, predictor, MDC.LABEL, label,
+            MDC.PATTERN_TYPE, pattern_type, MDC.PRECISION)
+        columns = [MDC.VALID_DT, MDC.VALUE, MDC.PRECISION, MDC.RECALL, MDC.F1_SCORE, MDC.ROC_AUC]
+        query = "SELECT {} from Metric {} ORDER BY {}".format(','.join(columns), where_clause, MDC.VALID_DT)
+        # print('query={}'.format(query))
         return self._access_layer_metric.select_data_by_query(query)
 
     def get_x_orig_data_for_confusion_regression(self):
-        query = "SELECT DISTINCT {} from Metric ORDER BY {}".format(MDC.VALID_DT, MDC.VALID_DT)
-        print('query={}'.format(query))
+        query = "SELECT DISTINCT {} from Metric WHERE {} > 0 ORDER BY {}".format(
+            MDC.VALID_DT, MDC.PRECISION, MDC.VALID_DT)
+        # print('query={}'.format(query))
         df = self._access_layer_metric.select_data_by_query(query)
         return df[MDC.VALID_DT]
 

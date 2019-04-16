@@ -29,7 +29,6 @@ class MyDashTab4Log(MyPatternDashBaseTab):
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         MyPatternDashBaseTab.__init__(self, app, sys_config)
-        self.__init_dash_element_ids__()
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.exchange_config = self.sys_config.exchange_config
         self._pattern_controller = PatternDetectionController(self.sys_config)

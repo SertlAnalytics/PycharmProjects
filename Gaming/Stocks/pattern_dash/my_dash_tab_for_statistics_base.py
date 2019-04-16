@@ -13,10 +13,9 @@ from sertl_analytics.constants.pattern_constants import CHT, FT, DC
 from sertl_analytics.mydash.my_dash_components import MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLTabPatternStatisticsHeaderTable
 from pattern_dash.my_dash_tab_dd_for_statistics import DDT, PatternStatisticsDropDownHandler
-from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Pattern
+from pattern_dash.plotter_dash.my_dash_plotter_for_statistics_pattern import MyDashTabStatisticsPlotter4Pattern
 from pattern_dash.my_dash_colors import DashColorHandler
 from textwrap import dedent
-from pattern_database.stock_tables import PatternTable
 import pandas as pd
 
 
@@ -24,14 +23,9 @@ class MyDashTab4StatisticsBase(MyPatternDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, color_handler: DashColorHandler):
         MyPatternDashBaseTab.__init__(self, app, sys_config)
         self._color_handler = color_handler
-        self.__fill_tab__()
         self._df_base = None
         self.__fill_df_base__()
-        self.__manipulate_ptc_columns__()
-        self.__init_dash_element_ids__()
-        self._plotter = None
-        self.__init_plotter__()
-        self.__init_dd_handler__()
+        self._statistic_plotter = self.__get_statistic_plotter__()
 
     @property
     def column_result(self):
@@ -52,7 +46,7 @@ class MyDashTab4StatisticsBase(MyPatternDashBaseTab):
         return MyHTML.div(self._my_statistics, children_list)
 
     def __get_charts_from_plotter__(self):
-        charts = self._plotter.get_chart_list()
+        charts = self._statistic_plotter.get_chart_list()
         # print('charts = {}'.format(charts))
         if len(charts) == 1:
             return charts[0]
@@ -61,8 +55,9 @@ class MyDashTab4StatisticsBase(MyPatternDashBaseTab):
             embedded_element_list.append(MyHTML.div('HALLO', chart, inline=True))
         return MyHTML.div_embedded(embedded_element_list)
 
-    def __fill_tab__(self):
-        self._tab = 'base'
+    @staticmethod
+    def __get_tab_name__():
+        return 'base'
 
     @staticmethod
     def __get_html_tab_header_table__():
@@ -94,11 +89,12 @@ class MyDashTab4StatisticsBase(MyPatternDashBaseTab):
     def __get_df_base__(self) -> pd.DataFrame:
         return self.sys_config.db_stock.get_pattern_records_as_dataframe()
 
-    def __init_dd_handler__(self):
-        self._dd_handler = PatternStatisticsDropDownHandler()
+    @staticmethod
+    def __get_drop_down_handler__():
+        return PatternStatisticsDropDownHandler()
 
-    def __init_plotter__(self):
-        self._plotter = MyDashTabStatisticsPlotter4Pattern(self._df_base, self._color_handler)
+    def __get_statistic_plotter__(self):
+        return MyDashTabStatisticsPlotter4Pattern(self._df_base, self._color_handler)
 
     def __manipulate_ptc_columns__(self):
         for column in self._df_base.columns:
@@ -224,13 +220,13 @@ class MyDashTab4StatisticsBase(MyPatternDashBaseTab):
              Input('my_interval_refresh', 'n_intervals')])
         def handle_interval_callback_with_date_picker(ct: str, predictor: str, category: str, x: str, y: str,
                                                       text_column: str, pt: str, n_intervals: int):
-            self._plotter.predictor = predictor
-            self._plotter.category = category
-            self._plotter.chart_type = ct
-            self._plotter.x_variable = x
-            self._plotter.y_variable = y
-            self._plotter.text_variable = text_column
-            self._plotter.pattern_type = pt
+            self._statistic_plotter.predictor = predictor
+            self._statistic_plotter.category = category
+            self._statistic_plotter.chart_type = ct
+            self._statistic_plotter.x_variable = x
+            self._statistic_plotter.y_variable = y
+            self._statistic_plotter.text_variable = text_column
+            self._statistic_plotter.pattern_type = pt
             return self.__get_charts_from_plotter__()
 
         @self.app.callback(

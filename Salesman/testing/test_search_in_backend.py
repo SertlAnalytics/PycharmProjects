@@ -9,8 +9,8 @@ import requests
 from lxml import html
 from lxml.html import HtmlElement
 from tutti_spacy import TuttiSpacy
-from tutti_offer import TuttiOffer
-from tutti_constants import OCLS
+from tutti_sale import TuttiSale
+from tutti_constants import SLCLS
 from sertl_analytics.myhtml import MyHtmlElement
 
 
@@ -26,9 +26,9 @@ class TuttiPage:
         tree = html.fromstring(request.content)
         offers = tree.xpath('//div[@class="_3aiCi"]')
         for offer_element in offers:
-            offer = TuttiOffer(self._spacy.nlp, search_str)
+            offer = TuttiSale(self._spacy.nlp, search_str)
             offer.init_by_html_element(offer_element)
-            offer.print_offer_in_original_structure()
+            offer.print_sale_in_original_structure()
 
 
 tutti_page = TuttiPage()

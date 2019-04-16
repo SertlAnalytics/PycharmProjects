@@ -5,19 +5,19 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
-from dash.dependencies import Input, Output
-from sertl_analytics.constants.pattern_constants import DC, CHT, PRED, FT
+from sertl_analytics.constants.pattern_constants import DC, CHT, PRED
 from pattern_database.stock_tables import PatternTable
 from pattern_dash.my_dash_header_tables import MyHTMLTabPatternStatisticsHeaderTable
-from pattern_dash.my_dash_tab_dd_for_statistics import DDT, PatternStatisticsDropDownHandler
-from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Pattern
+from pattern_dash.my_dash_tab_dd_for_statistics import PatternStatisticsDropDownHandler
+from pattern_dash.plotter_dash.my_dash_plotter_for_statistics_pattern import MyDashTabStatisticsPlotter4Pattern
 from pattern_dash.my_dash_tab_for_statistics_base import MyDashTab4StatisticsBase
 import pandas as pd
 
 
 class MyDashTab4PatternStatistics(MyDashTab4StatisticsBase):
-    def __fill_tab__(self):
-        self._tab = 'pattern'
+    @staticmethod
+    def __get_tab_name__():
+        return 'pattern'
 
     @property
     def column_result(self):
@@ -30,11 +30,12 @@ class MyDashTab4PatternStatistics(MyDashTab4StatisticsBase):
     def __get_df_base__(self) -> pd.DataFrame:
         return self.sys_config.db_stock.get_pattern_records_as_dataframe()
 
-    def __init_dd_handler__(self):
-        self._dd_handler = PatternStatisticsDropDownHandler()
+    @staticmethod
+    def __get_drop_down_handler__():
+        return PatternStatisticsDropDownHandler()
 
-    def __init_plotter__(self):
-        self._plotter = MyDashTabStatisticsPlotter4Pattern(self._df_base, self._color_handler)
+    def __get_statistic_plotter__(self):
+        return MyDashTabStatisticsPlotter4Pattern(self._df_base, self._color_handler)
 
     @staticmethod
     def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):

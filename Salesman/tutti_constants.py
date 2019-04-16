@@ -17,7 +17,7 @@ class EL:  # entity labels
         return ent_level in [EL.PRODUCT, EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP]
 
 
-class OCLS:  # css classes used within offers
+class SLCLS:  # css classes used within tutti sales
     OFFERS = '_2qT0v'
     MAIN_ANKER = '_16dGT'
     LOCATION = '_3f6Er'

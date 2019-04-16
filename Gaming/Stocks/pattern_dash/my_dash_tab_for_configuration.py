@@ -33,9 +33,13 @@ class MyDashTab4Configuration(MyPatternDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
         MyPatternDashBaseTab.__init__(self, app, sys_config)
         self._trade_handler_online = trade_handler_online
-        self._dd_handler = ConfigurationTabDropDownHandler(ExchangeConfiguration.buy_order_value_max,
-                                                           PatternSoundMachine.is_active,
-                                                           ExchangeConfiguration.small_profit_taking_active)
+
+    @staticmethod
+    def __get_drop_down_handler__():
+        return ConfigurationTabDropDownHandler(
+            ExchangeConfiguration.buy_order_value_max,
+            PatternSoundMachine.is_active,
+            ExchangeConfiguration.small_profit_taking_active)
 
     @staticmethod
     def __get_news_handler__():

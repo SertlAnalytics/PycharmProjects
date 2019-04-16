@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-26
 """
 
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from sertl_analytics.constants.pattern_constants import DC, TRC, EQUITY_TYPE
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
@@ -15,7 +15,7 @@ from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_database.stock_tables import AssetTable
 from pattern_dash.my_dash_header_tables import MyHTMLTabAssetStatisticsHeaderTable
 from pattern_dash.my_dash_tab_dd_for_statistics import AssetStatisticsDropDownHandler
-from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Assets
+from pattern_dash.plotter_dash.my_dash_plotter_for_statistics_assets import MyDashTabStatisticsPlotter4Assets
 from pattern_dash.my_dash_tab_for_statistics_base import MyDashTab4StatisticsBase, DDT
 from sertl_analytics.mydash.my_dash_components import MyHTML
 import pandas as pd
@@ -34,8 +34,9 @@ class MyDashTab4AssetStatistics(MyDashTab4StatisticsBase):
         self._trade_number_dict = {}
         self.__fill_trade_number_dict__()
 
-    def __fill_tab__(self):
-        self._tab = 'asset'
+    @staticmethod
+    def __get_tab_name__():
+        return 'asset'
 
     @property
     def column_result(self):
@@ -105,11 +106,11 @@ class MyDashTab4AssetStatistics(MyDashTab4StatisticsBase):
              Input('my_interval_refresh', 'n_intervals')])
         def handle_callbacks_for_asset_chart(ct: str, category: str, x: str, y: str, n_intervals: int):
             self.__fill_df_base__()
-            self.__init_plotter__()
-            self._plotter.chart_type = ct
-            self._plotter.category = category
-            self._plotter.x_variable = x
-            self._plotter.y_variable = y
+            self._statistic_plotter = self.__get_statistic_plotter__()
+            self._statistic_plotter.chart_type = ct
+            self._statistic_plotter.category = category
+            self._statistic_plotter.x_variable = x
+            self._statistic_plotter.y_variable = y
             return self.__get_charts_from_plotter__()
 
     def __get_asset_numbers_for_trade_client__(self, trade_client: str):
@@ -168,12 +169,12 @@ class MyDashTab4AssetStatistics(MyDashTab4StatisticsBase):
         df_concat.reset_index(inplace=True)
         return df_concat
 
-    def __init_dd_handler__(self):
-        self._dd_handler = AssetStatisticsDropDownHandler()
+    @staticmethod
+    def __get_drop_down_handler__():
+        return AssetStatisticsDropDownHandler()
 
-    def __init_plotter__(self):
-        self._plotter = MyDashTabStatisticsPlotter4Assets(
-            self._df_base, self._color_handler, self._trade_handler_online)
+    def __get_statistic_plotter__(self):
+        return MyDashTabStatisticsPlotter4Assets(self._df_base, self._color_handler, self._trade_handler_online)
 
     @staticmethod
     def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):

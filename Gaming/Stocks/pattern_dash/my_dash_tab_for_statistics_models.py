@@ -6,18 +6,16 @@ Date: 2018-09-26
 """
 
 from dash.dependencies import Input, Output, State
-from sertl_analytics.constants.pattern_constants import DC, TRC, EQUITY_TYPE, PRED, STBL
-from sertl_analytics.mydates import MyDate
+from sertl_analytics.constants.pattern_constants import DC, PRED, STBL
 from pattern_system_configuration import SystemConfiguration
 from dash import Dash
 from pattern_dash.my_dash_colors import DashColorHandler
 from pattern_database.stock_tables import TradeTable, PatternTable
 from pattern_dash.my_dash_header_tables import MyHTMLTabModelsStatisticsHeaderTable
 from pattern_dash.my_dash_tab_dd_for_statistics import ModelsStatisticsDropDownHandler
-from pattern_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter4Models
+from pattern_dash.plotter_dash.my_dash_plotter_for_statistics_models import MyDashTabStatisticsPlotter4Models
 from pattern_dash.my_dash_tab_for_statistics_base import MyDashTab4StatisticsBase, DDT
 from sertl_analytics.mydash.my_dash_components import MyHTML
-from pattern_database.stock_database import StockDatabase
 import pandas as pd
 
 
@@ -25,8 +23,9 @@ class MyDashTab4ModelStatistics(MyDashTab4StatisticsBase):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, color_handler: DashColorHandler):
         MyDashTab4StatisticsBase.__init__(self, app, sys_config, color_handler)
 
-    def __fill_tab__(self):
-        self._tab = 'models'
+    @staticmethod
+    def __get_tab_name__():
+        return 'models'
 
     @property
     def column_result(self):
@@ -128,14 +127,14 @@ class MyDashTab4ModelStatistics(MyDashTab4StatisticsBase):
                                               model_type: object, text_variable: str, pattern_type: str,
                                               n_intervals: int, category: str, pred: str):
             self._category_selected = category
-            self._plotter.chart_type = ct
-            self._plotter.category = category
-            self._plotter.predictor = pred
-            self._plotter.x_variable = x
-            self._plotter.y_variable = [y] if type(y) is str else y
-            self._plotter.model_type = [model_type] if type(model_type) is str else model_type
-            self._plotter.text_variable = text_variable
-            self._plotter.pattern_type = pattern_type
+            self._statistic_plotter.chart_type = ct
+            self._statistic_plotter.category = category
+            self._statistic_plotter.predictor = pred
+            self._statistic_plotter.x_variable = x
+            self._statistic_plotter.y_variable = [y] if type(y) is str else y
+            self._statistic_plotter.model_type = [model_type] if type(model_type) is str else model_type
+            self._statistic_plotter.text_variable = text_variable
+            self._statistic_plotter.pattern_type = pattern_type
             return self.__get_charts_from_plotter__()
 
     def __get_df_base__(self) -> pd.DataFrame:
@@ -145,11 +144,12 @@ class MyDashTab4ModelStatistics(MyDashTab4StatisticsBase):
     def __get_html_tab_header_table__():
         return MyHTMLTabModelsStatisticsHeaderTable().get_table()
 
-    def __init_dd_handler__(self):
-        self._dd_handler = ModelsStatisticsDropDownHandler()
+    @staticmethod
+    def __get_drop_down_handler__():
+        return ModelsStatisticsDropDownHandler()
 
-    def __init_plotter__(self):
-        self._plotter = MyDashTabStatisticsPlotter4Models(
+    def __get_statistic_plotter__(self):
+        return MyDashTabStatisticsPlotter4Models(
             self._df_base, self._color_handler, self.sys_config.db_stock, self.sys_config.predictor_optimizer)
 
     @staticmethod

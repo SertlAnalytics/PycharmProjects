@@ -9,7 +9,7 @@ from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
 from salesman_database.salesman_db import SalesmanDatabase
 import pandas as pd
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.salesman_constants import ODC, DC, SMTBL
+from sertl_analytics.constants.salesman_constants import SLDC, DC, SMTBL
 
 
 class AccessLayer:
@@ -99,7 +99,7 @@ class AccessLayer:
 class SalesmanDatabaseDataFrame(DatabaseDataFrame):
     def __init__(self, db: SalesmanDatabase, offer_id_master: str):
         self.offer_id_master = offer_id_master
-        self.statement = "SELECT * from {} WHERE {} = '{}'".format(SMTBL.OFFER, ODC.OFFER_ID_MASTER, offer_id_master)
+        self.statement = "SELECT * from {} WHERE {} = '{}'".format(SMTBL.SALE, SLDC.SALE_ID_MASTER, offer_id_master)
         DatabaseDataFrame.__init__(self, db, self.statement)
         if self.df.shape[0] == 0:
             self.df_data = None

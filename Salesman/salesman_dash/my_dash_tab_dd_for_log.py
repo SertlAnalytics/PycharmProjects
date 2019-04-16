@@ -6,8 +6,8 @@ Date: 2018-10-17
 """
 
 from sertl_analytics.mydash.my_dash_components import DropDownHandler
-from sertl_analytics.constants.pattern_constants import INDICES, LOGT, DTRG
-from salesman_dash.my_dash_header_tables import MyHTMLTabLogHeaderTable
+from sertl_analytics.constants.pattern_constants import LOGT, DTRG
+from salesman_dash.header_tables.my_dash_header_tables import MyHTMLTabLogHeaderTable
 
 
 class LOGDD:  # recommender drop down

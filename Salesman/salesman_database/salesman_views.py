@@ -7,18 +7,18 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyView
-from sertl_analytics.constants.salesman_constants import SMVW, ODC
-from salesman_database.salesman_tables import OfferTable
+from sertl_analytics.constants.salesman_constants import SMVW, SLDC
+from salesman_database.salesman_tables import SaleTable
 
 
-class OfferView(MyView):
+class SaleView(MyView):
     @staticmethod
     def __get_name__():
-        return SMVW.V_OFFER
+        return SMVW.V_SALE
 
     @staticmethod
     def __get_select_statement__():
-        all_columns = OfferTable().column_name_list
-        all_columns.remove(ODC.DESCRIPTION)
-        return "SELECT {} FROM Offer".format(','.join(all_columns))
+        all_columns = SaleTable().column_name_list
+        all_columns.remove(SLDC.DESCRIPTION)
+        return "SELECT {} FROM Sale".format(','.join(all_columns))
 

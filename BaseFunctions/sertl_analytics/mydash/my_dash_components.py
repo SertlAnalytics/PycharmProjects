@@ -291,6 +291,17 @@ class MyHTML:
                 style={'fontSize': 24, 'margin-left': '30px'})
 
     @staticmethod
+    def div_with_html_element(element_id: str, html_element, hidden='hidden'):
+        width = '1200px'
+        style = {'width': width, 'display': 'inline-block', 'vertical-align': 'bottom', 'padding-bottom': 20,
+                 'padding-left': 10}
+        return html.Div(
+            [html_element],
+            style={'width': width, 'display': 'inline-block'},
+            id='{}_div'.format(element_id)
+        )
+
+    @staticmethod
     def div_with_html_button_submit(element_id: str, children='Submit', hidden='hidden'):
         width = str(max(100, 16 * len(children)))
         return html.Div(
@@ -317,6 +328,15 @@ class MyHTML:
         style = {'display': 'inline-block', 'verticalAlign': 'bottom', 'width': size, 'padding-bottom': 10}
         return html.Div(
             [MyDCC.input(element_id, placeholder=placeholder, value=value, size=size, height=height)],
+            style=style,
+            id='{}_div'.format(element_id)
+        )
+
+    @staticmethod
+    def div_with_textarea(element_id: str, placeholder='Please enter some value', value='', size=500, height=30):
+        style = {'display': 'inline-block', 'verticalAlign': 'bottom', 'width': size, 'padding-bottom': 10}
+        return html.Div(
+            [MyDCC.textarea(element_id, placeholder=placeholder, value=value, size=size, height=height)],
             style=style,
             id='{}_div'.format(element_id)
         )
@@ -420,6 +440,13 @@ class MyDCC:
         style = {'width': size, 'height': height}
         return dcc.Input(
             id=element_id, placeholder=placeholder, type='text', value=value, style=style
+        )
+
+    @staticmethod
+    def textarea(element_id: str, placeholder: str, value: str, size: int, height: int):
+        style = {'width': size, 'height': height}
+        return dcc.Textarea(
+            id=element_id, placeholder=placeholder, value=value, style=style
         )
 
     @staticmethod
