@@ -18,6 +18,7 @@ from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
 from salesman_dash.grid_tables.my_grid_table_sale_4_sales import MySaleTable
 from salesman_dash.grid_tables.my_grid_table_similar_sale_4_sales import MySimilarSaleTable
 from salesman_system_configuration import SystemConfiguration
+from tutti import Tutti
 
 
 class MyDashTab4Sales(MyDashBaseTab):
@@ -27,7 +28,9 @@ class MyDashTab4Sales(MyDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration):
         MyDashBaseTab.__init__(self, app)
         self.sys_config = sys_config
+        self.tutti = Tutti(sys_config)
         self._refresh_button_clicks = 0
+        self._search_button_clicks = 0
         self._dd_handler = SalesTabDropDownHandler()
         self._sale_grid_table = MySaleTable(self.sys_config)
         self._similar_sale_grid_table = MySimilarSaleTable(self.sys_config)
@@ -117,8 +120,8 @@ class MyDashTab4Sales(MyDashBaseTab):
             if self._dd_handler.selected_sale_source == SLSRC.ONLINE:
                 if self._dd_handler.selected_similar_sale_source == SLSRC.DB:
                     return ''
-                if self._sale_online_input_table.button_n_clicks != search_n_clicks:
-                    self._sale_online_input_table.button_n_clicks = search_n_clicks
+                if self._search_button_clicks != search_n_clicks:
+                    self._search_button_clicks = search_n_clicks
                     print('n_clicks={}, title={}'.format(search_n_clicks, title))
                     return self.__get_similar_sale_grid_table_by_online_search__(title, description)
                 return ''
@@ -264,7 +267,8 @@ class MyDashTab4Sales(MyDashBaseTab):
         return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
 
     def __get_similar_sale_grid_table_by_online_search__(self, title: str, description: str):
-        rows = [{'Title': title, 'Description': description}]
+        rows = self.tutti.get_similar_sales_from_online_inputs(title, description)
+        # rows = [{'Title': title, 'Description': description}]
         # rows = self._similar_sale_grid_table.get_rows_for_selected_source(master_id)
         min_height = self._similar_sale_grid_table.height_for_display
         return MyDCC.data_table(self._my_sales_similar_sale_grid_table, rows, [], min_height=min_height)

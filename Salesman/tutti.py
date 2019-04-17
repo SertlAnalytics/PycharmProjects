@@ -61,6 +61,11 @@ class Tutti:
         similar_sale_dict = self.__get_similar_sale_dict_from_tutti__(list_with_nth_sale)
         self.__process_my_sales_and_similar_sales__(list_with_nth_sale, similar_sale_dict)
 
+    def get_similar_sales_from_online_inputs(self, title: str, description: str):
+        list_with_sale = self.__get_my_online_sales__(title, description)
+        similar_sale_dict = self.__get_similar_sale_dict_from_tutti__(list_with_sale)
+        return self.__get_similar_sales_as_dict__(list_with_sale, similar_sale_dict)
+
     def check_my_sales_against_similar_sales(self):
         my_sales = self._browser.get_my_sales_from_tutti()
         similar_sale_dict = self.__get_similar_sale_dict_from_tutti__(my_sales)
@@ -149,6 +154,16 @@ class Tutti:
             if not self._access_layer.is_sale_with_id_available(sale.id):
                 input_list.append(sale_dict)
 
+    def __get_similar_sales_as_dict__(self, my_sales: list, similar_sale_dict: dict):
+        return_list = []
+        for my_sale in my_sales:
+            similar_sales = similar_sale_dict[my_sale.id]
+            for similar_sale in similar_sales:
+                if similar_sale.is_sale_ready_for_sale_table():
+                    sale_dict = similar_sale.data_dict_obj.get_data_dict_for_sale_table()
+                    return_list.append(sale_dict)
+        return return_list
+
     def __get_my_virtual_sales__(self, number=0):
         self._my_sales_source = 'virtual'
         tutti_sales = []
@@ -159,6 +174,12 @@ class Tutti:
                 sale = self.__get_tutti_sale_from_file_row__(row)
                 tutti_sales.append(sale)
         return tutti_sales
+
+    def __get_my_online_sales__(self, title: str, description: str):
+        self._my_sales_source = 'online'
+        sale = TuttiSale(self._spacy, self.sys_config)
+        sale.init_by_online_input(title, description)
+        return [sale]
 
     def __get_sale_elements_from_file__(self) -> pd.DataFrame:
         df = pd.read_csv(self.sys_config.virtual_sales_file_path, delimiter='#', header=None)

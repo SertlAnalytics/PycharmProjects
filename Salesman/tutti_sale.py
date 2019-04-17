@@ -77,6 +77,17 @@ class TuttiSale:
         self.__process_doc_extensions__()
         self.__add_data_dict_entries__()
 
+    def init_by_online_input(self, title: str, description: str):
+        self._id = MyDate.time_stamp_now()
+        self.add_location_text('online')
+        self.add_date_text(MyDate.get_date_as_string_from_date_time())
+        self.add_title_text(title)
+        self.add_description_text(description)
+        self.add_price(str(0))
+        self.__add_search_labels__()
+        self.__process_doc_extensions__()
+        self.__add_data_dict_entries__()
+
     def init_by_sale_element(self, offer_element):
         offer_id_obj = offer_element.find_element_by_class_name(SLCLS.MAIN_ANKER)
         self.add_href(offer_id_obj.get_attribute('href'))
