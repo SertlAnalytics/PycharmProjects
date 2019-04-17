@@ -21,6 +21,8 @@ class SLDD:  # Sales drop down
 class SalesTabDropDownHandler(DropDownHandler):
     def __init__(self):
         DropDownHandler.__init__(self)
+        self.selected_sale_source = ''
+        self.selected_similar_sale_source = ''
 
     @property
     def my_sales_sales_source_dd(self):
@@ -39,7 +41,7 @@ class SalesTabDropDownHandler(DropDownHandler):
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
             SLDD.MY_SALE_SOURCE: 'My sale source',
-            SLDD.SIMILAR_SALE_SOURCE: 'Similar sale source(s)',
+            SLDD.SIMILAR_SALE_SOURCE: 'Similar sale source',
         }
         return value_dict.get(drop_down_type, None)
 
@@ -72,7 +74,7 @@ class SalesTabDropDownHandler(DropDownHandler):
 
     def __get_for_multi__(self, drop_down_type: str):
         if drop_down_type in [SLDD.SIMILAR_SALE_SOURCE]:
-            return True
+            return False
         return False
 
     @staticmethod

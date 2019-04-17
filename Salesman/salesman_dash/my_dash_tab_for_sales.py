@@ -31,6 +31,7 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._dd_handler = SalesTabDropDownHandler()
         self._sale_grid_table = MySaleTable(self.sys_config)
         self._similar_sale_grid_table = MySimilarSaleTable(self.sys_config)
+        self._sale_online_input_table = MyHTMLSaleOnlineInputTable()
 
     def __init_dash_element_ids__(self):
         self._my_sales_refresh_button = 'my_sales_refresh_button'
@@ -50,7 +51,7 @@ class MyDashTab4Sales(MyDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.MY_SALE_SOURCE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SIMILAR_SALE_SOURCE)),
             MyHTML.div_with_html_button_submit(self._my_sales_refresh_button, 'Refresh', hidden=''),
-            MyHTML.div_with_html_element(self._my_sales_online_input_table, MyHTMLSaleOnlineInputTable().get_table()),
+            MyHTML.div_with_html_element(self._my_sales_online_input_table, self._sale_online_input_table.get_table()),
             MyHTML.div(self._data_table_div, self.__get_sale_grid_table__(), False),
             MyDCC.markdown(self._my_sales_sale_entry_markdown),
             MyHTML.div(self._my_sales_similar_sale_grid_table_div, self.__get_similar_sale_grid_table__(''), False),
@@ -77,8 +78,11 @@ class MyDashTab4Sales(MyDashBaseTab):
              Input(self._my_sales_refresh_button, 'n_clicks')]
             )
         def handle_callback_for_sale_grid_table(sale_source: str, refresh_n_clicks: int):
+            self._dd_handler.selected_sale_source = sale_source
             self._sale_grid_table.selected_source = sale_source
             self.__handle_refresh_click__(refresh_n_clicks)
+            if self._dd_handler.selected_sale_source == SLSRC.ONLINE:
+                pass
             return self.__get_sale_grid_table__()
 
     def __handle_refresh_click__(self, refresh_n_clicks: int):
@@ -94,16 +98,36 @@ class MyDashTab4Sales(MyDashBaseTab):
             [Input(self._dd_handler.my_sales_similar_sales_source_dd, 'value'),
              Input(self._my_sales_refresh_button, 'n_clicks'),
              Input(self._data_table_name, 'rows'),
-             Input(self._data_table_name, 'selected_row_indices')]
+             Input(self._data_table_name, 'selected_row_indices'),
+             Input(self._sale_online_input_table.my_sales_online_search_button, 'n_clicks')
+             ],
+            [State(self._sale_online_input_table.my_sales_title_input, 'value'),
+             State(self._sale_online_input_table.my_sales_description_input, 'value')]
         )
-        def handle_callback_for_similar_sale_grid_table(similar_sale_sources: list, refresh_n_clicks: int,
-                                                        rows: list, selected_row_indices: list):
+        def handle_callback_for_similar_sale_grid_table(
+                similar_sale_source: str,
+                refresh_n_clicks: int,
+                rows: list,
+                selected_row_indices: list,
+                search_n_clicks: int,
+                title: str,
+                description: str):
+            print('handle_callback_for_similar_sale_grid_table')
+            self._dd_handler.selected_similar_sale_source = similar_sale_source
+            if self._dd_handler.selected_sale_source == SLSRC.ONLINE:
+                if self._dd_handler.selected_similar_sale_source == SLSRC.DB:
+                    return ''
+                if self._sale_online_input_table.button_n_clicks != search_n_clicks:
+                    self._sale_online_input_table.button_n_clicks = search_n_clicks
+                    print('n_clicks={}, title={}'.format(search_n_clicks, title))
+                    return self.__get_similar_sale_grid_table_by_online_search__(title, description)
+                return ''
             if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:
                 self._sale_grid_table.reset_selected_row()
                 return ''
             selected_row = rows[selected_row_indices[0]]
             sale_id = selected_row[SLDC.SALE_ID]
-            self._similar_sale_grid_table.selected_source = similar_sale_sources
+            self._similar_sale_grid_table.selected_source = similar_sale_source
             return self.__get_similar_sale_grid_table__(sale_id)
 
     def __init_callback_for_sale_entry_markdown__(self):
@@ -124,16 +148,15 @@ class MyDashTab4Sales(MyDashBaseTab):
         @self.app.callback(
             Output(self._my_sales_similar_sale_entry_markdown, 'children'),
             [Input(self._my_sales_similar_sale_grid_table, 'selected_row_indices'),
-             # Input(self._my_sales_similar_sale_grid_table_div, 'children'),
-             # Input(self._data_table_name, 'selected_row_indices'),
-             ],
+             Input(self._my_sales_sale_entry_markdown, 'children')],
             [State(self._my_sales_similar_sale_grid_table, 'rows')]
         )
-        def handle_callback_similar_sale_entry_markdown(selected_row_indices: list, rows):
-            if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:
+        def handle_callback_similar_sale_entry_markdown(selected_row_indices: list, children, rows):
+            if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1 or len(children) == 0:
                 return ''
             selected_row = rows[selected_row_indices[0]]
-            column_value_list = ['_**{}**_: {}'.format(col, selected_row[col]) for col in self._sale_grid_table.columns]
+            column_value_list = ['_**{}**_: {}'.format(col, selected_row[col])
+                                 for col in self._similar_sale_grid_table.columns]
             return '  \n'.join(column_value_list)
 
     def __init_callback_for_selected_row_indices__(self):
@@ -234,11 +257,17 @@ class MyDashTab4Sales(MyDashBaseTab):
         return '  \n'.join(text_list)
 
     def __get_sale_grid_table__(self):
-        if self._sale_grid_table.selected_source == SLSRC.ONLINE:
+        if self._sale_grid_table.selected_source == SLSRC.ONLINE and False:
             return ''
         rows = self._sale_grid_table.get_rows_for_selected_source()
         min_height = self._sale_grid_table.height_for_display
         return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
+
+    def __get_similar_sale_grid_table_by_online_search__(self, title: str, description: str):
+        rows = [{'Title': title, 'Description': description}]
+        # rows = self._similar_sale_grid_table.get_rows_for_selected_source(master_id)
+        min_height = self._similar_sale_grid_table.height_for_display
+        return MyDCC.data_table(self._my_sales_similar_sale_grid_table, rows, [], min_height=min_height)
 
     def __get_similar_sale_grid_table__(self, master_id: str):
         if master_id == '':

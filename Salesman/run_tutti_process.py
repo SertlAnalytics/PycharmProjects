@@ -13,11 +13,11 @@ sys_config = SystemConfiguration()
 sys_config.with_nlp = True
 sys_config.write_to_excel = True
 sys_config.load_sm = True
-sys_config.write_to_database = True
+sys_config.write_to_database = False
 
 tutti = Tutti(sys_config)
 # tutti.check_my_sales_against_similar_sales()
 # tutti.check_my_virtual_sales_against_similar_sales()
-tutti.check_my_nth_sale_against_similar_sales(1)
-# tutti.check_my_nth_virtual_sale_against_similar_sales(1)
+# tutti.check_my_nth_sale_against_similar_sales(1)
+tutti.check_my_nth_virtual_sale_against_similar_sales(11)
 sleep(2)

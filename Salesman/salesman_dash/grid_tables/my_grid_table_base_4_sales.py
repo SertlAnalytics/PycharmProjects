@@ -121,7 +121,7 @@ class MySaleBaseTable:
 
     @property
     def columns(self):
-        return self._sale_columns_dict[self._selected_source]
+        return self._sale_columns_dict.get(self._selected_source, [])
 
     @property
     def selected_row_index(self):

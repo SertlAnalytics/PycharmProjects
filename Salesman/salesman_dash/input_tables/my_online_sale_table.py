@@ -12,6 +12,15 @@ from sertl_analytics.mydash.my_dash_components import MyHTMLTable, COLORS
 class MyHTMLInputTable(MyHTMLTable):
     def __init__(self):
         MyHTMLTable.__init__(self, 2, 3)
+        self._button_n_clicks = 0
+
+    @property
+    def button_n_clicks(self) -> int:
+        return self._button_n_clicks
+
+    @button_n_clicks.setter
+    def button_n_clicks(self, n_clicks):
+        self._button_n_clicks = n_clicks
 
     def _get_cell_style_(self, row: int, col: int):
         width = ['20%', '60%', '20%'][col - 1]
