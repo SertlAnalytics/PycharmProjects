@@ -63,7 +63,7 @@ class SpacyCourse4DocSpanToken(SpacyCourseBase):
         vocab_string = self.nlp.vocab.strings[vocab_hash]
         print('nlp.vocab: hash={}, string={}'.format(vocab_hash, vocab_string))
 
-        doc = self.nlp('I bought a car but accually I wanted to buy a new bike!')
+        doc = self.nlp('I bought a car but actually I wanted to buy a new bike!')
         vocab_hash = doc.vocab.strings['car']
         vocab_string = doc.vocab.strings[vocab_hash]
         print('doc.vocab: hash={}, string={}'.format(vocab_hash, vocab_string))

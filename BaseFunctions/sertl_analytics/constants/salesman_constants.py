@@ -12,6 +12,7 @@ class SMPR:  # Salesman Processes
     
 class SMVW:  # salesman views
     V_SALE = 'v_sale'
+    V_SALE_MAX_VERSION = 'v_sale_max_version'
 
 
 class SMTBL:  # salesman tables
@@ -49,14 +50,13 @@ class SLSRC:  # sale sources
 
     @staticmethod
     def get_my_sale_sources():
-        return [SLSRC.DB, SLSRC.FILE, SLSRC.ONLINE]
+        return [SLSRC.DB, SLSRC.FILE]
 
     @staticmethod
     def get_similar_sale_sources():
-        return [SLSRC.DB, SLSRC.TUTTI_CH, SLSRC.RICARDO_CH, SLSRC.EBAY_CH]
+        return [SLSRC.TUTTI_CH, SLSRC.RICARDO_CH, SLSRC.EBAY_CH]
     
 class SLST:  # Sale Status
-    NEW = 'new'
     OPEN = 'open'
     SOLD = 'sold'
     VANISHED = 'vanished'
@@ -72,6 +72,10 @@ class OBJST:  # Object Status
     
 class SLDC:  # Sale data column
     SALE_ID = 'Sale_ID'
+    SALE_ID_MAX = 'Sale_ID_max'
+    VERSION = 'Version'
+    VERSION_MAX = 'Version_max'
+    IS_ACTUAL = 'Is_actual'
     MASTER_ID = 'Master_ID'
     SOURCE = 'Source'  # Tutti, Ricardo, etc.
     SALE_STATE = 'Sale_State'  # see SLST
@@ -95,9 +99,6 @@ class SLDC:  # Sale data column
     SEARCH_LABELS = 'Search_labels'
     ENTITY_LABELS = 'Entity_labels'
     FOUND_BY_LABELS = 'Found_by_labels'
-    PRICE_CHANGES = 'Price_Changes'
-    END_DATE = 'End_Date'
-    END_PRICE = 'End_Price'
     LAST_CHECK_DATE = 'Last_Check_Date'
     COMMENT = 'Comment'
 
@@ -116,7 +117,7 @@ class SLDC:  # Sale data column
 
     @staticmethod
     def get_columns_for_sales_tab_table():
-        return [SLDC.SALE_ID, SLDC.MASTER_ID, SLDC.SOURCE, SLDC.START_DATE, SLDC.LOCATION, SLDC.OBJECT_STATE,
-                SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER, SLDC.TITLE, SLDC.HREF]
+        return [SLDC.SALE_ID, SLDC.VERSION, SLDC.MASTER_ID, SLDC.SOURCE, SLDC.START_DATE, SLDC.LOCATION, 
+                SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER, SLDC.TITLE, SLDC.HREF]
 
 

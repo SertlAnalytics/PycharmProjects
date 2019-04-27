@@ -26,6 +26,7 @@ class TuttiMatcher:
         for pattern_type, test_case_dict in pattern_type_testcase_dict.items():
             for test_string, expected_value in test_case_dict.items():
                 doc = spacy.nlp(test_string)
+                print('run_test: {} -> {}'.format(test_string, doc.text))
                 if print_token:
                     spacy.print_tokens_for_doc(doc)
                 result = self.get_pattern_result_for_doc(doc)

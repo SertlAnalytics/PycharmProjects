@@ -20,14 +20,53 @@ from matcher.tutti_matcher_4_single_prize import TuttiMatcher4SinglePrize
 import spacy
 
 
+class CustomTokenizer:
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+
+    def __call__(self, text: str):
+        text = self.__replace_substrings__(text)
+        return self.tokenizer(text)
+
+    def __replace_substrings__(self, text: str) -> str:
+        for replacement_string in self.replacement_dict:
+            if text.find(replacement_string) > -1:
+                text = text.replace(replacement_string, self.replacement_dict[replacement_string])
+        return text
+
+    @property
+    def replacement_dict(self) -> dict:
+        return {
+            'Fr.': 'CHF',
+            ',--': '.-',
+            ',-': '.-',
+            '.--': '.-',
+        }
+
+
+class WhitespaceTokenizer(object):  # see https://spacy.io/usage/linguistic-features#entity-types
+    def __init__(self, vocab):
+        self.vocab = vocab
+
+    def __call__(self, text):
+        text = text.replace(',--', '.-')
+        words = text.split(' ')
+        # All tokens 'own' a subsequent space character in this tokenizer
+        spaces = [True] * len(words)
+        return Doc(self.vocab, words=words, spaces=spaces)
+
+
 class TuttiSpacy:
     def __init__(self, load_sm=True):
         self._load_sm = load_sm
         self._nlp = spacy.load('de_core_news_sm') if load_sm else spacy.load('de_core_news_md')
+        self._nlp.tokenizer = CustomTokenizer(self._nlp.tokenizer)
+        # self._nlp.tokenizer = WhitespaceTokenizer(self._nlp.vocab)
         self._matcher_company = self.__get_matcher_for_entity_type__(EL.COMPANY)
         self._matcher_product = self.__get_matcher_for_entity_type__(EL.PRODUCT)
         self._matcher_object = self.__get_matcher_for_entity_type__(EL.OBJECT)
         self._matcher_target_group = self.__get_matcher_for_entity_type__(EL.TARGET_GROUP)
+        # self._nlp.add_pipe(self.replacement_component, name='CUSTOM_REPLACEMENT', before='tagger')
         self._nlp.add_pipe(self.company_component, name='CUSTOM_COMPANY', after='ner')
         self._nlp.add_pipe(self.product_component, name='CUSTOM_PRODUCT', after='CUSTOM_COMPANY')
         self._nlp.add_pipe(self.object_component, name='CUSTOM_OBJECT', after='CUSTOM_PRODUCT')
@@ -60,6 +99,10 @@ class TuttiSpacy:
         patterns = list(self.nlp.pipe(entity_names))
         matcher.add(entity_type, None, *patterns)
         return matcher
+
+    def replacement_component(self, doc):  # ToDo see https://nlpforhackers.io/complete-guide-to-spacy/
+        doc.text = doc.text.replace(',--', '.-')
+        return doc
 
     def company_component(self, doc):
         matches = self._matcher_company(doc)

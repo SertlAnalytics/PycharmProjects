@@ -19,6 +19,8 @@ class TuttiMatcher4Number(TuttiMatcher):
             'PREIS_FUER_ALLE': [{'LOWER': 'preis'}, {'LOWER': 'für'}, {'LOWER': 'alle'}, {'POS': POS.NUM}],  # Preis für alle
             'STUECK': [{'POS': POS.NUM}, {'LOWER': 'stück'}],
             'STK': [{'POS': POS.NUM}, {'LOWER': 'stk'}],
+            'DIESE': [{'LOWER': 'diese'}, {'POS': POS.NUM}],
+            'BIS': [{'POS': POS.NUM}, {'POS': POS.NUM}, {'POS': POS.NUM}],
         }
 
     def __get_pattern_type_test_case_dict__(self):
@@ -28,6 +30,8 @@ class TuttiMatcher4Number(TuttiMatcher):
             'PREIS_FUER_ALLE': {'Preis für alle 34 Stück: 2000.-': 34},
             'STUECK': {'es sind insgesamt 4 Stück': 4},
             'STK': {'Stühle CONFERENCE - 3 Stk.': 3},
+            'DIESE': {'DIESE 6 Stühle werden nur zusammen EN BLOC verkauft': 6},
+            'BIS': {'1-5 eames alu chair vitra': 5},
         }
 
     def __get_pattern_result_for_doc_as_text__(self, doc: Doc):

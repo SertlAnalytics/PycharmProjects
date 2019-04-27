@@ -29,6 +29,19 @@ class SLCLS:  # css classes used within tutti sales
     NUMBERS = '_1WJLw'
 
 
+class SLSCLS:  # css classes used within tutti sale single
+    OFFERS = '_142-1'
+    MAIN_ANKER = '_16dGT'
+    LOCATION_CLASS = '_35E6Q'  # _2ey_I'  # <div class="_35E6Q"><svg role="img" viewBox="0 0 35 35" class="svg-sprite"><use xlink:href="#canton-aargau"></use></svg><span class="_2ey_I">Aargau, 5430</span></div>
+    LOCATION_SUB_CLASS = '_2ey_I'
+    DATE_CLASS = '_2hsZ0'
+    DATE_SUB_CLASS = '_3HMUQ'
+    LINK = '_16dGT'  # or '_2SE_L'
+    TITLE = '_36xB4'
+    DESCRIPTION = ['_3E1vH', '_100oN', '_3MSKw']
+    PRICE = '-zQvW'
+
+
 class SCLS:  # css classes used within search offers
     OFFERS = '_3aiCi'
     MAIN_ANKER = '_16dGT'
@@ -43,6 +56,7 @@ class POS:
     ADJ = 'ADJ'  # adjective, e.g. 'warmes' (Innenfutter)
     ADP = 'ADP'  # AD, e.g. 'in', 'Dank'
     ADV = 'ADV'  # adverb, e.g. 'kaum' (gebraucht)
+    CONJ = 'CONJ' # conjunction
     NUM = 'NUM'  # number, e.g. 37
     NOUN = 'NOUN'  # noun, e.g. 'Goretex'
     PART = 'PART'  # partical, e.g. 'zu' (verkaufen)

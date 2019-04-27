@@ -28,5 +28,6 @@ class MySaleTable(MySaleBaseTable):
         }
 
     def __fill_rows_for_selected_source__(self, master_id: str):
+        print('Sale.__fill_rows_for_selected_source__: selected_source={}'.format(self.selected_source))
         self._rows_selected_source = self._sale_rows_dict.get(self._selected_source, [])
 

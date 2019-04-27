@@ -11,12 +11,12 @@ from salesman_dash.header_tables.my_tab_header_table import MyHTMLTabHeaderTable
 
 class MyHTMLTabSalesHeaderTable(MyHTMLTabHeaderTable):
     @property
-    def my_sales_position_label_div(self):
-        return 'my_sales_position_label_div'
+    def my_sales_id_label_div(self):
+        return 'my_sales_id_label_div'
 
     @property
-    def my_sales_position_div(self):
-        return 'my_sales_position_div'
+    def my_sales_id_value_div(self):
+        return 'my_sales_value_div'
 
     @property
     def my_sales_markdown(self):
@@ -27,10 +27,10 @@ class MyHTMLTabSalesHeaderTable(MyHTMLTabHeaderTable):
         return 'my_sales_news_markdown'
 
     def _init_cells_(self):
-        ticker_label_div = MyHTML.div(self.my_sales_position_label_div, 'Position:', True)
-        ticker_div = MyHTML.div(self.my_sales_position_div, '', False)
+        id_label_div = MyHTML.div(self.my_sales_id_label_div, 'Sale ID:', True)
+        id_value_div = MyHTML.div(self.my_sales_id_value_div, '', False)
 
-        self.set_value(1, 1, MyHTML.div_embedded([ticker_label_div, MyHTML.span(' '), ticker_div]))
+        self.set_value(1, 1, MyHTML.div_embedded([id_label_div, MyHTML.span(' '), id_value_div]))
         self.set_value(1, 2, MyDCC.markdown(self.my_sales_markdown))
         self.set_value(1, 3, MyDCC.markdown(self.my_sales_news_markdown))
 

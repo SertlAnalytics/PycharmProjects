@@ -384,6 +384,10 @@ class BaseDatabase:
             connection.close()
         return counter
 
+    @staticmethod
+    def __get_view_by_name__(view_name: str):
+        pass
+
 """
 Example for a derived class - connecting to a SQLite database
 

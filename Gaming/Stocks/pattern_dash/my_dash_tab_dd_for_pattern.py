@@ -99,6 +99,7 @@ class PatternTabDropDownHandler(DropDownHandler):
     @staticmethod
     def __get_refresh_interval_options__():
         return [
+            {'label': '30 min', 'value': 1800},
             {'label': '15 min', 'value': 900},
             {'label': '10 min', 'value': 600},
             {'label': '5 min', 'value': 300},

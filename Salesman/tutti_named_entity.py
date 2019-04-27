@@ -38,20 +38,24 @@ class TuttiNamedEntity:
 class TuttiCompanyEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
-        return ['BMW', 'Crumpler', 'Eames', 'Lowa', 'Mercedes', 'Paidi', 'USM', 'Waldmann', 'Vitra', 'Zimstern', 'Zimtstern',
+        return ['Apple', 'BMW', 'Crumpler', 'DeLonghi', 'Eames', 'GoPro', 'Nespresso', 'Lowa',
+                'Grüezi-Bag',
+                'Mercedes', 'Paidi', 'Samsung', 'USM', 'Schöffel',
+                'Waldmann', 'Vitra', 'Zimstern', 'Zimtstern',
                 'Villiger', 'Omega', 'Sunshine', 'Diono']
 
     @staticmethod
     def __get_synonym_dict__():
         return {
             'Sunshine': ['Diono'],
+            'Grüezi-Bag': ['Grüezi Bag']
         }
 
 
 class TuttiTargetGroupEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
-        return ['Frau', 'Frauen', 'Mann', 'Männer', 'Kind', 'Kinder']
+        return ['Frau', 'Frauen', 'Mann', 'Männer', 'Kind', 'Kinder', 'Baby', 'Babies']
 
     @staticmethod
     def __get_synonym_dict__():
@@ -59,13 +63,15 @@ class TuttiTargetGroupEntity(TuttiNamedEntity):
             'Frau': ['Frauen'],
             'Mann': ['Männer'],
             'Kind': ['Kinder'],
+            'Baby': ['Babies'],
         }
 
 
 class TuttiProductEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
-        return ['alu chair', 'aluminium chair', 'gtx', 'meda', 'Monterey', 'Booster']
+        return ['MacBook', 'alu chair', 'aluminium chair', 'gtx', 'hero', 'Kid Cow',
+                'meda', 'Monterey', 'Booster', 'pixie']
 
     @staticmethod
     def __get_synonym_dict__():
@@ -78,7 +84,8 @@ class TuttiObjectTypeEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
         return ['regal', 'tisch', 'schreibtisch', 'stuhl', 'bürostuhl', 'bürotisch', 'auto', 'fahrrad', 'velo',
-                'corpus', 'rollcontainer', 'besucherstuhl', 'chair', 'tasche']
+                'corpus', 'kommunionskleid', 'notebook',
+                'rollcontainer', 'besucherstuhl', 'schlafsack', 'chair', 'tasche']
 
     @staticmethod
     def __get_synonym_dict__():
@@ -88,7 +95,9 @@ class TuttiObjectTypeEntity(TuttiNamedEntity):
             'corpus': ['rollcontainer'],
             'stuhl': ['bürostuhl', 'besucherstuhl', 'chair', 'bürodrehstuhl', 'drehstuhl'],
             'kindersitz': ['autokindersitz', 'auto-kindersitz'],
-            'umhängetasche': ['tasche']
+            'notebook': ['laptop'],
+            'umhängetasche': ['tasche'],
+            'kommunionskleid': ['kommunionkleid'],
         }
 
 

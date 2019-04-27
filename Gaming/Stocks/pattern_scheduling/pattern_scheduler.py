@@ -54,7 +54,7 @@ class MyPatternScheduler:
         job = self.get_job(job_name)
         if job is not None:
             if not job.is_running:
-                print('...{}: Switch job state to : {}'.format(job.job_name, 'active' if job.is_active else 'inactive'))
+                print('...{}: Switch job state to : {}'.format(job.job_name, 'inactive' if job.is_active else 'active'))
                 job.switch_job_state()
 
     def start_job_manually(self, job_name: str):

@@ -30,6 +30,7 @@ class MySimilarSaleTable(MySaleBaseTable):
         }
 
     def __fill_rows_for_selected_source__(self, master_id: str):
+        print('SimilarSale.__fill_rows_for_selected_source__')
         self._rows_selected_source = self._sale_rows_dict[self._selected_source]
         if master_id not in ['', 'SEARCH']:
             self._rows_selected_source = [row for row in self._rows_selected_source if row.master_id == master_id]

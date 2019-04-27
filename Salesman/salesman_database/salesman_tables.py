@@ -41,8 +41,9 @@ class SaleTable(MyTable):
         return SLDC.START_DATE
 
     def _add_columns_(self):
-        self._columns.append(MyTableColumn(SLDC.SALE_ID, CDT.STRING, 10))
-        self._columns.append(MyTableColumn(SLDC.MASTER_ID, CDT.STRING, 10))
+        self._columns.append(MyTableColumn(SLDC.SALE_ID, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.VERSION, CDT.INTEGER))
+        self._columns.append(MyTableColumn(SLDC.MASTER_ID, CDT.STRING, 20))
         self._columns.append(MyTableColumn(SLDC.SOURCE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(SLDC.SALE_STATE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(SLDC.HREF, CDT.STRING, 150))
@@ -65,9 +66,6 @@ class SaleTable(MyTable):
         self._columns.append(MyTableColumn(SLDC.SEARCH_LABELS, CDT.STRING, 100))
         self._columns.append(MyTableColumn(SLDC.ENTITY_LABELS, CDT.STRING, 100))
         self._columns.append(MyTableColumn(SLDC.FOUND_BY_LABELS, CDT.STRING, 100))
-        self._columns.append(MyTableColumn(SLDC.PRICE_CHANGES, CDT.STRING, 1000))
-        self._columns.append(MyTableColumn(SLDC.END_DATE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(SLDC.END_PRICE, CDT.FLOAT))
         self._columns.append(MyTableColumn(SLDC.LAST_CHECK_DATE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(SLDC.COMMENT, CDT.STRING, 200))
 

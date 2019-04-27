@@ -9,7 +9,7 @@ from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
 from salesman_database.salesman_db import SalesmanDatabase
 import pandas as pd
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.salesman_constants import SLDC, DC, SMTBL
+from sertl_analytics.constants.salesman_constants import SLDC, DC, SMTBL, SMVW
 
 
 class AccessLayer:
@@ -20,6 +20,10 @@ class AccessLayer:
     @property
     def table_name(self):
         return self._table.name
+
+    @property
+    def view_name(self):
+        return ''
 
     def get_all_as_data_frame(self, index_col='', columns=None, where_clause=''):
         selected_columns = '*' if columns is None else ','.join(columns)
@@ -42,6 +46,7 @@ class AccessLayer:
         return self.__get_dataframe_with_index_column__(db_df.df, index_col)
 
     def select_data_by_query(self, query: str, index_col='') -> pd.DataFrame:
+        # print('query={}'.format(query))
         db_df = DatabaseDataFrame(self._db, query)
         return self.__get_dataframe_with_index_column__(db_df.df, index_col)
 
@@ -99,7 +104,7 @@ class AccessLayer:
 class SalesmanDatabaseDataFrame(DatabaseDataFrame):
     def __init__(self, db: SalesmanDatabase, offer_id_master: str):
         self.offer_id_master = offer_id_master
-        self.statement = "SELECT * from {} WHERE {} = '{}'".format(SMTBL.SALE, SLDC.SALE_ID_MASTER, offer_id_master)
+        self.statement = "SELECT * from {} WHERE {} = '{}'".format(SMVW.V_SALE, SLDC.MASTER_ID, offer_id_master)
         DatabaseDataFrame.__init__(self, db, self.statement)
         if self.df.shape[0] == 0:
             self.df_data = None

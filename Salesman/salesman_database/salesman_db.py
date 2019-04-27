@@ -10,7 +10,7 @@ from sertl_analytics.mydates import MyDate
 from salesman_database.salesman_tables import SaleTable, CompanyTable, MetricTable, ProcessTable
 from sertl_analytics.constants.pattern_constants import STBL
 from sertl_analytics.constants.salesman_constants import SMTBL, SMVW, SLDC
-from salesman_database.salesman_views import SaleView
+from salesman_database.salesman_views import SaleView, SaleMaxVersionView
 from salesman_logging.salesman_log import SalesmanLog
 from datetime import datetime
 from sertl_analytics.datafetcher.database_fetcher import MyTable
@@ -79,6 +79,9 @@ class SalesmanDatabase(BaseDatabase):
     def create_sale_view(self):
         self.__create_view__(SMVW.V_SALE)
 
+    def create_sale_version_max_view(self):
+        self.__create_view__(SMVW.V_SALE_MAX_VERSION)
+
     def is_offer_already_available(self, offer_id: str) -> bool:
         query = self._sale_table.get_query_select_for_unique_record_by_id(offer_id)
         db_df = DatabaseDataFrame(self, query)
@@ -101,7 +104,7 @@ class SalesmanDatabase(BaseDatabase):
 
     @staticmethod
     def __get_view_by_name__(view_name: str):
-        return {SMVW.V_SALE: SaleView()}.get(view_name, None)
+        return {SMVW.V_SALE: SaleView(), SMVW.V_SALE_MAX_VERSION: SaleMaxVersionView()}.get(view_name, None)
 
 
 class SaleDataFrame(DatabaseDataFrame):

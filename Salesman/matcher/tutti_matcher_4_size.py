@@ -16,6 +16,7 @@ class TuttiMatcher4Size(TuttiMatcher):
         return {
             'GROESSE': [{'LOWER': 'grösse'}, {'POS': POS.NUM}],
             'GR': [{'LOWER': 'gr'}, {'POS': POS.PUNCT}, {'POS': POS.NUM}],
+            'GR_2': [{'LOWER': 'gr'}, {'POS': POS.PUNCT}, {'POS': POS.NOUN}],
             'CM': [{'POS': POS.PROPN}, {'LOWER': 'cm'}],
             # 'MASSE': [{'LOWER': 'masse'}, {'POS': POS.PUNCT, 'OP': '?'}, {'POS': POS.PROPN}],
             'PROPN_CM': [{'POS': POS.PROPN, 'OP': '?'}, {'LIKE_NUM': True}, {'LOWER': 'cm'}],
@@ -24,8 +25,9 @@ class TuttiMatcher4Size(TuttiMatcher):
 
     def __get_pattern_type_test_case_dict__(self):
         return {
-            'GROESSE': {'Gr. 37': '37'},
-            'GR': {'Grösse 38': '38'},
+            'GROESSE': {'Grösse 38': '38'},
+            'GR': {'Gr. 37': '37'},
+            'GR_2': {'Passt ca. Gr. 158/164': '158/164'},
             'CM': {'Masse: Durchmesser 90 cm': 'Durchmesser 90 cm'},
             # 'MASSE': {'Masse: 175x100x74 cm': '175x100x74 cm'},
             'PROPN_CM': {'175x100x74 cm': '175x100x74 cm'},

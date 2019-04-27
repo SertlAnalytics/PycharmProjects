@@ -312,6 +312,23 @@ class MyHTML:
         )
 
     @staticmethod
+    def div_with_anchor(element_id: str, href: str, title='Link', target='_blank', hidden=''):
+        return html.Div(
+            [html.A(title, id=element_id, href=href, target=target, hidden=hidden)],
+            style={'display': 'inline-block', 'vertical-align': 'bottom', 'padding-bottom': 20, 'padding-left': 10},
+            id='{}_div'.format(element_id)
+        )
+
+    @staticmethod
+    def div_with_button_link(element_id: str, href: str, title='Link', target='_blank', hidden=''):
+        button = MyHTML.button_submit(element_id + '_button', 'Open', '')
+        return html.Div(
+            [html.A(button, id=element_id, href=href, target=target, hidden=hidden)],
+            style={'display': 'inline-block', 'vertical-align': 'bottom', 'padding-bottom': 20, 'padding-left': 10},
+            id='{}_div'.format(element_id)
+        )
+
+    @staticmethod
     def div_with_button(element_id: str, text: str, width: int, show=True):
         if show:
             style = {'display': 'inline-block', 'verticalAlign': 'bottom', 'width': width, 'padding-bottom': 20}
