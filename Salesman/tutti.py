@@ -4,6 +4,7 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-02
 """
+
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
 from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from calculation.outlier import Outlier
@@ -12,7 +13,7 @@ from lxml import html
 from tutti_sale import TuttiSale
 from spacy import displacy
 from tutti_spacy import TuttiSpacy
-from tutti_constants import SCLS, SLSCLS
+from tutti_constants import SCLS, SLSCLS, EL
 import pandas as pd
 import xlsxwriter
 import requests
@@ -20,17 +21,20 @@ from time import sleep
 import numpy as np
 import statistics
 from salesman_system_configuration import SystemConfiguration
+from printing.sale_printing import SalesmanPrint
 
 
 class Tutti:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
+        self.printing = SalesmanPrint(SLDC.get_columns_for_sales_printing())
         self._my_sales_source = SLSRC.TUTTI_CH
         self._write_to_excel = self.sys_config.write_to_excel
         self._spacy = TuttiSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
         self._browser = None
         self._url_search_switzerland = 'https://www.tutti.ch/de/li/ganze-schweiz/angebote?q='
         self._access_layer = AccessLayer4Sale(self.sys_config.db)
+        self._search_label_lists = []
 
     @property
     def nlp(self):
@@ -49,6 +53,10 @@ class Tutti:
             return self.sys_config.file_handler.get_file_path_for_file(
                 '{}_{}'.format(self._my_sales_source, self.sys_config.sales_result_file_name))
         return self.sys_config.file_handler.get_file_path_for_file(self.sys_config.virtual_sales_result_file_name)
+
+    @property
+    def start_search_label_lists(self) -> list:
+        return self._search_label_lists
 
     def check_my_nth_sale_against_similar_sales(self, number=1):
         sale = self.browser.get_my_nth_sale_from_tutti(number)
@@ -93,10 +101,18 @@ class Tutti:
         similar_sale_dict = self.__get_similar_sale_dict_from_tutti__(list_with_nth_sale)
         self.__process_my_sales_and_similar_sales__(list_with_nth_sale, similar_sale_dict)
 
-    def get_similar_sales_from_online_inputs(self, title: str, description: str):
-        list_with_sale = self.__get_my_online_sales__(title, description)
+    def get_search_results_from_online_inputs(self, search_input: str) -> list:
+        if search_input == '':  # we need an empty line...
+            return []
+        list_with_sale = self.__get_sale_list_for_online_search_string__(search_input)
         similar_sale_dict = self.__get_similar_sale_dict_from_tutti__(list_with_sale)
-        return self.__get_similar_sales_as_dict__(list_with_sale, similar_sale_dict)
+        self.__init_printing__(list_with_sale, similar_sale_dict)
+        return self.__get_similar_sales_as_dict_list__(list_with_sale, similar_sale_dict, for_db=False)
+
+    def search_on_tutti(self, search_string: str):
+        list_with_sale = self.__get_sale_list_for_online_search_string__(search_string)
+        similar_sale_dict = self.__get_similar_sale_dict_from_tutti__(list_with_sale)
+        self.__process_my_sales_and_similar_sales__(list_with_sale, similar_sale_dict)
 
     def check_my_sales_against_similar_sales(self, state='active'):
         if state == '':
@@ -118,6 +134,7 @@ class Tutti:
         self.__check_similarity__(my_sales, similar_sale_dict)
         self.__write_to_excel__(my_sales, similar_sale_dict)
         self.__write_to_database__(my_sales, similar_sale_dict)
+        self.__init_printing__(my_sales, similar_sale_dict)
 
     def __check_similarity__(self, my_sales: list, similar_sale_dict: dict):
         if self._spacy.sm_loaded:
@@ -158,7 +175,7 @@ class Tutti:
                 row_list.append(my_sale.get_value_dict_for_worksheet())
                 similar_sales = similar_sale_dict[my_sale.sale_id]
                 for similar_sale in similar_sales:
-                    row_list.append(similar_sale.get_value_dict_for_worksheet(my_sale.sale_id))
+                    row_list.append(similar_sale.get_value_dict_for_worksheet(my_sale.sale_id, my_sale.title))
             for idx, value_dict in enumerate(row_list):
                 # print(value_dict)
                 row_number = idx + 1
@@ -185,6 +202,26 @@ class Tutti:
         finally:
             print('{} sales written to database...'.format(len(input_list)))
 
+    def __init_printing__(self, my_sales: list, similar_sale_dict: dict):
+        input_list = []
+        for my_sale in my_sales:
+            for label_value, entity_label in my_sale.entity_label_dict.items():
+                self.__add_to_printing_list__(input_list, my_sale, similar_sale_dict, entity_label, label_value)
+            self.printing.init_by_sale_dict(input_list)
+            break
+
+    def __add_to_printing_list__(
+            self, input_list, my_sale: TuttiSale, similar_sale_dict: dict, entity_label: str, label_value: str):
+        if entity_label == my_sale.entity_label_dict.get(label_value, ''):
+            if my_sale.location != 'online':
+                my_sale.data_dict_obj.add(SLDC.PRINT_CATEGORY, '{}: {}'.format(entity_label, label_value))
+                input_list.append(my_sale.data_dict_obj.get_data_dict_for_columns(self.printing.columns))
+        similar_sales = similar_sale_dict[my_sale.sale_id]
+        for similar_sale in similar_sales:
+            if entity_label == similar_sale.entity_label_dict.get(label_value, ''):
+                similar_sale.data_dict_obj.add(SLDC.PRINT_CATEGORY, '{}: {}'.format(entity_label, label_value))
+                input_list.append(similar_sale.data_dict_obj.get_data_dict_for_columns(self.printing.columns))
+
     def __add_sale_to_database_input_list__(self, sale: TuttiSale, input_list: list):
         if sale.is_sale_ready_for_sale_table():
             sale_dict = sale.data_dict_obj.get_data_dict_for_sale_table()
@@ -203,14 +240,18 @@ class Tutti:
             return existing_sale
 
     @staticmethod
-    def __get_similar_sales_as_dict__(my_sales: list, similar_sale_dict: dict):
+    def __get_similar_sales_as_dict_list__(my_sales: list, similar_sale_dict: dict, for_db=True) -> list:
         return_list = []
         for my_sale in my_sales:
             similar_sales = similar_sale_dict[my_sale.sale_id]
             for similar_sale in similar_sales:
-                if similar_sale.is_sale_ready_for_sale_table():
-                    sale_dict = similar_sale.data_dict_obj.get_data_dict_for_sale_table()
-                    return_list.append(sale_dict)
+                if for_db:
+                    if similar_sale.is_sale_ready_for_sale_table():
+                        sale_dict = similar_sale.data_dict_obj.get_data_dict_for_sale_table()
+                        return_list.append(sale_dict)
+                else:
+                    return_list.append(
+                        similar_sale.data_dict_obj.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
         return return_list
 
     def __get_my_virtual_sales__(self, number=0):
@@ -224,10 +265,10 @@ class Tutti:
                 tutti_sales.append(sale)
         return tutti_sales
 
-    def __get_my_online_sales__(self, title: str, description: str):
+    def __get_sale_list_for_online_search_string__(self, search_input: str):
         self._my_sales_source = 'online'
         sale = TuttiSale(self._spacy, self.sys_config)
-        sale.init_by_online_input(title, description)
+        sale.init_by_online_input(search_input)
         return [sale]
 
     def __get_sale_elements_from_file__(self) -> pd.DataFrame:
@@ -254,31 +295,67 @@ class Tutti:
 
     def __get_similar_sales_for_sale__(self, sale: TuttiSale) -> list:
         similar_sale_dict = {}
-        start_search_label_lists = sale.get_start_search_label_lists()
-        print('\nStart_search_label_lists={}'.format(start_search_label_lists))
-        for start_search_label_list in start_search_label_lists:
-            self.__get_sales_from_tutti_for_next_search_level__(
-                similar_sale_dict, start_search_label_list, sale)
+        self._search_label_lists = sale.get_search_label_lists()
+        print('\nSearch_label_lists={}'.format(self._search_label_lists))
+        request_dict = self.__get_request_dict_from_tutti_for_search_label_list__(SCLS.FOUND_NUMBERS, SCLS.OFFERS)
+        found_number_list = [request_dict[search_string][0] for search_string in request_dict]
+        if len(found_number_list) > 0 and max(found_number_list) > self.sys_config.number_allowed_search_results:
+            print('Max number {} is larger then allowed result number {} -> change search strings...'.format(
+                max(found_number_list), self.sys_config.number_allowed_search_results
+            ))
+            self._search_label_lists = sale.get_extended_base_search_label_lists(self._search_label_lists)
+            print('\nSearch_label_lists={}'.format(self._search_label_lists))
+        for search_label_list in self._search_label_lists:
+            self.__get_sales_from_tutti_for_search_label_list__(similar_sale_dict, search_label_list, sale)
         self.__identify_outliers__(similar_sale_dict)
         similar_sales_summary = [sale for sale in similar_sale_dict.values()]
         self.__print_similar_sales__(sale, similar_sales_summary)
         return similar_sales_summary
 
-    def __get_sales_from_tutti_for_next_search_level__(
-            self, similar_sales_dict: dict, parent_search_label_list: list, sale: TuttiSale):
-        similar_sales = self.__get_sales_from_tutti__(SCLS.OFFERS, parent_search_label_list)
-        added_flag = False
+    def __get_request_dict_from_tutti_for_search_label_list__(self, class_number: str, class_entries: str) -> dict:
+        return_dict = {}
+        for search_label_list in self._search_label_lists:
+            search_string = ' '.join(search_label_list)
+            url = '{}{}'.format(self._url_search_switzerland, search_string)
+            request = requests.get(url)
+            tree = html.fromstring(request.content)
+            xpath_numbers = tree.xpath('//div[@class="{}"]'.format(class_number))
+            number_found = self.__get_number_from_number_item__(xpath_numbers)
+            sales = tree.xpath('//div[@class="{}"]'.format(class_entries))
+            return_dict[search_string] = [number_found, sales]
+        return return_dict
+
+    def __get_number_from_number_item__(self, xpath_numbers):
+        number_item = xpath_numbers[0] if type(xpath_numbers) is list else xpath_numbers
+        doc_number = self.nlp(str(number_item.text_content()).replace("'", ""))
+        # self._spacy.print_tokens_for_doc(doc_number)
+        number_results = doc_number._.first_pos_number
+        return 0 if number_results is None else number_results
+
+    def __get_numbers_dict_from_tutti__(self, class_name: str, search_label_list: list) -> list:
+        tutti_sales = []
+        search_string = ' '.join(search_label_list)
+        url = '{}{}'.format(self._url_search_switzerland, search_string)
+        # print('Searching for {}'.format(url))
+        request = requests.get(url)
+        # sleep(1)
+        tree = html.fromstring(request.content)
+        sales = tree.xpath('//div[@class="{}"]'.format(class_name))
+        for sale_element in sales:
+            sale = TuttiSale(self._spacy, self.sys_config, search_label_list)
+            sale.init_by_html_element(sale_element)
+            tutti_sales.append(sale)
+            # sale.print_sale_in_original_structure()
+        return tutti_sales
+
+    def __get_sales_from_tutti_for_search_label_list__(
+            self, similar_sales_dict: dict, search_label_list: list, sale: TuttiSale):
+        similar_sales = self.__get_sales_from_tutti__(SCLS.OFFERS, search_label_list)
         for similar_sale in similar_sales:
             if self.__can_similar_sale_be_added_to_dict__(similar_sales_dict, sale, similar_sale):
-                similar_sale.set_master_id(sale.sale_id)
+                similar_sale.set_master_details(sale.sale_id, sale.title)
                 similar_sale.set_source(SLSRC.TUTTI_CH)
                 similar_sales_dict[similar_sale.sale_id] = similar_sale
-                added_flag = True
-        if added_flag:  # recursive call !!!
-            next_parent_search_label_list = sale.get_label_list_with_child_labels(parent_search_label_list)
-            for search_label_list in next_parent_search_label_list:
-                self.__get_sales_from_tutti_for_next_search_level__(
-                    similar_sales_dict, search_label_list, sale)
 
     def __get_sales_from_tutti__(self, class_name: str, parent_search_label_list: list) -> list:
         tutti_sales = []
@@ -301,6 +378,7 @@ class Tutti:
             return False
         if not self.__is_found_sale_similar_to_source_sale__(similar_sale, sale):
             print('Found sale "{}" not similar to "{}"'.format(similar_sale.title, sale.title))
+            print('--> entity_dict: {} <--> {}'.format(sale.entity_label_dict, similar_sale.entity_label_dict))
             return False
         if similar_sale.sale_id not in similar_dict:
             return True
@@ -308,10 +386,15 @@ class Tutti:
 
     @staticmethod
     def __is_found_sale_similar_to_source_sale__(found_sale: TuttiSale, source_sale: TuttiSale) -> bool:
-        is_company_available = found_sale.is_any_term_in_list_in_title(source_sale.company_list)
-        is_product_available = found_sale.is_any_term_in_list_in_title(source_sale.product_list)
-        is_object_available = found_sale.is_any_term_in_list_in_title_or_description(source_sale.object_list)
-        return is_company_available and is_product_available and is_object_available
+        # is_company_available = found_sale.is_any_term_in_list_in_title_or_description(source_sale.company_list)
+        # is_product_available = found_sale.is_any_term_in_list_in_title_or_description(source_sale.product_list)
+        # is_object_available = found_sale.is_any_term_in_list_in_title(source_sale.object_list)
+        # return (is_company_available or is_product_available) and is_object_available
+        is_target_group_identical = found_sale.is_any_target_group_entity_identical(source_sale)
+        is_product_identical = found_sale.is_any_product_entity_identical(source_sale)
+        is_object_identical = found_sale.is_any_object_entity_identical(source_sale)
+        return is_object_identical
+        # return (is_product_identical or is_object_identical) and is_target_group_identical
 
     @staticmethod
     def __print_similar_sales__(sale, similar_sales: list):

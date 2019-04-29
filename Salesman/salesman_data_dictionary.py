@@ -52,6 +52,9 @@ class SalesmanDataDictionary(DataDictionary):
     def get_data_list_for_columns(self, columns: list):
         return [self._data_dict[col] for col in columns]
 
+    def get_data_dict_for_columns(self, columns: list):
+        return {col: self._data_dict[col] for col in columns}
+
     def get_data_dict_for_sale_table(self):
         return {col: self._data_dict[col] for col in self.sys_config.sale_table.column_name_list}
 

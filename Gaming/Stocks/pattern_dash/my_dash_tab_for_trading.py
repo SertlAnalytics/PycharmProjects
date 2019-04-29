@@ -14,7 +14,7 @@ from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi
 from pattern_dash.my_dash_header_tables import MyHTMLTabTradeHeaderTable
 from pattern_dash.my_dash_tab_dd_for_trades import TradeDropDownHandler, TDD
-from pattern_dash.my_dash_tab_button_for_trades import TradeButtonHandler, TBTN
+from pattern_dash.my_dash_tab_button_for_trades import TradingButtonHandler, TBTN
 from pattern_trade_handler import PatternTradeHandler
 from pattern_database.stock_tables import TradeTable, PatternTable
 from dash import Dash
@@ -23,7 +23,7 @@ from sertl_analytics.mydates import MyDate
 from pattern_news_handler import NewsHandler
 
 
-class MyDashTab4Trades(MyPatternDashBaseTab):
+class MyDashTab4Trading(MyPatternDashBaseTab):
     _data_table_name = 'actual_trade_table'
 
     def __init__(self, app: Dash, sys_config: SystemConfiguration, trade_handler_online: PatternTradeHandler):
@@ -61,7 +61,7 @@ class MyDashTab4Trades(MyPatternDashBaseTab):
 
     @staticmethod
     def __get_button_handler__():
-        return TradeButtonHandler()
+        return TradingButtonHandler()
 
     def __init_selected_row__(self, trade_type=''):
         self._selected_trade_type = trade_type

@@ -9,12 +9,12 @@ from sertl_analytics.constants.pattern_constants import BT, TSTR, TP
 from sertl_analytics.mydash.my_dash_components import ButtonHandler
 
 
-class TBTN:  # Trades Buttons
+class TBTN:  # Trading Buttons
     CANCEL_TRADE = 'Cancel_Trade_Button'
     RESTART_REPlAY = 'Restart_Replay_Button'
 
 
-class TradeButtonHandler(ButtonHandler):
+class TradingButtonHandler(ButtonHandler):
     def __get_text__(self, button_type: str):
         value_dict = {
             TBTN.CANCEL_TRADE: 'Cancel Trade',

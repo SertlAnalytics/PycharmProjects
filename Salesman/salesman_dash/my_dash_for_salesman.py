@@ -14,7 +14,7 @@ from sertl_analytics.mydates import MyDate
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from salesman_dash.header_tables.my_dash_header_tables import MyHTMLHeaderTable
 from salesman_dash.my_dash_tab_for_sales import MyDashTab4Sales
-from salesman_dash.my_dash_tab_for_pricing import MyDashTab4Pricing
+from salesman_dash.my_dash_tab_for_search import MyDashTab4Search
 from salesman_dash.my_dash_tab_for_jobs import MyDashTab4Jobs
 from salesman_system_configuration import SystemConfiguration
 from tutti import Tutti
@@ -26,7 +26,7 @@ class MyDash4Salesman(MyDashBase):
         self.sys_config = sys_config
         self.tutti = Tutti(sys_config)
         self.tab_sales = MyDashTab4Sales(self.app, self.sys_config, self.tutti)
-        self.tab_pricing = MyDashTab4Pricing(self.app, self.sys_config, self.tutti)
+        self.tab_search = MyDashTab4Search(self.app, self.sys_config, self.tutti)
         # self.tab_log = MyDashTab4Log(self.app)
         self.tab_jobs = MyDashTab4Jobs(self.app)
 
@@ -35,7 +35,7 @@ class MyDash4Salesman(MyDashBase):
         self.__init_interval_callback_for_user_name__()
         self.__init_interval_callback_for_time_div__()
         self.tab_sales.init_callbacks()
-        self.tab_pricing.init_callbacks()
+        self.tab_search.init_callbacks()
         self.tab_jobs.init_callbacks()
 
     def run_on_server(self):
@@ -70,18 +70,17 @@ class MyDash4Salesman(MyDashBase):
     def __get_div_for_app_layout__(self):
         children_list = [
             MyHTMLHeaderTable().get_table(),
-            MyDCC.interval('my_interval_timer', 15),
-            MyDCC.interval('my_interval_refresh', 120),
+            MyDCC.interval('my_interval_timer', 180),
+            MyDCC.interval('my_interval_refresh', 600),
             self.__get_tabs_for_app__()
         ]
         return MyHTML.div('my_app', children_list)
 
     def __get_tabs_for_app__(self):
         tab_list = [
+            MyDCC.tab('Search', [self.tab_search.get_div_for_tab()]),
             MyDCC.tab('Sales', [self.tab_sales.get_div_for_tab()]),
-            MyDCC.tab('Pricing', [self.tab_pricing.get_div_for_tab()]),
             # MyDCC.tab('Logs', [self.tab_log.get_div_for_tab()]),
             MyDCC.tab('Jobs', [self.tab_jobs.get_div_for_tab()]),
-
         ]
         return MyDCC.tabs('my_app_tabs', tab_list)

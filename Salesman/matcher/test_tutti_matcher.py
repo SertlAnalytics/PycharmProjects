@@ -27,7 +27,7 @@ class TC:
     TC_MATCHER_SINGLE_PRICE = 'TC_MATCHER_SINGLE_PRICE'
 
 
-tc = TC.TC_MATCHER_ORIGINAL_PRICE
+tc = TC.TC_MATCHER_IS_USED
 
 spacy = TuttiSpacy()
 
@@ -42,7 +42,7 @@ elif tc == TC.TC_MATCHER_SIZE:
     matcher.run_test(spacy, False)
 elif tc == TC.TC_MATCHER_ORIGINAL_PRICE:
     matcher = TuttiMatcher4OriginalPrize(spacy.nlp)
-    matcher.run_test(spacy, False)
+    matcher.run_test(spacy, True)
 elif tc == TC.TC_MATCHER_NUMBER:
     matcher = TuttiMatcher4Number(spacy.nlp)
     matcher.run_test(spacy, False)

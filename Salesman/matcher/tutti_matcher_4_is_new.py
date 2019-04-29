@@ -14,9 +14,6 @@ class TuttiMatcher4IsNew(TuttiMatcher):
     @staticmethod
     def __get_pattern_dict__() -> dict:
         return {
-            'NEUWERTIG': [{'LOWER': 'neuwertig'}],
-            'NEUWERTIGEN': [{'LOWER': 'neuwertigen'}],
-            'NEUWERTIGEM': [{'LOWER': 'neuwertigem'}],
             'ORIGINALVERPACKT': [{'LOWER': 'originalverpackt'}],
             'ORIGINALVERPACKUNG': [{'LOWER': 'originalverpackung'}],
             'WIE_NEU': [{'POS': 'ADJ', 'OP': '?'}, {'LOWER': 'neu'}],
@@ -28,9 +25,6 @@ class TuttiMatcher4IsNew(TuttiMatcher):
 
     def __get_pattern_type_test_case_dict__(self):
         return {
-            'NEUWERTIG': {'ist neuwertig': True},
-            'NEUWERTIGEN': {'Ich verkaufe meine neuwertigen Damen Wanderschuhe': True},
-            'NEUWERTIGEM': {'Weisser USM Haller Tisch in neuwertigem Zustand': True},
             'ORIGINALVERPACKT': {'ist noch originalverpackt': True},
             'ORIGINALVERPACKUNG': {'die Originalverpackung ist vorhanden': True},
             'WIE_NEU': {'der Tisch ist wie neu': True},

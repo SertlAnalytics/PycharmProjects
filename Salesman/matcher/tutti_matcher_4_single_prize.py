@@ -19,6 +19,7 @@ class TuttiMatcher4SinglePrize(TuttiMatcher):
             'STUECK': [{'LOWER': 'stück'}, {'POS': POS.PUNCT}, {'POS': POS.X}],  # Preis pro Stück: 2000.-
             'PRO_STUECK': [{'POS': POS.NUM}, {'LOWER': 'pro'}, {'LOWER': 'stück'}],  # Verkaufspreispreis 79.- pro Stück
             'PRO_STUECK_nk': [{'DEP': DEP.nk}, {'LOWER': 'pro'}, {'LOWER': 'stück'}],  # Verkaufspreispreis 79.- pro Stück
+            'CHF_STUECK': [{'POS': POS.NUM}, {'LOWER': 'chf/stück'}],
         }
 
     def __get_pattern_type_test_case_dict__(self):
@@ -28,11 +29,12 @@ class TuttiMatcher4SinglePrize(TuttiMatcher):
             'STUECK': {'Preis pro Stück: 2000.-': 2000},
             'PRO_STUECK': {'wir verkaufen auch einzeln für 79.- pro Stück': 79},
             'PRO_STUECK_nk': {'wir verkaufen auch einzeln für 78.- pro Stück': 78},
+            'CHF_STUECK': {'Verhandlungs Basis 380.- CHF/Stück': 380}
         }
 
     def __get_pattern_result_for_doc_as_text__(self, doc: Doc):
         for match_id, start, end in self._matcher(doc):
-            if doc[end - 1].text.lower() in ['stück']:
+            if doc[end - 1].text.lower() in ['stück', 'chf/stück']:
                 return doc[start].text
             return doc[end - 1].text
         return ''

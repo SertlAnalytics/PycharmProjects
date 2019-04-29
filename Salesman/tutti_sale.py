@@ -67,6 +67,7 @@ class TuttiSale:
 
     @sale_id.setter
     def sale_id(self, value):
+        self.data_dict_obj.add(SLDC.SALE_ID, value)
         self._sale_id = value
 
     @property
@@ -86,15 +87,27 @@ class TuttiSale:
         return SLST.OPEN
 
     @property
+    def location(self):
+        return self._location
+
+    @property
     def object_state(self):
-        if self._is_new:
-            return OBJST.NEW
+        if self._is_used:
+            return OBJST.USED
         else:
-            return OBJST.USED if self._is_used else OBJST.NOT_QUALIFIED
+            return OBJST.NEW if self._is_new else OBJST.NOT_QUALIFIED
 
     @property
     def found_by_labels(self):
         return self._found_by_labels
+
+    @property
+    def material_list(self):
+        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.MATERIAL]
+
+    @property
+    def target_group_list(self):
+        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.TARGET_GROUP]
 
     @property
     def company_list(self):
@@ -107,6 +120,14 @@ class TuttiSale:
     @property
     def object_list(self):
         return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.OBJECT]
+
+    @property
+    def entity_names(self):
+        return self._entity_names
+
+    @property
+    def entity_label_dict(self):
+        return self._entity_label_dict
 
     def init_by_file_row(self, row):
         self._sale_id = row[SLDC.SALE_ID]
@@ -149,12 +170,12 @@ class TuttiSale:
                 return False
         return True
 
-    def init_by_online_input(self, title: str, description: str):
+    def init_by_online_input(self, search_input: str):
         self._sale_id = MyDate.time_stamp_now()
         self.add_location_text('online')
         self.add_date_text(MyDate.get_date_as_string_from_date_time())
-        self.add_title_text(title)
-        self.add_description_text(description)
+        self.add_title_text(search_input)
+        self.add_description_text('')
         self.add_price(str(0))
         self.__add_search_labels__()
         self.__process_doc_extensions__()
@@ -172,7 +193,7 @@ class TuttiSale:
             numbers = offer_element.find_elements_by_class_name(SLCLS.NUMBERS)
             self.add_visits_text(numbers[0].text)
             self.add_bookmarks_text(numbers[1].text)
-            self.__add_search_labels__()
+        self.__add_search_labels__()
         self.__process_doc_extensions__()
         self.__add_data_dict_entries__()
 
@@ -184,6 +205,7 @@ class TuttiSale:
         self.add_title_text(my_html_element.get_text_for_sub_class(SLCLS.TITLE))
         self.add_description_text(my_html_element.get_text_for_sub_class(SLCLS.DESCRIPTION))
         self.add_price(my_html_element.get_text_for_sub_class(SLCLS.PRICE))
+        self.__add_search_labels__()
         self.__process_doc_extensions__()
         self.__add_data_dict_entries__()
 
@@ -201,14 +223,37 @@ class TuttiSale:
         self.__process_doc_extensions__()
         self.__add_data_dict_entries__()
 
+    def set_master_details(self, master_id: str, master_title: str):
+        self.data_dict_obj.add(SLDC.MASTER_ID, master_id)
+        self.data_dict_obj.add(SLDC.MASTER_TITLE, master_title)
+
     def is_any_term_in_list_in_title_or_description(self, term_list: str):
         return self.__is_any_term_in_list_in_text__(term_list, self._title.lower() + self._description.lower())
 
+    def is_any_target_group_entity_identical(self, other_sale):
+        return True
+        return self.__is_any_entity_identical__(self.target_group_list, other_sale.target_group_list)
+
+    def is_any_company_entity_identical(self, other_sale):
+        return self.__is_any_entity_identical__(self.company_list, other_sale.company_list)
+
+    def is_any_product_entity_identical(self, other_sale):
+        return self.__is_any_entity_identical__(self.product_list, other_sale.product_list)
+
+    def is_any_object_entity_identical(self, other_sale):
+        return self.__is_any_entity_identical__(self.object_list, other_sale.object_list, EL.OBJECT)
+
+    @staticmethod
+    def __is_any_entity_identical__(entity_list: list, entity_list_comp: list, entity_label=''):
+        if len(entity_list) == 0 and len(entity_list_comp) == 0:
+            return True
+        if entity_label == EL.OBJECT:
+            if abs(len(entity_list) - len(entity_list_comp)) >= 2:  # if there are too many differences - no go
+                return False
+        return len(set(entity_list).intersection(set(entity_list_comp))) > 0
+
     def is_any_term_in_list_in_title(self, term_list: str):
         return self.__is_any_term_in_list_in_text__(term_list, self._title.lower())
-
-    def set_master_id(self, master_id: str):
-        self.data_dict_obj.add(SLDC.MASTER_ID, master_id)
 
     def set_source(self, source: str):
         self.data_dict_obj.add(SLDC.SOURCE, source)
@@ -233,7 +278,7 @@ class TuttiSale:
         print('\nDoc for {}: {}'.format('title' if for_title else 'description', doc.text))
         token_text_list = []
         token_head_text_list = []
-        self._spacy.print_tokens_for_doc(doc)
+        # self._spacy.print_tokens_for_doc(doc)
         for token in doc:
             if POS.is_pos_noun(token.pos_):
                 token_text_list.append(token.text)
@@ -250,12 +295,12 @@ class TuttiSale:
 
     def __process_doc_extensions__(self):
         doc_title_description = self._nlp(self._title + ' ' + self._description)
-        self._price_original = doc_title_description._.get_original_price
-        self._size = doc_title_description._.get_size
-        self._number = doc_title_description._.get_number
+        self._price_original = doc_title_description._.original_price
+        self._size = doc_title_description._.size
+        self._number = doc_title_description._.number
         self._is_new = doc_title_description._.is_new
         self._is_used = doc_title_description._.is_used
-        single_price = doc_title_description._.get_single_price
+        single_price = doc_title_description._.single_price
         self._price_single = self._price if single_price == 0 else single_price
         self._is_total_price = doc_title_description._.is_total_price
         if self._is_total_price and self._number != 0:
@@ -272,11 +317,9 @@ class TuttiSale:
         self._date_str = MyDate.get_date_str_for_date_term(input_str)
 
     def add_title_text(self, input_str: str):
-        print('add_title_text: {}, type={}'.format(input_str, type(input_str)))
         self._title = input_str
 
     def add_description_text(self, input_str: str):
-        print('add_description_text: {}, type={}'.format(input_str, type(input_str)))
         self._description = input_str
 
     def add_price(self, input_str: str):
@@ -290,36 +333,34 @@ class TuttiSale:
     def add_bookmarks_text(self, input_str: str):
         self._bookmarks = int(input_str.split(' ')[0])
 
-    def get_start_search_label_lists(self):
-        return_list = []
-        print('self._entity_names: {}, dict: {}'.format(self._entity_names, self._entity_label_dict))
-        if len(self._entity_names) == 0:  # we use labels in head text
-            start_lists = [[label] for label in self._search_labels if label in self._search_labels_in_head_text]
-        elif len(self._entity_names) == 1:  # we use all entity names
-            start_lists = [self._entity_names]
-            if len(self._search_labels) == 0:
-                return start_lists
-        elif len(self._entity_names) == 2: # we start with all entity names
-            return [self._entity_names]
-        else:
-            return self.__get_start_list_for_several_entity_names__()
-        for start_list in start_lists:
-            return_list = return_list + self.get_label_list_with_child_labels(start_list)
-        return return_list
+    def get_search_label_lists(self):
+        """
+        The following rules are implemented:
+        1. If object name is available => use object name
+        2. If company and product names are available => use these tupels
+        Material, Target_group and Company are NOT used for the search - they are used later for similarity...
+        :return: list of lists
+        """
+        if len(self.object_list) > 0:
+            return [[object_name] for object_name in self.object_list]
+        if len(self.company_list) > 0 and len(self.product_list) > 0:
+            return [[company_name, product_name] for company_name in self.company_list
+                    for product_name in self.product_list]
+        return []
 
-    def __get_start_list_for_several_entity_names__(self):
-        # If #{PROUDCT, OBJECT} > 1 then whe have several start_search_label_list - each combination...
-        c_list = [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.COMPANY]
-        p_list = [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.PRODUCT]
-        o_list = [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.OBJECT]
-
-        if len(c_list) == 0:  # we don't have a company name
-            return [[p, o] for p in p_list for o in o_list]
-
-        if len(p_list) == 0:  # we don't have products - but company and objects
-            return [[c, o] for c in c_list for o in o_list]
-
-        return [[c, p] for c in c_list for p in p_list]
+    def get_extended_base_search_label_lists(self, search_label_lists: list) -> list:
+        # the object list alone is too unspecific (too many results) - we add company and product
+        c_p_tg_m_list = self.company_list + self.product_list + self.target_group_list + self.material_list
+        if len(c_p_tg_m_list) == 0:
+            return search_label_lists
+        print('c_p_tg_list = {}'.format(c_p_tg_m_list))
+        extended_label_lists = []
+        for search_label_list in search_label_lists:
+            for c_p in c_p_tg_m_list:
+                list_new = list(search_label_list)
+                list_new.append(c_p)
+                extended_label_lists.append(list_new)
+        return extended_label_lists
 
     def get_label_list_with_child_labels(self, parent_label_list: list):
         if parent_label_list[-1] in self._search_labels:
@@ -343,8 +384,11 @@ class TuttiSale:
         self._is_outlier = value
         self.data_dict_obj.add(SLDC.IS_OUTLIER, self._is_outlier)
 
-    def get_value_dict_for_worksheet(self, master_id=None):
-        self.set_master_id(self._sale_id if master_id is None else master_id)
+    def get_value_dict_for_worksheet(self, master_id='', master_title=''):
+        if master_id == '':
+            self.set_master_details(self._sale_id, self._title)
+        else:
+            self.set_master_details(master_id, master_title)
         worksheet_columns = SLDC.get_columns_for_excel()
         return {column: self.data_dict_obj.get(column) for column in worksheet_columns}
 
@@ -398,14 +442,19 @@ class TuttiSale:
         print('{}'.format(search_details))
         if self._my_offer:
             print('Entity names: {}'.format(self._entity_names))
+            print('Entity_label_dict: {}'.format(self._entity_label_dict))
+        else:
+            print('Entity_names: {}'.format(self._entity_names))
+            print('Entity_label_dict: {}'.format(self._entity_label_dict))
 
     def print_sale_details(self):
         visits_bookmarks, search_details = self.__get_visits_bookmarks_and_search_details_for_printing__()
         print('\n{}: ID: {}, Version: {}, Location: {}, Date: {}, Title: {}, '
               'Description: {}, Price: {:.2f} CHF{}{}'.format(
             self.source, self._sale_id, self._version, self._location, self._date_str, self._title, self._description,
-            self._price, visits_bookmarks, search_details)
-        )
+            self._price, visits_bookmarks, search_details))
+        print('Entity_names: {}'.format(self._entity_names))
+        print('Entity_label_dict: {}'.format(self._entity_label_dict))
         """
         ID: 24840417, Location: Aargau, 5430, Date: 26.03.2019, Title: Lowa / Rufus III GTX / Gr. 37, 
         Description: Sehr gut erhalten. Tolles Profil., Price: 20.-, Visits: 10 Besuche, Bookmarks: 0 Merkliste
@@ -416,6 +465,7 @@ class TuttiSale:
         self.data_dict_obj.add(SLDC.VERSION,
                                self.sys_config.access_layer_sale.get_next_version_for_sale_id(self._sale_id))
         self.data_dict_obj.add(SLDC.MASTER_ID, self._sale_id)  # default - will be overwritten...
+        self.data_dict_obj.add(SLDC.MASTER_TITLE, self._title) # default - will be overwritten...
         self.data_dict_obj.add(SLDC.SALE_STATE, self.sale_state)
         self.data_dict_obj.add(SLDC.SOURCE, '')  # default - will be overwritten...
         self.data_dict_obj.add(SLDC.START_DATE, self._date_str)
@@ -436,6 +486,7 @@ class TuttiSale:
         self.data_dict_obj.add(SLDC.BOOK_MARKS, self._bookmarks)
         self.data_dict_obj.add(SLDC.SEARCH_LABELS, ','.join(self._search_labels))
         self.data_dict_obj.add(SLDC.ENTITY_LABELS, ','.join(self._entity_names))
+        self.data_dict_obj.add(SLDC.ENTITY_LABELS_DICT, ','.join(self._entity_label_dict))
         self.data_dict_obj.add(SLDC.FOUND_BY_LABELS,
                                '' if self._found_by_labels is None else ','.join(self._found_by_labels))
         self.data_dict_obj.add(SLDC.HREF, self._href)

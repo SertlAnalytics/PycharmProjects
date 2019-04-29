@@ -11,10 +11,11 @@ class EL:  # entity labels
     PRODUCT = 'PRODUCT'
     OBJECT = 'OBJECT'
     TARGET_GROUP = 'TARGET_GROUP'
+    MATERIAL = 'MATERIAL'
 
     @staticmethod
     def is_entity_label_tutti_relevant(ent_level: str) -> bool:
-        return ent_level in [EL.PRODUCT, EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP]
+        return ent_level in [EL.PRODUCT, EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL]
 
 
 class SLCLS:  # css classes used within tutti sales
@@ -43,6 +44,7 @@ class SLSCLS:  # css classes used within tutti sale single
 
 
 class SCLS:  # css classes used within search offers
+    FOUND_NUMBERS = '_35r2W'
     OFFERS = '_3aiCi'
     MAIN_ANKER = '_16dGT'
     LOCATION = '_3f6Er'

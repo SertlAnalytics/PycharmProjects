@@ -7,7 +7,7 @@ Date: 2019-04-02
 
 from spacy.tokens import Doc, Span
 from spacy.matcher import PhraseMatcher
-from tutti_constants import EL
+from tutti_constants import EL, POS
 from tutti_named_entity import TuttiEntityHandler
 from tutti_named_entity import TuttiCompanyEntity, TuttiProductEntity, TuttiObjectTypeEntity
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
@@ -41,6 +41,7 @@ class CustomTokenizer:
             ',--': '.-',
             ',-': '.-',
             '.--': '.-',
+            'Schalfsack': 'Schlafsack',
         }
 
 
@@ -66,11 +67,13 @@ class TuttiSpacy:
         self._matcher_product = self.__get_matcher_for_entity_type__(EL.PRODUCT)
         self._matcher_object = self.__get_matcher_for_entity_type__(EL.OBJECT)
         self._matcher_target_group = self.__get_matcher_for_entity_type__(EL.TARGET_GROUP)
+        self._matcher_material = self.__get_matcher_for_entity_type__(EL.MATERIAL)
         # self._nlp.add_pipe(self.replacement_component, name='CUSTOM_REPLACEMENT', before='tagger')
         self._nlp.add_pipe(self.company_component, name='CUSTOM_COMPANY', after='ner')
         self._nlp.add_pipe(self.product_component, name='CUSTOM_PRODUCT', after='CUSTOM_COMPANY')
         self._nlp.add_pipe(self.object_component, name='CUSTOM_OBJECT', after='CUSTOM_PRODUCT')
-        self._nlp.add_pipe(self.object_target_group, name='CUSTOM_TARGET_GROUP', after='CUSTOM_OBJECT')
+        self._nlp.add_pipe(self.target_group_component, name='CUSTOM_TARGET_GROUP', after='CUSTOM_OBJECT')
+        self._nlp.add_pipe(self.material_component, name='CUSTOM_MATERIAL', after='CUSTOM_TARGET_GROUP')
         self.__set_doc_extensions__()
 
     @property
@@ -110,6 +113,11 @@ class TuttiSpacy:
         doc.ents = spans  # Overwrite the doc.ents with the matched spans
         return doc
 
+    def material_component(self, doc):
+        matches = self._matcher_material(doc)
+        spans = [Span(doc, start, end, label=EL.MATERIAL) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
     def product_component(self, doc):
         matches = self._matcher_product(doc)
         spans = [Span(doc, start, end, label=EL.PRODUCT) for match_id, start, end in matches]
@@ -120,7 +128,7 @@ class TuttiSpacy:
         spans = [Span(doc, start, end, label=EL.OBJECT) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
-    def object_target_group(self, doc):
+    def target_group_component(self, doc):
         matches = self._matcher_target_group(doc)
         spans = [Span(doc, start, end, label=EL.TARGET_GROUP) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
@@ -150,10 +158,11 @@ class TuttiSpacy:
             print('ent.text={}, ent.label_={}'.format(ent.text, ent.label_))
 
     def __set_doc_extensions__(self): # Register some Doc property extensions
-        Doc.set_extension('get_size', getter=self.__get_size__)
-        Doc.set_extension('get_single_price', getter=self.__get_single_price__)
-        Doc.set_extension('get_number', getter=self.__get_number__)
-        Doc.set_extension('get_original_price', getter=self.__get_original_price__)
+        Doc.set_extension('size', getter=self.__get_size__)
+        Doc.set_extension('single_price', getter=self.__get_single_price__)
+        Doc.set_extension('number', getter=self.__get_number__)
+        Doc.set_extension('first_pos_number', getter=self.__get_fist_pos_number__)
+        Doc.set_extension('original_price', getter=self.__get_original_price__)
         Doc.set_extension('is_new', getter=self.__is_new__)
         Doc.set_extension('is_used', getter=self.__is_used__)
         Doc.set_extension('is_total_price', getter=self.__is_total_price__)
@@ -163,6 +172,13 @@ class TuttiSpacy:
 
     def __get_number__(self, doc):
         return TuttiMatcher4Number(self._nlp).get_pattern_result_for_doc(doc)
+
+    @staticmethod
+    def __get_fist_pos_number__(doc):
+        for token in doc:
+            if token.pos_ == POS.NUM:
+                if token.text.isnumeric():
+                    return int(token.text)
 
     def __get_original_price__(self, doc):
         return TuttiMatcher4OriginalPrize(self._nlp).get_pattern_result_for_doc(doc)

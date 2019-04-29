@@ -35,12 +35,30 @@ class TuttiNamedEntity:
         return {}
 
 
+class TuttiMaterialEntity(TuttiNamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return ['Baumwolle', 'Leder', 'Kunstleder', 'Goretex', 'Stoff', 'Wolle']
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+            'Goretex': ['GoreTex'],
+        }
+
+
 class TuttiCompanyEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
-        return ['Apple', 'BMW', 'Crumpler', 'DeLonghi', 'Eames', 'GoPro', 'Nespresso', 'Lowa',
-                'Grüezi-Bag',
-                'Mercedes', 'Paidi', 'Samsung', 'USM', 'Schöffel',
+        return ['Apple', 'BMW', 'Crumpler',
+                'DeLonghi', 'Dyson',
+                'Eames',
+                'GoPro', 'Gucci',
+                'Hape', 'Nespresso',
+                'IKEA',
+                'Lowa', 'Louis Vuitton',
+                'Grüezi-Bag', 'Jacobsen', 'Hansen', 'Mango', 'Even&Odd', 'Bally', 'Zanotti', 'Tosca', 'H&M',
+                'Mercedes', 'Paidi', 'Risa', 'Samsung', 'USM', 'Schöffel',
                 'Waldmann', 'Vitra', 'Zimstern', 'Zimtstern',
                 'Villiger', 'Omega', 'Sunshine', 'Diono']
 
@@ -48,6 +66,7 @@ class TuttiCompanyEntity(TuttiNamedEntity):
     def __get_synonym_dict__():
         return {
             'Sunshine': ['Diono'],
+            'Jacobsen': ['Jacobson'],
             'Grüezi-Bag': ['Grüezi Bag']
         }
 
@@ -55,49 +74,73 @@ class TuttiCompanyEntity(TuttiNamedEntity):
 class TuttiTargetGroupEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
-        return ['Frau', 'Frauen', 'Mann', 'Männer', 'Kind', 'Kinder', 'Baby', 'Babies']
+        return ['Dame', 'Damen', 'Frau', 'Frauen', 'Mann', 'Männer',
+                'Mädchen', 'Jungen',
+                'Kind', 'Kinder', 'Baby', 'Babies']
 
     @staticmethod
     def __get_synonym_dict__():
         return {
-            'Frau': ['Frauen'],
+            'Frau': ['Dame'],
+            'Frauen': ['Damen'],
+            'Dame': ['Frau'],
+            'Damen': ['Frauen'],
             'Mann': ['Männer'],
             'Kind': ['Kinder'],
             'Baby': ['Babies'],
+            'Lady': ['Mädchen'],
         }
 
 
 class TuttiProductEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
-        return ['MacBook', 'alu chair', 'aluminium chair', 'gtx', 'hero', 'Kid Cow',
-                'meda', 'Monterey', 'Booster', 'pixie']
+        return ['MacBook', 'alu chair', 'aluminium chair', 'gtx', 'hero', 'Kid Cow', 'Roundabout',
+                'meda', 'Monterey', 'Booster', 'pixie', 'hot & cool', 'X3', 'Panama']
 
     @staticmethod
     def __get_synonym_dict__():
         return {
-            'alu chair': ['aluminum chair']
+            'alu chair': ['aluminum chair'],
+            'hot & cool': ['hot+cool', 'hot + cool'],
         }
 
 
 class TuttiObjectTypeEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
-        return ['regal', 'tisch', 'schreibtisch', 'stuhl', 'bürostuhl', 'bürotisch', 'auto', 'fahrrad', 'velo',
-                'corpus', 'kommunionskleid', 'notebook',
-                'rollcontainer', 'besucherstuhl', 'schlafsack', 'chair', 'tasche']
+        return ['Alufelgen','auto',
+                'Bremsbeläge', 'bürotisch', 'Bürostuhl', 'Büro',
+                'corpus', 'fleecejacke', 'hut', 'kugelbahn', 'dusche', 'toilette',
+                'Einstellwerkzeug',
+                'Gartenlehnstuhl',
+                'Kinderbett',
+                'Matraze', 'Matrazen',
+                'regal', 'tisch', 'schreibtisch', 'stuhl', 'stühle',
+                'winterschuhe', 'handtasche', 'nebelleuchte', 'scheinwerfer', 'stossstange',
+                'fahrrad', 'velo', 'kinderwagen', 'regenschutz', 'rucksack', 'ski',
+                'kommunionskleid', 'notebook', 'jacke', 'Skijacke', 'sonnenschirm', 'babywanne',
+                'rollcontainer', 'besucherstuhl', 'schlafsack', 'chair', 'tasche',
+                'Reifen', 'Räder',
+                'schlüssel', 'schlüsselanhänger', 'Scheibenbremsbeläge',
+                'Turnschuhe',
+                'Winterräder', 'Winterreifen', 'Winterkompletträder',
+                'Werkzeugkasten', 'Winterjacke',
+                'Zeitwerkzeug', 'Zeitsteuerung']
 
     @staticmethod
     def __get_synonym_dict__():
         return {
             'fahrrad': ['velo'],
-            'tisch': ['bürotisch'],
+            'hut': ['sonnenhut', 'strohhut'],
+            'stuhl': ['chair', 'stühle'],
             'corpus': ['rollcontainer'],
-            'stuhl': ['bürostuhl', 'besucherstuhl', 'chair', 'bürodrehstuhl', 'drehstuhl'],
+            'bürostuhl': ['besucherstuhl', 'bürodrehstuhl', 'drehstuhl'],
             'kindersitz': ['autokindersitz', 'auto-kindersitz'],
             'notebook': ['laptop'],
             'umhängetasche': ['tasche'],
             'kommunionskleid': ['kommunionkleid'],
+            'stossstange': ['stoßstange']
         }
 
 
@@ -121,7 +164,8 @@ class TuttiEntityHandler:
         return {EL.COMPANY: TuttiCompanyEntity(),
                 EL.PRODUCT: TuttiProductEntity(),
                 EL.OBJECT: TuttiObjectTypeEntity(),
-                EL.TARGET_GROUP: TuttiTargetGroupEntity()}.get(entity_type, TuttiCompanyEntity())
+                EL.TARGET_GROUP: TuttiTargetGroupEntity(),
+                EL.MATERIAL: TuttiMaterialEntity()}.get(entity_type, TuttiCompanyEntity())
 
 
 

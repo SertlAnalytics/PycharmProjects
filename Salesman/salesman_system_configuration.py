@@ -24,6 +24,7 @@ class SystemConfiguration:
         self.sound_machine = SalesmanSoundMachine()
         self.db = SalesmanDatabase()
         self.access_layer_sale = AccessLayer4Sale(self.db)
+        self.number_allowed_search_results = 200
         self.sale_table = SaleTable()
         self.company_table = CompanyTable()
         self.process_table = ProcessTable()

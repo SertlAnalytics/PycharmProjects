@@ -53,7 +53,7 @@ class SLSRC:  # sale sources
         return [SLSRC.DB, SLSRC.FILE]
 
     @staticmethod
-    def get_similar_sale_sources():
+    def get_search_sources():
         return [SLSRC.TUTTI_CH, SLSRC.RICARDO_CH, SLSRC.EBAY_CH]
     
 class SLST:  # Sale Status
@@ -77,6 +77,8 @@ class SLDC:  # Sale data column
     VERSION_MAX = 'Version_max'
     IS_ACTUAL = 'Is_actual'
     MASTER_ID = 'Master_ID'
+    MASTER_TITLE = 'Master_Title'
+    PRINT_CATEGORY = 'Print_Category'
     SOURCE = 'Source'  # Tutti, Ricardo, etc.
     SALE_STATE = 'Sale_State'  # see SLST
     HREF = 'Link'
@@ -98,6 +100,7 @@ class SLDC:  # Sale data column
     BOOK_MARKS = 'Bookmarks'
     SEARCH_LABELS = 'Search_labels'
     ENTITY_LABELS = 'Entity_labels'
+    ENTITY_LABELS_DICT = 'Entity_labels_dictionary'
     FOUND_BY_LABELS = 'Found_by_labels'
     LAST_CHECK_DATE = 'Last_Check_Date'
     COMMENT = 'Comment'
@@ -119,5 +122,20 @@ class SLDC:  # Sale data column
     def get_columns_for_sales_tab_table():
         return [SLDC.SALE_ID, SLDC.VERSION, SLDC.MASTER_ID, SLDC.SOURCE, SLDC.START_DATE, SLDC.LOCATION, 
                 SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER, SLDC.TITLE, SLDC.HREF]
+
+    @staticmethod
+    def get_columns_for_sales_printing():
+        return [SLDC.SALE_ID, SLDC.VERSION, SLDC.MASTER_ID, SLDC.PRINT_CATEGORY,
+                SLDC.SOURCE, SLDC.START_DATE, SLDC.LOCATION,
+                SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER, SLDC.TITLE, 
+                SLDC.ENTITY_LABELS, SLDC.ENTITY_LABELS_DICT]
+
+    staticmethod
+
+    def get_columns_for_search_results():
+        return [SLDC.SALE_ID, SLDC.PRINT_CATEGORY,
+                SLDC.SOURCE, SLDC.START_DATE, SLDC.LOCATION,
+                SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE, SLDC.DESCRIPTION, SLDC.IS_OUTLIER, 
+                SLDC.ENTITY_LABELS, SLDC.ENTITY_LABELS_DICT]
 
 

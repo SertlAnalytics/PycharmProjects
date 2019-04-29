@@ -15,7 +15,7 @@ from dash import Dash
 from sertl_analytics.my_text import MyText
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
 from salesman_dash.grid_tables.my_grid_table_sale_4_sales import MySaleTable
-from salesman_dash.grid_tables.my_grid_table_similar_sale_4_sales import MySimilarSaleTable
+from salesman_dash.grid_tables.my_grid_table_similar_sale_4_sales import MySearchResultTable
 from salesman_system_configuration import SystemConfiguration
 from tutti import Tutti
 import pandas as pd
@@ -35,7 +35,7 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._dd_handler = SalesTabDropDownHandler()
         self._header_table = MyHTMLTabSalesHeaderTable()
         self._sale_grid_table = MySaleTable(self.sys_config)
-        self._similar_sale_grid_table = MySimilarSaleTable(self.sys_config)
+        self._similar_sale_grid_table = MySearchResultTable(self.sys_config)
         self._selected_my_sale_row = None
         self._selected_similar_sale_row = None
         self._online_title = None
@@ -180,11 +180,11 @@ class MyDashTab4Sales(MyDashBaseTab):
         else:
             title, description = self._selected_my_sale_row[SLDC.TITLE], self._selected_my_sale_row[SLDC.DESCRIPTION]
             print('__handle_refresh_click__: title={}, description={}'.format(title, description))
-            results = self.tutti.get_similar_sales_from_online_inputs(title, description)
+            results = self.tutti.get_search_results_from_online_inputs(title, description)
             print(results)
         self._sale_grid_table = MySaleTable(self.sys_config)
         self._sale_grid_table.selected_source = self._dd_handler.selected_sale_source
-        self._similar_sale_grid_table = MySimilarSaleTable(self.sys_config)
+        self._similar_sale_grid_table = MySearchResultTable(self.sys_config)
 
     def __init_callback_for_similar_sale_grid_table__(self):
         @self.app.callback(

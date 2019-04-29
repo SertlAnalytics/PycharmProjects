@@ -2,25 +2,42 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f337eff7-2e2d-415d-b4ab-cf8d55a29aa3" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/my_text.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my_pandas.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/printing/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/printing/sale_printing.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/grid_tables/my_grid_table_sale_4_search_results.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/header_tables/my_tab_header_table_4_search.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/constants/salesman_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/salesman_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datafetcher/database_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/datafetcher/database_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mydash/my_dash_components.py" beforeDir="false" afterPath="$PROJECT_DIR$/mydash/my_dash_components.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_dd_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_scheduling/pattern_scheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_button_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_button_for_trades.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_trades.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_trading.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_new.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_new.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_used.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_used.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_number.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_number.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_original_price.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_original_price.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_single_prize.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_single_prize.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/run_tutti_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/run_tutti_process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/grid_tables/my_grid_table_similar_sale_4_sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/grid_tables/my_grid_table_similar_sale_4_sales.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/header_tables/my_tab_header_table_4_pricing.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/input_tables/my_online_sale_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/input_tables/my_online_sale_table.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_for_salesman.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_for_salesman.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_pricing.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_pricing.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_search.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_sale.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/run_create_salesman_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/run_create_salesman_table.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_views.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_data_dictionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_data_dictionary.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_system_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/test_tutti_matcher.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_named_entity.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_sale.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_spacy.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_spacy.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -88,7 +105,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/datafetcher/data_fetcher_cache.py" />
         <option value="$PROJECT_DIR$/pybase/loop_list.py" />
         <option value="$PROJECT_DIR$/models/nn_collector.py" />
         <option value="$PROJECT_DIR$/user_input/confirmation.py" />
@@ -137,8 +153,9 @@
         <option value="$PROJECT_DIR$/constants/pattern_constants.py" />
         <option value="$PROJECT_DIR$/models/__test_models__.py" />
         <option value="$PROJECT_DIR$/my_array.py" />
-        <option value="$PROJECT_DIR$/my_numpy.py" />
         <option value="$PROJECT_DIR$/my_text.py" />
+        <option value="$PROJECT_DIR$/my_panda.py" />
+        <option value="$PROJECT_DIR$/my_numpy.py" />
       </list>
     </option>
   </component>
@@ -153,7 +170,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -242,6 +258,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -249,16 +266,16 @@
     <property name="settings.editor.selected.configurable" value="vcs.Git" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\test" />
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\constants" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\processes" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\mydash" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\test" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\test" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -398,13 +415,13 @@
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4745098" visible="true" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4729412" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.477707" side_tool="true" weight="0.32784313" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.522293" weight="0.5294118" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49761146" weight="0.32784313" />
-      <window_info id="Structure" order="1" sideWeight="0.5254902" side_tool="true" visible="true" weight="0.25" />
+      <window_info id="Structure" order="1" sideWeight="0.52705884" side_tool="true" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.70616496" weight="0.24078432" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49761146" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -505,13 +522,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/models/models_abc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="334">
-          <caret line="33" lean-forward="true" selection-start-line="33" selection-end-line="33" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/models/policy_action.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="102">
@@ -852,13 +862,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/my_numpy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="19" selection-start-line="19" selection-end-line="19" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/constants/pattern_constants.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
@@ -870,6 +873,20 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="119">
           <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/my_pandas.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" selection-start-line="8" selection-end-line="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/my_numpy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="9" lean-forward="true" selection-start-line="8" selection-start-column="42" selection-end-line="9" />
         </state>
       </provider>
     </entry>

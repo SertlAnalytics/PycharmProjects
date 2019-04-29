@@ -21,6 +21,7 @@ class TuttiMatcher4Number(TuttiMatcher):
             'STK': [{'POS': POS.NUM}, {'LOWER': 'stk'}],
             'DIESE': [{'LOWER': 'diese'}, {'POS': POS.NUM}],
             'BIS': [{'POS': POS.NUM}, {'POS': POS.NUM}, {'POS': POS.NUM}],
+            'DESIGNKLASSIKER': [{'POS': POS.NUM}, {'LOWER': 'designklassiker'}],
         }
 
     def __get_pattern_type_test_case_dict__(self):
@@ -32,11 +33,12 @@ class TuttiMatcher4Number(TuttiMatcher):
             'STK': {'Stühle CONFERENCE - 3 Stk.': 3},
             'DIESE': {'DIESE 6 Stühle werden nur zusammen EN BLOC verkauft': 6},
             'BIS': {'1-5 eames alu chair vitra': 5},
+            'DESIGNKLASSIKER': {'4 Designklassiker': 4},
         }
 
     def __get_pattern_result_for_doc_as_text__(self, doc: Doc):
         for match_id, start, end in self._matcher(doc):
-            if doc[end-1].text.lower() in ['stk', 'stück', 'set', 'mal']:
+            if doc[end-1].text.lower() in ['stk', 'stück', 'set', 'mal', 'designklassiker']:
                 return doc[start].text
             return doc[end - 1].text
         return ''

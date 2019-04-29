@@ -15,7 +15,7 @@ from sertl_analytics.mydates import MyDate
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from pattern_dash.my_dash_header_tables import MyHTMLHeaderTable
 from pattern_dash.my_dash_tab_for_pattern import MyDashTab4Pattern
-from pattern_dash.my_dash_tab_for_trades import MyDashTab4Trades
+from pattern_dash.my_dash_tab_for_trading import MyDashTab4Trading
 from pattern_dash.my_dash_tab_for_statistics_trade import MyDashTab4TradeStatistics
 from pattern_dash.my_dash_tab_for_statistics_pattern import MyDashTab4PatternStatistics
 from pattern_dash.my_dash_tab_for_statistics_asset import MyDashTab4AssetStatistics
@@ -42,8 +42,8 @@ class MyDash4Pattern(MyDashBase):
         self.tab_pattern = MyDashTab4Pattern(self.app, self.sys_config, self.trade_handler_online)
         self.tab_portfolio = MyDashTab4Portfolio(self.app, self.sys_config, self.trade_handler_online)
         self.tab_recommender = MyDashTab4Recommender(self.app, self.sys_config, self.trade_handler_online)
+        self.tab_trading = MyDashTab4Trading(self.app, self.sys_config, self.trade_handler_online)
         self.tab_waves = MyDashTab4Waves(self.app, self.sys_config, self.color_handler)
-        self.tab_trades = MyDashTab4Trades(self.app, self.sys_config, self.trade_handler_online)
         self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config, self.color_handler)
         self.tab_asset_statistics = MyDashTab4AssetStatistics(self.app, self.sys_config,
@@ -61,8 +61,8 @@ class MyDash4Pattern(MyDashBase):
         self.tab_pattern.init_callbacks()
         self.tab_portfolio.init_callbacks()
         self.tab_recommender.init_callbacks()
+        self.tab_trading.init_callbacks()
         self.tab_waves.init_callbacks()
-        self.tab_trades.init_callbacks()
         self.tab_trade_statistics.init_callbacks()
         self.tab_pattern_statistics.init_callbacks()
         self.tab_asset_statistics.init_callbacks()
@@ -112,8 +112,8 @@ class MyDash4Pattern(MyDashBase):
             MyDCC.tab('Detector', [self.tab_pattern.get_div_for_tab()]),
             MyDCC.tab('Portfolio', [self.tab_portfolio.get_div_for_tab()]),
             MyDCC.tab('Recom.', [self.tab_recommender.get_div_for_tab()]),
+            MyDCC.tab('Trading', [self.tab_trading.get_div_for_tab()]),
             MyDCC.tab('Waves', [self.tab_waves.get_div_for_tab()]),
-            MyDCC.tab('Trading', [self.tab_trades.get_div_for_tab()]),
             MyDCC.tab('Trades', [self.tab_trade_statistics.get_div_for_tab()]),
             MyDCC.tab('Patterns', [self.tab_pattern_statistics.get_div_for_tab()]),
             MyDCC.tab('Assets', [self.tab_asset_statistics.get_div_for_tab()]),

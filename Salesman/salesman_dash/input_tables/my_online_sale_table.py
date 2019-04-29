@@ -10,18 +10,6 @@ from sertl_analytics.mydash.my_dash_components import MyHTMLTable, COLORS
 
 
 class MyHTMLInputTable(MyHTMLTable):
-    def __init__(self):
-        MyHTMLTable.__init__(self, 2, 3)
-        self._button_n_clicks = 0
-
-    @property
-    def button_n_clicks(self) -> int:
-        return self._button_n_clicks
-
-    @button_n_clicks.setter
-    def button_n_clicks(self, n_clicks):
-        self._button_n_clicks = n_clicks
-
     def _get_cell_style_(self, row: int, col: int):
         width = ['20%', '60%', '20%'][col - 1]
         bg_color = COLORS[2]['background']
@@ -32,46 +20,32 @@ class MyHTMLInputTable(MyHTMLTable):
                 'vertical-align': v_align, 'padding': self.padding_cell}
 
 
-class MyHTMLSaleOnlineInputTable(MyHTMLInputTable):
-    @property
-    def my_sales_title_label_div(self):
-        return 'my_sales_title_label_div'
+class MyHTMLSearchOnlineInputTable(MyHTMLInputTable):
+    def __init__(self):
+        MyHTMLTable.__init__(self, 1, 3)
+        self.search_button_n_clicks = 0
+        self.search_input_n_blur = 0
 
     @property
-    def my_sales_description_label_div(self):
-        return 'my_sales_description_label_div'
+    def my_search_input(self):
+        return 'my_search_input'
 
     @property
-    def my_sales_title_input(self):
-        return 'my_sales_title_input'
+    def my_search_input_label_div(self):
+        return '{}_label_div'.format(self.my_search_input)
 
     @property
-    def my_sales_description_input(self):
-        return 'my_sales_description_input'
-
-    @property
-    def my_sales_online_search_button(self):
-        return 'my_sales_online_search_button'
+    def my_search_button(self):
+        return 'my_search_button'
 
     def _init_cells_(self):
-        self.set_value(1, 1, 'Title')
-        self.set_value(2, 1, 'Description')
+        input_label_div = MyHTML.div(self.my_search_input_label_div, 'Search input:', True)
+        input_field = MyHTML.div_with_textarea(
+            element_id=self.my_search_input, placeholder='Please enter search string...', size=650, height=50)
+        button_search = MyHTML.div_with_html_button_submit(self.my_search_button, 'Search', hidden='')
 
-        title_label_div = MyHTML.div(self.my_sales_title_label_div, 'Title:', True)
-        description_label_div = MyHTML.div(self.my_sales_description_label_div, 'Description:', True)
-
-        title_input = MyHTML.div_with_input(element_id=self.my_sales_title_input,
-                                            placeholder='Please enter title...', size=500, height=27)
-
-        description_input = MyHTML.div_with_textarea(element_id=self.my_sales_description_input,
-                                                     placeholder='Please enter description...', size=500, height=100)
-
-        button_search = MyHTML.div_with_html_button_submit(self.my_sales_online_search_button, 'Search', hidden='')
-
-        self.set_value(1, 1, title_label_div)
-        self.set_value(1, 2, title_input)
-        self.set_value(2, 1, description_label_div)
-        self.set_value(2, 2, description_input)
-        self.set_value(2, 3, button_search)
+        self.set_value(1, 1, input_label_div)
+        self.set_value(1, 2, input_field)
+        self.set_value(1, 3, button_search)
 
 
