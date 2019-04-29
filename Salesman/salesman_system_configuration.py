@@ -32,6 +32,7 @@ class SystemConfiguration:
         self.load_sm = True
         self.write_to_excel = False
         self.write_to_database = False
+        self.print_details = False
         self.outlier_threshold = 25  # percentile below this threshold and above on top, i.e. < 15 and above 85 for 15
 
     @property

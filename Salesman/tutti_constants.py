@@ -52,6 +52,8 @@ class SCLS:  # css classes used within search offers
     LINK = '_16dGT'
     DESCRIPTION = '_2c4Jo'
     PRICE = '_6HJe5'
+    NAVIGATION_MAIN = '_34zCr'
+    NAVIGATION_ANCHOR = '_3bpXO _3vEQq'
 
 
 class POS:

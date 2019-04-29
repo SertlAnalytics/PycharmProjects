@@ -57,6 +57,7 @@ class TuttiCompanyEntity(TuttiNamedEntity):
                 'Hape', 'Nespresso',
                 'IKEA',
                 'Lowa', 'Louis Vuitton',
+                'name it',
                 'Grüezi-Bag', 'Jacobsen', 'Hansen', 'Mango', 'Even&Odd', 'Bally', 'Zanotti', 'Tosca', 'H&M',
                 'Mercedes', 'Paidi', 'Risa', 'Samsung', 'USM', 'Schöffel',
                 'Waldmann', 'Vitra', 'Zimstern', 'Zimtstern',
@@ -96,7 +97,7 @@ class TuttiProductEntity(TuttiNamedEntity):
     @staticmethod
     def __get_entity_names__():
         return ['MacBook', 'alu chair', 'aluminium chair', 'gtx', 'hero', 'Kid Cow', 'Roundabout',
-                'meda', 'Monterey', 'Booster', 'pixie', 'hot & cool', 'X3', 'Panama']
+                'meda', 'Monterey', 'Booster', 'pixie', 'hot & cool', 'X3', 'Panama', 'Kitos']
 
     @staticmethod
     def __get_synonym_dict__():
@@ -113,7 +114,8 @@ class TuttiObjectTypeEntity(TuttiNamedEntity):
                 'Bremsbeläge', 'bürotisch', 'Bürostuhl', 'Büro',
                 'corpus', 'fleecejacke', 'hut', 'kugelbahn', 'dusche', 'toilette',
                 'Einstellwerkzeug',
-                'Gartenlehnstuhl',
+                'Gartenlehnstuhl', 'Gestell',
+                'Hängematte',
                 'Kinderbett',
                 'Matraze', 'Matrazen',
                 'regal', 'tisch', 'schreibtisch', 'stuhl', 'stühle',
@@ -122,7 +124,7 @@ class TuttiObjectTypeEntity(TuttiNamedEntity):
                 'kommunionskleid', 'notebook', 'jacke', 'Skijacke', 'sonnenschirm', 'babywanne',
                 'rollcontainer', 'besucherstuhl', 'schlafsack', 'chair', 'tasche',
                 'Reifen', 'Räder',
-                'schlüssel', 'schlüsselanhänger', 'Scheibenbremsbeläge',
+                'schlüssel', 'schlüsselanhänger', 'Scheibenbremsbeläge', 'Strickdecke', 'Stehleuchte',
                 'Turnschuhe',
                 'Winterräder', 'Winterreifen', 'Winterkompletträder',
                 'Werkzeugkasten', 'Winterjacke',

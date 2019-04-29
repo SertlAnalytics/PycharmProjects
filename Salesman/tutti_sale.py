@@ -275,7 +275,8 @@ class TuttiSale:
         self.reduce_search_labels_by_entity_names()
 
     def __add_search_labels_for_doc__(self, doc: Doc, for_title=False):
-        print('\nDoc for {}: {}'.format('title' if for_title else 'description', doc.text))
+        if self.sys_config.print_details:
+            print('\nDoc for {}: {}'.format('title' if for_title else 'description', doc.text))
         token_text_list = []
         token_head_text_list = []
         # self._spacy.print_tokens_for_doc(doc)
@@ -382,7 +383,7 @@ class TuttiSale:
 
     def set_is_outlier(self, value: bool):
         self._is_outlier = value
-        self.data_dict_obj.add(SLDC.IS_OUTLIER, self._is_outlier)
+        self.data_dict_obj.add(SLDC.IS_OUTLIER, 1 if self._is_outlier else 0)
 
     def get_value_dict_for_worksheet(self, master_id='', master_title=''):
         if master_id == '':
@@ -401,12 +402,14 @@ class TuttiSale:
 
     def add_entity_name_label(self, entity_name: str, entity_label: str):
         if entity_name not in self._entity_names:
-            print('Entity is relevant for Tutti: {} {}'.format(entity_name, entity_label))
+            if self.sys_config.print_details:
+                print('Entity is relevant for Tutti: {} {}'.format(entity_name, entity_label))
             self._entity_names.append(entity_name)
             self._entity_label_dict[entity_name] = entity_label
             entity_synonyms = TuttiEntityHandler.get_synonyms_for_entity_name(entity_label, entity_name)
             if len(entity_synonyms) > 0:
-                print('Entity {} has synonym {}'.format(entity_name, entity_synonyms))
+                if self.sys_config.print_details:
+                    print('Entity {} has synonym {}'.format(entity_name, entity_synonyms))
                 # self._entity_names.append(entity_synonym)
                 for entity_synonym in entity_synonyms:
                     self._entity_label_dict[entity_synonym] = entity_label
@@ -414,13 +417,16 @@ class TuttiSale:
     def reduce_search_labels_by_entity_names(self):
         # entity names are the most important part - they are mandatory for the search - delete them from the
         # normal search labels
-        print('')
+        if self.sys_config.print_details:
+            print('')
         if len(self._entity_names) > 0:
-            print('Search labels before entity name deletion: {}'.format(self._search_labels))
+            if self.sys_config.print_details:
+                print('Search labels before entity name deletion: {}'.format(self._search_labels))
             for entity_name in self._entity_names:
                 if entity_name in self._search_labels:
                     self._search_labels.remove(entity_name)
-        print('Search labels: {}'.format(self._search_labels))
+        if self.sys_config.print_details:
+            print('Search labels: {}'.format(self._search_labels))
 
     def is_price_ready_for_update_in_tutti(self) -> bool:
         return self._price_new != self._price
@@ -484,9 +490,10 @@ class TuttiSale:
         self.data_dict_obj.add(SLDC.IS_USED, self._is_used)
         self.data_dict_obj.add(SLDC.VISITS, self._visits)
         self.data_dict_obj.add(SLDC.BOOK_MARKS, self._bookmarks)
-        self.data_dict_obj.add(SLDC.SEARCH_LABELS, ','.join(self._search_labels))
-        self.data_dict_obj.add(SLDC.ENTITY_LABELS, ','.join(self._entity_names))
-        self.data_dict_obj.add(SLDC.ENTITY_LABELS_DICT, ','.join(self._entity_label_dict))
+        self.data_dict_obj.add(SLDC.SEARCH_LABELS, ', '.join(self._search_labels))
+        self.data_dict_obj.add(SLDC.ENTITY_LABELS, ', '.join(self._entity_names))
+        label_list = ['{} ({})'.format(values, self.entity_label_dict[values]) for values in self.entity_label_dict]
+        self.data_dict_obj.add(SLDC.ENTITY_LABELS_DICT, ', '.join(label_list))
         self.data_dict_obj.add(SLDC.FOUND_BY_LABELS,
                                '' if self._found_by_labels is None else ','.join(self._found_by_labels))
         self.data_dict_obj.add(SLDC.HREF, self._href)
@@ -530,11 +537,17 @@ class TuttiSale:
             label_in_list_lower = label_in_list.lower()
             if label_lower.find(label_in_list_lower) >= 0:
                 # the new label is more specific (longer) => we keep the shorter one
-                print('new label {} covers old label {}=> keep old label'.format(label, label_in_list))
+                self.__print_new_old_label_behavior__(
+                    'new label {} covers old label {}=> keep old label'.format(label, label_in_list))
                 return
             elif label_in_list_lower.find(label_lower) >= 0:
                 # the new label is more general (shorter) => we replace the old one
-                print('new label {} is in old label {}=> replace old label'.format(label, label_in_list))
+                self.__print_new_old_label_behavior__(
+                    'new label {} is in old label {}=> replace old label'.format(label, label_in_list))
                 label_list[idx] = label
                 return
         label_list.append(label)
+
+    def __print_new_old_label_behavior__(self, behavior: str):
+        if self.sys_config.print_details:
+            print(behavior)

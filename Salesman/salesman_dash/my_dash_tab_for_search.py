@@ -188,7 +188,7 @@ class MyDashTab4Search(MyDashBaseTab):
 
     def __get_scatter_plot__(self):
         df_search_result = self.tutti.printing.df_sale
-        MyPandas.print_df_details(df_search_result)
+        # MyPandas.print_df_details(df_search_result)
         plotter = MyDashTabPlotter4Search(df_search_result, self._color_handler)
         scatter_chart = plotter.get_chart_type_scatter()
         return scatter_chart

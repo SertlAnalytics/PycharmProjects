@@ -32,7 +32,7 @@ class Tutti:
         self._write_to_excel = self.sys_config.write_to_excel
         self._spacy = TuttiSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
         self._browser = None
-        self._url_search_switzerland = 'https://www.tutti.ch/de/li/ganze-schweiz/angebote?q='
+        self._url_search_switzerland = 'https://www.tutti.ch/de/li/ganze-schweiz/angebote?'
         self._access_layer = AccessLayer4Sale(self.sys_config.db)
         self._search_label_lists = []
 
@@ -62,7 +62,8 @@ class Tutti:
         sale = self.browser.get_my_nth_sale_from_tutti(number)
         if sale is None:
             return
-        sale.print_sale_in_original_structure()
+        if self.sys_config.print_details:
+            sale.print_sale_in_original_structure()
         similar_sales_dict = self.__get_similar_sale_dict_from_tutti__([sale])
         self.__process_my_sales_and_similar_sales__([sale], similar_sales_dict)
 
@@ -70,18 +71,22 @@ class Tutti:
         sale = self.get_sale_from_tutti_by_sale_id(sale_id)
         if sale is None:
             return
-        sale.print_sale_in_original_structure()
+        if self.sys_config.print_details:
+            sale.print_sale_in_original_structure()
         similar_sales_dict = self.__get_similar_sale_dict_from_tutti__([sale])
         self.__process_my_sales_and_similar_sales__([sale], similar_sales_dict)
 
     def check_my_sale_on_tutti_by_sale_id_against_sale_in_db(self, sale_id: str):
         sale = self.get_sale_from_tutti_by_sale_id(sale_id)
         if sale is None:
-            print('Sale with sale_id {} not found on Tutti'.format(sale_id))
+            if self.sys_config.print_details:
+                print('Sale with sale_id {} not found on Tutti'.format(sale_id))
         else:
-            sale.print_sale_details()
+            if self.sys_config.print_details:
+                sale.print_sale_details()
             existing_sale = self.get_sale_from_db_by_sale_id(sale_id)
-            existing_sale.print_sale_details()
+            if self.sys_config.print_details:
+                existing_sale.print_sale_details()
             print('Are identical' if sale.is_identical(existing_sale) else 'Not identical')
 
     def get_sale_from_tutti_by_sale_id(self, sale_id: str) -> TuttiSale:
@@ -146,9 +151,10 @@ class Tutti:
                 similar_sale_title_doc = self.nlp(similar_sale.title)
                 similarity = my_sale_title_doc.similarity(similar_sale_title_doc)
                 similarity_text = self._spacy.get_similarity_text(similarity)
-                print('Similarity between {} and {}: {} ({})'.format(
-                    my_sale.title, similar_sale.title, similarity, similarity_text
-                ))
+                if self.sys_config.print_details:
+                    print('Similarity between {} and {}: {} ({})'.format(
+                        my_sale.title, similar_sale.title, similarity, similarity_text
+                    ))
 
     def __identify_outliers__(self, similar_sale_dict: dict):
         if len(similar_sale_dict) == 0:
@@ -252,6 +258,7 @@ class Tutti:
                 else:
                     return_list.append(
                         similar_sale.data_dict_obj.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
+        # print('return_list={}'.format(return_list))
         return return_list
 
     def __get_my_virtual_sales__(self, number=0):
@@ -280,7 +287,8 @@ class Tutti:
         sale = TuttiSale(self._spacy, self.sys_config)
         sale.init_by_file_row(file_row)
         sale.set_source(self.sys_config.virtual_sales_file_name)
-        sale.print_sale_in_original_structure()
+        if self.sys_config.print_details:
+            sale.print_sale_in_original_structure()
         return sale
 
     def __visualize_dependencies__(self, sale: list):
@@ -296,7 +304,8 @@ class Tutti:
     def __get_similar_sales_for_sale__(self, sale: TuttiSale) -> list:
         similar_sale_dict = {}
         self._search_label_lists = sale.get_search_label_lists()
-        print('\nSearch_label_lists={}'.format(self._search_label_lists))
+        if self.sys_config.print_details:
+            print('\nSearch_label_lists={}'.format(self._search_label_lists))
         request_dict = self.__get_request_dict_from_tutti_for_search_label_list__(SCLS.FOUND_NUMBERS, SCLS.OFFERS)
         found_number_list = [request_dict[search_string][0] for search_string in request_dict]
         if len(found_number_list) > 0 and max(found_number_list) > self.sys_config.number_allowed_search_results:
@@ -304,12 +313,14 @@ class Tutti:
                 max(found_number_list), self.sys_config.number_allowed_search_results
             ))
             self._search_label_lists = sale.get_extended_base_search_label_lists(self._search_label_lists)
-            print('\nSearch_label_lists={}'.format(self._search_label_lists))
+            if self.sys_config.print_details:
+                print('\nSearch_label_lists={}'.format(self._search_label_lists))
         for search_label_list in self._search_label_lists:
             self.__get_sales_from_tutti_for_search_label_list__(similar_sale_dict, search_label_list, sale)
         self.__identify_outliers__(similar_sale_dict)
         similar_sales_summary = [sale for sale in similar_sale_dict.values()]
-        self.__print_similar_sales__(sale, similar_sales_summary)
+        if self.sys_config.print_details:
+            self.__print_similar_sales__(sale, similar_sales_summary)
         return similar_sales_summary
 
     def __get_request_dict_from_tutti_for_search_label_list__(self, class_number: str, class_entries: str) -> dict:
@@ -360,18 +371,35 @@ class Tutti:
     def __get_sales_from_tutti__(self, class_name: str, parent_search_label_list: list) -> list:
         tutti_sales = []
         search_string = ' '.join(parent_search_label_list)
-        url = '{}{}'.format(self._url_search_switzerland, search_string)
-        # print('Searching for {}'.format(url))
-        request = requests.get(url)
-        # sleep(1)
-        tree = html.fromstring(request.content)
-        sales = tree.xpath('//div[@class="{}"]'.format(class_name))
-        for sale_element in sales:
-            sale = TuttiSale(self._spacy, self.sys_config, parent_search_label_list)
-            sale.init_by_html_element(sale_element)
-            tutti_sales.append(sale)
-            # sale.print_sale_in_original_structure()
+        url_list = self.__get_url_list__(search_string)
+        navigation_pages = ''
+        for idx, url in enumerate(url_list):
+            print('checking url: {}'.format(url))
+            if idx > 0 and navigation_pages.find(str(idx)) < 0:
+                break
+            request = requests.get(url)
+            # sleep(1)
+            tree = html.fromstring(request.content)
+            if idx == 0:
+                navigations = tree.xpath('//ul[@class="{}"]'.format(SCLS.NAVIGATION_MAIN))
+                for navigation in navigations:
+                    navigation_pages = str(navigation.text_content())
+            sales = tree.xpath('//div[@class="{}"]'.format(class_name))
+            for sale_element in sales:
+                sale = TuttiSale(self._spacy, self.sys_config, parent_search_label_list)
+                sale.init_by_html_element(sale_element)
+                tutti_sales.append(sale)
+                # sale.print_sale_in_original_structure()
         return tutti_sales
+
+    def __get_url_list__(self, search_string: str):
+        url_list = []
+        for i in range(0, 11):
+            if i == 0:
+                url_list.append('{}q={}'.format(self._url_search_switzerland, search_string))
+            else:
+                url_list.append('{}o={}&q={}'.format(self._url_search_switzerland, i, search_string))
+        return url_list
 
     def __can_similar_sale_be_added_to_dict__(self, similar_dict: dict, sale: TuttiSale, similar_sale: TuttiSale):
         if similar_sale.sale_id == sale.sale_id:

@@ -14,6 +14,7 @@ sys_config.with_nlp = True
 sys_config.write_to_excel = True
 sys_config.load_sm = True
 sys_config.write_to_database = False
+sys_config.print_details = False
 
 tutti = Tutti(sys_config)
 # tutti.check_my_nth_sale_against_similar_sales(4)
@@ -30,7 +31,8 @@ results = tutti.search_on_tutti(
     # 'Fritz Hansen / Jacobsen - Serie 7 Stuhl / 6 Stk. / Original + neuwertig', 'Wenig gebraucht. Für 100.- statt 200.-'
     # 'Dyson hot & cool AM09', 'Neuwertiger Dyson hot+cool , zum kühlen und heizen Mit Garantie'
     # 'Schöffel Kinder Winterjacke, Grösse 152'
-    'Vitra Meda Bürostuhl, flexibler Rücken'
+    # 'Vitra Meda Bürostuhl, flexibler Rücken'
+    'tasche leder Louis Vuitton'
 )
 # print(results)
 # tutti.printing.print_sales_head()
