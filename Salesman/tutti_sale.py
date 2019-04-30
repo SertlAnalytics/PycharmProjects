@@ -230,27 +230,34 @@ class TuttiSale:
     def is_any_term_in_list_in_title_or_description(self, term_list: str):
         return self.__is_any_term_in_list_in_text__(term_list, self._title.lower() + self._description.lower())
 
-    def is_any_target_group_entity_identical(self, other_sale):
-        return True
-        return self.__is_any_entity_identical__(self.target_group_list, other_sale.target_group_list)
+    def is_any_material_entity_identical(self, other_sale) -> bool:
+        return self.__is_any_entity_identical__(self.material_list, other_sale.material_list, EL.MATERIAL)
 
-    def is_any_company_entity_identical(self, other_sale):
-        return self.__is_any_entity_identical__(self.company_list, other_sale.company_list)
+    def is_any_target_group_entity_identical(self, other_sale) -> bool:
+        return self.__is_any_entity_identical__(self.target_group_list, other_sale.target_group_list, EL.TARGET_GROUP)
 
-    def is_any_product_entity_identical(self, other_sale):
-        return self.__is_any_entity_identical__(self.product_list, other_sale.product_list)
+    def is_any_company_entity_identical(self, other_sale) -> bool:
+        return self.__is_any_entity_identical__(self.company_list, other_sale.company_list, EL.COMPANY)
 
-    def is_any_object_entity_identical(self, other_sale):
+    def is_any_product_entity_identical(self, other_sale) -> bool:
+        return self.__is_any_entity_identical__(self.product_list, other_sale.product_list, EL.PRODUCT)
+
+    def is_any_object_entity_identical(self, other_sale) -> bool:
         return self.__is_any_entity_identical__(self.object_list, other_sale.object_list, EL.OBJECT)
 
     @staticmethod
     def __is_any_entity_identical__(entity_list: list, entity_list_comp: list, entity_label=''):
-        if len(entity_list) == 0 and len(entity_list_comp) == 0:
-            return True
-        if entity_label == EL.OBJECT:
-            if abs(len(entity_list) - len(entity_list_comp)) >= 2:  # if there are too many differences - no go
-                return False
-        return len(set(entity_list).intersection(set(entity_list_comp))) > 0
+        if min(len(entity_list), len(entity_list_comp)) == 0:
+            return False
+        # Now we have at least one entry in each list...
+        set_01 = set([entity_name.lower() for entity_name in entity_list])
+        set_02 = set([entity_name.lower() for entity_name in entity_list_comp])
+        set_intersection = set_01.intersection(set_02)
+        if len(set_intersection) == 0:  # we don't have anything in common
+            return False
+        if len(set_intersection) * 2 < max(len(set_01), len(set_02)):  # we have too many other entities per set
+            return False
+        return True
 
     def is_any_term_in_list_in_title(self, term_list: str):
         return self.__is_any_term_in_list_in_text__(term_list, self._title.lower())
@@ -342,12 +349,24 @@ class TuttiSale:
         Material, Target_group and Company are NOT used for the search - they are used later for similarity...
         :return: list of lists
         """
+        return_list = []
         if len(self.object_list) > 0:
-            return [[object_name] for object_name in self.object_list]
-        if len(self.company_list) > 0 and len(self.product_list) > 0:
-            return [[company_name, product_name] for company_name in self.company_list
-                    for product_name in self.product_list]
-        return []
+            object_lower_list = []
+            for object_name in self.object_list:
+                if object_name.lower() not in object_lower_list:
+                    object_lower_list.append(object_name.lower())
+                    return_list.append([object_name])
+        elif len(self.company_list) > 0 and len(self.product_list) > 0:
+            company_lower_list = []
+            product_lower_list = []
+            for company_name in self.company_list:
+                if company_name.lower() not in company_lower_list:
+                    company_lower_list.append(company_name.lower())
+                    for product_name in self.product_list:
+                        if product_name.lower() not in product_lower_list:
+                            product_lower_list.append(product_name.lower())
+                            return_list.append([company_name, product_name])
+        return return_list
 
     def get_extended_base_search_label_lists(self, search_label_lists: list) -> list:
         # the object list alone is too unspecific (too many results) - we add company and product
@@ -409,9 +428,10 @@ class TuttiSale:
             entity_synonyms = TuttiEntityHandler.get_synonyms_for_entity_name(entity_label, entity_name)
             if len(entity_synonyms) > 0:
                 if self.sys_config.print_details:
-                    print('Entity {} has synonym {}'.format(entity_name, entity_synonyms))
-                # self._entity_names.append(entity_synonym)
+                    print('Entity {} has synonyms {}'.format(entity_name, entity_synonyms))
                 for entity_synonym in entity_synonyms:
+                    if entity_synonym not in self._entity_names:
+                        self._entity_names.append(entity_synonym)
                     self._entity_label_dict[entity_synonym] = entity_label
 
     def reduce_search_labels_by_entity_names(self):

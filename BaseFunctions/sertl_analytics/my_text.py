@@ -4,6 +4,7 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-14
 """
+import urllib.parse
 
 
 class MyText:
@@ -17,3 +18,6 @@ class MyText:
                 return '{}{}'.format(text[:k], suffix)
         return '{}{}'.format(text[:max_length+1], suffix)
 
+    @staticmethod
+    def get_url_encode_plus(input_string):
+        return urllib.parse.quote_plus(input_string)

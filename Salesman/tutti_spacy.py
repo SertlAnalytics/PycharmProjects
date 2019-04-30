@@ -30,8 +30,12 @@ class CustomTokenizer:
 
     def __replace_substrings__(self, text: str) -> str:
         for replacement_string in self.replacement_dict:
-            if text.find(replacement_string) > -1:
-                text = text.replace(replacement_string, self.replacement_dict[replacement_string])
+            string_new = self.replacement_dict[replacement_string]
+            repl_list = [replacement_string.lower(), replacement_string.upper(), replacement_string.capitalize()]
+            for repl_string in repl_list:
+                if text.find(repl_string) != -1:
+                    text = text.replace(repl_string, string_new)
+                    break
         return text
 
     @property
@@ -42,6 +46,8 @@ class CustomTokenizer:
             ',-': '.-',
             '.--': '.-',
             'Schalfsack': 'Schlafsack',
+            'Kommunionskleid': 'Kommunionkleid',
+            'Stoßstange': 'Stossstange',
         }
 
 

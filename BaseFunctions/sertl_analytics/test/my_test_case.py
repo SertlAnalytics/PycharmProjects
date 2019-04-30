@@ -21,7 +21,7 @@ class MyTestCase:
         self._result = result
 
     def print_result(self):
-        print('...{} {}: expected={}, result={}: {}'.format(
+        print('...{} {}:\texpected={}\tresult={}\t--> {}'.format(
             self._key, self._test_data, self._result_expected, self._result, self.is_ok
         ))
 
@@ -45,5 +45,5 @@ class MyTestCaseHandler:
             self._counter_ok += 1 if test_case.is_ok else 0
             test_case.print_result()
         passed = 'PASSED' if self.count == self._counter_ok else 'NOT passed'
-        print('***Summary: {}/{} ok, {} nok - {}***'.format(
+        print('***Summary: {}/{} ok\t\t{} nok \t--> {}***'.format(
             self._counter_ok, self.count, self.count-self._counter_ok, passed))

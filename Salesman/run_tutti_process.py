@@ -32,7 +32,8 @@ results = tutti.search_on_tutti(
     # 'Dyson hot & cool AM09', 'Neuwertiger Dyson hot+cool , zum kühlen und heizen Mit Garantie'
     # 'Schöffel Kinder Winterjacke, Grösse 152'
     # 'Vitra Meda Bürostuhl, flexibler Rücken'
-    'tasche leder Louis Vuitton'
+    # 'tasche leder Louis Vuitton'
+    'Dyson hot+cool AM09'
 )
 # print(results)
 # tutti.printing.print_sales_head()

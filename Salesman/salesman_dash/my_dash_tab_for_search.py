@@ -216,7 +216,7 @@ class MyDashTab4Search(MyDashBaseTab):
         else:
             my_price = self._selected_my_sale_row[SLDC.PRICE_SINGLE]
             pct_change = int(price_suggested - my_price) / my_price * 100
-        start_search_labels = '_**Search labels**_: {}'.format(self.tutti.start_search_label_lists)
+        start_search_labels = '_**Search labels**_: {}'.format(self.tutti.search_label_lists)
         my_price_suggested = '_**Price**_: {:.2f}  -->  _**Price suggested**_: {:.2f} ({:+.2f}%)'.format(
             my_price, price_suggested, pct_change)
         return '  \n'.join([my_sale, prices, my_price_suggested, start_search_labels])

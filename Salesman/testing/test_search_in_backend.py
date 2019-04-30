@@ -10,12 +10,14 @@ from lxml import html
 from lxml.html import HtmlElement
 from tutti_spacy import TuttiSpacy
 from tutti_sale import TuttiSale
+from salesman_system_configuration import SystemConfiguration
 from tutti_constants import SLCLS
 from sertl_analytics.myhtml import MyHtmlElement
 
 
 class TuttiPage:
     def __init__(self):
+        self.sys_config = SystemConfiguration()
         self._url_search_q = 'https://www.tutti.ch/de/li/ganze-schweiz?q='
         self._spacy = TuttiSpacy(load_sm=True)
 
@@ -26,7 +28,7 @@ class TuttiPage:
         tree = html.fromstring(request.content)
         offers = tree.xpath('//div[@class="_3aiCi"]')
         for offer_element in offers:
-            offer = TuttiSale(self._spacy.nlp, search_str)
+            offer = TuttiSale(self._spacy.nlp, self.sys_config)
             offer.init_by_html_element(offer_element)
             offer.print_sale_in_original_structure()
 

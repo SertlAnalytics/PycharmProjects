@@ -6,6 +6,7 @@ Date: 2019-04-02
 """
 
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
+from sertl_analytics.my_text import MyText
 from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from calculation.outlier import Outlier
 from tutti_browser import MyUrlBrowser4Tutti
@@ -55,8 +56,14 @@ class Tutti:
         return self.sys_config.file_handler.get_file_path_for_file(self.sys_config.virtual_sales_result_file_name)
 
     @property
-    def start_search_label_lists(self) -> list:
+    def search_label_lists(self) -> list:
         return self._search_label_lists
+
+    def get_search_label_lists_for_url(self):
+        lower_list = []
+        return_list = []
+        for label in self._search_label_lists:
+            return []
 
     def check_my_nth_sale_against_similar_sales(self, number=1):
         sale = self.browser.get_my_nth_sale_from_tutti(number)
@@ -306,7 +313,7 @@ class Tutti:
         self._search_label_lists = sale.get_search_label_lists()
         if self.sys_config.print_details:
             print('\nSearch_label_lists={}'.format(self._search_label_lists))
-        request_dict = self.__get_request_dict_from_tutti_for_search_label_list__(SCLS.FOUND_NUMBERS, SCLS.OFFERS)
+        request_dict = self.__get_search_string_found_number_request_list_dict__(SCLS.FOUND_NUMBERS, SCLS.OFFERS)
         found_number_list = [request_dict[search_string][0] for search_string in request_dict]
         if len(found_number_list) > 0 and max(found_number_list) > self.sys_config.number_allowed_search_results:
             print('Max number {} is larger then allowed result number {} -> change search strings...'.format(
@@ -315,25 +322,30 @@ class Tutti:
             self._search_label_lists = sale.get_extended_base_search_label_lists(self._search_label_lists)
             if self.sys_config.print_details:
                 print('\nSearch_label_lists={}'.format(self._search_label_lists))
-        for search_label_list in self._search_label_lists:
-            self.__get_sales_from_tutti_for_search_label_list__(similar_sale_dict, search_label_list, sale)
+        for encoded_search_string in request_dict:
+            label_list = request_dict[encoded_search_string][1]
+            self.__get_sales_from_tutti_for_search_label_list__(
+                similar_sale_dict, encoded_search_string, label_list, sale)
         self.__identify_outliers__(similar_sale_dict)
         similar_sales_summary = [sale for sale in similar_sale_dict.values()]
         if self.sys_config.print_details:
             self.__print_similar_sales__(sale, similar_sales_summary)
         return similar_sales_summary
 
-    def __get_request_dict_from_tutti_for_search_label_list__(self, class_number: str, class_entries: str) -> dict:
+    def __get_search_string_found_number_request_list_dict__(self, class_number: str, class_entries: str) -> dict:
+        # gets the number and request for a search_string - only positive searches are given back
         return_dict = {}
         for search_label_list in self._search_label_lists:
-            search_string = ' '.join(search_label_list)
-            url = '{}{}'.format(self._url_search_switzerland, search_string)
+            search_string = MyText.get_url_encode_plus(' '.join(search_label_list))
+            url = '{}q={}'.format(self._url_search_switzerland, search_string)
             request = requests.get(url)
             tree = html.fromstring(request.content)
             xpath_numbers = tree.xpath('//div[@class="{}"]'.format(class_number))
             number_found = self.__get_number_from_number_item__(xpath_numbers)
-            sales = tree.xpath('//div[@class="{}"]'.format(class_entries))
-            return_dict[search_string] = [number_found, sales]
+            if number_found > 0:
+                sales = tree.xpath('//div[@class="{}"]'.format(class_entries))
+                return_dict[search_string] = [number_found, search_label_list, sales]
+                print('--> found {} by search_label_list "{}"'.format(number_found, search_label_list))
         return return_dict
 
     def __get_number_from_number_item__(self, xpath_numbers):
@@ -346,7 +358,7 @@ class Tutti:
     def __get_numbers_dict_from_tutti__(self, class_name: str, search_label_list: list) -> list:
         tutti_sales = []
         search_string = ' '.join(search_label_list)
-        url = '{}{}'.format(self._url_search_switzerland, search_string)
+        url = '{}{}'.format(self._url_search_switzerland, MyText.get_url_encode_plus(search_string))
         # print('Searching for {}'.format(url))
         request = requests.get(url)
         # sleep(1)
@@ -360,18 +372,17 @@ class Tutti:
         return tutti_sales
 
     def __get_sales_from_tutti_for_search_label_list__(
-            self, similar_sales_dict: dict, search_label_list: list, sale: TuttiSale):
-        similar_sales = self.__get_sales_from_tutti__(SCLS.OFFERS, search_label_list)
+            self, similar_sales_dict: dict, encoded_search_string: str, label_list: list, sale: TuttiSale):
+        similar_sales = self.__get_sales_from_tutti__(SCLS.OFFERS, encoded_search_string, label_list)
         for similar_sale in similar_sales:
             if self.__can_similar_sale_be_added_to_dict__(similar_sales_dict, sale, similar_sale):
                 similar_sale.set_master_details(sale.sale_id, sale.title)
                 similar_sale.set_source(SLSRC.TUTTI_CH)
                 similar_sales_dict[similar_sale.sale_id] = similar_sale
 
-    def __get_sales_from_tutti__(self, class_name: str, parent_search_label_list: list) -> list:
+    def __get_sales_from_tutti__(self, class_name: str, encoded_search_string: str, label_list: list) -> list:
         tutti_sales = []
-        search_string = ' '.join(parent_search_label_list)
-        url_list = self.__get_url_list__(search_string)
+        url_list = self.__get_url_list__(encoded_search_string)
         navigation_pages = ''
         for idx, url in enumerate(url_list):
             print('checking url: {}'.format(url))
@@ -386,7 +397,7 @@ class Tutti:
                     navigation_pages = str(navigation.text_content())
             sales = tree.xpath('//div[@class="{}"]'.format(class_name))
             for sale_element in sales:
-                sale = TuttiSale(self._spacy, self.sys_config, parent_search_label_list)
+                sale = TuttiSale(self._spacy, self.sys_config, label_list)
                 sale.init_by_html_element(sale_element)
                 tutti_sales.append(sale)
                 # sale.print_sale_in_original_structure()
@@ -405,7 +416,7 @@ class Tutti:
         if similar_sale.sale_id == sale.sale_id:
             return False
         if not self.__is_found_sale_similar_to_source_sale__(similar_sale, sale):
-            print('Found sale "{}" not similar to "{}"'.format(similar_sale.title, sale.title))
+            print('Source sale "{}" is not similar to found sale "{}"'.format(sale.title, similar_sale.title))
             print('--> entity_dict: {} <--> {}'.format(sale.entity_label_dict, similar_sale.entity_label_dict))
             return False
         if similar_sale.sale_id not in similar_dict:
@@ -421,7 +432,7 @@ class Tutti:
         is_target_group_identical = found_sale.is_any_target_group_entity_identical(source_sale)
         is_product_identical = found_sale.is_any_product_entity_identical(source_sale)
         is_object_identical = found_sale.is_any_object_entity_identical(source_sale)
-        return is_object_identical
+        return is_object_identical or is_product_identical
         # return (is_product_identical or is_object_identical) and is_target_group_identical
 
     @staticmethod
