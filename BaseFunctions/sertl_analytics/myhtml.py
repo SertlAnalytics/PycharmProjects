@@ -30,6 +30,7 @@ class MyHtmlElement:
 
     def get_text_for_sub_class(self, sub_class):
         child_element = self.__find_child_element_for_sub_class__(sub_class)
+        # print('get_text_for_sub_class: {} -> {}'.format(sub_class, child_element))
         return str(child_element.text_content())
 
     def __find_child_element_for_sub_class__(self, class_name):

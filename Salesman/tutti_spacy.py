@@ -8,8 +8,7 @@ Date: 2019-04-02
 from spacy.tokens import Doc, Span
 from spacy.matcher import PhraseMatcher
 from tutti_constants import EL, POS
-from tutti_named_entity import TuttiEntityHandler
-from tutti_named_entity import TuttiCompanyEntity, TuttiProductEntity, TuttiObjectTypeEntity
+from entities.tutti_named_entity import TuttiEntityHandler
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
 from matcher.tutti_matcher_4_is_used import TuttiMatcher4IsUsed
 from matcher.tutti_matcher_4_original_price import TuttiMatcher4OriginalPrize

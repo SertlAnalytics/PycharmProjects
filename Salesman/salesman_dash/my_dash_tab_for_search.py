@@ -22,7 +22,7 @@ from salesman_dash.grid_tables.my_grid_table_sale_4_search_results import MySear
 from salesman_system_configuration import SystemConfiguration
 from salesman_dash.plotting.my_dash_plotter_for_salesman_search import MyDashTabPlotter4Search
 from salesman_dash.my_dash_colors import DashColorHandler
-from tutti import Tutti
+from tutti import Tutti, TuttiUrlHelper
 import pandas as pd
 from printing.sale_printing import SalesmanPrint
 
@@ -42,7 +42,6 @@ class MyDashTab4Search(MyDashBaseTab):
         self._sale_grid_table = MySaleTable(self.sys_config)
         self._search_results_grid_table = MySearchResultTable(self.sys_config)
         self._search_online_input_table = MyHTMLSearchOnlineInputTable()
-        self._selected_my_sale_row = None
         self._selected_search_result_row = None
         self._search_input = ''
         self._online_rows = None
@@ -64,6 +63,8 @@ class MyDashTab4Search(MyDashBaseTab):
         children_list = [
             self._header_table.get_table(),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_SOURCE)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_REGION)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.PRODUCT_CATEGORY)),
             MyHTML.div_with_html_element(self._my_search_online_input_table, self._search_online_input_table.get_table()),
             MyHTML.div_with_button_link(self._my_search_result_entry_link, href='', title='', hidden='hidden'),
             MyHTML.div(self._my_search_result_grid_table_div, '', False),
@@ -135,19 +136,21 @@ class MyDashTab4Search(MyDashBaseTab):
     def __init_callback_for_search_result_grid_table__(self):
         @self.app.callback(
             Output(self._my_search_result_grid_table_div, 'children'),
-            [Input(self._dd_handler.my_search_source_dd, 'value'),
-             Input(self._search_online_input_table.my_search_input, 'n_blur'),
-             Input(self._search_online_input_table.my_search_button, 'n_clicks')
-             ],
-            [State(self._search_online_input_table.my_search_input, 'value')]
+            [Input(self._search_online_input_table.my_search_button, 'n_clicks')],
+            [State(self._dd_handler.my_search_source_dd, 'value'),
+             State(self._dd_handler.my_search_region_dd, 'value'),
+             State(self._dd_handler.my_product_category_dd, 'value'),
+             State(self._search_online_input_table.my_search_input, 'value'),
+             ]
         )
         def handle_callback_for_search_result_grid_table(
-                search_source: str, n_blur: int, search_n_clicks: int, search_input: str):
+                search_n_clicks: int, search_source: str, region: str, category: str, search_input: str):
             self._dd_handler.selected_search_source = search_source
+            self._dd_handler.selected_search_region = region
+            self._dd_handler.selected_product_category = category
             self._search_input = search_input
             self._online_rows = None
             if self._search_online_input_table.search_button_n_clicks != search_n_clicks:
-                self._search_online_input_table.search_input_n_blur = n_blur
                 self._search_online_input_table.search_button_n_clicks = search_n_clicks
                 return self.__get_search_result_grid_table_by_online_search__()
             return ''
@@ -172,7 +175,6 @@ class MyDashTab4Search(MyDashBaseTab):
             [Input(self._my_search_result_grid_table_div, 'children'),
              Input(self._header_table.my_search_found_valid_value_div, 'children')])
         def handle_callback_for_search_markdown(search_result_grid_table, children):
-            print('handle_callback_for_search_markdown for {}'.format(self._search_input))
             if self._search_input == '':
                 return '**Please enter search string**'
             return self.__get_search_markdown_for_online_search__()
@@ -194,32 +196,25 @@ class MyDashTab4Search(MyDashBaseTab):
         return scatter_chart
 
     def __get_search_markdown_for_online_search__(self):
-        my_sale = '_**Searching for**_: {}'.format(self._search_input)
+        my_sale_obj = self.tutti.current_source_sale_list[0]
+        my_sale = '**Searching for**: {}'.format(self._search_input)
+        my_sale_obj_text = '**Found entities:** {}'.format(my_sale_obj.data_dict_obj.get(SLDC.ENTITY_LABELS_DICT))
         if self._online_rows is None or len(self._online_rows) == 0:
-            return '  \n'.join([my_sale, '**NO RESULTS FOUND**'])
+            return '  \n'.join([my_sale, my_sale_obj_text, '**NO RESULTS FOUND**'])
         outlier_online_search = self.__get_outlier_for_online_search__()
-        return self.__get_search_markdown_with_outlier__(my_sale, outlier_online_search)
+        return self.__get_search_markdown_with_outlier__(my_sale, my_sale_obj_text, outlier_online_search)
 
-    def __get_search_markdown_with_outlier__(self, my_sale: str, outlier_online_search: Outlier):
-        prices = '_**[min, bottom, mean, top, max]**_: [{:.2f}, {:.2f}, **{:.2f}**, {:.2f}, {:.2f}]'.format(
+    def __get_search_markdown_with_outlier__(self, my_sale: str, my_sale_obj_text: str, outlier_online_search: Outlier):
+        iqr = '- **IQR:** [{:.2f}, {:.2f}]'.format(
+            outlier_online_search.bottom_threshold_iqr, outlier_online_search.top_threshold_iqr)
+        prices = '**[min, bottom, mean, top, max]:** [{:.2f}, {:.2f}, **{:.2f}**, {:.2f}, {:.2f}] {}'.format(
             outlier_online_search.min_values, outlier_online_search.bottom_threshold,
             outlier_online_search.mean_values, outlier_online_search.top_threshold,
-            outlier_online_search.max_values)
-        prices_iqr = '_**[min, bottom, mean, top, max]**_: [{:.2f}, {:.2f}, **{:.2f}**, {:.2f}, {:.2f}]'.format(
-            outlier_online_search.min_values, outlier_online_search.bottom_threshold_iqr,
-            outlier_online_search.mean_values, outlier_online_search.top_threshold_iqr,
-            outlier_online_search.max_values)
+            outlier_online_search.max_values, iqr)
         price_suggested = outlier_online_search.mean_values_without_outliers
-        if self._selected_my_sale_row is None:
-            my_price = 0
-            pct_change = 0
-        else:
-            my_price = self._selected_my_sale_row[SLDC.PRICE_SINGLE]
-            pct_change = int(price_suggested - my_price) / my_price * 100
-        start_search_labels = '_**Search labels**_: {}'.format(self.tutti.search_label_lists)
-        my_price_suggested = '_**Price**_: {:.2f}  -->  _**Price suggested**_: {:.2f} ({:+.2f}%)'.format(
-            my_price, price_suggested, pct_change)
-        return '  \n'.join([my_sale, prices, my_price_suggested, start_search_labels])
+        start_search_labels = '**Search labels**: {}'.format(self.tutti.search_label_lists)
+        my_price_suggested = '**Price suggested**: {:.2f}'.format(price_suggested)
+        return '  \n'.join([my_sale, my_sale_obj_text, prices, my_price_suggested, start_search_labels])
 
     def __get_outlier_for_online_search__(self) -> Outlier:
         df_results = pd.DataFrame.from_dict(self._online_rows)
@@ -228,6 +223,11 @@ class MyDashTab4Search(MyDashBaseTab):
         return outlier
 
     def __get_search_result_grid_table_by_online_search__(self):
-        self._online_rows = self.tutti.get_search_results_from_online_inputs(self._search_input)
+        self._online_rows = self.tutti.get_search_results_from_online_inputs(self.__get_url_helper__())
         min_height = self._search_results_grid_table.height_for_display
         return MyDCC.data_table(self._my_search_result_grid_table, self._online_rows, [], min_height=min_height)
+
+    def __get_url_helper__(self) -> TuttiUrlHelper:
+        return TuttiUrlHelper(search_string=self._search_input,
+                              region=self._dd_handler.selected_search_region,
+                              category=self._dd_handler.selected_product_category)

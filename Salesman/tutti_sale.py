@@ -7,10 +7,10 @@ Date: 2019-04-02
 
 from sertl_analytics.mymath import MyMath
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.salesman_constants import SLDC, SLST, OBJST
+from sertl_analytics.constants.salesman_constants import SLDC, SLST, OBJST, SLSRC, PRCAT
 from tutti_constants import SLCLS, POS, EL, SLSCLS
-from spacy.tokens import Doc, Span
-from tutti_named_entity import TuttiEntityHandler
+from spacy.tokens import Doc
+from entities.tutti_named_entity import TuttiEntityHandler
 from lxml.html import HtmlElement
 from sertl_analytics.myhtml import MyHtmlElement
 from tutti_spacy import TuttiSpacy
@@ -27,6 +27,9 @@ class TuttiSale:
         self._my_offer = found_by_labels is None
         self._found_by_labels = found_by_labels
 
+        self._source = SLSRC.TUTTI_CH
+        self._product_category = ''
+        self._product_sub_category = ''
         self._href = ''
         self._sale_id = ''
         self._version = 1
@@ -209,12 +212,15 @@ class TuttiSale:
         self.__process_doc_extensions__()
         self.__add_data_dict_entries__()
 
-    def init_by_html_element_for_single_sale(self, html_element: HtmlElement, url: str):
+    def init_by_html_element_for_single_sale(self, product_categories: list, html_element: HtmlElement, url: str):
         my_html_element = MyHtmlElement(html_element)
         self.add_href(url)
         location_html_element = my_html_element.get_html_element_for_sub_class(SLSCLS.LOCATION_CLASS)
         self.add_location_text(location_html_element.get_text_for_sub_class(SLSCLS.LOCATION_SUB_CLASS))
         date_html_element = my_html_element.get_html_element_for_sub_class(SLSCLS.DATE_CLASS)
+        category_off_set = 1 if len(product_categories) == 3 else 2
+        self._product_category = product_categories[category_off_set].text_content()
+        self._product_sub_category = product_categories[category_off_set+1].text_content()
         self.add_date_text(date_html_element.get_text_for_sub_class(SLSCLS.DATE_SUB_CLASS))
         self.add_title_text(my_html_element.get_text_for_sub_class(SLSCLS.TITLE))
         self.add_description_text(my_html_element.get_text_for_sub_class(SLSCLS.DESCRIPTION))
@@ -263,6 +269,7 @@ class TuttiSale:
         return self.__is_any_term_in_list_in_text__(term_list, self._title.lower())
 
     def set_source(self, source: str):
+        self._source = source
         self.data_dict_obj.add(SLDC.SOURCE, source)
 
     @staticmethod
@@ -284,9 +291,14 @@ class TuttiSale:
     def __add_search_labels_for_doc__(self, doc: Doc, for_title=False):
         if self.sys_config.print_details:
             print('\nDoc for {}: {}'.format('title' if for_title else 'description', doc.text))
+        # self.__add_to_search_label__(doc, for_title)
+        for ent in doc.ents:
+            if EL.is_entity_label_tutti_relevant(ent.label_):
+                self.add_entity_name_label(ent.text, ent.label_)
+
+    def __add_to_search_label__(self, doc, for_title: bool):
         token_text_list = []
         token_head_text_list = []
-        # self._spacy.print_tokens_for_doc(doc)
         for token in doc:
             if POS.is_pos_noun(token.pos_):
                 token_text_list.append(token.text)
@@ -297,9 +309,6 @@ class TuttiSale:
                 self.add_search_label(token_text, for_title, is_label_head_text=True)
             else:
                 self.add_search_label(token_text, for_title, is_label_head_text=False)
-        for ent in doc.ents:
-            if EL.is_entity_label_tutti_relevant(ent.label_):
-                self.add_entity_name_label(ent.text, ent.label_)
 
     def __process_doc_extensions__(self):
         doc_title_description = self._nlp(self._title + ' ' + self._description)
@@ -316,7 +325,19 @@ class TuttiSale:
 
     def add_href(self, href: str):
         self._href = '{}{}'.format(self.domain, href) if href.find('https') < 0 else href
-        self._sale_id = href.split('/')[-1]
+        href_splits = self._href.split('/')
+        self._product_category, self._product_sub_category = self.__get_product_categories__(href_splits)
+        self._sale_id = href_splits[-1]
+
+    @staticmethod
+    def __get_product_categories__(href_splits: list):
+        product_category, product_sub_category = '', ''
+        if len(href_splits) > 6:
+            category_offset = 6 if len(href_splits) == 10 else 7
+            product_category = PRCAT.get_product_category_for_href_part(href_splits[category_offset])
+            product_sub_category = PRCAT.get_product_sub_category_for_href_part(
+                product_category, href_splits[category_offset+1])
+        return product_category, product_sub_category
 
     def add_location_text(self, input_str: str):
         self._location = input_str
@@ -453,9 +474,10 @@ class TuttiSale:
 
     def print_sale_in_original_structure(self):
         visits_bookmarks, search_details = self.__get_visits_bookmarks_and_search_details_for_printing__()
-        print('\n{}: ID: {}\n{}, {}\n{}\n{}\n{:.2f} CHF{}'.format(
-            self.source, self._sale_id, self._location, self._date_str, self._title,
-            self._description, self._price, visits_bookmarks)
+        print('\n{}: ID: {}\nLocation: {} / {} / {} ({})\n{}\n{}\n{:.2f} CHF{}'.format(
+            self.source, self._sale_id,
+            self._location, self._product_category, self._product_sub_category, self._date_str,
+            self._title, self._description, self._price, visits_bookmarks)
         )
         print('Is price total price: {}'.format(self._is_total_price))
         print('Single price: {}'.format(self._price_single))
@@ -475,10 +497,11 @@ class TuttiSale:
 
     def print_sale_details(self):
         visits_bookmarks, search_details = self.__get_visits_bookmarks_and_search_details_for_printing__()
-        print('\n{}: ID: {}, Version: {}, Location: {}, Date: {}, Title: {}, '
-              'Description: {}, Price: {:.2f} CHF{}{}'.format(
-            self.source, self._sale_id, self._version, self._location, self._date_str, self._title, self._description,
-            self._price, visits_bookmarks, search_details))
+        print('\n{}: ID: {}, Version: {}, Location: {}, Kategorie: {}, Bereich: {}, '
+              'Date: {}, Title: {}, Description: {}, Price: {:.2f} CHF{}{}'.format(
+            self.source, self._sale_id, self._version,
+            self._location, self._product_category, self._product_sub_category,
+            self._date_str, self._title, self._description, self._price, visits_bookmarks, search_details))
         print('Entity_names: {}'.format(self._entity_names))
         print('Entity_label_dict: {}'.format(self._entity_label_dict))
         """
@@ -493,7 +516,9 @@ class TuttiSale:
         self.data_dict_obj.add(SLDC.MASTER_ID, self._sale_id)  # default - will be overwritten...
         self.data_dict_obj.add(SLDC.MASTER_TITLE, self._title) # default - will be overwritten...
         self.data_dict_obj.add(SLDC.SALE_STATE, self.sale_state)
-        self.data_dict_obj.add(SLDC.SOURCE, '')  # default - will be overwritten...
+        self.data_dict_obj.add(SLDC.SOURCE, self._source)  # default - will be overwritten...
+        self.data_dict_obj.add(SLDC.PRODUCT_CATEGORY, self._product_category)
+        self.data_dict_obj.add(SLDC.PRODUCT_SUB_CATEGORY, self._product_sub_category)
         self.data_dict_obj.add(SLDC.START_DATE, self._date_str)
         self.data_dict_obj.add(SLDC.LOCATION, self._location)
         self.data_dict_obj.add(SLDC.OBJECT_STATE, self.object_state)
@@ -519,6 +544,7 @@ class TuttiSale:
         self.data_dict_obj.add(SLDC.HREF, self._href)
         self.data_dict_obj.add(SLDC.LAST_CHECK_DATE, MyDate.get_date_str_from_datetime())
         self.data_dict_obj.add(SLDC.COMMENT, '1. load')
+        self.data_dict_obj.add(SLDC.PRINT_CATEGORY, '')
 
     def __get_visits_bookmarks_and_search_details_for_printing__(self):
         if self._my_offer:

@@ -16,7 +16,8 @@ class TuttiMatcher4Number(TuttiMatcher):
         return {
             'MAL': [{'POS': POS.NUM}, {'LOWER': 'mal'}],  # 2 er set
             'SET': [{'POS': POS.NUM}, {'LOWER': 'er', 'OP': '?'}, {'LOWER': 'set'}],  # 2 er set
-            'PREIS_FUER_ALLE': [{'LOWER': 'preis'}, {'LOWER': 'für'}, {'LOWER': 'alle'}, {'POS': POS.NUM}],  # Preis für alle
+            'PREIS_FUER_ALLE': [{'LOWER': 'preis'}, {'LOWER': 'für'}, {'LOWER': 'alle'}, {'POS': POS.NUM}],
+            'PREIS_FUER': [{'LOWER': 'preis'}, {'LOWER': 'für'}, {'POS': POS.NUM}],
             'STUECK': [{'POS': POS.NUM}, {'LOWER': 'stück'}],
             'STK': [{'POS': POS.NUM}, {'LOWER': 'stk'}],
             'DIESE': [{'LOWER': 'diese'}, {'POS': POS.NUM}],
@@ -29,6 +30,7 @@ class TuttiMatcher4Number(TuttiMatcher):
             'MAL': {'Wir bieten den Tisch 7 Mal an': 7},
             'SET': {'Wie bieten an ein 2 er set': 2},
             'PREIS_FUER_ALLE': {'Preis für alle 34 Stück: 2000.-': 34},
+            'PREIS_FUER': {'Preis für 6 Stück': 6},
             'STUECK': {'es sind insgesamt 4 Stück': 4},
             'STK': {'Stühle CONFERENCE - 3 Stk.': 3},
             'DIESE': {'DIESE 6 Stühle werden nur zusammen EN BLOC verkauft': 6},

@@ -12,7 +12,7 @@ from salesman_dash.grid_tables.my_grid_table_base_4_sales import MySaleBaseTable
 class MySearchResultTable(MySaleBaseTable):
     @staticmethod
     def __get_default_source__():
-        return [SLSRC.DB]
+        return [SLSRC.TUTTI_CH]
 
     def __get_sale_df_dict__(self):
         return {

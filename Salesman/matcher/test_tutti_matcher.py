@@ -6,7 +6,7 @@ Date: 2019-04-02
 """
 
 from tutti_spacy import TuttiSpacy
-from tutti_named_entity import TuttiCompanyEntity
+from entities.tutti_named_entity import TuttiCompanyEntity
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
 from matcher.tutti_matcher_4_is_used import TuttiMatcher4IsUsed
 from matcher.tutti_matcher_4_original_price import TuttiMatcher4OriginalPrize
@@ -27,7 +27,7 @@ class TC:
     TC_MATCHER_SINGLE_PRICE = 'TC_MATCHER_SINGLE_PRICE'
 
 
-tc = TC.TC_MATCHER_IS_USED
+tc = TC.TC_MATCHER_NUMBER
 
 spacy = TuttiSpacy()
 

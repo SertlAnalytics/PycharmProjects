@@ -41,6 +41,9 @@ class SLSCLS:  # css classes used within tutti sale single
     TITLE = '_36xB4'
     DESCRIPTION = ['_3E1vH', '_100oN', '_3MSKw']
     PRICE = '-zQvW'
+    PRODUCT_CATEGORIES = '_3G0Ix'
+    PRODUCT_CATEGORY_CLASS = '_2ey_I'
+    PRODUCT_SUB_CATEGORY_CLASS = 'b1fl5'
 
 
 class SCLS:  # css classes used within search offers
