@@ -56,7 +56,7 @@ class TuttiSale:
         self._is_like_new = False
         self._is_used = False
         self._is_cover_available = False
-        self._is_outlier = False
+        self._is_outlier = 0
         self._search_labels = []
         self._entity_label_dict = {}  # contains entities with {value: label, value: label}
         self._property_dict = {}  # contains all properties for this object (details).

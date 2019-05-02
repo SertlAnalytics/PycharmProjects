@@ -21,6 +21,10 @@ class TuttiTargetGroupEntity(NamedEntity):
             'Mädchen', 'Junge', 'Jungen',
             'Kind', 'Kinder',
             'Baby', 'Babies'
+            'Büro',
+            'Gewerbe',
+            'Zuhause',
+            'Privat', 'Arbeit',
         ]
 
     @staticmethod
@@ -109,7 +113,7 @@ class TuttiProductEntity(NamedEntity):
             'Pixie', 'Panama', 'Purpose Chair',
             'Roundabout',
             'sleepi',
-            'Tower',
+            'Tower 5GHz',
         ]
 
     @staticmethod
@@ -124,7 +128,7 @@ class TuttiObjectTypeEntity(NamedEntity):
     def __get_entity_names__():
         return [
             'Alufelgen','Auto', 'Autokindersitz', 'Auto-Kindersitz', 'Anhänger', 'Anzug',
-            'Besucherstuhl', 'Babywanne', 'Bremsbeläge', 'Bürotisch', 'Bürostuhl', 'Büro',
+            'Besucherstuhl', 'Babywanne', 'Bremsbeläge', 'Bürotisch', 'Bürostuhl',
             'Bürodrehstuhl', 'Bild', 'Buch', 'Badehose', 'Bikini',
             'Corpus',
             'Dusche', 'Drehstuhl', 'Drosselklappensensor', 'Drosselklappenschalter',
