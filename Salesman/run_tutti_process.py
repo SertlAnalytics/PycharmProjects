@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-02
 """
 
-from tutti import Tutti
+from salesman_tutti.tutti import Tutti
 from time import sleep
 from salesman_system_configuration import SystemConfiguration
 

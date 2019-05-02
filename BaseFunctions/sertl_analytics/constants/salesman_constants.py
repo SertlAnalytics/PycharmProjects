@@ -66,103 +66,106 @@ class SLST:  # Sale Status
     
 class OBJST:  # Object Status
     NEW = 'new'
+    LIKE_NEW = 'like new'
     USED = 'used'
     NOT_QUALIFIED = 'not qualified'
 
 
-class CANTON:
-    ALL = ['Alle', 'ganze-schweiz']
-    AARGAU = ['Aargau', 'aargau']
-    APENZELL = ['Apenzell', 'apenzell']
-    BASEL = ['Basel', 'basel']
-    BERN = ['bern', 'bern']
-    FREIBURG = ['Freiburg', 'freiburg']
-    GENF = ['Genf', 'genf']
-    GLARUS = ['Glarus', 'glarus']
-    GRAUBUENDEN = ['Graubünden', 'graubuenden']
-    JURA = ['Jura', 'jura']
-    LUZERN = ['Luzern', 'luzern']
-    NEUENBURG = ['Neuenburg', 'neuenburg']
-    NID_OBWALDEN = ['Nid- & Obwalden', 'nid-obwalden']
-    SCHAFFHAUSEN = ['Schaffhausen', 'schaffhausen']
-    SCHWYZ = ['Schwyz', 'schwyz']
-    SOLOTHURN = ['Solothurn', 'soloturn']
-    ST_GALLEN = ['St. Gallen', 'st-gallen']
-    THURGAU = ['Thurgau', 'thurgau']
-    TESSIN = ['Tessin', 'tessin']
-    URI = ['Uri', 'uri']
-    WAADT = ['Waadt', 'waadt']
-    WALLIS = ['Wallis', 'wallis']
-    ZUG = ['Zug', 'zug']
-    ZUERICH = ['Zürich', 'zuerich']
-    LICHTENSTEIN = ['Lichtenstein', 'lichtenstein']
-    NUR_DEUTSCH = ['-- nur deutsch--', 'deutsch-schweiz']
+class REGION:
+    GANZE_SCHWEIZ = 'Ganze Schweiz'
+    AARGAU = 'Aargau'
+    APENZELL = 'Apenzell'
+    BASEL = 'Basel'
+    BASEL_STADT = 'Basel-Stadt'
+    BERN = 'bern'
+    FREIBURG = 'Freiburg'
+    GENF = 'Genf'
+    GLARUS = 'Glarus'
+    GRAUBUENDEN = 'Graubünden'
+    JURA = 'Jura'
+    LUZERN = 'Luzern'
+    NEUENBURG = 'Neuenburg'
+    NID_OBWALDEN = 'Nid- & Obwalden'
+    SCHAFFHAUSEN = 'Schaffhausen'
+    SCHWYZ = 'Schwyz'
+    SOLOTHURN = 'Solothurn'
+    ST_GALLEN = 'St. Gallen'
+    THURGAU = 'Thurgau'
+    TESSIN = 'Tessin'
+    URI = 'Uri'
+    WAADT = 'Waadt'
+    WALLIS = 'Wallis'
+    ZUG = 'Zug'
+    ZUERICH = 'Zürich'
+    LICHTENSTEIN = 'Lichtenstein'
+    DEUTSCH_SCHWEIZ = 'Deutsch-Schweiz'
 
     @staticmethod
-    def get_all():
-        return [CANTON.ALL, CANTON.NUR_DEUTSCH, CANTON.AARGAU, CANTON.APENZELL, 
-                CANTON.BASEL, CANTON.BERN, CANTON.FREIBURG, CANTON.GENF, CANTON.GLARUS, CANTON.GRAUBUENDEN,
-                CANTON.JURA, CANTON.LUZERN, CANTON.NEUENBURG, CANTON.NID_OBWALDEN, 
-                CANTON.SCHAFFHAUSEN, CANTON.SCHWYZ, CANTON.SOLOTHURN, CANTON.ST_GALLEN, 
-                CANTON.THURGAU, CANTON.TESSIN, CANTON.URI, CANTON.WAADT, CANTON.WALLIS, CANTON.ZUERICH,
-                CANTON.ZUG, CANTON.LICHTENSTEIN
-                ]
+    def get_regions_for_tutti_search():
+        return [
+            REGION.GANZE_SCHWEIZ, REGION.AARGAU, REGION.DEUTSCH_SCHWEIZ, REGION.APENZELL,
+            REGION.BASEL, REGION.BASEL_STADT, REGION.BERN, REGION.FREIBURG, 
+            REGION.GENF, REGION.GLARUS, REGION.GRAUBUENDEN,
+            REGION.JURA, REGION.LUZERN, REGION.NEUENBURG, REGION.NID_OBWALDEN,
+            REGION.SCHAFFHAUSEN, REGION.SCHWYZ, REGION.SOLOTHURN, REGION.ST_GALLEN,
+            REGION.THURGAU, REGION.TESSIN, REGION.URI, REGION.WAADT, REGION.WALLIS, REGION.ZUERICH,
+            REGION.ZUG, REGION.LICHTENSTEIN
+        ]
     
+
+class OBJPROP:  # Object properties
+    SIZE = 'Size'
+    NUMBER = 'Number'
+    AGE = 'Age'
+    YEAR = 'Year'
+    WARRANTY = 'Warrenty until'
+    ORIGINAL_COVER = 'Cover available'    
+
 
 class PRCAT:  # Product Category, german: Rubrik
-    ALL = ['Alle', 'angebote']
-    ART = ['Antiquitäten & Kunst', 'antiquitaeten-kunst']
-    CHILD = ['Baby & Child', 'baby-child']
-    BOOKS = ['Bücher', 'buecher']
-    BUSINESS = ['Büro & Gewerbe', 'buero-gewerbe']
-    COMPUTER = ['Computer & Zubehör', 'computer-zubehoer']
-    SERVICE = ['Dienstleistungen', 'dienstleistungen']
-    VEHICELS = ['Fahrzeuge', 'fahrzeuge']
-    PICTURE = ['Film', 'film']
-    PHOTO_VIDEO = ['Foto & Video', 'foto-video']
-    GARDEN_CRAFT = ['Garten & Handwerk', 'garten-handwerk']
-    HOUSEHOLD = ['Haushalt', 'haushalt']
-    REAL_ESTATE = ['Immobilien', 'immobilien']
-    CLOTHES_OTHERS = ['Kleidung & Assessoires', 'kleidung-assessoires']
-    MUSIC = ['Musik', 'musik']
-    COLLECTIONS = ['Sammeln', 'sammeln']
-    TOYS = ['Spielzeuge & Basteln', 'spielzeuge-basteln']
-    SPORT_OUTDOOR = ['Sport & Outdoor', 'sport-outdoor']
-    JOBS = ['Stellenangebote', 'stellenangebote']
-    TV_AUDIO = ['TV & Audio', 'tv-audio']
-    PHONE_NAVI = ['Telefon & Navigation', 'telefon-navigation']
-    TICKETS_BONS = ['Tickets & Gutscheine', 'tickets-gutscheine']
-    ANIMALS = ['Tiere', 'tiere']
-    OTHERS = ['Sonstiges', 'sonstiges']
+    ALL = 'Alle'
+    ART = 'Antiquitäten & Kunst'
+    CHILD = 'Baby & Child'
+    BOOKS = 'Bücher'
+    BUSINESS = 'Büro & Gewerbe'
+    COMPUTER = 'Computer & Zubehör'
+    SERVICE = 'Dienstleistungen'
+    VEHICELS = 'Fahrzeuge'
+    PICTURE = 'Film'
+    FOTO_VIDEO = 'Foto & Video'
+    GARDEN_CRAFT = 'Garten & Handwerk'
+    HOUSEHOLD = 'Haushalt'
+    REAL_ESTATE = 'Immobilien'
+    CLOTHES_OTHERS = 'Kleidung & Assessoires'
+    MUSIC = 'Musik'
+    COLLECTIONS = 'Sammeln'
+    TOYS = 'Spielzeuge & Basteln'
+    SPORT_OUTDOOR = 'Sport & Outdoor'
+    JOBS = 'Stellenangebote'
+    TV_AUDIO = 'TV & Audio'
+    PHONE_NAVI = 'Telefon & Navigation'
+    TICKETS_BONS = 'Tickets & Gutscheine'
+    ANIMALS = 'Tiere'
+    OTHERS = 'Sonstiges'
     
     @staticmethod
     def get_all():
-        return [PRCAT.ALL, PRCAT.ART, PRCAT.CHILD, PRCAT.BOOKS, PRCAT.BUSINESS, PRCAT.COMPUTER,
-                PRCAT.SERVICE, PRCAT.VEHICELS, PRCAT.PICTURE, PRCAT.PHOTO_VIDEO, PRCAT.GARDEN_CRAFT,
-                PRCAT.HOUSEHOLD, PRCAT.REAL_ESTATE, PRCAT.CLOTHES_OTHERS, PRCAT.MUSIC, PRCAT.COLLECTIONS,
-                PRCAT.TOYS, PRCAT.SPORT_OUTDOOR, PRCAT.JOBS, PRCAT.TV_AUDIO, PRCAT.PHONE_NAVI,
-                PRCAT.TICKETS_BONS, PRCAT.ANIMALS, PRCAT.OTHERS                
-                ]
-    
-    @staticmethod
-    def get_product_category_for_href_part(href_part: str):
-        href_part_lower = href_part.lower()
-        for category_list in PRCAT.get_all():
-            if href_part_lower == category_list[1]:
-                return category_list[0]
-        return href_part_lower.replace('-', ' & ', 1).capitalize()
+        return [
+            PRCAT.ALL, PRCAT.VEHICELS, PRCAT.REAL_ESTATE,
+            PRCAT.ART, PRCAT.CHILD, PRCAT.BOOKS, PRCAT.BUSINESS, PRCAT.COMPUTER,
+            PRCAT.SERVICE, PRCAT.PICTURE, PRCAT.FOTO_VIDEO, PRCAT.GARDEN_CRAFT,
+            PRCAT.HOUSEHOLD, PRCAT.CLOTHES_OTHERS, PRCAT.MUSIC, PRCAT.COLLECTIONS,
+            PRCAT.TOYS, PRCAT.SPORT_OUTDOOR, PRCAT.JOBS, PRCAT.TV_AUDIO, PRCAT.PHONE_NAVI,
+            PRCAT.TICKETS_BONS, PRCAT.ANIMALS, PRCAT.OTHERS
+        ]
 
-    @staticmethod
-    def get_product_sub_category_for_href_part(product_category: str, href_part: str):
-        href_part_changed = href_part.lower().replace('-', ' & ', 1)
-        return href_part_changed.capitalize()
-    
-    
+
 class SLDC:  # Sale data column
     SALE_ID = 'Sale_ID'
     SALE_ID_MAX = 'Sale_ID_max'
     VERSION = 'Version'
     VERSION_MAX = 'Version_max'
+    REGION = 'Region'  # see REGION
     PRODUCT_CATEGORY = 'Product_Category'  # see PRCAT
     PRODUCT_SUB_CATEGORY = 'Product_SubCategory'  # see PRCAT and below...
     IS_ACTUAL = 'Is_actual'
@@ -177,6 +180,8 @@ class SLDC:  # Sale data column
     OBJECT_STATE = 'Object_State'  # see OBJST
     TITLE = 'Title'
     DESCRIPTION = 'Description'
+    MATERIAL = 'Material'
+    PROPERTY_DICT = 'Properties'
     PRICE = 'Price'
     PRICE_SINGLE = 'Price_single'
     IS_TOTAL_PRICE = 'Is_total_price'
@@ -184,6 +189,7 @@ class SLDC:  # Sale data column
     SIZE = 'Size'
     NUMBER = 'Number'
     IS_NEW = 'Is_new'
+    IS_LIKE_NEW = 'Is_like_new'
     IS_USED = 'Is_used'
     IS_OUTLIER = 'Is_outlier'
     VISITS = 'Visits'
@@ -201,12 +207,14 @@ class SLDC:  # Sale data column
 
     @staticmethod
     def get_columns_for_excel():
-        return [SLDC.SALE_ID, SLDC.MASTER_ID, SLDC.SOURCE, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY, 
+        return [SLDC.SALE_ID, SLDC.MASTER_ID, SLDC.SOURCE,
+                SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.LOCATION, SLDC.OBJECT_STATE,
+                SLDC.IS_NEW, SLDC.IS_LIKE_NEW, SLDC.IS_USED,
                 SLDC.PRICE, SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER, SLDC.IS_TOTAL_PRICE, SLDC.PRICE_ORIGINAL, SLDC.NUMBER,
                 SLDC.SIZE,
-                SLDC.TITLE, SLDC.DESCRIPTION,
-                SLDC.IS_NEW, SLDC.IS_USED, SLDC.VISITS, SLDC.BOOK_MARKS,
+                SLDC.TITLE, SLDC.DESCRIPTION, SLDC.MATERIAL, SLDC.PROPERTY_DICT,
+                SLDC.VISITS, SLDC.BOOK_MARKS,
                 SLDC.ENTITY_LABELS, SLDC.ENTITY_LABELS_DICT, SLDC.FOUND_BY_LABELS, SLDC.HREF]
 
     @staticmethod
@@ -227,8 +235,9 @@ class SLDC:  # Sale data column
     def get_columns_for_search_results():
         return [SLDC.SALE_ID, SLDC.PRINT_CATEGORY,
                 SLDC.SOURCE, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
-                SLDC.START_DATE, SLDC.LOCATION,
-                SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.NUMBER, SLDC.TITLE, SLDC.DESCRIPTION, SLDC.IS_OUTLIER,
+                SLDC.START_DATE, SLDC.LOCATION, SLDC.IS_OUTLIER,
+                SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.NUMBER, SLDC.TITLE, SLDC.DESCRIPTION,
+                SLDC.MATERIAL, SLDC.PROPERTY_DICT,
                 SLDC.ENTITY_LABELS, SLDC.ENTITY_LABELS_DICT, SLDC.HREF]
 
 

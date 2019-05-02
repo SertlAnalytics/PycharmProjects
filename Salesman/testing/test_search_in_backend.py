@@ -7,19 +7,16 @@ Date: 2019-04-08
 
 import requests
 from lxml import html
-from lxml.html import HtmlElement
-from tutti_spacy import TuttiSpacy
-from tutti_sale import TuttiSale
+from salesman_nlp.salesman_spacy import SalesmanSpacy
+from salesman_tutti.tutti_sale import TuttiSale
 from salesman_system_configuration import SystemConfiguration
-from tutti_constants import SLCLS
-from sertl_analytics.myhtml import MyHtmlElement
 
 
 class TuttiPage:
     def __init__(self):
         self.sys_config = SystemConfiguration()
         self._url_search_q = 'https://www.tutti.ch/de/li/ganze-schweiz?q='
-        self._spacy = TuttiSpacy(load_sm=True)
+        self._spacy = SalesmanSpacy(load_sm=True)
 
     def search(self, search_str: str):
         url = '{}{}'.format(self._url_search_q, search_str)

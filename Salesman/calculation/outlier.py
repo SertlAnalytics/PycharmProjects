@@ -64,6 +64,7 @@ class Outlier:
         return self._mean_values_without_outliers
 
     def is_value_outlier(self, value: float):
+        # print('is_value_outlier: value={} <-> [{}, {}]'.format(value, self._bottom_threshold, self._top_threshold))
         return value < self._bottom_threshold or value > self._top_threshold
 
     def is_value_iqr_outlier(self, value: float):
@@ -81,9 +82,9 @@ class Outlier:
 
     def __calculate_variables__(self, by_iqr=False):
         self._min_values = MyMath.round_smart(min(self._values))
+        self._max_values = MyMath.round_smart(max(self._values))
         self._mean_values = MyMath.round_smart(statistics.mean(self._values))
         self.__calculate_thresholds__()
-        self._max_values = MyMath.round_smart(max(self._values))
         for value in self._values:
             if not self.is_value_outlier(value):
                 self._values_without_outliers.append(value)
@@ -107,7 +108,10 @@ class Outlier:
         iqr = q75 - q25
         self._bottom_threshold_iqr = MyMath.round_smart(q25 - 1.5 * iqr)
         self._top_threshold_iqr = MyMath.round_smart(q75 + 1.5 * iqr)
-
-        self._bottom_threshold = MyMath.round_smart(np.percentile(self._values, self._threshold_pct))
-        self._top_threshold = MyMath.round_smart(np.percentile(self._values, 100 - self._threshold_pct))
+        if len(self._values) <= 4:
+            self._bottom_threshold = self._bottom_threshold_iqr
+            self._top_threshold = self._top_threshold_iqr
+        else:
+            self._bottom_threshold = MyMath.round_smart(np.percentile(self._values, self._threshold_pct))
+            self._top_threshold = MyMath.round_smart(np.percentile(self._values, 100 - self._threshold_pct))
 

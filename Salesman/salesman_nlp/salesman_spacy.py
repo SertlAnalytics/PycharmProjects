@@ -7,15 +7,18 @@ Date: 2019-04-02
 
 from spacy.tokens import Doc, Span
 from spacy.matcher import PhraseMatcher
-from tutti_constants import EL, POS
+from salesman_tutti.tutti_constants import EL, POS
 from entities.tutti_named_entity import TuttiEntityHandler
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
+from matcher.tutti_matcher_4_is_like_new import TuttiMatcher4IsLikeNew
 from matcher.tutti_matcher_4_is_used import TuttiMatcher4IsUsed
 from matcher.tutti_matcher_4_original_price import TuttiMatcher4OriginalPrize
 from matcher.tutti_matcher_4_size import TuttiMatcher4Size
 from matcher.tutti_matcher_4_number import TuttiMatcher4Number
 from matcher.tutti_matcher_4_is_total_price import TuttiMatcher4IsTotalPrice
 from matcher.tutti_matcher_4_single_prize import TuttiMatcher4SinglePrize
+from matcher.tutti_matcher_4_cover_available import TuttiMatcher4CoverAvailable
+from matcher.tutti_matcher_4_age import TuttiMatcher4Age
 import spacy
 
 
@@ -44,9 +47,11 @@ class CustomTokenizer:
             ',--': '.-',
             ',-': '.-',
             '.--': '.-',
+            'Huawai': 'Huawei',
             'Schalfsack': 'Schlafsack',
             'Kommunionskleid': 'Kommunionkleid',
             'Stoßstange': 'Stossstange',
+            'WIFI': 'WiFi',
         }
 
 
@@ -62,7 +67,7 @@ class WhitespaceTokenizer(object):  # see https://spacy.io/usage/linguistic-feat
         return Doc(self.vocab, words=words, spaces=spaces)
 
 
-class TuttiSpacy:
+class SalesmanSpacy:
     def __init__(self, load_sm=True):
         self._load_sm = load_sm
         self._nlp = spacy.load('de_core_news_sm') if load_sm else spacy.load('de_core_news_md')
@@ -169,11 +174,17 @@ class TuttiSpacy:
         Doc.set_extension('first_pos_number', getter=self.__get_fist_pos_number__)
         Doc.set_extension('original_price', getter=self.__get_original_price__)
         Doc.set_extension('is_new', getter=self.__is_new__)
+        Doc.set_extension('is_like_new', getter=self.__is_like_new__)
         Doc.set_extension('is_used', getter=self.__is_used__)
         Doc.set_extension('is_total_price', getter=self.__is_total_price__)
+        Doc.set_extension('is_cover_available', getter=self.__is_cover_available__)
+        Doc.set_extension('age', getter=self.__get_age__)
 
     def __get_size__(self, doc):
         return TuttiMatcher4Size(self._nlp).get_pattern_result_for_doc(doc)
+
+    def __get_age__(self, doc):
+        return TuttiMatcher4Age(self._nlp).get_pattern_result_for_doc(doc)
 
     def __get_number__(self, doc):
         return TuttiMatcher4Number(self._nlp).get_pattern_result_for_doc(doc)
@@ -191,6 +202,9 @@ class TuttiSpacy:
     def __is_new__(self, doc):
         return TuttiMatcher4IsNew(self._nlp).get_pattern_result_for_doc(doc)
 
+    def __is_like_new__(self, doc):
+        return TuttiMatcher4IsLikeNew(self._nlp).get_pattern_result_for_doc(doc)
+
     def __is_used__(self, doc):
         return TuttiMatcher4IsUsed(self._nlp).get_pattern_result_for_doc(doc)
 
@@ -199,5 +213,8 @@ class TuttiSpacy:
 
     def __get_single_price__(self, doc):
         return TuttiMatcher4SinglePrize(self._nlp).get_pattern_result_for_doc(doc)
+
+    def __is_cover_available__(self, doc):
+        return TuttiMatcher4CoverAvailable(self._nlp).get_pattern_result_for_doc(doc)
 
 

@@ -9,14 +9,13 @@ from sertl_analytics.pyurl.url_process import MyUrlBrowser
 from sertl_analytics.pyurl.url_username_passwords import WebPasswords
 from salesman_system_configuration import SystemConfiguration
 from sertl_analytics.constants.salesman_constants import SLSRC
-from tutti_sale import TuttiSale
-from tutti_constants import SLCLS
-from tutti_spacy import TuttiSpacy
-from time import sleep
+from salesman_tutti.tutti_sale import TuttiSale
+from salesman_tutti.tutti_constants import SLCLS
+from salesman_nlp.salesman_spacy import SalesmanSpacy
 
 
 class MyUrlBrowser4Tutti(MyUrlBrowser):
-    def __init__(self, sys_config: SystemConfiguration, spacy: TuttiSpacy):
+    def __init__(self, sys_config: SystemConfiguration, spacy: SalesmanSpacy):
         self.sys_config = sys_config
         self._url_login = 'https://www.tutti.ch/de/start/login'
         self._url_search = 'https://www.tutti.ch/de/li'
@@ -52,7 +51,7 @@ class MyUrlBrowser4Tutti(MyUrlBrowser):
     def __change_price_for_sale__(self, sale: TuttiSale):
         if not sale.is_price_ready_for_update_in_tutti():
             return
-        self.__open_site_for_editing__(sale.id)
+        self.__open_site_for_editing__(sale.sale_id)
         self.__click_next_page__()      # click "Nächste Seite"
         self.__enter_price_new__(sale.price_new)
         self.__click_next_page__()      # click "Nächste Seite"

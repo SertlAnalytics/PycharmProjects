@@ -6,10 +6,9 @@ Date: 2018-06-17
 """
 
 import numpy as np
-from sertl_analytics.mydash.my_dash_shapes import MyPolygonShape, MyPolygonLineShape, MyLineShape, MyCircleShape
 from sertl_analytics.constants.pattern_constants import PRD
 from sertl_analytics.mydates import MyDate
-from tutti import Tutti
+from salesman_tutti.tutti import Tutti
 
 
 class DashInterface:

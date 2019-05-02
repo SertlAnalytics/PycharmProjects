@@ -5,8 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-05
 """
 
-from spacy.tokens import Doc, Span
-from tutti_constants import POS
+from spacy.tokens import Doc
+from salesman_tutti.tutti_constants import POS
 from matcher.tutti_matcher import TuttiMatcher
 
 

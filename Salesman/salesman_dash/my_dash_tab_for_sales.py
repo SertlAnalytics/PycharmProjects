@@ -8,7 +8,7 @@ Date: 2018-11-14
 from dash.dependencies import Input, Output, State
 from calculation.outlier import Outlier
 from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
-from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from salesman_dash.header_tables.my_tab_header_table_4_sales import MyHTMLTabSalesHeaderTable
 from salesman_dash.my_dash_tab_dd_for_sales import SalesTabDropDownHandler, SLDD
 from dash import Dash
@@ -17,8 +17,7 @@ from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
 from salesman_dash.grid_tables.my_grid_table_sale_4_sales import MySaleTable
 from salesman_dash.grid_tables.my_grid_table_similar_sale_4_sales import MySearchResultTable
 from salesman_system_configuration import SystemConfiguration
-from tutti import Tutti
-import pandas as pd
+from salesman_tutti.tutti import Tutti
 
 
 class MyDashTab4Sales(MyDashBaseTab):

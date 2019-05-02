@@ -21,3 +21,11 @@ class MyText:
     @staticmethod
     def get_url_encode_plus(input_string):
         return urllib.parse.quote_plus(input_string)
+    
+    @staticmethod
+    def get_with_replaced_umlaute(input_str: str) -> str:
+        umlaute_dict = {'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue'}
+        for umlaut, replacement in umlaute_dict.items():
+            if input_str.find(umlaut) > -1:
+                input_str = input_str.replace(umlaut, replacement)
+        return input_str

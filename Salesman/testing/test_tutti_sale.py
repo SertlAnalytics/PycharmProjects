@@ -5,15 +5,15 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-30
 """
 
-from tutti_constants import EL
-from tutti_sale import TuttiSale
-from tutti_spacy import TuttiSpacy
+from salesman_tutti.tutti_constants import EL
+from salesman_tutti.tutti_sale import TuttiSale
+from salesman_nlp.salesman_spacy import SalesmanSpacy
 from salesman_system_configuration import SystemConfiguration
 from sertl_analytics.test.my_test_case import MyTestCaseHandler, MyTestCase
 
 
 class Test4TuttiSale:
-    def run_test(self, spacy: TuttiSpacy, sys_config: SystemConfiguration):
+    def run_test(self, spacy: SalesmanSpacy, sys_config: SystemConfiguration):
         test_case_dict = self.__get_test_case_dict__()
         tc_handler = MyTestCaseHandler('Testing "{}":'.format(self.__class__.__name__))
         for key, test_case_list in test_case_dict.items():
@@ -78,7 +78,7 @@ class TestSimilarity4TuttiSale(Test4TuttiSale):
 class TuttiSaleTestHandler:
     def __init__(self):
         self.sys_config = SystemConfiguration()
-        self._spacy = TuttiSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
+        self._spacy = SalesmanSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
 
     def test_entity_similarity(self):
         TestSimilarity4TuttiSale().run_test(self._spacy, self.sys_config)

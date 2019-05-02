@@ -17,7 +17,7 @@ from salesman_dash.my_dash_tab_for_sales import MyDashTab4Sales
 from salesman_dash.my_dash_tab_for_search import MyDashTab4Search
 from salesman_dash.my_dash_tab_for_jobs import MyDashTab4Jobs
 from salesman_system_configuration import SystemConfiguration
-from tutti import Tutti
+from salesman_tutti.tutti import Tutti
 
 
 class MyDash4Salesman(MyDashBase):

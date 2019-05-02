@@ -10,24 +10,23 @@ from salesman_tutti.tutti_constants import POS
 from matcher.tutti_matcher import TuttiMatcher
 
 
-class TuttiMatcher4IsNew(TuttiMatcher):
+class TuttiMatcher4CoverAvailable(TuttiMatcher):
     @staticmethod
     def __get_pattern_dict__() -> dict:
         return {
-            'NEU': [{'LOWER': 'neu', 'POS': POS.ADJ}],
             'ORIGINALVERPACKT': [{'LOWER': 'originalverpackt'}],
-            'NOCH_NICHT_BENUTZT': [{'LOWER': 'noch'}, {'LOWER': 'nicht'}, {'LOWER': 'benutzt'}],
-            'UNBENUTZT': [{'LOWER': 'unbenutzt'}],
-            'UNGEBRAUCHT': [{'LOWER': 'ungebraucht'}],
+            'IN_ORIGINALVERPACKUNG': [{'LOWER': 'in'}, {'LOWER': 'der', 'OP': '?'}, {'LOWER': 'originalverpackung'}],
+            'ORIGINALVERPACKUNG_VORHANDEN': [
+                {'LOWER': 'originalverpackung'}, {'LOWER': 'ist', 'OP': '?'}, {'LOWER': 'vorhanden'}],
         }
 
     def __get_pattern_type_test_case_dict__(self):
         return {
-            'NEU': {'der Tisch ist neu': True, 'der Tisch ist veraltet': False},
             'ORIGINALVERPACKT': {'ist noch originalverpackt': True},
-            'NOCH_NICHT_BENUTZT': {'der TV wurde noch nicht benutzt': True},
-            'UNBENUTZT': {'der Tisch ist noch unbenutzt': True},
-            'UNGEBRAUCHT': {'der Stuhl ist noch ungebraucht': True},
+            'IN_ORIGINALVERPACKUNG': {'die Vase ist in der Originalverpackung': True,
+                                      'der TV ist in Originalverpackung': True},
+            'ORIGINALVERPACKUNG_VORHANDEN': {'die Originalverpackung ist vorhanden': True,
+                                             'Originalverpackung vorhanden': True},
         }
 
     def get_pattern_result_for_doc(self, doc: Doc):

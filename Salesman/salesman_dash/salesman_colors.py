@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from tutti import Tutti
+from salesman_tutti.tutti import Tutti
 from sertl_analytics.mydash.my_dash_color_handler import DashColorHandler
 
 

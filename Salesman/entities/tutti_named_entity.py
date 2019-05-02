@@ -6,7 +6,7 @@ Date: 2019-04-02
 """
 
 
-from tutti_constants import EL
+from salesman_tutti.tutti_constants import EL
 from entities.named_entity import NamedEntity
 
 
@@ -58,7 +58,7 @@ class TuttiCompanyEntity(NamedEntity):
             'DeLonghi', 'Dyson', 'Diono'
             'Eames', 'Even&Odd',
             'GoPro', 'Gucci', 'Grüezi-Bag', 'Grüezi Bag',
-            'Hape', 'Hansen', 'H&M',
+            'Hape', 'Hansen', 'H&M', 'Huawei',
             'IKEA',
             'Jacobsen',
             'Lowa', 'Louis Vuitton', 'Lladro', 'LUCAN',
@@ -67,7 +67,7 @@ class TuttiCompanyEntity(NamedEntity):
             'Omega',
             'Paidi',
             'Risa',
-            'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat',
+            'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise',
             'Tosca', 'Toyota',
             'USM',
             'Waldmann', 'Wilde+Spieth',
@@ -91,6 +91,8 @@ class TuttiProductEntity(NamedEntity):
         return [
             [['hot', 'cool'], [' ', '+', ' + ', '&', ' & '], 'concatenate'],
             [['A', 'X', 'Z'], [1, 2, 3, 4, 5, 6, 7], 'add'],
+            [['A', 'B', 'C', 'E', 'X'], ['-Klasse', '-Class'], 'add'],
+            [['GL'], ['A', 'B', 'C', 'E'], 'add'],
         ]
 
     @staticmethod
@@ -106,7 +108,8 @@ class TuttiProductEntity(NamedEntity):
             'MacBook', 'meda', 'Monterey',
             'Pixie', 'Panama', 'Purpose Chair',
             'Roundabout',
-            'sleepi'
+            'sleepi',
+            'Tower',
         ]
 
     @staticmethod
@@ -120,40 +123,40 @@ class TuttiObjectTypeEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
-            'Alufelgen','Auto', 'Autokindersitz', 'Auto-Kindersitz',
+            'Alufelgen','Auto', 'Autokindersitz', 'Auto-Kindersitz', 'Anhänger', 'Anzug',
             'Besucherstuhl', 'Babywanne', 'Bremsbeläge', 'Bürotisch', 'Bürostuhl', 'Büro',
-            'Bürodrehstuhl', 'Bild',
+            'Bürodrehstuhl', 'Bild', 'Buch', 'Badehose', 'Bikini',
             'Corpus',
             'Dusche', 'Drehstuhl', 'Drosselklappensensor', 'Drosselklappenschalter',
             'Digitalkamera',
-            'Einstellwerkzeug', 'Endschalldämpfer',
+            'Einstellwerkzeug', 'Endschalldämpfer', 'Entsorgung',
             'Felgen', 'Fahrzeuge',
             'Fleecejacke', 'Fahrrad', 'Figur', 'Figuren', 'Frontspoiler', 'Frontlippe', 'Frontlippen',
             'Gartenlehnstuhl', 'Gestell', 'Geschwisterkinderwagen', 'Gewindefahrwerk', 'Grill',
             'Handtasche', 'Hängematte', 'Hut', 'Herbst-/Winterjacke', 'Herbst/Winterjacke', 'Hose',
-            'Harlekin', 'Heckspoiler',
+            'Harlekin', 'Heckspoiler', 'Hotspot',
             'Inspektion',
             'Jacke',
             'Kommunionkleid', 'Kinderwagen', 'Kinderbett', 'Kugelbahn', 'Kostüm', 'Kostüme', 'Kleid',
-            'Kupplungsscheibe', 'Kühlergrill', 'Kühlmittelpumpe',
-            'Laptop',
-            'Nebelleuchte', 'Notebook',
-            'Matraze', 'Matrazen', 'Matratzenboden', 'Marionette', 'Modell', 'Modellauto',
-            'Motorenöl', 'Motoröl', 'Motor',
+            'Kupplungsscheibe', 'Kühlergrill', 'Kühlmittelpumpe', 'Kinderzimmer', 'Kleidung', 'Kinderschuhe',
+            'Laptop', 'Lift', 'LTE-Router'
+            'Nebelleuchte', 'Notebook', 'NannoSim',
+            'Matraze', 'Matrazen', 'Matratzenboden', 'Marionette', 'Modell', 'Modellauto', 'Möbellift',
+            'Motorenöl', 'Motoröl', 'Motor', 'Mitfahrgelegenheit', 'MicroSim',
             'Overall',
             'Porzellanfigur', 'Porzellanfiguren',
-            'Rettungsweste',
+            'Rettungsweste', 'Roman', 'Ratgeber', 'Router',
             'Rollcontainer', 'Reifen', 'Räder', 'Regal', 'Regenschutz', 'Rucksack', 'Rock', 'Rahmen',
-            'Schlafsack', 'Service', 'Scheibenwischer',
+            'Schlafsack', 'Service', 'Scheibenwischer', 'Sachbuch',
             'Schlüssel', 'Schlüsselanhänger', 'Scheibenbremsbeläge', 'Strickdecke', 'Stehleuchte', 'Ski',
             'Schreibtisch', 'Stuhl', 'Stühle', 'Scheinwerfer', 'Stossstange', 'Skijacke', 'Ski/Winterjacke',
             'Sommerkleid', 'Sonnenschirm', 'Sommerhut', 'Sonnenhut', 'Strohhut', 'Schuh', 'Schuhe',
-            'Sportauspuff', 'Spielzeugautos', 'Schlafsofa',
-            'Turnschuhe', 'Tisch', 'Toilette', 'Tasche',
-            'Umhängetasche', 'Übergangsjacke',
+            'Sportauspuff', 'Spielzeugautos', 'Schlafsofa', 'Sommerreifen', 'Stehtisch', 'Sitzungstisch',
+            'Turnschuhe', 'Tisch', 'Toilette', 'Tasche', 'Transport', 'Taxi',
+            'Umhängetasche', 'Übergangsjacke', 'Umzug',
             'Velo',
             'Winterräder', 'Winterreifen', 'Winterkompletträder', 'Wanne', 'Wasserpumpe',
-            'Werkzeugkasten', 'Winterjacke', 'Winterschuhe',
+            'Werkzeugkasten', 'Winterjacke', 'Winterschuhe', 'Wohnmobil', 'WiFi',
             'Zeitwerkzeug', 'Zeitsteuerung'
         ]
 

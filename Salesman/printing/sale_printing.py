@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from tutti_sale import TuttiSale
 from sertl_analytics.constants.salesman_constants import SLDC
 
 

@@ -9,18 +9,16 @@ from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
 from sertl_analytics.my_text import MyText
 from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from calculation.outlier import Outlier
-from tutti_browser import MyUrlBrowser4Tutti
+from salesman_tutti.tutti_browser import MyUrlBrowser4Tutti
 from lxml import html
-from tutti_sale import TuttiSale
+from salesman_tutti.tutti_sale import TuttiSale
 from spacy import displacy
-from tutti_spacy import TuttiSpacy
-from tutti_constants import SCLS, SLSCLS, EL
+from salesman_nlp.salesman_spacy import SalesmanSpacy
+from salesman_tutti.tutti_constants import SCLS, SLSCLS
 import pandas as pd
 import xlsxwriter
 import requests
 from time import sleep
-import numpy as np
-import statistics
 from salesman_system_configuration import SystemConfiguration
 from printing.sale_printing import SalesmanPrint
 
@@ -68,7 +66,7 @@ class TuttiUrlHelper:
     def __get_url_extended_base__(self):
         region = '' if self._region == '' else '/{}'.format(self._region)
         category = '' if self._category == '' else '/{}'.format(self._category)
-        sub_category = '' if self._sub_category == '' else '/{}'.format(self._sub_category)
+        sub_category = '' if self._sub_category in ['', 'GANZ_SCHWEIZ'] else '/{}'.format(self._sub_category)
         return '{}{}{}{}'.format(self._url_base, region, category, sub_category)
 
 
@@ -78,7 +76,7 @@ class Tutti:
         self.printing = SalesmanPrint(SLDC.get_columns_for_sales_printing())
         self._my_sales_source = SLSRC.TUTTI_CH
         self._write_to_excel = self.sys_config.write_to_excel
-        self._spacy = TuttiSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
+        self._spacy = SalesmanSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
         self._browser = None
         self._url_helper = TuttiUrlHelper('')  # will be overwritten when searched
         self._access_layer = AccessLayer4Sale(self.sys_config.db)

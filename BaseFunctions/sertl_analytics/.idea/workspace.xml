@@ -2,19 +2,46 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f337eff7-2e2d-415d-b4ab-cf8d55a29aa3" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_sale.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pybase/value_categorizer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_nlp/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_categorizer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_sale.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/constants/salesman_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/salesman_constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my_text.py" beforeDir="false" afterPath="$PROJECT_DIR$/my_text.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/my_test_case.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/my_test_case.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/mymath.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/dictionaries/josef.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/calculation/outlier.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/calculation/outlier.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/entities/tutti_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/entities/tutti_named_entity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/test_tutti_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/test_tutti_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_new.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_new.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_total_price.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_total_price.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_used.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_used.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_number.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_number.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_original_price.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_original_price.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_single_prize.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_single_prize.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_size.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_size.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/printing/sale_printing.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/printing/sale_printing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/run_tutti_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/run_tutti_process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_for_salesman.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_for_salesman.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_interface_for_salesman.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_interface_for_salesman.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/salesman_colors.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/salesman_colors.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/testing/test_search_in_backend.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/testing/test_search_in_backend.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_named_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_sale.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_spacy.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/tutti_spacy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_sale.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_browser.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_browser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_sale.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_search_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_search_result.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_spacy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/tutti_tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_tools.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -25,11 +52,32 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="run_test_from_factory.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="run_test_from_factory.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="289">
               <caret line="17" selection-start-line="17" selection-end-line="17" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="value_categorizer.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pybase/value_categorizer.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="680">
+              <caret line="40" selection-start-line="40" selection-end-line="40" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="mymath.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/mymath.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="102">
+              <caret line="249" column="76" selection-start-line="249" selection-start-column="76" selection-end-line="249" selection-end-column="76" />
+              <folding>
+                <element signature="e#173#191#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -70,6 +118,7 @@
       <find>float</find>
       <find>ZECUSD</find>
       <find>BTC</find>
+      <find>wrong</find>
     </findStrings>
     <replaceStrings>
       <replace>test_unit</replace>
@@ -82,7 +131,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/pybase/loop_list.py" />
         <option value="$PROJECT_DIR$/models/nn_collector.py" />
         <option value="$PROJECT_DIR$/user_input/confirmation.py" />
         <option value="$PROJECT_DIR$/exchanges/interactive_broker_test.py" />
@@ -100,7 +148,6 @@
         <option value="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_trade_back_testing.py" />
         <option value="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_provider.py" />
         <option value="$PROJECT_DIR$/test/my_test_abc.py" />
-        <option value="$PROJECT_DIR$/mymath.py" />
         <option value="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" />
         <option value="$PROJECT_DIR$/mydates.py" />
         <option value="$PROJECT_DIR$/exchanges/bitfinex_trade_client.py" />
@@ -133,6 +180,8 @@
         <option value="$PROJECT_DIR$/my_panda.py" />
         <option value="$PROJECT_DIR$/my_numpy.py" />
         <option value="$PROJECT_DIR$/my_text.py" />
+        <option value="$PROJECT_DIR$/pybase/value_categorizer.py" />
+        <option value="$PROJECT_DIR$/mymath.py" />
       </list>
     </option>
   </component>
@@ -147,7 +196,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -176,7 +224,19 @@
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
               <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
               <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="mydash" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
               <item name="processes" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="pybase" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
@@ -236,6 +296,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -392,13 +453,14 @@
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.47215685" visible="true" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.47058824" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.477707" side_tool="true" weight="0.32784313" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.4960191" weight="0.32784313" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.522293" weight="0.5294118" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49761146" weight="0.32784313" />
-      <window_info id="Structure" order="1" sideWeight="0.5278431" side_tool="true" visible="true" weight="0.25" />
+      <window_info id="Structure" order="1" sideWeight="0.5294118" side_tool="true" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.70616496" weight="0.24078432" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49761146" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -408,7 +470,6 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.4960191" weight="0.32784313" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -499,13 +560,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/models/policy_action.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" lean-forward="true" selection-start-line="6" selection-end-line="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/datafetcher/database_fetcher.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
@@ -587,13 +641,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-187">
           <caret line="598" column="35" selection-start-line="598" selection-start-column="35" selection-end-line="598" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/mymath.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="11" selection-start-line="11" selection-end-line="11" selection-end-column="58" />
         </state>
       </provider>
     </entry>
@@ -871,6 +918,23 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="289">
           <caret line="17" selection-start-line="17" selection-end-line="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pybase/value_categorizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="680">
+          <caret line="40" selection-start-line="40" selection-end-line="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mymath.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="249" column="76" selection-start-line="249" selection-start-column="76" selection-end-line="249" selection-end-column="76" />
+          <folding>
+            <element signature="e#173#191#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

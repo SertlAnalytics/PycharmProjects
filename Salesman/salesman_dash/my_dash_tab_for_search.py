@@ -8,23 +8,21 @@ Date: 2018-11-14
 from dash.dependencies import Input, Output, State
 from calculation.outlier import Outlier
 from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
-from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi
+from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from salesman_dash.header_tables.my_tab_header_table_4_search import MyHTMLTabSearchHeaderTable
 from salesman_dash.input_tables.my_online_sale_table import MyHTMLSearchOnlineInputTable
 from salesman_dash.my_dash_tab_dd_for_search import SearchTabDropDownHandler, SRDD
 from dash import Dash
-from sertl_analytics.my_pandas import MyPandas
-from sertl_analytics.mydates import MyDate
 from sertl_analytics.my_text import MyText
-from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
+from sertl_analytics.constants.salesman_constants import SLDC
 from salesman_dash.grid_tables.my_grid_table_sale_4_sales import MySaleTable
 from salesman_dash.grid_tables.my_grid_table_sale_4_search_results import MySearchResultTable
 from salesman_system_configuration import SystemConfiguration
 from salesman_dash.plotting.my_dash_plotter_for_salesman_search import MyDashTabPlotter4Search
 from salesman_dash.my_dash_colors import DashColorHandler
-from tutti import Tutti, TuttiUrlHelper
+from salesman_tutti.tutti import Tutti, TuttiUrlHelper
+from salesman_tutti.tutti_categorizer import ProductCategorizer
 import pandas as pd
-from printing.sale_printing import SalesmanPrint
 
 
 class MyDashTab4Search(MyDashBaseTab):
@@ -45,6 +43,7 @@ class MyDashTab4Search(MyDashBaseTab):
         self._selected_search_result_row = None
         self._search_input = ''
         self._online_rows = None
+        self._product_categorizer = ProductCategorizer()
 
     def __init_dash_element_ids__(self):
         self._my_search_result_entry_link = 'my_search_result_entry_link'
@@ -65,6 +64,7 @@ class MyDashTab4Search(MyDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_SOURCE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_REGION)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.PRODUCT_CATEGORY)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.PRODUCT_SUB_CATEGORY)),
             MyHTML.div_with_html_element(self._my_search_online_input_table, self._search_online_input_table.get_table()),
             MyHTML.div_with_button_link(self._my_search_result_entry_link, href='', title='', hidden='hidden'),
             MyHTML.div(self._my_search_result_grid_table_div, '', False),
@@ -80,6 +80,7 @@ class MyDashTab4Search(MyDashBaseTab):
         self.__init_callback_for_search_result_entry_markdown__()
         self.__init_callbacks_for_search_result_numbers__()
         self.__init_callback_for_search_result_graph__()
+        self.__init_callback_for_product_sub_categories__()
 
     def __init_callbacks_for_search_result_entry_link__(self):
         @self.app.callback(
@@ -133,6 +134,15 @@ class MyDashTab4Search(MyDashBaseTab):
         self._sale_grid_table = MySaleTable(self.sys_config)
         self._search_results_grid_table = MySearchResultTable(self.sys_config)
 
+    def __init_callback_for_product_sub_categories__(self):
+        @self.app.callback(
+            Output(self._dd_handler.my_product_sub_category_dd, 'options'),
+            [Input(self._dd_handler.my_product_category_dd, 'value')])
+        def handle_callback_for_product_sub_categories(value: str):
+            category = self._product_categorizer.get_category_for_value(value)
+            self._dd_handler.selected_product_category = category
+            return self._product_categorizer.get_sub_category_lists_for_category_as_option_list(category)
+
     def __init_callback_for_search_result_grid_table__(self):
         @self.app.callback(
             Output(self._my_search_result_grid_table_div, 'children'),
@@ -140,14 +150,16 @@ class MyDashTab4Search(MyDashBaseTab):
             [State(self._dd_handler.my_search_source_dd, 'value'),
              State(self._dd_handler.my_search_region_dd, 'value'),
              State(self._dd_handler.my_product_category_dd, 'value'),
+             State(self._dd_handler.my_product_sub_category_dd, 'value'),
              State(self._search_online_input_table.my_search_input, 'value'),
              ]
         )
         def handle_callback_for_search_result_grid_table(
-                search_n_clicks: int, search_source: str, region: str, category: str, search_input: str):
+                search_n_clicks: int, search_source: str, region: str, cat: str, sub_cat: str, search_input: str):
             self._dd_handler.selected_search_source = search_source
             self._dd_handler.selected_search_region = region
-            self._dd_handler.selected_product_category = category
+            self._dd_handler.selected_product_category = cat
+            self._dd_handler.selected_product_sub_category = sub_cat
             self._search_input = search_input
             self._online_rows = None
             if self._search_online_input_table.search_button_n_clicks != search_n_clicks:
@@ -230,4 +242,6 @@ class MyDashTab4Search(MyDashBaseTab):
     def __get_url_helper__(self) -> TuttiUrlHelper:
         return TuttiUrlHelper(search_string=self._search_input,
                               region=self._dd_handler.selected_search_region,
-                              category=self._dd_handler.selected_product_category)
+                              category=self._dd_handler.selected_product_category,
+                              sub_category=self._dd_handler.selected_product_sub_category
+                              )
