@@ -10,14 +10,16 @@ from calculation.outlier import Outlier
 from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from salesman_dash.header_tables.my_tab_header_table_4_sales import MyHTMLTabSalesHeaderTable
-from salesman_dash.my_dash_tab_dd_for_sales import SalesTabDropDownHandler, SLDD
+from salesman_dash.my_dash_tab_dd_for_sales import SaleTabDropDownHandler, SLDD
 from dash import Dash
 from sertl_analytics.my_text import MyText
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
-from salesman_dash.grid_tables.my_grid_table_sale_4_sales import MySaleTable
-from salesman_dash.grid_tables.my_grid_table_similar_sale_4_sales import MySearchResultTable
+from salesman_dash.grid_tables.my_grid_table_4_sales_base import GridTableSelectionApi
+from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MyFile
+from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MySales, MySaleTable4SimilarSales
 from salesman_system_configuration import SystemConfiguration
 from salesman_tutti.tutti import Tutti
+from salesman_tutti.tutti_categorizer import ProductCategorizer, RegionCategorizer
 
 
 class MyDashTab4Sales(MyDashBaseTab):
@@ -31,16 +33,21 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._sale_table = self.sys_config.sale_table
         self._refresh_button_clicks = 0
         self._search_button_clicks = 0
-        self._dd_handler = SalesTabDropDownHandler()
+        self._dd_handler = SaleTabDropDownHandler(self.sys_config)
         self._header_table = MyHTMLTabSalesHeaderTable()
-        self._sale_grid_table = MySaleTable(self.sys_config)
-        self._similar_sale_grid_table = MySearchResultTable(self.sys_config)
+        self._selection_api = GridTableSelectionApi()
+        self._sale_grid_table = MySaleTable4MySales(self.sys_config)
+        self._sale_file_grid_table = MySaleTable4MyFile(self.sys_config)
+        self._similar_sale_grid_table = MySaleTable4SimilarSales(self.sys_config)
         self._selected_my_sale_row = None
         self._selected_similar_sale_row = None
         self._online_title = None
         self._online_rows = None
+        self._region_categorizer = RegionCategorizer()
+        self._product_categorizer = ProductCategorizer()
 
     def __init_dash_element_ids__(self):
+        self._my_sales_filter_button = 'my_sales_filter_button'
         self._my_sales_search_similar_button = 'my_sales_search_similar_button'
         self._my_sales_link = 'my_sales_link'
         self._my_sales_similar_sale_link = 'my_sales_similar_sale_link'
@@ -54,9 +61,13 @@ class MyDashTab4Sales(MyDashBaseTab):
     def get_div_for_tab(self):
         children_list = [
             self._header_table.get_table(),
-            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.MY_SALE_SOURCE)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_SOURCE)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_REGION)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_CATEGORY)),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_SUB_CATEGORY)),
+            MyHTML.div_with_html_button_submit(self._my_sales_filter_button, children='Filter', hidden=''),
             MyHTML.div_with_html_button_submit(
-                self._my_sales_search_similar_button, children='Search similar', hidden=''),
+                self._my_sales_search_similar_button, children='Search similar', hidden='hidden'),
             MyHTML.div_with_button_link(self._my_sales_link, href='', title='', hidden='hidden'),
             MyHTML.div(self._data_table_div, self.__get_sale_grid_table__(), False),  # ERROR
             MyDCC.markdown(self._my_sales_sale_entry_markdown),
@@ -152,15 +163,23 @@ class MyDashTab4Sales(MyDashBaseTab):
     def __init_callback_for_sale_grid_table__(self):
         @self.app.callback(
             Output(self._data_table_div, 'children'),
-            [Input(self._dd_handler.my_sales_sales_source_dd, 'value'),
+            [Input(self._my_sales_filter_button, 'n_clicks'),
              Input(self._my_sales_search_similar_button, 'n_clicks')],
-            [State(self._data_table_name, 'rows'),
+            [State(self._dd_handler.my_sale_source_dd, 'value'),
+             State(self._dd_handler.my_sale_region_dd, 'value'),
+             State(self._dd_handler.my_sale_category_dd, 'value'),
+             State(self._dd_handler.my_sale_sub_category_dd, 'value'),
+             State(self._data_table_name, 'rows'),
              State(self._data_table_name, 'selected_row_indices')]
             )
-        def handle_callback_for_sale_grid_table(sale_source: str, refresh_n_clicks: int, rows: list,
-                selected_row_indices: list):
-            self._dd_handler.selected_sale_source = sale_source
-            self._sale_grid_table.selected_source = sale_source
+        def handle_callback_for_sale_grid_table(
+                filter_n_clicks: int, refresh_n_clicks: int,
+                source: str, region: str, category: str, sub_category: str, rows: list, selected_row_indices: list):
+            self._selection_api.source = source
+            self._selection_api.region = self._region_categorizer.get_category_for_value(region)
+            self._selection_api.category = self._product_categorizer.get_category_for_value(category)
+            self._selection_api.sub_category = \
+                self._product_categorizer.get_sub_category_for_value(self._selection_api.category, sub_category)
             self._selected_my_sale_row = None if len(selected_row_indices) == 0 else rows[selected_row_indices[0]]
             self.__handle_refresh_click__(refresh_n_clicks)
             return self.__get_sale_grid_table__()
@@ -179,11 +198,8 @@ class MyDashTab4Sales(MyDashBaseTab):
         else:
             title, description = self._selected_my_sale_row[SLDC.TITLE], self._selected_my_sale_row[SLDC.DESCRIPTION]
             print('__handle_refresh_click__: title={}, description={}'.format(title, description))
-            results = self.tutti.get_search_results_from_online_inputs(title, description)
+            results = self.tutti.get_search_results_from_online_inputs(title)
             print(results)
-        self._sale_grid_table = MySaleTable(self.sys_config)
-        self._sale_grid_table.selected_source = self._dd_handler.selected_sale_source
-        self._similar_sale_grid_table = MySearchResultTable(self.sys_config)
 
     def __init_callback_for_similar_sale_grid_table__(self):
         @self.app.callback(
@@ -293,15 +309,19 @@ class MyDashTab4Sales(MyDashBaseTab):
         return outlier
 
     def __get_sale_grid_table__(self):
-        rows = self._sale_grid_table.get_rows_for_selected_source()
+        if self._dd_handler.selected_sale_source == SLSRC.FILE:
+            grid_table = self._sale_file_grid_table
+        else:
+            grid_table = self._sale_grid_table
+        rows = grid_table.get_rows_for_selection(self._selection_api, False)
         min_height = self._sale_grid_table.height_for_display
         return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
 
     def __get_similar_sale_grid_table__(self, master_id: str):
         if master_id == '':
             return ''
-        self._similar_sale_grid_table.selected_source = SLSRC.DB
-        rows = self._similar_sale_grid_table.get_rows_for_selected_source(master_id)
+        self._selection_api.master_id = master_id
+        rows = self._similar_sale_grid_table.get_rows_for_selection(self._selection_api, True)
         min_height = self._similar_sale_grid_table.height_for_display
         return MyDCC.data_table(self._my_sales_similar_sale_grid_table, rows, [], min_height=min_height)
 

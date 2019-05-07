@@ -52,6 +52,19 @@ class TuttiMaterialEntity(NamedEntity):
         }
 
 
+class TuttiTechnologyEntity(NamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return ['WiFi', 'WLAN']
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+            'WiFi': ['WLAN'],
+        }
+
+
+
 class TuttiCompanyEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
@@ -66,7 +79,7 @@ class TuttiCompanyEntity(NamedEntity):
             'IKEA',
             'Jacobsen',
             'Lowa', 'Louis Vuitton', 'Lladro', 'LUCAN',
-            'Mercedes', 'Mercedes-Benz', 'Mango',
+            'Mercedes', 'Mercedes-Benz', 'Mango', 'Mexx',
             'Nespresso', 'name it',
             'Omega',
             'Paidi',
@@ -95,6 +108,7 @@ class TuttiProductEntity(NamedEntity):
         return [
             [['hot', 'cool'], [' ', '+', ' + ', '&', ' & '], 'concatenate'],
             [['A', 'X', 'Z'], [1, 2, 3, 4, 5, 6, 7], 'add'],
+            [['Serie'], [1, 2, 3, 4, 5, 6, 7], 'add', ['', ' ', '+']],
             [['A', 'B', 'C', 'E', 'X'], ['-Klasse', '-Class'], 'add'],
             [['GL'], ['A', 'B', 'C', 'E'], 'add'],
         ]
@@ -109,11 +123,11 @@ class TuttiProductEntity(NamedEntity):
             'gtx',
             'Hot + Cool', 'hero',
             'Kitos', 'Kid Cow',
+            'Looking Good',
             'MacBook', 'meda', 'Monterey',
             'Pixie', 'Panama', 'Purpose Chair',
             'Roundabout',
             'sleepi',
-            'Tower 5GHz',
         ]
 
     @staticmethod
@@ -140,7 +154,7 @@ class TuttiObjectTypeEntity(NamedEntity):
             'Handtasche', 'Hängematte', 'Hut', 'Herbst-/Winterjacke', 'Herbst/Winterjacke', 'Hose',
             'Harlekin', 'Heckspoiler', 'Hotspot',
             'Inspektion',
-            'Jacke',
+            'Jacke', 'Jeans', 'Jeanshose',
             'Kommunionkleid', 'Kinderwagen', 'Kinderbett', 'Kugelbahn', 'Kostüm', 'Kostüme', 'Kleid',
             'Kupplungsscheibe', 'Kühlergrill', 'Kühlmittelpumpe', 'Kinderzimmer', 'Kleidung', 'Kinderschuhe',
             'Laptop', 'Lift', 'LTE-Router'
@@ -148,7 +162,7 @@ class TuttiObjectTypeEntity(NamedEntity):
             'Matraze', 'Matrazen', 'Matratzenboden', 'Marionette', 'Modell', 'Modellauto', 'Möbellift',
             'Motorenöl', 'Motoröl', 'Motor', 'Mitfahrgelegenheit', 'MicroSim',
             'Overall',
-            'Porzellanfigur', 'Porzellanfiguren',
+            'Porzellanfigur', 'Porzellanfiguren', 'Puppe', 'Pullover',
             'Rettungsweste', 'Roman', 'Ratgeber', 'Router',
             'Rollcontainer', 'Reifen', 'Räder', 'Regal', 'Regenschutz', 'Rucksack', 'Rock', 'Rahmen',
             'Schlafsack', 'Service', 'Scheibenwischer', 'Sachbuch',
@@ -160,7 +174,7 @@ class TuttiObjectTypeEntity(NamedEntity):
             'Umhängetasche', 'Übergangsjacke', 'Umzug',
             'Velo',
             'Winterräder', 'Winterreifen', 'Winterkompletträder', 'Wanne', 'Wasserpumpe',
-            'Werkzeugkasten', 'Winterjacke', 'Winterschuhe', 'Wohnmobil', 'WiFi',
+            'Werkzeugkasten', 'Winterjacke', 'Winterschuhe', 'Wohnmobil',
             'Zeitwerkzeug', 'Zeitsteuerung'
         ]
 
@@ -168,6 +182,8 @@ class TuttiObjectTypeEntity(NamedEntity):
     def __get_synonym_dict__():
         return {
             'Fahrrad': ['Velo'],
+            'LTE-Router': ['Router'],
+            'Jeans': ['Jeanshose'],
             'Sommerhut': ['Sonnenhut', 'Strohhut'],
             'Corpus': ['Rollcontainer'],
             'Bürostuhl': ['Besucherstuhl', 'Bürodrehstuhl', 'Drehstuhl'],
@@ -201,11 +217,14 @@ class TuttiEntityHandler:
 
     @staticmethod
     def get_entity_for_entity_label(entity_label: str) -> NamedEntity:
-        return {EL.COMPANY: TuttiCompanyEntity(),
-                EL.PRODUCT: TuttiProductEntity(),
-                EL.OBJECT: TuttiObjectTypeEntity(),
-                EL.TARGET_GROUP: TuttiTargetGroupEntity(),
-                EL.MATERIAL: TuttiMaterialEntity()}.get(entity_label, TuttiCompanyEntity())
+        return {
+            EL.COMPANY: TuttiCompanyEntity(),
+            EL.PRODUCT: TuttiProductEntity(),
+            EL.OBJECT: TuttiObjectTypeEntity(),
+            EL.TARGET_GROUP: TuttiTargetGroupEntity(),
+            EL.MATERIAL: TuttiMaterialEntity(),
+            EL.TECHNOLOGY: TuttiTechnologyEntity(),
+        }.get(entity_label, TuttiCompanyEntity())
 
 
 

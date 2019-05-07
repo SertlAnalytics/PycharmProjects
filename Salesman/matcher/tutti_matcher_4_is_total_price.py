@@ -18,7 +18,6 @@ class TuttiMatcher4IsTotalPrice(TuttiMatcher):
             'ZUSAMMEN': [{'LOWER': 'zusammen'}],
             'SET_PROPN': [{'LOWER': 'set', 'POS': POS.PROPN}],
             'SET_X': [{'LOWER': 'set', 'POS': POS.X}],
-            'PREIS_STUECK': [{'LOWER': 'preis/stück'}],
             'GESAMTPREIS': [{'LOWER': 'gesamtpreis'}]
         }
 
@@ -29,7 +28,6 @@ class TuttiMatcher4IsTotalPrice(TuttiMatcher):
             'ZUSAMMEN': {'Der Preis ist für alle Stücke zusammen': True},
             'SET_PROPN': {'Preis ist für 4 er Set': True},
             'SET_X': {'Preis ist für 3 er set': True},
-            'PREIS_STUECK': {'der Preis ist Preis/Stück.': True},
             'GESAMTPREIS': {'der Preis versteht sich als Gesamtpreis': True},
         }
 

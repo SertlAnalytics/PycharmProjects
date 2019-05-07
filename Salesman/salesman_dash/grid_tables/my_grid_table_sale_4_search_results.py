@@ -6,7 +6,7 @@ Date: 2019-04-16
 """
 
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
-from salesman_dash.grid_tables.my_grid_table_base_4_sales import MySaleBaseTable
+from salesman_dash.grid_tables.my_grid_table_4_sales_base import MySaleBaseTable
 
 
 class MySearchResultTable(MySaleBaseTable):

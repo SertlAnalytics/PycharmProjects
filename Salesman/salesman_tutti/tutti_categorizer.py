@@ -56,10 +56,21 @@ class ProductCategorizer(ValueCategorizer):  # Product Category, german: Rubrik
         return [['Alle', 'ALL']] + self.__get_sub_category_lists_for_category__(category)
 
     @staticmethod
+    def get_search_category_sub_categories(category: str, sub_category: str) -> list:
+        return_list = [[category, sub_category]]
+        if category == PRCAT.CHILD and sub_category == 'Kleider & Schuhe':
+            return_list.append([PRCAT.CLOTHES_OTHERS, PRCAT.ALL])
+        elif category == PRCAT.COMPUTER and sub_category == 'Komponenten & Zubehör':
+            return_list.append([PRCAT.PHONE_NAVI, 'Zubehör'])
+        return return_list
+
+    @staticmethod
     def __get_sub_category_list_for_category__(category: str):
         sub_category_dict = {
             PRCAT.BOOKS: ['Romane', 'Sachbücher & Ratgeber'],
             PRCAT.CHILD: ['Kinderwagen & Sitze', 'Kinderzimmer', 'Kleider & Schuhe'],
+            PRCAT.CLOTHES_OTHERS: ['Kleidung für Damen', 'Kleidung für Herren', 'Schuhe für Damen', 'Schuhe für Herren',
+                                   'Taschen und & Portmonnaies', 'Uhren & Schmuck'],
             PRCAT.COMPUTER: ['Computer', 'Komponenten & Zubehör', 'Software', 'Tablets'],
             PRCAT.SERVICE: ['Büroservice', 'Computer & Handys', 'Finanzen & Recht', 'Handwerk', 'Umzug & Transport'],
             PRCAT.BUSINESS: ['Büromaterial & Büromöbel', 'Geschäftseinrichtungen'],

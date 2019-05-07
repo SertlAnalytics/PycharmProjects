@@ -20,13 +20,14 @@ class MyDashTabPlotter4Search(MyDashTabPlotter):
         self.x_variable = SLDC.PRICE_SINGLE
         self.y_variable = SLDC.PRINT_CATEGORY
         self.text_variable = SLDC.TITLE
+        self.category_list = []
 
     def __get_scatter_figure_data__(self):
         df = self.__get_df_for_selection__()
         color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[self.category].unique()}
-        category_list = list(df[self.category].unique())
-        scatter_traces = self.__get_scatter_traces_for_categories__(df, category_list, color_dict)
-        box_plot_traces = self.__get_box_plot_traces_for_categories__(df, category_list, color_dict)
+        self.category_list = list(df[self.category].unique())
+        scatter_traces = self.__get_scatter_traces_for_categories__(df, self.category_list, color_dict)
+        box_plot_traces = self.__get_box_plot_traces_for_categories__(df, self.category_list, color_dict)
         return scatter_traces  + box_plot_traces
 
     def __get_scatter_traces_for_categories__(self, df: pd.DataFrame, category_list: list, color_dict: dict):

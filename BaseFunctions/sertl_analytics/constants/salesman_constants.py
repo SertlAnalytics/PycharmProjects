@@ -49,7 +49,7 @@ class SLSRC:  # sale sources
     EBAY_CH = 'Ebay.ch'
 
     @staticmethod
-    def get_my_sale_sources():
+    def get_sale_sources():
         return [SLSRC.DB, SLSRC.FILE]
 
     @staticmethod
@@ -77,7 +77,7 @@ class REGION:
     APENZELL = 'Apenzell'
     BASEL = 'Basel'
     BASEL_STADT = 'Basel-Stadt'
-    BERN = 'bern'
+    BERN = 'Bern'
     FREIBURG = 'Freiburg'
     GENF = 'Genf'
     GLARUS = 'Glarus'
@@ -136,7 +136,7 @@ class PRCAT:  # Product Category, german: Rubrik
     GARDEN_CRAFT = 'Garten & Handwerk'
     HOUSEHOLD = 'Haushalt'
     REAL_ESTATE = 'Immobilien'
-    CLOTHES_OTHERS = 'Kleidung & Assessoires'
+    CLOTHES_OTHERS = 'Kleidung & Accessoires'
     MUSIC = 'Musik'
     COLLECTIONS = 'Sammeln'
     TOYS = 'Spielzeuge & Basteln'
@@ -158,6 +158,12 @@ class PRCAT:  # Product Category, german: Rubrik
             PRCAT.TOYS, PRCAT.SPORT_OUTDOOR, PRCAT.JOBS, PRCAT.TV_AUDIO, PRCAT.PHONE_NAVI,
             PRCAT.TICKETS_BONS, PRCAT.ANIMALS, PRCAT.OTHERS
         ]
+    
+    @staticmethod
+    def get_all_without_all() -> list:
+        list_all = PRCAT.get_all()
+        list_all.remove(PRCAT.ALL)
+        return list_all
 
 
 class SLDC:  # Sale data column
@@ -219,9 +225,15 @@ class SLDC:  # Sale data column
 
     @staticmethod
     def get_columns_for_sales_tab_table():
-        return [SLDC.SALE_ID, SLDC.VERSION, SLDC.MASTER_ID, 
+        return [SLDC.SALE_ID, SLDC.VERSION,
                 SLDC.SOURCE, SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
-                SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER, SLDC.TITLE, SLDC.HREF]
+                SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE, SLDC.HREF]
+
+    @staticmethod
+    def get_columns_for_similar_sales_tab_table():
+        return [SLDC.SALE_ID, SLDC.VERSION,
+                SLDC.SOURCE, SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
+                SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE, SLDC.HREF, SLDC.MASTER_ID]
 
     @staticmethod
     def get_columns_for_sales_printing():

@@ -12,10 +12,11 @@ class EL:  # entity labels
     OBJECT = 'OBJECT'
     TARGET_GROUP = 'TARGET_GROUP'
     MATERIAL = 'MATERIAL'
+    TECHNOLOGY = 'TECHNOLOGY'
 
     @staticmethod
     def is_entity_label_tutti_relevant(ent_level: str) -> bool:
-        return ent_level in [EL.PRODUCT, EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL]
+        return ent_level in [EL.PRODUCT, EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.TECHNOLOGY]
 
 
 class SLCLS:  # css classes used within tutti sales
@@ -47,7 +48,7 @@ class SLSCLS:  # css classes used within tutti sale single
 
 
 class SCLS:  # css classes used within search offers
-    FOUND_NUMBERS = '_35r2W'
+    FOUND_NUMBERS = '_3N3mg'  #'_35r2W'
     OFFERS = '_3aiCi'
     MAIN_ANKER = '_16dGT'
     LOCATION = '_3f6Er'
@@ -63,7 +64,8 @@ class POS:
     ADJ = 'ADJ'  # adjective, e.g. 'warmes' (Innenfutter)
     ADP = 'ADP'  # AD, e.g. 'in', 'Dank'
     ADV = 'ADV'  # adverb, e.g. 'kaum' (gebraucht)
-    CONJ = 'CONJ' # conjunction
+    CONJ = 'CONJ'  # conjunction
+    DATE = 'DATE'  # date, 27.10.1964
     NUM = 'NUM'  # number, e.g. 37
     NOUN = 'NOUN'  # noun, e.g. 'Goretex'
     PART = 'PART'  # partical, e.g. 'zu' (verkaufen)

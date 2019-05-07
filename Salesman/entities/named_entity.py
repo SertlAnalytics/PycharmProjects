@@ -42,17 +42,21 @@ class NamedEntity:
     def __add_specific_entries_to_entity_names__(self):
         specific_entries = self.__get_specific_entries__()
         for specific_entry in specific_entries:
-            word_list = specific_entry[0]
-            conjunction_list = specific_entry[1]
             process_type = specific_entry[2]
             if process_type == 'concatenate':
+                word_list = specific_entry[0]
+                conjunction_list = specific_entry[1]  # like [' ', '+', ' + ', '&', ' & ']
                 for changed_word_list in self.__get_word_list_as_list__(word_list):
                     for conjunction in conjunction_list:
                         self._entity_names.append('{}'.format(conjunction).join(changed_word_list))
             elif process_type == 'add':
-                for word in word_list:
-                    for conjunction in conjunction_list:
-                        self._entity_names.append('{}{}'.format(word, conjunction))
+                left_word_list = specific_entry[0]
+                right_word_list = specific_entry[1]
+                delimiter_list = [''] if len(specific_entry) <= 3 else specific_entry[3]  # like [' ', '+', ' + ']
+                for left_word in left_word_list:
+                    for right_word in right_word_list:
+                        for delimiter in delimiter_list:
+                            self._entity_names.append('{}{}{}'.format(left_word, delimiter, right_word))
 
     def __get_word_list_as_list__(self, word_list: list):
         return [[word.lower() for word in word_list], [word.capitalize() for word in word_list]]

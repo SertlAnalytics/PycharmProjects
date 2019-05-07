@@ -197,7 +197,7 @@ class FibonacciWaveDataBase:
     def fill_wave_type_number_dict_for_ticks_in_wave_tick_list(self, wave_tick_list: WaveTickList, index: str):
         for wave_type in self._wave_types:
             key = '{}_{}'.format(index, wave_type)
-            if key in self._index_wave_type_number_dict:
+            if key in self._index_wave_type_number_dict and len(self._index_wave_type_number_dict[key]) > 0:
                 number_dict = self._index_wave_type_number_dict[key]
                 threshold = self.__get_threshold_for_index_and_wave_type_number_dict__(number_dict)
                 for wave_tick in wave_tick_list.tick_list:

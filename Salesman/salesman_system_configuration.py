@@ -12,15 +12,17 @@ from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from salesman_sound.salesman_sound_machine import SalesmanSoundMachine
 from salesman_logging.salesman_debugger import SalesmanDebugger
 from Files.file_handler import FileHandler
+from salesman_tutti.tutti_categorizer import ProductCategorizer, RegionCategorizer
 
 
 class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
         self.file_log = SalesmanLog()
         self.file_handler = FileHandler()
+        self.region_categorizer = RegionCategorizer()
+        self.product_categorizer = ProductCategorizer()
         self.virtual_sales_file_name = "virtual_sales.csv"
-        self.sales_result_file_name = "sales_result.xlsx"
-        self.virtual_sales_result_file_name = "virtual_sales_result.xlsx"
+        self.sales_result_file_name = "similar_result.xlsx"
         self.sound_machine = SalesmanSoundMachine()
         self.db = SalesmanDatabase()
         self.access_layer_sale = AccessLayer4Sale(self.db)

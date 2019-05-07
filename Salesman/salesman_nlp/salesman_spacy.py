@@ -12,13 +12,14 @@ from entities.tutti_named_entity import TuttiEntityHandler
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
 from matcher.tutti_matcher_4_is_like_new import TuttiMatcher4IsLikeNew
 from matcher.tutti_matcher_4_is_used import TuttiMatcher4IsUsed
-from matcher.tutti_matcher_4_original_price import TuttiMatcher4OriginalPrize
+from matcher.tutti_matcher_4_original_price import TuttiMatcher4PriceOriginal
 from matcher.tutti_matcher_4_size import TuttiMatcher4Size
 from matcher.tutti_matcher_4_number import TuttiMatcher4Number
 from matcher.tutti_matcher_4_is_total_price import TuttiMatcher4IsTotalPrice
-from matcher.tutti_matcher_4_single_prize import TuttiMatcher4SinglePrize
+from matcher.tutti_matcher_4_single_prize import TuttiMatcher4PriceSingle
 from matcher.tutti_matcher_4_cover_available import TuttiMatcher4CoverAvailable
 from matcher.tutti_matcher_4_age import TuttiMatcher4Age
+from matcher.tutti_matcher_4_warranty import TuttiMatcher4Warranty
 import spacy
 
 
@@ -78,12 +79,14 @@ class SalesmanSpacy:
         self._matcher_object = self.__get_matcher_for_entity_type__(EL.OBJECT)
         self._matcher_target_group = self.__get_matcher_for_entity_type__(EL.TARGET_GROUP)
         self._matcher_material = self.__get_matcher_for_entity_type__(EL.MATERIAL)
+        self._matcher_technology = self.__get_matcher_for_entity_type__(EL.TECHNOLOGY)
         # self._nlp.add_pipe(self.replacement_component, name='CUSTOM_REPLACEMENT', before='tagger')
         self._nlp.add_pipe(self.company_component, name='CUSTOM_COMPANY', after='ner')
         self._nlp.add_pipe(self.product_component, name='CUSTOM_PRODUCT', after='CUSTOM_COMPANY')
         self._nlp.add_pipe(self.object_component, name='CUSTOM_OBJECT', after='CUSTOM_PRODUCT')
         self._nlp.add_pipe(self.target_group_component, name='CUSTOM_TARGET_GROUP', after='CUSTOM_OBJECT')
         self._nlp.add_pipe(self.material_component, name='CUSTOM_MATERIAL', after='CUSTOM_TARGET_GROUP')
+        self._nlp.add_pipe(self.technology_component, name='CUSTOM_TECHNOLOGY', after='CUSTOM_MATERIAL')
         self.__set_doc_extensions__()
 
     @property
@@ -128,6 +131,11 @@ class SalesmanSpacy:
         spans = [Span(doc, start, end, label=EL.MATERIAL) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
+    def technology_component(self, doc):
+        matches = self._matcher_technology(doc)
+        spans = [Span(doc, start, end, label=EL.TECHNOLOGY) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
     def product_component(self, doc):
         matches = self._matcher_product(doc)
         spans = [Span(doc, start, end, label=EL.PRODUCT) for match_id, start, end in matches]
@@ -169,16 +177,17 @@ class SalesmanSpacy:
 
     def __set_doc_extensions__(self): # Register some Doc property extensions
         Doc.set_extension('size', getter=self.__get_size__)
-        Doc.set_extension('single_price', getter=self.__get_single_price__)
+        Doc.set_extension('price_single', getter=self.__get_price_single__)
         Doc.set_extension('number', getter=self.__get_number__)
         Doc.set_extension('first_pos_number', getter=self.__get_fist_pos_number__)
-        Doc.set_extension('original_price', getter=self.__get_original_price__)
+        Doc.set_extension('price_original', getter=self.__get_price_original__)
         Doc.set_extension('is_new', getter=self.__is_new__)
         Doc.set_extension('is_like_new', getter=self.__is_like_new__)
         Doc.set_extension('is_used', getter=self.__is_used__)
         Doc.set_extension('is_total_price', getter=self.__is_total_price__)
         Doc.set_extension('is_cover_available', getter=self.__is_cover_available__)
         Doc.set_extension('age', getter=self.__get_age__)
+        Doc.set_extension('warranty', getter=self.__get_warranty__)
 
     def __get_size__(self, doc):
         return TuttiMatcher4Size(self._nlp).get_pattern_result_for_doc(doc)
@@ -196,8 +205,8 @@ class SalesmanSpacy:
                 if token.text.isnumeric():
                     return int(token.text)
 
-    def __get_original_price__(self, doc):
-        return TuttiMatcher4OriginalPrize(self._nlp).get_pattern_result_for_doc(doc)
+    def __get_price_original__(self, doc):
+        return TuttiMatcher4PriceOriginal(self._nlp).get_pattern_result_for_doc(doc)
 
     def __is_new__(self, doc):
         return TuttiMatcher4IsNew(self._nlp).get_pattern_result_for_doc(doc)
@@ -211,10 +220,13 @@ class SalesmanSpacy:
     def __is_total_price__(self, doc):
         return TuttiMatcher4IsTotalPrice(self._nlp).get_pattern_result_for_doc(doc)
 
-    def __get_single_price__(self, doc):
-        return TuttiMatcher4SinglePrize(self._nlp).get_pattern_result_for_doc(doc)
+    def __get_price_single__(self, doc):
+        return TuttiMatcher4PriceSingle(self._nlp).get_pattern_result_for_doc(doc)
 
     def __is_cover_available__(self, doc):
         return TuttiMatcher4CoverAvailable(self._nlp).get_pattern_result_for_doc(doc)
+
+    def __get_warranty__(self, doc):
+        return TuttiMatcher4Warranty(self._nlp).get_pattern_result_for_doc(doc)
 
 

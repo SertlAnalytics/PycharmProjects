@@ -21,11 +21,20 @@ class MyText:
     @staticmethod
     def get_url_encode_plus(input_string):
         return urllib.parse.quote_plus(input_string)
+
+    @staticmethod
+    def get_option_label(input_string: str):
+        replace_dict = {' ': '', ':': '_', '&': '_', '+': ''}
+        return MyText.replace_by_dict(input_string, replace_dict)
     
     @staticmethod
-    def get_with_replaced_umlaute(input_str: str) -> str:
+    def get_with_replaced_umlaute(input_string: str) -> str:
         umlaute_dict = {'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue'}
-        for umlaut, replacement in umlaute_dict.items():
-            if input_str.find(umlaut) > -1:
-                input_str = input_str.replace(umlaut, replacement)
-        return input_str
+        return MyText.replace_by_dict(input_string, umlaute_dict)
+
+    @staticmethod
+    def replace_by_dict(input_string, replacement_dict):
+        for old_value, new_value in replacement_dict.items():
+            if input_string.find(old_value) > -1:
+                input_string = input_string.replace(old_value, new_value)
+        return input_string

@@ -10,7 +10,7 @@ from salesman_tutti.tutti_constants import POS, DEP
 from matcher.tutti_matcher import TuttiMatcher
 
 
-class TuttiMatcher4SinglePrize(TuttiMatcher):
+class TuttiMatcher4PriceSingle(TuttiMatcher):
     @staticmethod
     def __get_pattern_dict__() -> dict:
         return {

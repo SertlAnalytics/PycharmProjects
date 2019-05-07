@@ -17,11 +17,15 @@ class SalesmanPrint:
         self._column_list = column_list
         self._sale_dict_list = []
         self._df_sale = self.__get_df_from_sale_list__()
+        self._print_category_list = self._df_sale[SLDC.PRINT_CATEGORY].unique()
+        self._detail_offset_dict = {}
+        self._ax = None
 
     def init_by_sale_dict(self, sale_dict_list: list):
         self._sale_dict_list = sale_dict_list
         self._df_sale = self.__get_df_from_sale_list__()
         self._df_sale = self.__get_df_without_single_entries__()
+        self._print_category_list = self._df_sale[SLDC.PRINT_CATEGORY].unique()
 
     @property
     def df_sale(self):
@@ -79,7 +83,7 @@ class SalesmanPrint:
         b = sns.boxplot(y=SLDC.PRINT_CATEGORY,
                         x=SLDC.PRICE_SINGLE,
                         data=self._df_sale, whis=np.inf)
-        g = sns.swarmplot(y=SLDC.PRINT_CATEGORY,
+        self._ax = sns.swarmplot(y=SLDC.PRINT_CATEGORY,
                           x=SLDC.PRICE_SINGLE,
                           data=self._df_sale,
                           # Decrease the size of the points to avoid crowding
@@ -87,8 +91,32 @@ class SalesmanPrint:
         # remove the top and right line in graph
         # self.__add_annotation__()
         sns.despine()
-        g.figure.set_size_inches(12, 8)
+        self._ax.figure.set_size_inches(12, 8)
+        self._ax.figure.canvas.mpl_connect('button_press_event', self.__on_click__)
+        self._ax.figure.canvas.mpl_connect('motion_notify_event', self.__on_motion_notify__)
+        self._ax.axes.format_coord = self.__on_hover__
+        self.__init_detail_offset_dict__(self._ax.axes)
         plt.show()
+
+    def __init_detail_offset_dict__(self, axes):
+        for idx, print_category in enumerate(self._print_category_list):
+            offsets = axes.collections[idx].get_offsets()
+            # print('type(offsets)={}, offsets={}'.format(type(offsets), offsets))
+            row_detail_list = self.__get_row_detail_list_for_print_category__(print_category)
+            for idx, offsets in enumerate(axes.collections[idx].get_offsets()):
+                detail = '{}: {}'.format(print_category, row_detail_list[idx])
+                self._detail_offset_dict[detail] = offsets
+        # print('__init_detail_offset_dict__={}'.format(self._detail_offset_dict))
+
+    def __get_row_detail_list_for_print_category__(self, print_category: str) -> list:
+        row_detail_list = []
+        df_print_category = self._df_sale[self._df_sale[SLDC.PRINT_CATEGORY] == print_category]
+        df_print_category = df_print_category.sort_values(by=SLDC.PRICE_SINGLE)
+        for i in range(df_print_category.shape[0]):
+            row = df_print_category.iloc[i]
+            row_detail = '{}: {:.2f} CHF'.format(row[SLDC.TITLE], row[SLDC.PRICE_SINGLE])
+            row_detail_list.append(row_detail)
+        return row_detail_list
 
     def __add_annotation__(self):
         # Annotate. xy for coordinate. max_wage is x and 0 is y. In this plot y ranges from 0 to 7 for each level
@@ -101,3 +129,38 @@ class SalesmanPrint:
                      # Shrink the arrow to avoid occlusion
                      arrowprops={'facecolor': 'gray', 'width': 1, 'shrink': 0.03},
                      backgroundcolor='white')
+
+    def __on_motion_notify__(self, event):
+        # self.__reset_patch_lists__(event)
+        # self.__handle_visibility_for_range_polygons__(event)
+        # self.__handle_visibility_for_fibonacci_waves__(event)
+        self.__print_current_selected_patch__(event)
+
+    def __on_click__(self, event):
+        self.__print_current_selected_patch__(event)
+
+    def __print_current_selected_patch__(self, event):
+        for patches in self._ax.patches:
+            cont, dic = patches.contains(event)
+            if cont:
+                print(patches)
+
+    def __on_hover__(self, x, y):
+        dist_y = 0.3
+        dist_x = 1
+        for detail, offset in self._detail_offset_dict.items():
+            if x - dist_x < offset[0] < x + dist_x:
+                if y - dist_y < offset[1] < y + dist_y:
+                    return detail
+        return '{} --> {:.2f} CHF'.format(self.__get_print_category_for_y_coordinate__(y), x)
+
+    def __get_print_category_for_y_coordinate__(self, y: float):
+        y_idx = int(y + 0.5)
+        if 0 <= y_idx < len(self._print_category_list):
+            return self._print_category_list[y_idx]
+        return 'Price single'
+
+
+
+
+
