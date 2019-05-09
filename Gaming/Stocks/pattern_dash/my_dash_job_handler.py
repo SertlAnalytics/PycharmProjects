@@ -24,6 +24,9 @@ class MyDashJobHandler:
         self._weekdays_all = [0, 1, 2, 3, 4, 5, 6]
         self._weekdays_week = [0, 1, 2, 3, 4]  # Monday till Friday
         self._weekdays_tu_sa = [1, 2, 3, 4, 5]  # Tuesday till Saturday
+        self._weekday_monday = [0]
+        self._weekday_saturday = [5]
+        self._weekday_sunday = [6]
         self._scheduler = MyPatternScheduler('DashStockDatabaseUpdater', self._process_manager)
         self._db_updater = StockDatabaseUpdater()
         if for_test:
@@ -70,9 +73,9 @@ class MyDashJobHandler:
         self._scheduler.add_job(MyDashTradePolicyUpdateJob(
             weekdays=self._weekdays_all, start_times=['04:30'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashPredictorOptimizerJob(
-            weekdays=self._weekdays_all, start_times=['05:30'], db_updater=self._db_updater))
-        self._scheduler.add_job(
-            MyDashOptimizeLogFilesJob(weekdays=[6], start_times=['23:00'], db_updater=self._db_updater))
+            weekdays=self._weekday_sunday, start_times=['05:30'], db_updater=self._db_updater))
+        self._scheduler.add_job(MyDashOptimizeLogFilesJob(
+            weekdays=self._weekday_sunday, start_times=['23:00'], db_updater=self._db_updater))
         # self._scheduler.add_job(MyTradeRecordsUpdateJob(
         # weekdays=self._weekdays, start_times=['05:30'], stock_db_updater=self._db_updater))
 

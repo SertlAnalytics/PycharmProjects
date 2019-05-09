@@ -6,7 +6,7 @@ Date: 2019-04-02
 """
 
 from salesman_nlp.salesman_spacy import SalesmanSpacy
-from entities.tutti_named_entity import TuttiCompanyEntity
+from entities.salesman_named_entity import CompanyEntity
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
 from matcher.tutti_matcher_4_is_used import TuttiMatcher4IsUsed
 from matcher.tutti_matcher_4_original_price import TuttiMatcher4PriceOriginal
@@ -73,6 +73,6 @@ elif tc == TC.TC_MATCHER_WARRANTY:
     matcher = TuttiMatcher4Warranty(spacy.nlp)
     matcher.run_test(spacy, True)
 else:
-    company_entity = TuttiCompanyEntity()
+    company_entity = CompanyEntity()
     print(company_entity.get_entity_names_for_phrase_matcher())
 

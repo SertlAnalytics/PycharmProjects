@@ -20,11 +20,20 @@ from salesman_dash.grid_tables.my_grid_table_sale_4_search_results import MySear
 from salesman_system_configuration import SystemConfiguration
 from salesman_dash.plotting.my_dash_plotter_for_salesman_search import MyDashTabPlotter4Search
 from salesman_dash.my_dash_colors import DashColorHandler
-from salesman_tutti.tutti import Tutti, TuttiUrlHelper
+from salesman_tutti.tutti import Tutti
+from salesman_tutti.tutti_url_factory import OnlineSearchApi
 from salesman_tutti.tutti_categorizer import ProductCategorizer
 from printing.sale_printing import SalesmanPrint
 import pandas as pd
 
+
+class SearchHandler:
+    def __init__(self, sys_config: SystemConfiguration):
+        self.sys_config = sys_config
+        self._search_string_rows
+        self._print_category_list = []
+        self._print_category_options = []
+        self._print_category_selected_as_list = []
 
 class MyDashTab4Search(MyDashBaseTab):
     _data_table_name = 'my_search_result_grid_table'
@@ -200,7 +209,6 @@ class MyDashTab4Search(MyDashBaseTab):
             self._dd_handler.selected_search_print_category = 'print_category'
             self._search_input = search_input
             self._online_rows = None
-            print('New print category value: {}'.format(print_category_value))
             if self._search_online_input_table.search_button_n_clicks != search_n_clicks:
                 self._print_category_list = []
                 self._print_category_options = []
@@ -209,6 +217,7 @@ class MyDashTab4Search(MyDashBaseTab):
                 return self.__get_search_result_grid_table_by_online_search__()
             elif self._search_online_input_table.search_button_n_clicks > 0 and \
                     self._dd_handler.selected_search_print_category != print_category_value:
+                print('New print category value: {}'.format(print_category_value))
                 self._print_category_selected_as_list = self.__get_selected_print_category__(print_category_value)
                 return self.__get_search_result_grid_table_by_selected_print_category__()
             return ''
@@ -295,16 +304,13 @@ class MyDashTab4Search(MyDashBaseTab):
         return self.__get_search_result_grid_table__()
 
     def __get_search_result_grid_table_by_online_search__(self):
-        self._online_rows = self.tutti.get_search_results_from_online_inputs(self.__get_url_helper__())
+        api = OnlineSearchApi(self._search_input)
+        api.region = self._dd_handler.selected_search_region
+        api.category = self._dd_handler.selected_search_category
+        api.sub_category = self._dd_handler.selected_search_sub_category
+        self._online_rows = self.tutti.get_search_results_from_online_inputs(api)
         return self.__get_search_result_grid_table__()
 
     def __get_search_result_grid_table__(self):
         min_height = self._search_results_grid_table.height_for_display
         return MyDCC.data_table(self._my_search_result_grid_table, self._online_rows, [], min_height=min_height)
-
-    def __get_url_helper__(self) -> TuttiUrlHelper:
-        return TuttiUrlHelper(search_string=self._search_input,
-                              region=self._dd_handler.selected_search_region,
-                              category=self._dd_handler.selected_search_category,
-                              sub_category=self._dd_handler.selected_search_sub_category
-                              )

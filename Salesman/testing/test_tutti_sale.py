@@ -6,23 +6,22 @@ Date: 2019-04-30
 """
 
 from salesman_tutti.tutti_constants import EL
-from salesman_tutti.tutti_sale import TuttiSale
+from salesman_sale import SalesmanSale
 from salesman_nlp.salesman_spacy import SalesmanSpacy
 from salesman_system_configuration import SystemConfiguration
 from sertl_analytics.test.my_test_case import MyTestCaseHandler, MyTestCase
+from salesman_sale_factory import SalesmanSaleFactory
 
 
 class Test4TuttiSale:
-    def run_test(self, spacy: SalesmanSpacy, sys_config: SystemConfiguration):
+    def run_test(self, spacy: SalesmanSpacy, sys_config: SystemConfiguration, sale_factory: SalesmanSaleFactory):
         test_case_dict = self.__get_test_case_dict__()
         tc_handler = MyTestCaseHandler('Testing "{}":'.format(self.__class__.__name__))
         for key, test_case_list in test_case_dict.items():
             for tc in test_case_list:
                 print('\nRUN_TEST: {}'.format(tc))
-                sale_01 = TuttiSale(spacy, sys_config)
-                sale_01.init_by_online_input(tc[0])
-                sale_02 = TuttiSale(spacy, sys_config)
-                sale_02.init_by_online_input(tc[1])
+                sale_01 = sale_factory.get_sale_by_online_search_string(tc[0], False)
+                sale_02 = sale_factory.get_sale_by_online_search_string(tc[1], False)
                 if sys_config.print_details:
                     print('--> Entities for "{}": {}'.format(tc[0], sale_01.entity_label_dict))
                     print('--> Entities for "{}": {}'.format(tc[1], sale_02.entity_label_dict))
@@ -79,9 +78,10 @@ class TuttiSaleTestHandler:
     def __init__(self):
         self.sys_config = SystemConfiguration()
         self._spacy = SalesmanSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
+        self._sale_factory = SalesmanSaleFactory(self.sys_config, self._spacy)
 
     def test_entity_similarity(self):
-        TestSimilarity4TuttiSale().run_test(self._spacy, self.sys_config)
+        TestSimilarity4TuttiSale().run_test(self._spacy, self.sys_config, self._sale_factory)
 
 
 test_handler = TuttiSaleTestHandler()

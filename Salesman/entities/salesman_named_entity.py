@@ -10,7 +10,7 @@ from salesman_tutti.tutti_constants import EL
 from entities.named_entity import NamedEntity
 
 
-class TuttiTargetGroupEntity(NamedEntity):
+class TargetGroupEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
@@ -40,7 +40,7 @@ class TuttiTargetGroupEntity(NamedEntity):
         }
 
 
-class TuttiMaterialEntity(NamedEntity):
+class MaterialEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return ['Aluminium', 'Baumwolle', 'Leder', 'Kunstleder', 'Goretex', 'Stoff', 'Wolle', 'Porzellan']
@@ -52,7 +52,7 @@ class TuttiMaterialEntity(NamedEntity):
         }
 
 
-class TuttiTechnologyEntity(NamedEntity):
+class TechnologyEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return ['WiFi', 'WLAN']
@@ -64,13 +64,12 @@ class TuttiTechnologyEntity(NamedEntity):
         }
 
 
-
-class TuttiCompanyEntity(NamedEntity):
+class CompanyEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
             'Apple', 'Audi',
-            'BMW', 'Bally', 'Bugaboo',
+            'BMW', 'Bally', 'Bugaboo', 'Big Max',
             'Crumpler', 'CANON', 'Canon',
             'DeLonghi', 'Dyson', 'Diono'
             'Eames', 'Even&Odd',
@@ -102,7 +101,7 @@ class TuttiCompanyEntity(NamedEntity):
         }
 
 
-class TuttiProductEntity(NamedEntity):
+class ProductEntity(NamedEntity):
     @staticmethod
     def __get_specific_entries__() -> list:
         return [
@@ -127,7 +126,7 @@ class TuttiProductEntity(NamedEntity):
             'MacBook', 'meda', 'Monterey',
             'Pixie', 'Panama', 'Purpose Chair',
             'Roundabout',
-            'sleepi',
+            'sleepi', 'Silencio',
         ]
 
     @staticmethod
@@ -137,7 +136,7 @@ class TuttiProductEntity(NamedEntity):
         }
 
 
-class TuttiObjectTypeEntity(NamedEntity):
+class ObjectTypeEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
@@ -151,6 +150,7 @@ class TuttiObjectTypeEntity(NamedEntity):
             'Felgen', 'Fahrzeuge',
             'Fleecejacke', 'Fahrrad', 'Figur', 'Figuren', 'Frontspoiler', 'Frontlippe', 'Frontlippen',
             'Gartenlehnstuhl', 'Gestell', 'Geschwisterkinderwagen', 'Gewindefahrwerk', 'Grill',
+            'Golf-Bag',
             'Handtasche', 'Hängematte', 'Hut', 'Herbst-/Winterjacke', 'Herbst/Winterjacke', 'Hose',
             'Harlekin', 'Heckspoiler', 'Hotspot',
             'Inspektion',
@@ -194,15 +194,15 @@ class TuttiObjectTypeEntity(NamedEntity):
         }
 
 
-class TuttiEntityHandler:
+class SalesmanEntityHandler:
     @staticmethod
     def get_entity_names_for_entity_label(entity_label):
-        return TuttiEntityHandler.get_entity_for_entity_label(entity_label).get_entity_names_for_phrase_matcher()
+        return SalesmanEntityHandler.get_entity_for_entity_label(entity_label).get_entity_names_for_phrase_matcher()
 
     @staticmethod
     def get_synonyms_for_entity_name(entity_label: str, entity_name: str) -> list:
         # print('get_synonyms_for_entity_name: entity_label={}, entity_name={}'.format(entity_label, entity_name))
-        synonym_dict = TuttiEntityHandler.get_entity_for_entity_label(entity_label).entity_synonym_dict
+        synonym_dict = SalesmanEntityHandler.get_entity_for_entity_label(entity_label).entity_synonym_dict
         for key, synonym_list in synonym_dict.items():
             synonym_list_lower = [synonym.lower() for synonym in synonym_list]
             if key.lower() == entity_name.lower():
@@ -218,13 +218,13 @@ class TuttiEntityHandler:
     @staticmethod
     def get_entity_for_entity_label(entity_label: str) -> NamedEntity:
         return {
-            EL.COMPANY: TuttiCompanyEntity(),
-            EL.PRODUCT: TuttiProductEntity(),
-            EL.OBJECT: TuttiObjectTypeEntity(),
-            EL.TARGET_GROUP: TuttiTargetGroupEntity(),
-            EL.MATERIAL: TuttiMaterialEntity(),
-            EL.TECHNOLOGY: TuttiTechnologyEntity(),
-        }.get(entity_label, TuttiCompanyEntity())
+            EL.COMPANY: CompanyEntity(),
+            EL.PRODUCT: ProductEntity(),
+            EL.OBJECT: ObjectTypeEntity(),
+            EL.TARGET_GROUP: TargetGroupEntity(),
+            EL.MATERIAL: MaterialEntity(),
+            EL.TECHNOLOGY: TechnologyEntity(),
+        }.get(entity_label, CompanyEntity())
 
 
 

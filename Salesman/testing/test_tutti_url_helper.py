@@ -7,7 +7,7 @@ Date: 2019-04-30
 
 from sertl_analytics.test.my_test_case import MyTestCaseHandler, MyTestCase
 from sertl_analytics.constants.salesman_constants import SLDC, PRCAT, REGION
-from salesman_tutti.tutti_url_helper import TuttiUrlHelper
+from salesman_tutti.tutti_url_factory import TuttiUrlFactory
 from salesman_tutti.tutti_categorizer import RegionCategorizer, ProductCategorizer
 
 
@@ -24,7 +24,7 @@ class Test4TuttiUrlHelper:
             for tc in test_case_list:
                 print('\nRUN_TEST: {}'.format(tc))
                 url, expected_result = tc[0], tc[1]
-                url_helper = TuttiUrlHelper(
+                url_helper = TuttiUrlFactory(
                     url, region_categorizer=self._region_categorizer, product_categorizer=self._product_categorizer)
                 href_component_dict = url_helper.get_href_component_dict()
                 result = href_component_dict[key]

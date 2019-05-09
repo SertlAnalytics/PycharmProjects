@@ -7,54 +7,35 @@ Date: 2019-04-02
 
 from sertl_analytics.mymath import MyMath
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.salesman_constants import SLDC, SLST, OBJST, SLSRC, PRCAT, OBJPROP
-from salesman_tutti.tutti_constants import SLCLS, POS, EL, SLSCLS
+from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, SLST, OBJST
+from salesman_tutti.tutti_constants import SLCLS, POS, EL
 from spacy.tokens import Doc
-from entities.tutti_named_entity import TuttiEntityHandler
+from entities.salesman_named_entity import SalesmanEntityHandler
 from lxml.html import HtmlElement
 from sertl_analytics.myhtml import MyHtmlElement
 from salesman_nlp.salesman_spacy import SalesmanSpacy
 from salesman_data_dictionary import SalesmanDataDictionary
 from salesman_system_configuration import SystemConfiguration
-from salesman_tutti.tutti_categorizer import ProductCategorizer, RegionCategorizer
-from salesman_nlp.salesman_doc_extended import DocExtended
-from salesman_tutti.tutti_url_helper import TuttiUrlHelper
+from salesman_tutti.tutti_url_factory import TuttiUrlFactory
 
 
-class TuttiSale:
-    def __init__(self, spacy: SalesmanSpacy, sys_config: SystemConfiguration, found_by_labels=None):
+class SalesmanSale:
+    def __init__(self, spacy: SalesmanSpacy, sys_config: SystemConfiguration, found_by_labels=None, is_my_offer=False):
         self.sys_config = sys_config
         self.data_dict_obj = SalesmanDataDictionary(self.sys_config)
         self._spacy = spacy
+        self._url_factory = TuttiUrlFactory(self.sys_config, self._spacy)
         self._nlp = spacy.nlp
-        self._my_offer = found_by_labels is None
-        self._found_by_labels = found_by_labels
-        self._doc_extended = None
-
-        self._source = SLSRC.TUTTI_CH
-        self._region = ''
-        self._product_category = ''
-        self._product_category_value_list = []   # is used for online searches as default product categories
-        self._product_sub_category = ''
-        self._href = ''
-        self._sale_id = ''
-        self._version = 1
-        self._location = ''
-        self._date_str = ''
-        self._title = ''
-        self._description = ''
-        self._price = 0
-        self._price_new = 0
-        self._visits = 0
-        self._bookmarks = 0
-
-        self._is_outlier = 0
+        self._my_offer = is_my_offer
+        self._found_by_labels = '' if found_by_labels is None else found_by_labels
+        self._product_category_value_list = []  # is used for online searches as default product categories
         self._search_labels = []
         self._entity_label_dict = {}  # contains entities with {value: label, value: label}
         self._property_dict = {}  # contains all properties for this object (details).
         self._entity_names = []
         self._search_labels_in_description = []
         self._search_labels_in_head_text = []
+        self.__init_data_dict_entries__()
 
     @property
     def domain(self):
@@ -66,40 +47,59 @@ class TuttiSale:
 
     @property
     def sale_id(self):
-        return self._sale_id
-
-    @sale_id.setter
-    def sale_id(self, value):
-        self.data_dict_obj.add(SLDC.SALE_ID, value)
-        self._sale_id = value
+        return self.get_value(SLDC.SALE_ID)
 
     @property
-    def price_new(self):
-        return self._price_new
+    def version(self):
+        return self.get_value(SLDC.VERSION)
 
-    @price_new.setter
-    def price_new(self, value):
-        self._price_new = value
+    @property
+    def start_date(self):
+        return self.get_value(SLDC.START_DATE)
+
+    @property
+    def region(self):
+        return self.data_dict_obj.get(SLDC.REGION)
+
+    @property
+    def product_category(self):
+        return self.data_dict_obj.get(SLDC.PRODUCT_CATEGORY)
+
+    @property
+    def product_sub_category(self):
+        return self.data_dict_obj.get(SLDC.PRODUCT_SUB_CATEGORY)
 
     @property
     def title(self):
-        return self._title
+        return self.get_value(SLDC.TITLE)
+
+    @property
+    def description(self):
+        return self.get_value(SLDC.DESCRIPTION)
 
     @property
     def key(self):
-        return '{}_{}'.format(self._sale_id, self._title)
+        return '{}_{}'.format(self.sale_id, self.title)
+
+    @property
+    def price(self):
+        return self.get_value(SLDC.PRICE)
 
     @property
     def price_single(self):
-        return self._price_single
+        return self.get_value(SLDC.PRICE_SINGLE)
+
+    @property
+    def price_new(self):
+        return self.get_value(SLDC.PRICE_NEW)
 
     @property
     def sale_state(self):
-        return SLST.OPEN
+        return self.get_value(SLDC.SALE_STATE)
 
     @property
     def location(self):
-        return self._location
+        return self.get_value(SLDC.LOCATION)
 
     @property
     def found_by_labels(self):
@@ -134,133 +134,37 @@ class TuttiSale:
         return self._entity_label_dict
 
     @property
-    def product_category(self):
-        return self._product_category
-
-    @property
     def product_category_value_list(self):
         return self._product_category_value_list
 
-    @property
-    def product_sub_category(self):
-        return self._product_sub_category
+    def get_value(self, key: str):
+        return self.data_dict_obj.get(key, '')
+
+    def set_value(self, key: str, value):
+        return self.data_dict_obj.add(key, self.__get_corrected_value__(key, value))
+
+    @staticmethod
+    def __get_corrected_value__(key: str, value):
+        if key == SLDC.PRICE:
+            if type(value) is str:
+                return MyMath.get_float_for_string(value)
+        elif key == SLDC.START_DATE:
+            return MyDate.get_date_str_for_date_term(value)
+        elif key in [SLDC.VISITS, SLDC.BOOK_MARKS]:
+            if type(value) is str:
+                return int(value.split(' ')[0])
+        return value
 
     def set_product_category_value_list(self, product_category_value_list):
         self._product_category_value_list = product_category_value_list
-
-    def init_by_file_row(self, row):
-        self._sale_id = row[SLDC.SALE_ID]
-        self.add_location_text('virtual')
-        self.add_date_text(MyDate.get_date_as_string_from_date_time())
-        self.add_title_text(row[SLDC.TITLE])
-        self.add_description_text(row[SLDC.DESCRIPTION])
-        self.add_price(str(row[SLDC.PRICE]))
-        self.__init_doc_extended__()
-        self.__add_search_labels__()
-        self.__add_data_dict_entries__()
-
-    def init_by_database_row(self, row):
-        # print('init_by_database_row: {}'.format(row))
-        for col in row.index:
-            self.data_dict_obj.add(col, row[col])
-        self.__init_variables_by_data_dict__()
-        self.__init_doc_extended__()
-        self.__add_search_labels__()
-        self.__add_data_dict_entries__()
-
-    def __init_variables_by_data_dict__(self):
-        self._href = self.data_dict_obj.get(SLDC.HREF)
-        self._sale_id = self.data_dict_obj.get(SLDC.SALE_ID)
-        self._version = self.data_dict_obj.get(SLDC.VERSION)
-        self._source = self.data_dict_obj.get(SLDC.SOURCE)
-        self._region = self.data_dict_obj.get(SLDC.REGION)
-        self._product_category = self.data_dict_obj.get(SLDC.PRODUCT_CATEGORY)
-        self._product_sub_category = self.data_dict_obj.get(SLDC.PRODUCT_SUB_CATEGORY)
-        self._date_str = self.data_dict_obj.get(SLDC.START_DATE)
-        self._price = self.data_dict_obj.get(SLDC.PRICE)
-        self._title = self.data_dict_obj.get(SLDC.TITLE)
-        self._description = self.data_dict_obj.get(SLDC.DESCRIPTION)
-
-        # self.__init_doc_extended__()
-        # self._doc_extended.size = self.data_dict_obj.get(SLDC.SIZE)
-        # self._doc_extended.number = self.data_dict_obj.get(SLDC.NUMBER)
-        # self._doc_extended.price_original = self.data_dict_obj.get(SLDC.PRICE_ORIGINAL)
-        # self._doc_extended.single_price = self.data_dict_obj.get(SLDC.PRICE_SINGLE)
-
-        self._visits = self.data_dict_obj.get(SLDC.VISITS)
-        self._bookmarks = self.data_dict_obj.get(SLDC.BOOK_MARKS)
-
-    def is_identical(self, other_sale) -> bool:
-        check_col_list = [SLDC.TITLE, SLDC.DESCRIPTION, SLDC.PRICE_SINGLE]
-        for col in check_col_list:
-            if self.data_dict_obj.get(col) != other_sale.data_dict_obj.get(col):
-                print('Not identical: {}: {} and {}'.format(col, self.data_dict_obj.get(col), other_sale.data_dict_obj.get(col)))
-                return False
-        return True
-
-    def init_by_online_input(self, search_input: str):
-        self._sale_id = MyDate.time_stamp_now()
-        self.add_location_text('online')
-        self.add_date_text(MyDate.get_date_as_string_from_date_time())
-        self.add_title_text(search_input)
-        self.add_description_text('')
-        self.add_price(str(0))
-        self.__init_doc_extended__()
-        self.__add_search_labels__()
-        self.__add_data_dict_entries__()
-
-    def init_by_sale_element(self, offer_element):
-        offer_id_obj = offer_element.find_element_by_class_name(SLCLS.MAIN_ANKER)
-        self.add_href(offer_id_obj.get_attribute('href'))
-        self.add_location_text(offer_element.find_element_by_class_name(SLCLS.LOCATION).text)
-        self.add_date_text(offer_element.find_element_by_class_name(SLCLS.DATE).text)
-        self.add_title_text(offer_element.find_element_by_class_name(SLCLS.LINK).text)
-        self.add_description_text(offer_element.find_element_by_class_name(SLCLS.DESCRIPTION).text)
-        self.add_price(offer_element.find_element_by_class_name(SLCLS.PRICE).text)
-        if self._my_offer:
-            numbers = offer_element.find_elements_by_class_name(SLCLS.NUMBERS)
-            self.add_visits_text(numbers[0].text)
-            self.add_bookmarks_text(numbers[1].text)
-        self.__init_doc_extended__()
-        self.__add_search_labels__()
-        self.__add_data_dict_entries__()
-
-    def init_by_html_element(self, html_element: HtmlElement):
-        my_html_element = MyHtmlElement(html_element)
-        self.add_href(my_html_element.get_attribute_for_sub_class(SLCLS.MAIN_ANKER, 'href'))
-        self.add_location_text(my_html_element.get_text_for_sub_class(SLCLS.LOCATION))
-        self.add_date_text(my_html_element.get_text_for_sub_class(SLCLS.DATE))
-        self.add_title_text(my_html_element.get_text_for_sub_class(SLCLS.TITLE))
-        self.add_description_text(my_html_element.get_text_for_sub_class(SLCLS.DESCRIPTION))
-        self.add_price(my_html_element.get_text_for_sub_class(SLCLS.PRICE))
-        self.__init_doc_extended__()
-        self.__add_search_labels__()
-        self.__add_data_dict_entries__()
-
-    def init_by_html_element_for_single_sale(self, product_categories: list, html_element: HtmlElement, url: str):
-        my_html_element = MyHtmlElement(html_element)
-        self.add_href(url)
-        location_html_element = my_html_element.get_html_element_for_sub_class(SLSCLS.LOCATION_CLASS)
-        self.add_location_text(location_html_element.get_text_for_sub_class(SLSCLS.LOCATION_SUB_CLASS))
-        date_html_element = my_html_element.get_html_element_for_sub_class(SLSCLS.DATE_CLASS)
-        category_off_set = 1 if len(product_categories) == 3 else 2
-        self._region = product_categories[category_off_set-1].text_content()
-        self._product_category = product_categories[category_off_set].text_content()
-        self._product_sub_category = product_categories[category_off_set+1].text_content()
-        self.add_date_text(date_html_element.get_text_for_sub_class(SLSCLS.DATE_SUB_CLASS))
-        self.add_title_text(my_html_element.get_text_for_sub_class(SLSCLS.TITLE))
-        self.add_description_text(my_html_element.get_text_for_sub_class(SLSCLS.DESCRIPTION))
-        self.add_price(my_html_element.get_text_for_sub_class(SLSCLS.PRICE))
-        self.__init_doc_extended__()
-        self.__add_search_labels__()
-        self.__add_data_dict_entries__()
+        print('set_product_category_value_list: {}'.format(self._product_category_value_list))
 
     def set_master_details(self, master_id: str, master_title: str):
         self.data_dict_obj.add(SLDC.MASTER_ID, master_id)
         self.data_dict_obj.add(SLDC.MASTER_TITLE, master_title)
 
     def is_any_term_in_list_in_title_or_description(self, term_list: str):
-        return self.__is_any_term_in_list_in_text__(term_list, self._title.lower() + self._description.lower())
+        return self.__is_any_term_in_list_in_text__(term_list, self.title.lower() + self.description.lower())
 
     def is_any_material_entity_identical(self, other_sale) -> bool:
         return self.__is_any_entity_identical__(self.material_list, other_sale.material_list, EL.MATERIAL)
@@ -292,11 +196,10 @@ class TuttiSale:
         return True
 
     def is_any_term_in_list_in_title(self, term_list: str):
-        return self.__is_any_term_in_list_in_text__(term_list, self._title.lower())
+        return self.__is_any_term_in_list_in_text__(term_list, self.title.lower())
 
     def set_source(self, source: str):
-        self._source = source
-        self.data_dict_obj.add(SLDC.SOURCE, source)
+        self.set_value(SLDC.SOURCE, source)
 
     @staticmethod
     def __is_any_term_in_list_in_text__(term_list: str, check_string_lower: str):
@@ -308,8 +211,8 @@ class TuttiSale:
         return False
 
     def __add_search_labels__(self):
-        doc_title = self._nlp(self._title)
-        doc_description = self._nlp(self._description)
+        doc_title = self._nlp(self.title)
+        doc_description = self._nlp(self.description)
         self.__add_search_labels_for_doc__(doc_title, for_title=True)
         self.__add_search_labels_for_doc__(doc_description, for_title=False)
         self.reduce_search_labels_by_entity_names()
@@ -336,41 +239,32 @@ class TuttiSale:
             else:
                 self.add_search_label(token_text, for_title, is_label_head_text=False)
 
-    def add_href(self, href: str):
-        url_helper = TuttiUrlHelper(
-            search_string=href,
-            region_categorizer=self.sys_config.region_categorizer,
-            product_categorizer=self.sys_config.product_categorizer)
-        self._href = url_helper.get_href()
-        href_component_dict = url_helper.get_href_component_dict()
-        self._region = href_component_dict[SLDC.REGION]
-        self._product_category = href_component_dict[SLDC.PRODUCT_CATEGORY]
-        self._product_sub_category = href_component_dict[SLDC.PRODUCT_SUB_CATEGORY]
-        self._title = href_component_dict[SLDC.TITLE]
-        self._sale_id = href_component_dict[SLDC.SALE_ID]
+    def add_value_dict(self, value_dict: dict):
+        for key, value in value_dict.items():
+            self.set_value(key, value)
 
     def add_location_text(self, input_str: str):
-        self._location = input_str
+        self.set_value(SLDC.LOCATION, input_str)
 
     def add_date_text(self, input_str: str):
-        self._date_str = MyDate.get_date_str_for_date_term(input_str)
+        self.set_value(SLDC.START_DATE, MyDate.get_date_str_for_date_term(input_str))
 
     def add_title_text(self, input_str: str):
-        self._title = input_str
+        self.set_value(SLDC.TITLE, input_str)
 
     def add_description_text(self, input_str: str):
-        self._description = input_str
+        self.set_value(SLDC.DESCRIPTION, input_str)
 
     def add_price(self, input_str: str):
-        self._price = MyMath.get_float_for_string(input_str, delimiter='.')
-        self._price_single = self._price
-        self._price_original = self._price
+        self.set_value(SLDC.PRICE, MyMath.get_float_for_string(input_str, delimiter='.'))
+        self.set_value(SLDC.PRICE_SINGLE, self.get_value(SLDC.PRICE))
+        self.set_value(SLDC.PRICE_ORIGINAL, self.get_value(SLDC.PRICE))
 
     def add_visits_text(self, input_str: str):
-        self._visits = int(input_str.split(' ')[0])
+        self.set_value(SLDC.VISITS, int(input_str.split(' ')[0]))
 
     def add_bookmarks_text(self, input_str: str):
-        self._bookmarks = int(input_str.split(' ')[0])
+        self.set_value(SLDC.BOOK_MARKS, int(input_str.split(' ')[0]))
 
     def get_search_label_lists(self):
         """
@@ -431,13 +325,12 @@ class TuttiSale:
     def is_sale_ready_for_sale_table(self):
         return self.data_dict_obj.is_data_dict_ready_for_sale_table()
 
-    def set_is_outlier(self, value: bool):
-        self._is_outlier = value
-        self.data_dict_obj.add(SLDC.IS_OUTLIER, 1 if self._is_outlier else 0)
+    def set_is_outlier(self, is_outlier: bool):
+        self.set_value(SLDC.IS_OUTLIER, 1 if is_outlier else 0)
 
     def get_value_dict_for_worksheet(self, master_id='', master_title=''):
         if master_id == '':
-            self.set_master_details(self._sale_id, self._title)
+            self.set_master_details(self.sale_id, self.title)
         else:
             self.set_master_details(master_id, master_title)
         worksheet_columns = SLDC.get_columns_for_excel()
@@ -456,7 +349,7 @@ class TuttiSale:
                 print('Entity is relevant for Tutti: {} {}'.format(entity_name, entity_label))
             self._entity_names.append(entity_name)
             self._entity_label_dict[entity_name] = entity_label
-            entity_synonyms = TuttiEntityHandler.get_synonyms_for_entity_name(entity_label, entity_name)
+            entity_synonyms = SalesmanEntityHandler.get_synonyms_for_entity_name(entity_label, entity_name)
             if len(entity_synonyms) > 0:
                 if self.sys_config.print_details:
                     print('Entity {} has synonyms {}'.format(entity_name, entity_synonyms))
@@ -480,24 +373,24 @@ class TuttiSale:
             print('Search labels: {}'.format(self._search_labels))
 
     def is_price_ready_for_update_in_tutti(self) -> bool:
-        return self._price_new != self._price
+        return self.price_new != self.price
 
     def print_sale_in_original_structure(self):
         visits_bookmarks, search_details = self.__get_visits_bookmarks_and_search_details_for_printing__()
         print('\n{}: ID: {}\nCategories: {} / {} / {} ({})\n{}\n{}\n{:.2f} CHF{}'.format(
-            self.source, self._sale_id,
-            self._region, self._product_category, self._product_sub_category, self._date_str,
-            self._title, self._description, self._price, visits_bookmarks)
+            self.source, self.sale_id,
+            self.region, self.product_category, self.product_sub_category, self.start_date,
+            self.title, self.description, self.price, visits_bookmarks)
         )
-        print('Is price total price: {}'.format(self._doc_extended.is_total_price))
-        print('Single price: {}'.format(self._doc_extended.price_single))
-        print('Original price: {}'.format(self._doc_extended.price_original))
-        print('Size: {}'.format(self._doc_extended.size))
-        print('Number: {}'.format(self._doc_extended.number))
+        print('Is price total price: {}'.format(self.get_value(SLDC.IS_TOTAL_PRICE)))
+        print('Single price: {}'.format(self.get_value(SLDC.PRICE_SINGLE)))
+        print('Original price: {}'.format(self.get_value(SLDC.PRICE_ORIGINAL)))
+        print('Size: {}'.format(self.get_value(SLDC.SIZE)))
+        print('Number: {}'.format(self.get_value(SLDC.NUMBER)))
         print('New: {}/Used: {} - Conclusion: {}'.format(
-            self._doc_extended.is_new, self._doc_extended.is_used, self._doc_extended.object_state))
+            self.get_value(SLDC.IS_NEW), self.get_value(SLDC.IS_USED), self.get_value(SLDC.OBJECT_STATE)))
         if not self._my_offer:
-            print('Is outlier: {}'.format(self._doc_extended.is_new, self._doc_extended.is_used, self._is_outlier))
+            print('Is outlier: {}'.format(self.get_value(SLDC.IS_OUTLIER)))
         print('{}'.format(search_details))
         if self._my_offer:
             print('Entity names: {}'.format(self._entity_names))
@@ -510,9 +403,8 @@ class TuttiSale:
         visits_bookmarks, search_details = self.__get_visits_bookmarks_and_search_details_for_printing__()
         print('\n{}: ID: {}, Version: {}, Region: {}, Kategorie: {}, Bereich: {}, '
               'Date: {}, Title: {}, Description: {}, Price: {:.2f} CHF{}{}'.format(
-            self.source, self._sale_id, self._version,
-            self._region, self._product_category, self._product_sub_category,
-            self._date_str, self._title, self._description, self._price, visits_bookmarks, search_details))
+            self.source, self.sale_id, self.version, self.region, self.product_category, self.product_sub_category,
+            self.start_date, self.title, self.description, self.price, visits_bookmarks, search_details))
         print('Entity_names: {}'.format(self._entity_names))
         print('Entity_label_dict: {}'.format(self._entity_label_dict))
         """
@@ -520,58 +412,51 @@ class TuttiSale:
         Description: Sehr gut erhalten. Tolles Profil., Price: 20.-, Visits: 10 Besuche, Bookmarks: 0 Merkliste
         """
 
-    def __add_data_dict_entries__(self):
-        self.data_dict_obj.add(SLDC.SALE_ID, self._sale_id)
-        self.data_dict_obj.add(SLDC.VERSION,
-                               self.sys_config.access_layer_sale.get_next_version_for_sale_id(self._sale_id))
-        self.data_dict_obj.add(SLDC.MASTER_ID, self._sale_id)  # default - will be overwritten...
-        self.data_dict_obj.add(SLDC.MASTER_TITLE, self._title) # default - will be overwritten...
-        self.data_dict_obj.add(SLDC.SALE_STATE, self.sale_state)
-        self.data_dict_obj.add(SLDC.SOURCE, self._source)  # default - will be overwritten...
-        self.data_dict_obj.add(SLDC.REGION, self._region)
-        self.data_dict_obj.add(SLDC.PRODUCT_CATEGORY, self._product_category)
-        self.data_dict_obj.add(SLDC.PRODUCT_SUB_CATEGORY, self._product_sub_category)
-        self.data_dict_obj.add(SLDC.START_DATE, self._date_str)
-        self.data_dict_obj.add(SLDC.LOCATION, self._location)
-        self.data_dict_obj.add(SLDC.OBJECT_STATE, self._doc_extended.object_state)
-        self.data_dict_obj.add(SLDC.PRICE, self._price)
-        self.data_dict_obj.add(SLDC.IS_TOTAL_PRICE, self._doc_extended.is_total_price)
-        self.data_dict_obj.add(SLDC.PRICE_SINGLE, self._doc_extended.price_single)
-        self.data_dict_obj.add(SLDC.IS_OUTLIER, self._is_outlier)
-        self.data_dict_obj.add(SLDC.PRICE_ORIGINAL, self._doc_extended.price_original)
-        self.data_dict_obj.add(SLDC.NUMBER, self._doc_extended.number)
-        self.data_dict_obj.add(SLDC.SIZE, self._doc_extended.size)
-        self.data_dict_obj.add(SLDC.TITLE, self._title)
-        self.data_dict_obj.add(SLDC.DESCRIPTION, self._description)
-        self.data_dict_obj.add(SLDC.MATERIAL, ', '.join(self.material_list))
-        self.data_dict_obj.add(SLDC.IS_NEW, self._doc_extended.is_new)
-        self.data_dict_obj.add(SLDC.IS_LIKE_NEW, self._doc_extended.is_like_new)
-        self.data_dict_obj.add(SLDC.IS_USED, self._doc_extended.is_used)
-        self.data_dict_obj.add(SLDC.VISITS, self._visits)
-        self.data_dict_obj.add(SLDC.BOOK_MARKS, self._bookmarks)
-        self.data_dict_obj.add(SLDC.SEARCH_LABELS, ', '.join(self._search_labels))
-        self.data_dict_obj.add(SLDC.ENTITY_LABELS, ', '.join(self._entity_names))
-        label_list = ['{} ({})'.format(values, self.entity_label_dict[values]) for values in self.entity_label_dict]
-        self.data_dict_obj.add(SLDC.ENTITY_LABELS_DICT, ', '.join(label_list))
-        self.data_dict_obj.add(SLDC.FOUND_BY_LABELS,
-                               '' if self._found_by_labels is None else ','.join(self._found_by_labels))
-        self.data_dict_obj.add(SLDC.HREF, self._href)
-        self.data_dict_obj.add(SLDC.LAST_CHECK_DATE, MyDate.get_date_str_from_datetime())
-        self.data_dict_obj.add(SLDC.COMMENT, '1. load')
-        self.data_dict_obj.add(SLDC.PRINT_CATEGORY, '')
-        self.data_dict_obj.add(SLDC.PROPERTY_DICT, self._doc_extended.get_properties_for_data_dict())
+    def __init_data_dict_entries__(self):
+        self.set_value(SLDC.SOURCE, SLSRC.TUTTI_CH)
+        self.set_value(SLDC.VERSION, 1)
+        self.set_value(SLDC.SALE_STATE, SLST.OPEN)
+        self.set_value(SLDC.PRODUCT_CATEGORY, '')
+        self.set_value(SLDC.PRODUCT_SUB_CATEGORY, '')
+        self.set_value(SLDC.DESCRIPTION, '')
+        self.set_value(SLDC.PRICE, 0)
+        self.set_value(SLDC.PRICE_SINGLE, 0)
+        self.set_value(SLDC.PRICE_ORIGINAL, 0)
+        self.set_value(SLDC.IS_OUTLIER, 0)
+        self.set_value(SLDC.VISITS, 0)
+        self.set_value(SLDC.BOOK_MARKS, 0)
 
-    def __init_doc_extended__(self):
-        self._doc_extended = DocExtended(self._nlp(self._title + ' ' + self._description))
-        self._doc_extended.correct_single_price(self._price)
+    def complete_date_dict_entries(self):
+        self.set_value(SLDC.VERSION, self.sys_config.access_layer_sale.get_next_version_for_sale_id(self.sale_id))
+        self.set_value(SLDC.MASTER_ID, self.sale_id)  # default - will be overwritten...
+        self.set_value(SLDC.MASTER_TITLE, self.title) # default - will be overwritten...
+        self.set_value(SLDC.SALE_STATE, self.sale_state)
+        self.set_value(SLDC.PRICE_SINGLE, self.__get_price_single__())
+        self.set_value(SLDC.MATERIAL, ', '.join(self.material_list))
+        self.set_value(SLDC.SEARCH_LABELS, ', '.join(self._search_labels))
+        self.set_value(SLDC.ENTITY_LABELS, ', '.join(self._entity_names))
+        label_list = ['{} ({})'.format(values, self.entity_label_dict[values]) for values in self.entity_label_dict]
+        self.set_value(SLDC.ENTITY_LABELS_DICT, ', '.join(label_list))
+        self.set_value(SLDC.FOUND_BY_LABELS, '' if self._found_by_labels is None else self._found_by_labels)
+        self.set_value(SLDC.LAST_CHECK_DATE, MyDate.get_date_str_from_datetime())
+        self.set_value(SLDC.COMMENT, '1. load' if self.get_value(SLDC.VERSION) == 1 else 'some changes')
+        self.set_value(SLDC.PRINT_CATEGORY, '')
+
+    def __get_price_single__(self):
+        price, number = self.get_value(SLDC.PRICE), self.get_value(SLDC.NUMBER)
+        price_single = price
+        if self.get_value(SLDC.IS_TOTAL_PRICE) and number > 0:
+            price_single = int(price / number)
+        return price_single
 
     def __get_visits_bookmarks_and_search_details_for_printing__(self):
         if self._my_offer:
-            visits_bookmarks = ', {} Besuche, {} Merkliste'.format(self._visits, self._bookmarks)
+            visits_bookmarks = ', {} Besuche, {} Merkliste'.format(
+                self.get_value(SLDC.VISITS), self.get_value(SLDC.BOOK_MARKS))
             search_details = 'Search labels: {}'.format(self._search_labels)
         else:
             visits_bookmarks = ''
-            search_details = 'Found by: {}'.format(self._found_by_labels)
+            search_details = 'Found by: {}'.format('Sale_ID' if self._found_by_labels == '' else self._found_by_labels)
         return visits_bookmarks, search_details
 
     def __is_label_candidate_for_label_list__(self, label: str, for_title: bool):

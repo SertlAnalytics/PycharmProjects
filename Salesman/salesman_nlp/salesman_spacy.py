@@ -8,7 +8,7 @@ Date: 2019-04-02
 from spacy.tokens import Doc, Span
 from spacy.matcher import PhraseMatcher
 from salesman_tutti.tutti_constants import EL, POS
-from entities.tutti_named_entity import TuttiEntityHandler
+from entities.salesman_named_entity import SalesmanEntityHandler
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
 from matcher.tutti_matcher_4_is_like_new import TuttiMatcher4IsLikeNew
 from matcher.tutti_matcher_4_is_used import TuttiMatcher4IsUsed
@@ -111,7 +111,7 @@ class SalesmanSpacy:
 
     def __get_matcher_for_entity_type__(self, entity_type: str):
         matcher = PhraseMatcher(self.nlp.vocab)
-        entity_names = TuttiEntityHandler.get_entity_names_for_entity_label(entity_type)
+        entity_names = SalesmanEntityHandler.get_entity_names_for_entity_label(entity_type)
         patterns = list(self.nlp.pipe(entity_names))
         matcher.add(entity_type, None, *patterns)
         return matcher

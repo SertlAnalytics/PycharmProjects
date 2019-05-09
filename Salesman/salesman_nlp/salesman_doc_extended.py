@@ -23,6 +23,10 @@ class DocExtended:
         self.is_total_price = self._doc._.is_total_price
 
     @property
+    def doc(self):
+        return self._doc
+
+    @property
     def object_state(self):
         if self.is_like_new:
             return OBJST.LIKE_NEW

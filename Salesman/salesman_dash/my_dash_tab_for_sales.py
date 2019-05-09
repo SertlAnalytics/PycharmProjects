@@ -19,6 +19,7 @@ from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MyFile
 from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MySales, MySaleTable4SimilarSales
 from salesman_system_configuration import SystemConfiguration
 from salesman_tutti.tutti import Tutti
+from salesman_tutti.tutti_url_factory import OnlineSearchApi
 from salesman_tutti.tutti_categorizer import ProductCategorizer, RegionCategorizer
 
 
@@ -43,8 +44,6 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._selected_similar_sale_row = None
         self._online_title = None
         self._online_rows = None
-        self._region_categorizer = RegionCategorizer()
-        self._product_categorizer = ProductCategorizer()
 
     def __init_dash_element_ids__(self):
         self._my_sales_filter_button = 'my_sales_filter_button'
@@ -176,10 +175,10 @@ class MyDashTab4Sales(MyDashBaseTab):
                 filter_n_clicks: int, refresh_n_clicks: int,
                 source: str, region: str, category: str, sub_category: str, rows: list, selected_row_indices: list):
             self._selection_api.source = source
-            self._selection_api.region = self._region_categorizer.get_category_for_value(region)
-            self._selection_api.category = self._product_categorizer.get_category_for_value(category)
-            self._selection_api.sub_category = \
-                self._product_categorizer.get_sub_category_for_value(self._selection_api.category, sub_category)
+            self._selection_api.region = self.sys_config.region_categorizer.get_category_for_value(region)
+            self._selection_api.category = self.sys_config.product_categorizer.get_category_for_value(category)
+            self._selection_api.sub_category = self.sys_config.product_categorizer.get_sub_category_for_value(
+                self._selection_api.category, sub_category)
             self._selected_my_sale_row = None if len(selected_row_indices) == 0 else rows[selected_row_indices[0]]
             self.__handle_refresh_click__(refresh_n_clicks)
             return self.__get_sale_grid_table__()
@@ -198,7 +197,7 @@ class MyDashTab4Sales(MyDashBaseTab):
         else:
             title, description = self._selected_my_sale_row[SLDC.TITLE], self._selected_my_sale_row[SLDC.DESCRIPTION]
             print('__handle_refresh_click__: title={}, description={}'.format(title, description))
-            results = self.tutti.get_search_results_from_online_inputs(title)
+            results = self.tutti.get_search_results_from_online_inputs(OnlineSearchApi(title))
             print(results)
 
     def __init_callback_for_similar_sale_grid_table__(self):

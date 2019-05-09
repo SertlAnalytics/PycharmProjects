@@ -8,7 +8,7 @@ Date: 2019-04-08
 import requests
 from lxml import html
 from salesman_nlp.salesman_spacy import SalesmanSpacy
-from salesman_tutti.tutti_sale import TuttiSale
+from salesman_sale import SalesmanSale
 from salesman_system_configuration import SystemConfiguration
 
 
@@ -25,7 +25,7 @@ class TuttiPage:
         tree = html.fromstring(request.content)
         offers = tree.xpath('//div[@class="_3aiCi"]')
         for offer_element in offers:
-            offer = TuttiSale(self._spacy.nlp, self.sys_config)
+            offer = SalesmanSale(self._spacy.nlp, self.sys_config)
             offer.init_by_html_element(offer_element)
             offer.print_sale_in_original_structure()
 

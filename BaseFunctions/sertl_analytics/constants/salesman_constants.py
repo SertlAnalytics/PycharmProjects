@@ -41,6 +41,7 @@ class DC:  # Data Columns
     
     
 class SLSRC:  # sale sources
+    ALL = 'All'
     DB = 'Database'
     FILE = 'File'
     ONLINE = 'Online'
@@ -190,6 +191,7 @@ class SLDC:  # Sale data column
     PROPERTY_DICT = 'Properties'
     PRICE = 'Price'
     PRICE_SINGLE = 'Price_single'
+    PRICE_NEW = 'Price_new'
     IS_TOTAL_PRICE = 'Is_total_price'
     PRICE_ORIGINAL = 'Price_orig'
     SIZE = 'Size'

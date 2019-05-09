@@ -9,18 +9,20 @@ from sertl_analytics.pyurl.url_process import MyUrlBrowser
 from sertl_analytics.pyurl.url_username_passwords import WebPasswords
 from salesman_system_configuration import SystemConfiguration
 from sertl_analytics.constants.salesman_constants import SLSRC
-from salesman_tutti.tutti_sale import TuttiSale
+from salesman_sale import SalesmanSale
 from salesman_tutti.tutti_constants import SLCLS
 from salesman_nlp.salesman_spacy import SalesmanSpacy
+from salesman_sale_factory import SalesmanSaleFactory
 
 
 class MyUrlBrowser4Tutti(MyUrlBrowser):
-    def __init__(self, sys_config: SystemConfiguration, spacy: SalesmanSpacy):
+    def __init__(self, sys_config: SystemConfiguration, spacy: SalesmanSpacy, sale_factory: SalesmanSaleFactory):
         self.sys_config = sys_config
         self._url_login = 'https://www.tutti.ch/de/start/login'
         self._url_search = 'https://www.tutti.ch/de/li'
         self._spacy = spacy
         self._nlp = self._spacy.nlp
+        self._sale_factory = sale_factory
         MyUrlBrowser.__init__(self,  self._url_login, WebPasswords.TUTTI[0],  WebPasswords.TUTTI[1])
 
     def enter_and_submit_credentials(self):
@@ -36,7 +38,7 @@ class MyUrlBrowser4Tutti(MyUrlBrowser):
     def get_my_sales_from_tutti(self):
         return self.__get_sales_from_tutti__(SLCLS.OFFERS)
 
-    def get_my_nth_sale_from_tutti(self, number: int) -> TuttiSale:
+    def get_my_nth_sale_from_tutti(self, number: int) -> SalesmanSale:
         return self.__get_nth_sale_from_tutti__(SLCLS.OFFERS, number)
 
     def __click_submit__(self):
@@ -48,7 +50,7 @@ class MyUrlBrowser4Tutti(MyUrlBrowser):
         for sale in my_sales:
             self.__change_price_for_sale__(sale)
 
-    def __change_price_for_sale__(self, sale: TuttiSale):
+    def __change_price_for_sale__(self, sale: SalesmanSale):
         if not sale.is_price_ready_for_update_in_tutti():
             return
         self.__open_site_for_editing__(sale.sale_id)
@@ -88,15 +90,13 @@ class MyUrlBrowser4Tutti(MyUrlBrowser):
             tutti_sales.append(tutti_sale)
         return tutti_sales
 
-    def __get_nth_sale_from_tutti__(self, class_name: str, number: int) -> TuttiSale:
+    def __get_nth_sale_from_tutti__(self, class_name: str, number: int) -> SalesmanSale:
         sales_elements = self.__get_sales_elements_by_class_name__(class_name)
         if number - 1 < len(sales_elements):
             return self.__get_tutti_sale_from_sale_element__(sales_elements[number - 1], None)
 
     def __get_tutti_sale_from_sale_element__(self, sale_element, search_labels):
-        sale = TuttiSale(self._spacy, self.sys_config, search_labels)
-        sale.init_by_sale_element(sale_element)
-        return sale
+        return self._sale_factory.get_sale_by_browser_sale_element(sale_element, search_labels)
 
     def __get_sales_elements_by_class_name__(self, class_name: str):
         return self.driver.find_elements_by_class_name(class_name)
