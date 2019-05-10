@@ -122,51 +122,6 @@ class OBJPROP:  # Object properties
     WARRANTY = 'Warrenty until'
     ORIGINAL_COVER = 'Cover available'    
 
-
-class PRCAT:  # Product Category, german: Rubrik
-    ALL = 'Alle'
-    ART = 'Antiquitäten & Kunst'
-    CHILD = 'Baby & Child'
-    BOOKS = 'Bücher'
-    BUSINESS = 'Büro & Gewerbe'
-    COMPUTER = 'Computer & Zubehör'
-    SERVICE = 'Dienstleistungen'
-    VEHICELS = 'Fahrzeuge'
-    PICTURE = 'Film'
-    FOTO_VIDEO = 'Foto & Video'
-    GARDEN_CRAFT = 'Garten & Handwerk'
-    HOUSEHOLD = 'Haushalt'
-    REAL_ESTATE = 'Immobilien'
-    CLOTHES_OTHERS = 'Kleidung & Accessoires'
-    MUSIC = 'Musik'
-    COLLECTIONS = 'Sammeln'
-    TOYS = 'Spielzeuge & Basteln'
-    SPORT_OUTDOOR = 'Sport & Outdoor'
-    JOBS = 'Stellenangebote'
-    TV_AUDIO = 'TV & Audio'
-    PHONE_NAVI = 'Telefon & Navigation'
-    TICKETS_BONS = 'Tickets & Gutscheine'
-    ANIMALS = 'Tiere'
-    OTHERS = 'Sonstiges'
-    
-    @staticmethod
-    def get_all():
-        return [
-            PRCAT.ALL, PRCAT.VEHICELS, PRCAT.REAL_ESTATE,
-            PRCAT.ART, PRCAT.CHILD, PRCAT.BOOKS, PRCAT.BUSINESS, PRCAT.COMPUTER,
-            PRCAT.SERVICE, PRCAT.PICTURE, PRCAT.FOTO_VIDEO, PRCAT.GARDEN_CRAFT,
-            PRCAT.HOUSEHOLD, PRCAT.CLOTHES_OTHERS, PRCAT.MUSIC, PRCAT.COLLECTIONS,
-            PRCAT.TOYS, PRCAT.SPORT_OUTDOOR, PRCAT.JOBS, PRCAT.TV_AUDIO, PRCAT.PHONE_NAVI,
-            PRCAT.TICKETS_BONS, PRCAT.ANIMALS, PRCAT.OTHERS
-        ]
-    
-    @staticmethod
-    def get_all_without_all() -> list:
-        list_all = PRCAT.get_all()
-        list_all.remove(PRCAT.ALL)
-        return list_all
-
-
 class SLDC:  # Sale data column
     SALE_ID = 'Sale_ID'
     SALE_ID_MAX = 'Sale_ID_max'

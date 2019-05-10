@@ -1,11 +1,12 @@
 """
-Description: This module contains the category tree for product selection.
+Description: This module contains the category_value tree for product selection.
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-02
 """
 
-from sertl_analytics.constants.salesman_constants import PRCAT, REGION
+from sertl_analytics.constants.salesman_constants import REGION
+from salesman_tutti.tutti_constants import PRCAT, PRSUBCAT
 from sertl_analytics.pybase.value_categorizer import ValueCategorizer
 from sertl_analytics.my_text import MyText
 
@@ -44,7 +45,7 @@ class ProductCategorizer(ValueCategorizer):  # Product Category, german: Rubrik
     @staticmethod
     def __get_category_value_dict__() -> dict:
         return_dict = {
-            PRCAT.ALL: 'angebote',
+            PRCAT.ALL: PRCAT.ALL,
         }
         for category in PRCAT.get_all():
             if category not in return_dict:
@@ -53,37 +54,43 @@ class ProductCategorizer(ValueCategorizer):  # Product Category, german: Rubrik
         return return_dict
 
     def get_sub_category_lists_for_category(self, category: str):
-        return [['Alle', 'ALL']] + self.__get_sub_category_lists_for_category__(category)
+        return [[PRSUBCAT.ALL, PRSUBCAT.ALL]] + self.__get_sub_category_lists_for_category__(category)
 
     @staticmethod
-    def get_search_category_sub_categories(category: str, sub_category: str) -> list:
-        return_list = [[category, sub_category]]
-        if category == PRCAT.CHILD and sub_category == 'Kleider & Schuhe':
-            return_list.append([PRCAT.CLOTHES_OTHERS, PRCAT.ALL])
-        elif category == PRCAT.COMPUTER and sub_category == 'Komponenten & Zubehör':
-            return_list.append([PRCAT.PHONE_NAVI, 'Zubehör'])
-        return return_list
+    def get_alternative_search_category_sub_categories(category: str, sub_category: str) -> list:
+        if category == PRCAT.CHILD and sub_category == PRSUBCAT.CHILD_CLOTHES:
+            return [PRCAT.CLOTHES_OTHERS, '']
+        elif category == PRCAT.COMPUTER and sub_category == PRSUBCAT.COMPUTER_COMPONENTS:
+            return [PRCAT.PHONE_NAVI, PRSUBCAT.PHONE_COMPONENTS]
 
     @staticmethod
     def __get_sub_category_list_for_category__(category: str):
         sub_category_dict = {
-            PRCAT.BOOKS: ['Romane', 'Sachbücher & Ratgeber'],
-            PRCAT.CHILD: ['Kinderwagen & Sitze', 'Kinderzimmer', 'Kleider & Schuhe'],
-            PRCAT.CLOTHES_OTHERS: ['Kleidung für Damen', 'Kleidung für Herren', 'Schuhe für Damen', 'Schuhe für Herren',
-                                   'Taschen und & Portmonnaies', 'Uhren & Schmuck'],
-            PRCAT.COMPUTER: ['Computer', 'Komponenten & Zubehör', 'Software', 'Tablets'],
-            PRCAT.SERVICE: ['Büroservice', 'Computer & Handys', 'Finanzen & Recht', 'Handwerk', 'Umzug & Transport'],
-            PRCAT.BUSINESS: ['Büromaterial & Büromöbel', 'Geschäftseinrichtungen'],
-            PRCAT.SPORT_OUTDOOR: ['Camping', 'Fitness', 'Velos', 'Wintersport', 'Sonstige Sportarten'],
-            PRCAT.PHONE_NAVI: ['Festnetztelefone', 'Handys', 'Navigationssysteme', 'Zubehör'],
-            PRCAT.VEHICELS: ['Autos', 'Autozubehör', 'Boote & Zubehör', 'Motorradzubehör',
-                             'Motorräder', 'Nutzfahrzeuge', 'Wohnmobile'],
-            PRCAT.REAL_ESTATE: ['Ferienobjekte', 'Gewerbeobjekte', 'Grundstücke', 'Häuser',
-                                'Parkplätze', 'WG-Zimmer', 'Wohnungen'],
-            PRCAT.FOTO_VIDEO: ['Fotokameras', 'Videokameras', 'Zubehör'],
-            PRCAT.GARDEN_CRAFT: ['Baumaterial', 'Gartenausstattung', 'Werkzeuge & Maschinen'],
-            PRCAT.HOUSEHOLD: ['Beleuchtung', 'Geräte & Utensilien', 'Lebensmittel', 'Möbel'],
-            PRCAT.JOBS: ['Gesundheitswesen', 'Sonstige Stellen'],
+            PRCAT.BOOKS: [PRSUBCAT.BOOK_NOVELS, PRSUBCAT.BOOK_ADVISORS],
+            PRCAT.CHILD: [PRSUBCAT.CHILD_STROLLER, PRSUBCAT.CHILD_ROOM, PRSUBCAT.CHILD_CLOTHES],
+            PRCAT.CLOTHES_OTHERS: [PRSUBCAT.CLOTHES_FEMALE, PRSUBCAT.CLOTHES_MALE, PRSUBCAT.SHOES_FEMALE,
+                                   PRSUBCAT.SHOES_MALE,
+                                   PRSUBCAT.OTHERS_BAGS, PRSUBCAT.OTHERS_WATCHES],
+            PRCAT.COMPUTER: [PRSUBCAT.COMPUTER, PRSUBCAT.COMPUTER_COMPONENTS, PRSUBCAT.SOFTWARE, PRSUBCAT.TABLETS],
+            PRCAT.SERVICE: [PRSUBCAT.SERVICE_OFFICE, PRSUBCAT.SERVICE_COMPUTER, PRSUBCAT.SERVICE_FINANCE,
+                            PRSUBCAT.SERVICE_CRAFT, PRSUBCAT.SERVICE_TRANSPORT],
+            PRCAT.BUSINESS: [PRSUBCAT.BUSINESS_MATERIAL, PRSUBCAT.BUSINESS_EQUIPMENT],
+            PRCAT.SPORT_OUTDOOR: [PRSUBCAT.SPORT_CAMPING, PRSUBCAT.SPORT_FITNESS, PRSUBCAT.SPORT_BIKE,
+                                  PRSUBCAT.SPORT_WINTER, PRSUBCAT.SPORT_OTHERS],
+            PRCAT.PHONE_NAVI: [PRSUBCAT.PHONE_FIX, PRSUBCAT.PHONE_MOBILE,
+                               PRSUBCAT.PHONE_NAVI, PRSUBCAT.PHOTO_COMPONENTS],
+            PRCAT.VEHICELS: [PRSUBCAT.VEHICELS_CARS, PRSUBCAT.VEHICELS_COMPONENTS, PRSUBCAT.VEHICELS_BOATS,
+                             PRSUBCAT.VEHICELS_BIKE_COMPONENTS,
+                             PRSUBCAT.VEHICELS_BIKE, PRSUBCAT.VEHICELS_UTILITIES, PRSUBCAT.VEHICELS_CAMPERS],
+            PRCAT.REAL_ESTATE: [PRSUBCAT.REAL_ESTATE_HOLIDAY, PRSUBCAT.REAL_ESTATE_BUSINESS,
+                                PRSUBCAT.REAL_ESTATE_PROPERTY, PRSUBCAT.REAL_ESTATE_HOUSES,
+                                PRSUBCAT.REAL_ESTATE_PARKING, PRSUBCAT.REAL_ESTATE_COMMUNITY,
+                                PRSUBCAT.REAL_ESTATE_FLATS],
+            PRCAT.PHOTO_VIDEO: [PRSUBCAT.PHOTO_CAMERA, PRSUBCAT.VIDEO_CAMERA, PRSUBCAT.PHOTO_COMPONENTS],
+            PRCAT.GARDEN_CRAFT: [PRSUBCAT.GARDEN_MATERIAL, PRSUBCAT.GARDEN_EQUIPMENT, PRSUBCAT.GARDEN_TOOLS],
+            PRCAT.HOUSEHOLD: [PRSUBCAT.HOUSEHOLD_LIGHT, PRSUBCAT.HOUSEHOLD_TOOLS,
+                              PRSUBCAT.HOUSEHOLD_FOOD, PRSUBCAT.HOUSEHOLD_FURNITURE],
+            PRCAT.JOBS: [PRSUBCAT.JOBS_HEALTH, PRSUBCAT.JOBS_OTHERS],
         }
         return sub_category_dict.get(category, [])
 

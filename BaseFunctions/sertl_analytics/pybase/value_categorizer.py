@@ -12,11 +12,29 @@ class ValueCategorizer:
     def __init__(self):
         self._category_list = self.__get_category_list__()
         self._category_value_dict = self.__get_category_value_dict__()
+        self._category_value_list = self.__get_category_value_list__()
         self._value_category_dict = {self._category_value_dict[label]: label for label in self._category_value_dict}
         self._category_sub_category_value_dict = {}  # serves as cache for subcategories
 
-    def get_category_value_list(self):
-        return [[label, self._category_value_dict[label]] for label in self._category_list]
+    @property
+    def category_list(self):
+        return self._category_list
+
+    @property
+    def category_value_dict(self):
+        return self._category_value_dict
+
+    def get_category_value_list(self, excluded=None):
+        if excluded is None:
+            return self._category_value_list
+        return [x for x in self._category_value_list if x not in excluded]
+
+    @staticmethod
+    def get_alternative_search_category_sub_categories(category: str, sub_category: str) -> list:
+        pass
+    
+    def __get_category_value_list__(self):
+        return [self._category_value_dict[label] for label in self._category_list]
 
     def get_category_value_list_as_option_list(self):
         return [{'label': cat, 'value': self._category_value_dict[cat]} for cat in self._category_list]

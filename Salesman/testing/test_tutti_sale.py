@@ -20,8 +20,8 @@ class Test4TuttiSale:
         for key, test_case_list in test_case_dict.items():
             for tc in test_case_list:
                 print('\nRUN_TEST: {}'.format(tc))
-                sale_01 = sale_factory.get_sale_by_online_search_string(tc[0], False)
-                sale_02 = sale_factory.get_sale_by_online_search_string(tc[1], False)
+                sale_01 = sale_factory.get_sale_by_online_search_api(tc[0], False)
+                sale_02 = sale_factory.get_sale_by_online_search_api(tc[1], False)
                 if sys_config.print_details:
                     print('--> Entities for "{}": {}'.format(tc[0], sale_01.entity_label_dict))
                     print('--> Entities for "{}": {}'.format(tc[1], sale_02.entity_label_dict))

@@ -82,7 +82,7 @@ class CompanyEntity(NamedEntity):
             'Nespresso', 'name it',
             'Omega',
             'Paidi',
-            'Risa',
+            'Risa', 'Range Rover',
             'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise',
             'Tosca', 'Toyota',
             'USM',
@@ -127,6 +127,7 @@ class ProductEntity(NamedEntity):
             'Pixie', 'Panama', 'Purpose Chair',
             'Roundabout',
             'sleepi', 'Silencio',
+            'Velar',
         ]
 
     @staticmethod

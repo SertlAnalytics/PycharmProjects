@@ -2,27 +2,27 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6d5eace0-8cba-4361-96e5-e8ba9777a0db" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/salesman_sale_factory.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/salesman_search.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/salesman_web_parser.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/salesman_search_data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/salesman_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/salesman_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/pybase/value_categorizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/pybase/value_categorizer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entities/tutti_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/entities/salesman_named_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/matcher/test_tutti_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/matcher/test_tutti_matcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entities/salesman_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/entities/salesman_named_entity.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_tutti_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_tutti_process.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_sales.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/salesman_dash/grid_tables/my_grid_table_4_sales_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_dash/grid_tables/my_grid_table_4_sales_base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_sales.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_search.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_nlp/salesman_doc_extended.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_nlp/salesman_doc_extended.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/salesman_nlp/salesman_spacy.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_nlp/salesman_spacy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/salesman_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_sale.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/salesman_sale_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_sale_factory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/salesman_tutti/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_tutti/tutti.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_tutti/tutti_browser.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_tutti/tutti_browser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_tutti/tutti_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_sale.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/salesman_tutti/tutti_url_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_tutti/tutti_url_factory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/test_search_in_backend.py" beforeDir="false" afterPath="$PROJECT_DIR$/testing/test_search_in_backend.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/salesman_tutti/tutti_categorizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_tutti/tutti_categorizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/salesman_tutti/tutti_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_tutti/tutti_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/salesman_tutti/tutti_url_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_tutti/tutti_url_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/salesman_web_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/salesman_web_parser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testing/test_tutti_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/testing/test_tutti_sale.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/test_tutti_url_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/testing/test_tutti_url_helper.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -39,8 +39,11 @@
       <file leaf-file-name="run_tutti_process.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/run_tutti_process.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
+            <state relative-caret-position="476">
+              <caret line="52" column="36" lean-forward="true" selection-start-line="52" selection-start-column="36" selection-end-line="52" selection-end-column="36" />
+              <folding>
+                <element signature="e#190#228#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -48,67 +51,34 @@
       <file leaf-file-name="tutti.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/salesman_tutti/tutti.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="150">
-              <caret line="152" column="61" selection-start-line="152" selection-start-column="61" selection-end-line="152" selection-end-column="61" />
+            <state relative-caret-position="245">
+              <caret line="138" column="60" lean-forward="true" selection-start-line="138" selection-start-column="60" selection-end-line="138" selection-end-column="60" />
               <folding>
-                <element signature="e#181#256#0" expanded="true" />
+                <element signature="e#181#249#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tutti_url_factory.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="tutti_url_factory.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/salesman_tutti/tutti_url_factory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="92">
-              <caret line="44" column="43" lean-forward="true" selection-start-line="44" selection-start-column="43" selection-end-line="44" selection-end-column="43" />
+            <state relative-caret-position="-561">
+              <caret line="15" column="30" lean-forward="true" selection-start-line="15" selection-start-column="30" selection-end-line="15" selection-end-column="30" />
               <folding>
-                <element signature="e#180#256#0" expanded="true" />
+                <element signature="e#180#249#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="salesman_constants.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/salesman_constants.py">
+      <file leaf-file-name="salesman_search_data.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/salesman_search_data.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="228">
-              <caret line="126" column="4" selection-start-line="126" selection-start-column="4" selection-end-line="126" selection-end-column="4" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="my_dash_tab_for_search.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/salesman_dash/my_dash_tab_for_search.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="379">
-              <caret line="310" column="57" lean-forward="true" selection-start-line="310" selection-start-column="57" selection-end-line="310" selection-end-column="57" />
+            <state relative-caret-position="464">
+              <caret line="92" column="39" selection-start-line="92" selection-start-column="39" selection-end-line="92" selection-end-column="39" />
               <folding>
-                <element signature="e#216#266#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="salesman_sale_factory.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/salesman_sale_factory.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="364">
-              <caret line="56" column="57" selection-start-line="56" selection-start-column="57" selection-end-line="56" selection-end-column="57" />
-              <folding>
-                <element signature="e#164#206#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="salesman_web_parser.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/salesman_web_parser.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="330">
-              <caret line="155" column="70" lean-forward="true" selection-start-line="155" selection-start-column="70" selection-end-line="155" selection-end-column="70" />
-              <folding>
-                <element signature="e#164#206#0" expanded="true" />
+                <element signature="e#189#231#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -125,28 +95,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>type</find>
-      <find>_printing</find>
-      <find>_print_category_list</find>
-      <find>product_</find>
-      <find>tutti</find>
-      <find>RegionCategorizer</find>
-      <find>_doc_extended</find>
-      <find>_url_helper</find>
-      <find>get_search_results_from_online_inputs</find>
-      <find>init_</find>
-      <find>init_by_search_parameter</find>
-      <find>.ents</find>
-      <find>get_num</find>
-      <find>__get_number_from_number_item__</find>
-      <find>_current_similar_sales</find>
-      <find>is_is</find>
-      <find>_source</find>
-      <find>is_sim</find>
-      <find>identi</find>
-      <find>_found_by_labels</find>
-      <find>found by</find>
-      <find>NOT_QUALIFIED</find>
       <find>adjust_category_sub_category</find>
       <find>Suc</find>
       <find>found_by_l</find>
@@ -155,6 +103,28 @@
       <find>file_row</find>
       <find>by_db</find>
       <find>init_by</find>
+      <find>_spacy</find>
+      <find>_nlp</find>
+      <find>__add_search_labels__</find>
+      <find>add</find>
+      <find>__add_data_dict_entries_to_sale_from_doc__</find>
+      <find>_nlp_sale</find>
+      <find>_salesman_spacy</find>
+      <find />
+      <find>url=</find>
+      <find>option</find>
+      <find>Search_label_lists</find>
+      <find />
+      <find>_product_categories_value_list</find>
+      <find>set_produc</find>
+      <find>set_pro</find>
+      <find />
+      <find>get_sale_by_online_search_api</find>
+      <find>__init_printing__</find>
+      <find>anzei</find>
+      <find>SalesmanSearchData</find>
+      <find>OnlineSearchApi</find>
+      <find />
     </findStrings>
     <replaceStrings>
       <replace>:</replace>
@@ -172,7 +142,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/tutti_browser.py" />
         <option value="$PROJECT_DIR$/tutti_sale.py" />
         <option value="$PROJECT_DIR$/salesman_spacy/tutti_spacy.py" />
         <option value="$PROJECT_DIR$/calculation/outlier.py" />
@@ -187,42 +156,43 @@
         <option value="$PROJECT_DIR$/salesman_dash/grid_tables/my_grid_table_base_4_sales.py" />
         <option value="$PROJECT_DIR$/matcher/test_tutti_matcher.py" />
         <option value="$PROJECT_DIR$/matcher/tutti_matcher_4_warranty.py" />
-        <option value="$PROJECT_DIR$/salesman_tutti/tutti_categorizer.py" />
-        <option value="$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_sales.py" />
         <option value="$PROJECT_DIR$/salesman_database/salesman_views.py" />
         <option value="$PROJECT_DIR$/salesman_nlp/salesman_spacy.py" />
         <option value="$PROJECT_DIR$/salesman_dash/grid_tables/my_grid_table_4_sales.py" />
-        <option value="$PROJECT_DIR$/salesman_dash/grid_tables/my_grid_table_4_sales_base.py" />
-        <option value="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/pybase/value_categorizer.py" />
         <option value="$PROJECT_DIR$/entities/named_entity.py" />
         <option value="$PROJECT_DIR$/matcher/tutti_matcher_4_number.py" />
         <option value="$PROJECT_DIR$/matcher/tutti_matcher_4_original_price.py" />
         <option value="$PROJECT_DIR$/salesman_system_configuration.py" />
         <option value="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/my_excel.py" />
-        <option value="$PROJECT_DIR$/salesman_tutti/tutti_constants.py" />
         <option value="$PROJECT_DIR$/salesman_dash/plotting/my_dash_plotter_for_salesman_search.py" />
         <option value="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/my_text.py" />
         <option value="$PROJECT_DIR$/printing/sale_printing.py" />
-        <option value="$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_search.py" />
         <option value="$PROJECT_DIR$/testing/test_tutti_url_helper.py" />
         <option value="$PROJECT_DIR$/matcher/tutti_matcher_4_is_total_price.py" />
         <option value="$PROJECT_DIR$/salesman_search.py" />
         <option value="$PROJECT_DIR$/entities/tutti_named_entity.py" />
         <option value="$PROJECT_DIR$/salesman_tutti/tutti_sale.py" />
-        <option value="$PROJECT_DIR$/entities/salesman_named_entity.py" />
         <option value="$PROJECT_DIR$/salesman_nlp/salesman_doc_extended.py" />
         <option value="$PROJECT_DIR$/salesman_tutti/tutti_url_helper.py" />
-        <option value="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/salesman_constants.py" />
         <option value="$PROJECT_DIR$/testing/test_tutti_sale.py" />
         <option value="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_sales.py" />
         <option value="$PROJECT_DIR$/salesman_tutti/tutti_browser.py" />
-        <option value="$PROJECT_DIR$/run_tutti_process.py" />
-        <option value="$PROJECT_DIR$/salesman_sale_factory.py" />
-        <option value="$PROJECT_DIR$/salesman_tutti/tutti.py" />
+        <option value="$PROJECT_DIR$/entities/salesman_named_entity.py" />
+        <option value="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/salesman_constants.py" />
+        <option value="$PROJECT_DIR$/salesman_dash/grid_tables/my_grid_table_4_sales_base.py" />
+        <option value="$PROJECT_DIR$/salesman_tutti/tutti_constants.py" />
+        <option value="$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_search.py" />
+        <option value="$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_sales.py" />
         <option value="$PROJECT_DIR$/salesman_sale.py" />
-        <option value="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_search.py" />
+        <option value="$PROJECT_DIR$/run_tutti_process.py" />
         <option value="$PROJECT_DIR$/salesman_web_parser.py" />
+        <option value="$PROJECT_DIR$/salesman_sale_factory.py" />
         <option value="$PROJECT_DIR$/salesman_tutti/tutti_url_factory.py" />
+        <option value="$PROJECT_DIR$/salesman_dash/my_dash_tab_for_search.py" />
+        <option value="$PROJECT_DIR$/salesman_tutti/tutti.py" />
+        <option value="$PROJECT_DIR$/salesman_tutti/tutti_categorizer.py" />
+        <option value="$PROJECT_DIR$/../BaseFunctions/sertl_analytics/pybase/value_categorizer.py" />
+        <option value="$PROJECT_DIR$/salesman_search_data.py" />
       </list>
     </option>
   </component>
@@ -338,7 +308,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run_salesman_with_dash">
+  <component name="RunManager" selected="Python.run_tutti_process">
     <configuration name="run_create_salesman_table" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Salesman" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -438,8 +408,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.run_salesman_with_dash" />
         <item itemvalue="Python.run_tutti_process" />
+        <item itemvalue="Python.run_salesman_with_dash" />
         <item itemvalue="Python.test_tutti_url_helper" />
         <item itemvalue="Python.run_create_salesman_table" />
         <item itemvalue="Python.test_tutti_matcher" />
@@ -461,15 +431,16 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.89411765" visible="true" weight="0.25" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.89116716" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32941177" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.5027451" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.5027451" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
-      <window_info id="Structure" order="1" sideWeight="0.105882354" side_tool="true" visible="true" weight="0.25" />
+      <window_info id="Structure" order="1" sideWeight="0.10883281" side_tool="true" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.32941177" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info id="Favorites" order="2" sideWeight="0.103975534" side_tool="true" weight="0.25" />
@@ -483,21 +454,21 @@
     <layout-to-restore>
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49584815" visible="true" weight="0.25039873" />
       <window_info id="Structure" order="1" sideWeight="0.5041518" side_tool="true" weight="0.24980111" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Version Control" order="10" />
       <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.37490195" />
-      <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
-      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32941177" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.32941177" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.32941177" />
+      <window_info anchor="bottom" id="Version Control" order="10" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Python Console" order="7" weight="0.32941177" />
     </layout-to-restore>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -536,13 +507,8 @@
           <line>7</line>
           <option name="timeStamp" value="50" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/salesman_tutti/tutti.py</url>
-          <line>327</line>
-          <option name="timeStamp" value="52" />
-        </line-breakpoint>
       </breakpoints>
-      <option name="time" value="53" />
+      <option name="time" value="56" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
@@ -603,16 +569,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_sales.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="246">
-          <caret line="104" lean-forward="true" selection-start-line="104" selection-end-line="104" />
-          <folding>
-            <element signature="e#185#254#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/salesman_database/run_create_salesman_table.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="119">
@@ -648,13 +604,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="382">
           <caret line="31" column="26" selection-start-line="31" selection-start-column="26" selection-end-line="31" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/salesman_dash/grid_tables/my_grid_table_4_sales_base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="98" column="44" lean-forward="true" selection-start-line="98" selection-start-column="44" selection-end-line="98" selection-end-column="44" />
         </state>
       </provider>
     </entry>
@@ -721,27 +670,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_search.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="201">
-          <caret line="33" column="47" selection-start-line="33" selection-start-column="47" selection-end-line="33" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/salesman_tutti/tutti_categorizer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="24" column="21" lean-forward="true" selection-start-line="24" selection-start-column="21" selection-end-line="24" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/salesman_tutti/tutti_constants.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" column="6" selection-start-line="8" selection-start-column="6" selection-end-line="8" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/matcher/tutti_matcher_4_is_total_price.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="459">
@@ -760,26 +688,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="476">
           <caret line="28" selection-start-line="28" selection-end-line="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/entities/salesman_named_entity.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="269">
-          <caret line="156" column="42" lean-forward="true" selection-start-line="156" selection-start-column="42" selection-end-line="156" selection-end-column="42" />
-          <folding>
-            <element signature="e#166#211#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/salesman_system_configuration.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="19" column="37" lean-forward="true" selection-start-line="19" selection-start-column="37" selection-end-line="19" selection-end-column="37" />
-          <folding>
-            <element signature="e#204#257#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -804,13 +712,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="331">
           <caret line="41" column="37" lean-forward="true" selection-start-line="37" selection-start-column="4" selection-end-line="41" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../BaseFunctions/sertl_analytics/pybase/value_categorizer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="515">
-          <caret line="66" column="8" selection-start-line="66" selection-start-column="8" selection-end-line="66" selection-end-column="8" />
         </state>
       </provider>
     </entry>
@@ -841,9 +742,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Files/virtual_sales.csv">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/testing/test_search_in_backend.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="405">
@@ -861,76 +759,160 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/entities/salesman_named_entity.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="728">
+          <caret line="129" column="20" selection-start-line="129" selection-start-column="20" selection-end-line="129" selection-end-column="20" />
+          <folding>
+            <element signature="e#166#211#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/salesman_system_configuration.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="22" column="46" lean-forward="true" selection-start-line="22" selection-start-column="46" selection-end-line="22" selection-end-column="46" />
+          <folding>
+            <element signature="e#204#257#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/salesman_dash/grid_tables/my_grid_table_4_sales_base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+          <folding>
+            <element signature="e#181#257#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_sales.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="328">
+          <caret line="109" column="42" lean-forward="true" selection-start-line="109" selection-start-column="42" selection-end-line="109" selection-end-column="42" />
+          <folding>
+            <element signature="e#185#254#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/salesman_sale.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="157">
-          <caret line="159" column="94" selection-start-line="159" selection-start-column="94" selection-end-line="159" selection-end-column="94" />
+        <state relative-caret-position="632">
+          <caret line="166" lean-forward="true" selection-start-line="166" selection-end-line="166" />
           <folding>
             <element signature="e#175#216#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/salesman_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="448">
+          <caret line="75" column="4" selection-start-line="75" selection-start-column="4" selection-end-line="75" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/salesman_web_parser.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="228">
+          <caret line="35" column="44" selection-start-line="35" selection-start-column="44" selection-end-line="35" selection-end-column="44" />
+          <folding>
+            <element signature="e#164#206#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/run_tutti_process.py">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="476">
+          <caret line="52" column="36" lean-forward="true" selection-start-line="52" selection-start-column="36" selection-end-line="52" selection-end-column="36" />
+          <folding>
+            <element signature="e#190#228#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/salesman_tutti/tutti_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
-          <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
+          <caret line="51" lean-forward="true" selection-start-line="51" selection-end-line="51" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/salesman_tutti/tutti.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="152" column="61" selection-start-line="152" selection-start-column="61" selection-end-line="152" selection-end-column="61" />
+        <state relative-caret-position="245">
+          <caret line="138" column="60" lean-forward="true" selection-start-line="138" selection-start-column="60" selection-end-line="138" selection-end-column="60" />
           <folding>
-            <element signature="e#181#256#0" expanded="true" />
+            <element signature="e#181#249#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/salesman_dash/my_dash_tab_for_search.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="379">
-          <caret line="310" column="57" lean-forward="true" selection-start-line="310" selection-start-column="57" selection-end-line="310" selection-end-column="57" />
+        <state relative-caret-position="177">
+          <caret line="304" column="56" lean-forward="true" selection-start-line="304" selection-start-column="56" selection-end-line="304" selection-end-column="56" />
           <folding>
             <element signature="e#216#266#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/salesman_sale_factory.py">
+    <entry file="file://$PROJECT_DIR$/salesman_dash/my_dash_tab_dd_for_search.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="364">
-          <caret line="56" column="57" selection-start-line="56" selection-start-column="57" selection-end-line="56" selection-end-column="57" />
+        <state relative-caret-position="374">
+          <caret line="124" column="62" lean-forward="true" selection-start-line="124" selection-start-column="62" selection-end-line="124" selection-end-column="62" />
           <folding>
-            <element signature="e#164#206#0" expanded="true" />
+            <element signature="e#185#254#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../BaseFunctions/sertl_analytics/constants/salesman_constants.py">
+    <entry file="file://$PROJECT_DIR$/salesman_sale_factory.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="228">
-          <caret line="126" column="4" selection-start-line="126" selection-start-column="4" selection-end-line="126" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/salesman_web_parser.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="155" column="70" lean-forward="true" selection-start-line="155" selection-start-column="70" selection-end-line="155" selection-end-column="70" />
+        <state relative-caret-position="415">
+          <caret line="91" column="52" lean-forward="true" selection-start-line="91" selection-start-column="52" selection-end-line="91" selection-end-column="52" />
           <folding>
-            <element signature="e#164#206#0" expanded="true" />
+            <element signature="e#170#212#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/salesman_tutti/tutti_url_factory.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="92">
-          <caret line="44" column="43" lean-forward="true" selection-start-line="44" selection-start-column="43" selection-end-line="44" selection-end-column="43" />
+        <state relative-caret-position="-561">
+          <caret line="15" column="30" lean-forward="true" selection-start-line="15" selection-start-column="30" selection-end-line="15" selection-end-column="30" />
           <folding>
-            <element signature="e#180#256#0" expanded="true" />
+            <element signature="e#180#249#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../BaseFunctions/sertl_analytics/pybase/value_categorizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="31" column="17" lean-forward="true" selection-start-line="31" selection-start-column="17" selection-end-line="31" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/salesman_tutti/tutti_categorizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="59" column="8" selection-start-line="59" selection-start-column="8" selection-end-line="59" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/salesman_search_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="464">
+          <caret line="92" column="39" selection-start-line="92" selection-start-column="39" selection-end-line="92" selection-end-column="39" />
+          <folding>
+            <element signature="e#189#231#0" expanded="true" />
           </folding>
         </state>
       </provider>

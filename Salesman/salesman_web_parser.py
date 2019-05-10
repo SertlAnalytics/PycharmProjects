@@ -6,7 +6,7 @@ Date: 2019-05-08
 """
 
 from sertl_analytics.my_text import MyText
-from sertl_analytics.constants.salesman_constants import PRCAT, SLDC
+from sertl_analytics.constants.salesman_constants import SLDC
 from salesman_tutti.tutti_constants import SCLS, SLSCLS, SLCLS
 from salesman_nlp.salesman_spacy import SalesmanSpacy
 from salesman_system_configuration import SystemConfiguration
@@ -25,13 +25,15 @@ class SalesmanWebParser:
         self._salesman_spacy = salesman_spacy
         self._nlp_sale = self._salesman_spacy.nlp
         self._url_factory = TuttiUrlFactory(self.sys_config, self._salesman_spacy)
+        self._online_search_api = None
 
     @property
     def url_base_for_request(self):
         return 'https://www.tutti.ch/de/vi/'
 
-    def init_url_factory_by_online_search_api(self, api: OnlineSearchApi):
-        self._url_factory.init_by_online_search_api(api)
+    def adjust_by_online_search_api(self, api: OnlineSearchApi):
+        self._online_search_api = api
+        self._url_factory.adjust_by_online_search_api(api)
 
     def get_search_string_found_number_dict(self, search_label_lists: list) -> dict:
         # gets the number and used search label list for a search_string - only positive searches are given back
@@ -45,17 +47,30 @@ class SalesmanWebParser:
             number_found = self.__get_number_from_number_item__(xpath_numbers)
             if number_found > 0:
                 return_dict[search_string] = [number_found, search_label_list]
-                print('--> found {} by search_label_list "{}"'.format(number_found, search_label_list))
+                print('{} --> found {} by search_label_list "{}"'.format(url, number_found, search_label_list))
         return return_dict
 
-    def get_product_category_value_list_for_search_labels(self, search_label_lists: list):
+    def get_online_search_api_index_number_dict(self, api_list: list, search_label_lists) -> dict:
+        return_dict = {}
+        for idx, api in enumerate(api_list):
+            return_dict[idx] = 0
+            self._url_factory.adjust_by_online_search_api(api)
+            for search_label_list in search_label_lists:
+                encoded_search_string = MyText.get_url_encode_plus(' '.join(search_label_list))
+                url = self._url_factory.get_url_with_search_string(encoded_search_string)
+                return_dict[idx] += self.__get_found_number_for_product_category_url__(url)
+        return return_dict
+
+    def get_product_categories_value_list_for_search_labels(self, search_label_lists: list) -> list:
         category_number_dict = {}
+        category_value_list = self.sys_config.product_categorizer.get_category_value_list(exceptions=['angebote'])
         for search_label_list in search_label_lists:
             encoded_search_string = MyText.get_url_encode_plus(' '.join(search_label_list))
-            self.__fill_category_value_found_number_dict__(category_number_dict, encoded_search_string)
+            self.__fill_category_value_found_number_dict__(
+                category_value_list, category_number_dict, encoded_search_string)
         number_list = [number for category, number in category_number_dict.items()]
         max_number = max(number_list)
-        return [category for category in category_number_dict
+        return [[category, ''] for category in category_number_dict
                 if math.sqrt(category_number_dict[category]) > math.sqrt(max_number)/3]
 
     def get_html_elements_for_sale_via_request_by_sale_id(self, sale_id: str) -> list:
@@ -74,7 +89,7 @@ class SalesmanWebParser:
         tree = html.fromstring(request.content)
         product_categories = tree.xpath('//span[@class="{}"]'.format(SLSCLS.PRODUCT_CATEGORIES))
         sales = tree.xpath('//div[@class="{}"]'.format(SLSCLS.OFFERS))
-        sale_data_dict = self.__get_sale_data_dict_for_sale_html_elements__(sales[0], product_categories)
+        sale_data_dict = self.__get_sale_data_dict_for_sale_id_by_html_element__(sales[0], product_categories)
         if len(sale_data_dict) == 0:
             return sale_data_dict
         sale_data_dict[SLDC.SALE_ID] = sale_id
@@ -87,11 +102,10 @@ class SalesmanWebParser:
         url_list = self._url_factory.get_url_list(encoded_search_string)
         navigation_pages = ''
         for idx, url in enumerate(url_list):
-            if idx > 0 and navigation_pages.find(str(idx)) < 0:
+            if navigation_pages.find(str(idx)) < 0 < idx:  # we stop paging if there is no number found
                 break
             print('checking url: {}'.format(url))
             request = requests.get(url)
-            # sleep(1)
             tree = html.fromstring(request.content)
             if idx == 0:
                 navigation_elements = tree.xpath('//ul[@class="{}"]'.format(SCLS.NAVIGATION_MAIN))
@@ -102,9 +116,6 @@ class SalesmanWebParser:
                 sale_data_dict = self.__get_sale_data_dict_for_sale_html_element_in_list__(sale_element_in_list)
                 return_sales_data_dict[sale_data_dict[SLDC.SALE_ID]] = sale_data_dict
         return return_sales_data_dict
-
-    def adjust_category_sub_category(self, category_value: str, sub_category_value: str):
-        self._url_factory.adjust_category_sub_category(category_value, sub_category_value)
 
     def get_sale_data_dict_by_browser_sale_element(self, browser_html_element):
         offer_id_obj = browser_html_element.find_element_by_class_name(SLCLS.MAIN_ANKER)
@@ -135,7 +146,7 @@ class SalesmanWebParser:
         return return_dict
 
     @staticmethod
-    def __get_sale_data_dict_for_sale_html_elements__(html_element: HtmlElement, product_categories: list):
+    def __get_sale_data_dict_for_sale_id_by_html_element__(html_element: HtmlElement, product_categories: list):
         my_html_element = MyHtmlElement(html_element)
         return_dict = {}
         location_html_element = my_html_element.get_html_element_for_sub_class(SLSCLS.LOCATION_CLASS)
@@ -151,22 +162,31 @@ class SalesmanWebParser:
         return_dict[SLDC.PRICE] = my_html_element.get_text_for_sub_class(SLSCLS.PRICE)
         return return_dict
 
-    def __fill_category_value_found_number_dict__(self, category_number_dict: dict, search_string: str):
-        # fills the found number for each product category
-        online_search_category_value = self._url_factory.online_search_category_value
-
-        print('online_search_category_value={}'.format(online_search_category_value))
-        for product_category in PRCAT.get_all_without_all():
-            category_value = self.sys_config.product_categorizer.get_value_for_category(product_category)
-            if online_search_category_value == '' or category_value == online_search_category_value:
-                self._url_factory.adjust_category_sub_category(category_value, '')
+    def __fill_category_value_found_number_dict__(
+            self, category_value_list: list, category_number_dict: dict, search_string: str):
+        # fills the found number for each product category_value
+        category_value_remove_list = []
+        for category_value in category_value_list:
+            if self._online_search_api.category_value == '' or category_value == self._online_search_api.category_value:
+                if category_value == self._online_search_api.category_value:
+                    self._url_factory.adjust_by_online_search_api(self._online_search_api)
+                else:
+                    self._online_search_api.category_value = category_value
+                    self._online_search_api.sub_category_value = ''
+                    self._url_factory.adjust_by_online_search_api(self._online_search_api)
                 url = self._url_factory.get_url_with_search_string(search_string)
                 number_found = self.__get_found_number_for_product_category_url__(url)
-                if product_category in category_number_dict:
-                    category_number_dict[category_value] += number_found
+                if number_found == 0:
+                    if category_value not in category_number_dict:
+                        category_value_remove_list.append(category_value)  # we don't want to have this in the next loop
                 else:
-                    category_number_dict[category_value] = number_found
+                    if category_value in category_number_dict:
+                        category_number_dict[category_value] += number_found
+                    else:
+                        category_number_dict[category_value] = number_found
                 print('url={}: found: {}'.format(url, number_found))
+        for category_value in category_value_remove_list:
+            category_value_list.remove(category_value)
 
     def __get_found_number_for_product_category_url__(self, url: str):
         request = requests.get(url)

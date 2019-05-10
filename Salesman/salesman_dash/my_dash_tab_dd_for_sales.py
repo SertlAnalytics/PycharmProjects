@@ -6,8 +6,8 @@ Date: 2018-10-17
 """
 
 from sertl_analytics.mydash.my_dash_components import DropDownHandler
-from sertl_analytics.constants.salesman_constants import SLSRC, PRCAT
-from salesman_tutti.tutti_categorizer import RegionCategorizer, ProductCategorizer
+from sertl_analytics.constants.salesman_constants import SLSRC
+from salesman_tutti.tutti_constants import PRCAT
 from salesman_system_configuration import SystemConfiguration
 
 
@@ -108,8 +108,7 @@ class SaleTabDropDownHandler(DropDownHandler):
         return [{'label': value, 'value': value} for value in SLSRC.get_sale_sources()]
 
     def __get_sale_region_options__(self):
-        category_value_list = self.sys_config.region_categorizer.get_category_value_list()
-        return [{'label': value_list[0], 'value': value_list[1]} for value_list in category_value_list]
+        return self.sys_config.region_categorizer.get_category_value_list_as_option_list()
 
     def __get_product_category_options__(self):
         return self.sys_config.product_categorizer.get_category_value_list_as_option_list()

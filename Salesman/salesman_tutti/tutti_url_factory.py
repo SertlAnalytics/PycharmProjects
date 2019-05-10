@@ -4,7 +4,8 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-05-07
 """
-from sertl_analytics.constants.salesman_constants import SLDC, PRCAT, REGION
+from sertl_analytics.constants.salesman_constants import SLDC, REGION
+from salesman_tutti.tutti_constants import PRCAT, PRSUBCAT
 from salesman_system_configuration import SystemConfiguration
 from salesman_nlp.salesman_spacy import SalesmanSpacy
 
@@ -12,9 +13,13 @@ from salesman_nlp.salesman_spacy import SalesmanSpacy
 class OnlineSearchApi:
     def __init__(self, search_string: str):
         self.search_string = search_string
-        self.region = ''
-        self.category = ''
-        self.sub_category = ''
+        self.region_value = ''
+        self.category_value = ''
+        self.sub_category_value = ''
+
+    def print_api_details(self, prefix='OnlineSearchApi'):
+        print('{}: region_value={}, category_value={}, sub_category_value={}'.format(
+            prefix, self.region_value, self.category_value, self.sub_category_value))
 
 
 class TuttiUrlFactory:
@@ -24,9 +29,9 @@ class TuttiUrlFactory:
         # 'https://www.tutti.ch/de/li/ganze-schweiz/angebote?'
         # https://www.tutti.ch/de/li/aargau?o=6&q=weste
         self._url_base = 'https://www.tutti.ch/de/li'
-        self._region = ''
-        self._category = ''
-        self._sub_category = ''
+        self._region_value = ''
+        self._category_value = ''
+        self._sub_category_value = ''
         self._order = 0
         self._search_string = ''  # could be an href string as well
         self._href = ''
@@ -43,9 +48,15 @@ class TuttiUrlFactory:
 
     @property
     def online_search_category_value(self):
-        if self._online_search_api is None:
+        if self._online_search_api is None or self._online_search_api.category_value in ['angebote', PRCAT.ALL]:
             return ''
-        return '' if self._online_search_api.category in ['angebote', PRCAT.ALL] else self._online_search_api.category
+        return self._online_search_api.category_value
+
+    @property
+    def online_search_sub_category_value(self):
+        if self._online_search_api is None or self._online_search_api.sub_category_value in ['ALL', PRSUBCAT.ALL]:
+            return ''
+        return self._online_search_api.sub_category_value
 
     @property
     def url(self):
@@ -57,17 +68,17 @@ class TuttiUrlFactory:
         url = '{}?{}'.format(self._url_extended_base, '&'.join(p_list))
         return url
 
-    def init_by_online_search_api(self, api: OnlineSearchApi):
+    def adjust_by_online_search_api(self, api: OnlineSearchApi):
         # 'https://www.tutti.ch/de/li/ganze-schweiz/angebote?'
         # https://www.tutti.ch/de/li/aargau?o=6&q=weste
         self._online_search_api = api
         self._search_string = api.search_string
-        self._region = 'ganze-schweiz' if api.region == '' else api.region
-        self._category = 'angebote' if api.category in ['', PRCAT.ALL] else api.category
-        self._sub_category = '' if api.sub_category == 'ALL' else api.sub_category
+        self._region_value = 'ganze-schweiz' if api.region_value == '' else api.region_value
+        self._category_value = 'angebote' if api.category_value in ['', PRCAT.ALL] else api.category_value
+        self._sub_category_value = '' if api.sub_category_value == PRSUBCAT.ALL else api.sub_category_value
         self._order = 0
         self._url_extended_base = self.__get_url_extended_base__()
-        print('init_by_online_search_api._url_extended_base={}'.format(self._url_extended_base))
+        # print('adjust_by_online_search_api._url_extended_base={}'.format(self._url_extended_base))
 
     def get_href(self):
         href = self._search_string
@@ -109,14 +120,8 @@ class TuttiUrlFactory:
         self._order = 0  # reset it....
         return url_list
 
-    def adjust_category_sub_category(self, category: str, sub_category: str):
-        self._category = category
-        self._sub_category = sub_category
-        self._url_extended_base = self.__get_url_extended_base__()
-        # print('adjust_category_sub_category._url_extended_base: {}'.format(self._url_extended_base))
-
     def __get_url_extended_base__(self):
-        region = '' if self._region == '' else '/{}'.format(self._region)
-        category = '' if self._category == '' else '/{}'.format(self._category)
-        sub_category = '' if self._sub_category in ['', 'GANZE_SCHWEIZ'] else '/{}'.format(self._sub_category)
+        region = '' if self._region_value == '' else '/{}'.format(self._region_value)
+        category = '' if self._category_value == '' else '/{}'.format(self._category_value)
+        sub_category = '' if self._sub_category_value == '' else '/{}'.format(self._sub_category_value)
         return '{}{}{}{}'.format(self._url_base, region, category, sub_category)

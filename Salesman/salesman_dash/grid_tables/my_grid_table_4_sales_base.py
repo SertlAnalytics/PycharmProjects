@@ -5,10 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-16
 """
 
-from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, REGION, PRCAT
-from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
+from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, REGION
+from salesman_tutti.tutti_constants import PRCAT
 from salesman_system_configuration import SystemConfiguration
-import pandas as pd
 
 
 class SaleRow:

@@ -5,33 +5,28 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-02
 """
 
-from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, PRCAT
-from sertl_analytics.my_text import MyText
+from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
+from salesman_tutti.tutti_constants import PRCAT
 from sertl_analytics.my_excel import MyExcel
 from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from calculation.outlier import Outlier
 from salesman_tutti.tutti_browser import MyUrlBrowser4Tutti
-from lxml import html
 from salesman_sale import SalesmanSale
 from spacy import displacy
 from salesman_nlp.salesman_spacy import SalesmanSpacy
-from salesman_tutti.tutti_constants import SCLS, SLSCLS
 import pandas as pd
-import requests
-from time import sleep
 from salesman_system_configuration import SystemConfiguration
 from printing.sale_printing import SalesmanPrint
-import math
-from salesman_web_parser import SalesmanWebParser
 from salesman_tutti.tutti_url_factory import OnlineSearchApi
 from salesman_sale_factory import SalesmanSaleFactory
+from salesman_search_data import SalesmanSearchData
 
 
 class Tutti:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
         self._printing = SalesmanPrint(SLDC.get_columns_for_sales_printing())
-        self._my_sales_source = SLSRC.TUTTI_CH
+        self._sale_platform = self.__get_sale_platform__()
         self._excel = self.__get_excel__()
         self._salesman_spacy = SalesmanSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
         self._sale_factory = SalesmanSaleFactory(self.sys_config, self._salesman_spacy)
@@ -63,7 +58,7 @@ class Tutti:
     @property
     def excel_file_path(self):
         return self.sys_config.file_handler.get_file_path_for_file(
-            '{}_{}'.format(self._my_sales_source, self.sys_config.sales_result_file_name))
+            '{}_{}'.format(self._sale_platform, self.sys_config.sales_result_file_name))
 
     @property
     def search_label_lists(self) -> list:
@@ -73,27 +68,30 @@ class Tutti:
         if self.sys_config.write_to_excel:
             self._excel.close()
 
-    def search_on_tutti(self, title: str, description: str):
-        sale = self._sale_factory.get_sale_by_online_search_string(title + ' ' + description)
-        self.__check_sales_against_similar_sales_on_tutti__([sale])
+    def check_search_by_api_against_similar_sales(self, api: OnlineSearchApi):
+        sale = self._sale_factory.get_sale_by_online_search_api(api)
+        self.__check_sales_against_similar_sales_on_platform__([sale])
 
-    def check_my_nth_sale_against_similar_sales(self, number=1):
+    def check_my_nth_sale_in_browser_against_similar_sales(self, number=1):
         sale = self.browser.get_my_nth_sale_from_tutti(number)
-        self.__check_sales_against_similar_sales_on_tutti__([sale])
+        self.__check_sales_against_similar_sales_on_platform__([sale])
 
-    def check_sale_on_tutti_against_similar_sales_by_sale_id(self, sale_id: str):
-        sale = self.get_sale_from_tutti_by_sale_id(sale_id)
-        self.__check_sales_against_similar_sales_on_tutti__([sale])
+    def check_sale_on_platform_against_similar_sales_by_sale_id(self, sale_id: str):
+        sale = self.get_sale_from_platform_by_sale_id(sale_id)
+        self.__check_sales_against_similar_sales_on_platform__([sale])
 
     def check_sale_in_db_against_similar_sales_by_sale_id(self, sale_id: str):
         sale = self.get_sale_from_db_by_sale_id(sale_id)
-        self.__check_sales_against_similar_sales_on_tutti__([sale])
+        if sale is None:
+            print('\nWARNING: No sale in database with ID={}'.format(sale_id))
+        else:
+            self.__check_sales_against_similar_sales_on_platform__([sale])
 
     def check_my_nth_virtual_sale_against_similar_sales(self, number=1):
         source_sale_list = self.__get_my_virtual_sales__(number)
-        self.__check_sales_against_similar_sales_on_tutti__(source_sale_list)
+        self.__check_sales_against_similar_sales_on_platform__(source_sale_list)
 
-    def __check_sales_against_similar_sales_on_tutti__(self, source_sale_list: list):
+    def __check_sales_against_similar_sales_on_platform__(self, source_sale_list: list):
         if len(source_sale_list) == 0 or source_sale_list[0] is None:
             return
         for source_sale in source_sale_list:
@@ -108,15 +106,15 @@ class Tutti:
 
     def print_details_for_tutti_sale_id(self, sale_id: str):
         self.sys_config.write_to_excel = False
-        sale = self.get_sale_from_tutti_by_sale_id(sale_id)
+        sale = self.get_sale_from_platform_by_sale_id(sale_id)
         if sale is None:
             print('Cannot find {}'.format(sale_id))
         else:
             sale.print_sale_details()
             sale.print_sale_in_original_structure()
 
-    def check_sale_against_sale_in_db_by_sale_id(self, sale_id: str):
-        sale = self.get_sale_from_tutti_by_sale_id(sale_id)
+    def check_sale_on_platform_against_sale_in_db_by_sale_id(self, sale_id: str):
+        sale = self.get_sale_from_platform_by_sale_id(sale_id)
         if sale is None:
             if self.sys_config.print_details:
                 print('Sale with sale_id {} not found on Tutti'.format(sale_id))
@@ -128,7 +126,7 @@ class Tutti:
                 sale_from_db.print_sale_details()
             print('Are identical' if self._sale_factory.are_sales_identical(sale, sale_from_db) else 'Not identical')
 
-    def get_sale_from_tutti_by_sale_id(self, sale_id: str) -> SalesmanSale:
+    def get_sale_from_platform_by_sale_id(self, sale_id: str) -> SalesmanSale:
         return self._sale_factory.get_sale_via_request_by_sale_id(sale_id)
 
     def get_search_results_by_selected_print_category(self, print_category: list):
@@ -137,24 +135,27 @@ class Tutti:
 
     def __get_similar_sales_as_dict_list_by_print_category_(self, print_category: list) -> list:
         return_list = []
+        if len(print_category) == 0:
+            for similar_sale in self._current_similar_sales:
+                return_list.append(
+                    similar_sale.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
+            return return_list
         entity_label = print_category[0]
         entity_value = print_category[1]
         for similar_sale in self._current_similar_sales:
             if entity_value in similar_sale.entity_label_dict:
                 if similar_sale.entity_label_dict[entity_value] == entity_label:
                     return_list.append(
-                        similar_sale.data_dict_obj.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
+                        similar_sale.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
         return return_list
 
     def get_search_results_from_online_inputs(self, api: OnlineSearchApi) -> list:
         if api.search_string == '':
             return []
-        self._sale_factory.init_url_factory_by_online_search_api(api)
-        self._current_source_sale = self._sale_factory.get_sale_by_online_search_string(api.search_string)
+        self._current_source_sale = self._sale_factory.get_sale_by_online_search_api(api)
         self._current_similar_sales = self.__get_similar_sales_for_sale__(self._current_source_sale)
         self.__init_printing__(self._current_similar_sales)
-        return self.__get_similar_sales_as_dict_list__(
-            self._current_source_sale, self._current_similar_sales, for_db=False)
+        return self.__get_similar_sales_as_dict_list__(self._current_similar_sales, for_db=False)
 
     def check_my_sales_against_similar_sales(self, state='active'):
         if state == '':
@@ -246,8 +247,9 @@ class Tutti:
     def __init_printing__(self, similar_sales: list, print_category=None):
         input_list = []
         for label_value, entity_label in self._current_source_sale.entity_label_dict.items():
-            print('__init_printing__: print_cateogory={}, label={}, value={}'.format(print_category, entity_label, label_value))
-            if print_category is None or (print_category[0] == entity_label and print_category[1] == label_value):
+            print('__init_printing__: print_category={}, label={}, value={}'.format(print_category, entity_label, label_value))
+            if print_category is None or len(print_category) == 0 or \
+                    (print_category[0] == entity_label and print_category[1] == label_value):
                 self.__add_to_printing_list__(
                     input_list, self._current_source_sale, similar_sales, entity_label, label_value)
         self._printing.init_by_sale_dict(input_list)
@@ -256,16 +258,16 @@ class Tutti:
             self, input_list, my_sale: SalesmanSale, similar_sales: list, entity_label: str, label_value: str):
         if entity_label == my_sale.entity_label_dict.get(label_value, ''):
             if my_sale.location != 'online':
-                my_sale.data_dict_obj.add(SLDC.PRINT_CATEGORY, '{}: {}'.format(entity_label, label_value))
-                input_list.append(my_sale.data_dict_obj.get_data_dict_for_columns(self._printing.columns))
+                my_sale.set_value(SLDC.PRINT_CATEGORY, '{}: {}'.format(entity_label, label_value))
+                input_list.append(my_sale.get_data_dict_for_columns(self._printing.columns))
         for similar_sale in similar_sales:
             if entity_label == similar_sale.entity_label_dict.get(label_value, ''):
-                similar_sale.data_dict_obj.add(SLDC.PRINT_CATEGORY, '{}: {}'.format(entity_label, label_value))
-                input_list.append(similar_sale.data_dict_obj.get_data_dict_for_columns(self._printing.columns))
+                similar_sale.set_value(SLDC.PRINT_CATEGORY, '{}: {}'.format(entity_label, label_value))
+                input_list.append(similar_sale.get_data_dict_for_columns(self._printing.columns))
 
     def __add_sale_to_database_input_list__(self, sale: SalesmanSale, input_list: list):
         if sale.is_sale_ready_for_sale_table():
-            sale_dict = sale.data_dict_obj.get_data_dict_for_sale_table()
+            sale_dict = sale.get_data_dict_for_sale_table()
             existing_sale = self.get_sale_from_db_by_sale_id(sale.sale_id)
             if existing_sale is None:
                 input_list.append(sale_dict)
@@ -280,20 +282,20 @@ class Tutti:
             return self._sale_factory.get_sale_by_db_row(df.iloc[0])
 
     @staticmethod
-    def __get_similar_sales_as_dict_list__(my_sale: SalesmanSale, similar_sales: list, for_db=True) -> list:
+    def __get_similar_sales_as_dict_list__(similar_sales: list, for_db=True) -> list:
         return_list = []
         for similar_sale in similar_sales:
             if for_db:
                 if similar_sale.is_sale_ready_for_sale_table():
-                    sale_dict = similar_sale.data_dict_obj.get_data_dict_for_sale_table()
+                    sale_dict = similar_sale.get_data_dict_for_sale_table()
                     return_list.append(sale_dict)
             else:
                 return_list.append(
-                    similar_sale.data_dict_obj.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
+                    similar_sale.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
         return return_list
 
     def __get_my_virtual_sales__(self, number=0):
-        self._my_sales_source = 'virtual'
+        self._sale_platform = 'virtual'
         tutti_sales = []
         virtual_sale_df = self.__get_sale_elements_from_file__()
         for idx, row in virtual_sale_df.iterrows():
@@ -316,41 +318,37 @@ class Tutti:
                 displacy.render(doc, style='ent')
 
     def __get_similar_sales_for_sale__(self, sale: SalesmanSale) -> list:
-        similar_sale_dict = {}
         self._search_label_lists = sale.get_search_label_lists()
-        print('\nSearch_label_lists={}, category={}'.format(self._search_label_lists, sale.product_category))
-        category_sub_category_lists = self.sys_config.product_categorizer.get_search_category_sub_categories(
-            sale.product_category, sale.product_sub_category)
-        print('category_sub_category_lists={}'.format(category_sub_category_lists))
-        for value_list in category_sub_category_lists:
-            self.__adjust_search_label_lists_for_too_many_hits__(sale, value_list)
+        search_data = self.__get_search_data_adjusted__(sale)
+        self.__adjust_search_label_lists__(sale, search_data.max_number_found)
+        similar_sale_dict = {}
+        for search_api in search_data.online_search_api_list:
+            search_api.print_api_details('looping...')
+            self._sale_factory.adjust_by_online_search_api(search_api)
             for search_label_list in self._search_label_lists:
-                if len(sale.product_category_value_list) > 0:
-                    for product_category_value in sale.product_category_value_list:
-                        self._sale_factory.adjust_category_sub_category_for_url_factory(product_category_value, '')
-                        self.__get_sales_from_tutti_for_search_label_list__(similar_sale_dict, search_label_list, sale)
-                else:
-                    self.__get_sales_from_tutti_for_search_label_list__(similar_sale_dict, search_label_list, sale)
-            self.__identify_outliers__(similar_sale_dict)
+                self.__get_sales_from_tutti_for_search_label_list__(similar_sale_dict, search_label_list, sale)
+        self.__identify_outliers__(similar_sale_dict)
         similar_sales_summary = [sale for sale in similar_sale_dict.values()]
         if self.sys_config.print_details:
             self.__print_similar_sales__(sale, similar_sales_summary)
         return similar_sales_summary
 
-    def __adjust_search_label_lists_for_too_many_hits__(self, sale: SalesmanSale, value_list: list):
-        category_value = self.sys_config.product_categorizer.get_value_for_category(value_list[0])
-        sub_category_value = self.sys_config.product_categorizer.get_sub_category_value_for_sub_category(
-            value_list[0], value_list[1])
-        print('\nSearch over cat/sub_cat={}/{}'.format(category_value, sub_category_value))
-        self._sale_factory.adjust_category_sub_category_for_url_factory(category_value, sub_category_value)
-        number_search_dict = self._sale_factory.get_search_string_found_number_dict(self._search_label_lists)
-        found_number_list = [number_search_dict[search_string][0] for search_string in number_search_dict]
-        if len(found_number_list) > 0 and max(found_number_list) > self.sys_config.number_allowed_search_results:
-            print('Max number {} is larger then allowed result number {} -> change search strings...'.format(
-                max(found_number_list), self.sys_config.number_allowed_search_results
-            ))
-            self._search_label_lists = sale.get_extended_base_search_label_lists(self._search_label_lists)
-            print('\nSearch_label_lists={}'.format(self._search_label_lists))
+    def __adjust_search_label_lists__(self, sale: SalesmanSale, max_number_found: int):
+        if max_number_found <= self.sys_config.number_allowed_search_results:
+            return
+        lists_old = list(self._search_label_lists)
+        self._search_label_lists = sale.get_extended_base_search_label_lists(self._search_label_lists)
+        print('\nMax number {} is larger than allowed {}: {} -> {}'.format(
+            max_number_found, self.sys_config.number_allowed_search_results, lists_old, self._search_label_lists)
+        )
+
+    def __get_search_data_adjusted__(self, sale):
+        search_data = SalesmanSearchData(self.sys_config, sale)
+        online_search_api_index_number_dict = self._sale_factory.get_online_search_api_index_number_dict(
+            search_data.online_search_api_list, self._search_label_lists)
+        print('online_search_api_index_number_dict={}'.format(online_search_api_index_number_dict))
+        search_data.adjust_online_search_api_list_by_found_number_dict(online_search_api_index_number_dict)
+        return search_data
 
     def __get_sales_from_tutti_for_search_label_list__(
             self, similar_sales_dict: dict, search_label_list: list, sale: SalesmanSale):
@@ -390,4 +388,8 @@ class Tutti:
             print('\nNO SIMILAR SALES AVAILABLE for {}'.format(sale.key))
         for sale in similar_sales:
             sale.print_sale_in_original_structure()
+
+    @staticmethod
+    def __get_sale_platform__():
+        return SLSRC.TUTTI_CH
 

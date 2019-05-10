@@ -8,6 +8,7 @@ Date: 2018-11-14
 from dash.dependencies import Input, Output, State
 from calculation.outlier import Outlier
 from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
+from salesman_tutti.tutti_constants import PRCAT, PRSUBCAT
 from sertl_analytics.my_pandas import MyPandas
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
 from salesman_dash.header_tables.my_tab_header_table_4_search import MyHTMLTabSearchHeaderTable
@@ -34,6 +35,7 @@ class SearchHandler:
         self._print_category_list = []
         self._print_category_options = []
         self._print_category_selected_as_list = []
+
 
 class MyDashTab4Search(MyDashBaseTab):
     _data_table_name = 'my_search_result_grid_table'
@@ -115,9 +117,11 @@ class MyDashTab4Search(MyDashBaseTab):
             if len(children) == 0:
                 return []
             if len(self._print_category_options) == 0:
-                self._print_category_options = [
-                    {'label': '{}-{}'.format(idx+1, MyText.get_option_label(category)), 'value': '{}'.format(idx)}
-                    for idx, category in enumerate(self._print_category_list)]
+                self._print_category_options = [{'label': PRCAT.ALL, 'value': PRCAT.ALL}]
+                for idx, category in enumerate(self._print_category_list):
+                    self._print_category_options.append(
+                        {'label': '{}-{}'.format(idx + 1, MyText.get_option_label(category)), 'value': '{}'.format(idx)}
+                    )
             return self._print_category_options
 
         @self.app.callback(
@@ -217,7 +221,7 @@ class MyDashTab4Search(MyDashBaseTab):
                 return self.__get_search_result_grid_table_by_online_search__()
             elif self._search_online_input_table.search_button_n_clicks > 0 and \
                     self._dd_handler.selected_search_print_category != print_category_value:
-                print('New print category value: {}'.format(print_category_value))
+                print('New print category_value value: {}'.format(print_category_value))
                 self._print_category_selected_as_list = self.__get_selected_print_category__(print_category_value)
                 return self.__get_search_result_grid_table_by_selected_print_category__()
             return ''
@@ -273,7 +277,7 @@ class MyDashTab4Search(MyDashBaseTab):
     def __get_search_markdown_for_online_search__(self):
         my_sale_obj = self.tutti.current_source_sale
         my_sale = '**Searching for**: {}'.format(self._search_input)
-        my_sale_obj_text = '**Found entities:** {}'.format(my_sale_obj.data_dict_obj.get(SLDC.ENTITY_LABELS_DICT))
+        my_sale_obj_text = '**Found entities:** {}'.format(my_sale_obj.get_value(SLDC.ENTITY_LABELS_DICT))
         if self._online_rows is None or len(self._online_rows) == 0:
             return '  \n'.join([my_sale, my_sale_obj_text, '**NO RESULTS FOUND**'])
         outlier_online_search = self.__get_outlier_for_online_search__()
@@ -305,9 +309,13 @@ class MyDashTab4Search(MyDashBaseTab):
 
     def __get_search_result_grid_table_by_online_search__(self):
         api = OnlineSearchApi(self._search_input)
-        api.region = self._dd_handler.selected_search_region
-        api.category = self._dd_handler.selected_search_category
-        api.sub_category = self._dd_handler.selected_search_sub_category
+        category_value = self._dd_handler.selected_search_category
+        sub_category_value = self._dd_handler.selected_search_sub_category
+        api.region_value = self._dd_handler.selected_search_region
+        api.category_value = '' if category_value == PRCAT.ALL else category_value
+        api.sub_category_value = '' if api.category_value == '' or sub_category_value == PRSUBCAT.ALL \
+            else sub_category_value
+        # api.print_api_details('__get_search_result_grid_table_by_online_search__')
         self._online_rows = self.tutti.get_search_results_from_online_inputs(api)
         return self.__get_search_result_grid_table__()
 

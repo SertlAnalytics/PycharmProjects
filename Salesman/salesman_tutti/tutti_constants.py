@@ -6,6 +6,111 @@ Date: 2019-04-02
 """
 
 
+class PRCAT:  # Product Category, german: Rubrik
+    ALL = 'Alle'
+    ART = 'Antiquitäten & Kunst'
+    CHILD = 'Baby & Child'
+    BOOKS = 'Bücher'
+    BUSINESS = 'Büro & Gewerbe'
+    COMPUTER = 'Computer & Zubehör'
+    SERVICE = 'Dienstleistungen'
+    VEHICELS = 'Fahrzeuge'
+    PICTURE = 'Film'
+    PHOTO_VIDEO = 'Foto & Video'
+    GARDEN_CRAFT = 'Garten & Handwerk'
+    HOUSEHOLD = 'Haushalt'
+    REAL_ESTATE = 'Immobilien'
+    CLOTHES_OTHERS = 'Kleidung & Accessoires'
+    MUSIC = 'Musik'
+    COLLECTIONS = 'Sammeln'
+    TOYS = 'Spielzeuge & Basteln'
+    SPORT_OUTDOOR = 'Sport & Outdoor'
+    JOBS = 'Stellenangebote'
+    TV_AUDIO = 'TV & Audio'
+    PHONE_NAVI = 'Telefon & Navigation'
+    TICKETS_BONS = 'Tickets & Gutscheine'
+    ANIMALS = 'Tiere'
+    OTHERS = 'Sonstiges'
+
+    @staticmethod
+    def get_all():
+        return [
+            PRCAT.ALL, PRCAT.VEHICELS, PRCAT.REAL_ESTATE,
+            PRCAT.ART, PRCAT.CHILD, PRCAT.BOOKS, PRCAT.BUSINESS, PRCAT.COMPUTER,
+            PRCAT.SERVICE, PRCAT.PICTURE, PRCAT.PHOTO_VIDEO, PRCAT.GARDEN_CRAFT,
+            PRCAT.HOUSEHOLD, PRCAT.CLOTHES_OTHERS, PRCAT.MUSIC, PRCAT.COLLECTIONS,
+            PRCAT.TOYS, PRCAT.SPORT_OUTDOOR, PRCAT.JOBS, PRCAT.TV_AUDIO, PRCAT.PHONE_NAVI,
+            PRCAT.TICKETS_BONS, PRCAT.ANIMALS, PRCAT.OTHERS
+        ]
+
+    @staticmethod
+    def get_all_without_all() -> list:
+        list_all = PRCAT.get_all()
+        list_all.remove(PRCAT.ALL)
+        return list_all
+
+
+class PRSUBCAT:  # Product Sub Category, german: Unter-Rubrik
+    ALL = 'Alle'
+    BOOK_NOVELS = 'Romane'
+    BOOK_ADVISORS = 'Sachbücher & Ratgeber'
+    CHILD_STROLLER = 'Kinderwagen & Sitze'
+    CHILD_ROOM = 'Kinderzimmer'
+    CHILD_CLOTHES = 'Kleider & Schuhe'
+    CLOTHES_FEMALE = 'Kleidung für Damen'
+    CLOTHES_MALE = 'Kleidung für Herren'
+    SHOES_FEMALE = 'Schuhe für Damen'
+    SHOES_MALE = 'Schuhe für Herren'
+    OTHERS_BAGS = 'Taschen und & Portmonnaies'
+    OTHERS_WATCHES = 'Uhren & Schmuck'
+    COMPUTER = 'Computer'
+    COMPUTER_COMPONENTS = 'Komponenten & Zubehör'
+    SOFTWARE = 'Software'
+    TABLETS = 'Tablets'
+    SERVICE_OFFICE = 'Büroservice'
+    SERVICE_COMPUTER = 'Computer & Handys'
+    SERVICE_FINANCE = 'Finanzen & Recht'
+    SERVICE_CRAFT = 'Handwerk'
+    SERVICE_TRANSPORT = 'Umzug & Transport'
+    BUSINESS_MATERIAL = 'Büromaterial & Büromöbel'
+    BUSINESS_EQUIPMENT = 'Geschäftseinrichtungen'
+    SPORT_CAMPING = 'Camping'
+    SPORT_FITNESS = 'Fitness'
+    SPORT_BIKE = 'Velos'
+    SPORT_WINTER = 'Wintersport'
+    SPORT_OTHERS = 'Sonstige Sportarten'
+    PHONE_FIX = 'Festnetztelefone'
+    PHONE_MOBILE = 'Handys'
+    PHONE_NAVI = 'Navigationssysteme'
+    PHONE_COMPONENTS = 'Zubehör'
+    VEHICELS_CARS = 'Autos'
+    VEHICELS_COMPONENTS = 'Autozubehör'
+    VEHICELS_BOATS = 'Boote & Zubehör'
+    VEHICELS_BIKE_COMPONENTS = 'Motorradzubehör'
+    VEHICELS_BIKE = 'Motorräder'
+    VEHICELS_UTILITIES = 'Nutzfahrzeuge'
+    VEHICELS_CAMPERS = 'Wohnmobile'
+    REAL_ESTATE_HOLIDAY = 'Ferienobjekte'
+    REAL_ESTATE_BUSINESS = 'Gewerbeobjekte'
+    REAL_ESTATE_PROPERTY = 'Grundstücke'
+    REAL_ESTATE_HOUSES = 'Häuser'
+    REAL_ESTATE_PARKING = 'Parkplätze'
+    REAL_ESTATE_COMMUNITY = 'WG-Zimmer'
+    REAL_ESTATE_FLATS = 'Wohnungen'
+    PHOTO_CAMERA = 'Fotokameras'
+    VIDEO_CAMERA = 'Videokameras'
+    PHOTO_COMPONENTS = 'Zubehör'
+    GARDEN_MATERIAL = 'Baumaterial'
+    GARDEN_EQUIPMENT = 'Gartenausstattung'
+    GARDEN_TOOLS = 'Werkzeuge & Maschinen'
+    HOUSEHOLD_LIGHT = 'Beleuchtung'
+    HOUSEHOLD_TOOLS = 'Geräte & Utensilien'
+    HOUSEHOLD_FOOD = 'Lebensmittel'
+    HOUSEHOLD_FURNITURE = 'Möbel'
+    JOBS_HEALTH = 'Gesundheitswesen'
+    JOBS_OTHERS = 'Sonstige Stellen'
+
+
 class EL:  # entity labels
     COMPANY = 'COMPANY'
     PRODUCT = 'PRODUCT'
