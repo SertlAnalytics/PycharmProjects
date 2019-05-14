@@ -33,6 +33,16 @@ class MyText:
         return MyText.replace_by_dict(input_string, umlaute_dict)
 
     @staticmethod
+    def are_values_identical(value_01: str, value_02: str) -> bool:
+        replace_dict = {' ': '', '\n': ''}
+        value_01_changed = str(value_01)
+        value_02_changed = str(value_02)
+        for old_value, new_value in replace_dict.items():
+            value_01_changed = value_01_changed.replace(old_value, new_value)
+            value_02_changed = value_02_changed.replace(old_value, new_value)
+        return value_01_changed == value_02_changed
+
+    @staticmethod
     def replace_by_dict(input_string, replacement_dict):
         for old_value, new_value in replacement_dict.items():
             if input_string.find(old_value) > -1:

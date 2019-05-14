@@ -6,7 +6,10 @@ Date: 2019-04-09
 """
 
 class SMPR:  # Salesman Processes
-    UPDATE_SALES_DAILY = 'Update_Sales_Daily'
+    UPDATE_SALES_DATA_IN_STATISTICS_TAB = 'Update_Sales_Data_In_Statistics_Tab'
+    CHECK_SALES_STATE = 'Check_Sales_State'
+    CHECK_SIMILAR_SALES_IN_DATABASE = 'Check_Similar_Sales_In_Database'
+    UPDATE_SIMILAR_SALES_DAILY = 'Update_Similar_Sales'
     UPDATE_COMPANY_DAILY = 'Update_Company_Daily'
 
     
@@ -63,6 +66,7 @@ class SLST:  # Sale Status
     VANISHED = 'vanished'
     WITHDRAWN = 'withdrawn'
     ON_HOLD = 'onhold'
+    DELETE = 'delete'
     
     
 class OBJST:  # Object Status
@@ -123,6 +127,7 @@ class OBJPROP:  # Object properties
     ORIGINAL_COVER = 'Cover available'    
 
 class SLDC:  # Sale data column
+    ROW_ID = 'rowid'
     SALE_ID = 'Sale_ID'
     SALE_ID_MAX = 'Sale_ID_max'
     VERSION = 'Version'
@@ -143,11 +148,15 @@ class SLDC:  # Sale data column
     TITLE = 'Title'
     DESCRIPTION = 'Description'
     MATERIAL = 'Material'
+    LOCATIONS_ALL = 'Locations_All'
+    COLORS = 'COLORS'
+    JOBS = 'JOBS'
     PROPERTY_DICT = 'Properties'
     PRICE = 'Price'
     PRICE_SINGLE = 'Price_single'
     PRICE_NEW = 'Price_new'
     IS_TOTAL_PRICE = 'Is_total_price'
+    IS_SINGLE_PRICE = 'Is_single_price'
     PRICE_ORIGINAL = 'Price_orig'
     SIZE = 'Size'
     NUMBER = 'Number'
@@ -170,9 +179,9 @@ class SLDC:  # Sale data column
 
     @staticmethod
     def get_columns_for_excel():
-        return [SLDC.SALE_ID, SLDC.MASTER_ID, SLDC.SOURCE,
+        return [SLDC.SALE_ID, SLDC.MASTER_ID, SLDC.SOURCE, SLDC.SALE_STATE, 
                 SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
-                SLDC.START_DATE, SLDC.LOCATION, SLDC.OBJECT_STATE,
+                SLDC.START_DATE, SLDC.LOCATION, SLDC.LOCATIONS_ALL, SLDC.COLORS, SLDC.OBJECT_STATE,
                 SLDC.IS_NEW, SLDC.IS_LIKE_NEW, SLDC.IS_USED,
                 SLDC.PRICE, SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER, SLDC.IS_TOTAL_PRICE, SLDC.PRICE_ORIGINAL, SLDC.NUMBER,
                 SLDC.SIZE, SLDC.MATERIAL, SLDC.PROPERTY_DICT,
@@ -182,13 +191,13 @@ class SLDC:  # Sale data column
 
     @staticmethod
     def get_columns_for_sales_tab_table():
-        return [SLDC.SALE_ID, SLDC.VERSION,
+        return [SLDC.SALE_ID, SLDC.VERSION, SLDC.SALE_STATE,
                 SLDC.SOURCE, SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE, SLDC.HREF]
 
     @staticmethod
     def get_columns_for_similar_sales_tab_table():
-        return [SLDC.SALE_ID, SLDC.VERSION,
+        return [SLDC.SALE_ID, SLDC.VERSION, SLDC.SALE_STATE,
                 SLDC.SOURCE, SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE, SLDC.HREF, SLDC.MASTER_ID]
 

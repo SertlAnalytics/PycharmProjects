@@ -86,6 +86,7 @@ class SalesmanWebParser:
         url = '{}{}'.format(self.url_base_for_request, sale_id)
         request = requests.get(url)
         sleep(1)
+        print('...get_sale_data_dict_for_sale_id.url: {}'.format(url))
         tree = html.fromstring(request.content)
         product_categories = tree.xpath('//span[@class="{}"]'.format(SLSCLS.PRODUCT_CATEGORIES))
         sales = tree.xpath('//div[@class="{}"]'.format(SLSCLS.OFFERS))
@@ -148,19 +149,25 @@ class SalesmanWebParser:
     @staticmethod
     def __get_sale_data_dict_for_sale_id_by_html_element__(html_element: HtmlElement, product_categories: list):
         my_html_element = MyHtmlElement(html_element)
-        return_dict = {}
+        description = my_html_element.get_text_for_sub_class(SLSCLS.DESCRIPTION)
+        print('description={}, type={}'.format(description, type(description)))
         location_html_element = my_html_element.get_html_element_for_sub_class(SLSCLS.LOCATION_CLASS)
-        return_dict[SLDC.LOCATION] = location_html_element.get_text_for_sub_class(SLSCLS.LOCATION_SUB_CLASS)
+        if location_html_element is None:
+            return {}
         date_html_element = my_html_element.get_html_element_for_sub_class(SLSCLS.DATE_CLASS)
-        category_off_set = 1 if len(product_categories) == 3 else 2
-        return_dict[SLDC.REGION] = product_categories[category_off_set-1].text_content()
-        return_dict[SLDC.PRODUCT_CATEGORY] = product_categories[category_off_set].text_content()
-        return_dict[SLDC.PRODUCT_SUB_CATEGORY] = product_categories[category_off_set+1].text_content()
-        return_dict[SLDC.START_DATE] = date_html_element.get_text_for_sub_class(SLSCLS.DATE_SUB_CLASS)
-        return_dict[SLDC.TITLE] = my_html_element.get_text_for_sub_class(SLSCLS.TITLE)
-        return_dict[SLDC.DESCRIPTION] = my_html_element.get_text_for_sub_class(SLSCLS.DESCRIPTION)
-        return_dict[SLDC.PRICE] = my_html_element.get_text_for_sub_class(SLSCLS.PRICE)
-        return return_dict
+        category_off_set = 1 if len(product_categories) <= 3 else 2
+        product_sub_category = '' if len(product_categories) <= category_off_set+1 else \
+            product_categories[category_off_set+1].text_content()
+        return {
+            SLDC.LOCATION: location_html_element.get_text_for_sub_class(SLSCLS.LOCATION_SUB_CLASS),
+            SLDC.REGION: product_categories[category_off_set-1].text_content(),
+            SLDC.PRODUCT_CATEGORY: product_categories[category_off_set].text_content(),
+            SLDC.PRODUCT_SUB_CATEGORY: product_sub_category,
+            SLDC.START_DATE: date_html_element.get_text_for_sub_class(SLSCLS.DATE_SUB_CLASS),
+            SLDC.TITLE: my_html_element.get_text_for_sub_class(SLSCLS.TITLE),
+            SLDC.DESCRIPTION: my_html_element.get_text_for_sub_class(SLSCLS.DESCRIPTION),
+            SLDC.PRICE: my_html_element.get_text_for_sub_class(SLSCLS.PRICE),
+        }
 
     def __fill_category_value_found_number_dict__(
             self, category_value_list: list, category_number_dict: dict, search_string: str):

@@ -27,6 +27,10 @@ class NamedEntity:
     def entity_synonym_dict(self):
         return self._entity_synonym_dict
 
+    @property
+    def entity_names(self):
+        return self._entity_names
+
     @staticmethod
     def __get_entity_names__():
         return []

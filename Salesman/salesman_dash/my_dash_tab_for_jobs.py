@@ -16,15 +16,17 @@ from sertl_analytics.constants.pattern_constants import STBL, DTRG, JDC
 from salesman_dash.my_dash_tab_table_for_jobs import JobTable
 from salesman_dash.my_dash_job_handler import MyDashJobHandler
 from salesman_scheduling.salesman_process_manager import SalesmanProcessManager
+from salesman_tutti.tutti import Tutti
 
 
 class MyDashTab4Jobs(MyDashBaseTab):
     _data_table_name = 'my_jobs_table'
     _data_table_div = '{}_div'.format(_data_table_name)
 
-    def __init__(self, app: Dash):
+    def __init__(self, app: Dash, tutti: Tutti):
         MyDashBaseTab.__init__(self, app)
-        self._job_handler = MyDashJobHandler(SalesmanProcessManager())
+        self._job_handler = MyDashJobHandler(SalesmanProcessManager(), tutti)
+        self._tutti = tutti
         self.__init_dash_element_ids__()
         self._db = SalesmanDatabase()
         self._dd_handler = JobsTabDropDownHandler()

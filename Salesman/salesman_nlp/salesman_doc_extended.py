@@ -21,6 +21,7 @@ class DocExtended:
         self.is_used = self._doc._.is_used
         self.price_single = self._doc._.price_single
         self.is_total_price = self._doc._.is_total_price
+        self.is_single_price = self._doc._.is_single_price
 
     @property
     def doc(self):
@@ -36,7 +37,7 @@ class DocExtended:
             return OBJST.NEW if self.is_new else OBJST.NOT_QUALIFIED
 
     def correct_single_price(self, price: float):
-        if self.is_total_price and self.number != 0:
+        if self.is_total_price and self.number != 0 and not self.is_single_price:
             self.price_single = int(price / self.number)
         if self.price_single == 0:
             self.price_single = price

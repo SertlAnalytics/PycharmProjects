@@ -60,6 +60,8 @@ class ProductCategorizer(ValueCategorizer):  # Product Category, german: Rubrik
     def get_alternative_search_category_sub_categories(category: str, sub_category: str) -> list:
         if category == PRCAT.CHILD and sub_category == PRSUBCAT.CHILD_CLOTHES:
             return [PRCAT.CLOTHES_OTHERS, '']
+        elif category == PRCAT.TOYS and sub_category == PRSUBCAT.TOYS:
+            return[PRCAT.CHILD, PRSUBCAT.CHILD_ROOM]
         elif category == PRCAT.COMPUTER and sub_category == PRSUBCAT.COMPUTER_COMPONENTS:
             return [PRCAT.PHONE_NAVI, PRSUBCAT.PHONE_COMPONENTS]
 

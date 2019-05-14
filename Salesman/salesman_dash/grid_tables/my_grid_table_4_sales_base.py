@@ -179,6 +179,6 @@ class MySaleBaseTable:
             self._rows = [row for row in self._rows if row.category == api.category]
         if api.sub_category != PRCAT.ALL:
             self._rows = [row for row in self._rows if row.sub_category == api.sub_category]
-        if api.master_id not in ['', 'SEARCH']:
-            self._rows = [row for row in self._rows if row.master_id == api.master_id]
+        # if api.master_id not in ['', 'SEARCH']:
+        #     self._rows = [row for row in self._rows if row.master_id == api.master_id]
 

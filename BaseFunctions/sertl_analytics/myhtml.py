@@ -26,12 +26,13 @@ class MyHtmlElement:
         return self._html_element.text_content()
         
     def get_html_element_for_sub_class(self, sub_class: str):
-        return MyHtmlElement(self._html_element.find_class(sub_class)[0])
+        html_elements_for_sub_class = self._html_element.find_class(sub_class)
+        if len(html_elements_for_sub_class) > 0:
+            return MyHtmlElement(html_elements_for_sub_class[0])
 
     def get_text_for_sub_class(self, sub_class):
         child_element = self.__find_child_element_for_sub_class__(sub_class)
-        # print('get_text_for_sub_class: {} -> {}'.format(sub_class, child_element))
-        return str(child_element.text_content())
+        return '. '.join(child_element.itertext()).strip()
 
     def __find_child_element_for_sub_class__(self, class_name):
         # we have sometimes more classes: <div class="_3HMUQ Gk7KC _1KGC- _3Ejud"><h2 class="-zQvW"> 350.-</h2></div>

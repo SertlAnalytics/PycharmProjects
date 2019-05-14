@@ -11,7 +11,7 @@ from sertl_analytics.processes.my_process import MyProcess
 from salesman_logging.salesman_log import SalesmanLog
 
 """
-    UPDATE_SALES_DAILY = 'Update_Sale_Daily'
+    UPDATE_SIMILAR_SALES_DAILY = 'Update_Sale_Daily'
     UPDATE_COMPANY_DAILY = 'Update_Company_Daily'
 """
 
@@ -21,14 +21,46 @@ class SalesmanProcess(MyProcess):
         return SalesmanLog()
 
 
-class ProcessUpdateSaleDaily(SalesmanProcess):
+class SalesmanSalesProcess(SalesmanProcess):
+    @staticmethod
+    def __get_child_process_names__():
+        return [SMPR.UPDATE_SALES_DATA_IN_STATISTICS_TAB]
+
+
+class ProcessCheckSalesState(SalesmanSalesProcess):
     @property
     def process_name(self):
-        return SMPR.UPDATE_SALES_DAILY
+        return SMPR.CHECK_SALES_STATE
 
     @staticmethod
     def __get_table_names__():
         return [SMTBL.SALE]
+
+
+class ProcessUpdateSaleDaily(SalesmanSalesProcess):
+    @property
+    def process_name(self):
+        return SMPR.UPDATE_SIMILAR_SALES_DAILY
+
+    @staticmethod
+    def __get_table_names__():
+        return [SMTBL.SALE]
+
+
+class ProcessCheckSimilarSalesInDatabase(SalesmanSalesProcess):
+    @property
+    def process_name(self):
+        return SMPR.CHECK_SIMILAR_SALES_IN_DATABASE
+
+    @staticmethod
+    def __get_table_names__():
+        return [SMTBL.SALE]
+
+
+class ProcessUpdateSalesDataInStatisticsTab(SalesmanProcess):
+    @property
+    def process_name(self):
+        return SMPR.UPDATE_SALES_DATA_IN_STATISTICS_TAB
 
 
 class ProcessUpdateCompanyDaily(SalesmanProcess):

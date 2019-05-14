@@ -18,13 +18,31 @@ class MyDashSalesmanJob(MySalesmanJob):
         self._db_updater = db_updater
 
 
+class MyDashCheckSalesStateJob(MyDashSalesmanJob):
+    def __perform_task__(self):
+        self._db_updater.check_sales_states()
+
+    @property
+    def process_name(self):
+        return SMPR.CHECK_SALES_STATE
+
+
 class MyDashUpdateSimilarSalesJob(MyDashSalesmanJob):
     def __perform_task__(self):
         self._db_updater.update_similar_sales()
 
     @property
     def process_name(self):
-        return SMPR.UPDATE_SALES_DAILY
+        return SMPR.UPDATE_SIMILAR_SALES_DAILY
+
+
+class MyDashCheckSimilarSalesInDatabaseJob(MyDashSalesmanJob):
+    def __perform_task__(self):
+        self._db_updater.check_similar_sales_in_database()
+
+    @property
+    def process_name(self):
+        return SMPR.CHECK_SIMILAR_SALES_IN_DATABASE
 
 
 class MyDashOptimizeLogFilesJob(MyDashSalesmanJob):

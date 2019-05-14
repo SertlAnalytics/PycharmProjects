@@ -24,7 +24,8 @@ class SalesmanSale:
         self._salesman_spacy = spacy
         self._salesman_nlp = self._salesman_spacy.nlp
         self._url_factory = TuttiUrlFactory(self.sys_config, self._salesman_spacy)
-        self._my_offer = is_my_offer
+        self._is_my_offer = is_my_offer
+        self._is_from_db = False
         self._found_by_labels = '' if found_by_labels is None else found_by_labels
         self._product_categories_value_list = []  # is used for online searches as default product categories
         self._search_labels = []
@@ -34,14 +35,24 @@ class SalesmanSale:
         self._search_labels_in_description = []
         self._search_labels_in_head_text = []
         self.__init_data_dict_entries__()
+        self._entity_label_list_dict = {}
 
     @property
     def source(self):
-        return '{} ({})'.format(self.get_value(SLDC.SOURCE), 'My offer' if self._my_offer else 'Similar offer')
+        from_db = ' ({})'.format('db') if self._is_from_db else ''
+        return '{}{}'.format(self.get_value(SLDC.SOURCE), from_db)
+
+    @property
+    def row_id(self):
+        return self.get_value(SLDC.ROW_ID)
 
     @property
     def sale_id(self):
         return self.get_value(SLDC.SALE_ID)
+
+    @property
+    def sale_state(self):
+        return self.get_value(SLDC.SALE_STATE)
 
     @property
     def version(self):
@@ -50,6 +61,10 @@ class SalesmanSale:
     @property
     def start_date(self):
         return self.get_value(SLDC.START_DATE)
+
+    @property
+    def last_check_date(self):
+        return self.get_value(SLDC.LAST_CHECK_DATE)
 
     @property
     def region(self):
@@ -96,26 +111,6 @@ class SalesmanSale:
         return self._found_by_labels
 
     @property
-    def material_list(self):
-        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.MATERIAL]
-
-    @property
-    def target_group_list(self):
-        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.TARGET_GROUP]
-
-    @property
-    def company_list(self):
-        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.COMPANY]
-
-    @property
-    def product_list(self):
-        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.PRODUCT]
-
-    @property
-    def object_list(self):
-        return [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == EL.OBJECT]
-
-    @property
     def entity_names(self):
         return self._entity_names
 
@@ -126,6 +121,15 @@ class SalesmanSale:
     @property
     def product_categories_value_list(self):
         return self._product_categories_value_list
+
+    def get_entity_list_by_entity_label(self, entity_label: str):
+        return self._entity_label_list_dict.get(entity_label, [])
+
+    def get_entity_list_by_entity_label_list(self, entity_label_list: list):
+        return_list = []
+        for entity_label in entity_label_list:
+            return_list += self.get_entity_list_by_entity_label(entity_label)
+        return return_list
 
     def get_value(self, key: str):
         return self._data_dict_obj.get(key, '')
@@ -141,7 +145,9 @@ class SalesmanSale:
 
     @staticmethod
     def __get_corrected_value__(key: str, value):
-        if key == SLDC.PRICE:
+        if key == SLDC.TITLE:
+            return value.replace('/', ' / ')
+        elif key == SLDC.PRICE:
             if type(value) is str:
                 return MyMath.get_float_for_string(value)
         elif key == SLDC.START_DATE:
@@ -161,35 +167,6 @@ class SalesmanSale:
 
     def is_any_term_in_list_in_title_or_description(self, term_list: str):
         return self.__is_any_term_in_list_in_text__(term_list, self.title.lower() + self.description.lower())
-
-    def is_any_material_entity_identical(self, other_sale) -> bool:
-        return self.__is_any_entity_identical__(self.material_list, other_sale.material_list, EL.MATERIAL)
-
-    def is_any_target_group_entity_identical(self, other_sale) -> bool:
-        return self.__is_any_entity_identical__(self.target_group_list, other_sale.target_group_list, EL.TARGET_GROUP)
-
-    def is_any_company_entity_identical(self, other_sale) -> bool:
-        return self.__is_any_entity_identical__(self.company_list, other_sale.company_list, EL.COMPANY)
-
-    def is_any_product_entity_identical(self, other_sale) -> bool:
-        return self.__is_any_entity_identical__(self.product_list, other_sale.product_list, EL.PRODUCT)
-
-    def is_any_object_entity_identical(self, other_sale) -> bool:
-        return self.__is_any_entity_identical__(self.object_list, other_sale.object_list, EL.OBJECT)
-
-    @staticmethod
-    def __is_any_entity_identical__(entity_list: list, entity_list_comp: list, entity_label=''):
-        if min(len(entity_list), len(entity_list_comp)) == 0:
-            return False
-        # Now we have at least one entry in each list...
-        set_01 = set([entity_name.lower() for entity_name in entity_list])
-        set_02 = set([entity_name.lower() for entity_name in entity_list_comp])
-        set_intersection = set_01.intersection(set_02)
-        if len(set_intersection) == 0:  # we don't have anything in common
-            return False
-        if len(set_intersection) * 2 < max(len(set_01), len(set_02)):  # we have too many other entities per set
-            return False
-        return True
 
     def is_any_term_in_list_in_title(self, term_list: str):
         return self.__is_any_term_in_list_in_text__(term_list, self.title.lower())
@@ -242,36 +219,42 @@ class SalesmanSale:
         :return: list of lists
         """
         return_list = []
-        if len(self.object_list) > 0:
-            object_lower_list = []
-            for object_name in self.object_list:
-                if object_name.lower() not in object_lower_list:
-                    object_lower_list.append(object_name.lower())
-                    return_list.append([object_name])
-        elif len(self.company_list) > 0 and len(self.product_list) > 0:
-            company_lower_list = []
-            product_lower_list = []
-            for company_name in self.company_list:
-                if company_name.lower() not in company_lower_list:
-                    company_lower_list.append(company_name.lower())
-                    for product_name in self.product_list:
-                        if product_name.lower() not in product_lower_list:
-                            product_lower_list.append(product_name.lower())
-                            return_list.append([company_name, product_name])
+        base_entity_list = self.get_entity_list_by_entity_label_list([EL.OBJECT, EL.ANIMAL, EL.PROPERTY])
+        if len(base_entity_list) > 0:
+            entity_lower_list = []
+            for entity_name in base_entity_list:
+                if entity_name.lower() not in entity_lower_list:
+                    entity_lower_list.append(entity_name.lower())
+                    return_list.append([entity_name])
+        else:
+            company_list = self.get_entity_list_by_entity_label(EL.COMPANY)
+            product_list = self.get_entity_list_by_entity_label(EL.PRODUCT)
+            if len(company_list) > 0 and len(product_list) > 0:
+                company_lower_list = []
+                product_lower_list = []
+                for company_name in company_list:
+                    if company_name.lower() not in company_lower_list:
+                        company_lower_list.append(company_name.lower())
+                        for product_name in product_list:
+                            if product_name.lower() not in product_lower_list:
+                                product_lower_list.append(product_name.lower())
+                                return_list.append([company_name, product_name])
         return return_list
 
     def get_extended_base_search_label_lists(self, search_label_lists: list) -> list:
         # the object list alone is too unspecific (too many results) - we add company and product
-        c_p_tg_m_list = self.company_list + self.product_list + self.target_group_list + self.material_list
-        if len(c_p_tg_m_list) == 0:
+        extended_search_label_list = self.get_entity_list_by_entity_label_list(
+            [EL.COLOR, EL.COMPANY, EL.PRODUCT, EL.TARGET_GROUP, EL.MATERIAL, EL.LOC])
+        if len(extended_search_label_list) == 0:
             return search_label_lists
-        print('c_p_tg_list = {}'.format(c_p_tg_m_list))
+        print('extended_search_label_list = {}'.format(extended_search_label_list))
         extended_label_lists = []
         for search_label_list in search_label_lists:
-            for c_p in c_p_tg_m_list:
+            for extended_label in extended_search_label_list:
                 list_new = list(search_label_list)
-                list_new.append(c_p)
-                extended_label_lists.append(list_new)
+                if extended_label not in list_new:
+                    list_new.append(extended_label)
+                    extended_label_lists.append(list_new)
         return extended_label_lists
 
     def get_label_list_with_child_labels(self, parent_label_list: list):
@@ -313,7 +296,7 @@ class SalesmanSale:
     def add_entity_name_label(self, entity_name: str, entity_label: str):
         if entity_name not in self._entity_names:
             if self.sys_config.print_details:
-                print('Entity is relevant for Tutti: {} {}'.format(entity_name, entity_label))
+                print('Entity is relevant for Tutti: {} ({})'.format(entity_name, entity_label))
             self._entity_names.append(entity_name)
             self._entity_label_dict[entity_name] = entity_label
             entity_synonyms = SalesmanEntityHandler.get_synonyms_for_entity_name(entity_label, entity_name)
@@ -342,11 +325,18 @@ class SalesmanSale:
     def is_price_ready_for_update_in_tutti(self) -> bool:
         return self.price_new != self.price
 
-    def complete_sale(self):
+    def complete_sale(self, is_from_db: bool):
+        self._is_from_db = is_from_db
         nlp_doc_sale = self.__get_nlp_doc_for_sale__()
         self.__add_entity_name_labels_to_sale_from_doc__(nlp_doc_sale)
         self.__add_data_dict_entries_to_sale_from_doc__(nlp_doc_sale)
+        self.__fill_entity_label_list_dict__()
         self.__complete_date_dict_entries__()
+
+    def __fill_entity_label_list_dict__(self):
+        for entity_label in EL.get_all_relevant():
+            self._entity_label_list_dict[entity_label] =\
+                [ent_name for ent_name, ent_label in self._entity_label_dict.items() if ent_label == entity_label]
 
     def print_sale_in_original_structure(self):
         visits_bookmarks, search_details = self.__get_visits_bookmarks_and_search_details_for_printing__()
@@ -362,15 +352,18 @@ class SalesmanSale:
         print('Number: {}'.format(self.get_value(SLDC.NUMBER)))
         print('New: {}/Used: {} - Conclusion: {}'.format(
             self.get_value(SLDC.IS_NEW), self.get_value(SLDC.IS_USED), self.get_value(SLDC.OBJECT_STATE)))
-        if not self._my_offer:
+        if not self._is_my_offer:
             print('Is outlier: {}'.format(self.get_value(SLDC.IS_OUTLIER)))
         print('{}'.format(search_details))
-        if self._my_offer:
+        if self._is_my_offer:
             print('Entity names: {}'.format(self._entity_names))
             print('Entity_label_dict: {}'.format(self._entity_label_dict))
         else:
             print('Entity_names: {}'.format(self._entity_names))
             print('Entity_label_dict: {}'.format(self._entity_label_dict))
+
+    def print_data_dict(self):
+        print('Data_dict={}'.format(self._data_dict_obj.data_dict))
 
     def print_sale_details(self):
         visits_bookmarks, search_details = self.__get_visits_bookmarks_and_search_details_for_printing__()
@@ -387,7 +380,6 @@ class SalesmanSale:
 
     def __init_data_dict_entries__(self):
         self.set_value(SLDC.SOURCE, SLSRC.TUTTI_CH)
-        self.set_value(SLDC.VERSION, 1)
         self.set_value(SLDC.SALE_STATE, SLST.OPEN)
         self.set_value(SLDC.PRODUCT_CATEGORY, '')
         self.set_value(SLDC.PRODUCT_SUB_CATEGORY, '')
@@ -398,9 +390,12 @@ class SalesmanSale:
         self.set_value(SLDC.IS_OUTLIER, 0)
         self.set_value(SLDC.VISITS, 0)
         self.set_value(SLDC.BOOK_MARKS, 0)
+        self.set_value(SLDC.LAST_CHECK_DATE, MyDate.get_date_str_from_datetime())
+        self.set_value(SLDC.COMMENT, '1. load')
 
     def __get_nlp_doc_for_sale__(self) -> DocExtended:
         nlp_doc_sale = DocExtended(self._salesman_nlp(self.title + ' ' + self.description))
+        # nlp_doc_sale = DocExtended(self._salesman_nlp(self.title))
         nlp_doc_sale.correct_single_price(self.price_single)
         return nlp_doc_sale
 
@@ -413,6 +408,7 @@ class SalesmanSale:
     def __add_data_dict_entries_to_sale_from_doc__(self, nlp_doc_sale: DocExtended):
         self.set_value(SLDC.OBJECT_STATE, nlp_doc_sale.object_state)
         self.set_value(SLDC.IS_TOTAL_PRICE, nlp_doc_sale.is_total_price)
+        self.set_value(SLDC.IS_SINGLE_PRICE, nlp_doc_sale.is_single_price)
         self.set_value(SLDC.PRICE_SINGLE, nlp_doc_sale.price_single)
         self.set_value(SLDC.PRICE_ORIGINAL, nlp_doc_sale.price_original)
         self.set_value(SLDC.NUMBER, nlp_doc_sale.number)
@@ -423,19 +419,26 @@ class SalesmanSale:
         self.set_value(SLDC.PROPERTY_DICT, nlp_doc_sale.get_properties_for_data_dict())
 
     def __complete_date_dict_entries__(self):
-        self.set_value(SLDC.VERSION, self.sys_config.access_layer_sale.get_next_version_for_sale_id(self.sale_id))
+        self.set_value(SLDC.VERSION, self.__get_version__())
         self.set_value(SLDC.MASTER_ID, self.sale_id)  # default - will be overwritten...
         self.set_value(SLDC.MASTER_TITLE, self.title) # default - will be overwritten...
         self.set_value(SLDC.PRICE_SINGLE, self.__get_price_single__())
-        self.set_value(SLDC.MATERIAL, ', '.join(self.material_list))
+        self.set_value(SLDC.MATERIAL, ', '.join(self.get_entity_list_by_entity_label(EL.MATERIAL)))
+        self.set_value(SLDC.LOCATIONS_ALL, ', '.join(self.get_entity_list_by_entity_label(EL.LOC)))
+        self.set_value(SLDC.COLORS, ', '.join(self.get_entity_list_by_entity_label(EL.COLOR)))
+        self.set_value(SLDC.JOBS, ', '.join(self.get_entity_list_by_entity_label(EL.JOB)))
         self.set_value(SLDC.SEARCH_LABELS, ', '.join(self._search_labels))
         self.set_value(SLDC.ENTITY_LABELS, ', '.join(self._entity_names))
         label_list = ['{} ({})'.format(values, self.entity_label_dict[values]) for values in self.entity_label_dict]
         self.set_value(SLDC.ENTITY_LABELS_DICT, ', '.join(label_list))
         self.set_value(SLDC.FOUND_BY_LABELS, '' if self._found_by_labels is None else self._found_by_labels)
-        self.set_value(SLDC.LAST_CHECK_DATE, MyDate.get_date_str_from_datetime())
-        self.set_value(SLDC.COMMENT, '1. load' if self.get_value(SLDC.VERSION) == 1 else 'some changes')
         self.set_value(SLDC.PRINT_CATEGORY, '')
+
+    def __get_version__(self):
+        if self.get_value(SLDC.VERSION) == '':
+            return self.sys_config.access_layer_sale.get_next_version_for_sale_id(self.sale_id)
+        else:
+            return self.get_value(SLDC.VERSION)
 
     def __get_price_single__(self):
         price, number = self.get_value(SLDC.PRICE), self.get_value(SLDC.NUMBER)
@@ -445,13 +448,13 @@ class SalesmanSale:
         return price_single
 
     def __get_visits_bookmarks_and_search_details_for_printing__(self):
-        if self._my_offer:
+        if self._is_my_offer:
             visits_bookmarks = ', {} Besuche, {} Merkliste'.format(
                 self.get_value(SLDC.VISITS), self.get_value(SLDC.BOOK_MARKS))
-            search_details = 'Search labels: {}'.format(self._search_labels)
+            search_details = ', Search labels: {}'.format(self._search_labels)
         else:
             visits_bookmarks = ''
-            search_details = 'Found by: {}'.format('Sale_ID' if self._found_by_labels == '' else self._found_by_labels)
+            search_details = ', Found by: {}'.format('Sale_ID' if self._found_by_labels == '' else self._found_by_labels)
         return visits_bookmarks, search_details
 
     def __is_label_candidate_for_label_list__(self, label: str, for_title: bool):

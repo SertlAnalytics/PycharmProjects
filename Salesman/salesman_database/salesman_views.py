@@ -18,7 +18,7 @@ class SaleView(MyView):
 
     @staticmethod
     def __get_select_statement__():
-        all_columns = SaleTable().column_name_list
+        all_columns = ['{}.{}'.format(SMTBL.SALE, SLDC.ROW_ID)] + SaleTable().column_name_list
         # all_columns.remove(SLDC.DESCRIPTION)
         return "SELECT {} FROM {} JOIN {} ON {}.{}={}.{} AND {}.{}={}.{}".format(
             ','.join(all_columns), SMTBL.SALE, SMVW.V_SALE_MAX_VERSION,

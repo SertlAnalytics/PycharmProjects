@@ -6,22 +6,27 @@ Date: 2019-01-22
 """
 
 from salesman_dash.my_dash_jobs import MyDashUpdateSimilarSalesJob, MyDashOptimizeLogFilesJob
+from salesman_dash.my_dash_jobs import MyDashCheckSalesStateJob, MyDashCheckSimilarSalesInDatabaseJob
 from salesman_scheduling.salesman_process_manager import SalesmanProcessManager
 from salesman_scheduling.salesman_scheduler import MySalesmanScheduler
 from sertl_analytics.constants.pattern_constants import PRD, INDICES, FT, PPR, STBL
 from salesman_database.salesman_db import SalesmanDatabase
 from salesman_database.salesman_database_updater import SalesmanDatabaseUpdater
 from sertl_analytics.mydates import MyDate
+from salesman_tutti.tutti import Tutti
 
 
 class MyDashJobHandler:
-    def __init__(self, process_manager: SalesmanProcessManager, for_test=False):
+    def __init__(self, process_manager: SalesmanProcessManager, tutti: Tutti, for_test=False):
         self._process_manager = process_manager
         self._weekdays_all = [0, 1, 2, 3, 4, 5, 6]
         self._weekdays_week = [0, 1, 2, 3, 4]  # Monday till Friday
         self._weekdays_tu_sa = [1, 2, 3, 4, 5]  # Tuesday till Saturday
+        self._weekday_monday = [0]
+        self._weekday_saturday = [5]
+        self._weekday_sunday = [6]
         self._scheduler = MySalesmanScheduler('DashSalesDatabaseUpdater', self._process_manager)
-        self._db_updater = SalesmanDatabaseUpdater(SalesmanDatabase())
+        self._db_updater = SalesmanDatabaseUpdater(SalesmanDatabase(), tutti)
         if for_test:
             self.__add_jobs_for_testing__()
         else:
@@ -43,15 +48,16 @@ class MyDashJobHandler:
 
     def __add_jobs__(self):
         self._scheduler.add_job(
-            MyDashUpdateSimilarSalesJob(
+            MyDashCheckSalesStateJob(
                 weekdays=self._weekdays_all, start_times=['01:00'], db_updater=self._db_updater))
         self._scheduler.add_job(
+            MyDashUpdateSimilarSalesJob(
+                weekdays=self._weekdays_all, start_times=['02:00'], db_updater=self._db_updater))
+        self._scheduler.add_job(
+            MyDashCheckSimilarSalesInDatabaseJob(
+                weekdays=self._weekdays_all, start_times=['03:00'], db_updater=self._db_updater))
+        self._scheduler.add_job(
             MyDashOptimizeLogFilesJob(weekdays=[6], start_times=['23:00'], db_updater=self._db_updater))
-
-    def __add_jobs_for_intraday_wave_update__(self):
-        start_times_crypto = ['04:30', '10:00', '16:00', '22:00']
-        start_times_shares = ['18:00', '20:00', '23:00']
-        start_times_currencies = ['06:00', '18:30']
 
     def __add_jobs_for_testing__(self):
         start_time = self.__get_start_time_for_testing__()

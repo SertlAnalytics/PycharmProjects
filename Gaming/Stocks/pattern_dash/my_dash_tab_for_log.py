@@ -203,6 +203,7 @@ class MyDashTab4Log(MyPatternDashBaseTab):
         if os.path.getsize(file_path) == 0:
             print('Note: {} was empty. Skipping.'.format(file_path))
         else:
+            # print('filepath={}'.format(file_path))
             df = pd.read_csv(file_path, header=None)
             columns = self.__get_columns_for_log_type__(log_type)
             if len(columns) > 0:

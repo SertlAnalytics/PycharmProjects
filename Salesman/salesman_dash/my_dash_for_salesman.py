@@ -28,7 +28,7 @@ class MyDash4Salesman(MyDashBase):
         self.tab_sales = MyDashTab4Sales(self.app, self.sys_config, self.tutti)
         self.tab_search = MyDashTab4Search(self.app, self.sys_config, self.tutti)
         # self.tab_log = MyDashTab4Log(self.app)
-        self.tab_jobs = MyDashTab4Jobs(self.app)
+        self.tab_jobs = MyDashTab4Jobs(self.app, self.tutti)
 
     def get_salesman(self):
         self.__set_app_layout__()

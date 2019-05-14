@@ -13,7 +13,7 @@ from salesman_dash.header_tables.my_tab_header_table_4_sales import MyHTMLTabSal
 from salesman_dash.my_dash_tab_dd_for_sales import SaleTabDropDownHandler, SLDD
 from dash import Dash
 from sertl_analytics.my_text import MyText
-from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
+from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, SMPR
 from salesman_dash.grid_tables.my_grid_table_4_sales_base import GridTableSelectionApi
 from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MyFile
 from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MySales, MySaleTable4SimilarSales
@@ -21,6 +21,7 @@ from salesman_system_configuration import SystemConfiguration
 from salesman_tutti.tutti import Tutti
 from salesman_tutti.tutti_url_factory import OnlineSearchApi
 from salesman_tutti.tutti_categorizer import ProductCategorizer, RegionCategorizer
+from salesman_dash.plotting.my_dash_plotter_for_salesman_search import MyDashTabPlotter4Search
 
 
 class MyDashTab4Sales(MyDashBaseTab):
@@ -30,6 +31,8 @@ class MyDashTab4Sales(MyDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, tutti: Tutti):
         MyDashBaseTab.__init__(self, app)
         self.sys_config = sys_config
+        self._process_for_update_sales_data = sys_config.process_manager.get_process_by_name(
+            SMPR.UPDATE_SALES_DATA_IN_STATISTICS_TAB)
         self.tutti = tutti
         self._sale_table = self.sys_config.sale_table
         self._refresh_button_clicks = 0
@@ -47,7 +50,6 @@ class MyDashTab4Sales(MyDashBaseTab):
 
     def __init_dash_element_ids__(self):
         self._my_sales_filter_button = 'my_sales_filter_button'
-        self._my_sales_search_similar_button = 'my_sales_search_similar_button'
         self._my_sales_link = 'my_sales_link'
         self._my_sales_similar_sale_link = 'my_sales_similar_sale_link'
         self._my_sales_graph_div = 'my_sales_graph_div'
@@ -65,21 +67,17 @@ class MyDashTab4Sales(MyDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_CATEGORY)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_SUB_CATEGORY)),
             MyHTML.div_with_html_button_submit(self._my_sales_filter_button, children='Filter', hidden=''),
-            MyHTML.div_with_html_button_submit(
-                self._my_sales_search_similar_button, children='Search similar', hidden='hidden'),
             MyHTML.div_with_button_link(self._my_sales_link, href='', title='', hidden='hidden'),
             MyHTML.div(self._data_table_div, self.__get_sale_grid_table__(), False),  # ERROR
             MyDCC.markdown(self._my_sales_sale_entry_markdown),
             MyHTML.div_with_button_link(self._my_sales_similar_sale_link, href='', title='', hidden='hidden'),
             MyHTML.div(self._my_sales_similar_sale_grid_table_div, self.__get_similar_sale_grid_table__(''), False),
-            MyDCC.markdown(self._my_sales_similar_sale_entry_markdown),
         ]
         return MyHTML.div(self._my_sales_div, children_list)
 
     def init_callbacks(self):
         self.__init_callback_for_sales_markdown__()
         self.__init_callbacks_for_my_sales_link__()
-        self.__init_callbacks_for_my_search_similar_button__()
         self.__init_callback_for_sale_grid_table__()
         self.__init_callbacks_for_selected_sale_entry__()
         self.__init_callbacks_for_similar_sales_link__()
@@ -114,22 +112,6 @@ class MyDashTab4Sales(MyDashBaseTab):
                 return ''
             return self._selected_my_sale_row[SLDC.HREF]
 
-    def __init_callbacks_for_my_search_similar_button__(self):
-        @self.app.callback(
-            Output(self._my_sales_search_similar_button, 'hidden'),
-            [Input(self._data_table_name, 'selected_row_indices')])
-        def handle_callback_for_my_search_similar_button_visibility(selected_row_indices: list):
-            return 'hidden' if len(selected_row_indices) == 0 else ''
-
-        @self.app.callback(
-            Output(self._my_sales_search_similar_button, 'children'),
-            [Input(self._data_table_name, 'rows'),
-             Input(self._data_table_name, 'selected_row_indices')])
-        def handle_callback_for_my_search_similar_button_visibility(rows: list, selected_row_indices: list):
-            if len(selected_row_indices) == 0:
-                return 'Search similar'
-            return 'Search on Tutti.ch for {}'.format(rows[selected_row_indices[0]][SLDC.SALE_ID])
-
     def __init_callbacks_for_similar_sales_link__(self):
         @self.app.callback(
             Output(self._my_sales_similar_sale_link, 'hidden'),
@@ -162,8 +144,7 @@ class MyDashTab4Sales(MyDashBaseTab):
     def __init_callback_for_sale_grid_table__(self):
         @self.app.callback(
             Output(self._data_table_div, 'children'),
-            [Input(self._my_sales_filter_button, 'n_clicks'),
-             Input(self._my_sales_search_similar_button, 'n_clicks')],
+            [Input(self._my_sales_filter_button, 'n_clicks')],
             [State(self._dd_handler.my_sale_source_dd, 'value'),
              State(self._dd_handler.my_sale_region_dd, 'value'),
              State(self._dd_handler.my_sale_category_dd, 'value'),
@@ -172,7 +153,7 @@ class MyDashTab4Sales(MyDashBaseTab):
              State(self._data_table_name, 'selected_row_indices')]
             )
         def handle_callback_for_sale_grid_table(
-                filter_n_clicks: int, refresh_n_clicks: int,
+                filter_n_clicks: int,
                 source: str, region: str, category: str, sub_category: str, rows: list, selected_row_indices: list):
             self._selection_api.source = source
             self._selection_api.region = self.sys_config.region_categorizer.get_category_for_value(region)
@@ -180,36 +161,49 @@ class MyDashTab4Sales(MyDashBaseTab):
             self._selection_api.sub_category = self.sys_config.product_categorizer.get_sub_category_for_value(
                 self._selection_api.category, sub_category)
             self._selected_my_sale_row = None if len(selected_row_indices) == 0 else rows[selected_row_indices[0]]
-            self.__handle_refresh_click__(refresh_n_clicks)
             return self.__get_sale_grid_table__()
+    #
+    # def __init_callback_for_waves_heatmap__(self):
+    #     @self.app.callback(
+    #         Output(self._my_waves_heatmap_div, 'children'),
+    #         [Input('my_interval_refresh', 'n_intervals'),
+    #          Input(self._my_waves_period_selection, 'value'),
+    #          Input(self._my_waves_aggregation_selection, 'value'),
+    #          Input(self._my_waves_retrospective_ticks_selection, 'value'),
+    #          Input(self._my_waves_index_selection, 'value')],
+    #         [State(self._my_waves_heatmap_div, 'children')])
+    #     def handle_callback_for_position_manage_button_hidden(n_intervals: int, period: str, aggregation: int,
+    #                                                           ticks: int, index: str, children):
+    #         enforce_reload = self._process_for_head_map.was_triggered_by_another_process()
+    #         data_updated = self._fibonacci_wave_data_handler.reload_data_when_outdated(enforce_reload)
+    #         if not data_updated and not self._dd_handler.was_any_value_changed(
+    #                 period, aggregation, ticks, index):
+    #             self._heat_map_was_updated = False
+    #             return children
+    #         self._heat_map_was_updated = True
+    #         print('Return updated heatmap...')
+    #         return self.__get_heatmap__()
 
-    def __handle_refresh_click__(self, refresh_n_clicks: int):
-        if self._refresh_button_clicks == refresh_n_clicks:
-            return
-        self._refresh_button_clicks = refresh_n_clicks
-        if self._dd_handler.selected_sale_source == SLSRC.DB:
-            sale_id = self._selected_my_sale_row[SLDC.SALE_ID]
-            if self.sys_config.access_layer_sale.is_sale_with_id_available(sale_id):
-                sale_df = self.sys_config.access_layer_sale.get_sale_by_id(sale_id)
-                sale_series = sale_df.iloc[0]
-                title, description = sale_series[SLDC.TITLE], sale_series[SLDC.DESCRIPTION]
-                print('__handle_refresh_click__: title={}, description={}'.format(title, description))
-        else:
-            title, description = self._selected_my_sale_row[SLDC.TITLE], self._selected_my_sale_row[SLDC.DESCRIPTION]
-            print('__handle_refresh_click__: title={}, description={}'.format(title, description))
-            results = self.tutti.get_search_results_from_online_inputs(OnlineSearchApi(title))
-            print(results)
+    def __get_heatmap__(self):
+        @self._process_for_update_sales_data.process_decorator
+        def __get_heatmap_with_process__(process=None):
+            df_search_result = self.tutti.printing.df_sale
+            # MyPandas.print_df_details(df_search_result)
+            plotter = MyDashTabPlotter4Search(df_search_result, self._color_handler)
+            scatter_chart = plotter.get_chart_type_scatter()
+            if len(self._print_category_list) == 0:
+                self._print_category_list = plotter.category_list
+            return scatter_chart
+        return __get_heatmap_with_process__()
 
     def __init_callback_for_similar_sale_grid_table__(self):
         @self.app.callback(
             Output(self._my_sales_similar_sale_grid_table_div, 'children'),
-            [Input(self._my_sales_search_similar_button, 'n_clicks'),
-             Input(self._data_table_name, 'rows'),
+            [Input(self._data_table_name, 'rows'),
              Input(self._data_table_name, 'selected_row_indices')
              ]
         )
         def handle_callback_for_similar_sale_grid_table(
-                refresh_n_clicks: int,
                 rows: list,
                 selected_row_indices: list):
             if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:

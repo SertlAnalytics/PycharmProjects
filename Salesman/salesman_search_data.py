@@ -43,12 +43,21 @@ class SalesmanSearchData:
 
     def adjust_online_search_api_list_by_found_number_dict(self, index_number_dict: dict):
         self._max_number_found = max([number for number in index_number_dict.values()])
+        self.__print_online_search_api_list__(index_number_dict)
         self._online_search_api_list = [self._online_search_api_list[k]
-                                        for k in index_number_dict if index_number_dict[k] > self._max_number_found/10]
+                                        for k in index_number_dict if index_number_dict[k] > self._max_number_found/20]
+
+    def __print_online_search_api_list__(self, index_number_dict: dict):
+        print('online_search_api_index_number_dict={}'.format(index_number_dict))
+        category_number_dict = {
+            self._online_search_api_list[k].category_value: index_number_dict[k]
+            for k in index_number_dict if index_number_dict[k] > self._max_number_found / 20}
+        print('Search over: {}'.format(category_number_dict))
 
     def __get_region_value__(self):
-        return '' if self._region == '' else \
-            self._sys_config.region_categorizer.get_value_for_category(self._region)
+        return ''  # we want to search in whole Switzerland
+        # return '' if self._region == '' else \
+        #     self._sys_config.region_categorizer.get_value_for_category(self._region)
 
     def __get_category_value__(self):
         return '' if self._category == '' else \

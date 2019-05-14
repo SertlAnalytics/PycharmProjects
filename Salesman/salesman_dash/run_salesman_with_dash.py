@@ -10,6 +10,8 @@ from salesman_dash.my_dash_for_salesman import MyDash4Salesman
 from salesman_system_configuration import SystemConfiguration
 
 sys_config = SystemConfiguration()
+sys_config.plot_results = False
+sys_config.write_to_database = True
 
 my_profiler = MyProfiler()
 my_dash = MyDash4Salesman(sys_config)

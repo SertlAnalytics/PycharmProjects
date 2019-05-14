@@ -8,14 +8,27 @@ Date: 2018-12-10
 from sertl_analytics.mydates import MyDate
 from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from salesman_scheduling.salesman_job_result import SalesmanDatabaseUpdateJobResult
+from salesman_system_configuration import SystemConfiguration
+from salesman_tutti.tutti import Tutti
 
 
 class SalesmanDatabaseUpdater:
-    def __init__(self, db_salesman):
+    def __init__(self, db_salesman, tutti: Tutti):
+        self.sys_config = tutti.sys_config
         self.db_salesman = db_salesman
+        self.tutti = tutti
+
+    def check_sales_states(self):
+        self.sys_config.file_log.log_message('check_status_of_sales_in_database', 'SalesmanDatabaseUpdater')
+        self.tutti.check_status_of_sales_in_database()
 
     def update_similar_sales(self):
-        print('ToDo: update similar sales...')  # ToDo
+        self.sys_config.file_log.log_message('check_own_in_database_against_similar_sales', 'SalesmanDatabaseUpdater')
+        self.tutti.check_own_sales_in_database_against_similar_sales()
+
+    def check_similar_sales_in_database(self):
+        self.sys_config.file_log.log_message('check_similar_sales_in_database', 'SalesmanDatabaseUpdater')
+        self.tutti.check_similar_sales_in_db_against_master_sale_in_db()
 
     def update_equity_records(self) -> SalesmanDatabaseUpdateJobResult:
         result_obj = SalesmanDatabaseUpdateJobResult()

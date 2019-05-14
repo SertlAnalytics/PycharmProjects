@@ -87,17 +87,6 @@ class SalesmanDatabase(BaseDatabase):
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 
-    def update_price_change_for_sale(self, sale_id: str, price_new: float):
-        where_clause = "{} = '{}'".format(SLDC.SALE_ID, sale_id)
-        query = self._sale_table.get_query_select_for_records(where_clause)
-        db_df = DatabaseDataFrame(self, query)
-        price_change_old = ''
-        price_change_new = '{}: {}'.format(MyDate.get_date_as_string_from_date_time(), price_new)
-        self.update_table_column(SMTBL.SALE, SLDC.PRICE_CHANGES, price_change_new, "ID = '{}'".format(sale_id))
-
-    def update_similar_sales(self):
-        print('ToDo: update similar sales...')  # ToDo
-
     def delete_existing_offer(self, offer_id: str):
         if self.is_offer_already_available(offer_id):
             self.delete_records(self._sale_table.get_query_delete_by_id(offer_id))

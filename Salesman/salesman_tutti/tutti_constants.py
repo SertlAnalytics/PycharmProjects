@@ -98,6 +98,10 @@ class PRSUBCAT:  # Product Sub Category, german: Unter-Rubrik
     REAL_ESTATE_COMMUNITY = 'WG-Zimmer'
     REAL_ESTATE_FLATS = 'Wohnungen'
     PHOTO_CAMERA = 'Fotokameras'
+    TOYS = 'Spielzeuge'
+    TOYS_TINKER = 'Basteln'
+    TOYS_MODEL = 'Modelbau'
+    TOYS_GAMES = 'Spielkonsolen & Games'
     VIDEO_CAMERA = 'Videokameras'
     PHOTO_COMPONENTS = 'Zubehör'
     GARDEN_MATERIAL = 'Baumaterial'
@@ -112,16 +116,40 @@ class PRSUBCAT:  # Product Sub Category, german: Unter-Rubrik
 
 
 class EL:  # entity labels
+    BLACK_LIST = 'BLACK_LIST'
+    ANIMAL = 'ANIMAL'
     COMPANY = 'COMPANY'
+    COLOR = 'COLOR'
+    JOB = 'JOB'
+    LOC = 'LOC'
     PRODUCT = 'PRODUCT'
+    PROPERTY = 'PROPERTY'
     OBJECT = 'OBJECT'
     TARGET_GROUP = 'TARGET_GROUP'
     MATERIAL = 'MATERIAL'
     TECHNOLOGY = 'TECHNOLOGY'
+    SHOP = 'SHOP'
+
+    @staticmethod
+    def get_all() -> list:
+        return [EL.BLACK_LIST, EL.COLOR, EL.ANIMAL, EL.JOB, EL.PRODUCT, EL.PROPERTY, EL.LOC,
+                EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.SHOP, EL.TECHNOLOGY]
 
     @staticmethod
     def is_entity_label_tutti_relevant(ent_level: str) -> bool:
-        return ent_level in [EL.PRODUCT, EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.TECHNOLOGY]
+        return ent_level in EL.get_all_relevant()
+
+    @staticmethod
+    def get_all_relevant() -> list:
+        list_relevant = EL.get_all()
+        list_relevant.remove(EL.BLACK_LIST)
+        return list_relevant
+
+    @staticmethod
+    def get_all_without_loc() -> list:
+        list_all = EL.get_all()
+        list_all.remove(EL.LOC)
+        return list_all
 
 
 class SLCLS:  # css classes used within tutti sales
@@ -174,6 +202,7 @@ class POS:
     NUM = 'NUM'  # number, e.g. 37
     NOUN = 'NOUN'  # noun, e.g. 'Goretex'
     PART = 'PART'  # partical, e.g. 'zu' (verkaufen)
+    PRON = 'PRON'   # pronomen
     PROPN = 'PROPN'  # proper noun, e.g. 'Wanderschuhe'
     PUNCT = 'PUNCT'  # punctuation, e.g. ','
     VERB = 'VERB'  # verb, e.g. 'verkaufen'

@@ -56,11 +56,15 @@ class APIBaseFetcher:
         self._kwargs = kwargs
         url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
         self.__print_request_details__(url)
-        self._df = self.__get_data_frame__(request_data=requests.get(url))
-        if self._df is not None:
-            self._df_columns = list(self._df.columns.values)
-            self.__format_columns__()
-            self.__round_df_column_values__()
+        try:
+            self._df = self.__get_data_frame__(request_data=requests.get(url))
+        except:
+            print('PROBLEM with retrieving date from  {}'.format(url))
+        finally:
+            if self._df is not None:
+                self._df_columns = list(self._df.columns.values)
+                self.__format_columns__()
+                self.__round_df_column_values__()
 
     def retrieve_ticker(self, symbol: str):
         self.__sleep__()
@@ -158,9 +162,10 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
     def retrieve_data(self, **kwargs):
         # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):
         APIBaseFetcher.retrieve_data(self, **kwargs)
-        self._df_data = self._df[self._get_column_list_for_data_()]
-        column_for_volume = self._get_column_for_volume_()
-        self._df_volume = self._df[self._get_column_for_volume_()]
+        if self._df is not None:
+            self._df_data = self._df[self._get_column_list_for_data_()]
+            column_for_volume = self._get_column_for_volume_()
+            self._df_volume = self._df[self._get_column_for_volume_()]
 
     @property
     def class_last_request_ts(self):
@@ -382,7 +387,8 @@ class AlphavantageCSVFetcher (APIBaseFetcher):
 class CryptoCompareJSONFetcher (APIBaseFetcher):
     def retrieve_data(self, **kwargs):  # symbol: str, period: str, aggregation: int, limit: int):
         APIBaseFetcher.retrieve_data(self, **kwargs)
-        self._df_data = self._df[self.get_column_list_for_data()]
+        if self._df is not None:
+            self._df_data = self._df[self.get_column_list_for_data()]
 
     def get_column_list_for_data(self):
         pass
@@ -445,8 +451,9 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
 
     def retrieve_data(self, **kwargs):  # symbol: str, period=PRD.DAILY, aggregation=1, section='hist', limit=400
         APIBaseFetcher.retrieve_data(self, **kwargs)
-        column_list_data = self.get_column_list_data()
-        self._df_data = self._df[column_list_data]
+        if self._df is not None:
+            column_list_data = self.get_column_list_data()
+            self._df_data = self._df[column_list_data]
 
     def get_column_list_data(self):
         return self._df_columns

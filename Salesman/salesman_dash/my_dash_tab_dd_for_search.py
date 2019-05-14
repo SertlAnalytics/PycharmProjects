@@ -9,6 +9,7 @@ from sertl_analytics.mydash.my_dash_components import DropDownHandler
 from sertl_analytics.constants.salesman_constants import SLSRC
 from salesman_tutti.tutti_constants import PRCAT
 from salesman_system_configuration import SystemConfiguration
+from salesman_database.access_layer.access_layer_file import MySalesAccessLayerFile
 
 
 class SRDD:  # Search drop down
@@ -17,10 +18,13 @@ class SRDD:  # Search drop down
     SEARCH_CATEGORY = 'SEARCH_CATEGORY'
     SEARCH_SUB_CATEGORY = 'SEARCH_SUB_CATEGORY'
     SEARCH_PRINT_CATEGORY = 'SEARCH_PRINT_CATEGORY'
+    SEARCH_DATABASE = 'SEARCH_DATABASE'
+    SEARCH_FILE = 'SEARCH_FILE'
 
     @staticmethod
     def get_all_as_list():
-        return [SRDD.SEARCH_SOURCE, SRDD.SEARCH_REGION, SRDD.SEARCH_CATEGORY, SRDD.SEARCH_SUB_CATEGORY]
+        return [SRDD.SEARCH_SOURCE, SRDD.SEARCH_REGION, SRDD.SEARCH_CATEGORY, SRDD.SEARCH_SUB_CATEGORY,
+                SRDD.SEARCH_DATABASE, SRDD.SEARCH_FILE]
 
 
 class SearchTabDropDownHandler(DropDownHandler):
@@ -32,6 +36,8 @@ class SearchTabDropDownHandler(DropDownHandler):
         self.selected_search_category = ''
         self.selected_search_sub_category = ''
         self.selected_search_print_category = ''
+        self.selected_database_row_id = ''
+        self.selected_file_row = ''
 
     @property
     def my_search_source_dd(self):
@@ -53,12 +59,21 @@ class SearchTabDropDownHandler(DropDownHandler):
     def my_search_print_category_dd(self):
         return 'my_search_print_category'
 
+    @property
+    def my_search_db_dd(self):
+        return 'my_search_db_dd'
+
+    @property
+    def my_search_file_dd(self):
+        return 'my_search_file_dd'
+
     def __get_drop_down_key_list__(self):
         return SRDD.get_all_as_list()
 
     def __get_selected_value_dict__(self):
         return {SRDD.SEARCH_SOURCE: '', SRDD.SEARCH_REGION: '',
-                SRDD.SEARCH_CATEGORY: '', SRDD.SEARCH_SUB_CATEGORY: '', SRDD.SEARCH_PRINT_CATEGORY: ''}
+                SRDD.SEARCH_CATEGORY: '', SRDD.SEARCH_SUB_CATEGORY: '', SRDD.SEARCH_PRINT_CATEGORY: '',
+                SRDD.SEARCH_DATABASE: '', SRDD.SEARCH_FILE: ''}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
@@ -67,6 +82,8 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_CATEGORY: 'Category',
             SRDD.SEARCH_SUB_CATEGORY: 'Subcategory',
             SRDD.SEARCH_PRINT_CATEGORY: 'Print category_value',
+            SRDD.SEARCH_DATABASE: '',
+            SRDD.SEARCH_FILE: '',
         }
         return value_dict.get(drop_down_type, None)
 
@@ -77,6 +94,9 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_CATEGORY: self.my_search_category_dd,
             SRDD.SEARCH_SUB_CATEGORY: self.my_search_sub_category_dd,
             SRDD.SEARCH_PRINT_CATEGORY: self.my_search_print_category_dd,
+            SRDD.SEARCH_DATABASE: self.my_search_db_dd,
+            SRDD.SEARCH_FILE: self.my_search_file_dd,
+
         }
         return value_dict.get(drop_down_type, None)
 
@@ -87,6 +107,8 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_CATEGORY: default_value if default_value else '',
             SRDD.SEARCH_SUB_CATEGORY: default_value if default_value else '',
             SRDD.SEARCH_PRINT_CATEGORY: default_value if default_value else '',
+            SRDD.SEARCH_DATABASE: default_value if default_value else '',
+            SRDD.SEARCH_FILE: default_value if default_value else '',
         }
         return default_dict.get(drop_down_type, None)
 
@@ -97,6 +119,8 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_CATEGORY: 200,
             SRDD.SEARCH_SUB_CATEGORY: 200,
             SRDD.SEARCH_PRINT_CATEGORY: 350,
+            SRDD.SEARCH_DATABASE: 650,
+            SRDD.SEARCH_FILE: 650,
         }
         return value_dict.get(drop_down_type, 140)
 
@@ -107,6 +131,8 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_CATEGORY: self.__get_product_category_options__(),
             SRDD.SEARCH_SUB_CATEGORY: self.__get_product_sub_category_options__(),
             SRDD.SEARCH_PRINT_CATEGORY: self.__get_product_print_category_options__(),
+            SRDD.SEARCH_DATABASE: self.__get_database_options__(),
+            SRDD.SEARCH_FILE: self.__get_file_options__(),
         }
 
     def __get_for_multi__(self, drop_down_type: str):
@@ -130,4 +156,10 @@ class SearchTabDropDownHandler(DropDownHandler):
     @staticmethod
     def __get_product_print_category_options__():
         return [{'label': '', 'value': ''}]
+
+    def __get_database_options__(self):
+        return self.sys_config.access_layer_sale.get_my_sales_as_dd_options()
+
+    def __get_file_options__(self):
+        return self.sys_config.access_layer_file.get_my_sales_as_dd_options()
 

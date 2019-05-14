@@ -17,6 +17,7 @@ class TuttiMatcher4IsNew(TuttiMatcher):
             'NEU': [{'LOWER': 'neu', 'POS': POS.ADJ}],
             'ORIGINALVERPACKT': [{'LOWER': 'originalverpackt'}],
             'NOCH_NICHT_BENUTZT': [{'LOWER': 'noch'}, {'LOWER': 'nicht'}, {'LOWER': 'benutzt'}],
+            'NOCH_NIE_GETRAGEN': [{'LOWER': 'noch'}, {'LOWER': 'nie'}, {'LOWER': 'getragen'}],
             'UNBENUTZT': [{'LOWER': 'unbenutzt'}],
             'UNGEBRAUCHT': [{'LOWER': 'ungebraucht'}],
         }
@@ -26,6 +27,7 @@ class TuttiMatcher4IsNew(TuttiMatcher):
             'NEU': {'der Tisch ist neu': True, 'der Tisch ist veraltet': False},
             'ORIGINALVERPACKT': {'ist noch originalverpackt': True},
             'NOCH_NICHT_BENUTZT': {'der TV wurde noch nicht benutzt': True},
+            'NOCH_NIE_GETRAGEN': {'Neu (noch nie getragen) da zu klein gekauft': True},
             'UNBENUTZT': {'der Tisch ist noch unbenutzt': True},
             'UNGEBRAUCHT': {'der Stuhl ist noch ungebraucht': True},
         }

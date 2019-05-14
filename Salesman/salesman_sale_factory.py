@@ -25,20 +25,20 @@ class SalesmanSaleFactory:
     def sale_factory_source(self) -> str:
         return SLSRC.TUTTI_CH
 
-    @staticmethod
-    def are_sales_identical(sale_01: SalesmanSale, sale_02: SalesmanSale) -> bool:
-        check_col_list = [SLDC.TITLE, SLDC.DESCRIPTION, SLDC.PRICE_SINGLE]
-        for col in check_col_list:
-            if sale_01.get_value(col) != sale_02.get_value(col):
-                print('Not identical: {}: {} and {}'.format(col, sale_01.get_value(col), sale_02.get_value(col)))
-                return False
-        return True
-
     def adjust_by_online_search_api(self, api: OnlineSearchApi):
         self._web_parser.adjust_by_online_search_api(api)
 
     def get_search_string_found_number_dict(self, search_label_lists: list) -> dict:
         return self._web_parser.get_search_string_found_number_dict(search_label_lists)
+
+    def get_sale_from_db_by_sale_id(self, sale_id: str) -> SalesmanSale:
+        if self.sys_config.access_layer_sale.is_sale_with_id_available(sale_id):
+            df = self.sys_config.access_layer_sale.get_sale_by_id(sale_id)
+            return self.get_sale_by_db_row(df.iloc[0])
+
+    def get_sale_from_db_by_row_id(self, row_id: int) -> SalesmanSale:
+        df = self.sys_config.access_layer_sale.get_sale_by_row_id(row_id)
+        return self.get_sale_by_db_row(df.iloc[0])
 
     def get_online_search_api_index_number_dict(self, api_list: list, search_label_lists: list):
         return self._web_parser.get_online_search_api_index_number_dict(api_list, search_label_lists)
@@ -49,6 +49,7 @@ class SalesmanSaleFactory:
 
     def get_sale_via_request_by_sale_id(self, sale_id: str) -> SalesmanSale:
         sale_data_dict = self._web_parser.get_sale_data_dict_for_sale_id(sale_id)
+        print('sale_data_dict={}'.format(sale_data_dict))
         if len(sale_data_dict) == 0:
             print('\nWARNING: No active sale found on {} for id={}'.format(self.sale_factory_source, sale_id))
         else:
@@ -74,10 +75,12 @@ class SalesmanSaleFactory:
 
     def get_sale_by_db_row(self, row):
         sale_data_dict = {col: row[col] for col in row.index}
-        return self.__get_sale_by_data_dict__(sale_data_dict)
+        # sale_data_dict[SLDC.DESCRIPTION] = ''
+        return self.__get_sale_by_data_dict__(sale_data_dict, is_from_db=True)
 
     def __get_sales_data_dict_for_online_search_api__(self, api):
         region = self.sys_config.region_categorizer.get_category_for_value(api.region_value)
+        # print('__get_sales_data_dict_for_online_search_api__: region={}'.format(region))
         product_category, product_sub_category = '', ''
         if api.category_value != '':
             product_category = self.sys_config.product_categorizer.get_category_for_value(api.category_value)
@@ -95,10 +98,10 @@ class SalesmanSaleFactory:
         # print('sale_data_dict={}'.format(sale_data_dict))
         return sale_data_dict
 
-    def __get_sale_by_data_dict__(self, sale_data_dict: dict, search_labels=''):
+    def __get_sale_by_data_dict__(self, sale_data_dict: dict, search_labels='', is_from_db=False):
         sale = self.__get_sale_initialized__(sale_data_dict[SLDC.SALE_ID], search_labels)
         sale.add_value_dict(sale_data_dict)
-        sale.complete_sale()
+        sale.complete_sale(is_from_db)
         return sale
 
     def __get_sale_initialized__(self, sale_id: str, found_by_labels=''):

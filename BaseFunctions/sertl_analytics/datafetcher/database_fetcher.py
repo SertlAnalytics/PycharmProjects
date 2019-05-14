@@ -68,6 +68,7 @@ class MyView:
     def __init__(self):
         self._name = self.__get_name__()
         self._select_statement = text(self.__get_select_statement__())
+        print('MyView._select_statement={}'.format(self._select_statement))
 
     def get_create_view_obj(self, meta_data: MetaData):
         view = Table(self._name, meta_data)

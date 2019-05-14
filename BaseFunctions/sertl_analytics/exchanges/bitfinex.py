@@ -503,8 +503,9 @@ class MyBitfinex(ExchangeInterface):
             kw_args['limit'] = limit
         self.bitfinex_crypto_fetcher.retrieve_data(**kw_args)
         df_data = self.bitfinex_crypto_fetcher.df_data
-        self.__add_data_frame_to_cache__(df_data, data_fetcher_cache_key)
-        return df_data
+        if df_data is not None:
+            self.__add_data_frame_to_cache__(df_data, data_fetcher_cache_key)
+            return df_data
 
     def __add_data_frame_to_cache__(self, df: pd.DataFrame, data_fetcher_cache_key: BitfinexDataFetcherCacheKey):
         cache_api = MyCacheObjectApi()
