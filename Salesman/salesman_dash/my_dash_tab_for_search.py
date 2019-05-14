@@ -220,15 +220,13 @@ class MyDashTab4Search(MyDashBaseTab):
             self._dd_handler.selected_search_category = category
             self._dd_handler.selected_search_sub_category = sub_category
             self._dd_handler.selected_search_print_category = 'print_category'
-            self._search_input = search_input
-            print('Input={}, db_row_id={}, file_row_number={}'.format(search_input, db_row_id, file_row_number))
             self._online_rows = None
             if self._search_online_input_table.search_button_n_clicks != search_n_clicks:
                 self._print_category_list = []
                 self._print_category_options = []
                 self._print_category_selected_as_list = []
                 self._search_online_input_table.search_button_n_clicks = search_n_clicks
-                return self.__get_search_result_grid_table_by_online_search__()
+                return self.__get_search_result_grid_table_by_online_search__(search_input)
             elif self._search_online_input_table.search_button_db_n_clicks != search_db_n_clicks:
                 self._print_category_list = []
                 self._print_category_options = []
@@ -243,7 +241,6 @@ class MyDashTab4Search(MyDashBaseTab):
                 return self.__get_search_result_grid_table_by_file_search__(file_row_number)
             elif self._search_online_input_table.was_any_button_clicked() and \
                     self._dd_handler.selected_search_print_category != print_category_value:
-                print('New print category_value value: {}'.format(print_category_value))
                 self._print_category_selected_as_list = self.__get_selected_print_category__(print_category_value)
                 return self.__get_search_result_grid_table_by_selected_print_category__()
             return ''
@@ -339,11 +336,12 @@ class MyDashTab4Search(MyDashBaseTab):
         )
         return self.__get_search_result_grid_table__()
 
-    def __get_search_result_grid_table_by_online_search__(self):
-        api = OnlineSearchApi(self._search_input)
-        return self.__get_search_result_table_by_api__(api)
+    def __get_search_result_grid_table_by_online_search__(self, search_input: str):
+        self._search_input = search_input
+        return self.__get_search_result_table_by_api__()
 
-    def __get_search_result_table_by_api__(self, api):
+    def __get_search_result_table_by_api__(self):
+        api = OnlineSearchApi(self._search_input)
         region_value = self._dd_handler.selected_search_region
         category_value = self._dd_handler.selected_search_category
         sub_category_value = self._dd_handler.selected_search_sub_category
@@ -357,14 +355,14 @@ class MyDashTab4Search(MyDashBaseTab):
 
     def __get_search_result_grid_table_by_db_search__(self, row_id: int):
         sale = self._sale_factory.get_sale_from_db_by_row_id(row_id)
-        api = OnlineSearchApi(sale.title)
-        return self.__get_search_result_table_by_api__(api)
+        self._search_input = sale.title
+        return self.__get_search_result_table_by_api__()
 
     def __get_search_result_grid_table_by_file_search__(self, file_row_number: int):
         file_row = self.sys_config.access_layer_file.get_row(file_row_number)
         sale = self._sale_factory.get_sale_by_file_row(file_row)
-        api = OnlineSearchApi(sale.title)
-        return self.__get_search_result_table_by_api__(api)
+        self._search_input = sale.title
+        return self.__get_search_result_table_by_api__()
 
     def __get_search_result_grid_table__(self):
         min_height = self._search_results_grid_table.height_for_display

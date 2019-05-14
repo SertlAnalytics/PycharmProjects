@@ -14,16 +14,19 @@ class TuttiMatcher4IsNew(TuttiMatcher):
     @staticmethod
     def __get_pattern_dict__() -> dict:
         return {
+            'FABRIKNEU': [{'LOWER': 'fabrikneu'}],
             'NEU': [{'LOWER': 'neu', 'POS': POS.ADJ}],
             'ORIGINALVERPACKT': [{'LOWER': 'originalverpackt'}],
             'NOCH_NICHT_BENUTZT': [{'LOWER': 'noch'}, {'LOWER': 'nicht'}, {'LOWER': 'benutzt'}],
             'NOCH_NIE_GETRAGEN': [{'LOWER': 'noch'}, {'LOWER': 'nie'}, {'LOWER': 'getragen'}],
             'UNBENUTZT': [{'LOWER': 'unbenutzt'}],
             'UNGEBRAUCHT': [{'LOWER': 'ungebraucht'}],
+
         }
 
     def __get_pattern_type_test_case_dict__(self):
         return {
+            'FABRIKNEU': {'Der Artikel ist fabrikneu und original-verpackt!': True},
             'NEU': {'der Tisch ist neu': True, 'der Tisch ist veraltet': False},
             'ORIGINALVERPACKT': {'ist noch originalverpackt': True},
             'NOCH_NICHT_BENUTZT': {'der TV wurde noch nicht benutzt': True},

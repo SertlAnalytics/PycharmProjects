@@ -17,6 +17,7 @@ from matcher.tutti_matcher_4_single_prize import TuttiMatcher4PriceSingle
 from matcher.tutti_matcher_4_is_like_new import TuttiMatcher4IsLikeNew
 from matcher.tutti_matcher_4_cover_available import TuttiMatcher4CoverAvailable
 from matcher.tutti_matcher_4_age import TuttiMatcher4Age
+from matcher.tutti_matcher_4_usage import TuttiMatcher4Usage
 from matcher.tutti_matcher_4_warranty import TuttiMatcher4Warranty
 
 
@@ -32,10 +33,11 @@ class TC:
     TC_MATCHER_SINGLE_PRICE = 'TC_MATCHER_SINGLE_PRICE'
     TC_MATCHER_COVER_AVAILABLE = 'TC_MATCHER_COVER_AVAILABLE'
     TC_MATCHER_AGE = 'TC_MATCHER_AGE'
+    TC_MATCHER_USAGE = 'TC_MATCHER_USAGE'
     TC_MATCHER_WARRANTY = 'TC_MATCHER_WARRANTY'
 
 
-tc = TC.TC_MATCHER_NUMBER
+tc = TC.TC_MATCHER_SIZE
 
 spacy = SalesmanSpacy()
 
@@ -69,6 +71,9 @@ elif tc == TC.TC_MATCHER_COVER_AVAILABLE:
 elif tc == TC.TC_MATCHER_AGE:
     matcher = TuttiMatcher4Age(spacy.nlp)
     matcher.run_test(spacy, False)
+elif tc == TC.TC_MATCHER_USAGE:
+    matcher = TuttiMatcher4Usage(spacy.nlp)
+    matcher.run_test(spacy, True)
 elif tc == TC.TC_MATCHER_WARRANTY:
     matcher = TuttiMatcher4Warranty(spacy.nlp)
     matcher.run_test(spacy, True)

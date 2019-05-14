@@ -20,6 +20,7 @@ from matcher.tutti_matcher_4_is_single_price import TuttiMatcher4IsSinglePrice
 from matcher.tutti_matcher_4_single_prize import TuttiMatcher4PriceSingle
 from matcher.tutti_matcher_4_cover_available import TuttiMatcher4CoverAvailable
 from matcher.tutti_matcher_4_age import TuttiMatcher4Age
+from matcher.tutti_matcher_4_usage import TuttiMatcher4Usage
 from matcher.tutti_matcher_4_warranty import TuttiMatcher4Warranty
 import spacy
 
@@ -53,6 +54,8 @@ class CustomTokenizer:
             'käffig': 'Käfig',
             'Schalfsack': 'Schlafsack',
             'Kommunionskleid': 'Kommunionkleid',
+            'Komode': 'Kommode',
+            'original-verpackt': 'originalverpackt',
             'Stoßstange': 'Stossstange',
             'scheli': 'Schale',
             'Terarium': 'Terrarium',
@@ -261,6 +264,7 @@ class SalesmanSpacy:
         Doc.set_extension('is_single_price', getter=self.__is_single_price__)
         Doc.set_extension('is_cover_available', getter=self.__is_cover_available__)
         Doc.set_extension('age', getter=self.__get_age__)
+        Doc.set_extension('usage', getter=self.__get_usage__)
         Doc.set_extension('warranty', getter=self.__get_warranty__)
 
     def __get_size__(self, doc):
@@ -302,6 +306,9 @@ class SalesmanSpacy:
 
     def __is_cover_available__(self, doc):
         return TuttiMatcher4CoverAvailable(self._nlp).get_pattern_result_for_doc(doc)
+
+    def __get_usage__(self, doc):
+        return TuttiMatcher4Usage(self._nlp).get_pattern_result_for_doc(doc)
 
     def __get_warranty__(self, doc):
         return TuttiMatcher4Warranty(self._nlp).get_pattern_result_for_doc(doc)

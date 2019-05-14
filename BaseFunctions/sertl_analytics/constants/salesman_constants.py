@@ -123,8 +123,9 @@ class OBJPROP:  # Object properties
     NUMBER = 'Number'
     AGE = 'Age'
     YEAR = 'Year'
+    USAGE = 'Usage'
     WARRANTY = 'Warrenty until'
-    ORIGINAL_COVER = 'Cover available'    
+    ORIGINAL_COVER = 'Cover available'  
 
 class SLDC:  # Sale data column
     ROW_ID = 'rowid'

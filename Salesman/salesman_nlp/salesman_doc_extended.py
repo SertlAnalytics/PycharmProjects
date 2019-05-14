@@ -13,6 +13,7 @@ class DocExtended:
         self.price_original = self._doc._.price_original
         self.size = self._doc._.size
         self.age = self._doc._.age
+        self.usage = self._doc._.usage
         self.warranty = self._doc._.warranty
         self.number = self._doc._.number
         self.is_new = self._doc._.is_new
@@ -50,6 +51,8 @@ class DocExtended:
             property_dict[OBJPROP.SIZE] = self.size
         if self.age != '':
             property_dict[OBJPROP.AGE] = self.age
+        if self.usage != '':
+            property_dict[OBJPROP.USAGE] = self.usage
         if self.warranty != '':
             property_dict[OBJPROP.WARRANTY] = self.warranty
         return property_dict

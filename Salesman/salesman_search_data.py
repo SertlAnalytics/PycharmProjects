@@ -48,7 +48,6 @@ class SalesmanSearchData:
                                         for k in index_number_dict if index_number_dict[k] > self._max_number_found/20]
 
     def __print_online_search_api_list__(self, index_number_dict: dict):
-        print('online_search_api_index_number_dict={}'.format(index_number_dict))
         category_number_dict = {
             self._online_search_api_list[k].category_value: index_number_dict[k]
             for k in index_number_dict if index_number_dict[k] > self._max_number_found / 20}
