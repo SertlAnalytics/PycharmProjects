@@ -79,7 +79,7 @@ class OBJST:  # Object Status
 class REGION:
     GANZE_SCHWEIZ = 'Ganze Schweiz'
     AARGAU = 'Aargau'
-    APENZELL = 'Apenzell'
+    APPENZELL = 'Appenzell'
     BASEL = 'Basel'
     BASEL_STADT = 'Basel-Stadt'
     BERN = 'Bern'
@@ -108,7 +108,7 @@ class REGION:
     @staticmethod
     def get_regions_for_tutti_search():
         return [
-            REGION.GANZE_SCHWEIZ, REGION.AARGAU, REGION.DEUTSCH_SCHWEIZ, REGION.APENZELL,
+            REGION.GANZE_SCHWEIZ, REGION.AARGAU, REGION.DEUTSCH_SCHWEIZ, REGION.APPENZELL,
             REGION.BASEL, REGION.BASEL_STADT, REGION.BERN, REGION.FREIBURG, 
             REGION.GENF, REGION.GLARUS, REGION.GRAUBUENDEN,
             REGION.JURA, REGION.LUZERN, REGION.NEUENBURG, REGION.NID_OBWALDEN,
@@ -125,7 +125,8 @@ class OBJPROP:  # Object properties
     YEAR = 'Year'
     USAGE = 'Usage'
     WARRANTY = 'Warrenty until'
-    ORIGINAL_COVER = 'Cover available'  
+    ORIGINAL_COVER = 'Cover available'
+    
 
 class SLDC:  # Sale data column
     ROW_ID = 'rowid'

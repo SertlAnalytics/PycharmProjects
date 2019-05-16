@@ -5,9 +5,20 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-05-08
 """
 
-from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
-from sertl_analytics.pybase.data_dictionary import DataDictionary
-from salesman_system_configuration import SystemConfiguration
+from sertl_analytics.constants.salesman_constants import SLSRC
+
+
+class SalesmanSearchApi:
+    def __init__(self, search_string: str):
+        self.search_string = search_string
+        self.region_value = ''
+        self.category_value = ''
+        self.sub_category_value = ''
+        self.found_numbers = 0  # will be filled after search by these parameters
+
+    def print_api_details(self, prefix: str):
+        print('{}: region_value={}, category_value={}, sub_category_value={}'.format(
+            prefix, self.region_value, self.category_value, self.sub_category_value))
 
 
 class SalesmanSearch:

@@ -97,10 +97,10 @@ class AccessLayer4Sale(AccessLayer):
         print(query)
         return self._db.update_table_by_statement(self._table.name, query)
 
-    def change_sale_state(self, sale_id: str, version: int, sale_state: str, last_check_date: str):
-        query = "UPDATE {} SET {} = '{}', {}='{}' WHERE {}='{}' and {}={};".format(
+    def change_sale_state(self, sale_id: str, sale_state: str, last_check_date: str):
+        query = "UPDATE {} SET {} = '{}', {}='{}' WHERE {}='{}';".format(
             self._table.name, SLDC.SALE_STATE, sale_state, SLDC.LAST_CHECK_DATE, last_check_date,
-            SLDC.SALE_ID, sale_id, SLDC.VERSION, version)
+            SLDC.SALE_ID, sale_id)
         print(query)
         return self._db.update_table_by_statement(self._table.name, query)
 

@@ -15,16 +15,19 @@ from salesman_dash.input_tables.my_online_sale_table import MyHTMLSearchOnlineIn
 from salesman_dash.my_dash_tab_dd_for_search import SearchTabDropDownHandler, SRDD
 from dash import Dash
 from sertl_analytics.my_text import MyText
-from sertl_analytics.constants.salesman_constants import SLDC, REGION
+from sertl_analytics.constants.salesman_constants import SLDC
 from salesman_dash.grid_tables.my_grid_table_sale_4_search_results import MySearchResultTable
 from salesman_system_configuration import SystemConfiguration
 from salesman_dash.plotting.my_dash_plotter_for_salesman_search import MyDashTabPlotter4Search
 from salesman_dash.my_dash_colors import DashColorHandler
 from salesman_tutti.tutti import Tutti
-from salesman_tutti.tutti_url_factory import OnlineSearchApi
 from salesman_tutti.tutti_categorizer import ProductCategorizer
 from salesman_sale_factory import SalesmanSaleFactory
+from salesman_dash.callbacks.callbacks_for_search import CallbackForSearchInput
+from salesman_search import SalesmanSearchApi
 import pandas as pd
+from caching.salesman_cache import CKEY
+from salesman_dash.my_dash_tab_elements import MyDashTabElements4Search
 
 
 class SearchHandler:
@@ -36,9 +39,6 @@ class SearchHandler:
 
 
 class MyDashTab4Search(MyDashBaseTab):
-    _data_table_name = 'my_search_result_grid_table'
-    _data_table_div = '{}_div'.format(_data_table_name)
-
     def __init__(self, app: Dash, sys_config: SystemConfiguration, tutti: Tutti):
         MyDashBaseTab.__init__(self, app)
         self.sys_config = sys_config
@@ -57,19 +57,9 @@ class MyDashTab4Search(MyDashBaseTab):
         self._product_categorizer = ProductCategorizer()
         self._print_category_list = []
         self._print_category_options = []
-        self._print_category_selected_as_list = []
-
-    def __init_dash_element_ids__(self):
-        self._my_search_result_entry_link = 'my_search_result_entry_link'
-        self._my_search_result_graph_div = 'my_search_result_graph_div'
-        self._my_search_div = 'my_search_div'
-        self._my_search_result_grid_table = 'my_search_result_grid_table'
-        self._my_search_result_entry_markdown = 'my_search_result_entry_markdown'
-        self._my_search_result_grid_table_div = '{}_div'.format(self._my_search_result_grid_table)
-        self._my_search_online_input_table = 'my_search_online_input_table'
-        self._my_search_online_input_table_div = '{}_div'.format(self._my_search_online_input_table)
-        self._my_search_test_markdown = 'my_search_test_markdown'
-        self._my_search_input_markdown = 'my_search_input_markdown'
+        self._selected_entities_as_list = []
+        self._elements = MyDashTabElements4Search(self._dd_handler, self._search_online_input_table)
+        self._callback_for_search_input = CallbackForSearchInput(self._elements, self._sale_factory)
 
     def __get_color_handler__(self):
         return DashColorHandler()
@@ -81,23 +71,24 @@ class MyDashTab4Search(MyDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_REGION)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_CATEGORY)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_SUB_CATEGORY)),
-            MyHTML.div_with_html_element(self._my_search_online_input_table, self._search_online_input_table.get_table()),
-            MyDCC.markdown(self._my_search_input_markdown),
-            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_PRINT_CATEGORY)),
-            MyHTML.div_with_button_link(self._my_search_result_entry_link, href='', title='', hidden='hidden'),
-            MyDCC.markdown(self._my_search_test_markdown),
-            MyHTML.div(self._my_search_result_grid_table_div, '', False),
-            MyDCC.markdown(self._my_search_result_entry_markdown),
-            MyHTML.div(self._my_search_result_graph_div, '', False),
+            MyHTML.div_with_html_element(
+                self._elements.my_search_online_input_table, self._search_online_input_table.get_table()),
+            MyDCC.markdown(self._elements.my_search_input_markdown),
+            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_ENTITIES)),
+            MyHTML.div_with_button_link(self._elements.my_search_result_entry_link, href='', title='', hidden='hidden'),
+            MyDCC.markdown(self._elements.my_search_test_markdown),
+            MyHTML.div(self._elements.my_search_result_grid_table_div, '', False),
+            MyDCC.markdown(self._elements.my_search_result_entry_markdown),
+            MyHTML.div(self._elements.my_search_result_graph_div, '', False),
         ]
-        return MyHTML.div(self._my_search_div, children_list)
+        return MyHTML.div(self._elements.my_search_div, children_list)
 
     def init_callbacks(self):
-        pass
         self.__init_callback_for_search_markdown__()
         self.__init_callback_for_search_input_markdown__()
-        self.__init_callbacks_for_search_result_entry_link__()
         self.__init_callback_for_search_result_grid_table__()
+        self.__init_callback_for_search_input__()  # this has to be AFTER search_result_grid_table !!!! it is the first
+        self.__init_callbacks_for_search_result_entry_link__()
         self.__init_callback_for_search_result_entry_markdown__()
         self.__init_callbacks_for_search_result_numbers__()
         self.__init_callback_for_search_result_graph__()
@@ -106,17 +97,17 @@ class MyDashTab4Search(MyDashBaseTab):
 
     def __init_callbacks_for_search_print_category__(self):
         @self.app.callback(
-            Output(self._dd_handler.get_embracing_div_id(self._dd_handler.my_search_print_category_dd), 'style'),
-            [Input(self._my_search_result_graph_div, 'children')])
+            Output(self._dd_handler.get_embracing_div_id(self._dd_handler.my_search_entities_dd), 'style'),
+            [Input(self._elements.my_search_result_graph_div, 'children')])
         def handle_callback_for_search_print_category_visibility(children):
             print('children={}'.format(children))
             if len(children) == 0:
                 return {'display': 'none'}
-            return self._dd_handler.get_style_display(self._dd_handler.my_search_print_category_dd)
+            return self._dd_handler.get_style_display(self._dd_handler.my_search_entities_dd)
 
         @self.app.callback(
-            Output(self._dd_handler.my_search_print_category_dd, 'options'),
-            [Input(self._my_search_result_graph_div, 'children')])
+            Output(self._dd_handler.my_search_entities_dd, 'options'),
+            [Input(self._elements.my_search_result_graph_div, 'children')])
         def handle_callback_for_search_print_category_options(children):
             if len(children) == 0:
                 return []
@@ -129,16 +120,16 @@ class MyDashTab4Search(MyDashBaseTab):
             return self._print_category_options
 
         @self.app.callback(
-            Output(self._my_search_test_markdown, 'children'),
-            [Input(self._dd_handler.my_search_print_category_dd, 'value')])
+            Output(self._elements.my_search_test_markdown, 'children'),
+            [Input(self._dd_handler.my_search_entities_dd, 'value')])
         def handle_callback_for_search_print_category_markdown(category: str):
             return category
 
     def __init_callbacks_for_search_result_entry_link__(self):
         @self.app.callback(
-            Output(self._my_search_result_entry_link, 'hidden'),
-            [Input(self._my_search_result_grid_table, 'rows'),
-             Input(self._my_search_result_grid_table, 'selected_row_indices')])
+            Output(self._elements.my_search_result_entry_link, 'hidden'),
+            [Input(self._elements.my_search_result_grid_table, 'rows'),
+             Input(self._elements.my_search_result_grid_table, 'selected_row_indices')])
         def handle_callback_for_search_result_entry_link_visibility(rows: list, selected_row_indices: list):
             if len(selected_row_indices) == 0:
                 self._selected_search_result_row = None
@@ -147,8 +138,8 @@ class MyDashTab4Search(MyDashBaseTab):
             return ''
 
         @self.app.callback(
-            Output(self._my_search_result_entry_link, 'children'),
-            [Input(self._my_search_result_entry_link, 'hidden')])
+            Output(self._elements.my_search_result_entry_link, 'children'),
+            [Input(self._elements.my_search_result_entry_link, 'hidden')])
         def handle_callback_for_search_result_entry_link_text(button_hidden: str):
             if button_hidden == 'hidden':
                 return ''
@@ -156,8 +147,8 @@ class MyDashTab4Search(MyDashBaseTab):
             return MyHTML.button_submit('my_link_button', 'Open "{}"'.format(button_text), '')
 
         @self.app.callback(
-            Output(self._my_search_result_entry_link, 'href'),
-            [Input(self._my_search_result_entry_link, 'hidden')])
+            Output(self._elements.my_search_result_entry_link, 'href'),
+            [Input(self._elements.my_search_result_entry_link, 'hidden')])
         def handle_callback_for_search_result_entry_link_href(button_hidden: str):
             if button_hidden == 'hidden':
                 return ''
@@ -166,7 +157,7 @@ class MyDashTab4Search(MyDashBaseTab):
     def __init_callbacks_for_search_result_numbers__(self):
         @self.app.callback(
             Output(self._header_table.my_search_found_valid_value_div, 'children'),
-            [Input(self._my_search_result_grid_table, 'rows')])
+            [Input(self._elements.my_search_result_grid_table, 'rows')])
         def handle_callback_for_search_result_numbers_valid(rows: list):
             if len(rows) == 0:
                 return 0
@@ -175,7 +166,7 @@ class MyDashTab4Search(MyDashBaseTab):
 
         @self.app.callback(
             Output(self._header_table.my_search_found_all_value_div, 'children'),
-            [Input(self._my_search_result_grid_table, 'rows')])
+            [Input(self._elements.my_search_result_grid_table, 'rows')])
         def handle_callback_for_search_result_numbers_all(rows: list):
             return len(rows)
 
@@ -196,60 +187,52 @@ class MyDashTab4Search(MyDashBaseTab):
 
     def __init_callback_for_search_result_grid_table__(self):
         @self.app.callback(
-            Output(self._my_search_result_grid_table_div, 'children'),
-            [Input(self._search_online_input_table.my_search_button, 'n_clicks'),
-             Input(self._search_online_input_table.my_search_button_db, 'n_clicks'),
-             Input(self._search_online_input_table.my_search_button_file, 'n_clicks'),
-             Input(self._dd_handler.my_search_print_category_dd, 'value'),
+            Output(self._elements.my_search_result_grid_table_div, 'children'),
+            [Input(self._elements.my_search_button, 'n_clicks'),
+             Input(self._elements.my_search_db_button, 'n_clicks'),
+             Input(self._elements.my_search_file_button, 'n_clicks'),
+             Input(self._elements.my_search_entities_dd, 'value'),
              ],
-            [State(self._dd_handler.my_search_source_dd, 'value'),
-             State(self._dd_handler.my_search_region_dd, 'value'),
-             State(self._dd_handler.my_search_category_dd, 'value'),
-             State(self._dd_handler.my_search_sub_category_dd, 'value'),
-             State(self._search_online_input_table.my_search_input, 'value'),
-             State(self._search_online_input_table.my_search_db_dd, 'value'),
-             State(self._search_online_input_table.my_search_file_dd, 'value'),
+            [State(self._elements.my_search_source_dd, 'value'),
+             State(self._elements.my_search_region_dd, 'value'),
+             State(self._elements.my_search_category_dd, 'value'),
+             State(self._elements.my_search_sub_category_dd, 'value'),
+             State(self._elements.my_search_input, 'value'),
+             State(self._elements.my_search_db_dd, 'value'),
+             State(self._elements.my_search_file_dd, 'value'),
              ]
         )
-        def handle_callback_for_search_result_grid_table(
-                search_n_clicks: int, search_db_n_clicks: int, search_file_n_clicks: int, print_category_value: str,
-                search_source: str, region: str, category: str, sub_category: str,
-                search_input: str, db_row_id: int, file_row_number: int):
-            self._dd_handler.selected_search_source = search_source
-            self._dd_handler.selected_search_region = region
-            self._dd_handler.selected_search_category = category
-            self._dd_handler.selected_search_sub_category = sub_category
-            self._dd_handler.selected_search_print_category = 'print_category'
+        def handle_callback_for_search_result_grid_table(*params):
+            print('TEST (second??): handle_callback_for_search_result_grid_table')
             self._online_rows = None
-            if self._search_online_input_table.search_button_n_clicks != search_n_clicks:
+            clicked_button = self._callback_for_search_input.get_clicked_button()
+            if clicked_button is None:
+                if self._callback_for_search_input.has_value_been_changed_for_parameter(
+                        self._elements.my_search_entities_dd):
+                    self._selected_entities_as_list = self.__get_entities_by_selected_entity_indices__(
+                        self._callback_for_search_input.get_parameter_value(self._elements.my_search_entities_dd))
+                    return self.__get_search_result_grid_table_by_selected_entities__()
+            else:
+                search_input = self._callback_for_search_input.get_actual_search_value()
                 self._print_category_list = []
                 self._print_category_options = []
-                self._print_category_selected_as_list = []
-                self._search_online_input_table.search_button_n_clicks = search_n_clicks
-                return self.__get_search_result_grid_table_by_online_search__(search_input)
-            elif self._search_online_input_table.search_button_db_n_clicks != search_db_n_clicks:
-                self._print_category_list = []
-                self._print_category_options = []
-                self._print_category_selected_as_list = []
-                self._search_online_input_table.search_button_db_n_clicks = search_db_n_clicks
-                return self.__get_search_result_grid_table_by_db_search__(db_row_id)
-            elif self._search_online_input_table.search_button_file_n_clicks != search_file_n_clicks:
-                self._print_category_list = []
-                self._print_category_options = []
-                self._print_category_selected_as_list = []
-                self._search_online_input_table.search_button_file_n_clicks = search_file_n_clicks
-                return self.__get_search_result_grid_table_by_file_search__(file_row_number)
-            elif self._search_online_input_table.was_any_button_clicked() and \
-                    self._dd_handler.selected_search_print_category != print_category_value:
-                self._print_category_selected_as_list = self.__get_selected_print_category__(print_category_value)
-                return self.__get_search_result_grid_table_by_selected_print_category__()
+                self._selected_entities_as_list = []
+                if clicked_button.name == self._elements.my_search_button:
+                    return self.__get_search_result_grid_table_by_online_search__(search_input)
+                elif clicked_button.name == self._elements.my_search_db_button:
+                    return self.__get_search_result_grid_table_by_db_search__(
+                        self._callback_for_search_input.get_selected_db_row_id())
+                elif clicked_button.name == self._elements.my_search_file_button:
+                    return self.__get_search_result_grid_table_by_file_search__(
+                        self._callback_for_search_input.get_selected_file_row_number()
+                    )
             return ''
 
     def __init_callback_for_search_result_entry_markdown__(self):
         @self.app.callback(
-            Output(self._my_search_result_entry_markdown, 'children'),
-            [Input(self._my_search_result_grid_table, 'selected_row_indices')],
-            [State(self._my_search_result_grid_table, 'rows')]
+            Output(self._elements.my_search_result_entry_markdown, 'children'),
+            [Input(self._elements.my_search_result_grid_table, 'selected_row_indices')],
+            [State(self._elements.my_search_result_grid_table, 'rows')]
         )
         def handle_callback_for_search_result_entry_markdown(selected_row_indices: list, rows):
             if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:
@@ -262,43 +245,77 @@ class MyDashTab4Search(MyDashBaseTab):
     def __init_callback_for_search_markdown__(self):
         @self.app.callback(
             Output(self._header_table.my_search_markdown, 'children'),
-            [Input(self._my_search_result_grid_table_div, 'children'),
+            [Input(self._elements.my_search_result_grid_table_div, 'children'),
              Input(self._header_table.my_search_found_valid_value_div, 'children')])
         def handle_callback_for_search_markdown(search_result_grid_table, children):
             if self._search_input == '':
                 return '**Please enter search string**'
             return self.__get_search_markdown_for_online_search__()
 
+    def __init_callback_for_search_input__(self):
+        @self.app.callback(
+            Output(self._search_online_input_table.my_search_input, 'value'),
+            [Input(self._elements.my_search_button, 'n_clicks'),
+             Input(self._elements.my_search_db_button, 'n_clicks'),
+             Input(self._elements.my_search_file_button, 'n_clicks'),
+             Input(self._elements.my_search_entities_dd, 'value'),
+             ],
+            [State(self._elements.my_search_source_dd, 'value'),
+             State(self._elements.my_search_region_dd, 'value'),
+             State(self._elements.my_search_category_dd, 'value'),
+             State(self._elements.my_search_sub_category_dd, 'value'),
+             State(self._elements.my_search_input, 'value'),
+             State(self._elements.my_search_db_dd, 'value'),
+             State(self._elements.my_search_file_dd, 'value'),
+             ]
+        )
+        def handle_callback_for_search_input(*params):
+            print('TEST: (first?) handle_callback_for_search_input: {}'.format(params))
+            self._callback_for_search_input.set_values(*params)
+            self._callback_for_search_input.print_details()
+            actual_search_value = self._callback_for_search_input.get_actual_search_value()
+            if actual_search_value == '':
+                return self.sys_config.shelve_cache.get_value(CKEY.SEARCH_INPUT)
+            else:
+                self.sys_config.shelve_cache.set_value(CKEY.SEARCH_INPUT, actual_search_value)
+            return actual_search_value
+
     def __init_callback_for_search_input_markdown__(self):
         @self.app.callback(
-            Output(self._my_search_input_markdown, 'children'),
-            [Input(self._search_online_input_table.my_search_button, 'n_clicks')],
-            [State(self._search_online_input_table.my_search_input, 'value'),])
-        def handle_callback_for_search_markdown(n_clicks, search_input):
-            doc_nlp = self._salesman_spacy.nlp_sm(search_input)
+            Output(self._elements.my_search_input_markdown, 'children'),
+            [Input(self._search_online_input_table.my_search_button, 'n_clicks'),
+             Input(self._search_online_input_table.my_search_db_button, 'n_clicks'),
+             Input(self._search_online_input_table.my_search_file_button, 'n_clicks')],
+            )
+        def handle_callback_for_search_markdown(n_clicks, n_clics_db, n_clicks_file):
+            doc_nlp = self._salesman_spacy.nlp_sm(self._callback_for_search_input.get_actual_search_value())
             ent_list = ['{} ({})'.format(ent.text, ent.label_) for ent in doc_nlp.ents]
-            return 'Entities: {}'.format(', '.join(ent_list))
+            return 'Entities (original): {}'.format(', '.join(ent_list))
 
     def __init_callback_for_search_result_graph__(self):
         @self.app.callback(
-            Output(self._my_search_result_graph_div, 'children'),
-            [Input(self._my_search_result_grid_table_div, 'children')])
+            Output(self._elements.my_search_result_graph_div, 'children'),
+            [Input(self._elements.my_search_result_grid_table_div, 'children')])
         def handle_callback_for_search_result_graph(children):
             if self._online_rows is None:
                 return ''
             return self.__get_scatter_plot__()
 
-    def __get_selected_print_category__(self, selected_print_category_value: str):
-        if selected_print_category_value.isnumeric() and len(self._print_category_list) > 0:
-            print_category_string = self._print_category_list[int(selected_print_category_value)]
-            return print_category_string.split(': ')
-        return []
+    def __get_entities_by_selected_entity_indices__(self, selected_entity_indices: list):
+        if len(self._print_category_list) == 0 or len(selected_entity_indices) == 0 \
+                or PRCAT.ALL in selected_entity_indices:
+            return []
+        return_list = []
+        for selected_index in selected_entity_indices:
+            print_category_string = self._print_category_list[int(selected_index)]
+            return_list.append(print_category_string.split(': '))
+        return return_list
 
     def __get_scatter_plot__(self):
         df_search_result = self.tutti.printing.df_sale
         # MyPandas.print_df_details(df_search_result)
         plotter = MyDashTabPlotter4Search(df_search_result, self._color_handler)
-        scatter_chart = plotter.get_chart_type_scatter()
+        scatter_chart = plotter.get_chart_type_scatter(self._callback_for_search_input.get_actual_search_value())
         if len(self._print_category_list) == 0:
             self._print_category_list = plotter.category_list
         return scatter_chart
@@ -330,10 +347,8 @@ class MyDashTab4Search(MyDashBaseTab):
         outlier = Outlier(price_single_list, self.sys_config.outlier_threshold)
         return outlier
 
-    def __get_search_result_grid_table_by_selected_print_category__(self):
-        self._online_rows = self.tutti.get_search_results_by_selected_print_category(
-            self._print_category_selected_as_list
-        )
+    def __get_search_result_grid_table_by_selected_entities__(self):
+        self._online_rows = self.tutti.get_search_results_by_selected_entities(self._selected_entities_as_list)
         return self.__get_search_result_grid_table__()
 
     def __get_search_result_grid_table_by_online_search__(self, search_input: str):
@@ -341,17 +356,19 @@ class MyDashTab4Search(MyDashBaseTab):
         return self.__get_search_result_table_by_api__()
 
     def __get_search_result_table_by_api__(self):
-        api = OnlineSearchApi(self._search_input)
-        region_value = self._dd_handler.selected_search_region
-        category_value = self._dd_handler.selected_search_category
-        sub_category_value = self._dd_handler.selected_search_sub_category
+        api = SalesmanSearchApi(self._search_input)
+        region_value = self.__get_callback_value__(self._elements.my_search_region_dd)
+        category_value = self.__get_callback_value__(self._elements.my_search_category_dd)
+        sub_category_value = self.__get_callback_value__(self._elements.my_search_sub_category_dd)
         api.region_value = '' if region_value == 'ganze-schweiz' else region_value
         api.category_value = '' if category_value == PRCAT.ALL else category_value
         api.sub_category_value = '' if api.category_value == '' or sub_category_value == PRSUBCAT.ALL \
             else sub_category_value
-        # api.print_api_details('__get_search_result_grid_table_by_online_search__')
-        self._online_rows = self.tutti.get_search_results_from_online_inputs(api)
+        self._online_rows = self.tutti.get_search_results_by_search_api(api)
         return self.__get_search_result_grid_table__()
+
+    def __get_callback_value__(self, element_name: str):
+        return self._callback_for_search_input.get_parameter_value(element_name)
 
     def __get_search_result_grid_table_by_db_search__(self, row_id: int):
         sale = self._sale_factory.get_sale_from_db_by_row_id(row_id)
@@ -359,11 +376,10 @@ class MyDashTab4Search(MyDashBaseTab):
         return self.__get_search_result_table_by_api__()
 
     def __get_search_result_grid_table_by_file_search__(self, file_row_number: int):
-        file_row = self.sys_config.access_layer_file.get_row(file_row_number)
-        sale = self._sale_factory.get_sale_by_file_row(file_row)
+        sale = self._sale_factory.get_sale_from_file_by_row_number(file_row_number)
         self._search_input = sale.title
         return self.__get_search_result_table_by_api__()
 
     def __get_search_result_grid_table__(self):
         min_height = self._search_results_grid_table.height_for_display
-        return MyDCC.data_table(self._my_search_result_grid_table, self._online_rows, [], min_height=min_height)
+        return MyDCC.data_table(self._elements.my_search_result_grid_table, self._online_rows, [], min_height=min_height)

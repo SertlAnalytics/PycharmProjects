@@ -22,6 +22,7 @@ from matcher.tutti_matcher_4_cover_available import TuttiMatcher4CoverAvailable
 from matcher.tutti_matcher_4_age import TuttiMatcher4Age
 from matcher.tutti_matcher_4_usage import TuttiMatcher4Usage
 from matcher.tutti_matcher_4_warranty import TuttiMatcher4Warranty
+from sertl_analytics.my_text import MyText
 import spacy
 
 
@@ -34,6 +35,11 @@ class CustomTokenizer:
         return self.tokenizer(text)
 
     def __replace_substrings__(self, text: str) -> str:
+        for old_value, new_value in self.replacement_dict.items():
+            text = MyText.replace_substring(text, string_old=old_value, string_new=new_value)
+        return text
+
+    def __replace_substrings_old__(self, text: str) -> str:  # ToDo remove later (after 15.05.2019)
         for replacement_string in self.replacement_dict:
             string_new = self.replacement_dict[replacement_string]
             repl_list = [replacement_string.lower(), replacement_string.upper(), replacement_string.capitalize()]
@@ -50,6 +56,7 @@ class CustomTokenizer:
             ',--': '.-',
             ',-': '.-',
             '.--': '.-',
+            'Gore-Tex': 'Goretex', 'GoreTex': 'Goretex',
             'Huawai': 'Huawei',
             'käffig': 'Käfig',
             'Schalfsack': 'Schlafsack',
@@ -82,6 +89,8 @@ class SalesmanSpacy:
         self._nlp = spacy.load('de_core_news_sm') if load_sm else spacy.load('de_core_news_md')
         self._nlp_sm = spacy.load('de_core_news_sm')
         self._nlp.tokenizer = CustomTokenizer(self._nlp.tokenizer)
+        self._keep_entity_labels = [EL.LOC, EL.ORG]
+        self._keep_entity_label_replacement_dict = {EL.ORG: EL.COMPANY}
         self._salesman_entity_names = SalesmanEntityHandler.get_entity_names_for_all_entity_labels_without_loc(True)
         # print('self._salesman_entity_names={}'.format(self._salesman_entity_names))
         # self._salesman_nlp.tokenizer = WhitespaceTokenizer(self._salesman_nlp.vocab)
@@ -143,25 +152,23 @@ class SalesmanSpacy:
         matcher.add(entity_type, None, *patterns)
         return matcher
 
-    def replacement_component(self, doc):  # ToDo see https://nlpforhackers.io/complete-guide-to-spacy/
-        doc.text = doc.text.replace(',--', '.-')
-        return doc
-
     def keep_entity_component(self, doc):
-        keep_entity_labels = [EL.LOC]
         keep_list = []
         for ent in doc.ents:
-            if self.__can_entity_be_added_to_keep_list__(ent, keep_entity_labels):
+            # print('check entity: {} - {}'.format(ent.text, ent.label_))
+            if self.__can_entity_be_added_to_keep_list__(ent, self._keep_entity_labels):
+                # print('append loc entity: {} - {}'.format(ent.text, ent.label_))
+                if ent.label_ in self._keep_entity_label_replacement_dict:
+                    ent = Span(doc, start=ent.start, end=ent.end, label='COMPANY')
                 keep_list.append(ent)
         doc.ents = keep_list  # Overwrite the doc.ents with the entities to keep
-        # if len(keep_list):
-        #     print('\nLoc entities')
-        #     SalesmanSpacy.print_entities_for_doc(doc)
         return doc
 
     def __can_entity_be_added_to_keep_list__(self, ent, keep_entity_labels: list):
         # to avoid errors with a second entity for the same entity or parts of it
         if ent.label_ not in keep_entity_labels:
+            return False
+        if ent.text.lower() in self._salesman_entity_names:
             return False
         entity_text = ent.text.replace('-', ' ')
         entity_text = entity_text.replace('\n', ' ')
@@ -250,6 +257,13 @@ class SalesmanSpacy:
     def print_entities_for_doc(doc: Doc):
         for ent in doc.ents:
             print('ent.text={}, ent.label_={}'.format(ent.text, ent.label_))
+
+    @staticmethod
+    def get_entity_list(doc: Doc):
+        ent_dict = {ent.text: ent.label_ for ent in doc.ents}
+        li = ['{} ({})'.format(text, label) for text, label in ent_dict.items()]
+        li.sort()
+        return ', '.join(li)
 
     def __set_doc_extensions__(self): # Register some Doc property extensions
         Doc.set_extension('size', getter=self.__get_size__)

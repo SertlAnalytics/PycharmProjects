@@ -10,3 +10,19 @@ class MYPR:  # My Processes
     OPTIMIZE_LOG_FILES = 'Optimize_Log_Files'
     RUN_UNDEFINED_PROCESS = 'Run_Undefined_Process'
 
+
+class MYDT:  # DataTypes
+    BOOL = 'bool'
+    STRING = 'str'
+    INT = 'int'
+    FLOAT = 'float'
+    LIST = 'list'
+    DICT = 'dict'
+
+
+class MYDSHC:  # Dash Components
+    INPUT = 'input'
+    BUTTON = 'button'
+    DROP_DOWN = 'dropdown'
+    CHECK_BOX = 'checkbox'
+

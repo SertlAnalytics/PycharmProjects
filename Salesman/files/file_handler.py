@@ -12,8 +12,12 @@ class FileHandler:
     def __init__(self):
         pass
 
-    @staticmethod
-    def get_file_path_for_file(file_name: str):
-        package_dir = os.path.abspath(os.path.dirname(__file__))
+    def get_file_path_for_file(self, file_name: str):
+        package_dir = self.__get_package_dir__()
+        # print('get_file_path_for_file: {}'.format(os.path.join(package_dir, file_name)))
         return os.path.join(package_dir, file_name)
+
+    @staticmethod
+    def __get_package_dir__():
+        return os.path.abspath(os.path.dirname(__file__))
 

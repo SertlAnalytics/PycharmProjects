@@ -8,18 +8,7 @@ from sertl_analytics.constants.salesman_constants import SLDC, REGION
 from salesman_tutti.tutti_constants import PRCAT, PRSUBCAT
 from salesman_system_configuration import SystemConfiguration
 from salesman_nlp.salesman_spacy import SalesmanSpacy
-
-
-class OnlineSearchApi:
-    def __init__(self, search_string: str):
-        self.search_string = search_string
-        self.region_value = ''
-        self.category_value = ''
-        self.sub_category_value = ''
-
-    def print_api_details(self, prefix='OnlineSearchApi'):
-        print('{}: region_value={}, category_value={}, sub_category_value={}'.format(
-            prefix, self.region_value, self.category_value, self.sub_category_value))
+from salesman_search import SalesmanSearchApi
 
 
 class TuttiUrlFactory:
@@ -36,7 +25,7 @@ class TuttiUrlFactory:
         self._search_string = ''  # could be an href string as well
         self._href = ''
         self._url_extended_base = ''
-        self._online_search_api = None
+        self._search_api = None
 
     @property
     def domain(self):
@@ -48,15 +37,15 @@ class TuttiUrlFactory:
 
     @property
     def online_search_category_value(self):
-        if self._online_search_api is None or self._online_search_api.category_value in ['angebote', PRCAT.ALL]:
+        if self._search_api is None or self._search_api.category_value in ['angebote', PRCAT.ALL]:
             return ''
-        return self._online_search_api.category_value
+        return self._search_api.category_value
 
     @property
     def online_search_sub_category_value(self):
-        if self._online_search_api is None or self._online_search_api.sub_category_value in ['ALL', PRSUBCAT.ALL]:
+        if self._search_api is None or self._search_api.sub_category_value in ['ALL', PRSUBCAT.ALL]:
             return ''
-        return self._online_search_api.sub_category_value
+        return self._search_api.sub_category_value
 
     @property
     def url(self):
@@ -68,17 +57,17 @@ class TuttiUrlFactory:
         url = '{}?{}'.format(self._url_extended_base, '&'.join(p_list))
         return url
 
-    def adjust_by_online_search_api(self, api: OnlineSearchApi):
+    def adjust_by_search_api(self, api: SalesmanSearchApi):
         # 'https://www.tutti.ch/de/li/ganze-schweiz/angebote?'
         # https://www.tutti.ch/de/li/aargau?o=6&q=weste
-        self._online_search_api = api
+        self._search_api = api
         self._search_string = api.search_string
         self._region_value = 'ganze-schweiz' if api.region_value == '' else api.region_value
         self._category_value = 'angebote' if api.category_value in ['', PRCAT.ALL] else api.category_value
         self._sub_category_value = '' if api.sub_category_value == PRSUBCAT.ALL else api.sub_category_value
         self._order = 0
         self._url_extended_base = self.__get_url_extended_base__()
-        # print('adjust_by_online_search_api._url_extended_base={}'.format(self._url_extended_base))
+        # print('adjust_by_search_api._url_extended_base={}'.format(self._url_extended_base))
 
     def get_href(self):
         href = self._search_string

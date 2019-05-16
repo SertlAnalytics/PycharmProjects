@@ -9,7 +9,7 @@ Date: 2019-04-02
 class PRCAT:  # Product Category, german: Rubrik
     ALL = 'Alle'
     ART = 'Antiquitäten & Kunst'
-    CHILD = 'Baby & Child'
+    CHILD = 'Baby & Kind'
     BOOKS = 'Bücher'
     BUSINESS = 'Büro & Gewerbe'
     COMPUTER = 'Computer & Zubehör'
@@ -122,6 +122,7 @@ class EL:  # entity labels
     COLOR = 'COLOR'
     JOB = 'JOB'
     LOC = 'LOC'
+    ORG = 'ORG'
     PRODUCT = 'PRODUCT'
     PROPERTY = 'PROPERTY'
     OBJECT = 'OBJECT'

@@ -96,11 +96,13 @@ class SaleSimilarityCheck:
             elif label == EL.JOB:
                 return is_identical_or_similar_dict[EL.ANIMAL] and is_identical_or_similar_dict[EL.COMPANY]
             elif label == EL.COMPANY:
-                return is_identical_or_similar_dict[EL.PROPERTY] and (
-                    is_identical_or_similar_dict[EL.PRODUCT] or is_identical_or_similar_dict[EL.OBJECT]), label
+                return (is_identical_or_similar_dict[EL.PRODUCT]) or \
+                       (is_identical_or_similar_dict[EL.MATERIAL] and is_identical_or_similar_dict[EL.TARGET_GROUP]) or \
+                       (is_identical_or_similar_dict[EL.PROPERTY] and is_identical_or_similar_dict[EL.OBJECT]), label
             elif label == EL.PRODUCT:
-                return is_identical_or_similar_dict[EL.PROPERTY] and (
-                    is_identical_or_similar_dict[EL.COMPANY] or is_identical_or_similar_dict[EL.OBJECT]), label
+                return (is_identical_or_similar_dict[EL.COMPANY]) or \
+                       (is_identical_or_similar_dict[EL.MATERIAL] and is_identical_or_similar_dict[EL.TARGET_GROUP]) or \
+                       (is_identical_or_similar_dict[EL.PROPERTY] and is_identical_or_similar_dict[EL.OBJECT]), label
             elif label in [EL.TARGET_GROUP, EL.COLOR]:
                 return is_identical_or_similar_dict[EL.PROPERTY] and is_identical_or_similar_dict[EL.OBJECT], label
             else:

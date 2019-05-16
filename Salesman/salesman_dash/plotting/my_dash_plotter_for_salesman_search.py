@@ -15,7 +15,7 @@ from salesman_dash.plotting.my_dash_plotter_for_salesman import MyDashTabPlotter
 class MyDashTabPlotter4Search(MyDashTabPlotter):
     def __init_parameter__(self):
         self._chart_id = 'search_result_graph'
-        self._chart_name = 'Search Results'
+        self._chart_name = 'Results'
         self.category = SLDC.PRINT_CATEGORY
         self.x_variable = SLDC.PRICE_SINGLE
         self.y_variable = SLDC.PRINT_CATEGORY
@@ -28,7 +28,7 @@ class MyDashTabPlotter4Search(MyDashTabPlotter):
         self.category_list = list(df[self.category].unique())
         scatter_traces = self.__get_scatter_traces_for_categories__(df, self.category_list, color_dict)
         box_plot_traces = self.__get_box_plot_traces_for_categories__(df, self.category_list, color_dict)
-        return scatter_traces  + box_plot_traces
+        return scatter_traces + box_plot_traces
 
     def __get_scatter_traces_for_categories__(self, df: pd.DataFrame, category_list: list, color_dict: dict):
         return [

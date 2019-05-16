@@ -180,18 +180,20 @@ class DropDownHandler:
 
 
 class DccGraphApi:
-    def __init__(self, graph_id: str, title: str):
+    def __init__(self, graph_id: str, title: str, use_title_for_y_axis=True):
         self.period = ''
         self.id = graph_id
         self.ticker_id = ''
         self.df = None
         self.indicator = None
+        self.title = title
+        self.use_title_for_y_axis = use_title_for_y_axis
         self.pattern_trade = None
         self.figure_data = None
         self.figure_layout_auto_size = False
         self.figure_layout_height = 500
         self.figure_layout_width = 1200
-        self.figure_layout_yaxis_title = title
+        self.figure_layout_yaxis_title = ''
         self.figure_layout_margin = {'b': 50, 'r': 50, 'l': 50, 't': 50}
         self.figure_layout_legend = {'x': +5}
         self.figure_layout_hovermode = 'closest'
@@ -500,19 +502,18 @@ class MyDCC:
 
     @staticmethod
     def graph(graph_api: DccGraphApi):
-        if graph_api.figure_layout_x_axis_dict:
-            x_axis_dict = graph_api.figure_layout_x_axis_dict
-        else:
+        if graph_api.figure_layout_x_axis_dict is None:
             # x_axis_dict = {'title': 'ticker-x', 'type': 'date'}
-            x_axis_dict = {}  # 'type': 'log'
-
-        if graph_api.figure_layout_y_axis_dict:
-            y_axis_dict = graph_api.figure_layout_y_axis_dict
+            x_axis_dict = {'title': graph_api.title}            
         else:
-            y_axis_dict = {'title': graph_api.figure_layout_yaxis_title}
+            x_axis_dict = graph_api.figure_layout_x_axis_dict
+
+        if graph_api.figure_layout_y_axis_dict is None:
+            y_axis_dict = {'title': graph_api.title} if graph_api.use_title_for_y_axis else {}
+        else:
+            y_axis_dict = graph_api.figure_layout_y_axis_dict
 
         MyDCC.add_properties_to_x_y_axis_dict(x_axis_dict, y_axis_dict)
-        # print('y_axis_dict={}'.format(y_axis_dict))
 
         return dcc.Graph(
             id=graph_api.id,
@@ -521,7 +522,7 @@ class MyDCC:
                 'layout': {
                     'showlegend': True,
                     # 'spikedistance': 1,
-                    'title': graph_api.figure_layout_yaxis_title,
+                    'title': graph_api.title,
                     'xaxis': x_axis_dict,
                     'autosize': graph_api.figure_layout_auto_size,
                     'yaxis': y_axis_dict,

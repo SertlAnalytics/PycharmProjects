@@ -5,6 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-14
 """
 import urllib.parse
+from sertl_analytics.test.my_test_abc import TestInterface
+import re
 
 
 class MyText:
@@ -48,3 +50,50 @@ class MyText:
             if input_string.find(old_value) > -1:
                 input_string = input_string.replace(old_value, new_value)
         return input_string
+
+    @staticmethod
+    def replace_substring(string_orig: str, string_old: str, string_new: str) -> str:
+        start_list = [match.start() for match in re.finditer(string_old, string_orig, flags=re.IGNORECASE)]
+        if len(start_list) > 0:
+            len_old_value = len(string_old)
+            start_list.sort(reverse=True)
+            for start_pos in start_list:
+                string_orig = string_orig[:start_pos] + string_new + string_orig[start_pos + len_old_value:]
+        return string_orig
+
+
+class MyTextTest(MyText, TestInterface):
+    REPLACE_SUBSTRING = 'replace_substring'
+
+    def __init__(self, print_all_test_cases_for_units=False):
+        TestInterface.__init__(self, print_all_test_cases_for_units)
+
+    def test_replace_substring(self):
+        """
+         def divide(dividend: float, divisor: float, round_decimals = 2, return_value_on_error = 0):
+        if divisor == 0:
+            return return_value_on_error
+        return round(dividend/divisor, round_decimals)
+        :return:
+        """
+        test_case_dict = {
+            'Several replacements': [
+                self.replace_substring('Das ist ein Text mit GoreTex und goretex und Goretex', 'Goretex', 'Gore-Tex'),
+                'Das ist ein Text mit Gore-Tex und Gore-Tex und Gore-Tex'
+            ],
+            'One replacements': [
+                self.replace_substring('Das ist ein Text mit GoreTex', 'Goretex', 'Gore-Tex'),
+                'Das ist ein Text mit Gore-Tex'
+            ],
+        }
+        return self.__verify_test_cases__(self.REPLACE_SUBSTRING, test_case_dict)
+
+    def __get_class_name_tested__(self):
+        return MyText.__name__
+
+    def __run_test_for_unit__(self, unit: str) -> bool:
+        if unit == self.REPLACE_SUBSTRING:
+            return self.test_replace_substring()
+
+    def __get_test_unit_list__(self):
+        return [self.REPLACE_SUBSTRING]

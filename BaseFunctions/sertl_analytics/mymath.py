@@ -250,7 +250,7 @@ class MyMath:
         value_str = value_str.replace("´", "")  # remove thousand separators
         value_str = value_str.replace("-", "")  # remove -- signs
         value_str = value_str.replace(" ", "")  # remove spaces
-        if value_str == '':
+        if value_str.lower() in ['', 'gratis', 'umsonst']:
             return 0
         if value_str[-1] == delimiter:
             value_str = value_str[:-1]

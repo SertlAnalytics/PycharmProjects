@@ -2,20 +2,45 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce999960-43f7-47d3-8f9a-93118730bafb" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_usage.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_callback.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/caching/salesman_cache.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/callbacks/callbacks_for_search.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_elements.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_nlp/test_salesman_spacy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/my_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/my_constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/salesman_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/constants/salesman_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/my_text.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/my_text.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_components.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mydash/my_dash_components.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/myhtml.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/myhtml.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/mymath.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/test/run_test_from_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/test/run_test_from_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/test/test_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../BaseFunctions/sertl_analytics/test/test_factory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/Files/file_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/files/file_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/entities/salesman_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/entities/salesman_named_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/test_tutti_matcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/test_tutti_matcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_new.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_is_new.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_size.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/matcher/tutti_matcher_4_size.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/run_manual_import.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/run_manual_import.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/run_tutti_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/run_tutti_process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/input_tables/my_online_sale_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/input_tables/my_online_sale_table.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_dd_for_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_nlp/salesman_doc_extended.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_nlp/salesman_doc_extended.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_sale.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_nlp/salesman_spacy.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_nlp/salesman_spacy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_sale.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_sale_checks.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_sale_checks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_sale_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_sale_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_search.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_search_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_search_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_system_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_url_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_url_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_web_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_web_parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_sale.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -34,8 +59,8 @@
       <file leaf-file-name="run_pattern_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="667">
-              <caret line="63" column="51" selection-start-line="63" selection-start-column="51" selection-end-line="63" selection-end-column="51" />
+            <state relative-caret-position="177">
+              <caret line="51" column="44" selection-start-line="51" selection-start-column="44" selection-end-line="51" selection-end-column="44" />
               <folding>
                 <element signature="e#198#247#0" expanded="true" />
               </folding>
@@ -267,7 +292,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run_pattern_detection">
+  <component name="RunManager" selected="Python.run_pattern_detection_with_dash">
     <configuration name="__test_pattern_logging__" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Stocks" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -418,6 +443,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.73770493" visible="true" weight="0.28821656" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32" />
@@ -1303,8 +1329,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/run_pattern_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="667">
-          <caret line="63" column="51" selection-start-line="63" selection-start-column="51" selection-end-line="63" selection-end-column="51" />
+        <state relative-caret-position="177">
+          <caret line="51" column="44" selection-start-line="51" selection-start-column="44" selection-end-line="51" selection-end-column="44" />
           <folding>
             <element signature="e#198#247#0" expanded="true" />
           </folding>

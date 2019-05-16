@@ -36,8 +36,8 @@ class MyDashTabPlotter:
         df_reduced = self._df_base[columns]
         print('__print_df_base__: _df_wave\n{}'.format(df_reduced.head(100)))
 
-    def get_chart_type_scatter(self):
-        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'winner & loser'))
+    def get_chart_type_scatter(self, title: str):
+        graph_api = DccGraphApi(self._chart_id, '{}: {}'.format(self._chart_name, title), use_title_for_y_axis=False)
         graph_api.figure_data = self.__get_scatter_figure_data__()
         graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
         graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
@@ -51,7 +51,10 @@ class MyDashTabPlotter:
 
     def __get_figure_layout_y_axis_dict__(self, graph_api: DccGraphApi):
         if self.__can_axis_be_scaled_log_for_selected_variable__(self.y_variable):
-            return {'title': graph_api.figure_layout_yaxis_title, 'type': 'file_log', 'autorange': True}
+            if graph_api.use_title_for_y_axis:
+                return {'title': graph_api.title, 'type': 'file_log', 'autorange': True}
+            else:
+                return {'type': 'file_log', 'autorange': True}
 
     def __get_figure_layout_x_axis_dict__(self):
         if self.__can_axis_be_scaled_log_for_selected_variable__(self.x_variable):

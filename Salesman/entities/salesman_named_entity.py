@@ -134,7 +134,7 @@ class MaterialEntity(NamedEntity):
         return [
             'Aluminium', 'Akazienholz', 'Astholz',
             'Baumwolle',
-            'Glas', 'Gummi',
+            'Glas', 'Gummi', 'Goretex',
             'Holz',
             'Kunstleder', 'Kork',
             'Leder', 'Laminat',
@@ -142,7 +142,6 @@ class MaterialEntity(NamedEntity):
             'Naturholz',
             'Parkett', 'Porzellan', 'Plattenboden', 'Parkettboden', 'Plexiglas', 'Plastik',
             'Polyurethan', 'Polyester',
-            'Goretex',
             'Stoff', 'Stroh', 'Spreu', 'Sand',
             'Terracotta',
             'Wolle'
@@ -151,7 +150,7 @@ class MaterialEntity(NamedEntity):
     @staticmethod
     def __get_synonym_dict__():
         return {
-            'Goretex': ['GoreTex'],
+            'Goretex': ['Gore-Tex']
         }
 
 
@@ -264,13 +263,13 @@ class ProductEntity(NamedEntity):
             'alu chair', 'aluminium chair',
             'Booster',
             'Cameleon',
-            'EOS 700D',
+            'EOS 700D', 'EA107', 'EA 107', 'EA108' 'EA 108',
             'gtx',
             'Hot + Cool', 'hero',
             'Kitos', 'Kid Cow',
             'Looking Good',
             'MacBook', 'meda', 'Monterey',
-            'Pixie', 'Panama', 'Purpose Chair',
+            'Pixie', 'Panama', 'Purpose Chair', 'PrimaDonna',
             'Roundabout',
             'sleepi', 'Silencio',
             'Velar',
@@ -322,6 +321,7 @@ class ObjectTypeEntity(NamedEntity):
             'Nagerheim', 'Nagerkäfig', 'Nagerstall', 'Nagerhaus',
             'Overall', 'Öse',
             'Porzellanfigur', 'Porzellanfiguren', 'Puppe', 'Pullover', 'Plexiglasscheibe', 'PC-Halterung',
+            'Portemonnaie',
             'Rettungsweste', 'Roman', 'Ratgeber', 'Router', 'Rückwand',
             'Rollcontainer', 'Rollkorpus', 'Reifen', 'Räder', 'Regal', 'Regenschutz', 'Rucksack', 'Rock', 'Rahmen',
             'Schlafsack', 'Service', 'Scheibenwischer', 'Sachbuch', 'Schlafsofa',
@@ -331,7 +331,7 @@ class ObjectTypeEntity(NamedEntity):
             'Sportauspuff', 'Spielzeugautos', 'Schlafsofa', 'Sommerreifen', 'Stehtisch', 'Sitzungstisch',
             'Spiegelschrank', 'Schraube', 'Streu', 'Sandbad', 'Starterset', 'Spielburg', 'Schaukel',
             'Sauerstoffboxen', 'Schale', 'Schlafhöhlen', 'Seitenschutz', 'Seitenblende', 'Sporttourer',
-            'Schreibtischplatte',
+            'Schreibtischplatte', 'Schultergurt',
             'Turnschuhe', 'Tisch', 'Toilette', 'Tasche', 'Transport', 'Taxi', 'Tumbler', 'Truhe', 'Tourer',
             'Tiefkühlfach', 'Trockenfutter', 'Terrarium', 'Terrarien',
             'Transportbox', 'Transport-Box', 'Transportboxen', 'Transportkiste', 'Transportkistli',

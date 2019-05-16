@@ -59,12 +59,12 @@ class MyHTMLSearchOnlineInputTable(MyHTMLInputTable):
         return 'my_search_button'
 
     @property
-    def my_search_button_db(self):
-        return 'my_search_button_db'
+    def my_search_db_button(self):
+        return 'my_search_db_button'
 
     @property
-    def my_search_button_file(self):
-        return 'my_search_button_file'
+    def my_search_file_button(self):
+        return 'my_search_file_button'
 
     def was_any_button_clicked(self):
         return self.search_button_n_clicks + self.search_button_db_n_clicks + self.search_button_file_n_clicks > 0
@@ -87,7 +87,7 @@ class MyHTMLSearchOnlineInputTable(MyHTMLInputTable):
     def _init_cells_for_search_by_database_entries__(self):
         input_label_div = MyHTML.div(self.my_search_db_label_div, 'Search by database:', True)
         drop_down = MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_DATABASE)),
-        button_search = MyHTML.div_with_html_button_submit(self.my_search_button_db, 'Search', hidden='')
+        button_search = MyHTML.div_with_html_button_submit(self.my_search_db_button, 'Search', hidden='')
 
         self.set_value(2, 1, input_label_div)
         self.set_value(2, 2, drop_down)
@@ -96,7 +96,7 @@ class MyHTMLSearchOnlineInputTable(MyHTMLInputTable):
     def _init_cells_for_search_by_file_entries__(self):
         input_label_div = MyHTML.div(self.my_search_file_label_div, 'Search by file:', True)
         drop_down = MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_FILE)),
-        button_search = MyHTML.div_with_html_button_submit(self.my_search_button_file, 'Search', hidden='')
+        button_search = MyHTML.div_with_html_button_submit(self.my_search_file_button, 'Search', hidden='')
 
         self.set_value(3, 1, input_label_div)
         self.set_value(3, 2, drop_down)

@@ -146,7 +146,7 @@ class SalesmanSale:
     @staticmethod
     def __get_corrected_value__(key: str, value):
         if key == SLDC.TITLE:
-            return value.replace('/', ' / ')
+            return value.replace('/', ' / ') if type(key) is str else value
         elif key == SLDC.PRICE:
             if type(value) is str:
                 return MyMath.get_float_for_string(value)
@@ -274,6 +274,12 @@ class SalesmanSale:
 
     def is_sale_ready_for_sale_table(self):
         return self._data_dict_obj.is_data_dict_ready_for_sale_table()
+
+    def has_sale_entity(self, label: str, value: str) -> bool:
+        if value in self._entity_label_dict:
+            if self._entity_label_dict[value] == label:
+                return True
+        return False
 
     def set_is_outlier(self, is_outlier: bool):
         self.set_value(SLDC.IS_OUTLIER, 1 if is_outlier else 0)

@@ -13,12 +13,14 @@ from salesman_database.access_layer.access_layer_file import MySalesAccessLayerF
 from salesman_sound.salesman_sound_machine import SalesmanSoundMachine
 from salesman_logging.salesman_debugger import SalesmanDebugger
 from salesman_scheduling.salesman_process_manager import SalesmanProcessManager
-from Files.file_handler import FileHandler
+from files.file_handler import FileHandler
 from salesman_tutti.tutti_categorizer import ProductCategorizer, RegionCategorizer
-
+from caching.salesman_cache import SalesmanShelve
+import shelve
 
 class SystemConfiguration:
     def __init__(self, for_semi_deep_copy=False):
+        self.shelve_cache = SalesmanShelve()
         self.file_log = SalesmanLog()
         self.file_handler = FileHandler()
         self.process_manager = SalesmanProcessManager()

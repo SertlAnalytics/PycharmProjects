@@ -11,7 +11,8 @@ test_factory = TestFactory(True)
 # test_factory.run_test_for_my_math()
 # test_factory.run_test_for_stock_database()
 # test_factory.run_test_for_my_dates()
+test_factory.run_test_for_my_text()
 # test_factory.run_test_for_bitfinex()
-test_factory.run_test_for_ibkr()
+# test_factory.run_test_for_ibkr()
 
 

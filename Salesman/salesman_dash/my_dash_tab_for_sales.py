@@ -19,8 +19,6 @@ from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MyFile
 from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MySales, MySaleTable4SimilarSales
 from salesman_system_configuration import SystemConfiguration
 from salesman_tutti.tutti import Tutti
-from salesman_tutti.tutti_url_factory import OnlineSearchApi
-from salesman_tutti.tutti_categorizer import ProductCategorizer, RegionCategorizer
 from salesman_dash.plotting.my_dash_plotter_for_salesman_search import MyDashTabPlotter4Search
 
 

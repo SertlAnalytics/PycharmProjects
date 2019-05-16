@@ -17,7 +17,7 @@ class SRDD:  # Search drop down
     SEARCH_REGION = 'SEARCH_REGION'
     SEARCH_CATEGORY = 'SEARCH_CATEGORY'
     SEARCH_SUB_CATEGORY = 'SEARCH_SUB_CATEGORY'
-    SEARCH_PRINT_CATEGORY = 'SEARCH_PRINT_CATEGORY'
+    SEARCH_ENTITIES = 'SEARCH_ENTITIES'
     SEARCH_DATABASE = 'SEARCH_DATABASE'
     SEARCH_FILE = 'SEARCH_FILE'
 
@@ -31,11 +31,7 @@ class SearchTabDropDownHandler(DropDownHandler):
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
         DropDownHandler.__init__(self)
-        self.selected_search_source = ''
-        self.selected_search_region = ''
-        self.selected_search_category = ''
-        self.selected_search_sub_category = ''
-        self.selected_search_print_category = ''
+        self.selected_search_entities = ''
         self.selected_database_row_id = ''
         self.selected_file_row = ''
 
@@ -56,8 +52,8 @@ class SearchTabDropDownHandler(DropDownHandler):
         return 'my_search_sub_category'
 
     @property
-    def my_search_print_category_dd(self):
-        return 'my_search_print_category'
+    def my_search_entities_dd(self):
+        return 'my_search_entities'
 
     @property
     def my_search_db_dd(self):
@@ -72,7 +68,7 @@ class SearchTabDropDownHandler(DropDownHandler):
 
     def __get_selected_value_dict__(self):
         return {SRDD.SEARCH_SOURCE: '', SRDD.SEARCH_REGION: '',
-                SRDD.SEARCH_CATEGORY: '', SRDD.SEARCH_SUB_CATEGORY: '', SRDD.SEARCH_PRINT_CATEGORY: '',
+                SRDD.SEARCH_CATEGORY: '', SRDD.SEARCH_SUB_CATEGORY: '', SRDD.SEARCH_ENTITIES: '',
                 SRDD.SEARCH_DATABASE: '', SRDD.SEARCH_FILE: ''}
 
     def __get_div_text__(self, drop_down_type: str):
@@ -81,7 +77,7 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_REGION: 'Region',
             SRDD.SEARCH_CATEGORY: 'Category',
             SRDD.SEARCH_SUB_CATEGORY: 'Subcategory',
-            SRDD.SEARCH_PRINT_CATEGORY: 'Print category_value',
+            SRDD.SEARCH_ENTITIES: 'Entities',
             SRDD.SEARCH_DATABASE: '',
             SRDD.SEARCH_FILE: '',
         }
@@ -93,7 +89,7 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_REGION: self.my_search_region_dd,
             SRDD.SEARCH_CATEGORY: self.my_search_category_dd,
             SRDD.SEARCH_SUB_CATEGORY: self.my_search_sub_category_dd,
-            SRDD.SEARCH_PRINT_CATEGORY: self.my_search_print_category_dd,
+            SRDD.SEARCH_ENTITIES: self.my_search_entities_dd,
             SRDD.SEARCH_DATABASE: self.my_search_db_dd,
             SRDD.SEARCH_FILE: self.my_search_file_dd,
 
@@ -106,7 +102,7 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_REGION: default_value if default_value else '',
             SRDD.SEARCH_CATEGORY: default_value if default_value else '',
             SRDD.SEARCH_SUB_CATEGORY: default_value if default_value else '',
-            SRDD.SEARCH_PRINT_CATEGORY: default_value if default_value else '',
+            SRDD.SEARCH_ENTITIES: default_value if default_value else '',
             SRDD.SEARCH_DATABASE: default_value if default_value else '',
             SRDD.SEARCH_FILE: default_value if default_value else '',
         }
@@ -118,7 +114,7 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_REGION: 200,
             SRDD.SEARCH_CATEGORY: 200,
             SRDD.SEARCH_SUB_CATEGORY: 200,
-            SRDD.SEARCH_PRINT_CATEGORY: 350,
+            SRDD.SEARCH_ENTITIES: 350,
             SRDD.SEARCH_DATABASE: 650,
             SRDD.SEARCH_FILE: 650,
         }
@@ -130,14 +126,14 @@ class SearchTabDropDownHandler(DropDownHandler):
             SRDD.SEARCH_REGION: self.__get_search_region_options__(),
             SRDD.SEARCH_CATEGORY: self.__get_product_category_options__(),
             SRDD.SEARCH_SUB_CATEGORY: self.__get_product_sub_category_options__(),
-            SRDD.SEARCH_PRINT_CATEGORY: self.__get_product_print_category_options__(),
+            SRDD.SEARCH_ENTITIES: self.__get_product_print_category_options__(),
             SRDD.SEARCH_DATABASE: self.__get_database_options__(),
             SRDD.SEARCH_FILE: self.__get_file_options__(),
         }
 
     def __get_for_multi__(self, drop_down_type: str):
-        if drop_down_type in [SRDD.SEARCH_SOURCE]:
-            return False
+        if drop_down_type in [SRDD.SEARCH_ENTITIES]:
+            return True
         return False
 
     @staticmethod

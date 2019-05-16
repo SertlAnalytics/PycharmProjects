@@ -6,8 +6,6 @@ Date: 2019-04-02
 """
 
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, SLST
-from sertl_analytics.my_pandas import MyPandas
-from salesman_tutti.tutti_constants import PRCAT
 from sertl_analytics.my_excel import MyExcel
 from sertl_analytics.mydates import MyDate
 from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
@@ -19,7 +17,7 @@ from salesman_nlp.salesman_spacy import SalesmanSpacy
 import pandas as pd
 from salesman_system_configuration import SystemConfiguration
 from printing.sale_printing import SalesmanPrint
-from salesman_tutti.tutti_url_factory import OnlineSearchApi
+from salesman_tutti.tutti_url_factory import SalesmanSearchApi
 from salesman_sale_factory import SalesmanSaleFactory
 from salesman_sale_checks import SaleIdenticalCheck, SaleSimilarityCheck
 from salesman_search_data import SalesmanSearchData
@@ -81,12 +79,12 @@ class Tutti:
         if self.sys_config.write_to_excel:
             self._excel.close()
 
-    def check_search_by_api_against_similar_sales(self, api: OnlineSearchApi):
-        sale = self._sale_factory.get_sale_by_online_search_api(api)
+    def check_search_by_api_against_similar_sales(self, api: SalesmanSearchApi):
+        sale = self._sale_factory.get_sale_by_search_api(api)
         self.__check_sales_against_similar_sales_on_platform__([sale])
 
-    def check_search_by_api_against_other_sale(self, api: OnlineSearchApi, other_sale_id: str):
-        self._current_source_sale = self._sale_factory.get_sale_by_online_search_api(api)
+    def check_search_by_api_against_other_sale(self, api: SalesmanSearchApi, other_sale_id: str):
+        self._current_source_sale = self._sale_factory.get_sale_by_search_api(api)
         sale_other = self.get_sale_from_platform_by_sale_id(other_sale_id)
         if sale_other is None:
             print('Sale "{}" not found on Tutti'.format(other_sale_id))
@@ -112,12 +110,13 @@ class Tutti:
 
     def check_status_of_sales_in_database(self):
         today_str = MyDate.get_date_str_from_datetime()
-        sales = self.get_sales_from_db_by_sale_state(SLST.OPEN)
-        for idx, sale in enumerate(sales):
-            print('{}/{}: Check_status_of_sales_in_database: {}'.format(idx+1, len(sales), sale.sale_id))
-            sale_from_platform = self.get_sale_from_platform_by_sale_id(sale.sale_id)
-            if sale_from_platform is None:
-                self._access_layer.change_sale_state(sale.sale_id, sale.version, SLST.VANISHED, today_str)
+        sale_ids = self.get_sale_ids_from_db_by_sale_state(SLST.OPEN)
+        for idx, sale_id in enumerate(sale_ids):
+            sale_available = self._sale_factory.can_sale_be_accessed_via_request_by_sale_id(sale_id)
+            print('{}/{}: Check_status_of_sales_in_database: {} - Result: {}'.format(
+                idx + 1, len(sale_ids), sale_id, sale_available))
+            if not sale_available:
+                self._access_layer.change_sale_state(sale_id, SLST.VANISHED, today_str)
 
     def check_own_sales_in_database_against_similar_sales(self):
         sales = self.get_sales_from_db_by_sale_state(SLST.OPEN, only_own_sales=True)
@@ -156,6 +155,10 @@ class Tutti:
                 master_sales = [master_sale]
         self.__check_similar_sales_in_db_against_master_sales__(master_sales)
 
+    def check_sales_for_similarity_by_sale_id(self, sale_01_id: str, sale_02_id: str):
+        if self._sale_factory.are_sales_similar_by_sale_id(sale_01_id, sale_02_id):
+            print('-> Similar')
+
     def check_my_nth_virtual_sale_against_similar_sales(self, number=1):
         source_sale_list = self.__get_my_virtual_sales__(number)
         self.__check_sales_against_similar_sales_on_platform__(source_sale_list)
@@ -178,6 +181,7 @@ class Tutti:
         if self.sys_config.print_details:
             sale.print_sale_in_original_structure()
         self._current_source_sale = sale
+        sale.print_data_dict()
         self._current_similar_sales = self.__get_similar_sales_for_sale__(self._current_source_sale)
         self.__process_my_sale_and_similar_sales__()
 
@@ -216,30 +220,30 @@ class Tutti:
     def get_sale_from_platform_by_sale_id(self, sale_id: str) -> SalesmanSale:
         return self._sale_factory.get_sale_via_request_by_sale_id(sale_id)
 
-    def get_search_results_by_selected_print_category(self, print_category: list):
-        self.__init_printing__(self._current_similar_sales, print_category)
-        return self.__get_similar_sales_as_dict_list_by_print_category_(print_category)
+    def get_search_results_by_selected_entities(self, selected_entities: list):
+        self.__init_printing__(self._current_similar_sales, selected_entities)
+        return self.__get_similar_sales_as_dict_list_by_selected_entities__(selected_entities)
 
-    def __get_similar_sales_as_dict_list_by_print_category_(self, print_category: list) -> list:
+    def __get_similar_sales_as_dict_list_by_selected_entities__(self, selected_entities: list) -> list:
         return_list = []
-        if len(print_category) == 0:
+        if len(selected_entities) == 0:
             for similar_sale in self._current_similar_sales:
-                return_list.append(
-                    similar_sale.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
+                return_list.append(similar_sale.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
             return return_list
-        entity_label = print_category[0]
-        entity_value = print_category[1]
         for similar_sale in self._current_similar_sales:
-            if entity_value in similar_sale.entity_label_dict:
-                if similar_sale.entity_label_dict[entity_value] == entity_label:
-                    return_list.append(
-                        similar_sale.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
+            has_all_entities = True
+            for selected_entity in selected_entities:
+                if not similar_sale.has_sale_entity(selected_entity[0], selected_entity[1]):
+                    has_all_entities = False
+                    break
+            if has_all_entities:
+                return_list.append(similar_sale.get_data_dict_for_columns(SLDC.get_columns_for_search_results()))
         return return_list
 
-    def get_search_results_from_online_inputs(self, api: OnlineSearchApi) -> list:
+    def get_search_results_by_search_api(self, api: SalesmanSearchApi) -> list:
         if api.search_string == '':
             return []
-        self._current_source_sale = self._sale_factory.get_sale_by_online_search_api(api)
+        self._current_source_sale = self._sale_factory.get_sale_by_search_api(api)
         # self._current_source_sale.print_data_dict()
         self._current_similar_sales = self.__get_similar_sales_for_sale__(self._current_source_sale)
         self.__init_printing__(self._current_similar_sales)
@@ -279,15 +283,11 @@ class Tutti:
     def __check_similarity_against_master_sale__(self, similar_sales_in_db: list, change_in_db=False):
         row_id_list = []
         for similar_sale_in_db in similar_sales_in_db:
-            check = SaleSimilarityCheck(self._current_source_sale, similar_sale_in_db)
-            if check.are_sales_similar:
+            if self._sale_factory.are_sales_similar(self.current_source_sale, similar_sale_in_db, True):
                 pass
             else:
                 similar_sale_in_db.set_value(SLDC.SALE_STATE, SLST.DELETE)
                 row_id_list.append(str(similar_sale_in_db.row_id))
-                print('No longer similar: {} <--> {} '.format(
-                    self._current_source_sale.get_value(SLDC.ENTITY_LABELS_DICT),
-                    similar_sale_in_db.get_value(SLDC.ENTITY_LABELS_DICT)))
         print('row_id_list to set to delete: {}'.format(row_id_list))
         if change_in_db and len(row_id_list) > 0:
             last_check_date = MyDate.get_date_str_from_datetime()
@@ -358,15 +358,24 @@ class Tutti:
     def restrict_printing_to_selected_print_category(self, print_category: str):
         self.__init_printing__(self._current_similar_sales, print_category)
 
-    def __init_printing__(self, similar_sales: list, print_category=None):
+    def __init_printing__(self, similar_sales: list, print_categories=None):
         input_list = []
         for label_value, entity_label in self._current_source_sale.entity_label_dict.items():
-            print('__init_printing__: print_category={}, label={}, value={}'.format(print_category, entity_label, label_value))
-            if print_category is None or len(print_category) == 0 or \
-                    (print_category[0] == entity_label and print_category[1] == label_value):
+            # print('__init_printing__: print_category={}, label={}, value={}'.format(
+            #     print_category, entity_label, label_value))
+            if self.__can_entity_be_added_to_printing_list__(label_value, entity_label, print_categories):
                 self.__add_to_printing_list__(
                     input_list, self._current_source_sale, similar_sales, entity_label, label_value)
         self._printing.init_by_sale_dict(input_list)
+
+    @staticmethod
+    def __can_entity_be_added_to_printing_list__(value: str, label: str, category_list: list) -> bool:
+        if category_list is None or len(category_list) == 0:
+            return True
+        for category_entry in category_list:
+            if category_entry[0] == label and category_entry[1] == value:
+                return True
+        return False
 
     def __add_to_printing_list__(
             self, input_list, my_sale: SalesmanSale, similar_sales: list, entity_label: str, label_value: str):
@@ -387,8 +396,8 @@ class Tutti:
                 input_list.append(sale_dict)
             else:
                 identical_check = SaleIdenticalCheck(sale, sale_from_db, number_from_db=2)
+                today_str = MyDate.get_date_str_from_datetime()
                 if identical_check.are_identical:
-                    today_str = MyDate.get_date_str_from_datetime()
                     if sale_from_db.last_check_date != today_str:
                         print('Update last_check_date for {}: {} -> {}'.format(
                             sale_from_db.sale_id, sale_from_db.last_check_date, today_str))
@@ -396,6 +405,7 @@ class Tutti:
                             sale_from_db.sale_id, sale_from_db.version, today_str)
                 else:
                     sale_dict[SLDC.COMMENT] = 'Changes: {}'.format(identical_check.different_columns)
+                    sale_dict[SLDC.START_DATE] = today_str  # we change the start date since some changes....
                     input_list.append(sale_dict)
 
     def get_sales_from_db_by_sale_state(self, sale_state: str, only_own_sales=False) -> list:
@@ -405,6 +415,12 @@ class Tutti:
         for idx, row in df.iterrows():
             sales.append(self._sale_factory.get_sale_by_db_row(row))
         return sales
+
+    def get_sale_ids_from_db_by_sale_state(self, sale_state: str, only_own_sales=False) -> list:
+        df = self._access_layer.get_sales_df_by_sale_state(sale_state, only_own_sales)
+        li = list(df[SLDC.SALE_ID])
+        li.sort()
+        return li
 
     def __get_similar_sales_for_master_sale_from_db__(self, master_sale: SalesmanSale):
         df = self._access_layer.get_sales_df_by_master_sale_id(master_sale.sale_id)
@@ -455,9 +471,9 @@ class Tutti:
         search_data = self.__get_search_data_adjusted__(sale)
         self.__adjust_search_label_lists__(sale, search_data.max_number_found)
         similar_sale_dict = {}
-        for search_api in search_data.online_search_api_list:
-            search_api.print_api_details('looping...')
-            self._sale_factory.adjust_by_online_search_api(search_api)
+        for search_api in search_data.search_api_list:
+            search_api.print_api_details('...looping')
+            self._sale_factory.adjust_by_search_api(search_api)
             for search_label_list in self._search_label_lists:
                 self.__get_sales_from_tutti_for_search_label_list__(similar_sale_dict, search_label_list, sale)
         self.__identify_outliers__(similar_sale_dict)
@@ -476,10 +492,10 @@ class Tutti:
         )
 
     def __get_search_data_adjusted__(self, sale):
+        print('Checking search range...:')
         search_data = SalesmanSearchData(self.sys_config, sale)
-        online_search_api_index_number_dict = self._sale_factory.get_online_search_api_index_number_dict(
-            search_data.online_search_api_list, self._search_label_lists)
-        search_data.adjust_online_search_api_list_by_found_number_dict(online_search_api_index_number_dict)
+        self._sale_factory.fill_search_api_list_by_found_numbers(search_data.search_api_list, self._search_label_lists)
+        search_data.adjust_search_api_list_by_found_numbers()
         return search_data
 
     def __get_sales_from_tutti_for_search_label_list__(
@@ -494,8 +510,8 @@ class Tutti:
         if similar_sale.sale_id == sale.sale_id:
             return False
         if not self.__is_found_sale_similar_to_source_sale__(similar_sale, sale):
-            print('\nSource sale "{}" is not similar to found sale {} "{}"'.format(
-                sale.title, similar_sale.sale_id, similar_sale.title))
+            print('\nSource sale {} "{}" is not similar to found sale {} "{}"'.format(
+                sale.sale_id, sale.title, similar_sale.sale_id, similar_sale.title))
             print('--> entity_dict: {} <--> {}'.format(sale.entity_label_dict, similar_sale.entity_label_dict))
             return False
         if similar_sale.sale_id not in similar_dict:  # similar sale was not added so far

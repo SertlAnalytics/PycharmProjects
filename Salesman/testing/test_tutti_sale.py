@@ -6,29 +6,27 @@ Date: 2019-04-30
 """
 
 from salesman_tutti.tutti_constants import EL
-from salesman_sale import SalesmanSale
 from salesman_nlp.salesman_spacy import SalesmanSpacy
 from salesman_system_configuration import SystemConfiguration
 from sertl_analytics.test.my_test_case import MyTestCaseHandler, MyTestCase
 from sertl_analytics.constants.salesman_constants import SLDC
 from salesman_sale_factory import SalesmanSaleFactory
 from salesman_sale_checks import SaleSimilarityCheck
-from salesman_tutti.tutti_url_factory import OnlineSearchApi
-
+from salesman_search import SalesmanSearchApi
 
 class Test4TuttiSale:
     def run_test(self, spacy: SalesmanSpacy, sys_config: SystemConfiguration, sale_factory: SalesmanSaleFactory):
         test_case_dict = self.__get_test_case_dict__()
         tc_handler = MyTestCaseHandler('Testing "{}":'.format(self.__class__.__name__))
-        api = OnlineSearchApi('')
+        api = SalesmanSearchApi('')
         for key, test_case_list in test_case_dict.items():
             for tc in test_case_list:
                 print('\nRUN_TEST: {} for {}'.format(tc, key))
                 api.search_string = tc[0]
-                sale_01 = sale_factory.get_sale_by_online_search_api(api)
+                sale_01 = sale_factory.get_sale_by_search_api(api)
                 print('...sale_01.labels={}'.format(sale_01.get_value(SLDC.ENTITY_LABELS_DICT)))
                 api.search_string = tc[1]
-                sale_02 = sale_factory.get_sale_by_online_search_api(api)
+                sale_02 = sale_factory.get_sale_by_search_api(api)
                 print('...sale_02.labels={}'.format(sale_02.get_value(SLDC.ENTITY_LABELS_DICT)))
 
                 sale_similarity_check = SaleSimilarityCheck(sale_01, sale_02)

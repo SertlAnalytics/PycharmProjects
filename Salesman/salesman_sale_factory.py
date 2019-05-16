@@ -9,9 +9,10 @@ from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC
 from salesman_nlp.salesman_spacy import SalesmanSpacy
 from salesman_system_configuration import SystemConfiguration
-from salesman_tutti.tutti_url_factory import OnlineSearchApi
+from salesman_tutti.tutti_url_factory import SalesmanSearchApi
 from salesman_sale import SalesmanSale
 from salesman_web_parser import SalesmanWebParser
+from salesman_sale_checks import SaleIdenticalCheck, SaleSimilarityCheck
 
 
 class SalesmanSaleFactory:
@@ -25,8 +26,23 @@ class SalesmanSaleFactory:
     def sale_factory_source(self) -> str:
         return SLSRC.TUTTI_CH
 
-    def adjust_by_online_search_api(self, api: OnlineSearchApi):
-        self._web_parser.adjust_by_online_search_api(api)
+    def are_sales_similar_by_sale_id(self, sale_id_01: str, sale_id_02: str) -> bool:
+        sale_01 = self.get_sale_via_request_by_sale_id(sale_id_01)
+        sale_02 = self.get_sale_via_request_by_sale_id(sale_id_02)
+        return self.are_sales_similar(sale_01, sale_02, True)
+
+    @staticmethod
+    def are_sales_similar(source_sale: SalesmanSale, other_sale: SalesmanSale, with_info=True) -> bool:
+        check = SaleSimilarityCheck(source_sale, other_sale)
+        if with_info and not check.are_sales_similar:
+            print('Not similar {} <-> {}: {} <--> {} '.format(
+                source_sale.sale_id, other_sale.sale_id,
+                source_sale.get_value(SLDC.ENTITY_LABELS_DICT),
+                other_sale.get_value(SLDC.ENTITY_LABELS_DICT)))
+        return check.are_sales_similar
+
+    def adjust_by_search_api(self, api: SalesmanSearchApi):
+        self._web_parser.adjust_by_search_api(api)
 
     def get_search_string_found_number_dict(self, search_label_lists: list) -> dict:
         return self._web_parser.get_search_string_found_number_dict(search_label_lists)
@@ -40,20 +56,28 @@ class SalesmanSaleFactory:
         df = self.sys_config.access_layer_sale.get_sale_by_row_id(row_id)
         return self.get_sale_by_db_row(df.iloc[0])
 
-    def get_online_search_api_index_number_dict(self, api_list: list, search_label_lists: list):
-        return self._web_parser.get_online_search_api_index_number_dict(api_list, search_label_lists)
+    def get_sale_from_file_by_row_number(self, row_number: int) -> SalesmanSale:
+        row = self.sys_config.access_layer_file.get_row(row_number)
+        return self.get_sale_by_file_row(row)
 
-    def get_sale_by_online_search_api(self, api: OnlineSearchApi) -> SalesmanSale:
+    def fill_search_api_list_by_found_numbers(self, api_list: list, search_label_lists: list):
+        self._web_parser.fill_search_api_list_by_found_numbers(api_list, search_label_lists)
+
+    def get_sale_by_search_api(self, api: SalesmanSearchApi) -> SalesmanSale:
         sale_data_dict = self.__get_sales_data_dict_for_online_search_api__(api)
         return self.__get_sale_by_data_dict__(sale_data_dict)
 
     def get_sale_via_request_by_sale_id(self, sale_id: str) -> SalesmanSale:
         sale_data_dict = self._web_parser.get_sale_data_dict_for_sale_id(sale_id)
-        print('sale_data_dict={}'.format(sale_data_dict))
+        # print('sale_data_dict={}'.format(sale_data_dict))
         if len(sale_data_dict) == 0:
             print('\nWARNING: No active sale found on {} for id={}'.format(self.sale_factory_source, sale_id))
         else:
             return self.__get_sale_by_data_dict__(sale_data_dict)
+
+    def can_sale_be_accessed_via_request_by_sale_id(self, sale_id: str) -> bool:
+        sale_data_dict = self._web_parser.get_sale_data_dict_for_sale_id(sale_id)
+        return len(sale_data_dict) > 0
 
     def get_sales_by_search_label_list(self, search_label_list: list) -> list:
         return_sales = []
