@@ -23,7 +23,7 @@ from salesman_dash.my_dash_colors import DashColorHandler
 from salesman_tutti.tutti import Tutti
 from salesman_tutti.tutti_categorizer import ProductCategorizer
 from salesman_sale_factory import SalesmanSaleFactory
-from salesman_dash.callbacks.callbacks_for_search import CallbackForSearchInput
+from salesman_dash.callbacks.callbacks_for_search import CallbackForSearchInput, CallbackForResultGrid
 from salesman_search import SalesmanSearchApi
 import pandas as pd
 from caching.salesman_cache import CKEY
@@ -60,6 +60,8 @@ class MyDashTab4Search(MyDashBaseTab):
         self._selected_entities_as_list = []
         self._elements = MyDashTabElements4Search(self._dd_handler, self._search_online_input_table)
         self._callback_for_search_input = CallbackForSearchInput(self._elements, self._sale_factory)
+        self._callback_for_search_input_markdown = CallbackForSearchInput(self._elements, self._sale_factory)
+        self._callback_for_result_grid = CallbackForResultGrid(self._elements, self._sale_factory)
 
     def __get_color_handler__(self):
         return DashColorHandler()
@@ -85,9 +87,9 @@ class MyDashTab4Search(MyDashBaseTab):
 
     def init_callbacks(self):
         self.__init_callback_for_search_markdown__()
+        self.__init_callback_for_search_input__()
         self.__init_callback_for_search_input_markdown__()
         self.__init_callback_for_search_result_grid_table__()
-        self.__init_callback_for_search_input__()  # this has to be AFTER search_result_grid_table !!!! it is the first
         self.__init_callbacks_for_search_result_entry_link__()
         self.__init_callback_for_search_result_entry_markdown__()
         self.__init_callbacks_for_search_result_numbers__()
@@ -203,17 +205,19 @@ class MyDashTab4Search(MyDashBaseTab):
              ]
         )
         def handle_callback_for_search_result_grid_table(*params):
-            print('TEST (second??): handle_callback_for_search_result_grid_table')
+            self._callback_for_result_grid.set_values(*params)
+            if not self.sys_config.is_http_connection_ok:  # this parameter is updated during the set_values...
+                return 'SORRY - no internet connection at the moment - please check your WLAN'
             self._online_rows = None
-            clicked_button = self._callback_for_search_input.get_clicked_button()
+            clicked_button = self._callback_for_result_grid.get_clicked_button()
             if clicked_button is None:
-                if self._callback_for_search_input.has_value_been_changed_for_parameter(
+                if self._callback_for_result_grid.has_value_been_changed_for_parameter(
                         self._elements.my_search_entities_dd):
                     self._selected_entities_as_list = self.__get_entities_by_selected_entity_indices__(
-                        self._callback_for_search_input.get_parameter_value(self._elements.my_search_entities_dd))
+                        self._callback_for_result_grid.get_parameter_value(self._elements.my_search_entities_dd))
                     return self.__get_search_result_grid_table_by_selected_entities__()
             else:
-                search_input = self._callback_for_search_input.get_actual_search_value()
+                search_input = self._callback_for_result_grid.get_actual_search_value()
                 self._print_category_list = []
                 self._print_category_options = []
                 self._selected_entities_as_list = []
@@ -221,10 +225,10 @@ class MyDashTab4Search(MyDashBaseTab):
                     return self.__get_search_result_grid_table_by_online_search__(search_input)
                 elif clicked_button.name == self._elements.my_search_db_button:
                     return self.__get_search_result_grid_table_by_db_search__(
-                        self._callback_for_search_input.get_selected_db_row_id())
+                        self._callback_for_result_grid.get_selected_db_row_id())
                 elif clicked_button.name == self._elements.my_search_file_button:
                     return self.__get_search_result_grid_table_by_file_search__(
-                        self._callback_for_search_input.get_selected_file_row_number()
+                        self._callback_for_result_grid.get_selected_file_row_number()
                     )
             return ''
 
@@ -257,20 +261,12 @@ class MyDashTab4Search(MyDashBaseTab):
             Output(self._search_online_input_table.my_search_input, 'value'),
             [Input(self._elements.my_search_button, 'n_clicks'),
              Input(self._elements.my_search_db_button, 'n_clicks'),
-             Input(self._elements.my_search_file_button, 'n_clicks'),
-             Input(self._elements.my_search_entities_dd, 'value'),
-             ],
-            [State(self._elements.my_search_source_dd, 'value'),
-             State(self._elements.my_search_region_dd, 'value'),
-             State(self._elements.my_search_category_dd, 'value'),
-             State(self._elements.my_search_sub_category_dd, 'value'),
-             State(self._elements.my_search_input, 'value'),
+             Input(self._elements.my_search_file_button, 'n_clicks')],
+            [State(self._elements.my_search_input, 'value'),
              State(self._elements.my_search_db_dd, 'value'),
-             State(self._elements.my_search_file_dd, 'value'),
-             ]
+             State(self._elements.my_search_file_dd, 'value')]
         )
         def handle_callback_for_search_input(*params):
-            print('TEST: (first?) handle_callback_for_search_input: {}'.format(params))
             self._callback_for_search_input.set_values(*params)
             self._callback_for_search_input.print_details()
             actual_search_value = self._callback_for_search_input.get_actual_search_value()
@@ -286,9 +282,13 @@ class MyDashTab4Search(MyDashBaseTab):
             [Input(self._search_online_input_table.my_search_button, 'n_clicks'),
              Input(self._search_online_input_table.my_search_db_button, 'n_clicks'),
              Input(self._search_online_input_table.my_search_file_button, 'n_clicks')],
+            [State(self._elements.my_search_input, 'value'),
+             State(self._elements.my_search_db_dd, 'value'),
+             State(self._elements.my_search_file_dd, 'value')]
             )
-        def handle_callback_for_search_markdown(n_clicks, n_clics_db, n_clicks_file):
-            doc_nlp = self._salesman_spacy.nlp_sm(self._callback_for_search_input.get_actual_search_value())
+        def handle_callback_for_search_markdown(*params):
+            self._callback_for_search_input_markdown.set_values(*params)
+            doc_nlp = self._salesman_spacy.nlp_sm(self._callback_for_search_input_markdown.get_actual_search_value())
             ent_list = ['{} ({})'.format(ent.text, ent.label_) for ent in doc_nlp.ents]
             return 'Entities (original): {}'.format(', '.join(ent_list))
 
@@ -357,18 +357,18 @@ class MyDashTab4Search(MyDashBaseTab):
 
     def __get_search_result_table_by_api__(self):
         api = SalesmanSearchApi(self._search_input)
-        region_value = self.__get_callback_value__(self._elements.my_search_region_dd)
-        category_value = self.__get_callback_value__(self._elements.my_search_category_dd)
-        sub_category_value = self.__get_callback_value__(self._elements.my_search_sub_category_dd)
+        region_value = self._callback_for_result_grid.get_parameter_value(
+            self._elements.my_search_region_dd)
+        category_value = self._callback_for_result_grid.get_parameter_value(
+            self._elements.my_search_category_dd)
+        sub_category_value = self._callback_for_result_grid.get_parameter_value(
+            self._elements.my_search_sub_category_dd)
         api.region_value = '' if region_value == 'ganze-schweiz' else region_value
         api.category_value = '' if category_value == PRCAT.ALL else category_value
         api.sub_category_value = '' if api.category_value == '' or sub_category_value == PRSUBCAT.ALL \
             else sub_category_value
         self._online_rows = self.tutti.get_search_results_by_search_api(api)
         return self.__get_search_result_grid_table__()
-
-    def __get_callback_value__(self, element_name: str):
-        return self._callback_for_search_input.get_parameter_value(element_name)
 
     def __get_search_result_grid_table_by_db_search__(self, row_id: int):
         sale = self._sale_factory.get_sale_from_db_by_row_id(row_id)

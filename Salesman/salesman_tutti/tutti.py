@@ -8,7 +8,6 @@ Date: 2019-04-02
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, SLST
 from sertl_analytics.my_excel import MyExcel
 from sertl_analytics.mydates import MyDate
-from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from calculation.outlier import Outlier
 from salesman_tutti.tutti_browser import MyUrlBrowser4Tutti
 from salesman_sale import SalesmanSale
@@ -33,7 +32,6 @@ class Tutti:
         self._salesman_spacy = SalesmanSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
         self._sale_factory = SalesmanSaleFactory(self.sys_config, self._salesman_spacy)
         self._browser = None
-        self._access_layer = AccessLayer4Sale(self.sys_config.db)
         self._search_label_lists = []
         self._current_source_sale = None
         self._current_similar_sales = []  # will get the results for the search for ONE source
@@ -109,17 +107,10 @@ class Tutti:
             self.__write_sale_to_database__(sale)
 
     def check_status_of_sales_in_database(self):
-        today_str = MyDate.get_date_str_from_datetime()
-        sale_ids = self.get_sale_ids_from_db_by_sale_state(SLST.OPEN)
-        for idx, sale_id in enumerate(sale_ids):
-            sale_available = self._sale_factory.can_sale_be_accessed_via_request_by_sale_id(sale_id)
-            print('{}/{}: Check_status_of_sales_in_database: {} - Result: {}'.format(
-                idx + 1, len(sale_ids), sale_id, sale_available))
-            if not sale_available:
-                self._access_layer.change_sale_state(sale_id, SLST.VANISHED, today_str)
+        self._sale_factory.check_status_of_sales_in_database()
 
     def check_own_sales_in_database_against_similar_sales(self):
-        sales = self.get_sales_from_db_by_sale_state(SLST.OPEN, only_own_sales=True)
+        sales = self._sale_factory.get_sales_from_db_by_sale_state(SLST.OPEN, only_own_sales=True)
         for idx, sale in enumerate(sales):
             print('{}/{}: check_own_in_database_against_similar_sales: {}'.format(idx + 1, len(sales), sale.sale_id))
             self.__check_sales_against_similar_sales_on_platform__([sale])
@@ -145,7 +136,7 @@ class Tutti:
 
     def check_similar_sales_in_db_against_master_sale_in_db(self, master_sale_id=''):
         if master_sale_id == '':
-            master_sales = self.get_sales_from_db_by_sale_state(SLST.OPEN, only_own_sales=True)
+            master_sales = self._sale_factory.get_sales_from_db_by_sale_state(SLST.OPEN, only_own_sales=True)
         else:
             master_sale = self._sale_factory.get_sale_from_db_by_sale_id(master_sale_id)
             if master_sale is None:
@@ -167,7 +158,7 @@ class Tutti:
         if len(source_sale_list) == 0 or source_sale_list[0] is None:
             return
         for source_sale in source_sale_list:
-            self.__check_sale_against_similar_sales_on_tutti__(source_sale)
+            self.__check_sale_against_similar_sales_on_platform__(source_sale)
 
     def __check_similar_sales_in_db_against_master_sales__(self, master_sale_list: list):
         if len(master_sale_list) == 0 or master_sale_list[0] is None:
@@ -177,7 +168,7 @@ class Tutti:
                 master_sale.sale_id, master_sale.sale_state, master_sale.title))
             self.__check_similar_sales_in_db_against_master_sale__(master_sale)
 
-    def __check_sale_against_similar_sales_on_tutti__(self, sale: SalesmanSale):
+    def __check_sale_against_similar_sales_on_platform__(self, sale: SalesmanSale):
         if self.sys_config.print_details:
             sale.print_sale_in_original_structure()
         self._current_source_sale = sale
@@ -189,7 +180,8 @@ class Tutti:
         if self.sys_config.print_details:
             master_sale.print_sale_in_original_structure()
         self._current_source_sale = master_sale
-        self._current_similar_sales = self.__get_similar_sales_for_master_sale_from_db__(self._current_source_sale)
+        self._current_similar_sales = self._sale_factory.get_similar_sales_for_master_sale_from_db(
+            self._current_source_sale)
         self.__correct_similar_sales_in_db__()
 
     def print_details_for_tutti_sale_id(self, sale_id: str, with_data_dict=False):
@@ -266,7 +258,7 @@ class Tutti:
             self.__process_my_sale_and_similar_sales__()
 
     def __process_my_sale_and_similar_sales__(self):
-        self.__check_similarity__(self._current_similar_sales)
+        self.__check_spacy_doc_similarity__(self._current_similar_sales)
         self.__write_to_excel__(self._current_similar_sales)
         self.__write_to_database__(self._current_similar_sales)
         if self.sys_config.plot_results:
@@ -274,27 +266,14 @@ class Tutti:
             self._printing.print_box_plots()
 
     def __correct_similar_sales_in_db__(self):
-        self.__check_similarity_against_master_sale__(self._current_similar_sales, change_in_db=True)
+        self._sale_factory.check_similarity_against_master_sale(
+            self.current_source_sale, self._current_similar_sales, change_in_db=True)
         self.__write_to_excel__(self._current_similar_sales)
         if self.sys_config.plot_results:
             self.__init_printing__(self._current_similar_sales)
             self._printing.print_box_plots()
 
-    def __check_similarity_against_master_sale__(self, similar_sales_in_db: list, change_in_db=False):
-        row_id_list = []
-        for similar_sale_in_db in similar_sales_in_db:
-            if self._sale_factory.are_sales_similar(self.current_source_sale, similar_sale_in_db, True):
-                pass
-            else:
-                similar_sale_in_db.set_value(SLDC.SALE_STATE, SLST.DELETE)
-                row_id_list.append(str(similar_sale_in_db.row_id))
-        print('row_id_list to set to delete: {}'.format(row_id_list))
-        if change_in_db and len(row_id_list) > 0:
-            last_check_date = MyDate.get_date_str_from_datetime()
-            changed = self._access_layer.change_sale_state_for_rowid_list(SLST.DELETE, row_id_list, last_check_date)
-            print('Changed in db: {}'.format(changed))
-
-    def __check_similarity__(self, similar_sales: list):
+    def __check_spacy_doc_similarity__(self, similar_sales: list):
         if self._salesman_spacy.sm_loaded:
             return
         my_sale_title_doc = self.nlp(self._current_source_sale.title)
@@ -399,36 +378,11 @@ class Tutti:
                 today_str = MyDate.get_date_str_from_datetime()
                 if identical_check.are_identical:
                     if sale_from_db.last_check_date != today_str:
-                        print('Update last_check_date for {}: {} -> {}'.format(
-                            sale_from_db.sale_id, sale_from_db.last_check_date, today_str))
-                        self._access_layer.update_sale_last_check_date(
-                            sale_from_db.sale_id, sale_from_db.version, today_str)
+                        self._sale_factory.update_last_check_date(sale_from_db, today_str)
                 else:
                     sale_dict[SLDC.COMMENT] = 'Changes: {}'.format(identical_check.different_columns)
                     sale_dict[SLDC.START_DATE] = today_str  # we change the start date since some changes....
                     input_list.append(sale_dict)
-
-    def get_sales_from_db_by_sale_state(self, sale_state: str, only_own_sales=False) -> list:
-        df = self._access_layer.get_sales_df_by_sale_state(sale_state, only_own_sales)
-        # MyPandas.print_df_details(df)
-        sales = []
-        for idx, row in df.iterrows():
-            sales.append(self._sale_factory.get_sale_by_db_row(row))
-        return sales
-
-    def get_sale_ids_from_db_by_sale_state(self, sale_state: str, only_own_sales=False) -> list:
-        df = self._access_layer.get_sales_df_by_sale_state(sale_state, only_own_sales)
-        li = list(df[SLDC.SALE_ID])
-        li.sort()
-        return li
-
-    def __get_similar_sales_for_master_sale_from_db__(self, master_sale: SalesmanSale):
-        df = self._access_layer.get_sales_df_by_master_sale_id(master_sale.sale_id)
-        # MyPandas.print_df_details(df)
-        sales = []
-        for idx, row in df.iterrows():
-            sales.append(self._sale_factory.get_sale_by_db_row(row))
-        return sales
 
     @staticmethod
     def __get_similar_sales_as_dict_list__(similar_sales: list, for_db=True) -> list:
@@ -473,9 +427,9 @@ class Tutti:
         similar_sale_dict = {}
         for search_api in search_data.search_api_list:
             search_api.print_api_details('...looping')
-            self._sale_factory.adjust_by_search_api(search_api)
+            self._sale_factory.adjust_web_parser_by_search_api(search_api)
             for search_label_list in self._search_label_lists:
-                self.__get_sales_from_tutti_for_search_label_list__(similar_sale_dict, search_label_list, sale)
+                self.__get_sales_from_platform_for_search_label_list__(similar_sale_dict, search_label_list, sale)
         self.__identify_outliers__(similar_sale_dict)
         similar_sales_summary = [sale for sale in similar_sale_dict.values()]
         if self.sys_config.print_details:
@@ -498,7 +452,7 @@ class Tutti:
         search_data.adjust_search_api_list_by_found_numbers()
         return search_data
 
-    def __get_sales_from_tutti_for_search_label_list__(
+    def __get_sales_from_platform_for_search_label_list__(
             self, similar_sales_dict: dict, search_label_list: list, sale: SalesmanSale):
         similar_sales = self._sale_factory.get_sales_by_search_label_list(search_label_list)
         for similar_sale in similar_sales:

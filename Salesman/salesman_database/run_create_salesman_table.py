@@ -10,6 +10,8 @@ from salesman_database.salesman_db import SalesmanDatabase
 
 salesman_db = SalesmanDatabase()
 # salesman_db.create_sale_table()
+# salesman_db.create_sale_relation_table()
+# salesman_db.create_entity_category_table()
 # salesman_db.create_sale_version_max_view()
-salesman_db.create_sale_view()
+# salesman_db.create_sale_view()
 

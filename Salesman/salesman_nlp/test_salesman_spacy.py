@@ -40,7 +40,8 @@ class Test4SalesmanSpacy:
             'PRODUCT': [
                 ['Die Serie 7 ist gut. Das beste an der Serie 7 ist der Preis', 'Serie 7 (PRODUCT)'],
                 ['Vitra Aluminium Chair EA107 oder EA 108 oder MacBook',
-                 'Aluminium (MATERIAL), EA107 (PRODUCT), MacBook (PRODUCT), Vitra (COMPANY)'],
+                 'Aluminium (MATERIAL), EA 108 (PRODUCT), EA107 (PRODUCT), MacBook (PRODUCT), Vitra (COMPANY)'],
+                ['Vitra Bürostuhl EA108 günstig', 'Bürostuhl (OBJECT), EA108 (PRODUCT), Vitra (COMPANY)'],
             ],
             'UNKNOWN_ORG': [
                 ['Audi und Volvo bauen die sichersten Autos.', 'Audi (COMPANY), Volvo (COMPANY)'],

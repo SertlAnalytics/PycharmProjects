@@ -8,6 +8,7 @@ Date: 2018-05-14
 from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, PRD, PDP, CN, BT, TSTR, FT
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
+from sertl_analytics.my_http import MyHttpClient
 from sertl_analytics.exchanges.interactive_broker import IBKRConfiguration
 from pattern_configuration import PatternConfiguration
 from pattern_runtime_configuration import RuntimeConfiguration
@@ -29,6 +30,8 @@ from fibonacci.fibonacci_wave_data import FibonacciWaveDataHandler
 
 
 class SystemConfiguration:
+    is_http_connection_ok = MyHttpClient.do_we_have_internet_connection()  # class variable
+
     def __init__(self, for_semi_deep_copy=False):
         self.file_log = PatternLog()
         self.runtime_config = RuntimeConfiguration()
@@ -204,6 +207,7 @@ class SystemConfiguration:
         about which part has to be deeply copied and which can be used by reference.
         """
         sys_config_copy = SystemConfiguration(True)
+
         sys_config_copy.config = deepcopy(self.config)  # we change save modes... ToDo ???
         sys_config_copy.exchange_config = deepcopy(self.exchange_config)  # we change the simulation mode... ToDo ???
         sys_config_copy.file_log = self.file_log

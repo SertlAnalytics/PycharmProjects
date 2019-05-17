@@ -67,7 +67,7 @@ class TuttiUrlFactory:
         self._sub_category_value = '' if api.sub_category_value == PRSUBCAT.ALL else api.sub_category_value
         self._order = 0
         self._url_extended_base = self.__get_url_extended_base__()
-        # print('adjust_by_search_api._url_extended_base={}'.format(self._url_extended_base))
+        # print('adjust_web_parser_by_search_api._url_extended_base={}'.format(self._url_extended_base))
 
     def get_href(self):
         href = self._search_string

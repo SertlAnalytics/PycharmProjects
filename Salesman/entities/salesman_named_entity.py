@@ -263,7 +263,7 @@ class ProductEntity(NamedEntity):
             'alu chair', 'aluminium chair',
             'Booster',
             'Cameleon',
-            'EOS 700D', 'EA107', 'EA 107', 'EA108' 'EA 108',
+            'EOS 700D', 'EA107', 'EA 107', 'EA108', 'EA 108', 'EA 219',
             'gtx',
             'Hot + Cool', 'hero',
             'Kitos', 'Kid Cow',

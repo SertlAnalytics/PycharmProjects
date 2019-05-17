@@ -8,6 +8,7 @@ Date: 2018-05-14
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.mydates import MyDate
 from salesman_database.salesman_tables import SaleTable, CompanyTable, MetricTable, ProcessTable
+from salesman_database.salesman_tables import SaleRelationTable, EntityCategoryTable
 from sertl_analytics.constants.pattern_constants import STBL
 from sertl_analytics.constants.salesman_constants import SMTBL, SMVW, SLDC
 from salesman_database.salesman_views import SaleView, SaleMaxVersionView
@@ -20,6 +21,8 @@ import os
 class SalesmanDatabase(BaseDatabase):
     def __init__(self):
         self._sale_table = SaleTable()
+        self._sale_relation_table = SaleRelationTable()
+        self._entity_category_table = EntityCategoryTable()
         self._company_table = CompanyTable()
         self._process_table = ProcessTable()
         self._metric_table = MetricTable()
@@ -33,6 +36,8 @@ class SalesmanDatabase(BaseDatabase):
 
     def __get_table_dict__(self) -> dict:
         return {SMTBL.SALE: self._sale_table,
+                SMTBL.SALE_RELATION: self._sale_relation_table,
+                SMTBL.ENTITY_CATEGORY: self._entity_category_table,
                 STBL.PROCESS: self._process_table,
                 STBL.COMPANY: self._company_table,
                 STBL.METRIC: self._metric_table,
@@ -66,6 +71,12 @@ class SalesmanDatabase(BaseDatabase):
 
     def create_sale_table(self):
         self.__create_table__(SMTBL.SALE)
+
+    def create_sale_relation_table(self):
+        self.__create_table__(SMTBL.SALE_RELATION)
+
+    def create_entity_category_table(self):
+        self.__create_table__(SMTBL.ENTITY_CATEGORY)
 
     def create_company_table(self):
         self.__create_table__(STBL.COMPANY)

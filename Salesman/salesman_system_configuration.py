@@ -5,6 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
+from sertl_analytics.my_http import MyHttpClient
 from salesman_logging.salesman_log import SalesmanLog
 from salesman_database.salesman_db import SalesmanDatabase
 from salesman_database.salesman_tables import SaleTable, CompanyTable, ProcessTable
@@ -16,9 +17,11 @@ from salesman_scheduling.salesman_process_manager import SalesmanProcessManager
 from files.file_handler import FileHandler
 from salesman_tutti.tutti_categorizer import ProductCategorizer, RegionCategorizer
 from caching.salesman_cache import SalesmanShelve
-import shelve
+
 
 class SystemConfiguration:
+    is_http_connection_ok = MyHttpClient.do_we_have_internet_connection()  # class variable
+
     def __init__(self, for_semi_deep_copy=False):
         self.shelve_cache = SalesmanShelve()
         self.file_log = SalesmanLog()

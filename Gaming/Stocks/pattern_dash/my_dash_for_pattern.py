@@ -10,6 +10,7 @@ from datetime import datetime
 import json
 from sertl_analytics.myconstants import MyAPPS
 from sertl_analytics.mydash.my_dash_base import MyDashBase
+from sertl_analytics.my_http import MyHttpClient
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
@@ -29,7 +30,6 @@ from pattern_dash.my_dash_tab_for_db import MyDashTab4DB
 from pattern_dash.my_dash_tab_for_jobs import MyDashTab4Jobs
 from pattern_dash.my_dash_tab_for_waves import MyDashTab4Waves
 from pattern_trade_handler import PatternTradeHandler
-from pattern_dash.my_dash_job_handler import MyDashJobHandler
 
 
 class MyDash4Pattern(MyDashBase):
@@ -58,6 +58,7 @@ class MyDash4Pattern(MyDashBase):
         self.__set_app_layout__()
         self.__init_interval_callback_for_user_name__()
         self.__init_interval_callback_for_time_div__()
+        self.__init_interval_refresh_callback_for_http_connection_div__()
         self.tab_pattern.init_callbacks()
         self.tab_portfolio.init_callbacks()
         self.tab_recommender.init_callbacks()
@@ -93,6 +94,24 @@ class MyDash4Pattern(MyDashBase):
             [Input('my_interval_timer', 'n_intervals')])
         def handle_interval_callback_for_time_div(n_intervals):
             return '{}'.format(MyDate.get_time_from_datetime(datetime.now()))
+
+    def __init_interval_refresh_callback_for_http_connection_div__(self):
+        @self.app.callback(
+            Output('my_http_connection_div', 'children'),
+            [Input('my_interval_timer', 'n_intervals')],
+            [State('my_http_connection_div', 'children')]
+        )
+        def handle_interval_refresh_callback_for_http_connection_value(n_intervals, old_value: str):
+            self.sys_config.is_http_connection_ok = MyHttpClient.do_we_have_internet_connection()
+            return MyHttpClient.get_status_message(old_value)
+
+        @self.app.callback(
+            Output('my_http_connection_div', 'style'),
+            [Input('my_http_connection_div', 'children')])
+        def handle_interval_refresh_callback_for_http_connection_value(http_connection_info: str):
+            if self.sys_config.is_http_connection_ok:
+                return {'font-weight': 'normal', 'color': 'black', 'display': 'inline-block'}
+            return {'font-weight': 'bold', 'color': 'red', 'display': 'inline-block'}
 
     def __set_app_layout__(self):
         # self.app.layout = self.__get_div_for_tab_pattern_detection__()

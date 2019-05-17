@@ -9,6 +9,7 @@ from sertl_analytics.constants.pattern_constants import LOGT, WAVEST, INDICES
 from datetime import datetime
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mydash.my_dash_components import MyHTMLTable, COLORS, MyHTML, MyDCC
+from sertl_analytics.my_http import MyHttpClient
 
 
 class MyHTMLHeaderTable(MyHTMLTable):
@@ -51,6 +52,10 @@ class MyHTMLHeaderTable(MyHTMLTable):
         last_refresh_div = MyHTML.div_embedded([last_refresh_label_div, MyHTML.span(' '), last_refresh_time_div])
         next_refresh_div = MyHTML.div_embedded([next_refresh_label_div, MyHTML.span(' '), next_refresh_time_div])
 
+        http_connection_label_div = MyHTML.div('my_http_connection_label_div', 'Connection:', True, True)
+        http_connection_div = MyHTML.div('my_http_connection_div', MyHttpClient.get_status_message(), False)
+        my_http_connection_div = MyHTML.div_embedded([http_connection_label_div, MyHTML.span(' '), http_connection_div])
+
         online_trade_label_div = MyHTML.div('my_online_trade_label_div', 'Trades - Online:', True)
         online_trade_active_div = MyHTML.div('my_online_trade_active_div', '0')
         online_trade_all_div = MyHTML.div('my_online_trade_all_div', '0')
@@ -80,7 +85,7 @@ class MyHTMLHeaderTable(MyHTMLTable):
         self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div, my_sound_div,
                                                   my_mode_div, my_max_buy_div, my_small_profit_div]))
         self.set_value(1, 2, MyHTML.div_embedded([dash_board_title_div, dash_board_sub_title_div]))
-        self.set_value(1, 3, MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div]))
+        self.set_value(1, 3, MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div, my_http_connection_div]))
         self.set_value(2, 1, MyDCC.markdown('my_position_markdown'))
         self.set_value(2, 2, MyDCC.markdown('my_dashboard_markdown'))
         self.set_value(2, 3, MyHTML.div_embedded(

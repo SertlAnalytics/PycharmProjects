@@ -72,6 +72,38 @@ class SaleTable(MyTable):
         self._columns.append(MyTableColumn(SLDC.COMMENT, CDT.STRING, 200))
 
 
+class SaleRelationTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return SMTBL.SALE_RELATION
+
+    def __get_column_date__(self):
+        return SLDC.START_DATE
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(SLDC.MASTER_ID, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.CHILD_ID, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.START_DATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.RELATION_STATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.STATE_DATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.COMMENT, CDT.STRING, 200))
+
+
+class EntityCategoryTable(MyTable):
+    @staticmethod
+    def _get_name_():
+        return SMTBL.ENTITY_CATEGORY
+
+    def __get_column_date__(self):
+        return SLDC.START_DATE
+
+    def _add_columns_(self):
+        self._columns.append(MyTableColumn(SLDC.ENTITY_LIST, CDT.STRING, 500))
+        self._columns.append(MyTableColumn(SLDC.CATEGORY_LIST, CDT.STRING, 500))
+        self._columns.append(MyTableColumn(SLDC.START_DATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.COMMENT, CDT.STRING, 200))
+
+
 class MetricTable(MyTable):
     @staticmethod
     def _get_name_():

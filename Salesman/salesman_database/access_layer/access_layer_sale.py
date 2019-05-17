@@ -104,5 +104,11 @@ class AccessLayer4Sale(AccessLayer):
         print(query)
         return self._db.update_table_by_statement(self._table.name, query)
 
+    def get_sale_ids_from_db_by_sale_state(self, sale_state: str, only_own_sales=False) -> list:
+        df = self.get_sales_df_by_sale_state(sale_state, only_own_sales)
+        li = list(df[SLDC.SALE_ID])
+        li.sort()
+        return li
+
     def __get_table__(self):
         return SaleTable()

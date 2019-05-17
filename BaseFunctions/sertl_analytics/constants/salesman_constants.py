@@ -20,6 +20,8 @@ class SMVW:  # salesman views
 
 class SMTBL:  # salesman tables
     SALE = 'Sale'
+    SALE_RELATION = 'Sale_Relation'
+    ENTITY_CATEGORY = 'Entity_Category'
     COMPANY = 'Company'
     PRODUCT = 'Product'
     OBJECT = 'Object'
@@ -28,7 +30,8 @@ class SMTBL:  # salesman tables
 
     @staticmethod
     def get_all():
-        return [SMTBL.SALE, SMTBL.COMPANY, SMTBL.PRODUCT, SMTBL.OBJECT, SMTBL.PROCESS, SMTBL.METRIC]
+        return [SMTBL.SALE, SMTBL.SALE_RELATION, SMTBL.ENTITY_CATEGORY, 
+                SMTBL.COMPANY, SMTBL.PRODUCT, SMTBL.OBJECT, SMTBL.PROCESS, SMTBL.METRIC]
 
     @staticmethod
     def get_as_options():
@@ -139,6 +142,11 @@ class SLDC:  # Sale data column
     PRODUCT_SUB_CATEGORY = 'Product_SubCategory'  # see PRCAT and below...
     IS_ACTUAL = 'Is_actual'
     MASTER_ID = 'Master_ID'
+    CHILD_ID = 'Child_ID'
+    ENTITY_LIST = 'Entity_List'
+    CATEGORY_LIST = 'Category_List'
+    RELATION_STATE = 'Relation_State'
+    STATE_DATE = 'State_Date'
     MASTER_TITLE = 'Master_Title'
     PRINT_CATEGORY = 'Print_Category'
     SOURCE = 'Source'  # Tutti, Ricardo, etc.

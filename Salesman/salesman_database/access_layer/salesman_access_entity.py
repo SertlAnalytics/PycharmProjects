@@ -63,14 +63,14 @@ class EntityCollection:
         random_index = random.randint(1, self.elements)
         return self.get_nth_element(random_index)
 
-    def __fill_entity_dict__(self):
+    def __fill_entity_dict__(self):  # ToDo
         counter = 0
         for index, row in self._df.iterrows():
             counter += 1
             entity = self.__get_entity_for_row__(row)
             self._entity_number_dict[counter] = entity
             self._entity_key_dict[entity.entity_key] = entity
-        pass
+        return ''
 
     def __get_entity_for_row__(self, row):
         pass

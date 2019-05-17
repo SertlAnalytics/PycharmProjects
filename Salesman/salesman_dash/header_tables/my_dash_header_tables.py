@@ -9,6 +9,7 @@ from sertl_analytics.constants.pattern_constants import LOGT, WAVEST, INDICES
 from datetime import datetime
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mydash.my_dash_components import MyHTMLTable, COLORS, MyHTML, MyDCC
+from sertl_analytics.my_http import MyHttpClient
 
 
 class MyHTMLHeaderTable(MyHTMLTable):
@@ -19,11 +20,16 @@ class MyHTMLHeaderTable(MyHTMLTable):
         user_label_div = MyHTML.div('my_user_label_div', 'Username:', True)
         user_div = MyHTML.div('my_user_name_div', 'Josef Sertl', False)
         time_str = MyDate.get_time_from_datetime(datetime.now())
+
         login_label_div = MyHTML.div('my_login_label_div', 'Last login:', True, True)
         login_time_div = MyHTML.div('my_login_div', '{}'.format(time_str), False)
 
+        http_connection_label_div = MyHTML.div('my_http_connection_label_div', 'Connection:', True, True)
+        http_connection_div = MyHTML.div('my_http_connection_div', MyHttpClient.get_status_message(), False)
+
         my_user_div = MyHTML.div_embedded([user_label_div, MyHTML.span(' '), user_div])
         my_login_div = MyHTML.div_embedded([login_label_div, MyHTML.span(' '), login_time_div])
+        my_http_connection_div = MyHTML.div_embedded([http_connection_label_div, MyHTML.span(' '), http_connection_div])
 
         dash_board_title_div = MyHTML.div('my_dashboard_title_div', 'Salesman Dashboard', inline=False)
         dash_board_sub_title_div = MyHTML.div('my_dashboard_sub_title_div', '', bold=False, color='red')
@@ -53,7 +59,7 @@ class MyHTMLHeaderTable(MyHTMLTable):
             sales_label_div, MyHTML.span(' '),
             sales_active_div, MyHTML.span('/'), sales_all_div], inline=True)
 
-        self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div]))
+        self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div, my_http_connection_div]))
         self.set_value(1, 2, MyHTML.div_embedded([dash_board_title_div, dash_board_sub_title_div]))
         self.set_value(1, 3, MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div]))
         self.set_value(2, 1, '')
