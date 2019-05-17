@@ -89,6 +89,12 @@ class SaleSimilarityCheck:
 
         similar_label_list = [label for label in check_list if is_similar_dict[label]]
 
+        if not is_identical_or_similar_dict[EL.PROPERTY]:
+            return False, EL.PROPERTY
+
+        if not is_identical_or_similar_dict[EL.TARGET_GROUP]:
+            return False, EL.TARGET_GROUP
+
         for label in similar_label_list:
             if label == EL.ANIMAL:
                 return is_identical_or_similar_dict[EL.PROPERTY] \

@@ -446,10 +446,11 @@ class Tutti:
         )
 
     def __get_search_data_adjusted__(self, sale):
-        print('Checking search range...:')
+        print('Checking search range...sale.category={}'.format(sale.product_category))
         search_data = SalesmanSearchData(self.sys_config, sale)
-        self._sale_factory.fill_search_api_list_by_found_numbers(search_data.search_api_list, self._search_label_lists)
-        search_data.adjust_search_api_list_by_found_numbers()
+        if sale.product_category == '':
+            self._sale_factory.fill_search_api_list_by_found_numbers(search_data.search_api_list, self._search_label_lists)
+            search_data.adjust_search_api_list_by_found_numbers()
         return search_data
 
     def __get_sales_from_platform_for_search_label_list__(

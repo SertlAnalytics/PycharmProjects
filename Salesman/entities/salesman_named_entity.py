@@ -55,7 +55,8 @@ class PropertyEntity(NamedEntity):
     def __get_entity_names__():
         return [
             'Autostellplatz',
-            'Bad', 'Babyzimmer',
+            'Bad', 'Babyzimmer', 'Büro', 'Büroplatz',
+            'Coworking Spaces',
             'Dachboden', 'Dachgeschoss', 'Dach',
             'Garten', 'Garage',
             'Haus', 'Häuschen', 'Hütte',
@@ -101,16 +102,15 @@ class TargetGroupEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
+            'Coworking', 'Co-Working',
             'Dame', 'Damen',
             'Frau', 'Frauen',
             'Mann', 'Männer',
             'Lady',
             'Mädchen', 'Junge', 'Jungen',
             'Kind', 'Kinder',
-            'Baby', 'Babies'
-            'Büro',
+            'Baby', 'Babies'            
             'Gewerbe',
-            'Zuhause',
             'Privat', 'Arbeit',
             'Miete', 'Kauf', 'Leasing', 'Wohnen auf Zeit',
         ]
