@@ -73,6 +73,7 @@ class MyDashTab4Search(MyDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_REGION)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_CATEGORY)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SRDD.SEARCH_SUB_CATEGORY)),
+            MyHTML.div_with_html_button_submit(self._elements.my_search_refresh_button, children='Refresh', hidden=''),
             MyHTML.div_with_html_element(
                 self._elements.my_search_online_input_table, self._search_online_input_table.get_table()),
             MyDCC.markdown(self._elements.my_search_input_markdown),
@@ -96,6 +97,8 @@ class MyDashTab4Search(MyDashBaseTab):
         self.__init_callback_for_search_result_graph__()
         self.__init_callback_for_product_sub_categories__()
         self.__init_callbacks_for_search_print_category__()
+        self.__init_callbacks_for_drop_down_values__()
+
 
     def __init_callbacks_for_search_print_category__(self):
         @self.app.callback(
@@ -300,6 +303,19 @@ class MyDashTab4Search(MyDashBaseTab):
             if self._online_rows is None:
                 return ''
             return self.__get_scatter_plot__()
+
+    def __init_callbacks_for_drop_down_values__(self):
+        @self.app.callback(
+            Output(self._elements.my_search_db_dd, 'options'),
+            [Input(self._elements.my_search_refresh_button, 'n_clicks')])
+        def handle_callback_for_search_result_graph(n_clicks: int):
+            return self.sys_config.access_layer_sale.get_my_sales_as_dd_options()
+
+        @self.app.callback(
+            Output(self._elements.my_search_file_dd, 'options'),
+            [Input(self._elements.my_search_refresh_button, 'n_clicks')])
+        def handle_callback_for_search_result_graph(n_clicks: int):
+            return self.sys_config.access_layer_file.get_my_sales_as_dd_options(with_refresh=True)
 
     def __get_entities_by_selected_entity_indices__(self, selected_entity_indices: list):
         if len(self._print_category_list) == 0 or len(selected_entity_indices) == 0 \

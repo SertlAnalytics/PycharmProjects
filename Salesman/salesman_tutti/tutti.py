@@ -89,10 +89,11 @@ class Tutti:
         if sale_other is None:
             print('Sale "{}" not found on Tutti'.format(other_sale_id))
         else:
-            if self.__is_found_sale_similar_to_source_sale__(sale_other, self._current_source_sale):
+            sale_similarity_check = SaleSimilarityCheck(self._current_source_sale, sale_other)
+            if sale_similarity_check.are_sales_similar:
                 print('Both are similar')
             else:
-                print('Sales are NOT similar')
+                print('Sales are NOT similar - label: {}'.format(sale_similarity_check.similar_label))
             self._current_similar_sales = [sale_other]
             self.__process_my_sale_and_similar_sales__()
 
@@ -146,11 +147,13 @@ class Tutti:
                 return
             else:
                 master_sales = [master_sale]
-        self.__check_similar_sales_in_db_against_master_sales__(master_sales)
+        self.__check_similar_sales_in_db_against_master_sales_in_db__(master_sales)
 
     def check_sales_for_similarity_by_sale_id(self, sale_01_id: str, sale_02_id: str):
-        if self._sale_factory.are_sales_similar_by_sale_id(sale_01_id, sale_02_id):
-            print('-> Similar')
+        if self._sale_factory.are_sales_similar_on_platform_by_sale_id(sale_01_id, sale_02_id):
+            print('-> Similar on platform')
+        if self._sale_factory.are_sales_similar_in_db_by_sale_id(sale_01_id, sale_02_id):
+            print('-> Similar in db')
 
     def check_my_nth_virtual_sale_against_similar_sales(self, number=1):
         source_sale_list = self.__get_my_virtual_sales__(number)
@@ -162,13 +165,13 @@ class Tutti:
         for source_sale in source_sale_list:
             self.__check_sale_against_similar_sales_on_platform__(source_sale)
 
-    def __check_similar_sales_in_db_against_master_sales__(self, master_sale_list: list):
+    def __check_similar_sales_in_db_against_master_sales_in_db__(self, master_sale_list: list):
         if len(master_sale_list) == 0 or master_sale_list[0] is None:
             return
         for master_sale in master_sale_list:
             print('\nCheck similar sales in db against master sale: {}_{}_{}'.format(
                 master_sale.sale_id, master_sale.sale_state, master_sale.title))
-            self.__check_similar_sales_in_db_against_master_sale__(master_sale)
+            self.__check_similar_sales_in_db_against_master_sale_in_db__(master_sale)
 
     def __check_sale_against_similar_sales_on_platform__(self, sale: SalesmanSale):
         if self.sys_config.print_details:
@@ -178,7 +181,7 @@ class Tutti:
         self._current_similar_sales = self.__get_similar_sales_for_sale__(self._current_source_sale)
         self.__process_my_sale_and_similar_sales__()
 
-    def __check_similar_sales_in_db_against_master_sale__(self, master_sale: SalesmanSale):
+    def __check_similar_sales_in_db_against_master_sale_in_db__(self, master_sale: SalesmanSale):
         if self.sys_config.print_details:
             master_sale.print_sale_in_original_structure()
         self._current_source_sale = master_sale
@@ -474,22 +477,19 @@ class Tutti:
                 similar_sale.set_master_details(sale.sale_id, sale.title)
                 similar_sales_dict[similar_sale.sale_id] = similar_sale
 
-    def __can_similar_sale_be_added_to_dict__(self, similar_dict: dict, sale: SalesmanSale, similar_sale: SalesmanSale):
+    @staticmethod
+    def __can_similar_sale_be_added_to_dict__(similar_dict: dict, sale: SalesmanSale, similar_sale: SalesmanSale):
         if similar_sale.sale_id == sale.sale_id:
             return False
-        if not self.__is_found_sale_similar_to_source_sale__(similar_sale, sale):
-            print('\nSource sale {} "{}" is not similar to found sale {} "{}"'.format(
-                sale.sale_id, sale.title, similar_sale.sale_id, similar_sale.title))
+        sale_similarity_check = SaleSimilarityCheck(sale, similar_sale)
+        if not sale_similarity_check.are_sales_similar:
+            print('\nSource sale {} "{}" is not similar to found sale {} "{}" - label: {}'.format(
+                sale.sale_id, sale.title, similar_sale.sale_id, similar_sale.title, sale_similarity_check.similar_label))
             print('--> entity_dict: {} <--> {}'.format(sale.entity_label_dict, similar_sale.entity_label_dict))
             return False
         if similar_sale.sale_id not in similar_dict:  # similar sale was not added so far
             return True
         return len(similar_sale.found_by_labels) > len(similar_dict[similar_sale.sale_id].found_by_labels)
-
-    @staticmethod
-    def __is_found_sale_similar_to_source_sale__(found_sale: SalesmanSale, source_sale: SalesmanSale) -> bool:
-        sale_similarity_check = SaleSimilarityCheck(source_sale, found_sale)
-        return sale_similarity_check.are_sales_similar
 
     @staticmethod
     def __print_similar_sales__(sale, similar_sales: list):

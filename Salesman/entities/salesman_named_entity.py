@@ -214,7 +214,7 @@ class CompanyEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
-            'Apple', 'Audi',
+            'Apple', 'Audi', 'Adidas', 'Alberto',
             'BMW', 'Bally', 'Bugaboo', 'Big Max', 'Becker',
             'Crumpler', 'CANON', 'Canon',
             'DeLonghi', 'Dyson', 'Diono'
@@ -222,16 +222,16 @@ class CompanyEntity(NamedEntity):
             'GoPro', 'Gucci', 'Grüezi-Bag', 'Grüezi Bag', 'Garmin',
             'Hape', 'Hansen', 'H&M', 'Huawei', 'Honda',
             'IKEA',
-            'Jacobsen',
+            'Jacobsen', 'Joop', 'J. Lindeberg',
             'Lowa', 'Louis Vuitton', 'Lladro', 'LUCAN',
             'Mercedes', 'Mercedes-Benz', 'Mango', 'Mexx',
-            'Nespresso', 'name it', 'Navigon',
+            'Nespresso', 'name it', 'Navigon', 'Nike',
             'Omega',
-            'Paidi', 'Playmobil',
+            'Paidi', 'Playmobil', 'Puma',
             'Risa', 'Range Rover', 'Ricardo',
             'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise',
             'Tosca', 'Toyota', 'Tutti', 'TomTom',
-            'USM',
+            'USM', 'Under Armour',
             'Waldmann', 'Wilde+Spieth',
             'Villiger',  'Vitra', 'VW', 'Volkswagen',
             'Zimstern', 'Zimtstern', 'Zanotti',
@@ -300,7 +300,7 @@ class ObjectTypeEntity(NamedEntity):
             'Fleecejacke', 'Fahrrad', 'Figur', 'Figuren', 'Frontspoiler', 'Frontlippe', 'Frontlippen', 'Foto',
             'Gartenlehnstuhl', 'Gestell', 'Geschwisterkinderwagen', 'Gewindefahrwerk', 'Grill', 'Gitter',
             'Golf-Bag', 'Glaskeramikkochfeld', 'Glaskeramik-Kochfeld', 'Gefrierfach', 'Gefrierschrank',
-            'Garderobe', 'Geschirr', 'Geschirrspüler', 'Glaskäfig', 'Gehege',
+            'Garderobe', 'Geschirr', 'Geschirrspüler', 'Glaskäfig', 'Gehege', 'Gürtel', 'Golfgürtel',
             'Handtasche', 'Hängematte', 'Hut', 'Herbst-/Winterjacke', 'Herbst/Winterjacke', 'Hose', 'Heu',
             'Harlekin', 'Heckspoiler', 'Hotspot', 'Hamsterrad', 'Holzbrücke', 'Hamsterburg', 'Holzschrank',
             'Holzkäfig', 'Hamsterkäfig', 'Hamsterhöhle', 'Holztreppe', 'Hasenstahl', 'Holzhäuschen', 'Hundematte',

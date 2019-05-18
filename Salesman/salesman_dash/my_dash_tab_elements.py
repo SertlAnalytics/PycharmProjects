@@ -29,6 +29,8 @@ class MyDashTabElements4Search:
         self.my_search_category_dd = dd_handler.my_search_category_dd
         self.my_search_sub_category_dd = dd_handler.my_search_sub_category_dd
         self.my_search_entities_dd = dd_handler.my_search_entities_dd
+        # refresh button
+        self.my_search_refresh_button = 'my_search_refresh_button'
         # add elements from online search table
         self.my_search_input = search_table.my_search_input
         self.my_search_button = search_table.my_search_button

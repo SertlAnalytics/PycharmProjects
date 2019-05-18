@@ -27,19 +27,27 @@ class SalesmanSaleFactory:
     def sale_factory_source(self) -> str:
         return SLSRC.TUTTI_CH
 
-    def are_sales_similar_by_sale_id(self, sale_id_01: str, sale_id_02: str) -> bool:
+    def are_sales_similar_on_platform_by_sale_id(self, sale_id_01: str, sale_id_02: str) -> bool:
         sale_01 = self.get_sale_via_request_by_sale_id(sale_id_01)
         sale_02 = self.get_sale_via_request_by_sale_id(sale_id_02)
+        if sale_01 is None or sale_02 is None:
+            return False
+        return self.are_sales_similar(sale_01, sale_02, True)
+
+    def are_sales_similar_in_db_by_sale_id(self, sale_id_01: str, sale_id_02: str) -> bool:
+        sale_01 = self.get_sale_from_db_by_sale_id(sale_id_01)
+        sale_02 = self.get_sale_from_db_by_sale_id(sale_id_02)
+        if sale_01 is None or sale_02 is None:
+            return False
         return self.are_sales_similar(sale_01, sale_02, True)
 
     @staticmethod
     def are_sales_similar(source_sale: SalesmanSale, other_sale: SalesmanSale, with_info=True) -> bool:
         check = SaleSimilarityCheck(source_sale, other_sale)
         if with_info and not check.are_sales_similar:
-            print('Not similar {} <-> {}: {} <--> {} '.format(
-                source_sale.sale_id, other_sale.sale_id,
-                source_sale.get_value(SLDC.ENTITY_LABELS_DICT),
-                other_sale.get_value(SLDC.ENTITY_LABELS_DICT)))
+            print('Not similar because of {}:'.format(check.similar_label))
+            print('...{}: {}'.format(source_sale.sale_id, source_sale.get_value(SLDC.ENTITY_LABELS_DICT)))
+            print('...{}: {}'.format(other_sale.sale_id, other_sale.get_value(SLDC.ENTITY_LABELS_DICT)))
         return check.are_sales_similar
 
     def insert_sale(self, sale: SalesmanSale, master_sale: SalesmanSale = None, enforce_check=True):

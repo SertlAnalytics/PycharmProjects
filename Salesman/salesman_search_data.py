@@ -36,7 +36,8 @@ class SalesmanSearchData:
 
     @property
     def max_number_found(self) -> int:
-        return max([api.found_numbers for api in self._search_api_list])
+        print('len(api)={}'.format(len(self._search_api_list)))
+        return 0 if len(self._search_api_list) == 0 else max([api.found_numbers for api in self._search_api_list])
 
     def adjust_search_api_list_by_found_numbers(self):
         threshold = max([3, self.max_number_found / 20])

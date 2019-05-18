@@ -41,7 +41,7 @@ master_sale_id = '24325487'
 # tutti.check_similar_sales_in_db_against_master_sale_in_db()
 # tutti.check_sale_on_platform_against_similar_sales_by_sale_id(sale_id)
 
-tutti.check_sales_for_similarity_by_sale_id('24840417', '11098579')
+tutti.check_sales_for_similarity_by_sale_id('1558185369', '23623611')
 
 # api.search_string = 'Leder Handtasche von Gucci und Mango und Even&Odd und H&M, Wenig gebraucht. Für 100.- statt 200.-'
 # api.search_string = 'Fritz Hansen / Jacobsen - Serie 7 Stuhl / 6 Stk. / Original + neuwertig, Für 100.- statt 200.-'

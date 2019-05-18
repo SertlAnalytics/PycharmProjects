@@ -20,6 +20,8 @@ class SalesmanEntityFactory:
         return self._access_layer_entity_category.is_entity_key_available(entity_key)
 
     def change_entity_category_in_db(self, sale_entity_label_dict: dict, category_list: list):
+        if len(category_list) == 0:
+            return
         categories_value = self._key_delimiter.join(sorted(category_list))
         entity_key = self.__get_key_for_entity_label_dict__(sale_entity_label_dict)
         print('change_entity_category_in_db: dict={}, list={} -> key={}, cat={}'.format(

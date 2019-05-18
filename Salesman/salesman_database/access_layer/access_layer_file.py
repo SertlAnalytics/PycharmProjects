@@ -22,7 +22,9 @@ class AccessLayerFile:
     def get_row(self, row_number: int):
         return self._df.iloc[row_number]
 
-    def get_my_sales_as_dd_options(self):
+    def get_my_sales_as_dd_options(self, with_refresh=False):
+        if with_refresh:
+            self._df = self.__get_source_df__()
         option_list = []
         for idx, row in self._df.iterrows():
             label = '{}-{}'.format(row[SLDC.SALE_ID], row[SLDC.TITLE])
