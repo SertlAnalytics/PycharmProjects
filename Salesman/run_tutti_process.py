@@ -36,12 +36,12 @@ sale_id = '27124330'  # Pixie: 27943008 Schlafsack: 27959857 Schöffel: 27960542
 # Kugelbahn: 27993639, Sunrise Tower: 28105850
 # tutti.print_details_for_tutti_sale_id(sale_id, with_data_dict=True)
 # tutti.check_sale_on_platform_against_sale_in_db_by_sale_id(sale_id, write_to_db=False)
-tutti.check_sale_in_db_against_similar_sales_by_sale_id(sale_id)
+# tutti.check_sale_in_db_against_similar_sales_by_sale_id(sale_id)
 master_sale_id = '24325487'
 # tutti.check_similar_sales_in_db_against_master_sale_in_db()
 # tutti.check_sale_on_platform_against_similar_sales_by_sale_id(sale_id)
 
-# tutti.check_sales_for_similarity_by_sale_id('24840417', '26807970')
+tutti.check_sales_for_similarity_by_sale_id('24840417', '11098579')
 
 # api.search_string = 'Leder Handtasche von Gucci und Mango und Even&Odd und H&M, Wenig gebraucht. Für 100.- statt 200.-'
 # api.search_string = 'Fritz Hansen / Jacobsen - Serie 7 Stuhl / 6 Stk. / Original + neuwertig, Für 100.- statt 200.-'

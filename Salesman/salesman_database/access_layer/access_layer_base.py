@@ -57,7 +57,7 @@ class AccessLayer:
         return df
 
     def insert_data(self, input_dict_list: list):
-        self._db.insert_data_into_table(self._table.name, input_dict_list)
+        return self._db.insert_data_into_table(self._table.name, input_dict_list)
 
     def update_record(self, record_id: str, data_dict: dict):
         # Syntax: UPDATE users SET field1='value1', field2='value2'

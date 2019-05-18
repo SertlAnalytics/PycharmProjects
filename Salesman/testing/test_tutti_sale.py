@@ -10,7 +10,7 @@ from salesman_nlp.salesman_spacy import SalesmanSpacy
 from salesman_system_configuration import SystemConfiguration
 from sertl_analytics.test.my_test_case import MyTestCaseHandler, MyTestCase
 from sertl_analytics.constants.salesman_constants import SLDC
-from salesman_sale_factory import SalesmanSaleFactory
+from factories.salesman_sale_factory import SalesmanSaleFactory
 from salesman_sale_checks import SaleSimilarityCheck
 from salesman_search import SalesmanSearchApi
 

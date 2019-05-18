@@ -8,7 +8,7 @@ Date: 2019-05-15
 from sertl_analytics.constants.my_constants import MYDSHC
 from sertl_analytics.mydash.my_dash_callback import DashCallbackParameter, DashCallback
 from salesman_dash.my_dash_tab_elements import MyDashTabElements4Search
-from salesman_sale_factory import SalesmanSaleFactory
+from factories.salesman_sale_factory import SalesmanSaleFactory
 from sertl_analytics.my_http import MyHttpClient
 
 

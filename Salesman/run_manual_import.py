@@ -21,10 +21,10 @@ sale_id = '27961855'  # '27993639: Kugelbahn
 
 tutti = Tutti(sys_config)
 # tutti.check_my_nth_sale_in_browser_against_database(1)
-# tutti.check_my_sales_in_browser_against_database()
+tutti.check_my_sales_in_browser_against_database()
 # tutti.check_status_of_sales_in_database()
 # tutti.check_own_sales_in_database_against_similar_sales()
-tutti.check_similar_sales_in_db_against_master_sale_in_db()
+# tutti.check_similar_sales_in_db_against_master_sale_in_db()
 # tutti.check_sale_on_platform_against_sale_in_db_by_sale_id(sale_id, write_to_db=True)
 tutti.close_excel()
 

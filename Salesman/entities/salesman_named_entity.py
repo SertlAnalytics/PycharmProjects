@@ -6,7 +6,7 @@ Date: 2019-04-02
 """
 
 
-from salesman_tutti.tutti_constants import EL
+from sertl_analytics.constants.salesman_constants import EL
 from entities.named_entity import NamedEntity
 
 
@@ -199,6 +199,7 @@ class TechnologyEntity(NamedEntity):
     def __get_entity_names__():
         return [
             'Batterie', 'Batterien',
+            'GPS',
             'WiFi', 'WLAN'
         ]
 
@@ -214,22 +215,22 @@ class CompanyEntity(NamedEntity):
     def __get_entity_names__():
         return [
             'Apple', 'Audi',
-            'BMW', 'Bally', 'Bugaboo', 'Big Max',
+            'BMW', 'Bally', 'Bugaboo', 'Big Max', 'Becker',
             'Crumpler', 'CANON', 'Canon',
             'DeLonghi', 'Dyson', 'Diono'
             'Eames', 'Even&Odd',
-            'GoPro', 'Gucci', 'Grüezi-Bag', 'Grüezi Bag',
+            'GoPro', 'Gucci', 'Grüezi-Bag', 'Grüezi Bag', 'Garmin',
             'Hape', 'Hansen', 'H&M', 'Huawei', 'Honda',
             'IKEA',
             'Jacobsen',
             'Lowa', 'Louis Vuitton', 'Lladro', 'LUCAN',
             'Mercedes', 'Mercedes-Benz', 'Mango', 'Mexx',
-            'Nespresso', 'name it',
+            'Nespresso', 'name it', 'Navigon',
             'Omega',
             'Paidi', 'Playmobil',
             'Risa', 'Range Rover', 'Ricardo',
             'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise',
-            'Tosca', 'Toyota', 'Tutti',
+            'Tosca', 'Toyota', 'Tutti', 'TomTom',
             'USM',
             'Waldmann', 'Wilde+Spieth',
             'Villiger',  'Vitra', 'VW', 'Volkswagen',
@@ -315,7 +316,7 @@ class ObjectTypeEntity(NamedEntity):
             'Keramiknapf', 'Kräuter', 'Kokihaus', 'Kletterschutz', 'Kommode', 'Kleiderschrank',
             'Laptop', 'Lift', 'LTE-Router', 'Lavabo', 'Laufrad', 'Leiter',
             'Nebelleuchte', 'Notebook', 'NannoSim', 'Nachttisch', 'Nachtkästchen', 'Nachtschrank',
-            'Nagerbehälter',
+            'Nagerbehälter', 'Navi', 'Navigationsgerät',
             'Matraze', 'Matrazen', 'Matratzenboden', 'Marionette', 'Modell', 'Modellauto', 'Möbellift',
             'Motorenöl', 'Motoröl', 'Motor', 'Mitfahrgelegenheit', 'MicroSim', 'Müll', 'Mäusegehege',
             'Nagerheim', 'Nagerkäfig', 'Nagerstall', 'Nagerhaus',
@@ -357,6 +358,7 @@ class ObjectTypeEntity(NamedEntity):
             'Bürostuhl': ['Besucherstuhl', 'Bürodrehstuhl', 'Drehstuhl'],
             'Kindersitz': ['Autokindersitz', 'Auto-Kindersitz'],
             'Notebook': ['Laptop'],
+            'Navi': ['Navigationsgerät'],
             'Kommunionkleid': ['Sommerkleid'],
             'Stuhl': ['Stühle'],
             'Transportbox': ['Transport-Box'],

@@ -12,7 +12,7 @@ from sertl_analytics.constants.salesman_constants import SLSRC
 from salesman_sale import SalesmanSale
 from salesman_tutti.tutti_constants import SLCLS
 from salesman_nlp.salesman_spacy import SalesmanSpacy
-from salesman_sale_factory import SalesmanSaleFactory
+from factories.salesman_sale_factory import SalesmanSaleFactory
 
 
 class MyUrlBrowser4Tutti(MyUrlBrowser):

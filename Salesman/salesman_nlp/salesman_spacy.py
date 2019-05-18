@@ -7,7 +7,7 @@ Date: 2019-04-02
 
 from spacy.tokens import Doc, Span
 from spacy.matcher import PhraseMatcher
-from salesman_tutti.tutti_constants import EL, POS
+from sertl_analytics.constants.salesman_constants import EL, POS
 from entities.salesman_named_entity import SalesmanEntityHandler
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
 from matcher.tutti_matcher_4_is_like_new import TuttiMatcher4IsLikeNew

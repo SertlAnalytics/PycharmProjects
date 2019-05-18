@@ -2,21 +2,24 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f337eff7-2e2d-415d-b4ab-cf8d55a29aa3" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/my_http.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/factories/salesman_sale_factory.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_entity.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/constants/salesman_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/salesman_constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/entities/salesman_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/entities/salesman_named_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_sale.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/salesman_access_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/salesman_access_entity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/run_create_salesman_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/run_create_salesman_table.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/callbacks/callbacks_for_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/callbacks/callbacks_for_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_data_dictionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_data_dictionary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/salesman_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_nlp/test_salesman_spacy.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_nlp/test_salesman_spacy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_sale_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_sale_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_sale_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/factories/salesman_entity_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_search_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_search_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_system_configuration.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_url_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_url_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_browser.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_browser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/testing/test_tutti_sale.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -31,7 +34,7 @@
         <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="306">
-              <caret line="18" lean-forward="true" selection-start-line="18" selection-end-line="18" />
+              <caret line="18" selection-start-line="18" selection-end-line="18" />
             </state>
           </provider>
         </entry>
@@ -118,7 +121,6 @@
         <option value="$PROJECT_DIR$/mydash/my_dash_base.py" />
         <option value="$PROJECT_DIR$/myfilelog.py" />
         <option value="$PROJECT_DIR$/mypasswords.py" />
-        <option value="$PROJECT_DIR$/constants/salesman_constants.py" />
         <option value="$PROJECT_DIR$/processes/my_job_runtime.py" />
         <option value="$PROJECT_DIR$/processes/my_job_result.py" />
         <option value="$PROJECT_DIR$/processes/my_job.py" />
@@ -138,6 +140,7 @@
         <option value="$PROJECT_DIR$/my_text.py" />
         <option value="$PROJECT_DIR$/mymath.py" />
         <option value="$PROJECT_DIR$/my_httplib.py" />
+        <option value="$PROJECT_DIR$/constants/salesman_constants.py" />
       </list>
     </option>
   </component>
@@ -152,7 +155,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -259,6 +261,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -415,14 +418,14 @@
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.46487603" visible="true" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.463843" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.477707" side_tool="true" weight="0.32784313" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.522293" weight="0.5294118" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49761146" weight="0.32784313" />
-      <window_info id="Structure" order="1" sideWeight="0.53512394" side_tool="true" visible="true" weight="0.25" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="7" sideWeight="0.70616496" visible="true" weight="0.24078432" />
+      <window_info id="Structure" order="1" sideWeight="0.536157" side_tool="true" visible="true" weight="0.25" />
+      <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.70616496" visible="true" weight="0.24078432" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49761146" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -730,13 +733,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/constants/salesman_constants.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="680">
-          <caret line="40" column="8" selection-start-line="40" selection-start-column="8" selection-end-line="40" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/mypasswords.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="408">
@@ -866,9 +862,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret selection-end-line="11" selection-end-column="58" />
-          <folding>
-            <element signature="e#173#191#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -883,9 +876,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1190">
           <caret line="80" column="92" selection-start-line="80" selection-start-column="39" selection-end-line="80" selection-end-column="92" />
-          <folding>
-            <element signature="e#166#185#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -896,10 +886,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/constants/salesman_constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="527">
+          <caret line="31" column="49" lean-forward="true" selection-start-line="31" selection-start-column="49" selection-end-line="31" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="306">
-          <caret line="18" lean-forward="true" selection-start-line="18" selection-end-line="18" />
+          <caret line="18" selection-start-line="18" selection-end-line="18" />
         </state>
       </provider>
     </entry>

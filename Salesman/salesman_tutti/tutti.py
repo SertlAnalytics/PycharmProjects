@@ -17,7 +17,8 @@ import pandas as pd
 from salesman_system_configuration import SystemConfiguration
 from printing.sale_printing import SalesmanPrint
 from salesman_tutti.tutti_url_factory import SalesmanSearchApi
-from salesman_sale_factory import SalesmanSaleFactory
+from factories.salesman_sale_factory import SalesmanSaleFactory
+from factories.salesman_entity_factory import SalesmanEntityFactory
 from salesman_sale_checks import SaleIdenticalCheck, SaleSimilarityCheck
 from salesman_search_data import SalesmanSearchData
 from time import sleep
@@ -31,6 +32,7 @@ class Tutti:
         self._excel = self.__get_excel__()
         self._salesman_spacy = SalesmanSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
         self._sale_factory = SalesmanSaleFactory(self.sys_config, self._salesman_spacy)
+        self._entity_factory = SalesmanEntityFactory(self.sys_config)
         self._browser = None
         self._search_label_lists = []
         self._current_source_sale = None
@@ -448,9 +450,20 @@ class Tutti:
     def __get_search_data_adjusted__(self, sale):
         print('Checking search range...sale.category={}'.format(sale.product_category))
         search_data = SalesmanSearchData(self.sys_config, sale)
+        api_list = search_data.search_api_list
         if sale.product_category == '':
-            self._sale_factory.fill_search_api_list_by_found_numbers(search_data.search_api_list, self._search_label_lists)
-            search_data.adjust_search_api_list_by_found_numbers()
+            suggested_categories = self._entity_factory.get_suggested_categories(sale.entity_label_dict)
+            if len(suggested_categories) == 0:
+                self._sale_factory.fill_search_api_list_by_found_numbers(api_list, self._search_label_lists)
+                search_data.adjust_search_api_list_by_found_numbers()
+                self._entity_factory.change_entity_category_in_db(
+                    sale.entity_label_dict, search_data.get_api_categories())
+            else:
+                print('Use suggested categories={}'.format(suggested_categories))
+                search_data.adjust_search_api_list_by_suggested_categories(suggested_categories)
+                self._sale_factory.fill_search_api_list_by_found_numbers(api_list, self._search_label_lists)
+        else:
+            self._sale_factory.fill_search_api_list_by_found_numbers(api_list, self._search_label_lists)
         return search_data
 
     def __get_sales_from_platform_for_search_label_list__(

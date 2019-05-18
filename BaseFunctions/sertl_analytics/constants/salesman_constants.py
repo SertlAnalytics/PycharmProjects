@@ -5,6 +5,78 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-09
 """
 
+
+class EL:  # entity labels
+    BLACK_LIST = 'BLACK_LIST'
+    ANIMAL = 'ANIMAL'
+    COMPANY = 'COMPANY'
+    COLOR = 'COLOR'
+    JOB = 'JOB'
+    LOC = 'LOC'
+    ORG = 'ORG'
+    PRODUCT = 'PRODUCT'
+    PROPERTY = 'PROPERTY'
+    OBJECT = 'OBJECT'
+    TARGET_GROUP = 'TARGET_GROUP'
+    MATERIAL = 'MATERIAL'
+    TECHNOLOGY = 'TECHNOLOGY'
+    SHOP = 'SHOP'
+
+    @staticmethod
+    def get_all() -> list:
+        return [EL.BLACK_LIST, EL.COLOR, EL.ANIMAL, EL.JOB, EL.PRODUCT, EL.PROPERTY, EL.LOC,
+                EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.SHOP, EL.TECHNOLOGY]
+
+    @staticmethod
+    def is_entity_label_relevant_for_salesman(ent_level: str) -> bool:
+        return ent_level in EL.get_all_relevant()
+
+    @staticmethod
+    def get_all_relevant() -> list:
+        list_relevant = EL.get_all()
+        list_relevant.remove(EL.BLACK_LIST)
+        return list_relevant
+
+    @staticmethod
+    def get_labels_relevant_for_entity_category_key() -> list:
+        return [EL.ANIMAL, EL.JOB, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.TECHNOLOGY]
+
+    @staticmethod
+    def get_all_without_loc() -> list:
+        list_all = EL.get_all()
+        list_all.remove(EL.LOC)
+        return list_all
+    
+    
+class POS:
+    ADJ = 'ADJ'  # adjective, e.g. 'warmes' (Innenfutter)
+    ADP = 'ADP'  # AD, e.g. 'in', 'Dank'
+    ADV = 'ADV'  # adverb, e.g. 'kaum' (gebraucht)
+    CONJ = 'CONJ'  # conjunction
+    DATE = 'DATE'  # date, 27.10.1964
+    NUM = 'NUM'  # number, e.g. 37
+    NOUN = 'NOUN'  # noun, e.g. 'Goretex'
+    PART = 'PART'  # partical, e.g. 'zu' (verkaufen)
+    PRON = 'PRON'   # pronomen
+    PROPN = 'PROPN'  # proper noun, e.g. 'Wanderschuhe'
+    PUNCT = 'PUNCT'  # punctuation, e.g. ','
+    VERB = 'VERB'  # verb, e.g. 'verkaufen'
+    X = 'X'         # X = ???
+
+    @staticmethod
+    def is_pos_noun(pos: str) -> bool:
+        return pos in [POS.NOUN, POS.PROPN]
+
+
+class DEP:
+    cj = 'cj'  # cj???, e.g. 'LOWA', mostly POS=NOUN or PROPN
+    ROOT = 'ROOT'  # Root element, mostly POS=NOUN or PROPN
+    pnc = 'pnc'  # punctuation, mostly POS=NOUN or PROPN
+    punct = 'punct'  # punctuation, mostly POS=PUNKT
+    subtok = 'subtok'  # subtoken (part of a larger token), e.g. 10 in '10-12' - head.text is the right neighbor
+    nk = 'nk'  # nk = ????
+
+
 class SMPR:  # Salesman Processes
     UPDATE_SALES_DATA_IN_STATISTICS_TAB = 'Update_Sales_Data_In_Statistics_Tab'
     CHECK_SALES_STATE = 'Check_Sales_State'
@@ -182,7 +254,7 @@ class SLDC:  # Sale data column
     FOUND_BY_LABELS = 'Found_by_labels'
     LAST_CHECK_DATE = 'Last_Check_Date'
     COMMENT = 'Comment'
-
+   
     @staticmethod
     def get_columns_for_virtual_sales_in_file():
         return [SLDC.SALE_ID, SLDC.TITLE, SLDC.DESCRIPTION, SLDC.PRICE, SLDC.PRICE_ORIGINAL]

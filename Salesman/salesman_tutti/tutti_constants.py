@@ -115,44 +115,6 @@ class PRSUBCAT:  # Product Sub Category, german: Unter-Rubrik
     JOBS_OTHERS = 'Sonstige Stellen'
 
 
-class EL:  # entity labels
-    BLACK_LIST = 'BLACK_LIST'
-    ANIMAL = 'ANIMAL'
-    COMPANY = 'COMPANY'
-    COLOR = 'COLOR'
-    JOB = 'JOB'
-    LOC = 'LOC'
-    ORG = 'ORG'
-    PRODUCT = 'PRODUCT'
-    PROPERTY = 'PROPERTY'
-    OBJECT = 'OBJECT'
-    TARGET_GROUP = 'TARGET_GROUP'
-    MATERIAL = 'MATERIAL'
-    TECHNOLOGY = 'TECHNOLOGY'
-    SHOP = 'SHOP'
-
-    @staticmethod
-    def get_all() -> list:
-        return [EL.BLACK_LIST, EL.COLOR, EL.ANIMAL, EL.JOB, EL.PRODUCT, EL.PROPERTY, EL.LOC,
-                EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.SHOP, EL.TECHNOLOGY]
-
-    @staticmethod
-    def is_entity_label_tutti_relevant(ent_level: str) -> bool:
-        return ent_level in EL.get_all_relevant()
-
-    @staticmethod
-    def get_all_relevant() -> list:
-        list_relevant = EL.get_all()
-        list_relevant.remove(EL.BLACK_LIST)
-        return list_relevant
-
-    @staticmethod
-    def get_all_without_loc() -> list:
-        list_all = EL.get_all()
-        list_all.remove(EL.LOC)
-        return list_all
-
-
 class SLCLS:  # css classes used within tutti sales
     OFFERS = '_2qT0v'
     MAIN_ANKER = '_16dGT'
@@ -194,26 +156,6 @@ class SCLS:  # css classes used within search offers
     NAVIGATION_ANCHOR = '_3bpXO _3vEQq'
 
 
-class POS:
-    ADJ = 'ADJ'  # adjective, e.g. 'warmes' (Innenfutter)
-    ADP = 'ADP'  # AD, e.g. 'in', 'Dank'
-    ADV = 'ADV'  # adverb, e.g. 'kaum' (gebraucht)
-    CONJ = 'CONJ'  # conjunction
-    DATE = 'DATE'  # date, 27.10.1964
-    NUM = 'NUM'  # number, e.g. 37
-    NOUN = 'NOUN'  # noun, e.g. 'Goretex'
-    PART = 'PART'  # partical, e.g. 'zu' (verkaufen)
-    PRON = 'PRON'   # pronomen
-    PROPN = 'PROPN'  # proper noun, e.g. 'Wanderschuhe'
-    PUNCT = 'PUNCT'  # punctuation, e.g. ','
-    VERB = 'VERB'  # verb, e.g. 'verkaufen'
-    X = 'X'         # X = ???
-
-    @staticmethod
-    def is_pos_noun(pos: str) -> bool:
-        return pos in [POS.NOUN, POS.PROPN]
-
-
 class TAG:
     ADJA = 'ADJA'  # ADJA??, e.g. 'warmes'
     ADJD = 'ADJD'  # ADJD??, e.g. 'einfach' (einfach höhenverstellbar)
@@ -224,14 +166,6 @@ class TAG:
     VVFIN = 'VVFIN'  # VVFIN???, e.g. 'wasserdicht'
     VVPP = 'VVPP'  # VVPP??, e.g. 'gebraucht', 'erhalten'
 
-
-class DEP:
-    cj = 'cj'  # cj???, e.g. 'LOWA', mostly POS=NOUN or PROPN
-    ROOT = 'ROOT'  # Root element, mostly POS=NOUN or PROPN
-    pnc = 'pnc'  # punctuation, mostly POS=NOUN or PROPN
-    punct = 'punct'  # punctuation, mostly POS=PUNKT
-    subtok = 'subtok'  # subtoken (part of a larger token), e.g. 10 in '10-12' - head.text is the right neighbor
-    nk = 'nk'  # nk = ????
 
 
 

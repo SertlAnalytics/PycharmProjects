@@ -7,8 +7,7 @@ Date: 2019-04-02
 
 from sertl_analytics.mymath import MyMath
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, SLST, OBJST
-from salesman_tutti.tutti_constants import  EL
+from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, SLST, EL
 from entities.salesman_named_entity import SalesmanEntityHandler
 from salesman_nlp.salesman_doc_extended import DocExtended
 from salesman_nlp.salesman_spacy import SalesmanSpacy
@@ -400,14 +399,15 @@ class SalesmanSale:
         self.set_value(SLDC.COMMENT, '1. load')
 
     def __get_nlp_doc_for_sale__(self) -> DocExtended:
-        nlp_doc_sale = DocExtended(self._salesman_nlp(self.title + ' ' + self.description))
+        properties_list = [self.title, self.description, self.product_category, self.product_sub_category]
+        nlp_doc_sale = DocExtended(self._salesman_nlp(' '.join(properties_list)))
         # nlp_doc_sale = DocExtended(self._salesman_nlp(self.title))
         nlp_doc_sale.correct_single_price(self.price_single)
         return nlp_doc_sale
 
     def __add_entity_name_labels_to_sale_from_doc__(self, nlp_doc_sale: DocExtended):
         for ent in nlp_doc_sale.doc.ents:
-            if EL.is_entity_label_tutti_relevant(ent.label_):
+            if EL.is_entity_label_relevant_for_salesman(ent.label_):
                 self.add_entity_name_label(ent.text, ent.label_)
         self.reduce_search_labels_by_entity_names()
 

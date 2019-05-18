@@ -63,7 +63,7 @@ class SalesmanDatabase(BaseDatabase):
         self.__insert_data_into_table__(STBL.METRIC, input_dict_list)
 
     def insert_data_into_table(self, table_name: str, input_dict_list: list):
-        self.__insert_data_into_table__(table_name, input_dict_list)
+        return self.__insert_data_into_table__(table_name, input_dict_list)
 
     def __get_kw_args_for_data_fetcher__(self, period: str, aggregation: int, output_size: str, ticker: str):
         kw_args = {'symbol': ticker, 'period': period, 'aggregation': aggregation, 'output_size': output_size}

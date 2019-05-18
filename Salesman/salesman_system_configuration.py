@@ -10,6 +10,7 @@ from salesman_logging.salesman_log import SalesmanLog
 from salesman_database.salesman_db import SalesmanDatabase
 from salesman_database.salesman_tables import SaleTable, CompanyTable, ProcessTable
 from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
+from salesman_database.access_layer.access_layer_entity import AccessLayer4EntityCategory
 from salesman_database.access_layer.access_layer_file import MySalesAccessLayerFile
 from salesman_sound.salesman_sound_machine import SalesmanSoundMachine
 from salesman_logging.salesman_debugger import SalesmanDebugger
@@ -34,6 +35,7 @@ class SystemConfiguration:
         self.sound_machine = SalesmanSoundMachine()
         self.db = SalesmanDatabase()
         self.access_layer_sale = AccessLayer4Sale(self.db)
+        self.access_layer_entity_category = AccessLayer4EntityCategory(self.db)
         self.access_layer_file = MySalesAccessLayerFile(self.virtual_sales_file_path)
         self.number_allowed_search_results = 200
         self.sale_table = SaleTable()

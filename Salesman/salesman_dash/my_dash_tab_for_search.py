@@ -22,7 +22,7 @@ from salesman_dash.plotting.my_dash_plotter_for_salesman_search import MyDashTab
 from salesman_dash.my_dash_colors import DashColorHandler
 from salesman_tutti.tutti import Tutti
 from salesman_tutti.tutti_categorizer import ProductCategorizer
-from salesman_sale_factory import SalesmanSaleFactory
+from factories.salesman_sale_factory import SalesmanSaleFactory
 from salesman_dash.callbacks.callbacks_for_search import CallbackForSearchInput, CallbackForResultGrid
 from salesman_search import SalesmanSearchApi
 import pandas as pd

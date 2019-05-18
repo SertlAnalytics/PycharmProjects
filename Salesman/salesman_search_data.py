@@ -25,7 +25,6 @@ class SalesmanSearchData:
         self._sub_category = self._sale.product_sub_category
         self._sub_category_value = self.__get_sub_category_value__()
         self._search_api_list = self.__get_search_api_list__()
-        self._max_number_found = 0
 
     @property
     def product_category(self):
@@ -37,14 +36,19 @@ class SalesmanSearchData:
 
     @property
     def max_number_found(self) -> int:
-        return self._max_number_found
+        return max([api.found_numbers for api in self._search_api_list])
 
     def adjust_search_api_list_by_found_numbers(self):
-        self._max_number_found = max([api.found_numbers for api in self._search_api_list])
-        threshold = max([3, self._max_number_found / 20])
+        threshold = max([3, self.max_number_found / 20])
         self._search_api_list = [api for api in self._search_api_list if api.found_numbers >= threshold]
         print('Search over: {}'.format(
             ', '.join(['{}: {}'.format(api.category_value, api.found_numbers) for api in self._search_api_list])))
+
+    def adjust_search_api_list_by_suggested_categories(self, suggested_categories):
+        self._search_api_list = [api for api in self._search_api_list if api.category_value in suggested_categories]
+
+    def get_api_categories(self) -> list:
+        return [api.category_value for api in self._search_api_list]
 
     def __get_region_value__(self):
         if self._sale.description == '':  # online search

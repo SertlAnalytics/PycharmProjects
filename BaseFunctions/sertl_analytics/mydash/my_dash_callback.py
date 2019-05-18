@@ -59,7 +59,7 @@ class DashCallback:
         return self._parameter_dict.get(parameter_name).has_value_been_changed()
     
     def get_parameter_value(self, parameter_name: str):
-        print('get_parameter_value: {}: {}'.format(self.__class__.__name__, parameter_name))
+        # print('get_parameter_value: {}: {}'.format(self.__class__.__name__, parameter_name))
         return self._parameter_dict.get(parameter_name).value
 
     def get_changed_parameter(self) -> DashCallbackParameter:

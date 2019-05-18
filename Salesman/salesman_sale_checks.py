@@ -7,7 +7,7 @@ Date: 2019-05-08
 
 from sertl_analytics.my_text import MyText
 from sertl_analytics.constants.salesman_constants import SLDC
-from salesman_tutti.tutti_constants import EL
+from sertl_analytics.constants.salesman_constants import EL
 from salesman_sale import SalesmanSale
 
 
@@ -92,7 +92,7 @@ class SaleSimilarityCheck:
         if not is_identical_or_similar_dict[EL.PROPERTY]:
             return False, EL.PROPERTY
 
-        if not is_identical_or_similar_dict[EL.TARGET_GROUP]:
+        if source_length_dict[EL.TARGET_GROUP] > 0 and not is_identical_or_similar_dict[EL.TARGET_GROUP]:
             return False, EL.TARGET_GROUP
 
         for label in similar_label_list:
