@@ -87,6 +87,7 @@ class SMPR:  # Salesman Processes
     
 class SMVW:  # salesman views
     V_SALE = 'v_sale'
+    V_SALE_SIMILAR = 'v_sale_similar'
     V_SALE_MAX_VERSION = 'v_sale_max_version'
 
 
@@ -225,6 +226,7 @@ class SLDC:  # Sale data column
     SALE_STATE = 'Sale_State'  # see SLST
     HREF = 'Link'
     START_DATE = 'Start_Date'
+    END_DATE = 'End_Date'
     LOCATION = 'Location'
     OBJECT_STATE = 'Object_State'  # see OBJST
     TITLE = 'Title'
@@ -246,6 +248,7 @@ class SLDC:  # Sale data column
     IS_LIKE_NEW = 'Is_like_new'
     IS_USED = 'Is_used'
     IS_OUTLIER = 'Is_outlier'
+    IS_MY_SALE = 'Is_my_sale'
     VISITS = 'Visits'
     BOOK_MARKS = 'Bookmarks'
     SEARCH_LABELS = 'Search_labels'

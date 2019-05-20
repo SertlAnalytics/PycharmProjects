@@ -53,6 +53,9 @@ class SalesmanDatabase(BaseDatabase):
     def insert_sale_data(self, input_dict_list: list):
         return self.__insert_data_into_table__(SMTBL.SALE, input_dict_list)
 
+    def insert_sale_relation_data(self, input_dict_list: list):
+        return self.__insert_data_into_table__(SMTBL.SALE_RELATION, input_dict_list)
+
     def insert_company_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.COMPANY, input_dict_list)
 

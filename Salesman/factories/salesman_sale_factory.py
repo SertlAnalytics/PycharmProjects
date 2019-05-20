@@ -42,58 +42,45 @@ class SalesmanSaleFactory:
         return self.are_sales_similar(sale_01, sale_02, True)
 
     def write_sales_after_checks_to_db(self, sales: list, sale_master: SalesmanSale=None, enforce_writing=False):
-        counter_insert_total, counter_update_total = 0, 0
+        if not(self.sys_config.write_to_database or enforce_writing):
+            return
+
+        self._access_layer_sale.reset_counters()
         if sale_master is not None:
-            counter_insert, counter_update = self.write_sale_after_checks_to_db(
-                sale_master, enforce_writing=enforce_writing)
-            counter_insert_total += counter_insert
-            counter_update_total += counter_update_total
+            self.write_sale_after_checks_to_db(sale_master, enforce_writing=enforce_writing)
         for sale in sales:
-            counter_insert, counter_update = self.write_sale_after_checks_to_db(
-                sale, sale_master, enforce_writing)
-            counter_insert_total += counter_insert
-            counter_update_total += counter_update_total
-        print('Database sale transactions: insert={}, updates={}'.format(counter_insert_total, counter_update_total))
-        return counter_insert_total, counter_update_total
+            self.write_sale_after_checks_to_db(sale, sale_master, enforce_writing)
+        print('Sale transactions: insert={}, updates={}'.format(
+            self._access_layer_sale.counter_insert, self._access_layer_sale.counter_update))
 
     def write_sale_after_checks_to_db(self, sale: SalesmanSale, sale_master: SalesmanSale=None, enforce_writing=False):
         if not(self.sys_config.write_to_database or enforce_writing):
             return
         if not sale.is_sale_ready_for_sale_table():
             return
+
         sale_dict = sale.get_data_dict_for_sale_table()
         sale_from_db = self.get_sale_from_db_by_sale_id(sale.sale_id)
-        counter_insert, counter_update = 0, 0
+        master_id = '' if sale_master is None else sale_master.sale_id
         if sale_from_db is None:
-            counter_insert += self.sys_config.db.insert_sale_data([sale_dict])
+            self._access_layer_sale.insert_sale_data([sale_dict])
         else:
-            identical_check = SaleIdenticalCheck(sale, sale_from_db, number_from_db=2)
             today_str = MyDate.get_date_str_from_datetime()
+
+            if sale_from_db.last_check_date == today_str:
+                return
+            identical_check = SaleIdenticalCheck(sale, sale_from_db, number_from_db=2)
+
             if identical_check.are_identical:
                 if sale_from_db.last_check_date != today_str:
-                    counter_update += self.update_last_check_date(sale_from_db, today_str)
+                    self.update_last_check_date(sale_from_db, today_str)
             else:
                 sale_dict[SLDC.COMMENT] = 'Changes: {}'.format(identical_check.different_columns)
                 sale_dict[SLDC.START_DATE] = today_str  # we change the start date since some changes....
-                counter_insert += self.sys_config.db.insert_sale_data([sale_dict])
-        return counter_insert, counter_update
-
-    def __add_sale_to_database_input_list__(self, sale: SalesmanSale, input_list: list):
-        if sale.is_sale_ready_for_sale_table():
-            sale_dict = sale.get_data_dict_for_sale_table()
-            sale_from_db = self.get_sale_from_db_by_sale_id(sale.sale_id)
-            if sale_from_db is None:
-                input_list.append(sale_dict)
-            else:
-                identical_check = SaleIdenticalCheck(sale, sale_from_db, number_from_db=2)
-                today_str = MyDate.get_date_str_from_datetime()
-                if identical_check.are_identical:
-                    if sale_from_db.last_check_date != today_str:
-                        self.update_last_check_date(sale_from_db, today_str)
-                else:
-                    sale_dict[SLDC.COMMENT] = 'Changes: {}'.format(identical_check.different_columns)
-                    sale_dict[SLDC.START_DATE] = today_str  # we change the start date since some changes....
-                    input_list.append(sale_dict)
+                self._access_layer_sale.insert_sale_data([sale_dict])
+        if master_id != '':
+            self._access_layer_sale.insert_or_update_sale_relation_data(
+                sale_from_db.get_data_dict_for_sale_relation_table(master_id))
 
     @staticmethod
     def are_sales_similar(source_sale: SalesmanSale, other_sale: SalesmanSale, with_info=True) -> bool:
@@ -103,16 +90,6 @@ class SalesmanSaleFactory:
             print('...{}: {}'.format(source_sale.sale_id, source_sale.get_value(SLDC.ENTITY_LABELS_DICT)))
             print('...{}: {}'.format(other_sale.sale_id, other_sale.get_value(SLDC.ENTITY_LABELS_DICT)))
         return check.are_sales_similar
-
-    def insert_sale(self, sale: SalesmanSale, master_sale: SalesmanSale = None, enforce_check=True):
-        # ToDo: Regard: Sale does not exist, Sale exists without correct relation, sale exists with relation....
-        if self.is_sale_with_id_available(sale.sale_id):
-            pass
-        else:
-            self._db.insert_data_into_table(self._table.name, input_dict_list)
-
-    def insert_sale_relation(self):
-        pass  # ToDo
 
     def get_sales_from_db_by_sale_state(self, sale_state: str, only_own_sales=False) -> list:
         df = self._access_layer_sale.get_sales_df_by_sale_state(sale_state, only_own_sales)
@@ -203,21 +180,21 @@ class SalesmanSaleFactory:
 
     def get_sale_by_browser_sale_element(self, sale_element, search_labels):
         sale_data_dict = self._web_parser.get_sale_data_dict_by_browser_sale_element(sale_element)
+        sale_data_dict[SLDC.IS_MY_SALE] = True
         return self.__get_sale_by_data_dict__(sale_data_dict, search_labels)
 
     def get_sale_by_file_row(self, row):
         sale_data_dict = {col: row[col] for col in row.index}
+        sale_data_dict[SLDC.IS_MY_SALE] = True
         sale_data_dict[SLDC.LOCATION] = 'virtual'
         sale_data_dict[SLDC.START_DATE] = MyDate.get_date_as_string_from_date_time()
         return self.__get_sale_by_data_dict__(sale_data_dict)
 
     def get_sale_by_db_row(self, row):
         sale_data_dict = {col: row[col] for col in row.index}
-        # sale_data_dict[SLDC.DESCRIPTION] = ''
         return self.__get_sale_by_data_dict__(sale_data_dict, is_from_db=True)
 
     def update_last_check_date(self, sale: SalesmanSale, date_new: str):
-        print('Update last_check_date for {}: {} -> {}'.format(sale.sale_id, sale.last_check_date, date_new))
         self._access_layer_sale.update_sale_last_check_date(sale.sale_id, sale.version, date_new)
 
     def __get_sales_data_dict_for_online_search_api__(self, api):
@@ -241,13 +218,14 @@ class SalesmanSaleFactory:
         return sale_data_dict
 
     def __get_sale_by_data_dict__(self, sale_data_dict: dict, search_labels='', is_from_db=False):
-        sale = self.__get_sale_initialized__(sale_data_dict[SLDC.SALE_ID], search_labels)
+        is_my_offer = sale_data_dict.get(SLDC.IS_MY_SALE, False)
+        sale = self.__get_sale_initialized__(sale_data_dict[SLDC.SALE_ID], search_labels, is_my_offer=is_my_offer)
         sale.add_value_dict(sale_data_dict)
         sale.complete_sale(is_from_db)
         return sale
 
-    def __get_sale_initialized__(self, sale_id: str, found_by_labels=''):
-        sale = SalesmanSale(self._salesman_spacy, self.sys_config, found_by_labels=found_by_labels)
+    def __get_sale_initialized__(self, sale_id: str, found_by_labels='', is_my_offer=False):
+        sale = SalesmanSale(self._salesman_spacy, self.sys_config, found_by_labels=found_by_labels, is_my_sale=is_my_offer)
         sale.set_value(SLDC.SOURCE, self.sale_factory_source)
         sale.set_value(SLDC.SALE_ID, sale_id)
         return sale

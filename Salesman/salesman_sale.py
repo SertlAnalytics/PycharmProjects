@@ -17,13 +17,13 @@ from salesman_tutti.tutti_url_factory import TuttiUrlFactory
 
 
 class SalesmanSale:
-    def __init__(self, spacy: SalesmanSpacy, sys_config: SystemConfiguration, found_by_labels=None, is_my_offer=False):
+    def __init__(self, spacy: SalesmanSpacy, sys_config: SystemConfiguration, found_by_labels=None, is_my_sale=False):
         self.sys_config = sys_config
         self._data_dict_obj = SalesmanDataDictionary(self.sys_config)
         self._salesman_spacy = spacy
         self._salesman_nlp = self._salesman_spacy.nlp
         self._url_factory = TuttiUrlFactory(self.sys_config, self._salesman_spacy)
-        self._is_my_offer = is_my_offer
+        self._is_my_sale = is_my_sale
         self._is_from_db = False
         self._found_by_labels = '' if found_by_labels is None else found_by_labels
         self._product_categories_value_list = []  # is used for online searches as default product categories
@@ -138,6 +138,11 @@ class SalesmanSale:
 
     def get_data_dict_for_sale_table(self) -> dict:
         return self._data_dict_obj.get_data_dict_for_sale_table()
+
+    def get_data_dict_for_sale_relation_table(self, master_id: str):
+        today_string =  MyDate.get_date_str_from_datetime()
+        return {SLDC.SALE_ID: self.sale_id, SLDC.MASTER_ID: master_id, SLDC.START_DATE: today_string,
+                SLDC.END_DATE: '', SLDC.LAST_CHECK_DATE: today_string, SLDC.COMMENT: 'First load'}
 
     def get_data_dict_for_columns(self, columns: list) -> dict:
         return self._data_dict_obj.get_data_dict_for_columns(columns)
@@ -357,15 +362,11 @@ class SalesmanSale:
         print('Number: {}'.format(self.get_value(SLDC.NUMBER)))
         print('New: {}/Used: {} - Conclusion: {}'.format(
             self.get_value(SLDC.IS_NEW), self.get_value(SLDC.IS_USED), self.get_value(SLDC.OBJECT_STATE)))
-        if not self._is_my_offer:
+        if not self._is_my_sale:
             print('Is outlier: {}'.format(self.get_value(SLDC.IS_OUTLIER)))
         print('{}'.format(search_details))
-        if self._is_my_offer:
-            print('Entity names: {}'.format(self._entity_names))
-            print('Entity_label_dict: {}'.format(self._entity_label_dict))
-        else:
-            print('Entity_names: {}'.format(self._entity_names))
-            print('Entity_label_dict: {}'.format(self._entity_label_dict))
+        print('Entity_names: {}'.format(self._entity_names))
+        print('Entity_label_dict: {}'.format(self._entity_label_dict))
 
     def print_data_dict(self):
         print('Data_dict={}'.format(self._data_dict_obj.data_dict))
@@ -384,7 +385,8 @@ class SalesmanSale:
         """
 
     def __init_data_dict_entries__(self):
-        self.set_value(SLDC.SOURCE, SLSRC.TUTTI_CH)
+        self.set_value(SLDC.IS_MY_SALE, self._is_my_sale)
+        self.set_value(SLDC.SOURCE, SLSRC.TUTTI_CH)  # ToDo - get rid of Tutti.ch -- all platforms....
         self.set_value(SLDC.SALE_STATE, SLST.OPEN)
         self.set_value(SLDC.PRODUCT_CATEGORY, '')
         self.set_value(SLDC.PRODUCT_SUB_CATEGORY, '')
@@ -409,6 +411,10 @@ class SalesmanSale:
         for ent in nlp_doc_sale.doc.ents:
             if EL.is_entity_label_relevant_for_salesman(ent.label_):
                 self.add_entity_name_label(ent.text, ent.label_)
+        if nlp_doc_sale.is_for_renting:
+            self.add_entity_name_label('Miete', EL.TARGET_GROUP)
+        if nlp_doc_sale.is_for_selling:
+            self.add_entity_name_label('Kauf', EL.TARGET_GROUP)
         self.reduce_search_labels_by_entity_names()
 
     def __add_data_dict_entries_to_sale_from_doc__(self, nlp_doc_sale: DocExtended):
@@ -454,7 +460,7 @@ class SalesmanSale:
         return price_single
 
     def __get_visits_bookmarks_and_search_details_for_printing__(self):
-        if self._is_my_offer:
+        if self._is_my_sale:
             visits_bookmarks = ', {} Besuche, {} Merkliste'.format(
                 self.get_value(SLDC.VISITS), self.get_value(SLDC.BOOK_MARKS))
             search_details = ', Search labels: {}'.format(self._search_labels)

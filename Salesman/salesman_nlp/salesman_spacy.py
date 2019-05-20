@@ -9,6 +9,8 @@ from spacy.tokens import Doc, Span
 from spacy.matcher import PhraseMatcher
 from sertl_analytics.constants.salesman_constants import EL, POS
 from entities.salesman_named_entity import SalesmanEntityHandler
+from matcher.tutti_matcher_4_is_for_selling import TuttiMatcher4Selling
+from matcher.tutti_matcher_4_is_for_renting import TuttiMatcher4Renting
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
 from matcher.tutti_matcher_4_is_like_new import TuttiMatcher4IsLikeNew
 from matcher.tutti_matcher_4_is_used import TuttiMatcher4IsUsed
@@ -18,7 +20,7 @@ from matcher.tutti_matcher_4_number import TuttiMatcher4Number
 from matcher.tutti_matcher_4_is_total_price import TuttiMatcher4IsTotalPrice
 from matcher.tutti_matcher_4_is_single_price import TuttiMatcher4IsSinglePrice
 from matcher.tutti_matcher_4_single_prize import TuttiMatcher4PriceSingle
-from matcher.tutti_matcher_4_cover_available import TuttiMatcher4CoverAvailable
+from matcher.tutti_matcher_4_is_cover_available import TuttiMatcher4CoverAvailable
 from matcher.tutti_matcher_4_age import TuttiMatcher4Age
 from matcher.tutti_matcher_4_usage import TuttiMatcher4Usage
 from matcher.tutti_matcher_4_warranty import TuttiMatcher4Warranty
@@ -271,6 +273,8 @@ class SalesmanSpacy:
         Doc.set_extension('number', getter=self.__get_number__)
         Doc.set_extension('first_pos_number', getter=self.__get_fist_pos_number__)
         Doc.set_extension('price_original', getter=self.__get_price_original__)
+        Doc.set_extension('is_for_renting', getter=self.__is_for_renting__)
+        Doc.set_extension('is_for_selling', getter=self.__is_for_selling__)
         Doc.set_extension('is_new', getter=self.__is_new__)
         Doc.set_extension('is_like_new', getter=self.__is_like_new__)
         Doc.set_extension('is_used', getter=self.__is_used__)
@@ -299,6 +303,12 @@ class SalesmanSpacy:
 
     def __get_price_original__(self, doc):
         return TuttiMatcher4PriceOriginal(self._nlp).get_pattern_result_for_doc(doc)
+
+    def __is_for_selling__(self, doc):
+        return TuttiMatcher4Selling(self._nlp).get_pattern_result_for_doc(doc)
+
+    def __is_for_renting__(self, doc):
+        return TuttiMatcher4Renting(self._nlp).get_pattern_result_for_doc(doc)
 
     def __is_new__(self, doc):
         return TuttiMatcher4IsNew(self._nlp).get_pattern_result_for_doc(doc)

@@ -43,7 +43,7 @@ class SaleTable(MyTable):
     def _add_columns_(self):
         self._columns.append(MyTableColumn(SLDC.SALE_ID, CDT.STRING, 20))
         self._columns.append(MyTableColumn(SLDC.VERSION, CDT.INTEGER))
-        self._columns.append(MyTableColumn(SLDC.MASTER_ID, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.IS_MY_SALE, CDT.BOOLEAN))
         self._columns.append(MyTableColumn(SLDC.SOURCE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(SLDC.REGION, CDT.STRING, 50))
         self._columns.append(MyTableColumn(SLDC.PRODUCT_CATEGORY, CDT.STRING, 50))
@@ -84,8 +84,8 @@ class SaleRelationTable(MyTable):
         self._columns.append(MyTableColumn(SLDC.MASTER_ID, CDT.STRING, 20))
         self._columns.append(MyTableColumn(SLDC.CHILD_ID, CDT.STRING, 20))
         self._columns.append(MyTableColumn(SLDC.START_DATE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(SLDC.RELATION_STATE, CDT.STRING, 20))
-        self._columns.append(MyTableColumn(SLDC.STATE_DATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.END_DATE, CDT.STRING, 20))
+        self._columns.append(MyTableColumn(SLDC.LAST_CHECK_DATE, CDT.STRING, 20))
         self._columns.append(MyTableColumn(SLDC.COMMENT, CDT.STRING, 200))
 
 

@@ -153,7 +153,7 @@ class SystemConfiguration:
             if self.period_aggregation <= 5:
                 return 0.0005
             else:
-                return 0.001
+                return 0.003
         return 0.005
 
     def get_value_categorizer_tolerance_pct_equal(self):

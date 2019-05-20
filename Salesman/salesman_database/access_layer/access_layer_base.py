@@ -16,6 +16,9 @@ class AccessLayer:
     def __init__(self, db: SalesmanDatabase=None):
         self._db = SalesmanDatabase() if db is None else db
         self._table = self.__get_table__()
+        self._counter_insert = 0
+        self._counter_update = 0
+        self._counter_delete = 0
 
     @property
     def table_name(self):
@@ -24,6 +27,23 @@ class AccessLayer:
     @property
     def view_name(self):
         return ''
+
+    @property
+    def counter_insert(self):
+        return self._counter_insert
+
+    @property
+    def counter_update(self):
+        return self._counter_update
+
+    @property
+    def counter_delete(self):
+        return self._counter_delete
+
+    def reset_counters(self):
+        self._counter_insert = 0
+        self._counter_update = 0
+        self._counter_delete = 0
 
     def get_all_as_data_frame(self, index_col='', columns=None, where_clause=''):
         selected_columns = '*' if columns is None else ','.join(columns)
@@ -57,24 +77,24 @@ class AccessLayer:
         return df
 
     def insert_data(self, input_dict_list: list):
-        return self._db.insert_data_into_table(self._table.name, input_dict_list)
+        self._counter_insert += self._db.insert_data_into_table(self._table.name, input_dict_list)
 
     def update_record(self, record_id: str, data_dict: dict):
         # Syntax: UPDATE users SET field1='value1', field2='value2'
-        pass
+        self._counter_update += 1
 
     def delete_record_by_id(self, record_id: str):
-        pass
+        self._counter_delete += 1
 
     def delete_record_by_rowid(self, rowid: int):
         query = self._table.get_query_delete_by_row_id(rowid)
         print(query)
-        self._db.delete_records(query)
+        self._counter_delete += self._db.delete_records(query)
 
     def delete_existing_record(self, data_dict: dict):
         df = self.__get_data_frame_with_row_id__(data_dict)
         if df.shape[0] > 0:
-            self.delete_record_by_rowid(df.iloc[0][DC.ROWID])
+            self._counter_delete += self.delete_record_by_rowid(df.iloc[0][DC.ROWID])
         else:
             print('Nothing to delete for table {}: {}'.format(self._table.name, data_dict))
 

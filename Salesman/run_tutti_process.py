@@ -21,13 +21,13 @@ sys_config.print_details = False
 sys_config.plot_results = True
 
 api = SalesmanSearchApi('')
-api.region_value = sys_config.region_categorizer.get_value_for_category(REGION.GANZE_SCHWEIZ)
-# api.category_value = sys_config.product_categorizer.get_value_for_category(PRCAT.CHILD)
+api.region_value = sys_config.region_categorizer.get_value_for_category(REGION.AARGAU)
+api.category_value = sys_config.product_categorizer.get_value_for_category(PRCAT.REAL_ESTATE)
 # api.sub_category_value = sys_config.product_categorizer.get_sub_category_value_for_sub_category(
 #     PRCAT.CHILD, PRSUBCAT.CHILD_CLOTHES)
 
 tutti = Tutti(sys_config)
-# tutti.check_my_nth_sale_in_browser_against_similar_sales(1)
+tutti.check_my_nth_sale_in_browser_against_similar_sales(1)
 # tutti.check_my_nth_sale_in_browser_against_similar_sales(4)
 # tutti.check_my_sales_against_similar_sales()
 # tutti.check_my_nth_virtual_sale_against_similar_sales(1)
@@ -41,7 +41,7 @@ master_sale_id = '24325487'
 # tutti.check_similar_sales_in_db_against_master_sale_in_db()
 # tutti.check_sale_on_platform_against_similar_sales_by_sale_id(sale_id)
 
-tutti.check_sales_for_similarity_by_sale_id('1558185369', '23623611')
+# tutti.check_sales_for_similarity_by_sale_id('1558185369', '23623611')
 
 # api.search_string = 'Leder Handtasche von Gucci und Mango und Even&Odd und H&M, Wenig gebraucht. Für 100.- statt 200.-'
 # api.search_string = 'Fritz Hansen / Jacobsen - Serie 7 Stuhl / 6 Stk. / Original + neuwertig, Für 100.- statt 200.-'
@@ -52,7 +52,8 @@ tutti.check_sales_for_similarity_by_sale_id('1558185369', '23623611')
 # api.search_string = 'Dyson hot+cool AM09'
 # api.search_string = "Hape, Kugelbahn 'The Roundabout' 91-teilig"
 # api.search_string = "Gesucht 4.5 Zimmer Wohnung in Wettingen oder Baden"
-api.search_string = "Nespresso Pixie Kaffeemaschine von DeLonghi"
+# api.search_string = "Nespresso Pixie Kaffeemaschine von DeLonghi"
+api.search_string = 'haus zur miete'
 # api.search_string = 'Wir suchen Tiersitting für Hamster'
 # api.search_string = "Damen Hut von Risa, Grösse 56, etwas Besonderes"
 # api.search_string = 'Wilde+Spieth, Stuhl, SE 68 Multi Purpose Chair'

@@ -112,7 +112,7 @@ class TargetGroupEntity(NamedEntity):
             'Baby', 'Babies'            
             'Gewerbe',
             'Privat', 'Arbeit',
-            'Miete', 'Kauf', 'Leasing', 'Wohnen auf Zeit',
+            'Miete', 'Kauf', 'Leasing', 'Wohnen auf Zeit', 'Miete auf Zeit',
         ]
 
     @staticmethod

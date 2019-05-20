@@ -325,19 +325,6 @@ class Tutti:
     def __write_to_database__(self, sales: list, enforce_writing=False):
         self._sale_factory.write_sales_after_checks_to_db(sales, self._current_source_sale, enforce_writing)
 
-        # if not (self.sys_config.write_to_database or enforce_writing):
-        #     return
-        # input_list = []
-        # if self._current_source_sale is not None:
-        #     self.__add_sale_to_database_input_list__(self._current_source_sale, input_list)
-        # for sale in sales:
-        #     self.__add_sale_to_database_input_list__(sale, input_list)
-        # try:
-        #     if len(input_list) > 0:
-        #         self.sys_config.db.insert_sale_data(input_list)
-        # finally:
-        #     print('{} sales written to database...'.format(len(input_list)))
-
     def __write_sale_to_database__(self, sale: SalesmanSale):
         self.__write_to_database__([sale], enforce_writing=True)
 

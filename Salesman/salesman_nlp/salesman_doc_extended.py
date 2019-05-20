@@ -16,6 +16,8 @@ class DocExtended:
         self.usage = self._doc._.usage
         self.warranty = self._doc._.warranty
         self.number = self._doc._.number
+        self.is_for_renting = self._doc._.is_for_renting
+        self.is_for_selling = self._doc._.is_for_selling
         self.is_new = self._doc._.is_new
         self.is_like_new = self._doc._.is_like_new
         self.is_cover_available = self._doc._.is_cover_available
