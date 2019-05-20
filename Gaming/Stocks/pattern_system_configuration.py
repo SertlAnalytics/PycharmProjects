@@ -142,21 +142,27 @@ class SystemConfiguration:
 
     def get_value_categorizer_tolerance_pct(self):
         if self.period == PRD.INTRADAY:
-            if self.period_aggregation < 5:
-                return 0.0002
-            elif self.period_aggregation == 5:
+            if self.period_aggregation <= 5:
+                return 0.0005
+            else:
+                return 0.01  # old: 0.001
+        return 0.01  # orig: 0.005
+
+    def get_value_categorizer_tolerance_pct_buying(self):
+        if self.period == PRD.INTRADAY:
+            if self.period_aggregation <= 5:
                 return 0.0005
             else:
                 return 0.001
-        return 0.005  # orig: 0.005
+        return 0.005
 
     def get_value_categorizer_tolerance_pct_equal(self):
         if self.period == PRD.INTRADAY:
             if self.period_aggregation <= 5:
                 return 0.001
             else:
-                return 0.002
-        return 0.005  # orig: 0.005
+                return 0.01  # old: 0.002
+        return 0.01  # orig: 0.005
 
     @property
     def expected_win_pct(self):

@@ -51,7 +51,7 @@ class SalesmanDatabase(BaseDatabase):
         return os.path.join(package_dir, self.__get_db_name__())
 
     def insert_sale_data(self, input_dict_list: list):
-        self.__insert_data_into_table__(SMTBL.SALE, input_dict_list)
+        return self.__insert_data_into_table__(SMTBL.SALE, input_dict_list)
 
     def insert_company_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.COMPANY, input_dict_list)

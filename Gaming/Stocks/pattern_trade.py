@@ -427,7 +427,7 @@ class PatternTrade:
         if self.pattern.pattern_type in [FT.TKE_BOTTOM, FT.FIBONACCI_DESC]:
             return SVC.H_M_in if self.buy_trigger == BT.TOUCH_POINT else SVC.H_U_out
         else:
-            return SVC.M_in if self.buy_trigger == BT.TOUCH_POINT else SVC.U_out
+            return SVC.M_in if self.buy_trigger == BT.TOUCH_POINT else SVC.B_U_out  # old: SVC.U_out (before 2019-05-20)
 
     def is_actual_ticker_wrong_breakout(self, process: str):
         wave_tick = self.wave_tick_actual
@@ -460,7 +460,7 @@ class PatternTrade:
         if self.pattern.pattern_type in [FT.TKE_BOTTOM, FT.FIBONACCI_DESC]:
             return SVC.H_L_out
         else:
-            return SVC.L_out
+            return SVC.B_L_out  # old: SVC.L_out (before 2019-05-20)
 
     def __get_value_category_for_watch_breakout__(self):
         if self.pattern.pattern_type in [FT.TKE_BOTTOM, FT.FIBONACCI_DESC]:

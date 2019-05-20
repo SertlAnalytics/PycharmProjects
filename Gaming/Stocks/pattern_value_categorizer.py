@@ -20,6 +20,7 @@ class ValueCategorizer:
     def __init__(self, sys_config: SystemConfiguration, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower):
         self.sys_config = sys_config
         self._tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
+        self._tolerance_pct_buying = self.sys_config.get_value_categorizer_tolerance_pct_buying()
         self._tolerance_pct_equal = self.sys_config.get_value_categorizer_tolerance_pct_equal()
         self.df = df
         self.df_length = self.df.shape[0]
@@ -121,7 +122,8 @@ class ValueCategorizer:
         return self.__get_value_range_for_category__(data_series, value_category)
 
     def __get_value_range_for_category__(self, row, value_category: str):
-        lower_pct, upper_pct  = 1 - self._tolerance_pct, 1 + self._tolerance_pct
+        lower_pct, upper_pct = 1 - self._tolerance_pct, 1 + self._tolerance_pct
+        lower_pct_buying, upper_pct_buying = 1 - self._tolerance_pct_buying, 1 + self._tolerance_pct_buying
         if value_category == SVC.U_out:
             return row[CN.F_UPPER] * upper_pct, math.inf
         elif value_category == SVC.U_on:
@@ -140,6 +142,10 @@ class ValueCategorizer:
             return row[CN.H_LOWER] * upper_pct, row[CN.H_UPPER] * lower_pct
         elif value_category == SVC.H_L_out:
             return -math.inf, row[CN.H_LOWER] * lower_pct
+        elif value_category == SVC.B_U_out:
+            return row[CN.F_UPPER] * upper_pct_buying, math.inf
+        elif value_category == SVC.B_L_out:
+            return -math.inf, row[CN.F_LOWER] * lower_pct_buying
         else:
             return 0, 0
 

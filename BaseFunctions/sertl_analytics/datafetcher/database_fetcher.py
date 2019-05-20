@@ -340,8 +340,10 @@ class BaseDatabase:
         metadata = MetaData()
         table_object = Table(table_name, metadata, autoload=True, autoload_with=self.engine)
         stmt = insert(table_object)
-        counter = self.__handle_connection_execution__(connection, stmt, insert_data_dic_list)
-        connection.close()
+        try:
+            counter = self.__handle_connection_execution__(connection, stmt, insert_data_dic_list)
+        finally:
+            connection.close()
         if counter > 1:  # we don't want to have single entries in the log
             self._file_log.log_message('Loaded into {}: {} records.'.format(table_name, counter), 'Insert')
         return counter

@@ -76,6 +76,8 @@ class MyHTMLSystemConfigurationTable(MyHTMLConfigurationTable):
                                     self.config.get_value_categorizer_tolerance_pct())
         self.__add_key_value_pair__('value_categorizer_tolerance_pct_equal',
                                     self.config.get_value_categorizer_tolerance_pct_equal())
+        self.__add_key_value_pair__('value_categorizer_tolerance_pct_buying',
+                                    self.config.get_value_categorizer_tolerance_pct_buying())
         self.__add_key_value_pair__('ticker_dict', self.config.ticker_dict)
         self.__add_key_value_pair__('from_db', self.config.from_db)
         self.__add_key_value_pair__('_period', self.config.period)

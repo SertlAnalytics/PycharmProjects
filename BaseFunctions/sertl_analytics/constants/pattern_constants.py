@@ -783,6 +783,8 @@ class SVC(ValueCategories):  # Stock value categories:
     L_out = 'Low_out'
     H_in = 'Helper_in'
     H_on = 'Helper_on'
+    B_U_out = 'Buy_Upper_out'
+    B_L_out = 'Buy_Lower_out'
     H_U_out = 'Helper_Upper_out'
     H_U_in = 'Helper_Upper_in'
     H_U_on = 'Helper_Upper_on'

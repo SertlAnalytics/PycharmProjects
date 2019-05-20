@@ -202,7 +202,6 @@ class PatternFunctionContainer:
         pass
 
     def get_upper_value(self, f_var: float, with_smart_rounding=False):
-        # ToDo - get rid of with_smart_rounding - always this way - currently we face problems with pattern detection
         if with_smart_rounding or True:
             return MyMath.round_smart(self._f_upper(f_var))
         return round(self._f_upper(f_var), 2)

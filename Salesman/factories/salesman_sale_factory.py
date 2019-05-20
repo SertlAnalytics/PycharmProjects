@@ -41,6 +41,60 @@ class SalesmanSaleFactory:
             return False
         return self.are_sales_similar(sale_01, sale_02, True)
 
+    def write_sales_after_checks_to_db(self, sales: list, sale_master: SalesmanSale=None, enforce_writing=False):
+        counter_insert_total, counter_update_total = 0, 0
+        if sale_master is not None:
+            counter_insert, counter_update = self.write_sale_after_checks_to_db(
+                sale_master, enforce_writing=enforce_writing)
+            counter_insert_total += counter_insert
+            counter_update_total += counter_update_total
+        for sale in sales:
+            counter_insert, counter_update = self.write_sale_after_checks_to_db(
+                sale, sale_master, enforce_writing)
+            counter_insert_total += counter_insert
+            counter_update_total += counter_update_total
+        print('Database sale transactions: insert={}, updates={}'.format(counter_insert_total, counter_update_total))
+        return counter_insert_total, counter_update_total
+
+    def write_sale_after_checks_to_db(self, sale: SalesmanSale, sale_master: SalesmanSale=None, enforce_writing=False):
+        if not(self.sys_config.write_to_database or enforce_writing):
+            return
+        if not sale.is_sale_ready_for_sale_table():
+            return
+        sale_dict = sale.get_data_dict_for_sale_table()
+        sale_from_db = self.get_sale_from_db_by_sale_id(sale.sale_id)
+        counter_insert, counter_update = 0, 0
+        if sale_from_db is None:
+            counter_insert += self.sys_config.db.insert_sale_data([sale_dict])
+        else:
+            identical_check = SaleIdenticalCheck(sale, sale_from_db, number_from_db=2)
+            today_str = MyDate.get_date_str_from_datetime()
+            if identical_check.are_identical:
+                if sale_from_db.last_check_date != today_str:
+                    counter_update += self.update_last_check_date(sale_from_db, today_str)
+            else:
+                sale_dict[SLDC.COMMENT] = 'Changes: {}'.format(identical_check.different_columns)
+                sale_dict[SLDC.START_DATE] = today_str  # we change the start date since some changes....
+                counter_insert += self.sys_config.db.insert_sale_data([sale_dict])
+        return counter_insert, counter_update
+
+    def __add_sale_to_database_input_list__(self, sale: SalesmanSale, input_list: list):
+        if sale.is_sale_ready_for_sale_table():
+            sale_dict = sale.get_data_dict_for_sale_table()
+            sale_from_db = self.get_sale_from_db_by_sale_id(sale.sale_id)
+            if sale_from_db is None:
+                input_list.append(sale_dict)
+            else:
+                identical_check = SaleIdenticalCheck(sale, sale_from_db, number_from_db=2)
+                today_str = MyDate.get_date_str_from_datetime()
+                if identical_check.are_identical:
+                    if sale_from_db.last_check_date != today_str:
+                        self.update_last_check_date(sale_from_db, today_str)
+                else:
+                    sale_dict[SLDC.COMMENT] = 'Changes: {}'.format(identical_check.different_columns)
+                    sale_dict[SLDC.START_DATE] = today_str  # we change the start date since some changes....
+                    input_list.append(sale_dict)
+
     @staticmethod
     def are_sales_similar(source_sale: SalesmanSale, other_sale: SalesmanSale, with_info=True) -> bool:
         check = SaleSimilarityCheck(source_sale, other_sale)
