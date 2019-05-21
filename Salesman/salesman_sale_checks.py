@@ -65,6 +65,11 @@ class SaleSimilarityCheck:
         self._sale_source = sale_source
         self._sale_to_be_checked = sale_to_check
         self._are_sales_similar, self._similar_label = self.__are_sales_similar__()
+        self._source_length_dict = {}
+        self._to_check_length_dict = {}
+        self._is_similar_dict = {}
+        self._is_identical_dict = {}
+        self._is_identical_or_similar_dict = {}
 
     @property
     def are_sales_similar(self) -> bool:
@@ -79,41 +84,50 @@ class SaleSimilarityCheck:
                       EL.COLOR, EL.MATERIAL, EL.OBJECT]
         checker_dict = {label: SaleSimilarityCheck4EntityLabel(self._sale_source, self._sale_to_be_checked, label)
                         for label in check_list}
-        source_length_dict = {label: checker.elements_sale_source for label, checker in checker_dict.items()}
-        is_similar_dict = {
+
+        self._source_length_dict = {label: checker.elements_sale_source for label, checker in checker_dict.items()}
+        self._to_check_length_dict = {label: checker.elements_sale_to_be_checked for label, checker in checker_dict.items()}
+
+        self._is_similar_dict = {
             label: checker.is_sale_to_be_checked_similar_to_source for label, checker in checker_dict.items()}
-        is_identical_dict = {
+        self._is_identical_dict = {
             label: checker.is_sale_to_be_checked_identical_to_source for label, checker in checker_dict.items()}
-        is_identical_or_similar_dict = {
-            label: is_similar_dict[label] or is_identical_dict[label] for label in checker_dict}
+        self._is_identical_or_similar_dict = {
+            label: self._is_similar_dict[label] or self._is_identical_dict[label] for label in checker_dict}
 
-        similar_label_list = [label for label in check_list if is_similar_dict[label]]
+        similar_label_list = [label for label in check_list if self._is_similar_dict[label]]
 
-        if not is_identical_or_similar_dict[EL.PROPERTY]:
+        if not self._is_identical_or_similar_dict[EL.PROPERTY]:
             return False, EL.PROPERTY
 
-        if source_length_dict[EL.TARGET_GROUP] > 0 and not is_identical_or_similar_dict[EL.TARGET_GROUP]:
+        if  self._source_length_dict[EL.TARGET_GROUP] > 0 and not self._is_identical_or_similar_dict[EL.TARGET_GROUP]:
             return False, EL.TARGET_GROUP
 
         for label in similar_label_list:
             if label == EL.ANIMAL:
-                return is_identical_or_similar_dict[EL.PROPERTY] \
-                       and is_identical_or_similar_dict[EL.JOB] and is_identical_or_similar_dict[EL.OBJECT], label
+                return self._is_identical_or_similar_dict[EL.PROPERTY] \
+                       and self.__are_two_label_conditions_fulfilled__(EL.JOB, EL.OBJECT), label
             elif label == EL.JOB:
-                return is_identical_or_similar_dict[EL.ANIMAL] and is_identical_or_similar_dict[EL.COMPANY]
+                return self.__are_two_label_conditions_fulfilled__(EL.ANIMAL, EL.COMPANY), label
             elif label == EL.COMPANY:
-                return (is_identical_or_similar_dict[EL.PRODUCT]) or \
-                       (is_identical_or_similar_dict[EL.MATERIAL] and is_identical_or_similar_dict[EL.TARGET_GROUP]) or \
-                       (is_identical_or_similar_dict[EL.PROPERTY] and is_identical_or_similar_dict[EL.OBJECT]), label
+                return (self._is_identical_or_similar_dict[EL.PRODUCT]) or \
+                       (self.__are_two_label_conditions_fulfilled__(EL.MATERIAL, EL.TARGET_GROUP)) or \
+                       (self.__are_two_label_conditions_fulfilled__(EL.PROPERTY, EL.OBJECT)), label
             elif label == EL.PRODUCT:
-                return (is_identical_or_similar_dict[EL.COMPANY]) or \
-                       (is_identical_or_similar_dict[EL.MATERIAL] and is_identical_or_similar_dict[EL.TARGET_GROUP]) or \
-                       (is_identical_or_similar_dict[EL.PROPERTY] and is_identical_or_similar_dict[EL.OBJECT]), label
+                return (self._is_identical_or_similar_dict[EL.COMPANY]) or \
+                       (self.__are_two_label_conditions_fulfilled__(EL.MATERIAL, EL.TARGET_GROUP)) or \
+                       (self.__are_two_label_conditions_fulfilled__(EL.PROPERTY, EL.OBJECT)), label
             elif label in [EL.TARGET_GROUP, EL.COLOR]:
-                return is_identical_or_similar_dict[EL.PROPERTY] and is_identical_or_similar_dict[EL.OBJECT], label
+                return self.__are_two_label_conditions_fulfilled__(EL.PROPERTY, EL.OBJECT), label
             else:
                 return True, label
         return False, ''
+
+    def __are_two_label_conditions_fulfilled__(self, label_01: str, label_02: str):
+        if self._is_identical_or_similar_dict[label_01] and self._is_identical_or_similar_dict[label_02]:
+            return max(self._source_length_dict[label_01], self._to_check_length_dict[label_01],
+                       self._source_length_dict[label_02], self._to_check_length_dict[label_02]) > 0
+        return False
 
 
 class SaleIdenticalCheck:

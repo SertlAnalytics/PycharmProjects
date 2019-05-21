@@ -37,7 +37,7 @@ class TC:
     TC_MATCHER_WARRANTY = 'TC_MATCHER_WARRANTY'
 
 
-tc = TC.TC_MATCHER_SIZE
+tc = TC.TC_MATCHER_ORIGINAL_PRICE
 
 spacy = SalesmanSpacy()
 
@@ -52,7 +52,7 @@ elif tc == TC.TC_MATCHER_IS_USED:
     matcher.run_test(spacy, False)
 elif tc == TC.TC_MATCHER_SIZE:
     matcher = TuttiMatcher4Size(spacy.nlp)
-    matcher.run_test(spacy, True)
+    matcher.run_test(spacy, False)
 elif tc == TC.TC_MATCHER_ORIGINAL_PRICE:
     matcher = TuttiMatcher4PriceOriginal(spacy.nlp)
     matcher.run_test(spacy, False)
@@ -64,7 +64,7 @@ elif tc == TC.TC_MATCHER_SINGLE_PRICE:
     matcher.run_test(spacy, False)
 elif tc == TC.TC_MATCHER_IS_TOTAL_PRICE:
     matcher = TuttiMatcher4IsTotalPrice(spacy.nlp)
-    matcher.run_test(spacy, True)
+    matcher.run_test(spacy, False)
 elif tc == TC.TC_MATCHER_COVER_AVAILABLE:
     matcher = TuttiMatcher4CoverAvailable(spacy.nlp)
     matcher.run_test(spacy, False)

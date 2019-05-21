@@ -87,6 +87,8 @@ class SalesmanWebParser:
         tree = html.fromstring(request.content)
         product_categories = tree.xpath('//span[@class="{}"]'.format(SLSCLS.PRODUCT_CATEGORIES))
         sales = tree.xpath('//div[@class="{}"]'.format(SLSCLS.OFFERS))
+        if len(sales) == 0:
+            return {}
         sale_data_dict = self.__get_sale_data_dict_for_sale_id_by_html_element__(sales[0], product_categories)
         if len(sale_data_dict) == 0:
             return sale_data_dict

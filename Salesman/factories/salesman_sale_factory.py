@@ -41,6 +41,9 @@ class SalesmanSaleFactory:
             return False
         return self.are_sales_similar(sale_01, sale_02, True)
 
+    def update_sale_relation_end_date(self, sale_id: str, master_id: str, end_date: str):
+        self._access_layer_sale.update_sale_relation_end_date(sale_id, master_id, end_date)
+
     def write_sales_after_checks_to_db(self, sales: list, sale_master: SalesmanSale=None, enforce_writing=False):
         if not(self.sys_config.write_to_database or enforce_writing):
             return
@@ -49,9 +52,8 @@ class SalesmanSaleFactory:
         if sale_master is not None:
             self.write_sale_after_checks_to_db(sale_master, enforce_writing=enforce_writing)
         for sale in sales:
-            self.write_sale_after_checks_to_db(sale, sale_master, enforce_writing)
-        print('Sale transactions: insert={}, updates={}'.format(
-            self._access_layer_sale.counter_insert, self._access_layer_sale.counter_update))
+            self.write_sale_after_checks_to_db(sale, sale_master=sale_master, enforce_writing=enforce_writing)
+        self._access_layer_sale.print_transaction_statistics('Sale transactions: ')
 
     def write_sale_after_checks_to_db(self, sale: SalesmanSale, sale_master: SalesmanSale=None, enforce_writing=False):
         if not(self.sys_config.write_to_database or enforce_writing):
@@ -67,7 +69,7 @@ class SalesmanSaleFactory:
         else:
             today_str = MyDate.get_date_str_from_datetime()
 
-            if sale_from_db.last_check_date == today_str:
+            if sale_from_db.last_check_date == today_str and not enforce_writing:
                 return
             identical_check = SaleIdenticalCheck(sale, sale_from_db, number_from_db=2)
 
@@ -80,7 +82,7 @@ class SalesmanSaleFactory:
                 self._access_layer_sale.insert_sale_data([sale_dict])
         if master_id != '':
             self._access_layer_sale.insert_or_update_sale_relation_data(
-                sale_from_db.get_data_dict_for_sale_relation_table(master_id))
+                [sale.get_data_dict_for_sale_relation_table(master_id)])
 
     @staticmethod
     def are_sales_similar(source_sale: SalesmanSale, other_sale: SalesmanSale, with_info=True) -> bool:
@@ -98,6 +100,11 @@ class SalesmanSaleFactory:
         for idx, row in df.iterrows():
             sales.append(self.get_sale_by_db_row(row))
         return sales
+
+    def delete_all_test_cases_in_db(self):
+        self._access_layer_sale.reset_counters()
+        self._access_layer_sale.delete_all_test_cases_in_db()
+        self._access_layer_sale.print_transaction_statistics('Deleted test cases before starting test: ')
 
     def get_similar_sales_for_master_sale_from_db(self, master_sale: SalesmanSale):
         df = self._access_layer_sale.get_sales_df_by_master_sale_id(master_sale.sale_id)
@@ -218,14 +225,14 @@ class SalesmanSaleFactory:
         return sale_data_dict
 
     def __get_sale_by_data_dict__(self, sale_data_dict: dict, search_labels='', is_from_db=False):
-        is_my_offer = sale_data_dict.get(SLDC.IS_MY_SALE, False)
-        sale = self.__get_sale_initialized__(sale_data_dict[SLDC.SALE_ID], search_labels, is_my_offer=is_my_offer)
+        is_my_sale = sale_data_dict.get(SLDC.IS_MY_SALE, False)
+        sale = self.__get_sale_initialized__(sale_data_dict[SLDC.SALE_ID], search_labels, is_my_sale=is_my_sale)
         sale.add_value_dict(sale_data_dict)
         sale.complete_sale(is_from_db)
         return sale
 
-    def __get_sale_initialized__(self, sale_id: str, found_by_labels='', is_my_offer=False):
-        sale = SalesmanSale(self._salesman_spacy, self.sys_config, found_by_labels=found_by_labels, is_my_sale=is_my_offer)
+    def __get_sale_initialized__(self, sale_id: str, found_by_labels='', is_my_sale=False):
+        sale = SalesmanSale(self._salesman_spacy, self.sys_config, found_by_labels=found_by_labels, is_my_sale=is_my_sale)
         sale.set_value(SLDC.SOURCE, self.sale_factory_source)
         sale.set_value(SLDC.SALE_ID, sale_id)
         return sale

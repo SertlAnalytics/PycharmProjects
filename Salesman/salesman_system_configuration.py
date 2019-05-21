@@ -34,9 +34,9 @@ class SystemConfiguration:
         self.sales_result_file_name = "similar_result.xlsx"
         self.sound_machine = SalesmanSoundMachine()
         self.db = SalesmanDatabase()
-        self.access_layer_sale = AccessLayer4Sale(self.db)
-        self.access_layer_entity_category = AccessLayer4EntityCategory(self.db)
-        self.access_layer_file = MySalesAccessLayerFile(self.virtual_sales_file_path)
+        self.access_layer_sale = AccessLayer4Sale(self.db, is_for_test=self.is_for_test)
+        self.access_layer_entity_category = AccessLayer4EntityCategory(self.db, is_for_test=self.is_for_test)
+        self.access_layer_file = MySalesAccessLayerFile(self.virtual_sales_file_path, is_for_test=self.is_for_test)
         self.number_allowed_search_results = 200
         self.sale_table = SaleTable()
         self.company_table = CompanyTable()
@@ -50,6 +50,10 @@ class SystemConfiguration:
         self.outlier_threshold = 25  # percentile below this threshold and above on top, i.e. < 15 and above 85 for 15
 
     @property
+    def is_for_test(self):
+        return False
+
+    @property
     def virtual_sales_file_path(self):
         return self.file_handler.get_file_path_for_file(self.virtual_sales_file_name)
 
@@ -57,6 +61,12 @@ class SystemConfiguration:
     def deactivate_log_and_database():
         SalesmanLog.log_activated = False
         SalesmanDatabase.database_activated = False
+
+
+class SystemConfigurationForTest(SystemConfiguration):
+    @property
+    def is_for_test(self):
+        return True
 
 
 debugger = SalesmanDebugger()

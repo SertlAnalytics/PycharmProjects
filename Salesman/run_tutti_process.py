@@ -27,16 +27,17 @@ api.category_value = sys_config.product_categorizer.get_value_for_category(PRCAT
 #     PRCAT.CHILD, PRSUBCAT.CHILD_CLOTHES)
 
 tutti = Tutti(sys_config)
-tutti.check_my_nth_sale_in_browser_against_similar_sales(1)
+# tutti.check_my_nth_sale_in_browser_against_similar_sales(1)
 # tutti.check_my_nth_sale_in_browser_against_similar_sales(4)
 # tutti.check_my_sales_against_similar_sales()
 # tutti.check_my_nth_virtual_sale_against_similar_sales(1)
 # tutti.check_my_virtual_sales_against_similar_sales()
-sale_id = '27124330'  # Pixie: 27943008 Schlafsack: 27959857 Schöffel: 27960542, Meda Stuhl: 27124330, Jakobsen: 28017241
+sale_id = '27993639'  # Pixie: 27943008 Schlafsack: 27959857 Schöffel: 27960542, Meda Stuhl: 27124330, Jakobsen: 28017241
 # Kugelbahn: 27993639, Sunrise Tower: 28105850
 # tutti.print_details_for_tutti_sale_id(sale_id, with_data_dict=True)
 # tutti.check_sale_on_platform_against_sale_in_db_by_sale_id(sale_id, write_to_db=False)
-# tutti.check_sale_in_db_against_similar_sales_by_sale_id(sale_id)
+sale = tutti.get_sale_from_db_by_sale_id(sale_id)
+# tutti.check_sale_in_db_against_similar_sales_on_platform_by_sale_id(sale_id)
 master_sale_id = '24325487'
 # tutti.check_similar_sales_in_db_against_master_sale_in_db()
 # tutti.check_sale_on_platform_against_similar_sales_by_sale_id(sale_id)

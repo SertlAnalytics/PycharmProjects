@@ -54,6 +54,7 @@ class CustomTokenizer:
     @property
     def replacement_dict(self) -> dict:
         return {
+            'Fr ': 'CHF ',
             'Fr.': 'CHF',
             ',--': '.-',
             ',-': '.-',

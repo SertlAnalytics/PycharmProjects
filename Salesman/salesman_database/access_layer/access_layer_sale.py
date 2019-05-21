@@ -25,7 +25,7 @@ class AccessLayer4Sale(AccessLayer):
 
     def get_sale_relation_row_for_sale_id_master_id(self, sale_id: str, master_id: str):
         query = "SELECT * from {} WHERE {}='{}' and {}='{}';".format(
-            SMTBL.SALE_RELATION, SLDC.SALE_ID, master_id, SLDC.MASTER_ID, master_id
+            SMTBL.SALE_RELATION, SLDC.MASTER_ID, master_id, SLDC.CHILD_ID, sale_id
         )
         df = self.__get_data_frame_with_row_id_by_query__(query)
         return None if df.shape[0] == 0 else df.iloc[0]
@@ -54,7 +54,7 @@ class AccessLayer4Sale(AccessLayer):
 
     def get_my_sales_as_data_frame(self):
         query = "SELECT * from {} WHERE {}={} ORDER BY {};".format(
-            self.view_name, SLDC.MASTER_ID, SLDC.SALE_ID, SLDC.SALE_ID)
+            self.view_name, SLDC.IS_MY_SALE, 1, SLDC.SALE_ID)
         return self.select_data_by_query(query)
 
     def get_my_sales_as_dd_options(self):
@@ -85,7 +85,9 @@ class AccessLayer4Sale(AccessLayer):
 
     def get_sales_df_by_sale_state(self, sale_state: str, only_own_sales: bool):
         only_own_part = " AND {}={}".format(SLDC.SALE_ID, SLDC.MASTER_ID) if only_own_sales else ''
-        query = "SELECT * from {} WHERE {}='{}'{};".format(self.view_name, SLDC.SALE_STATE, sale_state, only_own_part)
+        for_test_part = " AND {} LIKE 'T_%'".format(SLDC.SALE_ID) if self._is_for_test else ''
+        query = "SELECT * from {} WHERE {}='{}'{}{};".format(
+            self.view_name, SLDC.SALE_STATE, sale_state, only_own_part, for_test_part)
         return self.select_data_by_query(query)
 
     def get_sales_df_by_master_sale_id(self, master_sale_id: str):
@@ -96,7 +98,16 @@ class AccessLayer4Sale(AccessLayer):
     def delete_existing_sale_by_id(self, sale_id: str):
         query = "DELETE FROM {} WHERE {}='{}';".format(self._table.name, SLDC.SALE_ID, sale_id)
         print(query)
-        self._db.delete_records(query)
+        self._counter_delete += self._db.delete_records(query)
+
+    def delete_all_test_cases_in_db(self):
+        query = "DELETE FROM {} WHERE {} LIKE 'T_%';".format(self._table.name, SLDC.SALE_ID)
+        print(query)
+        self._counter_delete += self._db.delete_records(query)
+        query = "DELETE FROM {} WHERE {} LIKE 'T_%' OR {} LIKE 'T_%';".format(
+            SMTBL.SALE_RELATION, SLDC.CHILD_ID, SLDC.MASTER_ID)
+        print(query)
+        self._counter_delete += self._db.delete_records(query)
 
     def update_sale_last_check_date(self, sale_id: str, version: int, last_check_date: str):
         query = "UPDATE {} SET {} = '{}' WHERE {}='{}' and {}={};".format(
@@ -105,8 +116,8 @@ class AccessLayer4Sale(AccessLayer):
         self._counter_update += self._db.update_table_by_statement(self._table.name, query)
 
     def update_sale_relation_end_date(self, sale_id: str, master_id: str, end_date: str):
-        query = "UPDATE {} SET {} = '{}' WHERE {}='{}' and {}={};".format(
-            SMTBL.SALE_RELATION, SLDC.END_DATE, end_date, SLDC.SALE_ID, sale_id, SLDC.MASTER_ID, master_id)
+        query = "UPDATE {} SET {} = '{}' WHERE {}='{}' and {}='{}';".format(
+            SMTBL.SALE_RELATION, SLDC.END_DATE, end_date, SLDC.CHILD_ID, sale_id, SLDC.MASTER_ID, master_id)
         print(query)
         self._counter_update += self._db.update_table_by_statement(SMTBL.SALE_RELATION, query)
 
@@ -126,26 +137,28 @@ class AccessLayer4Sale(AccessLayer):
         self._counter_update += self._db.update_table_by_statement(self._table.name, query)
 
     def get_sale_ids_from_db_by_sale_state(self, sale_state: str, only_own_sales=False) -> list:
-        df = self.get_sales_df_by_sale_state(sale_state, only_own_sales)
+        df = self.get_sales_df_by_sale_state(sale_state, only_own_sales=only_own_sales)
+        if df.shape[0] == 0:
+            return []
         li = list(df[SLDC.SALE_ID])
         li.sort()
         return li
 
     def insert_sale_data(self, input_dict_list: list):
-        self._counter_insert = self._db.insert_sale_data(input_dict_list)
+        self._counter_insert += self._db.insert_sale_data(input_dict_list)
 
     def insert_sale_relation_data(self, input_dict_list: list):
-        self._counter_insert = self._db.insert_sale_relation_data(input_dict_list)
+        self._counter_insert += self._db.insert_sale_relation_data(input_dict_list)
 
     def insert_or_update_sale_relation_data(self, input_dict_list: list):
         for input_dict in input_dict_list:
-            sale_id = input_dict[SLDC.SALE_ID]
+            child_id = input_dict[SLDC.CHILD_ID]
             master_id = input_dict[SLDC.MASTER_ID]
-            sale_id_master_id_row = self.get_sale_relation_row_for_sale_id_master_id(sale_id, master_id)
+            sale_id_master_id_row = self.get_sale_relation_row_for_sale_id_master_id(child_id, master_id)
             if sale_id_master_id_row is None:
                 self.insert_sale_relation_data(input_dict_list)
-            elif sale_id_master_id_row[SLDC.END_DATE] != '':
-                self.update_sale_relation_end_date(sale_id, master_id, MyDate.get_date_str_from_datetime())
+            elif sale_id_master_id_row[SLDC.END_DATE] != '':  # reactivate
+                self.update_sale_relation_end_date(child_id, master_id, '')
 
     def __get_table__(self):
         return SaleTable()

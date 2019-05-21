@@ -26,6 +26,7 @@ class TuttiMatcher4PriceOriginal(TuttiMatcher):
             'CHF_NOUN': [{'LOWER': 'chf'}, {'POS': POS.NOUN}],
             'NP': [{'LOWER': 'np'}, {'POS': POS.PUNCT}, {'POS': POS.NUM}],  # NP: 2800.- 18 Stk vorhanden
             'NP_2': [{'LOWER': 'np'}, {'POS': POS.PUNCT}, {'POS': POS.NUM}],  # NP: 2800,--
+            'VON': [{'LOWER': 'von'}, {'POS': POS.NUM}, {'LOWER': 'chf'}],
         }
 
     def __get_pattern_type_test_case_dict__(self):
@@ -44,7 +45,15 @@ class TuttiMatcher4PriceOriginal(TuttiMatcher):
             'CHF_NOUN': {'CHF 32.- war Neupreis': 32},
             'NP': {'Topstühle! NP: 2800.- 18 Stk vorhanden': 2800},
             'NP_2': {'Skijacke und Skihose (NP: 570,--)': 570},
+            'VON': {'Von 189.90 Fr jetzt für 79.90 Fr': 189}
         }
+
+    def __get_pattern_result_for_doc_as_text__(self, doc: Doc):
+        for match_id, start, end in self._matcher(doc):
+            if doc[start].text.lower() in ['von']:
+                return doc[start + 1].text
+            return doc[end - 1].text
+        return ''
 
     def get_pattern_result_for_doc(self, doc: Doc):
         return self.__get_pattern_result_for_doc_as_int__(doc)

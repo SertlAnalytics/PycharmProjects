@@ -79,6 +79,12 @@ class Tutti:
         if self.sys_config.write_to_excel:
             self._excel.close()
 
+    def get_sale_from_db_by_sale_id(self, sale_id: str):
+        sale = self._sale_factory.get_sale_from_db_by_sale_id(sale_id)
+        data_dict = sale.get_data_dict_for_sale_table()
+        print('data_dict={}'.format(data_dict))
+        return sale
+
     def check_search_by_api_against_similar_sales(self, api: SalesmanSearchApi):
         sale = self._sale_factory.get_sale_by_search_api(api)
         self.__check_sales_against_similar_sales_on_platform__([sale])
@@ -130,7 +136,7 @@ class Tutti:
         sale = self.get_sale_from_platform_by_sale_id(sale_id)
         self.__check_sales_against_similar_sales_on_platform__([sale])
 
-    def check_sale_in_db_against_similar_sales_by_sale_id(self, sale_id: str):
+    def check_sale_in_db_against_similar_sales_on_platform_by_sale_id(self, sale_id: str):
         sale = self._sale_factory.get_sale_from_db_by_sale_id(sale_id)
         if sale is None:
             print('\nWARNING: No sale in database with ID={}'.format(sale_id))

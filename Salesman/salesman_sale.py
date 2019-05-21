@@ -141,7 +141,7 @@ class SalesmanSale:
 
     def get_data_dict_for_sale_relation_table(self, master_id: str):
         today_string =  MyDate.get_date_str_from_datetime()
-        return {SLDC.SALE_ID: self.sale_id, SLDC.MASTER_ID: master_id, SLDC.START_DATE: today_string,
+        return {SLDC.MASTER_ID: master_id, SLDC.CHILD_ID: self.sale_id, SLDC.START_DATE: today_string,
                 SLDC.END_DATE: '', SLDC.LAST_CHECK_DATE: today_string, SLDC.COMMENT: 'First load'}
 
     def get_data_dict_for_columns(self, columns: list) -> dict:

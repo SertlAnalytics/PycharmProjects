@@ -10,7 +10,8 @@ from sertl_analytics.constants.salesman_constants import SLDC
 
 
 class AccessLayerFile:
-    def __init__(self, file_path: str, columns: list):
+    def __init__(self, file_path: str, columns: list, is_for_test=False):
+        self._is_for_test = is_for_test
         self._file_path = file_path
         self._columns = columns
         self._df = self.__get_source_df__()
@@ -38,7 +39,7 @@ class AccessLayerFile:
 
 
 class MySalesAccessLayerFile(AccessLayerFile):
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, is_for_test=False):
         self._file_path = file_path
-        AccessLayerFile.__init__(self, file_path, SLDC.get_columns_for_virtual_sales_in_file())
+        AccessLayerFile.__init__(self, file_path, SLDC.get_columns_for_virtual_sales_in_file(), is_for_test=is_for_test)
 

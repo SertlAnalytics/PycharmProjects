@@ -62,6 +62,10 @@ class MyDate:
         return '{} {}'.format(MyDate.get_date_from_datetime(dt_now), MyDate.get_time_from_datetime(dt_now))
 
     @staticmethod
+    def today_str() -> str:
+        return MyDate.get_date_str_from_datetime()
+
+    @staticmethod
     def get_datetime_object(date_time=None):
         if date_time is None:
             return datetime.now()

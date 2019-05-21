@@ -13,7 +13,8 @@ from sertl_analytics.constants.salesman_constants import SLDC, DC, SMTBL, SMVW
 
 
 class AccessLayer:
-    def __init__(self, db: SalesmanDatabase=None):
+    def __init__(self, db: SalesmanDatabase=None, is_for_test=False):
+        self._is_for_test = is_for_test
         self._db = SalesmanDatabase() if db is None else db
         self._table = self.__get_table__()
         self._counter_insert = 0
@@ -44,6 +45,10 @@ class AccessLayer:
         self._counter_insert = 0
         self._counter_update = 0
         self._counter_delete = 0
+
+    def print_transaction_statistics(self, prefix=''):
+        print('{}ins/upd/del = {}/{}/{}'.format(
+            prefix, self._counter_insert, self._counter_update, self._counter_delete))
 
     def get_all_as_data_frame(self, index_col='', columns=None, where_clause=''):
         selected_columns = '*' if columns is None else ','.join(columns)

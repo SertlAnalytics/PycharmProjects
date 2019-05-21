@@ -19,7 +19,9 @@ from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MyFile
 from salesman_dash.grid_tables.my_grid_table_4_sales import MySaleTable4MySales, MySaleTable4SimilarSales
 from salesman_system_configuration import SystemConfiguration
 from salesman_tutti.tutti import Tutti
-from salesman_dash.plotting.my_dash_plotter_for_salesman_search import MyDashTabPlotter4Search
+from salesman_dash.plotting.my_dash_plotter_for_salesman_sales import MyDashTabPlotter4Sales
+from factories.salesman_sale_factory import SalesmanSaleFactory
+from salesman_dash.my_dash_colors import DashColorHandler
 
 
 class MyDashTab4Sales(MyDashBaseTab):
@@ -32,9 +34,11 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._process_for_update_sales_data = sys_config.process_manager.get_process_by_name(
             SMPR.UPDATE_SALES_DATA_IN_STATISTICS_TAB)
         self.tutti = tutti
+        self._salesman_spacy = self.tutti.salesman_spacy
         self._sale_table = self.sys_config.sale_table
         self._refresh_button_clicks = 0
         self._search_button_clicks = 0
+        self._sale_factory = SalesmanSaleFactory(self.sys_config, self._salesman_spacy)
         self._dd_handler = SaleTabDropDownHandler(self.sys_config)
         self._header_table = MyHTMLTabSalesHeaderTable()
         self._selection_api = GridTableSelectionApi()
@@ -46,6 +50,9 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._online_title = None
         self._online_rows = None
 
+    def __get_color_handler__(self):
+        return DashColorHandler()
+
     def __init_dash_element_ids__(self):
         self._my_sales_filter_button = 'my_sales_filter_button'
         self._my_sales_link = 'my_sales_link'
@@ -56,6 +63,7 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._my_sales_similar_sale_grid_table = 'my_sales_similar_sale_grid_table'
         self._my_sales_similar_sale_entry_markdown = 'my_sales_similar_sale_entry_markdown'
         self._my_sales_similar_sale_grid_table_div = '{}_div'.format(self._my_sales_similar_sale_grid_table)
+        self._my_sales_regression_chart = 'my_sales_regression_chart'
 
     def get_div_for_tab(self):
         children_list = [
@@ -66,8 +74,9 @@ class MyDashTab4Sales(MyDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_SUB_CATEGORY)),
             MyHTML.div_with_html_button_submit(self._my_sales_filter_button, children='Filter', hidden=''),
             MyHTML.div_with_button_link(self._my_sales_link, href='', title='', hidden='hidden'),
-            MyHTML.div(self._data_table_div, self.__get_sale_grid_table__(), False),  # ERROR
+            MyHTML.div(self._data_table_div, self.__get_sale_grid_table__(), False),
             MyDCC.markdown(self._my_sales_sale_entry_markdown),
+            MyHTML.div(self._my_sales_regression_chart, self.__get_sales_regression_chart__(), False),
             MyHTML.div_with_button_link(self._my_sales_similar_sale_link, href='', title='', hidden='hidden'),
             MyHTML.div(self._my_sales_similar_sale_grid_table_div, self.__get_similar_sale_grid_table__(''), False),
         ]
@@ -81,6 +90,7 @@ class MyDashTab4Sales(MyDashBaseTab):
         self.__init_callbacks_for_similar_sales_link__()
         self.__init_callback_for_similar_sale_grid_table__()
         self.__init_callback_for_similar_sale_entry_markdown__()
+        self.__init_callback_for_sales_regression_chart__()
 
     def __init_callbacks_for_my_sales_link__(self):
         @self.app.callback(
@@ -160,39 +170,6 @@ class MyDashTab4Sales(MyDashBaseTab):
                 self._selection_api.category, sub_category)
             self._selected_my_sale_row = None if len(selected_row_indices) == 0 else rows[selected_row_indices[0]]
             return self.__get_sale_grid_table__()
-    #
-    # def __init_callback_for_waves_heatmap__(self):
-    #     @self.app.callback(
-    #         Output(self._my_waves_heatmap_div, 'children'),
-    #         [Input('my_interval_refresh', 'n_intervals'),
-    #          Input(self._my_waves_period_selection, 'value'),
-    #          Input(self._my_waves_aggregation_selection, 'value'),
-    #          Input(self._my_waves_retrospective_ticks_selection, 'value'),
-    #          Input(self._my_waves_index_selection, 'value')],
-    #         [State(self._my_waves_heatmap_div, 'children')])
-    #     def handle_callback_for_position_manage_button_hidden(n_intervals: int, period: str, aggregation: int,
-    #                                                           ticks: int, index: str, children):
-    #         enforce_reload = self._process_for_head_map.was_triggered_by_another_process()
-    #         data_updated = self._fibonacci_wave_data_handler.reload_data_when_outdated(enforce_reload)
-    #         if not data_updated and not self._dd_handler.was_any_value_changed(
-    #                 period, aggregation, ticks, index):
-    #             self._heat_map_was_updated = False
-    #             return children
-    #         self._heat_map_was_updated = True
-    #         print('Return updated heatmap...')
-    #         return self.__get_heatmap__()
-
-    def __get_heatmap__(self):
-        @self._process_for_update_sales_data.process_decorator
-        def __get_heatmap_with_process__(process=None):
-            df_search_result = self.tutti.printing.df_sale
-            # MyPandas.print_df_details(df_search_result)
-            plotter = MyDashTabPlotter4Search(df_search_result, self._color_handler)
-            scatter_chart = plotter.get_chart_type_scatter()
-            if len(self._print_category_list) == 0:
-                self._print_category_list = plotter.category_list
-            return scatter_chart
-        return __get_heatmap_with_process__()
 
     def __init_callback_for_similar_sale_grid_table__(self):
         @self.app.callback(
@@ -233,6 +210,20 @@ class MyDashTab4Sales(MyDashBaseTab):
             if len(selected_row_indices) == 0:
                 return ''
             return rows[selected_row_indices[0]][SLDC.SALE_ID]
+
+    def __init_callback_for_sales_regression_chart__(self):
+        @self.app.callback(
+            Output(self._my_sales_regression_chart, 'children'),
+            [Input(self._data_table_name, 'selected_row_indices')],
+            [State(self._data_table_name, 'rows')]
+        )
+        def handle_callback_sales_regression_chart(selected_row_indices: list, rows: list):
+            print('selected_row_indices={}'.format(selected_row_indices))
+            if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:
+                selected_row = None
+            else:
+                selected_row = rows[selected_row_indices[0]]
+            return self.__get_sales_regression_chart__(selected_row)
 
     def __init_callback_for_similar_sale_entry_markdown__(self):
         @self.app.callback(
@@ -307,6 +298,17 @@ class MyDashTab4Sales(MyDashBaseTab):
         rows = grid_table.get_rows_for_selection(self._selection_api, False)
         min_height = self._sale_grid_table.height_for_display
         return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
+
+    def __get_sales_regression_chart__(self, selected_row=None):
+        if selected_row is None:
+            return 'Nothing selected'
+        selected_sale_id = selected_row[SLDC.SALE_ID]
+        sale_from_db = self._sale_factory.get_sale_from_db_by_sale_id(selected_sale_id)
+        df_similar = self.sys_config.access_layer_sale.get_sales_df_by_master_sale_id(selected_sale_id)
+        print('Found similar_sales: {}'.format(df_similar.shape[0]))
+        plotter = MyDashTabPlotter4Sales(df_similar, self._color_handler)
+        regression_chart = plotter.get_chart_type_regression(sale_from_db)
+        return regression_chart
 
     def __get_similar_sale_grid_table__(self, master_id: str):
         if master_id == '':

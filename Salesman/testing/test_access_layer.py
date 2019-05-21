@@ -7,10 +7,12 @@ Date: 2019-04-02
 
 from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from salesman_database.salesman_db import SalesmanDatabase
+from testing.test_data import SaleTestDataFactory
 
 
 class AccessLayer4SaleTest(AccessLayer4Sale):
-    pass
+    def test_insert_similar_sales(self):
+        pass
 
 
 access_layer = AccessLayer4SaleTest(SalesmanDatabase())
