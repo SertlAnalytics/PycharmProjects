@@ -236,7 +236,7 @@ class PatternPart:
         return_dict['Range position'] = '{}'.format(self.pattern_range.position_list)
         return_dict[PAT.BEFORE_BREAKOUT] = prediction_text_dict[PAT.BEFORE_BREAKOUT]
         # return_dict[PAT.BEFORE_BREAKOUT_DETAILS] = prediction_text_dict[PAT.BEFORE_BREAKOUT_DETAILS]
-        if self.breakout:
+        if self.breakout or PAT.AFTER_BREAKOUT in prediction_text_dict:
             return_dict[PAT.AFTER_BREAKOUT] = prediction_text_dict[PAT.AFTER_BREAKOUT]
         if PAT.RETRACEMENT in prediction_text_dict:
             return_dict[PAT.RETRACEMENT] = prediction_text_dict[PAT.RETRACEMENT]

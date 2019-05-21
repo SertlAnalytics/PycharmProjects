@@ -58,13 +58,13 @@ class MyDashJobHandler:
         self._scheduler.add_job(MyDashDeleteDuplicatesJob(
             weekdays=self._weekdays_all, start_times=['00:30'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashStockDataUpdateJobForCrypto(
-            weekdays=self._weekdays_all, start_times=['00:45'], db_updater=self._db_updater))
+            weekdays=self._weekdays_all, start_times=['01:15'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashStockDataUpdateJobForCurrencies(
-            weekdays=self._weekdays_tu_sa, start_times=['01:00'], db_updater=self._db_updater))
+            weekdays=self._weekdays_tu_sa, start_times=['01:30'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashStockDataUpdateJobForShares(
-            weekdays=self._weekdays_tu_sa, start_times=['01:15'], db_updater=self._db_updater))
+            weekdays=self._weekdays_tu_sa, start_times=['01:45'], db_updater=self._db_updater))
         self._scheduler.add_job(MyEquityUpdateJob(
-            weekdays=self._weekdays_all, start_times=['02:30'], db_updater=self._db_updater))
+            weekdays=self._weekdays_all, start_times=['02:45'], db_updater=self._db_updater))
         self._scheduler.add_job(MyPatternUpdateJob(
             weekdays=self._weekdays_all, start_times=['03:00'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDailyWaveUpdateJob(

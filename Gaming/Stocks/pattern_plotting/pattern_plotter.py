@@ -398,13 +398,16 @@ class PatternPlotter:
     def __fill_plot_container_list__(self):
         color_handler = PatternColorHandler()
         for pattern in self.detector.pattern_list:
-            if not self.sys_config.config.plot_only_pattern_with_fibonacci_waves or pattern.intersects_with_fibonacci_wave:
+            if not self.sys_config.config.plot_only_pattern_with_fibonacci_waves \
+                    or pattern.intersects_with_fibonacci_wave:
                 color_pattern, color_trade, retr_color = color_handler.get_colors_for_pattern(pattern)
-                plot_container = PatternPlotContainer(PlotterInterface.get_pattern_shape_part_main(pattern), color_pattern)
+                plot_container = PatternPlotContainer(
+                    PlotterInterface.get_pattern_shape_part_main(pattern), color_pattern)
                 if pattern.was_breakout_done() and pattern.is_part_trade_available():
                     plot_container.add_trade_shape(PlotterInterface.get_pattern_shape_part_trade(pattern), color_trade)
                 if pattern.is_fibonacci:
-                    plot_container.add_retracement_shape(PlotterInterface.get_pattern_shape_retracement(pattern), retr_color)
+                    plot_container.add_retracement_shape(
+                        PlotterInterface.get_pattern_shape_retracement(pattern), retr_color)
                 plot_container.add_center_shape(PlotterInterface.get_pattern_center_shape(pattern))
                 plot_container.annotation_param = PlotterInterface.get_annotation_param(pattern)
                 # plot_container.add_border_line_top_shape(pattern.part_main.get_f_upper_shape())

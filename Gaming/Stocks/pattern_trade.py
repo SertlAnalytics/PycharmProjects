@@ -666,13 +666,13 @@ class PatternTrade:
         if self.buy_trigger == BT.TOUCH_POINT:
             distance_bottom = round(buy_price - lower_value, 4)
         else:
-            height = round(max(height, self.pattern.part_entry.distance_for_trading_box), 4)
+            height = MyMath.round_smart(max(height, self.pattern.part_entry.distance_for_trading_box))
             std_regression = self.pattern.part_entry.std_regression
             # print('__set_properties_after_buy__: height={:.4f}, {:.4f}=str_regression'.format(height, std_regression))
             height = 2 * std_regression
             if height < buy_price/100:
                 height = buy_price/100  # at least one percent
-            distance_bottom = round(height, 4)
+            distance_bottom = MyMath.round_smart(height)
         distance_bottom = self.__get_corrected_distance_bottom__(distance_bottom, off_set_value)
         self._trade_box = self.__get_trade_box__(off_set_value, buy_price, height, distance_bottom)
         self._trade_box.print_box()

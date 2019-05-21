@@ -450,6 +450,7 @@ class Pattern:
             PAT.BEFORE_BREAKOUT: self.__get_annotation_text_for_prediction_before_breakout__(),
             # PAT.BEFORE_BREAKOUT_DETAILS: self.__get_annotation_text_for_prediction_before_breakout__(True),
             PAT.AFTER_BREAKOUT: self.__get_annotation_text_for_prediction_after_breakout__()}
+        # print('__get_annotation_prediction_text_dict__={}'.format(annotation_prediction_text_dict))
         if self.is_fibonacci:
             annotation_prediction_text_dict[PAT.RETRACEMENT] = \
                 self.__get_annotation_text_for_retracement_prediction__()
@@ -480,7 +481,7 @@ class Pattern:
                 return 'DESC and breakout DESC likely - NO Go'
 
     def __get_annotation_text_for_prediction_after_breakout__(self):
-        if not(self.was_breakout_done() and self.y_predict_after_breakout is not None):
+        if self.y_predict_after_breakout is None:
             return 'sorry - not enough previous data'
         pos_pct_half = self.data_dict_obj.get(DC.FC_HALF_POSITIVE_PCT)
         pos_pct_full = self.data_dict_obj.get(DC.FC_FULL_POSITIVE_PCT)
