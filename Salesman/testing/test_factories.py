@@ -7,17 +7,21 @@ Date: 2019-05-21
 from sertl_analytics.constants.salesman_constants import SLDC
 from sertl_analytics.mydates import MyDate
 from factories.salesman_sale_factory import SalesmanSaleFactory
+from salesman_sale_list  import SalesmanSaleList
+from salesman_sale import SalesmanSale
 from salesman_system_configuration import SystemConfigurationForTest
 from salesman_tutti.tutti import Tutti
 from testing.test_data import SaleTestDataFactory, TCKEY
 
 
 class SalesmanSaleFactoryTest(SalesmanSaleFactory):
-    def __init__(self):
+    def __init__(self, delete_old_test_cases=True):
+        self._delete_old_test_cases = delete_old_test_cases
         self.sys_config = SystemConfigurationForTest()
         self._tutti = Tutti(self.sys_config)
         SalesmanSaleFactory.__init__(self, self.sys_config, self._tutti.salesman_spacy)
-        self.delete_all_test_cases_in_db()
+        if self._delete_old_test_cases:
+            self.delete_all_test_cases_in_db()
 
     def test_write_sales_after_checks_to_db(self):
         sales, sale_master = self.__get_sales_and_master_sale_for_test_run__()
@@ -44,6 +48,17 @@ class SalesmanSaleFactoryTest(SalesmanSaleFactory):
         self.print_test_results()
         self.check_status_of_sales_in_database()
         self.print_test_results()
+
+    def test_sale_list(self):
+        if self._delete_old_test_cases:
+            sales, sale_master = self.__get_sales_and_master_sale_for_test_run__()
+            self.write_sales_after_checks_to_db(sales, sale_master, enforce_writing=True)
+            self.print_test_results()
+        sale_master = self.get_sale_from_db_by_sale_id('T_M_01')
+        sales = self.get_similar_sales_for_master_sale_from_db(sale_master)
+        sale_list = SalesmanSaleList(self.sys_config, sales, sale_master)
+        result_rows = sale_list.get_sales_as_search_result_rows()
+        print(result_rows)
 
     def print_test_results(self, key_list=None):
         key_list = ['SALE', 'V_SALE', 'SALE_RELATION'] if key_list is None else key_list
@@ -72,5 +87,6 @@ class SalesmanSaleFactoryTest(SalesmanSaleFactory):
 factory = SalesmanSaleFactoryTest()  # the previous test cases are all removed...
 # factory.test_write_sales_after_checks_to_db()
 # factory.test_database_updater_check_status_of_sales_in_database()
+factory.test_sale_list()
 
 

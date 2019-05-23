@@ -22,6 +22,8 @@ from salesman_tutti.tutti import Tutti
 from salesman_dash.plotting.my_dash_plotter_for_salesman_sales import MyDashTabPlotter4Sales
 from factories.salesman_sale_factory import SalesmanSaleFactory
 from salesman_dash.my_dash_colors import DashColorHandler
+import pandas as pd
+import numpy as np
 
 
 class MyDashTab4Sales(MyDashBaseTab):
@@ -54,6 +56,7 @@ class MyDashTab4Sales(MyDashBaseTab):
         return DashColorHandler()
 
     def __init_dash_element_ids__(self):
+        self._my_sales_filter_input = 'my_sales_filter_input'
         self._my_sales_filter_button = 'my_sales_filter_button'
         self._my_sales_link = 'my_sales_link'
         self._my_sales_similar_sale_link = 'my_sales_similar_sale_link'
@@ -68,11 +71,8 @@ class MyDashTab4Sales(MyDashBaseTab):
     def get_div_for_tab(self):
         children_list = [
             self._header_table.get_table(),
-            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_SOURCE)),
-            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_REGION)),
-            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_CATEGORY)),
-            MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_SUB_CATEGORY)),
-            MyHTML.div_with_html_button_submit(self._my_sales_filter_button, children='Filter', hidden=''),
+            MyHTML.div_with_input(element_id=self._my_sales_filter_input,
+                                  placeholder='Please enter filter for my sales...', size=500, height=27),
             MyHTML.div_with_button_link(self._my_sales_link, href='', title='', hidden='hidden'),
             MyHTML.div(self._data_table_div, self.__get_sale_grid_table__(), False),
             MyDCC.markdown(self._my_sales_sale_entry_markdown),
@@ -118,7 +118,8 @@ class MyDashTab4Sales(MyDashBaseTab):
         def handle_callback_for_my_sales_link_href(button_hidden: str):
             if button_hidden == 'hidden':
                 return ''
-            return self._selected_my_sale_row[SLDC.HREF]
+            selected_sale = self._sale_factory.get_sale_from_db_by_sale_id(self._selected_my_sale_row[SLDC.SALE_ID])
+            return selected_sale.get_value(SLDC.HREF)
 
     def __init_callbacks_for_similar_sales_link__(self):
         @self.app.callback(
@@ -152,23 +153,16 @@ class MyDashTab4Sales(MyDashBaseTab):
     def __init_callback_for_sale_grid_table__(self):
         @self.app.callback(
             Output(self._data_table_div, 'children'),
-            [Input(self._my_sales_filter_button, 'n_clicks')],
-            [State(self._dd_handler.my_sale_source_dd, 'value'),
-             State(self._dd_handler.my_sale_region_dd, 'value'),
-             State(self._dd_handler.my_sale_category_dd, 'value'),
-             State(self._dd_handler.my_sale_sub_category_dd, 'value'),
+            [Input(self._my_sales_filter_input, 'n_blur')],
+            [State(self._my_sales_filter_input, 'value'),
              State(self._data_table_name, 'rows'),
              State(self._data_table_name, 'selected_row_indices')]
             )
         def handle_callback_for_sale_grid_table(
-                filter_n_clicks: int,
-                source: str, region: str, category: str, sub_category: str, rows: list, selected_row_indices: list):
-            self._selection_api.source = source
-            self._selection_api.region = self.sys_config.region_categorizer.get_category_for_value(region)
-            self._selection_api.category = self.sys_config.product_categorizer.get_category_for_value(category)
-            self._selection_api.sub_category = self.sys_config.product_categorizer.get_sub_category_for_value(
-                self._selection_api.category, sub_category)
+                filter_n_blurs: int, filter_input: str,
+                rows: list, selected_row_indices: list):
             self._selected_my_sale_row = None if len(selected_row_indices) == 0 else rows[selected_row_indices[0]]
+            self._selection_api.input = filter_input
             return self.__get_sale_grid_table__()
 
     def __init_callback_for_similar_sale_grid_table__(self):
@@ -305,10 +299,17 @@ class MyDashTab4Sales(MyDashBaseTab):
         selected_sale_id = selected_row[SLDC.SALE_ID]
         sale_from_db = self._sale_factory.get_sale_from_db_by_sale_id(selected_sale_id)
         df_similar = self.sys_config.access_layer_sale.get_sales_df_by_master_sale_id(selected_sale_id)
-        print('Found similar_sales: {}'.format(df_similar.shape[0]))
-        plotter = MyDashTabPlotter4Sales(df_similar, self._color_handler)
+        df_similar_without_outliers = self.__get_df_without_outliers__(df_similar)
+        plotter = MyDashTabPlotter4Sales(df_similar_without_outliers, self._color_handler)
         regression_chart = plotter.get_chart_type_regression(sale_from_db)
         return regression_chart
+
+    def __get_df_without_outliers__(self, df: pd.DataFrame):
+        price_single_list = [0] if df.shape[0] == 0 else list(df[SLDC.PRICE_SINGLE])
+        outlier = Outlier(price_single_list, self.sys_config.outlier_threshold)
+        outlier.print_outlier_details()
+        return df[np.logical_and(df[SLDC.PRICE_SINGLE] >= outlier.bottom_threshold,
+                                 df[SLDC.PRICE_SINGLE] <= outlier.top_threshold)]
 
     def __get_similar_sale_grid_table__(self, master_id: str):
         if master_id == '':

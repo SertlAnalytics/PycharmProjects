@@ -16,9 +16,9 @@ class MyDashTabPlotter4Search(MyDashTabPlotter):
     def __init_parameter__(self):
         self._chart_id = 'search_result_graph'
         self._chart_name = 'Results'
-        self.category = SLDC.PRINT_CATEGORY
+        self.category = SLDC.PLOT_CATEGORY
         self.x_variable = SLDC.PRICE_SINGLE
-        self.y_variable = SLDC.PRINT_CATEGORY
+        self.y_variable = SLDC.PLOT_CATEGORY
         self.text_variable = SLDC.TITLE
         self.category_list = []
 

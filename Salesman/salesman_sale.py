@@ -36,6 +36,12 @@ class SalesmanSale:
         self.__init_data_dict_entries__()
         self._entity_label_list_dict = {}
 
+    def __eq__(self, other):
+        return self.sale_id == other.sale_id and self.version == other.version
+
+    def __lt__(self, other):
+        return self.sale_id < other.sale_id or (self.sale_id == other.sale_id and self.version < other.version)
+
     @property
     def source(self):
         from_db = ' ({})'.format('db') if self._is_from_db else ''
@@ -259,7 +265,7 @@ class SalesmanSale:
                 if extended_label not in list_new:
                     list_new.append(extended_label)
                     extended_label_lists.append(list_new)
-        return extended_label_lists
+        return search_label_lists if len(extended_label_lists) == 0 else extended_label_lists
 
     def get_label_list_with_child_labels(self, parent_label_list: list):
         if parent_label_list[-1] in self._search_labels:
@@ -444,7 +450,7 @@ class SalesmanSale:
         label_list = ['{} ({})'.format(values, self.entity_label_dict[values]) for values in self.entity_label_dict]
         self.set_value(SLDC.ENTITY_LABELS_DICT, ', '.join(label_list))
         self.set_value(SLDC.FOUND_BY_LABELS, '' if self._found_by_labels is None else self._found_by_labels)
-        self.set_value(SLDC.PRINT_CATEGORY, '')
+        self.set_value(SLDC.PLOT_CATEGORY, '')
 
     def __get_version__(self):
         if self.get_value(SLDC.VERSION) == '':

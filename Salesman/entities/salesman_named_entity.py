@@ -203,6 +203,7 @@ class TechnologyEntity(NamedEntity):
             'Elektrische Fensterheber', 'ESP',
             'Fahrlichtautomatik',
             'GPS',
+            'höhenverstellbar',
             'Kollisionswarnung',
             'Notrufsystem',
             'LED-Tagfahrlicht', 'LED Heckleuchten', 'LED Intelligent Light',
@@ -329,7 +330,7 @@ class ObjectTypeEntity(NamedEntity):
             'Katzenkissen', 'Kissen', 'Katzenstreu', 'Katzentüre', 'Katzenhalsband', 'Käfig', 'Kleintiergehege',
             'Keramikhaus', 'Kleintiertransportbox', 'Kleintierstall', 'Kleintierheim', 'Klebeband',
             'Keramiknapf', 'Kräuter', 'Kokihaus', 'Kletterschutz', 'Kommode', 'Kleiderschrank',
-            'Laptop', 'Lift', 'LTE-Router', 'Lavabo', 'Laufrad', 'Leiter', 'Lieferwagen',
+            'Laptop', 'Lift', 'LTE-Router', 'Lavabo', 'Laufrad', 'Leiter', 'Lieferwagen', 'Lampe',
             'Nebelleuchte', 'Notebook', 'NannoSim', 'Nachttisch', 'Nachtkästchen', 'Nachtschrank',
             'Nagerbehälter', 'Navi', 'Navigationsgerät',
             'Matraze', 'Matrazen', 'Matratzenboden', 'Marionette', 'Modell', 'Modellauto', 'Möbellift',
@@ -359,7 +360,7 @@ class ObjectTypeEntity(NamedEntity):
             'Winterräder', 'Winterreifen', 'Winterkompletträder', 'Wanne', 'Wasserpumpe', 'Waschmaschine', 'WC',
             'Werkzeugkasten', 'Winterjacke', 'Winterschuhe', 'Wohnmobil', 'Wasch-Trockenmaschine',
             'Wasserflasche', 'Wasserflaschen', 'Winterstiefel', 'Wickeltisch',
-            'Zeitwerkzeug', 'Zeitsteuerung', 'Zubehör', 'Zwischenboden', 'Zahnriemen',
+            'Zeitwerkzeug', 'Zeitsteuerung', 'Zubehör', 'Zwischenboden', 'Zahnriemen', 'Zimmerlampe',
         ]
 
     @staticmethod
@@ -411,6 +412,17 @@ class SalesmanEntityHandler:
                     result_list.remove(entity_name)
                 return result_list
         return []
+
+    @staticmethod
+    def get_main_entity_name_for_entity_name(entity_label: str, entity_name: str) -> str:
+        # print('get_main_entity_name_for_entity_name: entity_label={}, entity_name={}'.format(entity_label, entity_name))
+        synonym_dict = SalesmanEntityHandler.get_entity_for_entity_label(entity_label).entity_synonym_dict
+        if entity_name in synonym_dict:  # entity_name is already main entity_name
+            return entity_name
+        for key, synonym_list in synonym_dict.items():
+            if entity_name in synonym_list:
+                return key
+        return entity_name
 
     @staticmethod
     def get_entity_for_entity_label(entity_label: str) -> NamedEntity:

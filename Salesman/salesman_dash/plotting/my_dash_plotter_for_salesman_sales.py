@@ -6,7 +6,7 @@ Date: 2019-04-29
 """
 
 import plotly.graph_objs as go
-from salesman_logging.salesman_log import SalesmanLog
+from entities.salesman_named_entity import SalesmanEntityHandler
 from sertl_analytics.constants.salesman_constants import SLDC
 import pandas as pd
 from salesman_dash.plotting.my_dash_plotter_for_salesman import MyDashTabPlotter
@@ -21,14 +21,14 @@ class MyDashTabPlotter4Sales(MyDashTabPlotter):
     def __init_parameter__(self):
         self._chart_id = 'sales_statistics_graph'
         self._chart_name = 'Statistics'
-        self.category = SLDC.PRINT_CATEGORY
+        self.category = SLDC.PLOT_CATEGORY
         self.x_variable = SLDC.START_DATE
         self.y_variable = SLDC.PRICE_SINGLE
         self.text_variable = SLDC.TITLE
         self.category_list = []
 
     def get_chart_type_regression(self, master_sale: SalesmanSale):
-        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self.category, self.x_variable))
+        graph_api = DccGraphApi(self._chart_id, '{}'.format(master_sale.title), use_title_for_y_axis=False)
         graph_api.figure_data = self.__get_regression_figure_data__(master_sale)
         graph_api.figure_layout_x_axis_dict = self.__get_figure_layout_x_axis_dict__()
         # graph_api.figure_layout_y_axis_dict = self.__get_figure_layout_y_axis_dict__(graph_api)
@@ -38,8 +38,11 @@ class MyDashTabPlotter4Sales(MyDashTabPlotter):
         x_orig = self._df_base[self.x_variable]
         y_data = self._df_base[self.y_variable]
         x_orig_predict = MyNumpy.get_date_values_as_number_for_date_time_array(list(x_orig))
-        category_list = list(set([entity_label for entity_label in master_sale.entity_label_dict.values()]))
-        x_dict, y_dict = self.__get_x_dict_and_y_dict_for_regression__(category_list, self.y_variable)
+        entity_name_list = []
+        for value, label in master_sale.entity_label_dict.items():
+            if SalesmanEntityHandler.get_main_entity_name_for_entity_name(label, value) == value:
+                entity_name_list.append(value)
+        x_dict, y_dict = self.__get_x_dict_and_y_dict_for_regression__(entity_name_list, self.y_variable)
         trace_list_regression = []
         color_all = self._color_handler.get_color_for_category('ALL')
         # trace_list_regression.append(self.__get_scatter_trace_for_x_y_data__(x_orig, color_all, y_data, 'My'))
@@ -52,27 +55,29 @@ class MyDashTabPlotter4Sales(MyDashTabPlotter):
                 self.__get_regression_trace_for_x_y_data__(x_orig, x_orig_predict, color, x_data, y_data, cat))
         return trace_list_regression
 
-    def __get_x_dict_and_y_dict_for_regression__(self, category_list: list, metric_list: list):
+    def __get_x_dict_and_y_dict_for_regression__(self, entity_name_list: list, metric_list: list):
         # both together since we need the same order....
         x_dict = {}
         y_dict = {}
-        for cat in category_list:
+        list_entity_labels = list(self._df_base[SLDC.ENTITY_LABELS_DICT])
+        # print('list_entity_labels = {}'.format(list_entity_labels))
+        for entity_name in entity_name_list:
             # df_cat = self._df_base[np.logical_and(self._df_base[SLDC.PRICE_SINGLE] > 0,
             #                                       self._df_base[SLDC.PRICE_SINGLE] > 0)]
-            df_cat = self._df_base[self._df_base[SLDC.ENTITY_LABELS_DICT].str.contains(cat)]
-            if df_cat.shape[0] > 10:  # we need some for getting a correct regression
-                x_dict[cat] = list(df_cat[SLDC.START_DATE])
-                y_dict[cat] = list(df_cat[SLDC.PRICE_SINGLE])
+            df_cat = self._df_base[self._df_base[SLDC.ENTITY_LABELS_DICT].str.contains(entity_name)]
+            if df_cat.shape[0] > 3:  # we need some for getting a correct regression
+                x_dict[entity_name] = list(df_cat[SLDC.START_DATE])
+                y_dict[entity_name] = list(df_cat[SLDC.PRICE_SINGLE])
         return x_dict, y_dict
 
     @staticmethod
     def __get_regression_trace_for_x_y_data__(
-            x_orig: pd.Series, x_orig_predict, color: str, x_train: list, y_train: list, cat: str):
+            x_orig: pd.Series, x_orig_predict: pd.Series, color: str, x_train: list, y_train: list, cat: str):
         lin_reg = LinearRegression()
         x_train_reshaped = MyNumpy.get_date_values_as_number_for_date_time_array(x_train)
         y_train_reshaped = np.array(y_train).reshape(-1, 1)
         lin_reg.fit(x_train_reshaped, y_train_reshaped)
-        y_predict = lin_reg.predict(X=x_orig_predict)
+        y_predict = lin_reg.predict(x_orig_predict)
         y_predict_values = np.array([y_value[0] for y_value in y_predict])
 
         return go.Scatter(
@@ -94,6 +99,7 @@ class MyDashTabPlotter4Sales(MyDashTabPlotter):
                     'size': 10,
                     'color': color,
                     'line': {'width': 0.5, 'color': 'white'}},
-            text=self._df_base[SLDC.TITLE],
+            # text=self._df_base[SLDC.TITLE],
+            text=self._df_base[SLDC.ENTITY_LABELS_DICT],
             name=cat,
         )

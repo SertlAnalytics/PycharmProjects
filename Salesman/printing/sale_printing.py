@@ -10,22 +10,26 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sertl_analytics.constants.salesman_constants import SLDC
+from salesman_sale import SalesmanSale
+from entities.salesman_named_entity import SalesmanEntityHandler
 
 
 class SalesmanPrint:
-    def __init__(self, column_list: list):
-        self._column_list = column_list
+    def __init__(self, sale_source: SalesmanSale, sales: list):
+        self._columns = SLDC.get_columns_for_sales_plotting()
+        self._sale_source = sale_source
+        self._sales = sales
         self._sale_dict_list = []
-        self._df_sale = self.__get_df_from_sale_list__()
-        self._print_category_list = self._df_sale[SLDC.PRINT_CATEGORY].unique()
+        self.__fill_sale_dict_list__()
+        self._df_sale = self.__get_df_from_sale_dict_list__(self._sale_dict_list)
+        self._df_sale = self.__get_df_without_single_entries__()
+        self._print_category_list = self._df_sale[SLDC.PLOT_CATEGORY].unique()
         self._detail_offset_dict = {}
         self._ax = None
 
-    def init_by_sale_dict(self, sale_dict_list: list):
-        self._sale_dict_list = sale_dict_list
-        self._df_sale = self.__get_df_from_sale_list__()
-        self._df_sale = self.__get_df_without_single_entries__()
-        self._print_category_list = self._df_sale[SLDC.PRINT_CATEGORY].unique()
+    @property
+    def print_category_list(self):
+        return self._print_category_list
 
     @property
     def df_sale(self):
@@ -33,23 +37,53 @@ class SalesmanPrint:
 
     @property
     def columns(self):
-        return self._column_list
+        return self._columns
 
-    def __get_df_from_sale_list__(self):
+    def init_for_selected_print_categories(self, category_list: list):
+        selected_category_list = self._print_category_list if category_list is None else category_list
+        selected_category_list = ['{}: {}'.format(entry[0], entry[1]) for entry in selected_category_list]
+        dict_list = [sale_dict for sale_dict in self._sale_dict_list
+                     if sale_dict[SLDC.PLOT_CATEGORY] in selected_category_list]
+        self._df_sale = self.__get_df_from_sale_dict_list__(dict_list)
+
+    def __fill_sale_dict_list__(self):
+        for label_value, entity_label in self._sale_source.entity_label_dict.items():
+            print('__fill_sale_dict_list__: label={}, value={}'.format(entity_label, label_value))
+            if self.__can_entity_be_added_to_printing_list__(label_value, entity_label):
+                self.__add_to_sale_dict_list__(entity_label, label_value)
+
+    @staticmethod
+    def __can_entity_be_added_to_printing_list__(value: str, label: str) -> bool:
+        if SalesmanEntityHandler.get_main_entity_name_for_entity_name(label, value) != value:
+            # print('__can_entity_be_added_to_printing_list__: NO for label={}, value={}'.format(label, value))
+            return False
+        return True
+
+    def __add_to_sale_dict_list__(self, entity_label: str, label_value: str):
+        if entity_label == self._sale_source.entity_label_dict.get(label_value, ''):
+            if self._sale_source.location != 'online':
+                self._sale_source.set_value(SLDC.PLOT_CATEGORY, '{}: {}'.format(entity_label, label_value))
+                self._sale_dict_list.append(self._sale_source.get_data_dict_for_columns(self._columns))
+        for sale in self._sales:
+            if entity_label == sale.entity_label_dict.get(label_value, ''):
+                sale.set_value(SLDC.PLOT_CATEGORY, '{}: {}'.format(entity_label, label_value))
+                self._sale_dict_list.append(sale.get_data_dict_for_columns(self._columns))
+
+    def __get_df_from_sale_dict_list__(self, sale_dict_list: list):
         return pd.DataFrame.from_dict(
-            {col: [sale_dict[col] for sale_dict in self._sale_dict_list] for col in self._column_list}
+            {col: [sale_dict[col] for sale_dict in sale_dict_list] for col in self._columns}
         )
 
     def __get_df_without_single_entries__(self):
-        category_list = self._df_sale[SLDC.PRINT_CATEGORY].unique()
+        category_list = self._df_sale[SLDC.PLOT_CATEGORY].unique()
         category_remove_list = []
         # print('category_list={}'.format(category_list))
         for print_category in category_list:
-            df = self._df_sale[self._df_sale[SLDC.PRINT_CATEGORY] == print_category]
+            df = self._df_sale[self._df_sale[SLDC.PLOT_CATEGORY] == print_category]
             if df.shape[0] <= 1:
                 category_remove_list.append(print_category)
         if len(category_remove_list) > 0:
-            return self._df_sale[self._df_sale[SLDC.PRINT_CATEGORY].isin(category_remove_list) == False]
+            return self._df_sale[self._df_sale[SLDC.PLOT_CATEGORY].isin(category_remove_list) == False]
         return self._df_sale
 
     def print_sales_head(self):
@@ -67,7 +101,7 @@ class SalesmanPrint:
                                                                        ]
         :return:
         """
-        g = sns.swarmplot(y=SLDC.PRINT_CATEGORY,
+        g = sns.swarmplot(y=SLDC.PLOT_CATEGORY,
                           x=SLDC.PRICE_SINGLE,
                           data=self._df_sale,
                           # Decrease the size of the points to avoid crowding
@@ -80,14 +114,14 @@ class SalesmanPrint:
     def print_box_plots(self):
         if self._df_sale.shape[0] == 0:
             return
-        b = sns.boxplot(y=SLDC.PRINT_CATEGORY,
+        b = sns.boxplot(y=SLDC.PLOT_CATEGORY,
                         x=SLDC.PRICE_SINGLE,
                         data=self._df_sale, whis=np.inf)
-        self._ax = sns.swarmplot(y=SLDC.PRINT_CATEGORY,
-                          x=SLDC.PRICE_SINGLE,
-                          data=self._df_sale,
-                          # Decrease the size of the points to avoid crowding
-                          size=7, color='black')
+        self._ax = sns.swarmplot(y=SLDC.PLOT_CATEGORY,
+                                 x=SLDC.PRICE_SINGLE,
+                                 data=self._df_sale,
+                                 # Decrease the size of the points to avoid crowding
+                                 size=7, color='black')
         # remove the top and right line in graph
         # self.__add_annotation__()
         sns.despine()
@@ -110,7 +144,7 @@ class SalesmanPrint:
 
     def __get_row_detail_list_for_print_category__(self, print_category: str) -> list:
         row_detail_list = []
-        df_print_category = self._df_sale[self._df_sale[SLDC.PRINT_CATEGORY] == print_category]
+        df_print_category = self._df_sale[self._df_sale[SLDC.PLOT_CATEGORY] == print_category]
         df_print_category = df_print_category.sort_values(by=SLDC.PRICE_SINGLE)
         for i in range(df_print_category.shape[0]):
             row = df_print_category.iloc[i]
@@ -122,7 +156,8 @@ class SalesmanPrint:
         # Annotate. xy for coordinate. max_wage is x and 0 is y. In this plot y ranges from 0 to 7 for each level
         # xytext for coordinates of where I want to put my text
         max_price = self._df_sale[SLDC.PRICE_SINGLE].max()
-        max_price_title = self._df_sale[(self._df_sale[SLDC.PRICE_SINGLE] == max_price)][SLDC.TITLE].values[0]
+        max_price_title = \
+            self._df_sale[(self._df_sale[SLDC.PRICE_SINGLE] == max_price)][SLDC.TITLE].values[0]
         plt.annotate(s=max_price_title,
                      xy=(max_price, 0),
                      xytext=(max_price * 0.8, -0.2),

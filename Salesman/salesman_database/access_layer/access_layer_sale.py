@@ -84,7 +84,7 @@ class AccessLayer4Sale(AccessLayer):
         return self.select_data_by_query(query)
 
     def get_sales_df_by_sale_state(self, sale_state: str, only_own_sales: bool):
-        only_own_part = " AND {}={}".format(SLDC.SALE_ID, SLDC.MASTER_ID) if only_own_sales else ''
+        only_own_part = " AND {}={}".format(SLDC.IS_MY_SALE, 1) if only_own_sales else ''
         for_test_part = " AND {} LIKE 'T_%'".format(SLDC.SALE_ID) if self._is_for_test else ''
         query = "SELECT * from {} WHERE {}='{}'{}{};".format(
             self.view_name, SLDC.SALE_STATE, sale_state, only_own_part, for_test_part)

@@ -221,7 +221,7 @@ class SLDC:  # Sale data column
     RELATION_STATE = 'Relation_State'
     STATE_DATE = 'State_Date'
     MASTER_TITLE = 'Master_Title'
-    PRINT_CATEGORY = 'Print_Category'
+    PLOT_CATEGORY = 'Plot_Category'
     SOURCE = 'Source'  # Tutti, Ricardo, etc.
     SALE_STATE = 'Sale_State'  # see SLST
     HREF = 'Link'
@@ -257,6 +257,7 @@ class SLDC:  # Sale data column
     FOUND_BY_LABELS = 'Found_by_labels'
     LAST_CHECK_DATE = 'Last_Check_Date'
     COMMENT = 'Comment'
+    IS_VALID_FOR_SELECTION = 'Is_Valid_For_Selection'
    
     @staticmethod
     def get_columns_for_virtual_sales_in_file():
@@ -277,8 +278,8 @@ class SLDC:  # Sale data column
     @staticmethod
     def get_columns_for_sales_tab_table():
         return [SLDC.SALE_ID, SLDC.VERSION, SLDC.SALE_STATE,
-                SLDC.SOURCE, SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
-                SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE, SLDC.HREF]
+                SLDC.SOURCE, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
+                SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE]
 
     @staticmethod
     def get_columns_for_similar_sales_tab_table():
@@ -287,8 +288,8 @@ class SLDC:  # Sale data column
                 SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE, SLDC.HREF, SLDC.MASTER_ID]
 
     @staticmethod
-    def get_columns_for_sales_printing():
-        return [SLDC.SALE_ID, SLDC.VERSION, SLDC.MASTER_ID, SLDC.PRINT_CATEGORY,
+    def get_columns_for_sales_plotting():
+        return [SLDC.SALE_ID, SLDC.VERSION, SLDC.MASTER_ID, SLDC.PLOT_CATEGORY,
                 SLDC.SOURCE, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.LOCATION,
                 SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.NUMBER, SLDC.IS_OUTLIER, SLDC.TITLE,
@@ -297,7 +298,7 @@ class SLDC:  # Sale data column
     staticmethod
 
     def get_columns_for_search_results():
-        return [SLDC.SALE_ID, SLDC.PRINT_CATEGORY,
+        return [SLDC.SALE_ID,
                 SLDC.SOURCE, SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.LOCATION, SLDC.IS_OUTLIER,
                 SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.NUMBER, SLDC.TITLE, SLDC.DESCRIPTION,

@@ -15,6 +15,7 @@ from salesman_dash.input_tables.my_online_sale_table import MyHTMLSearchOnlineIn
 from salesman_dash.my_dash_tab_dd_for_search import SearchTabDropDownHandler, SRDD
 from dash import Dash
 from sertl_analytics.my_text import MyText
+from sertl_analytics.my_pandas import MyPandas
 from sertl_analytics.constants.salesman_constants import SLDC
 from salesman_dash.grid_tables.my_grid_table_sale_4_search_results import MySearchResultTable
 from salesman_system_configuration import SystemConfiguration
@@ -96,15 +97,14 @@ class MyDashTab4Search(MyDashBaseTab):
         self.__init_callbacks_for_search_result_numbers__()
         self.__init_callback_for_search_result_graph__()
         self.__init_callback_for_product_sub_categories__()
-        self.__init_callbacks_for_search_print_category__()
+        self.__init_callbacks_for_filter_by_entities__()
         self.__init_callbacks_for_drop_down_values__()
 
-
-    def __init_callbacks_for_search_print_category__(self):
+    def __init_callbacks_for_filter_by_entities__(self):
         @self.app.callback(
             Output(self._dd_handler.get_embracing_div_id(self._dd_handler.my_search_entities_dd), 'style'),
             [Input(self._elements.my_search_result_graph_div, 'children')])
-        def handle_callback_for_search_print_category_visibility(children):
+        def handle_callback_for_for_filter_by_entities_visibility(children):
             print('children={}'.format(children))
             if len(children) == 0:
                 return {'display': 'none'}
@@ -112,10 +112,11 @@ class MyDashTab4Search(MyDashBaseTab):
 
         @self.app.callback(
             Output(self._dd_handler.my_search_entities_dd, 'options'),
-            [Input(self._elements.my_search_result_graph_div, 'children')])
-        def handle_callback_for_search_print_category_options(children):
+            [Input(self._elements.my_search_result_grid_table_div, 'children')])
+        def handle_callback_for_for_filter_by_entities_options(children):
             if len(children) == 0:
                 return []
+            self._print_category_list = self.tutti.printing.print_category_list
             if len(self._print_category_options) == 0:
                 self._print_category_options = [{'label': PRCAT.ALL, 'value': PRCAT.ALL}]
                 for idx, category in enumerate(self._print_category_list):
@@ -123,6 +124,15 @@ class MyDashTab4Search(MyDashBaseTab):
                         {'label': '{}-{}'.format(idx + 1, MyText.get_option_label(category)), 'value': '{}'.format(idx)}
                     )
             return self._print_category_options
+
+        # @self.app.callback(
+        #     Output(self._dd_handler.my_search_entities_dd, 'value'),
+        #     [Input(self._elements.my_search_button, 'n_clicks'),
+        #      Input(self._elements.my_search_db_button, 'n_clicks'),
+        #      Input(self._elements.my_search_file_button, 'n_clicks'),
+        #      ])
+        # def handle_callback_for_for_filter_by_entities_value(*params):
+        #     return []
 
         @self.app.callback(
             Output(self._elements.my_search_test_markdown, 'children'),
@@ -331,9 +341,8 @@ class MyDashTab4Search(MyDashBaseTab):
         df_search_result = self.tutti.printing.df_sale
         # MyPandas.print_df_details(df_search_result)
         plotter = MyDashTabPlotter4Search(df_search_result, self._color_handler)
-        scatter_chart = plotter.get_chart_type_scatter(self._callback_for_search_input.get_actual_search_value())
-        if len(self._print_category_list) == 0:
-            self._print_category_list = plotter.category_list
+        chart_title = self._callback_for_search_input.get_actual_search_value()
+        scatter_chart = plotter.get_chart_type_scatter(chart_title)
         return scatter_chart
 
     def __get_search_markdown_for_online_search__(self):

@@ -55,7 +55,7 @@ class SYM:
 
 class BitfinexConfiguration(ExchangeConfiguration):
     def __set_values__(self):
-        self.hodl_dict = {'IOT': 10000, 'ETH': 0}  # currency in upper characters
+        self.hodl_dict = {'XRP': 10000, 'ETHx': 0}  # currency in upper characters
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
         self.ticker_refresh_rate_in_seconds = 5
@@ -302,9 +302,9 @@ class MyBitfinex(ExchangeInterface):
 
     def create_order(self, order: BitfinexOrder, is_order_simulation: bool):
         self.__init_actual_order_properties__(order)
-        if self.__is_enough_balance_available__(order) or is_order_simulation:
-            if not self.__is_order_affected_by_hodl_config__(order) or is_order_simulation:
-                if self.__is_order_value_compliant__(order) or is_order_simulation:
+        if is_order_simulation or self.__is_enough_balance_available__(order):
+            if is_order_simulation or not self.__is_order_affected_by_hodl_config__(order):
+                if is_order_simulation or self.__is_order_value_compliant__(order):
                     return self.__create_order__(order, is_order_simulation)
 
     def delete_order(self, order_id: int, is_order_simulation: bool):
@@ -367,7 +367,7 @@ class MyBitfinex(ExchangeInterface):
         if available_money < 10:
             message = '{}: Not enough (>{}$) balance for {} available'.format(symbol, 10, self.base_currency)
             print('\n{}'.format(message))
-            PatternLog.log_message(message, 'Bitfinex.buy_available')
+            PatternLog().log_message(message, 'Bitfinex.buy_available')
         else:
             ticker = self.get_ticker(symbol) if last_price == 0 else None
             last_price = ticker.last_price if ticker else last_price

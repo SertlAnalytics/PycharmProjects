@@ -21,13 +21,14 @@ from factories.salesman_sale_factory import SalesmanSaleFactory
 from factories.salesman_entity_factory import SalesmanEntityFactory
 from salesman_sale_checks import SaleIdenticalCheck, SaleSimilarityCheck
 from salesman_search_data import SalesmanSearchData
+from entities.salesman_named_entity import SalesmanEntityHandler
 from time import sleep
 
 
 class Tutti:
     def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
-        self._printing = SalesmanPrint(SLDC.get_columns_for_sales_printing())
+        self._printing = None
         self._sale_platform = self.__get_sale_platform__()
         self._excel = self.__get_excel__()
         self._salesman_spacy = SalesmanSpacy(load_sm=self.sys_config.load_sm) if self.sys_config.with_nlp else None
@@ -39,7 +40,7 @@ class Tutti:
         self._current_similar_sales = []  # will get the results for the search for ONE source
 
     @property
-    def platform_name(self):
+    def platform_name(self) -> str:
         return SLSRC.TUTTI_CH
 
     @property
@@ -51,11 +52,11 @@ class Tutti:
         return None if self._salesman_spacy is None else self._salesman_spacy.nlp
 
     @property
-    def printing(self):
+    def printing(self) -> SalesmanPrint:
         return self._printing
 
     @property
-    def current_source_sale(self):
+    def current_source_sale(self) -> SalesmanSale:
         return self._current_source_sale
 
     @property
@@ -67,7 +68,7 @@ class Tutti:
         return self._browser
 
     @property
-    def excel_file_path(self):
+    def excel_file_path(self) -> str:
         return self.sys_config.file_handler.get_file_path_for_file(
             '{}_{}'.format(self._sale_platform, self.sys_config.sales_result_file_name))
 
@@ -224,7 +225,9 @@ class Tutti:
         return self._sale_factory.get_sale_via_request_by_sale_id(sale_id)
 
     def get_search_results_by_selected_entities(self, selected_entities: list):
-        self.__init_printing__(self._current_similar_sales, selected_entities)
+        if self._printing is None:
+            return []
+        self._printing.init_for_selected_print_categories(selected_entities)
         return self.__get_similar_sales_as_dict_list_by_selected_entities__(selected_entities)
 
     def __get_similar_sales_as_dict_list_by_selected_entities__(self, selected_entities: list) -> list:
@@ -249,10 +252,10 @@ class Tutti:
         self._current_source_sale = self._sale_factory.get_sale_by_search_api(api)
         # self._current_source_sale.print_data_dict()
         self._current_similar_sales = self.__get_similar_sales_for_sale__(self._current_source_sale)
-        self.__init_printing__(self._current_similar_sales)
+        self._printing = SalesmanPrint(self._current_source_sale, self._current_similar_sales)
         return self.__get_similar_sales_as_dict_list__(self._current_similar_sales, for_db=False)
 
-    def check_my_sales_against_similar_sales(self, state='active'):
+    def check_my_sales_in_browser_against_similar_sales(self, state='active'):
         state_list = ['active', 'pending', 'edit', 'hidden', 'archived'] if state == '' else [state]
         for state in state_list:
             source_sale_list = self.browser.get_my_sales_from_tutti()
@@ -273,7 +276,7 @@ class Tutti:
         self.__write_to_excel__(self._current_similar_sales)
         self.__write_to_database__(self._current_similar_sales)
         if self.sys_config.plot_results:
-            self.__init_printing__(self._current_similar_sales)
+            self._printing = SalesmanPrint(self._current_source_sale, self._current_similar_sales)
             self._printing.print_box_plots()
 
     def __correct_similar_sales_in_db__(self):
@@ -281,7 +284,7 @@ class Tutti:
             self.current_source_sale, self._current_similar_sales, change_in_db=True)
         self.__write_to_excel__(self._current_similar_sales)
         if self.sys_config.plot_results:
-            self.__init_printing__(self._current_similar_sales)
+            self._printing = SalesmanPrint(self._current_source_sale, self._current_similar_sales)
             self._printing.print_box_plots()
 
     def __check_spacy_doc_similarity__(self, similar_sales: list):
@@ -335,37 +338,7 @@ class Tutti:
         self.__write_to_database__([sale], enforce_writing=True)
 
     def restrict_printing_to_selected_print_category(self, print_category: str):
-        self.__init_printing__(self._current_similar_sales, print_category)
-
-    def __init_printing__(self, similar_sales: list, print_categories=None):
-        input_list = []
-        for label_value, entity_label in self._current_source_sale.entity_label_dict.items():
-            # print('__init_printing__: print_category={}, label={}, value={}'.format(
-            #     print_category, entity_label, label_value))
-            if self.__can_entity_be_added_to_printing_list__(label_value, entity_label, print_categories):
-                self.__add_to_printing_list__(
-                    input_list, self._current_source_sale, similar_sales, entity_label, label_value)
-        self._printing.init_by_sale_dict(input_list)
-
-    @staticmethod
-    def __can_entity_be_added_to_printing_list__(value: str, label: str, category_list: list) -> bool:
-        if category_list is None or len(category_list) == 0:
-            return True
-        for category_entry in category_list:
-            if category_entry[0] == label and category_entry[1] == value:
-                return True
-        return False
-
-    def __add_to_printing_list__(
-            self, input_list, my_sale: SalesmanSale, similar_sales: list, entity_label: str, label_value: str):
-        if entity_label == my_sale.entity_label_dict.get(label_value, ''):
-            if my_sale.location != 'online':
-                my_sale.set_value(SLDC.PRINT_CATEGORY, '{}: {}'.format(entity_label, label_value))
-                input_list.append(my_sale.get_data_dict_for_columns(self._printing.columns))
-        for similar_sale in similar_sales:
-            if entity_label == similar_sale.entity_label_dict.get(label_value, ''):
-                similar_sale.set_value(SLDC.PRINT_CATEGORY, '{}: {}'.format(entity_label, label_value))
-                input_list.append(similar_sale.get_data_dict_for_columns(self._printing.columns))
+        self._printing.init_for_selected_print_categories([print_category])
 
     def __add_sale_to_database_input_list__(self, sale: SalesmanSale, input_list: list):
         if sale.is_sale_ready_for_sale_table():

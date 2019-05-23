@@ -2,9 +2,31 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f337eff7-2e2d-415d-b4ab-cf8d55a29aa3" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/../../Salesman/salesman_sale_list.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/pattern_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/constants/salesman_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/salesman_constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exchanges/bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/exchanges/bitfinex.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my_pandas.py" beforeDir="false" afterPath="$PROJECT_DIR$/my_pandas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_tables.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/trade_test_cases.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/trade_test_cases.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/entities/salesman_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/entities/salesman_named_entity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/printing/sale_printing.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/printing/sale_printing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/run_manual_import.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/run_manual_import.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/run_tutti_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/run_tutti_process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/grid_tables/my_grid_table_4_sales_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/grid_tables/my_grid_table_4_sales_base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman_sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman_sales.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/plotting/my_dash_plotter_for_salesman_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_database/access_layer/access_layer_sale.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_sale.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_sale.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_sale_checks.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_sale_checks.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_tutti/tutti.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Salesman/testing/test_factories.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/testing/test_factories.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -15,11 +37,39 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="run_test_from_factory.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="run_test_from_factory.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="221">
-              <caret line="13" column="35" lean-forward="true" selection-start-line="13" selection-start-column="35" selection-end-line="13" selection-end-column="35" />
+            <state relative-caret-position="85">
+              <caret line="5" column="3" selection-start-line="5" selection-start-column="3" selection-end-line="5" selection-end-column="3" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="bitfinex.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="278">
+              <caret line="304" column="78" selection-start-line="304" selection-start-column="78" selection-end-line="304" selection-end-column="78" />
+              <folding>
+                <element signature="e#287#325#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="loop_list.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pybase/loop_list.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-290" />
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pattern_trade_candidate.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_candidate.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="211">
+              <caret line="53" column="20" selection-start-line="53" selection-start-column="20" selection-end-line="53" selection-end-column="20" />
             </state>
           </provider>
         </entry>
@@ -35,8 +85,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>__convert_to_floats__</find>
-      <find>balance_cache</find>
       <find>create_order</find>
       <find>sellmark</find>
       <find>buy_av</find>
@@ -64,6 +112,9 @@
       <find>Wrong price</find>
       <find>thread</find>
       <find>old</find>
+      <find>comply</find>
+      <find>hodl</find>
+      <find>collection</find>
     </findStrings>
     <replaceStrings>
       <replace>test_unit</replace>
@@ -98,7 +149,6 @@
         <option value="$PROJECT_DIR$/exchanges/interactive_broker.py" />
         <option value="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" />
         <option value="$PROJECT_DIR$/exchanges/exchange_cls.py" />
-        <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
         <option value="$PROJECT_DIR$/mytestcase.py" />
         <option value="$PROJECT_DIR$/myhtml.py" />
         <option value="$PROJECT_DIR$/mydash/my_dash_colors.py" />
@@ -127,6 +177,7 @@
         <option value="$PROJECT_DIR$/mymath.py" />
         <option value="$PROJECT_DIR$/my_httplib.py" />
         <option value="$PROJECT_DIR$/constants/salesman_constants.py" />
+        <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
       </list>
     </option>
   </component>
@@ -141,7 +192,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -248,6 +298,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -404,15 +455,15 @@
     <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.46280992" visible="true" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4607438" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.477707" side_tool="true" weight="0.32784313" />
       <window_info anchor="bottom" id="Find" order="1" sideWeight="0.4960191" weight="0.32784313" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.522293" weight="0.5294118" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49761146" weight="0.32784313" />
-      <window_info id="Structure" order="1" sideWeight="0.5371901" side_tool="true" visible="true" weight="0.25" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="7" sideWeight="0.70616496" visible="true" weight="0.24078432" />
+      <window_info id="Structure" order="1" sideWeight="0.5392562" side_tool="true" visible="true" weight="0.25" />
+      <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.70616496" visible="true" weight="0.24078432" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49761146" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -511,20 +562,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../../Gaming/Stocks/pattern_logging/pattern_log.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-315">
-          <caret line="16" column="8" selection-start-line="16" selection-start-column="8" selection-end-line="16" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../Gaming/Stocks/pattern_detection_controller.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="254">
-          <caret line="126" column="49" lean-forward="true" selection-start-line="126" selection-start-column="49" selection-end-line="126" selection-end-column="49" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="254">
@@ -646,27 +683,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1030">
-          <caret line="65" selection-start-line="65" selection-end-line="67" selection-end-column="59" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test/my_test_case.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="442">
           <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="6" selection-end-column="3" />
-          <folding>
-            <element signature="e#287#325#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -695,13 +715,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="68">
           <caret line="4" column="52" selection-start-line="4" selection-start-column="52" selection-end-line="4" selection-end-column="52" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/myfilelog.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
         </state>
       </provider>
     </entry>
@@ -881,8 +894,44 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="13" column="35" lean-forward="true" selection-start-line="13" selection-start-column="35" selection-end-line="13" selection-end-column="35" />
+        <state relative-caret-position="85">
+          <caret line="5" column="3" selection-start-line="5" selection-start-column="3" selection-end-line="5" selection-end-column="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/myfilelog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="98" column="8" selection-start-line="98" selection-start-column="8" selection-end-line="98" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/exchange_cls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="25" column="6" selection-start-line="25" selection-start-column="6" selection-end-line="25" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/exchanges/bitfinex.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="278">
+          <caret line="304" column="78" selection-start-line="304" selection-start-column="78" selection-end-line="304" selection-end-column="78" />
+          <folding>
+            <element signature="e#287#325#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pybase/loop_list.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-290" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_candidate.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="53" column="20" selection-start-line="53" selection-start-column="20" selection-end-line="53" selection-end-column="20" />
         </state>
       </provider>
     </entry>

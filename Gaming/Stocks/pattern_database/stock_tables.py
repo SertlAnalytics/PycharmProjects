@@ -378,7 +378,7 @@ class TradeTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def get_columns_for_online_trades() -> list:
-        return [DC.TRADE_STATUS, DC.TRADE_IS_SIMULATION, DC.TICKER_ID, DC.TICKER_NAME, DC.BUY_TRIGGER,
+        return [DC.TRADE_STATUS, DC.TRADE_IS_SIMULATION, DC.TICKER_ID, DC.FC_SUMMARY_AFTER_BREAKOUT,
                 DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
                 DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_BEGIN_TIME,
                 DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.TRADE_RESULT, DC.TRADE_RESULT_PCT,

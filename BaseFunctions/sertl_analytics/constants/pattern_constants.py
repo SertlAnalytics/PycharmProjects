@@ -1164,6 +1164,8 @@ class DC:  # Data Columns
     FC_SELL_DT = 'Forecast_Sell_Date'
     FC_SELL_TIME = 'Forecast_Sell_Time'
 
+    FC_SUMMARY_AFTER_BREAKOUT = 'Forecast_after_Breakout'  # contains a summary of the FC_... values after breakout
+
     SELL_ORDER_ID = 'Sell_Order_ID'
     SELL_ORDER_TPYE = 'Sell_Order_Type'
     SELL_ORDER_TPYE_ID = 'Sell_Order_Type_ID'

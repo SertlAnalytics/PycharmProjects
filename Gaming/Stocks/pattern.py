@@ -594,6 +594,9 @@ class Pattern:
         self.data_dict_obj.add(DC.FC_SELL_DT, MyDate.get_date_from_epoch_seconds(ts))
         self.data_dict_obj.add(DC.FC_SELL_TIME, str(MyDate.get_time_from_epoch_seconds(ts)))
 
+        self.data_dict_obj.add(DC.FC_SUMMARY_AFTER_BREAKOUT,
+                               self.__get_annotation_text_for_prediction_after_breakout__())
+
     def fill_result_set(self):
         if self.is_part_trade_available():
             self.__fill_trade_result__()

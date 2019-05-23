@@ -83,6 +83,7 @@ class MyDashTabStatisticsPlotter:
         graph_api.figure_data = self.__get_area_winner_loser_figure_data__()
         graph_api.figure_layout_x_axis_dict = None  # dict(type='date',)
         graph_api.figure_layout_y_axis_dict = None  # dict(type='linear', range=[1, 100], dtick=20, ticksuffix='%')
+        # graph_api.figure_layout_y_axis_dict = {'type': 'log', 'autorange': True}
         return [MyDCC.graph(graph_api)]
 
     def __get_chart_type_heatmap__(self):
@@ -429,11 +430,11 @@ class MyDashTabStatisticsPlotter:
 
     def __get_figure_layout_y_axis_dict__(self, graph_api: DccGraphApi):
         if self.__can_axis_be_scaled_log_for_selected_variable__(self.y_variable):
-            return {'title': graph_api.figure_layout_yaxis_title, 'type': 'file_log', 'autorange': True}
+            return {'title': graph_api.figure_layout_yaxis_title, 'type': 'log', 'autorange': True}
 
     def __get_figure_layout_x_axis_dict__(self):
         if self.__can_axis_be_scaled_log_for_selected_variable__(self.x_variable):
-            return {'type': 'file_log', 'autorange': True}
+            return {'type': 'log', 'autorange': True}
 
     def __can_axis_be_scaled_log_for_selected_variable__(self, variable_for_axis: str) -> bool:
         if variable_for_axis in ['', DC.VALUE_TOTAL, DC.TOUCH_POINTS_TILL_BREAKOUT_TOP,

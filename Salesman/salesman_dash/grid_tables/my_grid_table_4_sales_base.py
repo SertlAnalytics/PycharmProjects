@@ -40,11 +40,11 @@ class SaleRow:
 
     @property
     def master_id(self):
-        return self._value_dict[SLDC.MASTER_ID]
+        return self._value_dict.get(SLDC.MASTER_ID, '')
 
     @property
     def region(self):
-        return self._value_dict[SLDC.REGION]
+        return self._value_dict.get(SLDC.REGION, '')
 
     @property
     def category(self):
@@ -53,6 +53,10 @@ class SaleRow:
     @property
     def sub_category(self):
         return self._value_dict[SLDC.PRODUCT_SUB_CATEGORY]
+
+    @property
+    def title(self):
+        return self._value_dict[SLDC.TITLE]
 
     @property
     def source(self):
@@ -82,6 +86,7 @@ class GridTableSelectionApi:
         self.category = ''
         self.sub_category = ''
         self.master_id = ''
+        self.input = ''
 
     def print_api_details(self):
         print('Selection_api_details: Source={}, Region={}, Category={}, SubCategory={}'.format(
@@ -145,7 +150,7 @@ class MySaleBaseTable:
 
     @property
     def height_for_display(self):
-        return 400
+        return 200
 
     def reset_selected_row(self):
         self._selected_row = None
@@ -173,12 +178,14 @@ class MySaleBaseTable:
         self._rows = self._source_rows
         if with_master_id:
             self._rows = [row for row in self._rows if row.master_id == api.master_id]
-        if api.region != REGION.GANZE_SCHWEIZ:
+        if api.region not in ['', REGION.GANZE_SCHWEIZ]:
             self._rows = [row for row in self._rows if row.region == api.region]
-        if api.category != PRCAT.ALL:
+        if api.category not in ['', PRCAT.ALL]:
             self._rows = [row for row in self._rows if row.category == api.category]
-        if api.sub_category != PRCAT.ALL:
+        if api.sub_category not in ['', PRCAT.ALL]:
             self._rows = [row for row in self._rows if row.sub_category == api.sub_category]
+        if api.input != '':
+            self._rows = [row for row in self._rows if row.title.lower().find(api.input.lower()) > -1]
         # if api.master_id not in ['', 'SEARCH']:
         #     self._rows = [row for row in self._rows if row.master_id == api.master_id]
 

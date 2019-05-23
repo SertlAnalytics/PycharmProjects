@@ -65,7 +65,7 @@ class TradeTestCaseFactory:
         api.pattern_id = row[DC.PATTERN_ID] if DC.PATTERN_ID in row else ''
         api.test_process = test_process  # e.g. TP.TRADE_REPLAY
         api.pattern_type = row[DC.PATTERN_TYPE]
-        api.buy_trigger = row[DC.BUY_TRIGGER]
+        # api.buy_trigger = row[DC.BUY_TRIGGER]
         api.trade_strategy = row[DC.TRADE_STRATEGY]
         api.symbol = row[DC.TICKER_ID]
         api.dt_start = MyDate.adjust_by_days(row[DC.PATTERN_RANGE_BEGIN_DT], -30)
