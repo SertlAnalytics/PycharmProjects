@@ -6,6 +6,7 @@ Date: 2018-12-10
 """
 
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.processes.my_process import MyProcessCounter
 from salesman_database.access_layer.access_layer_sale import AccessLayer4Sale
 from salesman_scheduling.salesman_job_result import SalesmanDatabaseUpdateJobResult
 from salesman_system_configuration import SystemConfiguration
@@ -18,17 +19,17 @@ class SalesmanDatabaseUpdater:
         self.db_salesman = db_salesman
         self.tutti = tutti
 
-    def check_sales_states(self):
+    def check_sales_states(self, process_counter: MyProcessCounter):
         self.sys_config.file_log.log_message('check_status_of_sales_in_database', 'SalesmanDatabaseUpdater')
-        self.tutti.check_status_of_sales_in_database()
+        self.tutti.check_status_of_sales_in_database(process_counter)
 
-    def update_similar_sales(self):
+    def update_similar_sales(self, process_counter: MyProcessCounter):
         self.sys_config.file_log.log_message('check_own_in_database_against_similar_sales', 'SalesmanDatabaseUpdater')
-        self.tutti.check_own_sales_in_database_against_similar_sales()
+        self.tutti.check_own_sales_in_database_against_similar_sales(process_counter)
 
-    def check_similar_sales_in_database(self):
+    def check_similar_sales_in_database(self, process_counter: MyProcessCounter):
         self.sys_config.file_log.log_message('check_similar_sales_in_database', 'SalesmanDatabaseUpdater')
-        self.tutti.check_similar_sales_in_db_against_master_sale_in_db()
+        self.tutti.check_similar_sales_in_db_against_master_sale_in_db(process_counter)
 
     def update_equity_records(self) -> SalesmanDatabaseUpdateJobResult:
         result_obj = SalesmanDatabaseUpdateJobResult()

@@ -23,13 +23,13 @@ class SalesmanPrint:
         self.__fill_sale_dict_list__()
         self._df_sale = self.__get_df_from_sale_dict_list__(self._sale_dict_list)
         self._df_sale = self.__get_df_without_single_entries__()
-        self._print_category_list = self._df_sale[SLDC.PLOT_CATEGORY].unique()
+        self._plot_category_list = self._df_sale[SLDC.PLOT_CATEGORY].unique()
         self._detail_offset_dict = {}
         self._ax = None
 
     @property
-    def print_category_list(self):
-        return self._print_category_list
+    def plot_category_list(self):
+        return self._plot_category_list
 
     @property
     def df_sale(self):
@@ -39,16 +39,15 @@ class SalesmanPrint:
     def columns(self):
         return self._columns
 
-    def init_for_selected_print_categories(self, category_list: list):
-        selected_category_list = self._print_category_list if category_list is None else category_list
-        selected_category_list = ['{}: {}'.format(entry[0], entry[1]) for entry in selected_category_list]
+    def init_for_selected_plot_categories(self, category_list: list):
+        selected_category_list = self._plot_category_list if category_list is None else category_list
         dict_list = [sale_dict for sale_dict in self._sale_dict_list
-                     if sale_dict[SLDC.PLOT_CATEGORY] in selected_category_list]
+                     if sale_dict[SLDC.PLOT_CATEGORY] in selected_category_list or len(category_list) == 0]
         self._df_sale = self.__get_df_from_sale_dict_list__(dict_list)
 
     def __fill_sale_dict_list__(self):
         for label_value, entity_label in self._sale_source.entity_label_dict.items():
-            print('__fill_sale_dict_list__: label={}, value={}'.format(entity_label, label_value))
+            print('__fill_sale_dict_list__: value={}, label={}'.format(label_value, entity_label))
             if self.__can_entity_be_added_to_printing_list__(label_value, entity_label):
                 self.__add_to_sale_dict_list__(entity_label, label_value)
 
@@ -62,11 +61,11 @@ class SalesmanPrint:
     def __add_to_sale_dict_list__(self, entity_label: str, label_value: str):
         if entity_label == self._sale_source.entity_label_dict.get(label_value, ''):
             if self._sale_source.location != 'online':
-                self._sale_source.set_value(SLDC.PLOT_CATEGORY, '{}: {}'.format(entity_label, label_value))
+                self._sale_source.set_value(SLDC.PLOT_CATEGORY, '{}_{}'.format(label_value, entity_label))
                 self._sale_dict_list.append(self._sale_source.get_data_dict_for_columns(self._columns))
         for sale in self._sales:
             if entity_label == sale.entity_label_dict.get(label_value, ''):
-                sale.set_value(SLDC.PLOT_CATEGORY, '{}: {}'.format(entity_label, label_value))
+                sale.set_value(SLDC.PLOT_CATEGORY, '{}_{}'.format(label_value, entity_label))
                 self._sale_dict_list.append(sale.get_data_dict_for_columns(self._columns))
 
     def __get_df_from_sale_dict_list__(self, sale_dict_list: list):
@@ -77,11 +76,10 @@ class SalesmanPrint:
     def __get_df_without_single_entries__(self):
         category_list = self._df_sale[SLDC.PLOT_CATEGORY].unique()
         category_remove_list = []
-        # print('category_list={}'.format(category_list))
-        for print_category in category_list:
-            df = self._df_sale[self._df_sale[SLDC.PLOT_CATEGORY] == print_category]
+        for category in category_list:
+            df = self._df_sale[self._df_sale[SLDC.PLOT_CATEGORY] == category]
             if df.shape[0] <= 1:
-                category_remove_list.append(print_category)
+                category_remove_list.append(category)
         if len(category_remove_list) > 0:
             return self._df_sale[self._df_sale[SLDC.PLOT_CATEGORY].isin(category_remove_list) == False]
         return self._df_sale
@@ -133,7 +131,7 @@ class SalesmanPrint:
         plt.show()
 
     def __init_detail_offset_dict__(self, axes):
-        for idx, print_category in enumerate(self._print_category_list):
+        for idx, print_category in enumerate(self._plot_category_list):
             offsets = axes.collections[idx].get_offsets()
             # print('type(offsets)={}, offsets={}'.format(type(offsets), offsets))
             row_detail_list = self.__get_row_detail_list_for_print_category__(print_category)
@@ -142,12 +140,12 @@ class SalesmanPrint:
                 self._detail_offset_dict[detail] = offsets
         # print('__init_detail_offset_dict__={}'.format(self._detail_offset_dict))
 
-    def __get_row_detail_list_for_print_category__(self, print_category: str) -> list:
+    def __get_row_detail_list_for_print_category__(self, category: str) -> list:
         row_detail_list = []
-        df_print_category = self._df_sale[self._df_sale[SLDC.PLOT_CATEGORY] == print_category]
-        df_print_category = df_print_category.sort_values(by=SLDC.PRICE_SINGLE)
-        for i in range(df_print_category.shape[0]):
-            row = df_print_category.iloc[i]
+        df_plot_category = self._df_sale[self._df_sale[SLDC.PLOT_CATEGORY] == category]
+        df_plot_category = df_plot_category.sort_values(by=SLDC.PRICE_SINGLE)
+        for i in range(df_plot_category.shape[0]):
+            row = df_plot_category.iloc[i]
             row_detail = '{}: {:.2f} CHF'.format(row[SLDC.TITLE], row[SLDC.PRICE_SINGLE])
             row_detail_list.append(row_detail)
         return row_detail_list
@@ -191,8 +189,8 @@ class SalesmanPrint:
 
     def __get_print_category_for_y_coordinate__(self, y: float):
         y_idx = int(y + 0.5)
-        if 0 <= y_idx < len(self._print_category_list):
-            return self._print_category_list[y_idx]
+        if 0 <= y_idx < len(self._plot_category_list):
+            return self._plot_category_list[y_idx]
         return 'Price single'
 
 

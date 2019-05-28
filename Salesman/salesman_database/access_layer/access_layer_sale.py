@@ -52,6 +52,22 @@ class AccessLayer4Sale(AccessLayer):
         )
         return self.select_data_by_query(query)
 
+    def get_existing_sales_as_df(self):
+        query = "SELECT * from {} ORDER BY {};".format(self.view_name, SLDC.SALE_ID)
+        return self.select_data_by_query(query)
+
+    def get_existing_sale_relations_as_df(self):
+        query = "SELECT * from {} ORDER BY {};".format(SMTBL.SALE_RELATION, SLDC.CHILD_ID)
+        return self.select_data_by_query(query)
+
+    def get_number_existing_sales_group_by_as_dict(self, group_by_list: list) -> dict:
+        df = self.get_existing_sales_as_df()
+        return df.groupby(group_by_list).size().to_dict()
+
+    def get_number_existing_sale_relations_group_by_as_dict(self, group_by_list: list) -> dict:
+        df = self.get_existing_sale_relations_as_df()
+        return df.groupby(group_by_list).size().to_dict()
+
     def get_my_sales_as_data_frame(self):
         query = "SELECT * from {} WHERE {}={} ORDER BY {};".format(
             self.view_name, SLDC.IS_MY_SALE, 1, SLDC.SALE_ID)
@@ -133,7 +149,7 @@ class AccessLayer4Sale(AccessLayer):
         query = "UPDATE {} SET {} = '{}', {}='{}' WHERE {}='{}';".format(
             self._table.name, SLDC.SALE_STATE, sale_state, SLDC.LAST_CHECK_DATE, last_check_date,
             SLDC.SALE_ID, sale_id)
-        print(query)
+        # print(query)
         self._counter_update += self._db.update_table_by_statement(self._table.name, query)
 
     def get_sale_ids_from_db_by_sale_state(self, sale_state: str, only_own_sales=False) -> list:
@@ -152,13 +168,14 @@ class AccessLayer4Sale(AccessLayer):
 
     def insert_or_update_sale_relation_data(self, input_dict_list: list):
         for input_dict in input_dict_list:
-            child_id = input_dict[SLDC.CHILD_ID]
-            master_id = input_dict[SLDC.MASTER_ID]
+            child_id = input_dict.get(SLDC.CHILD_ID, '')
+            master_id = input_dict.get(SLDC.MASTER_ID, '')
+            end_date = input_dict.get(SLDC.END_DATE, '')
             sale_id_master_id_row = self.get_sale_relation_row_for_sale_id_master_id(child_id, master_id)
             if sale_id_master_id_row is None:
                 self.insert_sale_relation_data(input_dict_list)
-            elif sale_id_master_id_row[SLDC.END_DATE] != '':  # reactivate
-                self.update_sale_relation_end_date(child_id, master_id, '')
+            elif sale_id_master_id_row[SLDC.END_DATE] != end_date:  # reactivate under certain conditions
+                self.update_sale_relation_end_date(child_id, master_id, end_date)
 
     def __get_table__(self):
         return SaleTable()

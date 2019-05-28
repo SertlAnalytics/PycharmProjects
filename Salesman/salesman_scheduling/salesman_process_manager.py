@@ -20,7 +20,7 @@ class SalesmanProcessManager(MyProcessManager):
     def __get_process_dict__(self) -> dict:
         return {
             SMPR.CHECK_SALES_STATE: smpr.ProcessCheckSalesState(self._db),
-            SMPR.UPDATE_SIMILAR_SALES_DAILY: smpr.ProcessUpdateSaleDaily(self._db),
+            SMPR.UPDATE_SIMILAR_SALES_DAILY: smpr.ProcessUpdateSimilarSalesDaily(self._db),
             SMPR.CHECK_SIMILAR_SALES_IN_DATABASE: smpr.ProcessCheckSimilarSalesInDatabase(self._db),
             SMPR.UPDATE_SALES_DATA_IN_STATISTICS_TAB: smpr.ProcessUpdateSalesDataInStatisticsTab(self._db),
             SMPR.UPDATE_COMPANY_DAILY: smpr.ProcessUpdateCompanyDaily(self._db),

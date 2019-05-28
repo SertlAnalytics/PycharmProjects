@@ -20,7 +20,7 @@ class MyDashSalesmanJob(MySalesmanJob):
 
 class MyDashCheckSalesStateJob(MyDashSalesmanJob):
     def __perform_task__(self):
-        self._db_updater.check_sales_states()
+        self._db_updater.check_sales_states(self._process.process_counter)
 
     @property
     def process_name(self):
@@ -29,7 +29,7 @@ class MyDashCheckSalesStateJob(MyDashSalesmanJob):
 
 class MyDashUpdateSimilarSalesJob(MyDashSalesmanJob):
     def __perform_task__(self):
-        self._db_updater.update_similar_sales()
+        self._db_updater.update_similar_sales(self._process.process_counter)
 
     @property
     def process_name(self):
@@ -38,7 +38,7 @@ class MyDashUpdateSimilarSalesJob(MyDashSalesmanJob):
 
 class MyDashCheckSimilarSalesInDatabaseJob(MyDashSalesmanJob):
     def __perform_task__(self):
-        self._db_updater.check_similar_sales_in_database()
+        self._db_updater.check_similar_sales_in_database(self._process.process_counter)
 
     @property
     def process_name(self):

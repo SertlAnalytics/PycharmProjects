@@ -124,6 +124,10 @@ class SalesmanSale:
         return self._entity_label_dict
 
     @property
+    def main_entity_value_label_dict(self):
+        return SalesmanEntityHandler.get_main_entity_value_label_dict(self.entity_label_dict)
+
+    @property
     def product_categories_value_list(self):
         return self._product_categories_value_list
 
@@ -137,6 +141,9 @@ class SalesmanSale:
         return return_list
 
     def get_value(self, key: str):
+        if key == SLDC.ENTITY_LABELS_DICT_4_EXCEL:
+            data_dict = self.get_value(SLDC.ENTITY_LABELS_DICT)
+            return {value: label for value, label in data_dict.items() if label != EL.LOC}
         return self._data_dict_obj.get(key, '')
 
     def set_value(self, key: str, value):
@@ -407,7 +414,7 @@ class SalesmanSale:
         self.set_value(SLDC.COMMENT, '1. load')
 
     def __get_nlp_doc_for_sale__(self) -> DocExtended:
-        properties_list = [self.title, self.description, self.product_category, self.product_sub_category]
+        properties_list = [self.title, self.description]
         nlp_doc_sale = DocExtended(self._salesman_nlp(' '.join(properties_list)))
         # nlp_doc_sale = DocExtended(self._salesman_nlp(self.title))
         nlp_doc_sale.correct_single_price(self.price_single)
@@ -417,10 +424,9 @@ class SalesmanSale:
         for ent in nlp_doc_sale.doc.ents:
             if EL.is_entity_label_relevant_for_salesman(ent.label_):
                 self.add_entity_name_label(ent.text, ent.label_)
-        if nlp_doc_sale.is_for_renting:
-            self.add_entity_name_label('Miete', EL.TARGET_GROUP)
-        if nlp_doc_sale.is_for_selling:
-            self.add_entity_name_label('Kauf', EL.TARGET_GROUP)
+        print('__add_entity_name_labels_to_sale_from_doc__:')
+        print('self.product_category={}/{}'.format(self.product_category, self.product_sub_category))
+
         self.reduce_search_labels_by_entity_names()
 
     def __add_data_dict_entries_to_sale_from_doc__(self, nlp_doc_sale: DocExtended):

@@ -146,7 +146,7 @@ class SearchTabDropDownHandler(DropDownHandler):
     def __get_product_category_options__(self):
         return self.sys_config.product_categorizer.get_category_value_list_as_option_list()
 
-    def __get_product_sub_category_options__(self, category=PRCAT.VEHICELS):
+    def __get_product_sub_category_options__(self, category=PRCAT.VEHICLES):
         return self.sys_config.product_categorizer.get_sub_category_lists_for_category_as_option_list(category=category)
 
     @staticmethod

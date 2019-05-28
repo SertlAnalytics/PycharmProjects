@@ -34,10 +34,6 @@ class MyHTMLTabSearchHeaderTable(MyHTMLTabHeaderTable):
     def my_search_markdown(self):
         return 'my_search_markdown'
 
-    @property
-    def my_search_news_markdown(self):
-        return 'my_search_news_markdown'
-
     def _init_cells_(self):
         online_label_div = MyHTML.div(self.my_search_online_label_div, 'Online Search', True)
         online_value_div = MyHTML.div(self.my_search_online_value_div, '', False)

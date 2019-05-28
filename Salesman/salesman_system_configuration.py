@@ -6,6 +6,7 @@ Date: 2018-05-14
 """
 
 from sertl_analytics.my_http import MyHttpClient
+from sertl_analytics.constants.salesman_constants import OUTHDL
 from salesman_logging.salesman_log import SalesmanLog
 from salesman_database.salesman_db import SalesmanDatabase
 from salesman_database.salesman_tables import SaleTable, CompanyTable, ProcessTable
@@ -48,6 +49,7 @@ class SystemConfiguration:
         self.print_details = False
         self.plot_results = True
         self.outlier_threshold = 25  # percentile below this threshold and above on top, i.e. < 15 and above 85 for 15
+        self.outlier_handling_for_plot = OUTHDL.CUT_IQR
 
     @property
     def is_for_test(self):

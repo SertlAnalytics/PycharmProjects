@@ -56,22 +56,3 @@ class MyDashTabPlotter4Search(MyDashTabPlotter):
                 trace = go.Box(x=x_cat.values, opacity=0.7, line=dict(color=color, width=1), name=cat)
                 trace_list.append(trace)
         return trace_list
-
-    def __get_line_figure_data__(self):
-        df_base = self.__get_df_for_selection__()
-        df = pd.DataFrame(df_base.groupby([self.x_variable, self.category])[DC.TRADE_RESULT_PCT].sum())
-        df.reset_index(inplace=True)
-        color_dict = {cat: self._color_handler.get_color_for_category(cat) for cat in df[self.category].unique()}
-        combined_list = list(df[self.category].unique())
-        return [
-            go.Scatter(
-                x=df[df[self.category] == element][self.x_variable],
-                y=df[df[self.category] == element][self.y_variable],
-                text=['{}: {:0.2f}'.format(element, y) for y in df[df[self.category] == element][self.y_variable]],
-                line={'color': color_dict[element], 'width': 2},
-                opacity=0.7,
-                name=element
-            ) for element in combined_list
-        ]
-
-

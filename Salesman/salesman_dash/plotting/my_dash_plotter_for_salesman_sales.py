@@ -56,14 +56,9 @@ class MyDashTabPlotter4Sales(MyDashTabPlotter):
         return trace_list_regression
 
     def __get_x_dict_and_y_dict_for_regression__(self, entity_name_list: list, metric_list: list):
-        # both together since we need the same order....
         x_dict = {}
         y_dict = {}
-        list_entity_labels = list(self._df_base[SLDC.ENTITY_LABELS_DICT])
-        # print('list_entity_labels = {}'.format(list_entity_labels))
         for entity_name in entity_name_list:
-            # df_cat = self._df_base[np.logical_and(self._df_base[SLDC.PRICE_SINGLE] > 0,
-            #                                       self._df_base[SLDC.PRICE_SINGLE] > 0)]
             df_cat = self._df_base[self._df_base[SLDC.ENTITY_LABELS_DICT].str.contains(entity_name)]
             if df_cat.shape[0] > 3:  # we need some for getting a correct regression
                 x_dict[entity_name] = list(df_cat[SLDC.START_DATE])
@@ -99,7 +94,6 @@ class MyDashTabPlotter4Sales(MyDashTabPlotter):
                     'size': 10,
                     'color': color,
                     'line': {'width': 0.5, 'color': 'white'}},
-            # text=self._df_base[SLDC.TITLE],
-            text=self._df_base[SLDC.ENTITY_LABELS_DICT],
+            text=self._df_base[SLDC.TITLE],
             name=cat,
         )

@@ -105,7 +105,8 @@ class TuttiUrlFactory:
         url_list = []
         for i in range(0, 11):
             self._order = i
-            url_list.append(self.url)
+            if i != 1:  # order 1 is equal with no order... - just to avoid two times the same parser
+                url_list.append(self.url)
         self._order = 0  # reset it....
         return url_list
 

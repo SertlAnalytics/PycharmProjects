@@ -16,6 +16,7 @@ class SLDD:  # SALE drop down
     SALE_REGION = 'SALE_REGION'
     SALE_CATEGORY = 'SALE_CATEGORY'
     SALE_SUB_CATEGORY = 'SALE_SUB_CATEGORY'
+    SALE_ENTITIES = 'SALE_ENTITIES'
 
     @staticmethod
     def get_all_as_list():
@@ -47,12 +48,16 @@ class SaleTabDropDownHandler(DropDownHandler):
     def my_sale_sub_category_dd(self):
         return 'my_sale_sub_category'
 
+    @property
+    def my_sale_entities_dd(self):
+        return 'my_sale_entities'
+
     def __get_drop_down_key_list__(self):
         return SLDD.get_all_as_list()
 
     def __get_selected_value_dict__(self):
         return {SLDD.SALE_SOURCE: '', SLDD.SALE_REGION: '',
-                SLDD.SALE_CATEGORY: '', SLDD.SALE_SUB_CATEGORY: ''}
+                SLDD.SALE_CATEGORY: '', SLDD.SALE_SUB_CATEGORY: '', SLDD.SALE_ENTITIES: ''}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {
@@ -60,6 +65,7 @@ class SaleTabDropDownHandler(DropDownHandler):
             SLDD.SALE_REGION: 'Region',
             SLDD.SALE_CATEGORY: 'Category',
             SLDD.SALE_SUB_CATEGORY: 'Subcategory',
+            SLDD.SALE_ENTITIES: 'Entities',
         }
         return value_dict.get(drop_down_type, None)
 
@@ -69,6 +75,7 @@ class SaleTabDropDownHandler(DropDownHandler):
             SLDD.SALE_REGION: self.my_sale_region_dd,
             SLDD.SALE_CATEGORY: self.my_sale_category_dd,
             SLDD.SALE_SUB_CATEGORY: self.my_sale_sub_category_dd,
+            SLDD.SALE_ENTITIES: self.my_sale_entities_dd,
         }
         return value_dict.get(drop_down_type, None)
 
@@ -78,6 +85,7 @@ class SaleTabDropDownHandler(DropDownHandler):
             SLDD.SALE_REGION: default_value if default_value else '',
             SLDD.SALE_CATEGORY: default_value if default_value else '',
             SLDD.SALE_SUB_CATEGORY: default_value if default_value else '',
+            SLDD.SALE_ENTITIES: default_value if default_value else '',
         }
         return default_dict.get(drop_down_type, None)
 
@@ -87,6 +95,7 @@ class SaleTabDropDownHandler(DropDownHandler):
             SLDD.SALE_REGION: 200,
             SLDD.SALE_CATEGORY: 200,
             SLDD.SALE_SUB_CATEGORY: 200,
+            SLDD.SALE_ENTITIES: 350,
         }
         return value_dict.get(drop_down_type, 140)
 
@@ -96,11 +105,12 @@ class SaleTabDropDownHandler(DropDownHandler):
             SLDD.SALE_REGION: self.__get_sale_region_options__(),
             SLDD.SALE_CATEGORY: self.__get_product_category_options__(),
             SLDD.SALE_SUB_CATEGORY: self.__get_product_sub_category_options__(),
+            SLDD.SALE_ENTITIES: self.__get_sale_entities_options__(),
         }
 
     def __get_for_multi__(self, drop_down_type: str):
-        if drop_down_type in [SLDD.SALE_SOURCE]:
-            return False
+        if drop_down_type in [SLDD.SALE_ENTITIES]:
+            return True
         return False
 
     @staticmethod
@@ -113,6 +123,10 @@ class SaleTabDropDownHandler(DropDownHandler):
     def __get_product_category_options__(self):
         return self.sys_config.product_categorizer.get_category_value_list_as_option_list()
 
-    def __get_product_sub_category_options__(self, category=PRCAT.VEHICELS):
+    def __get_product_sub_category_options__(self, category=PRCAT.VEHICLES):
         return self.sys_config.product_categorizer.get_sub_category_lists_for_category_as_option_list(category=category)
+
+    @staticmethod
+    def __get_sale_entities_options__():
+        return [{'label': '', 'value': ''}]
 

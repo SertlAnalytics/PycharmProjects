@@ -54,7 +54,7 @@ class CustomTokenizer:
     @property
     def replacement_dict(self) -> dict:
         return {
-            'Fr ': 'CHF ',
+            # 'Fr ': 'CHF ',
             'Fr.': 'CHF',
             ',--': '.-',
             ',-': '.-',
@@ -105,20 +105,24 @@ class SalesmanSpacy:
         self._matcher_object = self.__get_matcher_for_entity_type__(EL.OBJECT)
         self._matcher_product = self.__get_matcher_for_entity_type__(EL.PRODUCT)
         self._matcher_property = self.__get_matcher_for_entity_type__(EL.PROPERTY)
+        self._matcher_property_part = self.__get_matcher_for_entity_type__(EL.PROPERTY_PART)
         self._matcher_shop = self.__get_matcher_for_entity_type__(EL.SHOP)
         self._matcher_target_group = self.__get_matcher_for_entity_type__(EL.TARGET_GROUP)
         self._matcher_technology = self.__get_matcher_for_entity_type__(EL.TECHNOLOGY)
+        self._matcher_environment = self.__get_matcher_for_entity_type__(EL.ENVIRONMENT)
         # self._salesman_nlp.add_pipe(self.replacement_component, name='CUSTOM_REPLACEMENT', before='tagger')
         self._nlp.add_pipe(self.keep_entity_component, name='CUSTOM_KEEP_ENTITY', after='ner')
         self._nlp.add_pipe(self.animal_component, name='CUSTOM_ANIMAL', after='CUSTOM_KEEP_ENTITY')
         self._nlp.add_pipe(self.color_component, name='CUSTOM_COLOR', after='CUSTOM_ANIMAL')
         self._nlp.add_pipe(self.company_component, name='CUSTOM_COMPANY', after='CUSTOM_COLOR')
         self._nlp.add_pipe(self.job_component, name='CUSTOM_JOB', after='CUSTOM_COMPANY')
-        self._nlp.add_pipe(self.material_component, name='CUSTOM_MATERIAL', after='CUSTOM_JOB')
+        self._nlp.add_pipe(self.environment_component, name='CUSTOM_ENVIRONMENT', after='CUSTOM_JOB')
+        self._nlp.add_pipe(self.material_component, name='CUSTOM_MATERIAL', after='CUSTOM_ENVIRONMENT')
         self._nlp.add_pipe(self.object_component, name='CUSTOM_OBJECT', after='CUSTOM_MATERIAL')
         self._nlp.add_pipe(self.product_component, name='CUSTOM_PRODUCT', after='CUSTOM_OBJECT')
         self._nlp.add_pipe(self.property_component, name='CUSTOM_PROPERTY', after='CUSTOM_PRODUCT')
-        self._nlp.add_pipe(self.shop_component, name='CUSTOM_SHOP', after='CUSTOM_PROPERTY')
+        self._nlp.add_pipe(self.property_part_component, name='CUSTOM_PROPERTY_PART', after='CUSTOM_PROPERTY')
+        self._nlp.add_pipe(self.shop_component, name='CUSTOM_SHOP', after='CUSTOM_PROPERTY_PART')
         self._nlp.add_pipe(self.target_group_component, name='CUSTOM_TARGET_GROUP', after='CUSTOM_SHOP')
         self._nlp.add_pipe(self.technology_component, name='CUSTOM_TECHNOLOGY', after='CUSTOM_TARGET_GROUP')
 
@@ -202,6 +206,11 @@ class SalesmanSpacy:
         spans = [Span(doc, start, end, label=EL.JOB) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
+    def environment_component(self, doc):
+        matches = self._matcher_environment(doc)
+        spans = [Span(doc, start, end, label=EL.ENVIRONMENT) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
     def material_component(self, doc):
         matches = self._matcher_material(doc)
         spans = [Span(doc, start, end, label=EL.MATERIAL) for match_id, start, end in matches]
@@ -220,6 +229,11 @@ class SalesmanSpacy:
     def property_component(self, doc):
         matches = self._matcher_property(doc)
         spans = [Span(doc, start, end, label=EL.PROPERTY) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
+    def property_part_component(self, doc):
+        matches = self._matcher_property_part(doc)
+        spans = [Span(doc, start, end, label=EL.PROPERTY_PART) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
     def shop_component(self, doc):

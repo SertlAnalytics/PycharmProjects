@@ -71,7 +71,7 @@ class SalesmanWebParser:
                 if math.sqrt(category_number_dict[category]) > math.sqrt(max_number)/3]
 
     def get_html_elements_for_sale_via_request_by_sale_id(self, sale_id: str) -> list:
-        url = '{}{}'.format(self.url_base_for_request, sale_id)
+        url = self.get_url_for_sale_id(sale_id)
         request = requests.get(url)
         sleep(1)
         tree = html.fromstring(request.content)
@@ -80,10 +80,10 @@ class SalesmanWebParser:
         return [url, sales[0], product_categories]
 
     def get_sale_data_dict_for_sale_id(self, sale_id: str):
-        url = '{}{}'.format(self.url_base_for_request, sale_id)
+        url = self.get_url_for_sale_id(sale_id)
         request = requests.get(url)
         # sleep(1)
-        print('...get_sale_data_dict_for_sale_id.url: {}'.format(url))
+        # print('...get_sale_data_dict_for_sale_id.url: {}'.format(url))
         tree = html.fromstring(request.content)
         product_categories = tree.xpath('//span[@class="{}"]'.format(SLSCLS.PRODUCT_CATEGORIES))
         sales = tree.xpath('//div[@class="{}"]'.format(SLSCLS.OFFERS))
@@ -96,26 +96,39 @@ class SalesmanWebParser:
         sale_data_dict[SLDC.HREF] = url
         return sale_data_dict
 
+    def get_url_for_sale_id(self, sale_id):
+        return '{}{}'.format(self.url_base_for_request, sale_id)
+
     def get_sales_data_dict_for_search_label_list(self, search_label_list: list) -> dict:
         return_sales_data_dict = {}
-        encoded_search_string = MyText.get_url_encode_plus(' '.join(search_label_list))
+        if len(search_label_list) == 0:
+            encoded_search_string = ''
+        else:
+            encoded_search_string = MyText.get_url_encode_plus(' '.join(search_label_list))
         url_list = self._url_factory.get_url_list(encoded_search_string)
-        navigation_pages = ''
+        navigation_pages = self.__get_navigation_pages_as_string__(url_list[0])
         for idx, url in enumerate(url_list):
             if navigation_pages.find(str(idx)) < 0 < idx:  # we stop paging if there is no number found
                 break
-            print('checking url: {}'.format(url))
-            request = requests.get(url)
-            tree = html.fromstring(request.content)
-            if idx == 0:
-                navigation_elements = tree.xpath('//ul[@class="{}"]'.format(SCLS.NAVIGATION_MAIN))
-                for navigation in navigation_elements:
-                    navigation_pages = str(navigation.text_content())
-            sales = tree.xpath('//div[@class="{}"]'.format(SCLS.OFFERS))
-            for sale_element_in_list in sales:
-                sale_data_dict = self.__get_sale_data_dict_for_sale_html_element_in_list__(sale_element_in_list)
-                return_sales_data_dict[sale_data_dict[SLDC.SALE_ID]] = sale_data_dict
+            self.__fill_sales_data_dict_for_url__(url, return_sales_data_dict)
         return return_sales_data_dict
+
+    @staticmethod
+    def __get_navigation_pages_as_string__(url: str):
+        request = requests.get(url)
+        tree = html.fromstring(request.content)
+        navigation_elements = tree.xpath('//ul[@class="{}"]'.format(SCLS.NAVIGATION_MAIN))
+        for navigation in navigation_elements:
+            return str(navigation.text_content())
+
+    def __fill_sales_data_dict_for_url__(self, url, return_sales_data_dict):
+        print('checking url: {}'.format(url))
+        request = requests.get(url)
+        tree = html.fromstring(request.content)
+        sales = tree.xpath('//div[@class="{}"]'.format(SCLS.OFFERS))
+        for sale_element_in_list in sales:
+            sale_data_dict = self.__get_sale_data_dict_for_sale_html_element_in_list__(sale_element_in_list)
+            return_sales_data_dict[sale_data_dict[SLDC.SALE_ID]] = sale_data_dict
 
     def get_sale_data_dict_by_browser_sale_element(self, browser_html_element):
         offer_id_obj = browser_html_element.find_element_by_class_name(SLCLS.MAIN_ANKER)

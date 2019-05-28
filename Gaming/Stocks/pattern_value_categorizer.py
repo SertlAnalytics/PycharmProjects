@@ -18,6 +18,7 @@ class ValueCategorizer:
     __index_column = CN.TIMESTAMP
 
     def __init__(self, sys_config: SystemConfiguration, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower):
+        # ToDo: To eliminate spikes we could take the extrema of the corpus of a candle - not the shadows
         self.sys_config = sys_config
         self._tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
         self._tolerance_pct_buying = self.sys_config.get_value_categorizer_tolerance_pct_buying()

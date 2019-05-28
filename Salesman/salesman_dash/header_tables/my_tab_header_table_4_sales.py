@@ -23,14 +23,30 @@ class MyHTMLTabSalesHeaderTable(MyHTMLTabHeaderTable):
         return 'my_sales_markdown'
 
     @property
-    def my_sales_news_markdown(self):
-        return 'my_sales_news_markdown'
+    def my_sales_found_label_div(self):
+        return 'my_sales_found_label_div'
+
+    @property
+    def my_sales_found_all_value_div(self):
+        return 'my_sales_found_all_value_div'
+
+    @property
+    def my_sales_found_valid_value_div(self):
+        return 'my_sales_found_valid_value_div'
 
     def _init_cells_(self):
         id_label_div = MyHTML.div(self.my_sales_id_label_div, 'Sale ID:', True)
         id_value_div = MyHTML.div(self.my_sales_id_value_div, '', False)
 
+        found_label_div = MyHTML.div(self.my_sales_found_label_div, 'Available:', True)
+        found_valid_value_div = MyHTML.div(self.my_sales_found_valid_value_div, '0')
+        found_all_value_div = MyHTML.div(self.my_sales_found_all_value_div, '0')
+
+        found_div = MyHTML.div_embedded([
+            found_label_div, MyHTML.span(' '),
+            found_valid_value_div, MyHTML.span('/'), found_all_value_div], inline=True)
+
         self.set_value(1, 1, MyHTML.div_embedded([id_label_div, MyHTML.span(' '), id_value_div]))
         self.set_value(1, 2, MyDCC.markdown(self.my_sales_markdown))
-        self.set_value(1, 3, MyDCC.markdown(self.my_sales_news_markdown))
+        self.set_value(1, 3, MyHTML.div_embedded([found_div, MyHTML.span(' ')]))
 

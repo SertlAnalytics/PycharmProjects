@@ -10,16 +10,44 @@ from sertl_analytics.mydates import MyDate
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase
 
 
+class MyProcessCounter:
+    def __init__(self):
+        self.processed_records = 0
+        self.deleted_records = 0
+        self.updated_records = 0
+        self.inserted_records = 0
+
+    def reset(self):
+        self.processed_records = 0
+        self.deleted_records = 0
+        self.updated_records = 0
+        self.inserted_records = 0
+
+    def get_record_numbers(self) -> list:
+        return [self.processed_records, self.inserted_records, self.updated_records, self.deleted_records]
+
+    def get_record_numbers_as_string(self) -> list:
+        return [str(number) for number in self.get_record_numbers()]
+
+    def print_statistics(self):
+        print('Process statistics: {}'.format(self.get_statistics()))
+
+    def get_statistics(self):
+        record_numbers = self.get_record_numbers()
+        if max(record_numbers) == 0:
+            return ''
+        prefix_list = ['processed', 'inserted', 'updated', 'deleted']
+        prefix_value_list = ['{}: {}'.format(prefix_list[idx], n) for idx, n in enumerate(record_numbers) if n > 0]
+        return ', '.join(prefix_value_list)
+
+
 class MyProcess:
     def __init__(self, db: BaseDatabase):
         self._file_log = self.__get_file_log__()
-        self._db_stock = db
+        self._db_sale = db
         self._start_dt = None
         self._end_dt = None
-        self._processed_records = 0
-        self._deleted_records = 0
-        self._updated_records = 0
-        self._inserted_records = 0
+        self._process_counter = MyProcessCounter()
         self._child_process_names = self.__get_child_process_names__()
         self._child_processes = []
         self._triggered_by_process_names = []
@@ -35,6 +63,10 @@ class MyProcess:
     @property
     def process_result(self):
         return self._process_result
+
+    @property
+    def process_counter(self) -> MyProcessCounter:
+        return self._process_counter
 
     @process_result.setter
     def process_result(self, value):
@@ -66,10 +98,7 @@ class MyProcess:
         print('Start process: {}'.format(self.process_name))
         self._start_dt = MyDate.get_datetime_object()
         self._end_dt = None
-        self._processed_records = 0
-        self._updated_records = 0
-        self._deleted_records = 0
-        self._inserted_records = 0
+        self._process_counter.reset()
         self._table_record_number_before_start = self.__get_table_record_numbers__()
 
     def __end_process__(self):
@@ -77,6 +106,7 @@ class MyProcess:
         self._end_dt = MyDate.get_datetime_object()
         self._table_record_number_after_end = self.__get_table_record_numbers__()
         self.__calculate_insert_delete_numbers__()
+        self._process_counter.print_statistics()
         self._triggered_by_process_names = []  # done for this dependencies
         self.__trigger_child_processes__()
         self._file_log.log_message(self.get_statistics(), 'End Process', self.process_name)  # ToDo - get rid of this file_log...
@@ -84,7 +114,7 @@ class MyProcess:
     def __get_table_record_numbers__(self):
         counter = 0
         for table_name in self._table_names:
-            counter += self._db_stock.get_number_of_records_for_table(table_name)
+            counter += self._db_sale.get_number_of_records_for_table(table_name)
         return counter
 
     def __calculate_insert_delete_numbers__(self):
@@ -102,30 +132,25 @@ class MyProcess:
             child_process.add_to_triggered_by_process_names(self.process_name)
 
     def increment_processed_records(self, increment=1):
-        self._processed_records += increment
+        self._process_counter.processed_records += increment
 
     def increment_deleted_records(self, increment=1):
-        self._deleted_records += increment
+        self._process_counter.deleted_records += increment
 
     def increment_updated_records(self, increment=1):
-        self._updated_records += increment
+        self._process_counter.updated_records += increment
 
     def increment_inserted_records(self, increment=1):
-        self._inserted_records += increment
+        self._process_counter.inserted_records += increment
 
     def get_record_numbers(self) -> list:
-        return [self._processed_records, self._inserted_records, self._updated_records, self._deleted_records]
+        return self._process_counter.get_record_numbers()
 
     def get_record_numbers_as_string(self) -> list:
-        return [str(number) for number in self.get_record_numbers()]
+        return self._process_counter.get_record_numbers_as_string()
 
     def get_statistics(self):
-        record_numbers = self.get_record_numbers()
-        if max(record_numbers) == 0:
-            return ''
-        prefix_list = ['processed', 'inserted', 'updated', 'deleted']
-        prefix_value_list = ['{}: {}'.format(prefix_list[idx], n) for idx, n in enumerate(record_numbers) if n > 0]
-        return ', '.join(prefix_value_list)
+        return self._process_counter.get_statistics()
 
     @staticmethod
     def __get_child_process_names__():

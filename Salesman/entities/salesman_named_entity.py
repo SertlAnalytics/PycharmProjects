@@ -54,20 +54,82 @@ class PropertyEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
-            'Autostellplatz',
-            'Bad', 'Babyzimmer', 'Büro', 'Büroplatz',
-            'Coworking Spaces',
-            'Dachboden', 'Dachgeschoss', 'Dach',
-            'Garten', 'Garage',
+            'Attika', 'Attikawohnung',
+            'Bauernhaus', 'Bungalow', 'Bauland',
+            'Doppelhaus', 'Doppelhaushälfte', 'DHH', 'Doppeleinfamilienhaus', 'Doppelfamilienhaus',
+            'Dreifamilienreihenhaus',
+            'Einfamilienhaus', 'EFH', 'Eckhaus',
+            'Generationenhaus',
             'Haus', 'Häuschen', 'Hütte',
-            'Jugendzimmer',
-            'Keller', 'Kinderzimmer', 'Küche'
-            'Parkplatz',
-            'Reduit',
-            'Stellplatz', 'Schlafzimmer',
-            'Tiefgarage', 'Terrasse',
+            'Immobilie',
+            'Lagerhalle', 'Landhaus',
+            'Mehrfamilienhaus', 'MFH', 'Maisonette', 'Mittelhaus',
+            'Parkplatz', 'Parkplätze',
             'Wohnung',
             'Zimmer',
+        ]
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+            'Doppelhaus': ['Doppelhaushälfte', 'Doppelfamilienhaus']
+        }
+
+
+class PropertyPartEntity(NamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return [
+            'Autostellplatz', 'Abstellraum', 'Ankleide', 'Aussenreduit', 'Ankleiderraum',
+            'Autoeinstellhalle', 'Autoeinstellplatz',
+            'Aussenschwimmbad',
+            'Bastelraum/Werkstatt', 'Bastelraum',
+            'Bad', 'Babyzimmer', 'Büro', 'Büroplatz', 'Badezimmer', 'Badzimmer', 'Balkon',
+            'Carport', 'Cheminée',
+            'Dachboden', 'Dachgeschoss', 'Dach', 'Dachterrasse',
+            'Elternschlafzimmer', 'Estrich', 'Esszimmer',
+            'Fahrradkeller', 'Fahrradabstellplatz',
+            'Garten', 'Garage', 'Gargensitzplatz', 'Grillplatz', 'Garten/Balkon',
+            'Jugendzimmer',
+            'Keller', 'Kinderzimmer', 'Küche', 'Kammer', 'Kellerraum',
+            'Reduit', 'Réduit',
+            'Stellplatz', 'Schlafzimmer', 'Seerosenteich',
+            'Tiefgarage', 'Terrasse', 'Trocknerraum',
+            'Veranda',
+            'Wohn-Esszimmer', 'Wohnzimmer', 'Wohnküche', 'Werkstatt', 'Waschküche',
+            'Zimmer',
+        ]
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+            'Reduit': ['Dachboden', 'Estrich']
+        }
+
+
+class EnvironmentEntity(NamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return [
+            'Abendsonne', 'Altstadt', 'Apotheke',
+            'Bahnhof', 'Bäckerei', 'Bezirksschule', 'Bauzonenrand', 'Baulandreserve', 'Bushaltestelle',
+            'Dorfkern', 'Dorfzentrum', 'Dorfmuseum', 'Dorfladen',
+            'Einkaufsmöglichkeiten', 'Einkaufszentren', 'Einkaufszentrum', 'Einkaufscenter',
+            'Flughafen',
+            'Gymnasium',
+            'Kindergarten',
+            'Poststelle', 'Post', 'Primarschule',
+            'Landwirtschaftszone',
+            'Metzgerei', 'Museum',
+            'Panoramablick',
+            'Rebberg',
+            'Schulen', 'Schwimmbad', 'S-Bahn', 'Spital', 'Spielplatz',
+            'Schulen/Kindergarten',
+            'Tram-Bahn', 'Thermalbad',
+            'U-Bahn',
+            'Vitaparcours', 'Vitaparcour',
+            'Wald',
+            'Zentrum', 'zentrumsnah',
         ]
 
     @staticmethod
@@ -111,8 +173,8 @@ class TargetGroupEntity(NamedEntity):
             'Kind', 'Kinder',
             'Baby', 'Babies'            
             'Gewerbe',
+            'Nachmieter',
             'Privat', 'Arbeit',
-            'Miete', 'Kauf', 'Leasing', 'Wohnen auf Zeit', 'Miete auf Zeit',
         ]
 
     @staticmethod
@@ -143,7 +205,8 @@ class MaterialEntity(NamedEntity):
             'Parkett', 'Porzellan', 'Plattenboden', 'Parkettboden', 'Plexiglas', 'Plastik',
             'Polyurethan', 'Polyester',
             'Stoff', 'Stroh', 'Spreu', 'Sand',
-            'Terracotta',
+            'Terracotta', 'Teakholz',
+            'Vinyl',
             'Wolle'
         ]
 
@@ -199,20 +262,23 @@ class TechnologyEntity(NamedEntity):
     def __get_entity_names__():
         return [
             'Aussentemperaturanzeige', 'ABS',
-            'Batterie', 'Batterien',
+            'Batterie', 'Batterien', 'Breitband-Internet',
             'Elektrische Fensterheber', 'ESP',
-            'Fahrlichtautomatik',
-            'GPS',
+            'Fahrlichtautomatik', 'Fernwärme',
+            'GPS', 'Gasheizung',
             'höhenverstellbar',
+            'Induktionskochfeld',
             'Kollisionswarnung',
+            'Minergie-Standard', 'Minergie', 'Massiv-Bauweise', 'Massivbauweise',
             'Notrufsystem',
             'LED-Tagfahrlicht', 'LED Heckleuchten', 'LED Intelligent Light',
             'Park-Assistent',
             'Tempomat',
             'Reiserechner', 'Reifendruck-Kontrollanzeige',
-            'Seitenairbag',
+            'Seitenairbag', 'SAT/TV', 'Sickerleitungen',
             'Start-Stopp-Funktion',
-            'WiFi', 'WLAN', 'Wartungsintervall-Anzeige',
+            'WiFi', 'WLAN', 'Wartungsintervall-Anzeige', 'Wäscheturm',
+            'Zentralzeizung',
         ]
 
     @staticmethod
@@ -241,11 +307,11 @@ class CompanyEntity(NamedEntity):
             'Omega',
             'Paidi', 'Playmobil', 'Puma',
             'Risa', 'Range Rover', 'Ricardo',
-            'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise',
+            'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise', 'SBB',
             'Tosca', 'Toyota', 'Tutti', 'TomTom',
             'USM', 'Under Armour',
             'Waldmann', 'Wilde+Spieth',
-            'Villiger',  'Vitra', 'VW', 'Volkswagen',
+            'Villiger',  'Vitra', 'VW', 'Volkswagen', 'Volg',
             'Zimstern', 'Zimtstern', 'Zanotti',
         ]
 
@@ -302,12 +368,14 @@ class ObjectTypeEntity(NamedEntity):
             'Ablagefach',
             'Alufelgen', 'Auto', 'Autokindersitz', 'Auto-Kindersitz', 'Anhänger', 'Anzug', 'Akku',
             'Aufbewahrungstruhe', 'Aufbewahrungsmöbel', 'Aufbewahrungstisch', 'Absturzsicherung',
-            'Besucherstuhl', 'Babywanne', 'Bremsbeläge', 'Bürotisch', 'Bürostuhl', 'Bad', 'Badesand',
+            'Besucherstuhl', 'Babywanne', 'Bremsbeläge', 'Bürotisch', 'Bürostuhl', 'Bad', 'Badesand', 'Badewanne',
             'Bürodrehstuhl', 'Bild', 'Buch', 'Badehose', 'Bikini', 'Badewanne', 'Balkon', 'Behälter',
             'Baumwolleinstreu', 'Baumhaus', 'Blüten', 'Blätter', 'Buddelbox', 'Bett', 'Bücherregal',
+            'Badewanne/Dusche', 'Badewanne/Whirlpool',
             'Brillenfach', 'Bottleholder',
             'Campinggeschirr',
             'Corpus', 'Chefsessel',
+            'Doppelbett', 'Dunstabzug',
             'Dusche', 'Drehstuhl', 'Drosselklappensensor', 'Drosselklappenschalter', 'Doppellavabo',
             'Digitalkamera', 'Drahtgitter', 'Deckelklappe', 'Drehteller', 'Dübelversteck',
             'Einstellwerkzeug', 'Endschalldämpfer', 'Entsorgung', 'Essbereich', 'Einstreu', 'Eckschrank',
@@ -317,13 +385,14 @@ class ObjectTypeEntity(NamedEntity):
             'Gartenlehnstuhl', 'Gestell', 'Geschwisterkinderwagen', 'Gewindefahrwerk', 'Grill', 'Gitter',
             'Golf-Bag', 'Glaskeramikkochfeld', 'Glaskeramik-Kochfeld', 'Gefrierfach', 'Gefrierschrank',
             'Garderobe', 'Geschirr', 'Geschirrspüler', 'Glaskäfig', 'Gehege', 'Gürtel', 'Golfgürtel',
+            'Haustür',
             'Handtasche', 'Hängematte', 'Hut', 'Herbst-/Winterjacke', 'Herbst/Winterjacke', 'Hose', 'Heu',
             'Harlekin', 'Heckspoiler', 'Hotspot', 'Hamsterrad', 'Holzbrücke', 'Hamsterburg', 'Holzschrank',
             'Holzkäfig', 'Hamsterkäfig', 'Hamsterhöhle', 'Holztreppe', 'Hasenstahl', 'Holzhäuschen', 'Hundematte',
             'Hangenester', 'Hochbett', 'Hinterreifen',
             'Inspektion',
             'Jacke', 'Jeans', 'Jeanshose',
-            'Kaffeemaschine', 'Kindersitz',
+            'Kaffeemaschine', 'Kindersitz', 'Kühlschrank',
             'Kommunionkleid', 'Kinderwagen', 'Kinderbett', 'Kugelbahn', 'Kostüm', 'Kostüme', 'Kleid',
             'Kupplungsscheibe', 'Kühlergrill', 'Kühlmittelpumpe', 'Kleidung', 'Kinderschuhe',
             'Konferenz-Raum', 'Kratzsäule', 'Kuschelhöhle', 'Katzentoilette', 'Katzenklo', 'Kletterbaum',
@@ -335,12 +404,12 @@ class ObjectTypeEntity(NamedEntity):
             'Nagerbehälter', 'Navi', 'Navigationsgerät',
             'Matraze', 'Matrazen', 'Matratzenboden', 'Marionette', 'Modell', 'Modellauto', 'Möbellift',
             'Motorenöl', 'Motoröl', 'Motor', 'Mitfahrgelegenheit', 'MicroSim', 'Müll', 'Mäusegehege', 'Motorrad',
-            'Multifunktionslenkrad',
+            'Multifunktionslenkrad', 'Mikrowelle',
             'Nagerheim', 'Nagerkäfig', 'Nagerstall', 'Nagerhaus',
             'Overall', 'Öse',
             'Porzellanfigur', 'Porzellanfiguren', 'Puppe', 'Pullover', 'Plexiglasscheibe', 'PC-Halterung',
-            'Portemonnaie',
-            'Rettungsweste', 'Roman', 'Ratgeber', 'Router', 'Rückwand', 'Rückfahrkamera',
+            'Portemonnaie', 'Pizzaofen',
+            'Rettungsweste', 'Roman', 'Ratgeber', 'Router', 'Rückwand', 'Rückfahrkamera', 'Rückenlehne', 'Rücklehne',
             'Rollcontainer', 'Rollkorpus', 'Reifen', 'Räder', 'Regal', 'Regenschutz', 'Rucksack', 'Rock', 'Rahmen',
             'Schlafsack', 'Service', 'Scheibenwischer', 'Sachbuch', 'Schlafsofa', 'Sitzbank', 'Seitentaschen',
             'Schlüssel', 'Schlüsselanhänger', 'Scheibenbremsbeläge', 'Strickdecke', 'Stehleuchte', 'Ski',
@@ -349,17 +418,17 @@ class ObjectTypeEntity(NamedEntity):
             'Sportauspuff', 'Spielzeugautos', 'Schlafsofa', 'Sommerreifen', 'Stehtisch', 'Sitzungstisch',
             'Spiegelschrank', 'Schraube', 'Streu', 'Sandbad', 'Starterset', 'Spielburg', 'Schaukel',
             'Sauerstoffboxen', 'Schale', 'Schlafhöhlen', 'Seitenschutz', 'Seitenblende', 'Sporttourer',
-            'Schreibtischplatte', 'Schultergurt', 'Sonderzubehör',
+            'Schreibtischplatte', 'Schultergurt', 'Sonderzubehör', 'SIM-Karte', 'Staubsauger', 'Steamer',
             'Turnschuhe', 'Tisch', 'Toilette', 'Tasche', 'Transport', 'Taxi', 'Tumbler', 'Truhe', 'Tourer',
             'Tiefkühlfach', 'Trockenfutter', 'Terrarium', 'Terrarien',
             'Transportbox', 'Transport-Box', 'Transportboxen', 'Transportkiste', 'Transportkistli',
             'Tür', 'Treppe',
             'Trinkflasche', 'Trinkflaschen', 'Terracottahaus',
-            'Umhängetasche', 'Übergangsjacke', 'Umzug', 'Unterbau', 'Unterschrank',
+            'Umhängetasche', 'Übergangsjacke', 'Umzug', 'Unterbau', 'Unterschrank', 'Untergestell',
             'Velo', 'Vorderreifen',
             'Winterräder', 'Winterreifen', 'Winterkompletträder', 'Wanne', 'Wasserpumpe', 'Waschmaschine', 'WC',
             'Werkzeugkasten', 'Winterjacke', 'Winterschuhe', 'Wohnmobil', 'Wasch-Trockenmaschine',
-            'Wasserflasche', 'Wasserflaschen', 'Winterstiefel', 'Wickeltisch',
+            'Wasserflasche', 'Wasserflaschen', 'Winterstiefel', 'Wickeltisch', 'Widerstand',
             'Zeitwerkzeug', 'Zeitsteuerung', 'Zubehör', 'Zwischenboden', 'Zahnriemen', 'Zimmerlampe',
         ]
 
@@ -425,6 +494,13 @@ class SalesmanEntityHandler:
         return entity_name
 
     @staticmethod
+    def get_main_entity_value_label_dict(entity_value_label_dict: dict) -> dict:
+        return {
+            label_value: entity_label for label_value, entity_label in entity_value_label_dict.items()
+            if SalesmanEntityHandler.get_main_entity_name_for_entity_name(entity_label, label_value) == label_value
+        }
+
+    @staticmethod
     def get_entity_for_entity_label(entity_label: str) -> NamedEntity:
         return {
             EL.ANIMAL: AnimalEntity(),
@@ -432,8 +508,10 @@ class SalesmanEntityHandler:
             EL.COMPANY: CompanyEntity(),
             EL.COLOR: ColorEntity(),
             EL.JOB: JobEntity(),
+            EL.ENVIRONMENT: EnvironmentEntity(),
             EL.PRODUCT: ProductEntity(),
             EL.PROPERTY: PropertyEntity(),
+            EL.PROPERTY_PART: PropertyPartEntity(),
             EL.OBJECT: ObjectTypeEntity(),
             EL.TARGET_GROUP: TargetGroupEntity(),
             EL.MATERIAL: MaterialEntity(),

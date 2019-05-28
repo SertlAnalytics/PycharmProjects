@@ -6,6 +6,7 @@ Date: 2019-02-26
 """
 
 from sertl_analytics.constants.pattern_constants import DC, FD, PRD
+from sertl_analytics.mymath import MyMath
 from pattern_database.stock_tables_data_dictionary import WaveDataDictionary
 from sertl_analytics.mydates import MyDate
 
@@ -33,13 +34,14 @@ class FibonacciPrediction:
         return 'FC_R_'
 
     def get_values_for_print_as_list(self):
-        return [[self.wave_end_flag_pct, self.max_retr_pct, self.max_retr_ts_pct],
+        wave_end_probability = 'End prob.: {:.2f}%'.format(self.wave_end_flag_pct)
+        return [[wave_end_probability, '{:.2f}%'.format(self.max_retr_pct), '{:.2f}%'.format(self.max_retr_ts_pct)],
                 [self.wave_end_flag, self.max_retr, self.max_retr_dt]]
 
     def get_value_for_retracement_pct(self, retracement_pct: float) -> float:
         if self.wave_type == FD.ASC:
-            return round(self.wave_end_value - self.value_range * retracement_pct/100, 2)
-        return round(self.wave_end_value + self.value_range * retracement_pct/100, 2)
+            return MyMath.round_smart(self.wave_end_value - self.value_range * retracement_pct/100)
+        return MyMath.round_smart(self.wave_end_value + self.value_range * retracement_pct/100)
 
     def get_timestamp_for_retracement_pct(self, retracement_pct: float) -> int:
         return int(self.wave_end_ts + self.ts_range * retracement_pct/100)

@@ -5,17 +5,24 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-09
 """
 
+class OUTHDL:  # outlier handling
+    KEEP_ALL = 'KEEP_ALL'
+    CUT_IQR = 'CUT_IQR'
+    CUT_CONFIGURED = 'CUT_CONFIGURED'  # see config parameter outlier_threshold
+
 
 class EL:  # entity labels
     BLACK_LIST = 'BLACK_LIST'
     ANIMAL = 'ANIMAL'
     COMPANY = 'COMPANY'
     COLOR = 'COLOR'
+    ENVIRONMENT = 'ENVIRONMENT'
     JOB = 'JOB'
     LOC = 'LOC'
     ORG = 'ORG'
     PRODUCT = 'PRODUCT'
     PROPERTY = 'PROPERTY'
+    PROPERTY_PART = 'PROPERTY_PART'
     OBJECT = 'OBJECT'
     TARGET_GROUP = 'TARGET_GROUP'
     MATERIAL = 'MATERIAL'
@@ -24,7 +31,9 @@ class EL:  # entity labels
 
     @staticmethod
     def get_all() -> list:
-        return [EL.BLACK_LIST, EL.COLOR, EL.ANIMAL, EL.JOB, EL.PRODUCT, EL.PROPERTY, EL.LOC,
+        return [EL.BLACK_LIST, EL.COLOR, EL.ANIMAL, EL.ENVIRONMENT, EL.JOB, EL.PRODUCT,
+                EL.PROPERTY, EL.PROPERTY_PART,
+                EL.LOC,
                 EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.SHOP, EL.TECHNOLOGY]
 
     @staticmethod
@@ -39,7 +48,7 @@ class EL:  # entity labels
 
     @staticmethod
     def get_labels_relevant_for_entity_category_key() -> list:
-        return [EL.ANIMAL, EL.JOB, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.TECHNOLOGY]
+        return [EL.ANIMAL, EL.JOB, EL.ENVIRONMENT, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.TECHNOLOGY]
 
     @staticmethod
     def get_all_without_loc() -> list:
@@ -80,8 +89,8 @@ class DEP:
 class SMPR:  # Salesman Processes
     UPDATE_SALES_DATA_IN_STATISTICS_TAB = 'Update_Sales_Data_In_Statistics_Tab'
     CHECK_SALES_STATE = 'Check_Sales_State'
-    CHECK_SIMILAR_SALES_IN_DATABASE = 'Check_Similar_Sales_In_Database'
     UPDATE_SIMILAR_SALES_DAILY = 'Update_Similar_Sales'
+    CHECK_SIMILAR_SALES_IN_DATABASE = 'Check_Similar_Sales_In_Database'    
     UPDATE_COMPANY_DAILY = 'Update_Company_Daily'
 
     
@@ -202,6 +211,7 @@ class OBJPROP:  # Object properties
     USAGE = 'Usage'
     WARRANTY = 'Warrenty until'
     ORIGINAL_COVER = 'Cover available'
+    SALE_TYPE = 'Type'
     
 
 class SLDC:  # Sale data column
@@ -254,6 +264,7 @@ class SLDC:  # Sale data column
     SEARCH_LABELS = 'Search_labels'
     ENTITY_LABELS = 'Entity_labels'
     ENTITY_LABELS_DICT = 'Entity_labels_dictionary'
+    ENTITY_LABELS_DICT_4_EXCEL = 'Entity_labels_dictionary_4_Excel'
     FOUND_BY_LABELS = 'Found_by_labels'
     LAST_CHECK_DATE = 'Last_Check_Date'
     COMMENT = 'Comment'
@@ -273,7 +284,7 @@ class SLDC:  # Sale data column
                 SLDC.SIZE, SLDC.MATERIAL, SLDC.PROPERTY_DICT,
                 SLDC.TITLE, SLDC.DESCRIPTION,
                 SLDC.VISITS, SLDC.BOOK_MARKS,
-                SLDC.ENTITY_LABELS, SLDC.ENTITY_LABELS_DICT, SLDC.FOUND_BY_LABELS, SLDC.HREF]
+                SLDC.ENTITY_LABELS, SLDC.ENTITY_LABELS_DICT_4_EXCEL, SLDC.FOUND_BY_LABELS, SLDC.HREF]
 
     @staticmethod
     def get_columns_for_sales_tab_table():
@@ -285,7 +296,8 @@ class SLDC:  # Sale data column
     def get_columns_for_similar_sales_tab_table():
         return [SLDC.SALE_ID, SLDC.VERSION, SLDC.SALE_STATE,
                 SLDC.SOURCE, SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
-                SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE, SLDC.HREF, SLDC.MASTER_ID]
+                SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER,
+                SLDC.TITLE, SLDC.HREF, SLDC.MASTER_ID]
 
     @staticmethod
     def get_columns_for_sales_plotting():

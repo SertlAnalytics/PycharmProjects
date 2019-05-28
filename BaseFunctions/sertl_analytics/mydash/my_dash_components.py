@@ -104,6 +104,8 @@ class DropDownHandler:
         return self.__get_element_id__(drop_down_type)
 
     def get_embracing_div_id(self, drop_down_type: str):
+        div_value = '{}_div'.format(self.__get_element_id__(drop_down_type))
+        # print('get_embracing_div_id for {}: {}'.format(drop_down_type, div_value))
         return '{}_div'.format(self.__get_element_id__(drop_down_type))
 
     def get_drop_down_type_by_embracing_div_id(self, div_id: str):

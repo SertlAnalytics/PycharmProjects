@@ -14,7 +14,7 @@ class PRCAT:  # Product Category, german: Rubrik
     BUSINESS = 'Büro & Gewerbe'
     COMPUTER = 'Computer & Zubehör'
     SERVICE = 'Dienstleistungen'
-    VEHICELS = 'Fahrzeuge'
+    VEHICLES = 'Fahrzeuge'
     PICTURE = 'Film'
     PHOTO_VIDEO = 'Foto & Video'
     GARDEN_CRAFT = 'Garten & Handwerk'
@@ -35,7 +35,7 @@ class PRCAT:  # Product Category, german: Rubrik
     @staticmethod
     def get_all():
         return [
-            PRCAT.ALL, PRCAT.VEHICELS, PRCAT.REAL_ESTATE,
+            PRCAT.ALL, PRCAT.VEHICLES, PRCAT.REAL_ESTATE,
             PRCAT.ART, PRCAT.CHILD, PRCAT.BOOKS, PRCAT.BUSINESS, PRCAT.COMPUTER,
             PRCAT.SERVICE, PRCAT.PICTURE, PRCAT.PHOTO_VIDEO, PRCAT.GARDEN_CRAFT,
             PRCAT.HOUSEHOLD, PRCAT.CLOTHES_OTHERS, PRCAT.MUSIC, PRCAT.COLLECTIONS,

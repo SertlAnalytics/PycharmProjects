@@ -6,6 +6,7 @@ Date: 2019-05-08
 """
 
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.processes.my_process import MyProcessCounter
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, SLST
 from salesman_nlp.salesman_spacy import SalesmanSpacy
 from salesman_system_configuration import SystemConfiguration
@@ -26,6 +27,13 @@ class SalesmanSaleFactory:
     @property
     def sale_factory_source(self) -> str:
         return SLSRC.TUTTI_CH
+
+    def reset_access_layer_counters(self):
+        self._access_layer_sale.reset_counters()
+
+    def synchronize_process_counter(self, process_counter: MyProcessCounter):
+        process_counter.processed_records += self._access_layer_sale.counter_processed
+        process_counter.updated_records += self._access_layer_sale.counter_update
 
     def are_sales_similar_on_platform_by_sale_id(self, sale_id_01: str, sale_id_02: str) -> bool:
         sale_01 = self.get_sale_via_request_by_sale_id(sale_id_01)
@@ -106,38 +114,45 @@ class SalesmanSaleFactory:
         self._access_layer_sale.delete_all_test_cases_in_db()
         self._access_layer_sale.print_transaction_statistics('Deleted test cases before starting test: ')
 
-    def get_similar_sales_for_master_sale_from_db(self, master_sale: SalesmanSale):
-        df = self._access_layer_sale.get_sales_df_by_master_sale_id(master_sale.sale_id)
-        # MyPandas.print_df_details(df)
-        sales = []
-        for idx, row in df.iterrows():
-            sales.append(self.get_sale_by_db_row(row))
-        return sales
+    def get_similar_sales_for_master_sale_from_db_as_df(self, master_sale: SalesmanSale):
+        return self._access_layer_sale.get_sales_df_by_master_sale_id(master_sale.sale_id)
 
-    def check_status_of_sales_in_database(self):
+    def get_similar_sales_for_master_sale_from_db(self, master_sale: SalesmanSale):
+        df = self.get_similar_sales_for_master_sale_from_db_as_df(master_sale.sale_id)
+        # MyPandas.print_df_details(df)
+        return [self.get_sale_by_db_row(row) for idx, row in df.iterrows()]
+
+    def check_status_of_sales_in_database(self, process_counter: MyProcessCounter):
+        self._access_layer_sale.reset_counters()
         today_str = MyDate.get_date_str_from_datetime()
         sale_ids = self._access_layer_sale.get_sale_ids_from_db_by_sale_state(SLST.OPEN)
+        process_counter.processed_records = len(sale_ids)
         for idx, sale_id in enumerate(sale_ids):
+            if idx % 100 == 0:
+                print('{}/{}: Check_status_of_sales_in_database...'.format(idx + 1, len(sale_ids)))
             sale_available = self.can_sale_be_accessed_via_request_by_sale_id(sale_id)
-            print('{}/{}: Check_status_of_sales_in_database: {} - Result: {}'.format(
-                idx + 1, len(sale_ids), sale_id, sale_available))
             if not sale_available:
+                process_counter.updated_records += 1
+                url = self._web_parser.get_url_for_sale_id(sale_id)
+                print('{}/{}: {} - Result: {}'.format(idx + 1, len(sale_ids), url, sale_available))
                 self._access_layer_sale.change_sale_state(sale_id, SLST.VANISHED, today_str)
 
     def check_similarity_against_master_sale(
             self, source_sale: SalesmanSale, similar_sales_in_db: list, change_in_db=False):
-        row_id_list = []
+        child_id_master_id_list = []
         for similar_sale_in_db in similar_sales_in_db:
             if self.are_sales_similar(source_sale, similar_sale_in_db, True):
                 pass
             else:
                 similar_sale_in_db.set_value(SLDC.SALE_STATE, SLST.DELETE)
-                row_id_list.append(str(similar_sale_in_db.row_id))
-        print('row_id_list to set to delete: {}'.format(row_id_list))
-        if change_in_db and len(row_id_list) > 0:
-            last_check_date = MyDate.get_date_str_from_datetime()
-            changed = self._access_layer_sale.change_sale_state_for_rowid_list(SLST.DELETE, row_id_list, last_check_date)
-            print('Changed in db: {}'.format(changed))
+                child_id_master_id_list.append([similar_sale_in_db.sale_id, source_sale.sale_id])
+        print('child_id_master_id_list to be ended: {}'.format(child_id_master_id_list))
+        if change_in_db and len(child_id_master_id_list) > 0:
+            current_date = MyDate.get_date_str_from_datetime()
+            input_dict_list = [
+                {SLDC.CHILD_ID: entry[0], SLDC.MASTER_ID: entry[1], SLDC.END_DATE: current_date}
+                for entry in child_id_master_id_list]
+            self._access_layer_sale.insert_or_update_sale_relation_data(input_dict_list)
 
     def adjust_web_parser_by_search_api(self, api: SalesmanSearchApi):
         self._web_parser.adjust_by_search_api(api)

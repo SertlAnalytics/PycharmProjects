@@ -31,14 +31,6 @@ from caching.salesman_cache import CKEY
 from salesman_dash.my_dash_tab_elements import MyDashTabElements4Search
 
 
-class SearchHandler:
-    def __init__(self, sys_config: SystemConfiguration):
-        self.sys_config = sys_config
-        self._print_category_list = []
-        self._print_category_options = []
-        self._print_category_selected_as_list = []
-
-
 class MyDashTab4Search(MyDashBaseTab):
     def __init__(self, app: Dash, sys_config: SystemConfiguration, tutti: Tutti):
         MyDashBaseTab.__init__(self, app)
@@ -56,9 +48,8 @@ class MyDashTab4Search(MyDashBaseTab):
         self._search_input = ''
         self._online_rows = None
         self._product_categorizer = ProductCategorizer()
-        self._print_category_list = []
-        self._print_category_options = []
-        self._selected_entities_as_list = []
+        self._plot_category_list = []
+        self._plot_category_options = []
         self._elements = MyDashTabElements4Search(self._dd_handler, self._search_online_input_table)
         self._callback_for_search_input = CallbackForSearchInput(self._elements, self._sale_factory)
         self._callback_for_search_input_markdown = CallbackForSearchInput(self._elements, self._sale_factory)
@@ -102,28 +93,28 @@ class MyDashTab4Search(MyDashBaseTab):
 
     def __init_callbacks_for_filter_by_entities__(self):
         @self.app.callback(
-            Output(self._dd_handler.get_embracing_div_id(self._dd_handler.my_search_entities_dd), 'style'),
+            Output(self._dd_handler.get_embracing_div_id(SRDD.SEARCH_ENTITIES), 'style'),
             [Input(self._elements.my_search_result_graph_div, 'children')])
-        def handle_callback_for_for_filter_by_entities_visibility(children):
-            print('children={}'.format(children))
+        def handle_callback_for_search_filter_by_entities_visibility(children):
+            # print('children={}'.format(children))
             if len(children) == 0:
                 return {'display': 'none'}
-            return self._dd_handler.get_style_display(self._dd_handler.my_search_entities_dd)
+            return self._dd_handler.get_style_display(SRDD.SEARCH_ENTITIES)
 
         @self.app.callback(
             Output(self._dd_handler.my_search_entities_dd, 'options'),
             [Input(self._elements.my_search_result_grid_table_div, 'children')])
-        def handle_callback_for_for_filter_by_entities_options(children):
+        def handle_callback_for_search_filter_by_entities_options(children):
             if len(children) == 0:
                 return []
-            self._print_category_list = self.tutti.printing.print_category_list
-            if len(self._print_category_options) == 0:
-                self._print_category_options = [{'label': PRCAT.ALL, 'value': PRCAT.ALL}]
-                for idx, category in enumerate(self._print_category_list):
-                    self._print_category_options.append(
-                        {'label': '{}-{}'.format(idx + 1, MyText.get_option_label(category)), 'value': '{}'.format(idx)}
-                    )
-            return self._print_category_options
+            self._plot_category_list = self.tutti.printing.plot_category_list
+            if len(self._plot_category_options) == 0:
+                self._plot_category_options = [{'label': PRCAT.ALL, 'value': PRCAT.ALL}]
+                for category in self._plot_category_list:
+                    label = category.replace('_', ' (') + ')'
+                    value = category
+                    self._plot_category_options.append({'label': label, 'value': value})
+            return self._plot_category_options
 
         # @self.app.callback(
         #     Output(self._dd_handler.my_search_entities_dd, 'value'),
@@ -226,13 +217,13 @@ class MyDashTab4Search(MyDashBaseTab):
             if clicked_button is None:
                 if self._callback_for_result_grid.has_value_been_changed_for_parameter(
                         self._elements.my_search_entities_dd):
-                    self._selected_entities_as_list = self.__get_entities_by_selected_entity_indices__(
-                        self._callback_for_result_grid.get_parameter_value(self._elements.my_search_entities_dd))
-                    return self.__get_search_result_grid_table_by_selected_entities__()
+                    return self.__get_search_result_grid_table_by_selected_entities__(
+                        self._callback_for_result_grid.get_parameter_value(self._elements.my_search_entities_dd)
+                    )
             else:
                 search_input = self._callback_for_result_grid.get_actual_search_value()
-                self._print_category_list = []
-                self._print_category_options = []
+                self._plot_category_list = []
+                self._plot_category_options = []
                 self._selected_entities_as_list = []
                 if clicked_button.name == self._elements.my_search_button:
                     return self.__get_search_result_grid_table_by_online_search__(search_input)
@@ -327,16 +318,6 @@ class MyDashTab4Search(MyDashBaseTab):
         def handle_callback_for_search_result_graph(n_clicks: int):
             return self.sys_config.access_layer_file.get_my_sales_as_dd_options(with_refresh=True)
 
-    def __get_entities_by_selected_entity_indices__(self, selected_entity_indices: list):
-        if len(self._print_category_list) == 0 or len(selected_entity_indices) == 0 \
-                or PRCAT.ALL in selected_entity_indices:
-            return []
-        return_list = []
-        for selected_index in selected_entity_indices:
-            print_category_string = self._print_category_list[int(selected_index)]
-            return_list.append(print_category_string.split(': '))
-        return return_list
-
     def __get_scatter_plot__(self):
         df_search_result = self.tutti.printing.df_sale
         # MyPandas.print_df_details(df_search_result)
@@ -355,12 +336,7 @@ class MyDashTab4Search(MyDashBaseTab):
         return self.__get_search_markdown_with_outlier__(my_sale, my_sale_obj_text, outlier_online_search)
 
     def __get_search_markdown_with_outlier__(self, my_sale: str, my_sale_obj_text: str, outlier_online_search: Outlier):
-        iqr = '- **IQR:** [{:.2f}, {:.2f}]'.format(
-            outlier_online_search.bottom_threshold_iqr, outlier_online_search.top_threshold_iqr)
-        prices = '**[min, bottom, mean, top, max]:** [{:.2f}, {:.2f}, **{:.2f}**, {:.2f}, {:.2f}] {}'.format(
-            outlier_online_search.min_values, outlier_online_search.bottom_threshold,
-            outlier_online_search.mean_values, outlier_online_search.top_threshold,
-            outlier_online_search.max_values, iqr)
+        prices = outlier_online_search.get_markdown_text()
         price_suggested = outlier_online_search.mean_values_without_outliers
         start_search_labels = '**Search labels**: {}'.format(self.tutti.search_label_lists)
         my_price_suggested = '**Price suggested**: {:.2f}'.format(price_suggested)
@@ -372,8 +348,8 @@ class MyDashTab4Search(MyDashBaseTab):
         outlier = Outlier(price_single_list, self.sys_config.outlier_threshold)
         return outlier
 
-    def __get_search_result_grid_table_by_selected_entities__(self):
-        self._online_rows = self.tutti.get_search_results_by_selected_entities(self._selected_entities_as_list)
+    def __get_search_result_grid_table_by_selected_entities__(self, selected_entity_values: list):
+        self._online_rows = self.tutti.get_search_results_by_selected_entities(selected_entity_values)
         return self.__get_search_result_grid_table__()
 
     def __get_search_result_grid_table_by_online_search__(self, search_input: str):

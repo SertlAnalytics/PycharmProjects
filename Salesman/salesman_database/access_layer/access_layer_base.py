@@ -17,6 +17,7 @@ class AccessLayer:
         self._is_for_test = is_for_test
         self._db = SalesmanDatabase() if db is None else db
         self._table = self.__get_table__()
+        self._counter_processed = 0
         self._counter_insert = 0
         self._counter_update = 0
         self._counter_delete = 0
@@ -28,6 +29,10 @@ class AccessLayer:
     @property
     def view_name(self):
         return ''
+
+    @property
+    def counter_processed(self):
+        return self._counter_processed
 
     @property
     def counter_insert(self):
@@ -42,13 +47,14 @@ class AccessLayer:
         return self._counter_delete
 
     def reset_counters(self):
+        self._counter_processed = 0
         self._counter_insert = 0
         self._counter_update = 0
         self._counter_delete = 0
 
     def print_transaction_statistics(self, prefix=''):
-        print('{}ins/upd/del = {}/{}/{}'.format(
-            prefix, self._counter_insert, self._counter_update, self._counter_delete))
+        print('{}pro/ins/upd/del = {}/{}/{}/{}'.format(
+            prefix, self._counter_processed, self._counter_insert, self._counter_update, self._counter_delete))
 
     def get_all_as_data_frame(self, index_col='', columns=None, where_clause=''):
         selected_columns = '*' if columns is None else ','.join(columns)
@@ -73,6 +79,7 @@ class AccessLayer:
     def select_data_by_query(self, query: str, index_col='') -> pd.DataFrame:
         # print('query={}'.format(query))
         db_df = DatabaseDataFrame(self._db, query)
+        self._counter_processed += db_df.df.shape[0]
         return self.__get_dataframe_with_index_column__(db_df.df, index_col)
 
     @staticmethod

@@ -23,7 +23,10 @@ class SaleRow:
         for col in self.columns:
             return_dict[col] = ''  # default
             if col in self._row:
-                return_dict[col] = self._row[col]
+                if col == SLDC.IS_OUTLIER:
+                    return_dict[col] = 1 if self._row[col] else 0
+                else:
+                    return_dict[col] = self._row[col]
         return return_dict
 
     @property
@@ -78,7 +81,6 @@ class SaleRow:
         return self._value_dict[self.sort_column] < other.value_dict[self.sort_column]
 
 
-
 class GridTableSelectionApi:
     def __init__(self):
         self.source = ''
@@ -87,10 +89,12 @@ class GridTableSelectionApi:
         self.sub_category = ''
         self.master_id = ''
         self.input = ''
+        self.master_sale = None
+        self.entity_values = []
 
     def print_api_details(self):
-        print('Selection_api_details: Source={}, Region={}, Category={}, SubCategory={}'.format(
-            self.source, self.region, self.category, self.sub_category))
+        print('Selection_api_details: Source={}, Region={}, Category={}, SubCategory={}, entities={}'.format(
+            self.source, self.region, self.category, self.sub_category, self.entity_values))
 
 
 class MySaleBaseTable:
@@ -186,6 +190,8 @@ class MySaleBaseTable:
             self._rows = [row for row in self._rows if row.sub_category == api.sub_category]
         if api.input != '':
             self._rows = [row for row in self._rows if row.title.lower().find(api.input.lower()) > -1]
+        if len(api.entity_values) > 0:
+            print('api.entity_values={}'.format(api.entity_values))
         # if api.master_id not in ['', 'SEARCH']:
         #     self._rows = [row for row in self._rows if row.master_id == api.master_id]
 

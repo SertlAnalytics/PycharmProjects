@@ -49,6 +49,10 @@ class DocExtended:
         property_dict = {}
         if self.is_cover_available:
             property_dict[OBJPROP.ORIGINAL_COVER] = 'Yes'
+        if self.is_for_selling:
+            property_dict[OBJPROP.SALE_TYPE] = 'Verkauf'
+        if self.is_for_renting:
+            property_dict[OBJPROP.SALE_TYPE] = 'Miete'
         if self.size != '':
             property_dict[OBJPROP.SIZE] = self.size
         if self.age != '':

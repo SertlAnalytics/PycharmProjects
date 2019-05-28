@@ -14,11 +14,13 @@ class TuttiMatcher4Renting(TuttiMatcher):
     @staticmethod
     def __get_pattern_dict__() -> dict:
         return {
+            'MIETE': [{'LEMMA': 'miete'}],
             'VERMIETEN': [{'LEMMA': 'vermieten'}],
         }
 
     def __get_pattern_type_test_case_dict__(self):
         return {
+            'MIETE': {'Das Haus ist zur Miete bis Ende des Jahres': True},
             'VERMIETEN': {'Im schönen Dorf Brittnau vermieten wir an bester Lage': True},
         }
 
