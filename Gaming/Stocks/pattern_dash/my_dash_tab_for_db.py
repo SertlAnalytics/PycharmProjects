@@ -62,7 +62,7 @@ class MyDashTab4DB(MyPatternDashBaseTab):
             MyHTML.div_with_input(element_id=self._my_db_where_clause_input,
                                   placeholder='Please enter where clause...', size=500, height=27),
             MyHTML.div(element_id=self._my_db_query),
-            MyHTML.div(self._data_table_div, self.__get_table_for_db__(), False),
+            MyHTML.div_with_table(self._data_table_div, self.__get_table_for_db__()),
             MyDCC.markdown(self._my_db_entry_markdown)
         ]
         return MyHTML.div('my_db_div', children_list)
@@ -116,8 +116,7 @@ class MyDashTab4DB(MyPatternDashBaseTab):
         self._db_grid_table = DBTable(
             self._df_for_grid_table, self._selected_table_name, self._selected_date_range, column_sort)
         rows = self._db_grid_table.get_rows_for_selected_items()
-        min_height = self._db_grid_table.height_for_display
-        return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
+        return MyDCC.data_table(self._data_table_name, rows, columns=self._db_grid_table.columns)
 
     def __get_query_for_table__(self):
         where_clause = self.__get_where_clause__()

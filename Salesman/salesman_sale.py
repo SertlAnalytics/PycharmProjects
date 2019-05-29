@@ -142,8 +142,7 @@ class SalesmanSale:
 
     def get_value(self, key: str):
         if key == SLDC.ENTITY_LABELS_DICT_4_EXCEL:
-            data_dict = self.get_value(SLDC.ENTITY_LABELS_DICT)
-            return {value: label for value, label in data_dict.items() if label != EL.LOC}
+            return '{}'.format({value: label for value, label in self._entity_label_dict.items() if label != EL.LOC})
         return self._data_dict_obj.get(key, '')
 
     def set_value(self, key: str, value):
@@ -307,7 +306,7 @@ class SalesmanSale:
         else:
             self.set_master_details(master_id, master_title)
         worksheet_columns = SLDC.get_columns_for_excel()
-        return {column: self._data_dict_obj.get(column) for column in worksheet_columns}
+        return {column: self.get_value(column) for column in worksheet_columns}
 
     def add_search_label(self, label: str, for_title: bool, is_label_head_text: bool):
         if self.__is_label_candidate_for_label_list__(label, for_title):

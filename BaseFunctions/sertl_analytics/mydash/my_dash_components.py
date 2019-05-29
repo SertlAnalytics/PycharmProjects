@@ -7,7 +7,7 @@ Date: 2018-06-17
 
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_table_experiments as dte
+import dash_table
 from datetime import datetime
 import pandas as pd
 from abc import ABCMeta, abstractmethod
@@ -382,11 +382,18 @@ class MyHTML:
         return html.Div(embedded_element_list, style=style)
 
     @staticmethod
-    def div(element_id: str, children='', bold=False, inline=True, color='black'):
+    def div(element_id: str, children='', bold=False, inline=True, color='black', width=None):
         style = {'font-weight': 'bold' if bold else 'normal', 'color': color}
         if inline:
             style['display'] = 'inline-block'
+        if width is not None:
+            style['width'] = width
         return html.Div(id=element_id, children=children, style=style)
+
+    @staticmethod
+    def div_with_table(div_element_id: str, children='', width=None):
+        style = {'width': 1200 if width is None else width}
+        return html.Div(id=div_element_id, children=children, style=style)
 
     @staticmethod
     def div_drop_down(children: str):
@@ -563,16 +570,26 @@ class MyDCC:
         return dcc.Interval(id=element_id, interval=seconds * 1000, n_intervals=0)
 
     @staticmethod
-    def data_table(element_id: str, rows: list, selected_row_indices: list, min_width=1200, min_height=1000):
-        return dte.DataTable(
+    def data_table(element_id: str, rows: list, selected_row_indices=None, filtering=False,
+                   columns=None, page_size=10, min_width=1200, min_height=1000):
+        selected_row_indices = [] if selected_row_indices is None else selected_row_indices
+        df = pd.DataFrame.from_dict(rows)
+        if columns is not None:
+            df = df[columns]
+        return dash_table.DataTable(
             id=element_id,
-            row_selectable=True,
-            filterable=True,
-            sortable=True,
-            selected_row_indices=selected_row_indices,
-            rows=rows,
-            min_width=min_width,
-            min_height=min_height
+            columns=[{"name": i, "id": i} for i in df.columns],
+            data=df.to_dict('records'),
+            filtering=filtering,
+            sorting=True,
+            row_selectable='single',
+            selected_rows=selected_row_indices,
+            pagination_mode='fe',
+            pagination_settings={
+                'current_page': 0,
+                'page_size': page_size
+            },
+            style_table={'overflowX': 'scroll'},
         )
 
     @staticmethod

@@ -54,8 +54,8 @@ class CustomTokenizer:
     @property
     def replacement_dict(self) -> dict:
         return {
-            # 'Fr ': 'CHF ',
-            'Fr.': 'CHF',
+            'Fr ': 'CHF ',
+            'Fr. ': 'CHF ',
             ',--': '.-',
             ',-': '.-',
             '.--': '.-',
@@ -98,6 +98,7 @@ class SalesmanSpacy:
         # print('self._salesman_entity_names={}'.format(self._salesman_entity_names))
         # self._salesman_nlp.tokenizer = WhitespaceTokenizer(self._salesman_nlp.vocab)
         self._matcher_animal = self.__get_matcher_for_entity_type__(EL.ANIMAL)
+        self._matcher_clothes = self.__get_matcher_for_entity_type__(EL.CLOTHES)
         self._matcher_color = self.__get_matcher_for_entity_type__(EL.COLOR)
         self._matcher_company = self.__get_matcher_for_entity_type__(EL.COMPANY)
         self._matcher_job = self.__get_matcher_for_entity_type__(EL.JOB)
@@ -106,25 +107,34 @@ class SalesmanSpacy:
         self._matcher_product = self.__get_matcher_for_entity_type__(EL.PRODUCT)
         self._matcher_property = self.__get_matcher_for_entity_type__(EL.PROPERTY)
         self._matcher_property_part = self.__get_matcher_for_entity_type__(EL.PROPERTY_PART)
+        self._matcher_payment = self.__get_matcher_for_entity_type__(EL.PAYMENT)
         self._matcher_shop = self.__get_matcher_for_entity_type__(EL.SHOP)
         self._matcher_target_group = self.__get_matcher_for_entity_type__(EL.TARGET_GROUP)
+        self._matcher_transport = self.__get_matcher_for_entity_type__(EL.TRANSPORT)
         self._matcher_technology = self.__get_matcher_for_entity_type__(EL.TECHNOLOGY)
+        self._matcher_education = self.__get_matcher_for_entity_type__(EL.EDUCATION)
         self._matcher_environment = self.__get_matcher_for_entity_type__(EL.ENVIRONMENT)
+        self._matcher_vehicle = self.__get_matcher_for_entity_type__(EL.VEHICLE)
         # self._salesman_nlp.add_pipe(self.replacement_component, name='CUSTOM_REPLACEMENT', before='tagger')
         self._nlp.add_pipe(self.keep_entity_component, name='CUSTOM_KEEP_ENTITY', after='ner')
         self._nlp.add_pipe(self.animal_component, name='CUSTOM_ANIMAL', after='CUSTOM_KEEP_ENTITY')
-        self._nlp.add_pipe(self.color_component, name='CUSTOM_COLOR', after='CUSTOM_ANIMAL')
+        self._nlp.add_pipe(self.clothes_component, name='CUSTOM_CLOTHES', after='CUSTOM_ANIMAL')
+        self._nlp.add_pipe(self.color_component, name='CUSTOM_COLOR', after='CUSTOM_CLOTHES')
         self._nlp.add_pipe(self.company_component, name='CUSTOM_COMPANY', after='CUSTOM_COLOR')
         self._nlp.add_pipe(self.job_component, name='CUSTOM_JOB', after='CUSTOM_COMPANY')
-        self._nlp.add_pipe(self.environment_component, name='CUSTOM_ENVIRONMENT', after='CUSTOM_JOB')
+        self._nlp.add_pipe(self.education_component, name='CUSTOM_EDUCATION', after='CUSTOM_JOB')
+        self._nlp.add_pipe(self.environment_component, name='CUSTOM_ENVIRONMENT', after='CUSTOM_EDUCATION')
         self._nlp.add_pipe(self.material_component, name='CUSTOM_MATERIAL', after='CUSTOM_ENVIRONMENT')
         self._nlp.add_pipe(self.object_component, name='CUSTOM_OBJECT', after='CUSTOM_MATERIAL')
         self._nlp.add_pipe(self.product_component, name='CUSTOM_PRODUCT', after='CUSTOM_OBJECT')
         self._nlp.add_pipe(self.property_component, name='CUSTOM_PROPERTY', after='CUSTOM_PRODUCT')
         self._nlp.add_pipe(self.property_part_component, name='CUSTOM_PROPERTY_PART', after='CUSTOM_PROPERTY')
-        self._nlp.add_pipe(self.shop_component, name='CUSTOM_SHOP', after='CUSTOM_PROPERTY_PART')
+        self._nlp.add_pipe(self.payment_component, name='CUSTOM_PAYMENT', after='CUSTOM_PROPERTY_PART')
+        self._nlp.add_pipe(self.shop_component, name='CUSTOM_SHOP', after='CUSTOM_PAYMENT')
         self._nlp.add_pipe(self.target_group_component, name='CUSTOM_TARGET_GROUP', after='CUSTOM_SHOP')
-        self._nlp.add_pipe(self.technology_component, name='CUSTOM_TECHNOLOGY', after='CUSTOM_TARGET_GROUP')
+        self._nlp.add_pipe(self.transport_component, name='CUSTOM_TRANSPORT', after='CUSTOM_TARGET_GROUP')
+        self._nlp.add_pipe(self.technology_component, name='CUSTOM_TECHNOLOGY', after='CUSTOM_TRANSPORT')
+        self._nlp.add_pipe(self.vehicle_component, name='CUSTOM_VEHICLE', after='CUSTOM_TECHNOLOGY')
 
         self.__set_doc_extensions__()
 
@@ -196,6 +206,11 @@ class SalesmanSpacy:
         spans = [Span(doc, start, end, label=EL.COMPANY) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
+    def clothes_component(self, doc):
+        matches = self._matcher_clothes(doc)
+        spans = [Span(doc, start, end, label=EL.CLOTHES) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
     def color_component(self, doc):
         matches = self._matcher_color(doc)
         spans = [Span(doc, start, end, label=EL.COLOR) for match_id, start, end in matches]
@@ -204,6 +219,11 @@ class SalesmanSpacy:
     def job_component(self, doc):
         matches = self._matcher_job(doc)
         spans = [Span(doc, start, end, label=EL.JOB) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
+    def education_component(self, doc):
+        matches = self._matcher_education(doc)
+        spans = [Span(doc, start, end, label=EL.EDUCATION) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
     def environment_component(self, doc):
@@ -236,6 +256,11 @@ class SalesmanSpacy:
         spans = [Span(doc, start, end, label=EL.PROPERTY_PART) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
+    def payment_component(self, doc):
+        matches = self._matcher_payment(doc)
+        spans = [Span(doc, start, end, label=EL.PAYMENT) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
     def shop_component(self, doc):
         matches = self._matcher_shop(doc)
         spans = [Span(doc, start, end, label=EL.SHOP) for match_id, start, end in matches]
@@ -249,6 +274,16 @@ class SalesmanSpacy:
     def technology_component(self, doc):
         matches = self._matcher_technology(doc)
         spans = [Span(doc, start, end, label=EL.TECHNOLOGY) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
+    def transport_component(self, doc):
+        matches = self._matcher_transport(doc)
+        spans = [Span(doc, start, end, label=EL.TRANSPORT) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
+
+    def vehicle_component(self, doc):
+        matches = self._matcher_vehicle(doc)
+        spans = [Span(doc, start, end, label=EL.VEHICLE) for match_id, start, end in matches]
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
     def __get_doc_with_added_span_list_as_entities__(self, doc: Doc, spans: list):
@@ -274,6 +309,21 @@ class SalesmanSpacy:
     def print_entities_for_doc(doc: Doc):
         for ent in doc.ents:
             print('ent.text={}, ent.label_={}'.format(ent.text, ent.label_))
+
+    @staticmethod
+    def get_sorted_entity_label_values_for_doc(doc: Doc) -> str:
+        entity_label_dict = {}
+        label_list = []
+        for ent in doc.ents:
+            if ent.label_ not in label_list:
+                label_list.append(ent.label_)
+                entity_label_dict[ent.label_] = []
+            entity_label_dict[ent.label_].append(ent.text)
+        label_list.sort()
+        for label in entity_label_dict:
+            entity_label_dict[label].sort()
+        label_values_list = ['{}: {}'.format(label, ', '.join(entity_label_dict[label])) for label in label_list]
+        return '; '.join(label_values_list)
 
     @staticmethod
     def get_entity_list(doc: Doc):

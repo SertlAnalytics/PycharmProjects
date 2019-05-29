@@ -20,9 +20,29 @@ class MYDT:  # DataTypes
     DICT = 'dict'
 
 
-class MYDSHC:  # Dash Components
+class DSHCT:  # Dash Callback Types
+    INPUT = 'Input'
+    OUTPUT = 'Output'
+    STATE = 'State'
+    
+    
+class DSHC:  # Dash Components
     INPUT = 'input'
     BUTTON = 'button'
     DROP_DOWN = 'dropdown'
     CHECK_BOX = 'checkbox'
+    
+    
+class DSHVT:  # Dash Value Types
+    N_BLUR = 'n_blur'
+    N_CLICKS = 'n_clicks'
+    VALUE = 'value'
+    SELECTED_ROW_INDICES = 'derived_virtual_selected_rows'
+    ROWS = 'derived_virtual_data'
+    CHILDREN = 'children'
+    HIDDEN = 'hidden'
+    HREF = 'href'
+    OPTIONS = 'options'
+    STYLE = 'style'
+    N_INTERVALS = 'n_intervals'
 

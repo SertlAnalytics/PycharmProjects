@@ -12,29 +12,36 @@ class OUTHDL:  # outlier handling
 
 
 class EL:  # entity labels
-    BLACK_LIST = 'BLACK_LIST'
     ANIMAL = 'ANIMAL'
+    BLACK_LIST = 'BLACK_LIST'
+    CLOTHES = 'CLOTHES'
     COMPANY = 'COMPANY'
     COLOR = 'COLOR'
+    EDUCATION = 'EDUCATION'
     ENVIRONMENT = 'ENVIRONMENT'
     JOB = 'JOB'
     LOC = 'LOC'
+    MATERIAL = 'MATERIAL'
     ORG = 'ORG'
+    OBJECT = 'OBJECT'
+    PAYMENT = 'PAYMENT'
     PRODUCT = 'PRODUCT'
     PROPERTY = 'PROPERTY'
     PROPERTY_PART = 'PROPERTY_PART'
-    OBJECT = 'OBJECT'
-    TARGET_GROUP = 'TARGET_GROUP'
-    MATERIAL = 'MATERIAL'
-    TECHNOLOGY = 'TECHNOLOGY'
     SHOP = 'SHOP'
+    TRANSPORT = 'TRANSPORT'
+    TARGET_GROUP = 'TARGET_GROUP'
+    TECHNOLOGY = 'TECHNOLOGY'
+    VEHICLE = 'VEHICLE'
+    
 
     @staticmethod
     def get_all() -> list:
-        return [EL.BLACK_LIST, EL.COLOR, EL.ANIMAL, EL.ENVIRONMENT, EL.JOB, EL.PRODUCT,
+        return [EL.BLACK_LIST, EL.COLOR, EL.ANIMAL, EL.EDUCATION, EL.ENVIRONMENT, EL.JOB, EL.PRODUCT,
                 EL.PROPERTY, EL.PROPERTY_PART,
                 EL.LOC,
-                EL.COMPANY, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.SHOP, EL.TECHNOLOGY]
+                EL.COMPANY, EL.OBJECT, EL.SHOP,
+                EL.TARGET_GROUP, EL.TRANSPORT, EL.MATERIAL, EL.SHOP, EL.TECHNOLOGY, EL.VEHICLE]
 
     @staticmethod
     def is_entity_label_relevant_for_salesman(ent_level: str) -> bool:
@@ -48,7 +55,9 @@ class EL:  # entity labels
 
     @staticmethod
     def get_labels_relevant_for_entity_category_key() -> list:
-        return [EL.ANIMAL, EL.JOB, EL.ENVIRONMENT, EL.OBJECT, EL.TARGET_GROUP, EL.MATERIAL, EL.TECHNOLOGY]
+        return [EL.ANIMAL, EL.JOB, EL.EDUCATION, EL.ENVIRONMENT, EL.MATERIAL,
+                EL.OBJECT, EL.PAYMENT, EL.PROPERTY, EL.PROPERTY_PART, EL.SHOP,
+                EL.TARGET_GROUP, EL.TECHNOLOGY, EL.TRANSPORT, EL.VEHICLE]
 
     @staticmethod
     def get_all_without_loc() -> list:

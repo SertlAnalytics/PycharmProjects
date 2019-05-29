@@ -31,7 +31,7 @@ class AnimalEntity(NamedEntity):
             'Esel',
             'Forelle', 'Forellen', 'Frettchen',
             'Goldfisch', 'Goldfische', 'Garnele', 'Garnelen','Graupapageien',
-            'Hund', 'Hamster', 'Haustiere',
+            'Hund', 'Hamster', 'Haustiere', 'Hase',
             'Katze', 'Kätzchen', 'Kater', 'Karpfen', 'Krebs', 'Krebse', 'Kleintier',
             'Maus', 'Meerschweinchen',
             'Nager',
@@ -65,6 +65,7 @@ class PropertyEntity(NamedEntity):
             'Lagerhalle', 'Landhaus',
             'Mehrfamilienhaus', 'MFH', 'Maisonette', 'Mittelhaus',
             'Parkplatz', 'Parkplätze',
+            'Reiheneckhaus', 'Reiheneinfamilienhaus',
             'Wohnung',
             'Zimmer',
         ]
@@ -87,16 +88,17 @@ class PropertyPartEntity(NamedEntity):
             'Bad', 'Babyzimmer', 'Büro', 'Büroplatz', 'Badezimmer', 'Badzimmer', 'Balkon',
             'Carport', 'Cheminée',
             'Dachboden', 'Dachgeschoss', 'Dach', 'Dachterrasse',
-            'Elternschlafzimmer', 'Estrich', 'Esszimmer',
+            'Elternschlafzimmer', 'Estrich', 'Esszimmer', 'Elternzimmer',
             'Fahrradkeller', 'Fahrradabstellplatz',
             'Garten', 'Garage', 'Gargensitzplatz', 'Grillplatz', 'Garten/Balkon',
             'Jugendzimmer',
             'Keller', 'Kinderzimmer', 'Küche', 'Kammer', 'Kellerraum',
+            'Naturkeller',
             'Reduit', 'Réduit',
             'Stellplatz', 'Schlafzimmer', 'Seerosenteich',
-            'Tiefgarage', 'Terrasse', 'Trocknerraum',
+            'Tiefgarage', 'Terrasse', 'Trocknerraum', 'Tomatenhäuschen',
             'Veranda',
-            'Wohn-Esszimmer', 'Wohnzimmer', 'Wohnküche', 'Werkstatt', 'Waschküche',
+            'Wohn-Esszimmer', 'Wohnzimmer', 'Wohnküche', 'Werkstatt', 'Waschküche', 'Waschraum',
             'Zimmer',
         ]
 
@@ -107,26 +109,83 @@ class PropertyPartEntity(NamedEntity):
         }
 
 
+class EducationEntity(NamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return [
+            'Bezirksschule',
+            'Fachhochschule',
+            'Gymnasium',
+            'Hochschule',
+            'Kindergarten', 'Kita', 'Kindertagesstätte',
+            'Primarschule',
+            'Schule', 'Schulen',
+            'Schulen/Kindergarten',
+            'Universität',
+        ]
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+        }
+
+
+class TransportEntity(NamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return [
+            'Bahnhof', 'Bushaltestelle', 'Bus', 'Bahn',
+            'Buslinie',
+            'Flughafen',
+            'öffentlicher Verkehr',
+            'Postauto',
+            'Rebberg', 'Restaurants',
+            'S-Bahn',
+            'Tram-Bahn', 'Taxi', 'Taxistand',
+            'U-Bahn',
+        ]
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+        }
+
+
+class ShopEntity(NamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return [
+            'Apotheke',
+            'Bäckerei',
+            'Dorfladen',
+            'Einkaufsmöglichkeiten', 'Einkaufszentren', 'Einkaufszentrum', 'Einkaufscenter',
+            'Poststelle', 'Post',
+            'Metzgerei',
+            'Restaurants',
+        ]
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+        }
+
+
 class EnvironmentEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
-            'Abendsonne', 'Altstadt', 'Apotheke',
-            'Bahnhof', 'Bäckerei', 'Bezirksschule', 'Bauzonenrand', 'Baulandreserve', 'Bushaltestelle',
-            'Dorfkern', 'Dorfzentrum', 'Dorfmuseum', 'Dorfladen',
-            'Einkaufsmöglichkeiten', 'Einkaufszentren', 'Einkaufszentrum', 'Einkaufscenter',
-            'Flughafen',
-            'Gymnasium',
-            'Kindergarten',
-            'Poststelle', 'Post', 'Primarschule',
+            'Abendsonne', 'Altstadt',
+            'Bauzonenrand', 'Baulandreserve',
+            'Buslinie',
+            'Dorfkern', 'Dorfzentrum', 'Dorfmuseum',
+            'Gartenparadies', 'Gehdistanz',
             'Landwirtschaftszone',
-            'Metzgerei', 'Museum',
+            'Museum',
+            'Naherholungsgebiet',
             'Panoramablick',
             'Rebberg',
-            'Schulen', 'Schwimmbad', 'S-Bahn', 'Spital', 'Spielplatz',
-            'Schulen/Kindergarten',
-            'Tram-Bahn', 'Thermalbad',
-            'U-Bahn',
+            'Schwimmbad', 'Spital', 'Spielplatz',
+            'Thermalbad',
             'Vitaparcours', 'Vitaparcour',
             'Wald',
             'Zentrum', 'zentrumsnah',
@@ -135,11 +194,10 @@ class EnvironmentEntity(NamedEntity):
     @staticmethod
     def __get_synonym_dict__():
         return {
-            'Reduit': ['Dachboden']
         }
 
 
-class ShopEntity(NamedEntity):
+class PaymentEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
@@ -247,7 +305,7 @@ class JobEntity(NamedEntity):
         return [
             'Hege',
             'Pflege',
-            'Tiersitting', 'Tierbetreuung',
+            'Tiersitting', 'Tierbetreuung', 'Tierfleger',
         ]
 
     @staticmethod
@@ -261,7 +319,7 @@ class TechnologyEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
-            'Aussentemperaturanzeige', 'ABS',
+            'Aussentemperaturanzeige', 'ABS', 'automatischem Tor',
             'Batterie', 'Batterien', 'Breitband-Internet',
             'Elektrische Fensterheber', 'ESP',
             'Fahrlichtautomatik', 'Fernwärme',
@@ -269,7 +327,8 @@ class TechnologyEntity(NamedEntity):
             'höhenverstellbar',
             'Induktionskochfeld',
             'Kollisionswarnung',
-            'Minergie-Standard', 'Minergie', 'Massiv-Bauweise', 'Massivbauweise',
+            'Minergie-Standard', 'Minergie', 'Massiv-Bauweise', 'Massivbauweise', 'Minergie-Zertifiziert',
+            'mechanischem Schiebetor',
             'Notrufsystem',
             'LED-Tagfahrlicht', 'LED Heckleuchten', 'LED Intelligent Light',
             'Park-Assistent',
@@ -292,22 +351,22 @@ class CompanyEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
-            'Apple', 'Audi', 'Adidas', 'Alberto',
+            'Apple', 'Audi', 'Adidas', 'Alberto', 'Aldi',
             'BMW', 'Bally', 'Bugaboo', 'Big Max', 'Becker',
-            'Crumpler', 'CANON', 'Canon',
-            'DeLonghi', 'Dyson', 'Diono'
+            'Crumpler', 'CANON', 'Canon', 'Coop',
+            'DeLonghi', 'Dyson', 'Diono', 'Denner',
             'Eames', 'Even&Odd',
             'GoPro', 'Gucci', 'Grüezi-Bag', 'Grüezi Bag', 'Garmin',
             'Hape', 'Hansen', 'H&M', 'Huawei', 'Honda', 'Harley Davidson',
             'IKEA',
             'Jacobsen', 'Joop', 'J. Lindeberg',
-            'Lowa', 'Louis Vuitton', 'Lladro', 'LUCAN',
+            'Lowa', 'Louis Vuitton', 'Lladro', 'LUCAN', 'Lidl',
             'Mercedes', 'Mercedes-Benz', 'Mango', 'Mexx',
             'Nespresso', 'name it', 'Navigon', 'Nike',
             'Omega',
             'Paidi', 'Playmobil', 'Puma',
             'Risa', 'Range Rover', 'Ricardo',
-            'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise', 'SBB',
+            'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise', 'SBB', 'Schwörer',
             'Tosca', 'Toyota', 'Tutti', 'TomTom',
             'USM', 'Under Armour',
             'Waldmann', 'Wilde+Spieth',
@@ -361,12 +420,66 @@ class ProductEntity(NamedEntity):
         }
 
 
-class ObjectTypeEntity(NamedEntity):
+class ClothesEntity(NamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return [
+            'Anzug',
+            'Fleecejacke',
+            'Gürtel', 'Golfgürtel',
+            'Handtasche', 'Hut', 'Herbst-/Winterjacke', 'Herbst/Winterjacke', 'Hose', 'Hemd',
+            'Jacke', 'Jeans', 'Jeanshose',
+            'Kommunionkleid', 'Kostüm', 'Kostüme', 'Kleid', 'Krawatte',
+            'Overall',
+            'Pullover', 'Pulli', 'Poloshirt',
+            'Rettungsweste',
+            'Skijacke', 'Ski/Winterjacke', 'Sommerkleid',
+            'Sommerhut', 'Sonnenhut', 'Strohhut', 'Schuh', 'Schuhe', 'Schultergurt',
+            'Turnschuhe',
+            'Umhängetasche', 'Übergangsjacke',
+            'Winterjacke', 'Winterschuhe', 'Winterstiefel',
+        ]
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+            'Kommunionkleid': ['Sommerkleid'],
+            'Jeans': ['Jeanshose'],
+            'Pullover': ['Pulli'],
+            'Sommerhut': ['Sonnenhut', 'Strohhut'],
+            'Winterjacke': ['Herbst-/Winterjacke', 'Herbst/Winterjacke', 'Ski/Winterjacke', 'Übergangsjacke'],
+            'Winterschuhe': ['Winterstiefel'],
+        }
+
+
+class VehicleEntity(NamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return [
+            'Auto',
+            'Camper', 'Campingbus',
+            'Drohne',
+            'Fahrrad', 'Fahrzeug', 'Fahrzeuge',
+            'Kinderwagen',
+            'Lkw', 'Lastkraftwagen',
+            'Motorrad',
+            'Spielzeugauto',
+            'Velo',
+        ]
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+            'Fahrrad': ['Velo'],
+        }
+
+
+class ObjectEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
         return [
             'Ablagefach',
-            'Alufelgen', 'Auto', 'Autokindersitz', 'Auto-Kindersitz', 'Anhänger', 'Anzug', 'Akku',
+            'Alufelgen', 'Autokindersitz', 'Auto-Kindersitz', 'Anhänger', 'Akku',
             'Aufbewahrungstruhe', 'Aufbewahrungsmöbel', 'Aufbewahrungstisch', 'Absturzsicherung',
             'Besucherstuhl', 'Babywanne', 'Bremsbeläge', 'Bürotisch', 'Bürostuhl', 'Bad', 'Badesand', 'Badewanne',
             'Bürodrehstuhl', 'Bild', 'Buch', 'Badehose', 'Bikini', 'Badewanne', 'Balkon', 'Behälter',
@@ -379,21 +492,20 @@ class ObjectTypeEntity(NamedEntity):
             'Dusche', 'Drehstuhl', 'Drosselklappensensor', 'Drosselklappenschalter', 'Doppellavabo',
             'Digitalkamera', 'Drahtgitter', 'Deckelklappe', 'Drehteller', 'Dübelversteck',
             'Einstellwerkzeug', 'Endschalldämpfer', 'Entsorgung', 'Essbereich', 'Einstreu', 'Eckschrank',
-            'Felgen', 'Fahrzeuge', 'Fenster', 'Futter',
-            'Fleecejacke', 'Fahrrad', 'Figur', 'Figuren', 'Frontspoiler', 'Frontlippe', 'Frontlippen', 'Foto',
+            'Felgen', 'Fenster', 'Futter',
+            'Figur', 'Figuren', 'Frontspoiler', 'Frontlippe', 'Frontlippen', 'Foto',
             'Flaschenhalter',
             'Gartenlehnstuhl', 'Gestell', 'Geschwisterkinderwagen', 'Gewindefahrwerk', 'Grill', 'Gitter',
             'Golf-Bag', 'Glaskeramikkochfeld', 'Glaskeramik-Kochfeld', 'Gefrierfach', 'Gefrierschrank',
-            'Garderobe', 'Geschirr', 'Geschirrspüler', 'Glaskäfig', 'Gehege', 'Gürtel', 'Golfgürtel',
+            'Garderobe', 'Geschirr', 'Geschirrspüler', 'Glaskäfig', 'Gehege',
             'Haustür',
-            'Handtasche', 'Hängematte', 'Hut', 'Herbst-/Winterjacke', 'Herbst/Winterjacke', 'Hose', 'Heu',
+            'Hängematte', 'Heu',
             'Harlekin', 'Heckspoiler', 'Hotspot', 'Hamsterrad', 'Holzbrücke', 'Hamsterburg', 'Holzschrank',
             'Holzkäfig', 'Hamsterkäfig', 'Hamsterhöhle', 'Holztreppe', 'Hasenstahl', 'Holzhäuschen', 'Hundematte',
             'Hangenester', 'Hochbett', 'Hinterreifen',
             'Inspektion',
-            'Jacke', 'Jeans', 'Jeanshose',
             'Kaffeemaschine', 'Kindersitz', 'Kühlschrank',
-            'Kommunionkleid', 'Kinderwagen', 'Kinderbett', 'Kugelbahn', 'Kostüm', 'Kostüme', 'Kleid',
+            'Kinderbett', 'Kugelbahn',
             'Kupplungsscheibe', 'Kühlergrill', 'Kühlmittelpumpe', 'Kleidung', 'Kinderschuhe',
             'Konferenz-Raum', 'Kratzsäule', 'Kuschelhöhle', 'Katzentoilette', 'Katzenklo', 'Kletterbaum',
             'Katzenkissen', 'Kissen', 'Katzenstreu', 'Katzentüre', 'Katzenhalsband', 'Käfig', 'Kleintiergehege',
@@ -403,53 +515,47 @@ class ObjectTypeEntity(NamedEntity):
             'Nebelleuchte', 'Notebook', 'NannoSim', 'Nachttisch', 'Nachtkästchen', 'Nachtschrank',
             'Nagerbehälter', 'Navi', 'Navigationsgerät',
             'Matraze', 'Matrazen', 'Matratzenboden', 'Marionette', 'Modell', 'Modellauto', 'Möbellift',
-            'Motorenöl', 'Motoröl', 'Motor', 'Mitfahrgelegenheit', 'MicroSim', 'Müll', 'Mäusegehege', 'Motorrad',
+            'Motorenöl', 'Motoröl', 'Motor', 'Mitfahrgelegenheit', 'MicroSim', 'Müll', 'Mäusegehege',
             'Multifunktionslenkrad', 'Mikrowelle',
             'Nagerheim', 'Nagerkäfig', 'Nagerstall', 'Nagerhaus',
-            'Overall', 'Öse',
-            'Porzellanfigur', 'Porzellanfiguren', 'Puppe', 'Pullover', 'Plexiglasscheibe', 'PC-Halterung',
+            'Öse',
+            'Porzellanfigur', 'Porzellanfiguren', 'Puppe', 'Plexiglasscheibe', 'PC-Halterung',
             'Portemonnaie', 'Pizzaofen',
-            'Rettungsweste', 'Roman', 'Ratgeber', 'Router', 'Rückwand', 'Rückfahrkamera', 'Rückenlehne', 'Rücklehne',
+            'Roman', 'Ratgeber', 'Router', 'Rückwand', 'Rückfahrkamera', 'Rückenlehne', 'Rücklehne',
             'Rollcontainer', 'Rollkorpus', 'Reifen', 'Räder', 'Regal', 'Regenschutz', 'Rucksack', 'Rock', 'Rahmen',
             'Schlafsack', 'Service', 'Scheibenwischer', 'Sachbuch', 'Schlafsofa', 'Sitzbank', 'Seitentaschen',
             'Schlüssel', 'Schlüsselanhänger', 'Scheibenbremsbeläge', 'Strickdecke', 'Stehleuchte', 'Ski',
-            'Schreibtisch', 'Stuhl', 'Stühle', 'Scheinwerfer', 'Stossstange', 'Skijacke', 'Ski/Winterjacke',
-            'Sommerkleid', 'Sonnenschirm', 'Sommerhut', 'Sonnenhut', 'Strohhut', 'Schuh', 'Schuhe',
-            'Sportauspuff', 'Spielzeugautos', 'Schlafsofa', 'Sommerreifen', 'Stehtisch', 'Sitzungstisch',
+            'Schreibtisch', 'Stuhl', 'Stühle', 'Scheinwerfer', 'Stossstange',
+            'Sonnenschirm',
+            'Sportauspuff', 'Schlafsofa', 'Sommerreifen', 'Stehtisch', 'Sitzungstisch',
             'Spiegelschrank', 'Schraube', 'Streu', 'Sandbad', 'Starterset', 'Spielburg', 'Schaukel',
             'Sauerstoffboxen', 'Schale', 'Schlafhöhlen', 'Seitenschutz', 'Seitenblende', 'Sporttourer',
-            'Schreibtischplatte', 'Schultergurt', 'Sonderzubehör', 'SIM-Karte', 'Staubsauger', 'Steamer',
-            'Turnschuhe', 'Tisch', 'Toilette', 'Tasche', 'Transport', 'Taxi', 'Tumbler', 'Truhe', 'Tourer',
+            'Schreibtischplatte', 'Sonderzubehör', 'SIM-Karte', 'Staubsauger', 'Steamer',
+            'Tisch', 'Toilette', 'Tasche', 'Transport', 'Tumbler', 'Truhe', 'Tourer',
             'Tiefkühlfach', 'Trockenfutter', 'Terrarium', 'Terrarien',
             'Transportbox', 'Transport-Box', 'Transportboxen', 'Transportkiste', 'Transportkistli',
             'Tür', 'Treppe',
             'Trinkflasche', 'Trinkflaschen', 'Terracottahaus',
-            'Umhängetasche', 'Übergangsjacke', 'Umzug', 'Unterbau', 'Unterschrank', 'Untergestell',
-            'Velo', 'Vorderreifen',
+            'Umzug', 'Unterbau', 'Unterschrank', 'Untergestell',
+            'Vorderreifen',
             'Winterräder', 'Winterreifen', 'Winterkompletträder', 'Wanne', 'Wasserpumpe', 'Waschmaschine', 'WC',
-            'Werkzeugkasten', 'Winterjacke', 'Winterschuhe', 'Wohnmobil', 'Wasch-Trockenmaschine',
-            'Wasserflasche', 'Wasserflaschen', 'Winterstiefel', 'Wickeltisch', 'Widerstand',
+            'Werkzeugkasten', 'Wohnmobil', 'Wasch-Trockenmaschine',
+            'Wasserflasche', 'Wasserflaschen', 'Wickeltisch', 'Widerstand',
             'Zeitwerkzeug', 'Zeitsteuerung', 'Zubehör', 'Zwischenboden', 'Zahnriemen', 'Zimmerlampe',
         ]
 
     @staticmethod
     def __get_synonym_dict__():
         return {
-            'Fahrrad': ['Velo'],
             'LTE-Router': ['Router'],
             'Glaskeramikkochfeld': ['Glaskeramik-Kochfeld'],
-            'Jeans': ['Jeanshose'],
-            'Sommerhut': ['Sonnenhut', 'Strohhut'],
             'Corpus': ['Rollcontainer', 'Rollkorpus'],
             'Bürostuhl': ['Besucherstuhl', 'Bürodrehstuhl', 'Drehstuhl'],
             'Kindersitz': ['Autokindersitz', 'Auto-Kindersitz'],
             'Notebook': ['Laptop'],
             'Navi': ['Navigationsgerät'],
-            'Kommunionkleid': ['Sommerkleid'],
             'Stuhl': ['Stühle'],
             'Transportbox': ['Transport-Box'],
-            'Winterjacke': ['Herbst-/Winterjacke', 'Herbst/Winterjacke', 'Ski/Winterjacke', 'Übergangsjacke'],
-            'Winterschuhe': ['Winterstiefel'],
         }
 
 
@@ -459,7 +565,8 @@ class SalesmanEntityHandler:
         return_list = []
         for entity_label in EL.get_all_without_loc():
             entity = SalesmanEntityHandler.get_entity_for_entity_label(entity_label)
-            return_list = return_list + entity.entity_names
+            if entity is not None:
+                return_list = return_list + entity.entity_names
         return [entry.lower() for entry in return_list] if with_lower else return_list
 
     @staticmethod
@@ -506,18 +613,23 @@ class SalesmanEntityHandler:
             EL.ANIMAL: AnimalEntity(),
             EL.BLACK_LIST: BlackListEntity(),
             EL.COMPANY: CompanyEntity(),
+            EL.CLOTHES: ClothesEntity(),
             EL.COLOR: ColorEntity(),
             EL.JOB: JobEntity(),
+            EL.EDUCATION: EducationEntity(),
             EL.ENVIRONMENT: EnvironmentEntity(),
             EL.PRODUCT: ProductEntity(),
             EL.PROPERTY: PropertyEntity(),
             EL.PROPERTY_PART: PropertyPartEntity(),
-            EL.OBJECT: ObjectTypeEntity(),
+            EL.OBJECT: ObjectEntity(),
             EL.TARGET_GROUP: TargetGroupEntity(),
             EL.MATERIAL: MaterialEntity(),
+            EL.PAYMENT: PaymentEntity(),
             EL.SHOP: ShopEntity(),
             EL.TECHNOLOGY: TechnologyEntity(),
-        }.get(entity_label, CompanyEntity())
+            EL.TRANSPORT: TransportEntity(),
+            EL.VEHICLE: VehicleEntity(),
+        }.get(entity_label, None)
 
 
 

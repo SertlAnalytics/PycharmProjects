@@ -5,8 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-05-15
 """
 
-from sertl_analytics.constants.my_constants import MYDSHC
-from sertl_analytics.mydash.my_dash_callback import DashCallbackParameter, DashCallback
+from sertl_analytics.constants.my_constants import DSHC, DSHVT, DSHCT
+from sertl_analytics.mydash.my_dash_callback import DashInputCallbackParameter, DashStateCallbackParameter
+from sertl_analytics.mydash.my_dash_callback import DashCallback
 from salesman_dash.my_dash_tab_elements import MyDashTabElements4Search
 from factories.salesman_sale_factory import SalesmanSaleFactory
 from sertl_analytics.my_http import MyHttpClient
@@ -14,7 +15,8 @@ from sertl_analytics.my_http import MyHttpClient
 
 class CallbackForSearchInput(DashCallback):
     """
-       [Input(self._elements.my_search_button, 'n_clicks'),
+       [Input(self._elements.my_search_input, 'n_blur'),
+        Input(self._elements.my_search_button, 'n_clicks'),
          Input(self._elements.my_search_db_button, 'n_clicks'),
          Input(self._elements.my_search_file_button, 'n_clicks'),
          ],
@@ -39,6 +41,7 @@ class CallbackForSearchInput(DashCallback):
         button_clicked = self.get_clicked_button()
         if button_clicked is None:
             return self.get_parameter_value(self._tab_elements.my_search_input)
+        print('get_actual_search_value.button_clicked={}'.format(button_clicked.name))
         if button_clicked.name == self._tab_elements.my_search_button:
             return self.get_parameter_value(self._tab_elements.my_search_input)
         elif button_clicked.name == self._tab_elements.my_search_db_button:
@@ -51,13 +54,14 @@ class CallbackForSearchInput(DashCallback):
     def __get_parameter_list__(self):
         return [
             # Input
-            DashCallbackParameter(self._tab_elements.my_search_button, MYDSHC.BUTTON),
-            DashCallbackParameter(self._tab_elements.my_search_db_button, MYDSHC.BUTTON),
-            DashCallbackParameter(self._tab_elements.my_search_file_button, MYDSHC.BUTTON),
+            DashInputCallbackParameter(self._tab_elements.my_search_input, DSHC.INPUT, DSHVT.N_BLUR),
+            DashInputCallbackParameter(self._tab_elements.my_search_button, DSHC.BUTTON),
+            DashInputCallbackParameter(self._tab_elements.my_search_db_button, DSHC.BUTTON),
+            DashInputCallbackParameter(self._tab_elements.my_search_file_button, DSHC.BUTTON),
             # State
-            DashCallbackParameter(self._tab_elements.my_search_input, MYDSHC.INPUT),
-            DashCallbackParameter(self._tab_elements.my_search_db_dd, MYDSHC.DROP_DOWN),
-            DashCallbackParameter(self._tab_elements.my_search_file_dd, MYDSHC.DROP_DOWN),
+            DashStateCallbackParameter(self._tab_elements.my_search_input, DSHC.INPUT),
+            DashStateCallbackParameter(self._tab_elements.my_search_db_dd, DSHC.DROP_DOWN),
+            DashStateCallbackParameter(self._tab_elements.my_search_file_dd, DSHC.DROP_DOWN),
         ]
 
 
@@ -85,16 +89,16 @@ class CallbackForResultGrid(CallbackForSearchInput):
     def __get_parameter_list__(self):
         return [
             # Input
-            DashCallbackParameter(self._tab_elements.my_search_button, MYDSHC.BUTTON),
-            DashCallbackParameter(self._tab_elements.my_search_db_button, MYDSHC.BUTTON),
-            DashCallbackParameter(self._tab_elements.my_search_file_button, MYDSHC.BUTTON),
-            DashCallbackParameter(self._tab_elements.my_search_entities_dd, MYDSHC.DROP_DOWN),
+            DashInputCallbackParameter(self._tab_elements.my_search_button, DSHC.BUTTON),
+            DashInputCallbackParameter(self._tab_elements.my_search_db_button, DSHC.BUTTON),
+            DashInputCallbackParameter(self._tab_elements.my_search_file_button, DSHC.BUTTON),
+            DashInputCallbackParameter(self._tab_elements.my_search_entities_dd, DSHC.DROP_DOWN),
             # State
-            DashCallbackParameter(self._tab_elements.my_search_source_dd, MYDSHC.DROP_DOWN),
-            DashCallbackParameter(self._tab_elements.my_search_region_dd, MYDSHC.DROP_DOWN),
-            DashCallbackParameter(self._tab_elements.my_search_category_dd, MYDSHC.DROP_DOWN),
-            DashCallbackParameter(self._tab_elements.my_search_sub_category_dd, MYDSHC.DROP_DOWN),
-            DashCallbackParameter(self._tab_elements.my_search_input, MYDSHC.INPUT),
-            DashCallbackParameter(self._tab_elements.my_search_db_dd, MYDSHC.DROP_DOWN),
-            DashCallbackParameter(self._tab_elements.my_search_file_dd, MYDSHC.DROP_DOWN),
+            DashStateCallbackParameter(self._tab_elements.my_search_source_dd, DSHC.DROP_DOWN),
+            DashStateCallbackParameter(self._tab_elements.my_search_region_dd, DSHC.DROP_DOWN),
+            DashStateCallbackParameter(self._tab_elements.my_search_category_dd, DSHC.DROP_DOWN),
+            DashStateCallbackParameter(self._tab_elements.my_search_sub_category_dd, DSHC.DROP_DOWN),
+            DashStateCallbackParameter(self._tab_elements.my_search_input, DSHC.INPUT),
+            DashStateCallbackParameter(self._tab_elements.my_search_db_dd, DSHC.DROP_DOWN),
+            DashStateCallbackParameter(self._tab_elements.my_search_file_dd, DSHC.DROP_DOWN),
         ]

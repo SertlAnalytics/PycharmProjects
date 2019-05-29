@@ -6,6 +6,7 @@ Date: 2018-11-14
 """
 
 from dash.dependencies import Input, Output, State
+from sertl_analytics.constants.my_constants import DSHVT
 from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
@@ -74,7 +75,7 @@ class MyDashTab4Log(MyPatternDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(LOGDD.PROCESS_STEP)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(LOGDD.DATE_RANGE)),
             MyHTML.div_with_html_button_submit(self._my_log_refresh_button, 'Refresh', hidden=''),
-            MyHTML.div(self._data_table_div, self.__get_table_for_log__(), False),
+            MyHTML.div_with_table(self._data_table_div, self.__get_table_for_log__()),
             MyDCC.markdown(self._my_log_entry_markdown)
         ]
         return MyHTML.div('my_log_div', children_list)
@@ -88,8 +89,8 @@ class MyDashTab4Log(MyPatternDashBaseTab):
 
     def __init_callback_for_process_options__(self):
         @self.app.callback(
-            Output(self._my_log_process_selection, 'options'),
-            [Input(self._my_log_type_selection, 'value')]
+            Output(self._my_log_process_selection, DSHVT.OPTIONS),
+            [Input(self._my_log_type_selection, DSHVT.VALUE)]
         )
         def handle_callback_for_process_options(log_type: str):
             value_list = self.__get_value_list_for_process_options__(log_type)
@@ -97,9 +98,9 @@ class MyDashTab4Log(MyPatternDashBaseTab):
 
     def __init_callback_for_process_step_options__(self):
         @self.app.callback(
-            Output(self._my_log_process_step_selection, 'options'),
-            [Input(self._my_log_type_selection, 'value'),
-             Input(self._my_log_process_selection, 'value')]
+            Output(self._my_log_process_step_selection, DSHVT.OPTIONS),
+            [Input(self._my_log_type_selection, DSHVT.VALUE),
+             Input(self._my_log_process_selection, DSHVT.VALUE)]
         )
         def handle_callback_for_process_step_options(log_type: str, process: str):
             value_list = self.__get_value_list_for_process_step_options__(log_type, process)
@@ -146,12 +147,12 @@ class MyDashTab4Log(MyPatternDashBaseTab):
 
     def __init_callback_for_log_table__(self):
         @self.app.callback(
-            Output(self._data_table_div, 'children'),
-            [Input(self._my_log_type_selection, 'value'),
-             Input(self._my_log_process_selection, 'value'),
-             Input(self._my_log_process_step_selection, 'value'),
-             Input(self._my_log_date_range_selection, 'value'),
-             Input(self._my_log_refresh_button, 'n_clicks')])
+            Output(self._data_table_div, DSHVT.CHILDREN),
+            [Input(self._my_log_type_selection, DSHVT.VALUE),
+             Input(self._my_log_process_selection, DSHVT.VALUE),
+             Input(self._my_log_process_step_selection, DSHVT.VALUE),
+             Input(self._my_log_date_range_selection, DSHVT.VALUE),
+             Input(self._my_log_refresh_button, DSHVT.N_CLICKS)])
         def handle_callback_for_positions_options(
                 log_type: str, process: str, step: str, date_range: str, n_clicks: int):
             if log_type != self._selected_log_type or self._refresh_button_clicks != n_clicks:
@@ -166,12 +167,12 @@ class MyDashTab4Log(MyPatternDashBaseTab):
 
     def __init_callback_for_log_entry_selection__(self):
         @self.app.callback(
-            Output(self._my_log_entry_markdown, 'children'),
-            [Input(self._data_table_name, 'rows'),
-             Input(self._data_table_name, 'selected_row_indices')],
-            [State(self._my_log_type_selection, 'value')])
+            Output(self._my_log_entry_markdown, DSHVT.CHILDREN),
+            [Input(self._data_table_name, DSHVT.ROWS),
+             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)],
+            [State(self._my_log_type_selection, DSHVT.VALUE)])
         def handle_callback_for_graph_first(rows: list, selected_row_indices: list, log_type: str):
-            if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:
+            if selected_row_indices is None or len(selected_row_indices) == 0:
                 return ''
             selected_row = rows[selected_row_indices[0]]
             column_value_list = ['_**{}**_: {}'.format(col, selected_row[col]) for col in self._log_table.columns]

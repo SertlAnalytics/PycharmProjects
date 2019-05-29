@@ -7,6 +7,7 @@ Date: 2018-11-09
 """
 
 from dash.dependencies import Input, Output, State
+from sertl_analytics.constants.my_constants import DSHVT
 from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi
@@ -54,6 +55,11 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
         self._trade_handler_online = trade_handler_online
         self._dd_handler = PortfolioTabDropDownHandler()
 
+    @property
+    def columns(self) -> list:
+        return [PDC.EXCHANGE, PDC.ASSET, PDC.AMOUNT, PDC.AMOUNT_AVAILABLE,
+                PDC.CURRENT_PRICE, PDC.CURRENT_TOTAL, PDC.ACTIVELY_MANAGED]
+
     @staticmethod
     def __get_adjusted_sys_config_copy__(sys_config: SystemConfiguration) -> SystemConfiguration:
         sys_config_copy = sys_config.get_semi_deep_copy()  # we need some adjustments (_period, etc...)
@@ -90,7 +96,7 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
             MyHTML.div_with_html_button_submit('my_portfolio_refresh_button', 'Refresh'),
             MyHTML.div_with_html_button_submit('my_portfolio_active_manage_button',
                                                self.__get_position_manage_button_text__()),
-            MyHTML.div(self._data_table_div, self.__get_table_for_portfolio__(), False),
+            MyHTML.div_with_table(self._data_table_div, self.__get_table_for_portfolio__()),
             MyHTML.div('my_graph_portfolio_position_div'),
             MyHTML.div('my_graph_portfolio_position_second_div')
         ]
@@ -107,12 +113,12 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
 
     def __init_callbacks_for_portfolio_refresh_button__(self):
         @self.app.callback(
-            Output('my_portfolio_refresh_button', 'hidden'),
-            [Input('my_graph_portfolio_position_div', 'children'),
-             Input('my_portfolio_aggregation', 'value'),
-             Input('my_portfolio_refresh_interval_selection', 'value'),
-             Input('my_portfolio_graph_second_days_selection', 'value'),
-             Input('my_portfolio_indicator_selection', 'value')])
+            Output('my_portfolio_refresh_button', DSHVT.HIDDEN),
+            [Input('my_graph_portfolio_position_div', DSHVT.CHILDREN),
+             Input('my_portfolio_aggregation', DSHVT.VALUE),
+             Input('my_portfolio_refresh_interval_selection', DSHVT.VALUE),
+             Input('my_portfolio_graph_second_days_selection', DSHVT.VALUE),
+             Input('my_portfolio_indicator_selection', DSHVT.VALUE)])
         def handle_callback_for_portfolio_refresh_button_hidden(graph, aggregation, interval, second_days, indicator):
             if indicator != self._selected_indicator:
                 self._selected_indicator = indicator
@@ -121,24 +127,24 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
 
     def __init_callbacks_for_position_manage_button__(self):
         @self.app.callback(
-            Output('my_portfolio_active_manage_button', 'hidden'),
-            [Input('my_graph_portfolio_position_div', 'children')])
+            Output('my_portfolio_active_manage_button', DSHVT.HIDDEN),
+            [Input('my_graph_portfolio_position_div', DSHVT.CHILDREN)])
         def handle_callback_for_position_manage_button_hidden(graph):
             if graph == '':
                 return 'hidden'
             return ''
 
         @self.app.callback(
-            Output('my_portfolio_active_manage_button', 'children'),
-            [Input('my_graph_portfolio_position_div', 'children')])
+            Output('my_portfolio_active_manage_button', DSHVT.CHILDREN),
+            [Input('my_graph_portfolio_position_div', DSHVT.CHILDREN)])
         def handle_callback_for_position_manage_button_text(graph):
             return self.__get_position_manage_button_text__()
 
     def __init_callback_for_portfolio_position__(self):
         @self.app.callback(
-            Output('my_portfolio_position_div', 'children'),
-            [Input(self._data_table_name, 'selected_row_indices')],
-            [State(self._data_table_name, 'rows')])
+            Output('my_portfolio_position_div', DSHVT.CHILDREN),
+            [Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)],
+            [State(self._data_table_name, DSHVT.ROWS)])
         def handle_callback_for_portfolio_position(selected_row_indices: list, rows: list):
             self.__init_selected_row__(selected_row_indices)
             if self._selected_ticker_id == '':
@@ -147,13 +153,13 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
 
     def __init_callback_for_graph_for_selected_position__(self):
         @self.app.callback(
-            Output('my_graph_portfolio_position_div', 'children'),
-            [Input(self._data_table_name, 'rows'),
-             Input(self._data_table_name, 'selected_row_indices'),
-             Input('my_portfolio_refresh_button', 'n_clicks')],
-            [State('my_portfolio_aggregation', 'value'),
-             State('my_portfolio_refresh_interval_selection', 'value'),
-             State('my_portfolio_indicator_selection', 'value')])
+            Output('my_graph_portfolio_position_div', DSHVT.CHILDREN),
+            [Input(self._data_table_name, DSHVT.ROWS),
+             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES),
+             Input('my_portfolio_refresh_button', DSHVT.N_CLICKS)],
+            [State('my_portfolio_aggregation', DSHVT.VALUE),
+             State('my_portfolio_refresh_interval_selection', DSHVT.VALUE),
+             State('my_portfolio_indicator_selection', DSHVT.VALUE)])
         def handle_callback_for_graph_first(rows: list, selected_row_indices: list, refresh_n_clicks: int,
                                             aggregation: int, refresh_interval: int, indicator: str):
             self.__init_selected_row__(selected_row_indices)
@@ -166,12 +172,12 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
             return graph
 
         @self.app.callback(
-            Output('my_graph_portfolio_position_second_div', 'children'),
-            [Input('my_graph_portfolio_position_div', 'children')],
-            [State('my_portfolio_aggregation', 'value'),
-             State('my_portfolio_refresh_interval_selection', 'value'),
-             State('my_portfolio_graph_second_days_selection', 'value'),
-             State('my_portfolio_indicator_selection', 'value')])
+            Output('my_graph_portfolio_position_second_div', DSHVT.CHILDREN),
+            [Input('my_graph_portfolio_position_div', DSHVT.CHILDREN)],
+            [State('my_portfolio_aggregation', DSHVT.VALUE),
+             State('my_portfolio_refresh_interval_selection', DSHVT.VALUE),
+             State('my_portfolio_graph_second_days_selection', DSHVT.VALUE),
+             State('my_portfolio_indicator_selection', DSHVT.VALUE)])
         def handle_callback_for_graph_second(graph_first, aggregation_first: int,
                                              refresh_interval: int, range_list: list, indicator: str):
             if self._selected_ticker_id == '' or len(range_list) == 0:
@@ -192,16 +198,16 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
 
     def __init_callback_for_portfolio_markdown__(self):
         @self.app.callback(
-            Output('my_portfolio_markdown', 'children'),
-            [Input('my_position_markdown', 'children')])
+            Output('my_portfolio_markdown', DSHVT.CHILDREN),
+            [Input('my_position_markdown', DSHVT.CHILDREN)])
         def handle_callback_for_portfolio_markdown(children):
             return self.__get_portfolio_markdown__()
 
     def __init_callback_for_portfolio_table__(self):
         @self.app.callback(
-            Output(self._data_table_div, 'children'),
-            [Input('my_position_markdown', 'children'),
-             Input('my_portfolio_active_manage_button', 'n_clicks')])
+            Output(self._data_table_div, DSHVT.CHILDREN),
+            [Input('my_position_markdown', DSHVT.CHILDREN),
+             Input('my_portfolio_active_manage_button', DSHVT.N_CLICKS)])
         def handle_callback_for_positions_options(children, n_clicks: int):
             if n_clicks > self._active_manage_button_clicks:
                 self._active_manage_button_clicks = n_clicks
@@ -210,9 +216,9 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
 
     def __init_callback_for_selected_row_indices__(self):
         @self.app.callback(
-            Output(self._data_table_name, 'selected_row_indices'),
-            [Input(self._data_table_div, 'children')],
-            [State(self._data_table_name, 'rows')])
+            Output(self._data_table_name, DSHVT.SELECTED_ROW_INDICES),
+            [Input(self._data_table_div, DSHVT.CHILDREN)],
+            [State(self._data_table_name, DSHVT.ROWS)])
         def handle_callback_for_selected_row_indices(children, rows):
             if self._selected_row_index == -1 or len(rows) == 0:
                 return []
@@ -265,8 +271,7 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
 
     def __get_table_for_portfolio__(self):
         self.__set_portfolio_rows_for_data_table__()
-        min_height = max(100, 50 + len(self._table_rows) * 40)
-        return MyDCC.data_table(self._data_table_name, self._table_rows, [], min_height=min_height)
+        return MyDCC.data_table(self._data_table_name, self._table_rows, columns=self.columns)
 
     def __set_portfolio_rows_for_data_table__(self):
         if self._trade_handler_online.balances is None:
@@ -297,13 +302,7 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
             return 'IBKR', asset
 
     def __init_table_rows__(self):
-        self._table_rows = [{PDC.EXCHANGE: '',
-                             PDC.ASSET: '',
-                             PDC.AMOUNT: '',
-                             PDC.AMOUNT_AVAILABLE: '',
-                             PDC.CURRENT_PRICE: '',
-                             PDC.CURRENT_TOTAL: '',
-                             PDC.ACTIVELY_MANAGED: ''}]
+        self._table_rows = [{col: '' for col in self.columns}]
 
     def __get_flag_for_actively_managed__(self, asset: str) -> str:
         for row in self._table_rows:

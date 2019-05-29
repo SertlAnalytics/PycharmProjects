@@ -6,7 +6,7 @@ Date: 2019-03-06
 """
 
 from dash.dependencies import Input, Output, State
-from sertl_analytics.mydates import MyDate
+from sertl_analytics.constants.my_constants import DSHVT
 from pattern_dash.my_dash_base_tab_for_pattern import MyPatternDashBaseTab
 from pattern_system_configuration import SystemConfiguration
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
@@ -53,7 +53,7 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
     def get_div_for_tab(self):
         children_list = [
             self.__get_embedded_div_for_last_run_and_start_job_button__(),
-            MyHTML.div(self._data_table_div, self.__get_table_for_jobs__(), False),
+            MyHTML.div_with_table(self._data_table_div, self.__get_table_for_jobs__()),
             MyDCC.markdown(self._my_jobs_entry_markdown)
         ]
         return MyHTML.div('my_jobs_div', children_list)
@@ -74,23 +74,23 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
 
     def __init_callback_for_last_check_value_div__(self):
         @self.app.callback(
-            Output(self._my_jobs_last_check_value_div, 'children'),
-            [Input('my_interval_refresh', 'n_intervals')])
+            Output(self._my_jobs_last_check_value_div, DSHVT.CHILDREN),
+            [Input('my_interval_refresh', DSHVT.N_INTERVALS)])
         def handle_callback_for_last_check_value_div(n_intervals: int):
             self._job_handler.check_scheduler_tasks()
             return self._job_handler.last_run_date_time
 
     def __init_callback_for_jobs_table__(self):
         @self.app.callback(
-            Output(self._data_table_div, 'children'),
-            [Input(self._my_jobs_last_check_value_div, 'children'),
-             Input(self._my_jobs_start_job_button, 'n_clicks'),
-             Input(self._my_jobs_activate_job_button, 'n_clicks')],
-            [State(self._data_table_name, 'rows'),
-             State(self._data_table_name, 'selected_row_indices')])
+            Output(self._data_table_div, DSHVT.CHILDREN),
+            [Input(self._my_jobs_last_check_value_div, DSHVT.CHILDREN),
+             Input(self._my_jobs_start_job_button, DSHVT.N_CLICKS),
+             Input(self._my_jobs_activate_job_button, DSHVT.N_CLICKS)],
+            [State(self._data_table_name, DSHVT.ROWS),
+             State(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
         def handle_callback_for_jobs_table(last_check_value: str, n_clicks_start: int, n_clicks_activate: int,
                                            rows: list, selected_row_indices: list):
-            if len(selected_row_indices) > 0:
+            if selected_row_indices is not None and len(selected_row_indices) > 0:
                 selected_job_row = rows[selected_row_indices[0]]
                 job_name = selected_job_row[JDC.NAME]
                 if self._n_clicks_start != n_clicks_start:
@@ -105,11 +105,11 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
 
     def __init_callback_for_jobs_markdown__(self):
         @self.app.callback(
-            Output(self._my_jobs_entry_markdown, 'children'),
-            [Input(self._data_table_name, 'rows'),
-             Input(self._data_table_name, 'selected_row_indices')])
+            Output(self._my_jobs_entry_markdown, DSHVT.CHILDREN),
+            [Input(self._data_table_name, DSHVT.ROWS),
+             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
         def handle_callback_for_jobs_markdown(rows: list, selected_row_indices: list):
-            if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:
+            if selected_row_indices is None or len(selected_row_indices) == 0:
                 return ''
             selected_row = rows[selected_row_indices[0]]
             column_value_list = ['_**{}**_: {}'.format(col, selected_row[col]) for col in self._grid_table.columns]
@@ -117,23 +117,23 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
 
     def __init_callback_for_button_visibility__(self):
         @self.app.callback(
-            Output(self._my_jobs_start_job_button, 'hidden'),
-            [Input(self._data_table_name, 'selected_row_indices')])
+            Output(self._my_jobs_start_job_button, DSHVT.HIDDEN),
+            [Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
         def handle_callback_for_button_start_visibility(selected_row_indices: list):
-            return '' if len(selected_row_indices) == 1 else 'hidden'
+            return 'hidden' if selected_row_indices is None or len(selected_row_indices) != 1 else ''
 
         @self.app.callback(
-            Output(self._my_jobs_activate_job_button, 'hidden'),
-            [Input(self._data_table_name, 'selected_row_indices')])
+            Output(self._my_jobs_activate_job_button, DSHVT.HIDDEN),
+            [Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
         def handle_callback_for_button_activate_visibility(selected_row_indices: list):
-            return '' if len(selected_row_indices) == 1 else 'hidden'
+            return 'hidden' if selected_row_indices is None or len(selected_row_indices) != 1 else ''
 
         @self.app.callback(
-            Output(self._my_jobs_activate_job_button, 'children'),
-            [Input(self._data_table_name, 'selected_row_indices')],
-            [State(self._data_table_name, 'rows')])
+            Output(self._my_jobs_activate_job_button, DSHVT.CHILDREN),
+            [Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)],
+            [State(self._data_table_name, DSHVT.ROWS)])
         def handle_callback_for_button_activate_text(selected_row_indices: list, rows: list):
-            if len(selected_row_indices) == 0:
+            if selected_row_indices is None or len(selected_row_indices) == 0:
                 return ''
             selected_job_row = rows[selected_row_indices[0]]
             job_name = selected_job_row[JDC.NAME]
@@ -143,6 +143,5 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
     def __get_table_for_jobs__(self):
         self._grid_table = JobTable(self._job_handler)
         rows = self._grid_table.get_rows_for_selected_items()
-        min_height = self._grid_table.effective_height_for_display
-        return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
+        return MyDCC.data_table(self._data_table_name, rows, columns=self._grid_table.columns, page_size=100)
 

@@ -6,6 +6,7 @@ Date: 2018-11-14
 """
 
 from dash.dependencies import Input, Output, State
+from sertl_analytics.constants.my_constants import DSHVT
 from salesman_tutti.tutti_constants import PRCAT
 from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML
@@ -74,12 +75,12 @@ class MyDashTab4Sales(MyDashBaseTab):
                                   placeholder='Please enter filter for my sales...', size=500, height=27),
             MyHTML.div_with_button_link(self._my_sales_link, href='', title='', hidden='hidden'),
             MyHTML.div_with_html_button_submit(self._my_sales_show_detail_button, children='Details', hidden='hidden'),
-            MyHTML.div(self._data_table_div, self.__get_sale_grid_table__(), False),
+            MyHTML.div_with_table(self._data_table_div, self.__get_sale_grid_table__()),
             MyDCC.markdown(self._my_sales_sale_entry_markdown),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_ENTITIES)),
-            MyHTML.div(self._my_sales_regression_chart, self.__get_sales_regression_chart__(), False),
+            MyHTML.div(self._my_sales_regression_chart, self.__get_sales_regression_chart__(), inline=False),
             MyHTML.div_with_button_link(self._my_sales_similar_sale_link, href='', title='', hidden='hidden'),
-            MyHTML.div(self._my_sales_similar_sale_grid_table_div, self.__get_similar_sale_grid_table__(''), False),
+            MyHTML.div_with_table(self._my_sales_similar_sale_grid_table_div, self.__get_similar_sale_grid_table__('')),
             MyDCC.markdown(self._my_sales_similar_sale_entry_markdown),
         ]
         return MyHTML.div(self._my_sales_div, children_list)
@@ -99,31 +100,31 @@ class MyDashTab4Sales(MyDashBaseTab):
 
     def __init_callback_for_my_sales_show_detail_button__(self):
         @self.app.callback(
-            Output(self._my_sales_show_detail_button, 'hidden'),
-            [Input(self._my_sales_link, 'hidden')])
+            Output(self._my_sales_show_detail_button, DSHVT.HIDDEN),
+            [Input(self._my_sales_link, DSHVT.HIDDEN)])
         def handle_callback_for_my_sales_show_detail_button_visibility(hidden: str):
             return 'hidden' if self._selected_sale is None else ''
 
     def __init_callbacks_for_sales_result_numbers__(self):
         @self.app.callback(
-            Output(self._header_table.my_sales_found_valid_value_div, 'children'),
-            [Input(self._my_sales_similar_sale_grid_table, 'rows')])
+            Output(self._header_table.my_sales_found_valid_value_div, DSHVT.CHILDREN),
+            [Input(self._my_sales_similar_sale_grid_table, DSHVT.ROWS)])
         def handle_callback_for_sales_result_numbers_valid(rows: list):
-            return 0 if len(rows) == 0 else len([row for row in rows if not row[SLDC.IS_OUTLIER]])
+            return 0 if rows is None or len(rows) == 0 else len([row for row in rows if not row[SLDC.IS_OUTLIER]])
 
         @self.app.callback(
-            Output(self._header_table.my_sales_found_all_value_div, 'children'),
-            [Input(self._my_sales_similar_sale_grid_table, 'rows')])
+            Output(self._header_table.my_sales_found_all_value_div, DSHVT.CHILDREN),
+            [Input(self._my_sales_similar_sale_grid_table, DSHVT.ROWS)])
         def handle_callback_for_sales_result_numbers_all(rows: list):
             return len(rows)
 
     def __init_callbacks_for_my_sales_link__(self):
         @self.app.callback(
-            Output(self._my_sales_link, 'hidden'),
-            [Input(self._data_table_name, 'selected_row_indices')],
-            [State(self._data_table_name, 'rows')])
+            Output(self._my_sales_link, DSHVT.HIDDEN),
+            [Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)],
+            [State(self._data_table_name, DSHVT.ROWS)])
         def handle_callback_for_my_sales_link_visibility(selected_row_indices: list, rows: list):
-            if len(selected_row_indices) == 0:
+            if selected_row_indices is None or len(selected_row_indices) == 0:
                 self._selected_sale = None
             else:
                 selected_row = rows[selected_row_indices[0]]
@@ -131,8 +132,8 @@ class MyDashTab4Sales(MyDashBaseTab):
             return 'hidden' if self._selected_sale is None else ''
 
         @self.app.callback(
-            Output(self._my_sales_link, 'children'),
-            [Input(self._my_sales_link, 'hidden')])
+            Output(self._my_sales_link, DSHVT.CHILDREN),
+            [Input(self._my_sales_link, DSHVT.HIDDEN)])
         def handle_callback_for_my_sales_link_title(button_hidden: str):
             if button_hidden == 'hidden':
                 return ''
@@ -141,7 +142,7 @@ class MyDashTab4Sales(MyDashBaseTab):
 
         @self.app.callback(
             Output(self._my_sales_link, 'href'),
-            [Input(self._my_sales_link, 'hidden')])
+            [Input(self._my_sales_link, DSHVT.HIDDEN)])
         def handle_callback_for_my_sales_link_href(button_hidden: str):
             if button_hidden == 'hidden':
                 return ''
@@ -149,8 +150,8 @@ class MyDashTab4Sales(MyDashBaseTab):
 
     def __init_callbacks_for_filter_by_entities__(self):
         @self.app.callback(
-            Output(self._dd_handler.get_embracing_div_id(SLDD.SALE_ENTITIES), 'style'),
-            [Input(self._my_sales_similar_sale_grid_table_div, 'children')])
+            Output(self._dd_handler.get_embracing_div_id(SLDD.SALE_ENTITIES), DSHVT.STYLE),
+            [Input(self._my_sales_similar_sale_grid_table_div, DSHVT.CHILDREN)])
         def handle_callback_for_sale_filter_by_entities_visibility(children):
             # print('children={}'.format(children))
             if len(children) == 0:
@@ -158,8 +159,8 @@ class MyDashTab4Sales(MyDashBaseTab):
             return self._dd_handler.get_style_display(SLDD.SALE_ENTITIES)
 
         @self.app.callback(
-            Output(self._dd_handler.my_sale_entities_dd, 'options'),
-            [Input(self._my_sales_similar_sale_grid_table_div, 'children')])
+            Output(self._dd_handler.my_sale_entities_dd, DSHVT.OPTIONS),
+            [Input(self._my_sales_similar_sale_grid_table_div, DSHVT.CHILDREN)])
         def handle_callback_for_sale_filter_by_entities_options(children):
             if len(children) == 0 or len(self._similar_sale_grid_table.plot_categories) == 0:
                 return []
@@ -172,9 +173,9 @@ class MyDashTab4Sales(MyDashBaseTab):
 
     def __init_callbacks_for_similar_sales_link__(self):
         @self.app.callback(
-            Output(self._my_sales_similar_sale_link, 'hidden'),
-            [Input(self._my_sales_similar_sale_grid_table, 'rows'),
-             Input(self._my_sales_similar_sale_grid_table, 'selected_row_indices')])
+            Output(self._my_sales_similar_sale_link, DSHVT.HIDDEN),
+            [Input(self._my_sales_similar_sale_grid_table, DSHVT.ROWS),
+             Input(self._my_sales_similar_sale_grid_table, DSHVT.SELECTED_ROW_INDICES)])
         def handle_callback_for_similar_sales_link_visibility(rows: list, selected_row_indices: list):
             if len(selected_row_indices) == 0:
                 self._selected_similar_sale = None
@@ -184,8 +185,8 @@ class MyDashTab4Sales(MyDashBaseTab):
             return ''
 
         @self.app.callback(
-            Output(self._my_sales_similar_sale_link, 'children'),
-            [Input(self._my_sales_similar_sale_link, 'hidden')])
+            Output(self._my_sales_similar_sale_link, DSHVT.CHILDREN),
+            [Input(self._my_sales_similar_sale_link, DSHVT.HIDDEN)])
         def handle_callback_for_similar_sales_link_text(button_hidden: str):
             if button_hidden == 'hidden':
                 return ''
@@ -193,8 +194,8 @@ class MyDashTab4Sales(MyDashBaseTab):
             return MyHTML.button_submit('my_link_button', 'Open "{}"'.format(button_text), '')
 
         @self.app.callback(
-            Output(self._my_sales_similar_sale_link, 'href'),
-            [Input(self._my_sales_similar_sale_link, 'hidden')])
+            Output(self._my_sales_similar_sale_link, DSHVT.HREF),
+            [Input(self._my_sales_similar_sale_link, DSHVT.HIDDEN)])
         def handle_callback_for_similar_sales_link_href(button_hidden: str):
             if button_hidden == 'hidden':
                 return ''
@@ -202,29 +203,32 @@ class MyDashTab4Sales(MyDashBaseTab):
 
     def __init_callback_for_sale_grid_table__(self):
         @self.app.callback(
-            Output(self._data_table_div, 'children'),
-            [Input(self._my_sales_filter_input, 'n_blur')],
-            [State(self._my_sales_filter_input, 'value'),
-             State(self._data_table_name, 'rows'),
-             State(self._data_table_name, 'selected_row_indices')]
+            Output(self._data_table_div, DSHVT.CHILDREN),
+            [Input(self._my_sales_filter_input, DSHVT.N_BLUR)],
+            [State(self._my_sales_filter_input, DSHVT.VALUE),
+             State(self._data_table_name, DSHVT.ROWS),
+             State(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)]
             )
         def handle_callback_for_sale_grid_table(
                 filter_n_blurs: int, filter_input: str,
                 rows: list, selected_row_indices: list):
-            self._selected_my_sale_row = None if len(selected_row_indices) == 0 else rows[selected_row_indices[0]]
+            if selected_row_indices is None or len(selected_row_indices) == 0:
+                self._selected_my_sale_row = None
+            else:
+                self._selected_my_sale_row = rows[selected_row_indices[0]]
             self._selection_api.input = filter_input
             return self.__get_sale_grid_table__()
 
     def __init_callback_for_similar_sale_grid_table__(self):
         @self.app.callback(
-            Output(self._my_sales_similar_sale_grid_table_div, 'children'),
-            [Input(self._data_table_name, 'rows'),
-             Input(self._data_table_name, 'selected_row_indices'),
-             Input(self._dd_handler.my_sale_entities_dd, 'value')
+            Output(self._my_sales_similar_sale_grid_table_div, DSHVT.CHILDREN),
+            [Input(self._data_table_name, DSHVT.ROWS),
+             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES),
+             Input(self._dd_handler.my_sale_entities_dd, DSHVT.VALUE)
              ]
         )
         def handle_callback_for_similar_sale_grid_table(rows: list, selected_row_indices: list, entity_values: list):
-            if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:
+            if selected_row_indices is None or len(selected_row_indices) == 0:
                 self._sale_grid_table.reset_selected_row()
                 return ''
             if set(selected_row_indices) != set(self._selected_row_indices):
@@ -240,10 +244,10 @@ class MyDashTab4Sales(MyDashBaseTab):
 
     def __init_callbacks_for_selected_sale_entry_markdown__(self):
         @self.app.callback(
-            Output(self._my_sales_sale_entry_markdown, 'children'),
-            [Input(self._my_sales_show_detail_button, 'n_clicks'),
-             Input(self._data_table_name, 'selected_row_indices')],
-            [State(self._my_sales_sale_entry_markdown, 'children')])
+            Output(self._my_sales_sale_entry_markdown, DSHVT.CHILDREN),
+            [Input(self._my_sales_show_detail_button, DSHVT.N_CLICKS),
+             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)],
+            [State(self._my_sales_sale_entry_markdown, DSHVT.CHILDREN)])
         def handle_callback_for_selected_sale_entry_markdown(n_clicks: int, selected_indices: list, markdown_old: str):
             if self._selected_sale is None or len(selected_indices) == 0 or markdown_old != '' \
                     or self._show_button_details_n_clicks == n_clicks:
@@ -254,24 +258,24 @@ class MyDashTab4Sales(MyDashBaseTab):
             return '  \n'.join(column_value_list)
 
         @self.app.callback(
-            Output(self._header_table.my_sales_id_value_div, 'children'),
-            [Input(self._my_sales_link, 'hidden')])
+            Output(self._header_table.my_sales_id_value_div, DSHVT.CHILDREN),
+            [Input(self._my_sales_link, DSHVT.HIDDEN)])
         def handle_callback_for_selected_sale_entry_sale_id(hidden: str):
             return '' if self._selected_sale is None else self._selected_sale.sale_id
 
     def __init_callback_for_sales_regression_chart__(self):
         @self.app.callback(
-            Output(self._my_sales_regression_chart, 'children'),
-            [Input(self._my_sales_similar_sale_grid_table_div, 'children')],
-            [State(self._data_table_name, 'selected_row_indices')]
+            Output(self._my_sales_regression_chart, DSHVT.CHILDREN),
+            [Input(self._my_sales_similar_sale_grid_table_div, DSHVT.CHILDREN)],
+            [State(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)]
         )
         def handle_callback_sales_regression_chart(children, selected_row_indices: list):
             return self.__get_sales_regression_chart__(selected_row_indices)
 
     def __init_callback_for_similar_sale_entry_markdown__(self):
         @self.app.callback(
-            Output(self._my_sales_similar_sale_entry_markdown, 'children'),
-            [Input(self._my_sales_similar_sale_link, 'hidden')]
+            Output(self._my_sales_similar_sale_entry_markdown, DSHVT.CHILDREN),
+            [Input(self._my_sales_similar_sale_link, DSHVT.HIDDEN)]
         )
         def handle_callback_similar_sale_entry_markdown(*params):
             if self._selected_similar_sale is None:
@@ -280,20 +284,10 @@ class MyDashTab4Sales(MyDashBaseTab):
                                  for col in self._similar_sale_grid_table.columns]
             return '  \n'.join(column_value_list)
 
-    def __init_callback_for_selected_row_indices__(self):
-        @self.app.callback(
-            Output(self._data_table_name, 'selected_row_indices'),
-            [Input(self._data_table_div, 'children')],
-            [State(self._data_table_name, 'rows')])
-        def handle_callback_for_selected_row_indices(children, rows):
-            if self._sale_grid_table.selected_row_index == -1 or len(rows) == 0:
-                return []
-            return [self._sale_grid_table.selected_row_index]
-
     def __init_callback_for_sales_markdown__(self):
         @self.app.callback(
-            Output(self._header_table.my_sales_markdown, 'children'),
-            [Input(self._my_sales_similar_sale_grid_table, 'rows')])
+            Output(self._header_table.my_sales_markdown, DSHVT.CHILDREN),
+            [Input(self._my_sales_similar_sale_grid_table, DSHVT.ROWS)])
         def handle_callback_for_sales_markdown(similar_grid_rows: list):
             if self._selected_sale is None:
                 return ''
@@ -318,7 +312,7 @@ class MyDashTab4Sales(MyDashBaseTab):
             grid_table = self._sale_grid_table
         rows = grid_table.get_rows_for_selection(self._selection_api, False)
         min_height = self._sale_grid_table.height_for_display
-        return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
+        return MyDCC.data_table(self._data_table_name, rows, columns=grid_table.columns, min_height=min_height)
 
     def __get_sales_regression_chart__(self, selected_row_indices=None):
         if selected_row_indices is None or len(selected_row_indices) == 0:
@@ -337,6 +331,6 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._selection_api.entity_values = selected_entity_values
         self._selection_api.master_sale = self._sale_factory.get_sale_from_db_by_sale_id(master_id)
         rows = self._similar_sale_grid_table.get_rows_for_selection(self._selection_api, True)
-        min_height = self._similar_sale_grid_table.height_for_display
-        return MyDCC.data_table(self._my_sales_similar_sale_grid_table, rows, [], min_height=min_height)
+        return MyDCC.data_table(
+            self._my_sales_similar_sale_grid_table, rows, columns=self._similar_sale_grid_table.columns)
 
