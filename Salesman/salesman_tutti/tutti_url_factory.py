@@ -67,7 +67,7 @@ class TuttiUrlFactory:
         self._sub_category_value = '' if api.sub_category_value == PRSUBCAT.ALL else api.sub_category_value
         self._order = 0
         self._url_extended_base = self.__get_url_extended_base__()
-        # print('adjust_web_parser_by_search_api._url_extended_base={}'.format(self._url_extended_base))
+        print('adjust_web_parser_by_search_api._url_extended_base={}'.format(self._url_extended_base))
 
     def get_href(self):
         href = self._search_string
@@ -96,8 +96,9 @@ class TuttiUrlFactory:
             return_dict[SLDC.SALE_ID] = href_parts[-1]
         return return_dict
 
-    def get_url_with_search_string(self, search_string: str):
+    def get_url_with_search_string(self, search_string: str, order=0):
         self._search_string = search_string
+        self._order = order
         return self.url
 
     def get_url_list(self, search_string: str):

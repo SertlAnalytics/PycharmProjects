@@ -12,6 +12,7 @@ from sertl_analytics.mydash.my_dash_components import ButtonHandler
 class TBTN:  # Trading Buttons
     CANCEL_TRADE = 'Cancel_Trade_Button'
     RESTART_REPlAY = 'Restart_Replay_Button'
+    RESET_TRADE_SELECTION = 'Reset_Trade_Selection'
 
 
 class TradingButtonHandler(ButtonHandler):
@@ -19,6 +20,7 @@ class TradingButtonHandler(ButtonHandler):
         value_dict = {
             TBTN.CANCEL_TRADE: 'Cancel Trade',
             TBTN.RESTART_REPlAY: 'Restart Trade',
+            TBTN.RESET_TRADE_SELECTION: 'Reset Selection',
         }
         return value_dict.get(button_type, None)
 
@@ -26,6 +28,7 @@ class TradingButtonHandler(ButtonHandler):
         value_dict = {
             TBTN.CANCEL_TRADE: 'my_trades_cancel_trade_button',
             TBTN.RESTART_REPlAY: 'my_replay_restart_button',
+            TBTN.RESET_TRADE_SELECTION: 'my_trades_reset_button',
         }
         return value_dict.get(button_type, None)
 
@@ -33,6 +36,7 @@ class TradingButtonHandler(ButtonHandler):
         value_dict = {
             TBTN.CANCEL_TRADE: '250',
             TBTN.RESTART_REPlAY: '250',
+            TBTN.RESET_TRADE_SELECTION: '250',
         }
         return value_dict.get(button_type, 200)
 
@@ -40,5 +44,6 @@ class TradingButtonHandler(ButtonHandler):
         return {
             TBTN.CANCEL_TRADE: '',
             TBTN.RESTART_REPlAY: '',
+            TBTN.RESET_TRADE_SELECTION: '',
         }
 

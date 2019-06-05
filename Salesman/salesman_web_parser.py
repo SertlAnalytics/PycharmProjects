@@ -105,12 +105,14 @@ class SalesmanWebParser:
             encoded_search_string = ''
         else:
             encoded_search_string = MyText.get_url_encode_plus(' '.join(search_label_list))
-        url_list = self._url_factory.get_url_list(encoded_search_string)
-        navigation_pages = self.__get_navigation_pages_as_string__(url_list[0])
-        for idx, url in enumerate(url_list):
-            if navigation_pages.find(str(idx)) < 0 < idx:  # we stop paging if there is no number found
-                break
+        url = self._url_factory.get_url_with_search_string(encoded_search_string)
+        navigation_pages_concatenated = self.__get_navigation_pages_as_string__(url)
+        if navigation_pages_concatenated is None:
             self.__fill_sales_data_dict_for_url__(url, return_sales_data_dict)
+        else:
+            for order in range(1, len(navigation_pages_concatenated)):
+                url = self._url_factory.get_url_with_search_string(encoded_search_string, order)
+                self.__fill_sales_data_dict_for_url__(url, return_sales_data_dict)
         return return_sales_data_dict
 
     @staticmethod

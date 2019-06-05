@@ -283,8 +283,8 @@ class PatternTradeHandler:
             return self._last_wave_tick_for_test
         else:
             trade_client = self.__get_trade_client_for_symbol__(ticker_id)
-            return trade_client.get_current_wave_tick(ticker_id, self.sys_config.period,
-                                                           self.sys_config.period_aggregation)
+            return trade_client.get_current_wave_tick(
+                ticker_id, self.sys_config.period, self.sys_config.period_aggregation)
 
     def __get_balance_by_symbol__(self, symbol: str):
         trade_client = self.__get_trade_client_for_symbol__(symbol)
@@ -298,6 +298,8 @@ class PatternTradeHandler:
         for pattern_trade in self.pattern_trade_dict.values():
             wave_tick = self.__get_current_wave_tick_for_ticker_id__(pattern_trade.ticker_id)
             pattern_trade.add_ticker(wave_tick)
+        print('{}: add_tickers_for_actual_time_stamp_to_pattern_trades: END'.format(MyDate.get_time_from_datetime()))
+        # ToDo - remove after checks
 
     def __handle_sell_triggers__(self):
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
@@ -385,8 +387,11 @@ class PatternTradeHandler:
         buying_deletion_key_list = []
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
             pattern_trade.correct_simulation_flag_according_to_forecast()
-            print('handle_buy_triggers: pattern_trade.is_simulation={}, auto={}'.format(
+
+            print('{}: handle_buy_triggers for {}: pattern_trade.is_simulation={}, auto={}'.format(
+                MyDate.get_time_from_datetime(), pattern_trade.ticker_id,
                 pattern_trade.is_simulation, self.exchange_config.automatic_trading_on))
+
             if pattern_trade.is_breakout_active:
                 if pattern_trade.is_actual_ticker_breakout(PTHP.HANDLE_BUY_TRIGGERS):
                     if pattern_trade.are_preconditions_for_breakout_buy_fulfilled():
@@ -443,11 +448,15 @@ class PatternTradeHandler:
                                                         pattern_trade.buy_trigger, pattern_trade.trade_strategy,
                                                         ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
-        self.sys_config.file_log.log_trade('{}'.format(pattern_trade.id_for_logging), process='Trade_Handler', process_step='Buy')
+        self.sys_config.file_log.log_trade('{}'.format(
+            pattern_trade.id_for_logging), process='Trade_Handler', process_step='Buy')
         if self.trade_process == TP.ONLINE:
             order_status = pattern_trade.trade_client.buy_available(
                 ticker.ticker_id, ticker.last_price, pattern_trade.is_simulation)
             if order_status is None:  # e.g. not enough money available...
+                message = '{} - Problem: {}'.format(
+                    pattern_trade.id_for_logging, pattern_trade.trade_client.transaction_step)
+                self.sys_config.file_log.log_trade(log_message=message, process='Trade_Handler', process_step='Buy')
                 return
         else:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_BUY_TRIGGERS, pattern_trade)

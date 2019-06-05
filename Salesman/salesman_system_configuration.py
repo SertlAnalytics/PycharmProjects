@@ -19,6 +19,7 @@ from salesman_scheduling.salesman_process_manager import SalesmanProcessManager
 from files.file_handler import FileHandler
 from salesman_tutti.tutti_categorizer import ProductCategorizer, RegionCategorizer
 from caching.salesman_cache import SalesmanShelve
+from entities.salesman_entity_handler import SalesmanEntityHandler
 
 
 class SystemConfiguration:
@@ -28,6 +29,7 @@ class SystemConfiguration:
         self.shelve_cache = SalesmanShelve()
         self.file_log = SalesmanLog()
         self.file_handler = FileHandler()
+        self.entity_handler = SalesmanEntityHandler()
         self.process_manager = SalesmanProcessManager()
         self.region_categorizer = RegionCategorizer()
         self.product_categorizer = ProductCategorizer()

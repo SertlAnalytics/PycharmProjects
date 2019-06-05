@@ -164,9 +164,8 @@ class MyDashTab4Recommender(MyPatternDashBaseTab):
     def __init_callback_for_selected_row_indices__(self):
         @self.app.callback(
             Output(self._data_table_name, DSHVT.SELECTED_ROW_INDICES),
-            [Input(self._data_table_div, DSHVT.CHILDREN)],
-            [State(self._data_table_name, DSHVT.ROWS)])
-        def handle_callback_for_selected_row_indices(children, rows):
+            [Input(self._data_table_name, DSHVT.ROWS)])
+        def handle_callback_for_selected_row_indices(rows):
             if self._recommender_table.selected_row_index == -1 or len(rows) == 0:
                 return []
             return [self._recommender_table.selected_row_index]

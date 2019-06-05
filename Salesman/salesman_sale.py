@@ -8,12 +8,12 @@ Date: 2019-04-02
 from sertl_analytics.mymath import MyMath
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.salesman_constants import SLDC, SLSRC, SLST, EL
-from entities.salesman_named_entity import SalesmanEntityHandler
 from salesman_nlp.salesman_doc_extended import DocExtended
 from salesman_nlp.salesman_spacy import SalesmanSpacy
 from salesman_data_dictionary import SalesmanDataDictionary
 from salesman_system_configuration import SystemConfiguration
 from salesman_tutti.tutti_url_factory import TuttiUrlFactory
+from salesman_entity_container import SalesmanEntityContainer
 
 
 class SalesmanSale:
@@ -21,6 +21,8 @@ class SalesmanSale:
         self.sys_config = sys_config
         self._data_dict_obj = SalesmanDataDictionary(self.sys_config)
         self._salesman_spacy = spacy
+        self._entity_handler = self.sys_config.entity_handler
+        self._entity_container = SalesmanEntityContainer(self._entity_handler)
         self._salesman_nlp = self._salesman_spacy.nlp
         self._url_factory = TuttiUrlFactory(self.sys_config, self._salesman_spacy)
         self._is_my_sale = is_my_sale
@@ -125,11 +127,19 @@ class SalesmanSale:
 
     @property
     def main_entity_value_label_dict(self):
-        return SalesmanEntityHandler.get_main_entity_value_label_dict(self.entity_label_dict)
+        return self._entity_handler.get_main_entity_value_label_dict(self.entity_label_dict)
 
     @property
     def product_categories_value_list(self):
         return self._product_categories_value_list
+
+    def get_entity_label_main_value_list_dict(self) -> dict:
+        return_dict = {}
+        for main_value, label in self.main_entity_value_label_dict.items():
+            if label not in return_dict:
+                return_dict[label] = []
+            return_dict[label].append(main_value)
+        return return_dict
 
     def get_entity_list_by_entity_label(self, entity_label: str):
         return self._entity_label_list_dict.get(entity_label, [])
@@ -226,6 +236,12 @@ class SalesmanSale:
     def add_bookmarks_text(self, input_str: str):
         self.set_value(SLDC.BOOK_MARKS, int(input_str.split(' ')[0]))
 
+    def get_entity_based_search_strings_as_list(self) -> list:
+        return self._entity_container.get_entity_based_search_strings_as_list()
+
+    def get_entity_based_search_lists(self) -> list:
+        return self._entity_container.get_entity_based_search_lists()
+
     def get_search_label_lists(self):
         """
         The following rules are implemented:
@@ -321,7 +337,7 @@ class SalesmanSale:
                 print('Entity is relevant for Tutti: {} ({})'.format(entity_name, entity_label))
             self._entity_names.append(entity_name)
             self._entity_label_dict[entity_name] = entity_label
-            entity_synonyms = SalesmanEntityHandler.get_synonyms_for_entity_name(entity_label, entity_name)
+            entity_synonyms = self._entity_handler.get_synonyms_for_entity_name(entity_label, entity_name)
             if len(entity_synonyms) > 0:
                 if self.sys_config.print_details:
                     print('Entity {} has synonyms {}'.format(entity_name, entity_synonyms))
@@ -422,7 +438,12 @@ class SalesmanSale:
     def __add_entity_name_labels_to_sale_from_doc__(self, nlp_doc_sale: DocExtended):
         for ent in nlp_doc_sale.doc.ents:
             if EL.is_entity_label_relevant_for_salesman(ent.label_):
+                self._entity_container.add_entity_label_with_value(ent.label_, ent.text)
                 self.add_entity_name_label(ent.text, ent.label_)
+
+        print('NEW: {}'.format(self._entity_container.get_entity_label_main_values_dict_as_string()))
+        print('NEW: {}'.format(self._entity_container.get_entity_based_search_strings_as_list()))
+
         print('__add_entity_name_labels_to_sale_from_doc__:')
         print('self.product_category={}/{}'.format(self.product_category, self.product_sub_category))
 

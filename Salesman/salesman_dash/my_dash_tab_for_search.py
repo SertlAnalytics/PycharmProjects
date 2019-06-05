@@ -340,7 +340,9 @@ class MyDashTab4Search(MyDashBaseTab):
     def __get_search_markdown_with_outlier__(self, my_sale: str, my_sale_obj_text: str, outlier_online_search: Outlier):
         prices = outlier_online_search.get_markdown_text()
         price_suggested = outlier_online_search.mean_values_without_outliers
-        start_search_labels = '**Search labels**: {}'.format(self.tutti.search_label_lists)
+        lists_as_string = '{}'.format(self.tutti.search_label_lists)
+        lists_as_string = MyText.get_text_for_markdown(lists_as_string)
+        start_search_labels = '**Search labels**: {}'.format(lists_as_string)
         my_price_suggested = '**Price suggested**: {:.2f}'.format(price_suggested)
         return '  \n'.join([my_sale, my_sale_obj_text, prices, my_price_suggested, start_search_labels])
 
@@ -384,5 +386,5 @@ class MyDashTab4Search(MyDashBaseTab):
         return self.__get_search_result_table_by_api__()
 
     def __get_search_result_grid_table__(self):
-        min_height = self._search_results_grid_table.height_for_display
-        return MyDCC.data_table(self._elements.my_search_result_grid_table, self._online_rows, [], min_height=min_height)
+        columns = SLDC.get_columns_for_search_results()
+        return MyDCC.data_table(self._elements.my_search_result_grid_table, self._online_rows, columns=columns)

@@ -238,7 +238,7 @@ class TradingBox:
                 self._stop_loss = max_apex_and_high
                 return True
         if self._pattern_type == FT.TRIANGLE_DOWN:  # we want to have a close stop_loss
-            adjusted_price = self.buy_price * 0.998
+            adjusted_price = self.buy_price * 0.99  # formerly 0.998 -- this was too close
             if adjusted_price > self._stop_loss:
                 self.__log_stop_loss_adjustment__(module, self._pattern_type, adjusted_price)
                 self._stop_loss = adjusted_price

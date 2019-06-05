@@ -8,7 +8,7 @@ Date: 2019-04-02
 from spacy.tokens import Doc, Span
 from spacy.matcher import PhraseMatcher
 from sertl_analytics.constants.salesman_constants import EL, POS
-from entities.salesman_named_entity import SalesmanEntityHandler
+from entities.salesman_entity_handler import SalesmanEntityHandler
 from matcher.tutti_matcher_4_is_for_selling import TuttiMatcher4Selling
 from matcher.tutti_matcher_4_is_for_renting import TuttiMatcher4Renting
 from matcher.tutti_matcher_4_is_new import TuttiMatcher4IsNew
@@ -87,15 +87,14 @@ class WhitespaceTokenizer(object):  # see https://spacy.io/usage/linguistic-feat
 
 
 class SalesmanSpacy:
-    def __init__(self, load_sm=True):
+    def __init__(self, entity_handler: SalesmanEntityHandler, load_sm=True):
         self._load_sm = load_sm
         self._nlp = spacy.load('de_core_news_sm') if load_sm else spacy.load('de_core_news_md')
         self._nlp_sm = spacy.load('de_core_news_sm')
         self._nlp.tokenizer = CustomTokenizer(self._nlp.tokenizer)
+        self._entity_handler = entity_handler
         self._keep_entity_labels = [EL.LOC, EL.ORG]
         self._keep_entity_label_replacement_dict = {EL.ORG: EL.COMPANY}
-        self._salesman_entity_names = SalesmanEntityHandler.get_entity_names_for_all_entity_labels_without_loc(True)
-        # print('self._salesman_entity_names={}'.format(self._salesman_entity_names))
         # self._salesman_nlp.tokenizer = WhitespaceTokenizer(self._salesman_nlp.vocab)
         self._matcher_animal = self.__get_matcher_for_entity_type__(EL.ANIMAL)
         self._matcher_clothes = self.__get_matcher_for_entity_type__(EL.CLOTHES)
@@ -139,6 +138,10 @@ class SalesmanSpacy:
         self.__set_doc_extensions__()
 
     @property
+    def entity_handler(self) -> SalesmanEntityHandler:
+        return self._entity_handler
+
+    @property
     def nlp(self):
         return self._nlp
 
@@ -164,8 +167,8 @@ class SalesmanSpacy:
 
     def __get_matcher_for_entity_type__(self, entity_type: str):
         matcher = PhraseMatcher(self.nlp.vocab)
-        entity_names = SalesmanEntityHandler.get_entity_names_for_entity_label(entity_type)
-        patterns = list(self.nlp.pipe(entity_names))
+        entity_phrase_names = self._entity_handler.get_entity_phrase_names_for_entity_label(entity_type)
+        patterns = list(self.nlp.pipe(entity_phrase_names))
         matcher.add(entity_type, None, *patterns)
         return matcher
 
@@ -183,15 +186,15 @@ class SalesmanSpacy:
 
     def __can_entity_be_added_to_keep_list__(self, ent, keep_entity_labels: list):
         # to avoid errors with a second entity for the same entity or parts of it
-        if ent.label_ not in keep_entity_labels:
+        if ent.label_ not in keep_entity_labels or True:
             return False
-        if ent.text.lower() in self._salesman_entity_names:
+        if ent.text.lower() in self._entity_handler.entity_phrase_names:
             return False
         entity_text = ent.text.replace('-', ' ')
         entity_text = entity_text.replace('\n', ' ')
         entity_parts = entity_text.split(' ')
         for entity_part in entity_parts:
-            if entity_part.lower() in self._salesman_entity_names:
+            if entity_part.lower() in self._entity_handler.entity_phrase_names:
                 return False
         # print('Loc_text ok: {}'.format(ent.text))
         return True
@@ -287,6 +290,8 @@ class SalesmanSpacy:
         return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
     def __get_doc_with_added_span_list_as_entities__(self, doc: Doc, spans: list):
+        if len(spans) == 0:
+            return doc
         try:
             doc.ents = list(doc.ents) + spans  # Overwrite the doc.ents with the matched spans
         except ValueError:
@@ -315,10 +320,12 @@ class SalesmanSpacy:
         entity_label_dict = {}
         label_list = []
         for ent in doc.ents:
+            print('Label: {}, value: {}'.format(ent.label_, ent.text))
             if ent.label_ not in label_list:
                 label_list.append(ent.label_)
                 entity_label_dict[ent.label_] = []
-            entity_label_dict[ent.label_].append(ent.text)
+            if ent.text not in entity_label_dict[ent.label_]:
+                entity_label_dict[ent.label_].append(ent.text)
         label_list.sort()
         for label in entity_label_dict:
             entity_label_dict[label].sort()

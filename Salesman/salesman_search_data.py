@@ -71,6 +71,7 @@ class SalesmanSearchData:
         return_list = []
         if self._category == '':
             category_value_list = self._product_categorizer.get_category_value_list(excluded=[PRCAT.ALL])
+            category_value_list = ['']
             for category_value in category_value_list:
                 api = SalesmanSearchApi('')
                 api.region_value = self._region_value

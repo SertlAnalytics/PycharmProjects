@@ -9,6 +9,44 @@ from sertl_analytics.my_text import MyText
 from sertl_analytics.constants.salesman_constants import SLDC
 from sertl_analytics.constants.salesman_constants import EL
 from salesman_sale import SalesmanSale
+from entities.salesman_entity_handler import SalesmanEntityHandler
+
+
+class SaleInformationScore:
+    def __init__(self, sale_01: SalesmanSale, sale_02: SalesmanSale=None):
+        self._sale_01 = sale_01
+        self._sale_02 = sale_02
+        self._intersection_labels = []
+        self._information_score = self.__get_information_score__()
+
+    @property
+    def information_score(self):
+        return self._information_score
+
+    @property
+    def intersection_labels(self):
+        return self._intersection_labels
+
+    def __get_information_score__(self) -> int:
+        i_score = 0
+        for label, value_list in self.__get_label_value_list_dict__().items():
+            i_score += SalesmanEntityHandler.get_similarity_score_for_entity_label(label) * len(value_list)
+        return i_score
+
+    def __get_label_value_list_dict__(self) -> dict:
+        if self._sale_02 is None:
+            return self._sale_01.get_entity_label_main_value_list_dict()
+
+        return_dict = {}
+        entity_label_main_value_list_dict_01 = self._sale_01.get_entity_label_main_value_list_dict()
+        entity_label_main_value_list_dict_02 = self._sale_02.get_entity_label_main_value_list_dict()
+        for label_01, value_list_01 in entity_label_main_value_list_dict_01.items():
+            if label_01 in entity_label_main_value_list_dict_02:
+                self._intersection_labels.append(label_01)
+                set_01 = set([value.lower() for value in value_list_01])
+                set_02 = set([value.lower() for value in entity_label_main_value_list_dict_02[label_01]])
+                return_dict[label_01] = list(set_01.intersection(set_02))
+        return return_dict
 
 
 class SaleSimilarityCheck4EntityLabel:
@@ -64,24 +102,39 @@ class SaleSimilarityCheck:
     def __init__(self, sale_source: SalesmanSale, sale_to_check: SalesmanSale):
         self._sale_source = sale_source
         self._sale_to_be_checked = sale_to_check
-        self._are_sales_similar, self._similar_label = self.__are_sales_similar__()
+        self._are_sales_similar = False
+        self._similar_label = ''
+        self._similar_score = 0
         self._source_length_dict = {}
         self._to_check_length_dict = {}
         self._is_similar_dict = {}
         self._is_identical_dict = {}
         self._is_identical_or_similar_dict = {}
+        self.__check_sales_for_similarity__()
 
     @property
     def are_sales_similar(self) -> bool:
         return self._are_sales_similar
 
     @property
-    def similar_label(self):
+    def similar_label(self) -> str:
         return self._similar_label
 
-    def __are_sales_similar__(self) -> tuple:
-        check_list = [EL.ANIMAL, EL.JOB, EL.COMPANY, EL.PRODUCT, EL.TARGET_GROUP, EL.PROPERTY,
-                      EL.COLOR, EL.MATERIAL, EL.OBJECT]
+    @property
+    def similar_score(self) -> int:
+        return self._similar_score
+
+    def __check_sales_for_similarity__(self):
+        i_s_source = SaleInformationScore(self._sale_source).information_score
+        i_s_check = SaleInformationScore(self._sale_to_be_checked).information_score
+        intersection_score_obj = SaleInformationScore(self._sale_source, self._sale_to_be_checked)
+        i_s_intersection = intersection_score_obj.information_score
+        self._are_sales_similar = 0.5 * i_s_source <= i_s_intersection <= i_s_check <= 2 * i_s_source
+        self._similar_label = ' ,'.join(intersection_score_obj.intersection_labels)
+        self._similar_score = i_s_intersection
+
+    def __check_sales_for_similarity_old__(self) -> tuple:
+        check_list = EL.get_all_for_similarity_check()
         checker_dict = {label: SaleSimilarityCheck4EntityLabel(self._sale_source, self._sale_to_be_checked, label)
                         for label in check_list}
 

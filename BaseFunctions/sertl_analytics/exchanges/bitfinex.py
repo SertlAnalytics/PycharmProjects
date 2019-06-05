@@ -279,6 +279,7 @@ class MyBitfinex(ExchangeInterface):
         self.trading_pairs = self.get_symbols()
         self.ticker_cache = BitfinexTickerCache(self.exchange_config.cache_ticker_seconds)
         self.balance_cache = BitfinexBalanceCache(self.exchange_config.cache_balance_seconds)
+        self.transaction_step = ''
 
     @property
     def is_automated_trading_on(self):
@@ -300,12 +301,18 @@ class MyBitfinex(ExchangeInterface):
     def get_available_money(self) -> float:
         return self.get_available_money_balance().amount_available
 
-    def create_order(self, order: BitfinexOrder, is_order_simulation: bool):
+    def create_order(self, order: BitfinexOrder, is_order_simulation: bool) -> OrderStatus:
         self.__init_actual_order_properties__(order)
-        if is_order_simulation or self.__is_enough_balance_available__(order):
-            if is_order_simulation or not self.__is_order_affected_by_hodl_config__(order):
-                if is_order_simulation or self.__is_order_value_compliant__(order):
+        is_transaction_simulation = self.is_transaction_simulation(is_order_simulation)
+        self.transaction_step = 'is_transaction_simulation or is_order_value_compliant'
+        if is_transaction_simulation or self.__is_enough_balance_available__(order):
+            self.transaction_step = 'is_transaction_simulation or not is_order_affected_by_hodl_config'
+            if is_transaction_simulation or not self.__is_order_affected_by_hodl_config__(order):
+                self.transaction_step = 'is_transaction_simulation or is_order_value_compliant'
+                if is_transaction_simulation or self.__is_order_value_compliant__(order):
+                    self.transaction_step = 'create_order'
                     return self.__create_order__(order, is_order_simulation)
+
 
     def delete_order(self, order_id: int, is_order_simulation: bool):
         prefix = 'Delete order - executed{}'.format (self.get_simulation_suffix(is_order_simulation))
@@ -359,7 +366,7 @@ class MyBitfinex(ExchangeInterface):
         return self.create_order(order_sell_all, is_order_simulation)
 
     def buy_available(self, symbol: str, last_price: float, is_order_simulation: bool):
-        if is_order_simulation:
+        if self.is_transaction_simulation(is_order_simulation):
             available_money = self.exchange_config.buy_order_value_max
         else:
             available_money = min(self.get_available_money(), self.exchange_config.buy_order_value_max)
@@ -501,6 +508,7 @@ class MyBitfinex(ExchangeInterface):
         kw_args = {'symbol': symbol, 'period': period, 'aggregation': aggregation, 'section': section}
         if limit > 0:
             kw_args['limit'] = limit
+        print('get_candles: kw_args = {}'.format(kw_args))
         self.bitfinex_crypto_fetcher.retrieve_data(**kw_args)
         df_data = self.bitfinex_crypto_fetcher.df_data
         if df_data is not None:

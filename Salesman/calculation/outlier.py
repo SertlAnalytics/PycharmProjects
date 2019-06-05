@@ -71,9 +71,9 @@ class Outlier:
         return value < self._bottom_threshold_iqr or value > self._top_threshold_iqr
 
     def get_markdown_text(self) -> str:
-        iqr = '- **IQR:** [{:.2f}, {:.2f}]'.format(
+        iqr = '- **IQR:** \[{:.2f}, {:.2f}\]'.format(
             self.bottom_threshold_iqr, self.top_threshold_iqr)
-        return '**[min, bottom, mean, top, max]:** [{:.2f}, {:.2f}, **{:.2f}**, {:.2f}, {:.2f}] {}'.format(
+        return '**\[min, bottom, mean, top, max\]:** \[{:.2f}, {:.2f}, **{:.2f}**, {:.2f}, {:.2f}\] {}'.format(
             self.min_values, self.bottom_threshold, self.mean_values, self.top_threshold, self.max_values, iqr)
 
     def print_outlier_details(self):

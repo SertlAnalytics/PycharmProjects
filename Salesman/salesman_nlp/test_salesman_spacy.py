@@ -47,6 +47,10 @@ class Test4SalesmanSpacy:
                 ['Audi und Volvo bauen die sichersten Autos.', 'Audi (COMPANY), Volvo (COMPANY)'],
                 ['Im Dow Jones sind u.a. Travelers Companies und Verizon enthalten',
                  'Dow Jones (LOC), Travelers Companies (COMPANY), Verizon (COMPANY)'],
+            ],
+            'TEST': [
+                ['Winterschuhe Kinder, Lowa, Rufus III GTX, Gr. 37, Goretex Sommerhut, Strohhut',
+                 'Dow Jones (LOC), Travelers Companies (COMPANY), Verizon (COMPANY)'],
             ]
         }
 

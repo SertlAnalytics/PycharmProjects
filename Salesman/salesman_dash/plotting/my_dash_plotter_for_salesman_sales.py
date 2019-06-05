@@ -6,7 +6,7 @@ Date: 2019-04-29
 """
 
 import plotly.graph_objs as go
-from entities.salesman_named_entity import SalesmanEntityHandler
+from entities.salesman_entity_handler import SalesmanEntityHandler
 from sertl_analytics.constants.salesman_constants import SLDC
 import pandas as pd
 from salesman_dash.plotting.my_dash_plotter_for_salesman import MyDashTabPlotter

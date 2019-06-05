@@ -30,6 +30,11 @@ class MyText:
         return MyText.replace_by_dict(input_string, replace_dict)
     
     @staticmethod
+    def get_text_for_markdown(input_string: str) -> str:
+        replace_dict = {'[': '\[', ']': '\]'}
+        return MyText.replace_by_dict(input_string, replace_dict)
+    
+    @staticmethod
     def get_with_replaced_umlaute(input_string: str) -> str:
         umlaute_dict = {'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue'}
         return MyText.replace_by_dict(input_string, umlaute_dict)

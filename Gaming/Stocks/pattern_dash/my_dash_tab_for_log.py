@@ -183,8 +183,7 @@ class MyDashTab4Log(MyPatternDashBaseTab):
             self._log_data_frame_dict, self._selected_log_type, self._selected_process, self._selected_process_step,
             self._selected_date_range)
         rows = self._log_table.get_rows_for_selected_items()
-        min_height = self._log_table.height_for_display
-        return MyDCC.data_table(self._data_table_name, rows, [], min_height=min_height)
+        return MyDCC.data_table(self._data_table_name, rows, columns=self._log_table.columns)
 
     def __fill_log_data_frame_dict__(self):
         for log_types in LOGT.get_log_types_for_processing():

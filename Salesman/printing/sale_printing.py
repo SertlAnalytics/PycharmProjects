@@ -11,11 +11,12 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sertl_analytics.constants.salesman_constants import SLDC
 from salesman_sale import SalesmanSale
-from entities.salesman_named_entity import SalesmanEntityHandler
+from entities.salesman_entity_handler import SalesmanEntityHandler
 
 
 class SalesmanPrint:
     def __init__(self, sale_source: SalesmanSale, sales: list):
+        self._entity_handler = sale_source.sys_config.entity_handler
         self._columns = SLDC.get_columns_for_sales_plotting()
         self._sale_source = sale_source
         self._sales = sales
@@ -51,12 +52,8 @@ class SalesmanPrint:
             if self.__can_entity_be_added_to_printing_list__(label_value, entity_label):
                 self.__add_to_sale_dict_list__(entity_label, label_value)
 
-    @staticmethod
-    def __can_entity_be_added_to_printing_list__(value: str, label: str) -> bool:
-        if SalesmanEntityHandler.get_main_entity_name_for_entity_name(label, value) != value:
-            # print('__can_entity_be_added_to_printing_list__: NO for label={}, value={}'.format(label, value))
-            return False
-        return True
+    def __can_entity_be_added_to_printing_list__(self, value: str, label: str) -> bool:
+        return self._entity_handler.get_main_entity_name_for_entity_name(label, value) == value
 
     def __add_to_sale_dict_list__(self, entity_label: str, label_value: str):
         if entity_label == self._sale_source.entity_label_dict.get(label_value, ''):

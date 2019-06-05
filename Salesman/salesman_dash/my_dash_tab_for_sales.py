@@ -51,6 +51,7 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._online_title = None
         self._selected_row_indices = []
         self._show_button_details_n_clicks = 0
+        self._reset_button_n_clicks = 0
 
     def __get_color_handler__(self):
         return DashColorHandler()
@@ -58,6 +59,7 @@ class MyDashTab4Sales(MyDashBaseTab):
     def __init_dash_element_ids__(self):
         self._my_sales_filter_input = 'my_sales_filter_input'
         self._my_sales_show_detail_button = 'my_sales_show_detail_button'
+        self._my_sales_reset_button = 'my_sales_reset_button'
         self._my_sales_link = 'my_sales_link'
         self._my_sales_similar_sale_link = 'my_sales_similar_sale_link'
         self._my_sales_graph_div = 'my_sales_graph_div'
@@ -75,6 +77,7 @@ class MyDashTab4Sales(MyDashBaseTab):
                                   placeholder='Please enter filter for my sales...', size=500, height=27),
             MyHTML.div_with_button_link(self._my_sales_link, href='', title='', hidden='hidden'),
             MyHTML.div_with_html_button_submit(self._my_sales_show_detail_button, children='Details', hidden='hidden'),
+            MyHTML.div_with_html_button_submit(self._my_sales_reset_button, children='Reset', hidden='hidden'),
             MyHTML.div_with_table(self._data_table_div, self.__get_sale_grid_table__()),
             MyDCC.markdown(self._my_sales_sale_entry_markdown),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(SLDD.SALE_ENTITIES)),
@@ -90,6 +93,7 @@ class MyDashTab4Sales(MyDashBaseTab):
         self.__init_callbacks_for_sales_result_numbers__()
         self.__init_callbacks_for_my_sales_link__()
         self.__init_callback_for_my_sales_show_detail_button__()
+        self.__init_callback_for_my_sales_reset_button__()
         self.__init_callback_for_sale_grid_table__()
         self.__init_callbacks_for_selected_sale_entry_markdown__()
         self.__init_callbacks_for_similar_sales_link__()
@@ -103,6 +107,13 @@ class MyDashTab4Sales(MyDashBaseTab):
             Output(self._my_sales_show_detail_button, DSHVT.HIDDEN),
             [Input(self._my_sales_link, DSHVT.HIDDEN)])
         def handle_callback_for_my_sales_show_detail_button_visibility(hidden: str):
+            return 'hidden' if self._selected_sale is None else ''
+
+    def __init_callback_for_my_sales_reset_button__(self):
+        @self.app.callback(
+            Output(self._my_sales_reset_button, DSHVT.HIDDEN),
+            [Input(self._my_sales_link, DSHVT.HIDDEN)])
+        def handle_callback_for_my_sales_reset_button_visibility(hidden: str):
             return 'hidden' if self._selected_sale is None else ''
 
     def __init_callbacks_for_sales_result_numbers__(self):
@@ -204,18 +215,23 @@ class MyDashTab4Sales(MyDashBaseTab):
     def __init_callback_for_sale_grid_table__(self):
         @self.app.callback(
             Output(self._data_table_div, DSHVT.CHILDREN),
-            [Input(self._my_sales_filter_input, DSHVT.N_BLUR)],
+            [Input(self._my_sales_filter_input, DSHVT.N_BLUR),
+             Input(self._my_sales_reset_button, DSHVT.N_CLICKS)],
             [State(self._my_sales_filter_input, DSHVT.VALUE),
              State(self._data_table_name, DSHVT.ROWS),
              State(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)]
             )
         def handle_callback_for_sale_grid_table(
-                filter_n_blurs: int, filter_input: str,
+                filter_n_blurs: int, reset_n_clicks: int, filter_input: str,
                 rows: list, selected_row_indices: list):
-            if selected_row_indices is None or len(selected_row_indices) == 0:
-                self._selected_my_sale_row = None
+            if self._reset_button_n_clicks != reset_n_clicks:
+                self._reset_button_n_clicks = reset_n_clicks
+                self._selected_row_indices = []
             else:
-                self._selected_my_sale_row = rows[selected_row_indices[0]]
+                if selected_row_indices is None or len(selected_row_indices) == 0:
+                    self._selected_my_sale_row = None
+                else:
+                    self._selected_my_sale_row = rows[selected_row_indices[0]]
             self._selection_api.input = filter_input
             return self.__get_sale_grid_table__()
 
@@ -312,11 +328,14 @@ class MyDashTab4Sales(MyDashBaseTab):
             grid_table = self._sale_grid_table
         rows = grid_table.get_rows_for_selection(self._selection_api, False)
         min_height = self._sale_grid_table.height_for_display
-        return MyDCC.data_table(self._data_table_name, rows, columns=grid_table.columns, min_height=min_height)
+        return MyDCC.data_table(
+            self._data_table_name, rows,
+            selected_row_indices=self._selected_row_indices,
+            columns=grid_table.columns, min_height=min_height)
 
     def __get_sales_regression_chart__(self, selected_row_indices=None):
         if selected_row_indices is None or len(selected_row_indices) == 0:
-            return 'Nothing selected'
+            return ''
         df_similar_without_outliers = self._similar_sale_grid_table.df_for_plot
         if df_similar_without_outliers is None:
             return ''

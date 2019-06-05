@@ -37,11 +37,15 @@ class EL:  # entity labels
 
     @staticmethod
     def get_all() -> list:
-        return [EL.BLACK_LIST, EL.COLOR, EL.ANIMAL, EL.EDUCATION, EL.ENVIRONMENT, EL.JOB, EL.PRODUCT,
-                EL.PROPERTY, EL.PROPERTY_PART,
+        return [EL.ANIMAL, EL.BLACK_LIST, EL.COLOR, EL.CLOTHES, EL.COMPANY,
+                EL.EDUCATION, EL.ENVIRONMENT, EL.JOB,
                 EL.LOC,
-                EL.COMPANY, EL.OBJECT, EL.SHOP,
-                EL.TARGET_GROUP, EL.TRANSPORT, EL.MATERIAL, EL.SHOP, EL.TECHNOLOGY, EL.VEHICLE]
+                EL.MATERIAL,
+                EL.PAYMENT, EL.PRODUCT, EL.PROPERTY, EL.PROPERTY_PART,
+                EL.OBJECT,
+                EL.SHOP,
+                EL.TARGET_GROUP, EL.TRANSPORT, EL.TECHNOLOGY,
+                EL.VEHICLE]
 
     @staticmethod
     def is_entity_label_relevant_for_salesman(ent_level: str) -> bool:
@@ -51,6 +55,14 @@ class EL:  # entity labels
     def get_all_relevant() -> list:
         list_relevant = EL.get_all()
         list_relevant.remove(EL.BLACK_LIST)
+        return list_relevant
+
+    @staticmethod
+    def get_all_for_similarity_check() -> list:
+        list_relevant = EL.get_all()
+        list_relevant.remove(EL.BLACK_LIST)
+        list_relevant.remove(EL.LOC)
+        list_relevant.remove(EL.ORG)
         return list_relevant
 
     @staticmethod

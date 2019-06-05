@@ -4,14 +4,11 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-11-05
 """
-from sertl_analytics.constants.pattern_constants import PRD, INDICES, FT
-from pattern_database.stock_database import StockDatabase, PatternTable, TradeTable, WaveTable
+from sertl_analytics.constants.pattern_constants import PRD
 from pattern_database.stock_database_updater import StockDatabaseUpdater
 from pattern_predictor_optimizer import PatternPredictorOptimizer
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from pattern_system_configuration import SystemConfiguration
-from datetime import date, datetime
-from sertl_analytics.mydates import MyDate
 
 sys_config = SystemConfiguration()
 stock_db = sys_config.db_stock
@@ -29,10 +26,10 @@ if True:
     # stock_db_updater.complete_wave_records(symbol='', ts_start=0, ts_end=0)
     # stock_db_updater.update_trade_policy_metric_for_today(
     #     [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
-    stock_db.update_stock_data_for_symbol('FCEL')
-    stock_db.update_stock_data_for_symbol('TSLA')
-    stock_db.update_stock_data_for_symbol('GE')
-    # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
+    # stock_db.update_stock_data_for_symbol('FCEL')
+    # stock_db.update_stock_data_for_symbol('TSLA')
+    # stock_db.update_stock_data_for_symbol('GE')
+    stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
     # stock_db_updater.add_wave_prediction_data_to_wave_records(symbol='')
     # stock_db_updater.update_trade_records(4, 16)
     # stock_db_updater.update_trade_policy_metric_for_today(

@@ -5,8 +5,6 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-02
 """
 
-
-from sertl_analytics.constants.salesman_constants import EL
 from entities.named_entity import NamedEntity
 
 
@@ -67,7 +65,6 @@ class PropertyEntity(NamedEntity):
             'Parkplatz', 'Parkplätze',
             'Reiheneckhaus', 'Reiheneinfamilienhaus',
             'Wohnung',
-            'Zimmer',
         ]
 
     @staticmethod
@@ -139,7 +136,6 @@ class TransportEntity(NamedEntity):
             'Flughafen',
             'öffentlicher Verkehr',
             'Postauto',
-            'Rebberg', 'Restaurants',
             'S-Bahn',
             'Tram-Bahn', 'Taxi', 'Taxistand',
             'U-Bahn',
@@ -176,7 +172,6 @@ class EnvironmentEntity(NamedEntity):
         return [
             'Abendsonne', 'Altstadt',
             'Bauzonenrand', 'Baulandreserve',
-            'Buslinie',
             'Dorfkern', 'Dorfzentrum', 'Dorfmuseum',
             'Gartenparadies', 'Gehdistanz',
             'Landwirtschaftszone',
@@ -403,7 +398,7 @@ class ProductEntity(NamedEntity):
             'Cameleon',
             'EOS 700D', 'EA107', 'EA 107', 'EA108', 'EA 108', 'EA 219',
             'gtx',
-            'Hot + Cool', 'hero',
+            'hero',
             'Kitos', 'Kid Cow',
             'Looking Good',
             'MacBook', 'meda', 'Monterey',
@@ -481,8 +476,8 @@ class ObjectEntity(NamedEntity):
             'Ablagefach',
             'Alufelgen', 'Autokindersitz', 'Auto-Kindersitz', 'Anhänger', 'Akku',
             'Aufbewahrungstruhe', 'Aufbewahrungsmöbel', 'Aufbewahrungstisch', 'Absturzsicherung',
-            'Besucherstuhl', 'Babywanne', 'Bremsbeläge', 'Bürotisch', 'Bürostuhl', 'Bad', 'Badesand', 'Badewanne',
-            'Bürodrehstuhl', 'Bild', 'Buch', 'Badehose', 'Bikini', 'Badewanne', 'Balkon', 'Behälter',
+            'Besucherstuhl', 'Babywanne', 'Bremsbeläge', 'Bürotisch', 'Bürostuhl', 'Badesand', 'Badewanne',
+            'Bürodrehstuhl', 'Bild', 'Buch', 'Badehose', 'Bikini', 'Behälter',
             'Baumwolleinstreu', 'Baumhaus', 'Blüten', 'Blätter', 'Buddelbox', 'Bett', 'Bücherregal',
             'Badewanne/Dusche', 'Badewanne/Whirlpool',
             'Brillenfach', 'Bottleholder',
@@ -527,7 +522,7 @@ class ObjectEntity(NamedEntity):
             'Schlüssel', 'Schlüsselanhänger', 'Scheibenbremsbeläge', 'Strickdecke', 'Stehleuchte', 'Ski',
             'Schreibtisch', 'Stuhl', 'Stühle', 'Scheinwerfer', 'Stossstange',
             'Sonnenschirm',
-            'Sportauspuff', 'Schlafsofa', 'Sommerreifen', 'Stehtisch', 'Sitzungstisch',
+            'Sportauspuff', 'Sommerreifen', 'Stehtisch', 'Sitzungstisch',
             'Spiegelschrank', 'Schraube', 'Streu', 'Sandbad', 'Starterset', 'Spielburg', 'Schaukel',
             'Sauerstoffboxen', 'Schale', 'Schlafhöhlen', 'Seitenschutz', 'Seitenblende', 'Sporttourer',
             'Schreibtischplatte', 'Sonderzubehör', 'SIM-Karte', 'Staubsauger', 'Steamer',
@@ -557,80 +552,4 @@ class ObjectEntity(NamedEntity):
             'Stuhl': ['Stühle'],
             'Transportbox': ['Transport-Box'],
         }
-
-
-class SalesmanEntityHandler:
-    @staticmethod
-    def get_entity_names_for_all_entity_labels_without_loc(with_lower=False):
-        return_list = []
-        for entity_label in EL.get_all_without_loc():
-            entity = SalesmanEntityHandler.get_entity_for_entity_label(entity_label)
-            if entity is not None:
-                return_list = return_list + entity.entity_names
-        return [entry.lower() for entry in return_list] if with_lower else return_list
-
-    @staticmethod
-    def get_entity_names_for_entity_label(entity_label):
-        return SalesmanEntityHandler.get_entity_for_entity_label(entity_label).get_entity_names_for_phrase_matcher()
-
-    @staticmethod
-    def get_synonyms_for_entity_name(entity_label: str, entity_name: str) -> list:
-        # print('get_synonyms_for_entity_name: entity_label={}, entity_name={}'.format(entity_label, entity_name))
-        synonym_dict = SalesmanEntityHandler.get_entity_for_entity_label(entity_label).entity_synonym_dict
-        for key, synonym_list in synonym_dict.items():
-            synonym_list_lower = [synonym.lower() for synonym in synonym_list]
-            if key.lower() == entity_name.lower():
-                return list(synonym_list)
-            elif entity_name.lower() in synonym_list_lower:
-                result_list = list(synonym_list)
-                result_list.append(key)
-                if entity_name in result_list:
-                    result_list.remove(entity_name)
-                return result_list
-        return []
-
-    @staticmethod
-    def get_main_entity_name_for_entity_name(entity_label: str, entity_name: str) -> str:
-        # print('get_main_entity_name_for_entity_name: entity_label={}, entity_name={}'.format(entity_label, entity_name))
-        synonym_dict = SalesmanEntityHandler.get_entity_for_entity_label(entity_label).entity_synonym_dict
-        if entity_name in synonym_dict:  # entity_name is already main entity_name
-            return entity_name
-        for key, synonym_list in synonym_dict.items():
-            if entity_name in synonym_list:
-                return key
-        return entity_name
-
-    @staticmethod
-    def get_main_entity_value_label_dict(entity_value_label_dict: dict) -> dict:
-        return {
-            label_value: entity_label for label_value, entity_label in entity_value_label_dict.items()
-            if SalesmanEntityHandler.get_main_entity_name_for_entity_name(entity_label, label_value) == label_value
-        }
-
-    @staticmethod
-    def get_entity_for_entity_label(entity_label: str) -> NamedEntity:
-        return {
-            EL.ANIMAL: AnimalEntity(),
-            EL.BLACK_LIST: BlackListEntity(),
-            EL.COMPANY: CompanyEntity(),
-            EL.CLOTHES: ClothesEntity(),
-            EL.COLOR: ColorEntity(),
-            EL.JOB: JobEntity(),
-            EL.EDUCATION: EducationEntity(),
-            EL.ENVIRONMENT: EnvironmentEntity(),
-            EL.PRODUCT: ProductEntity(),
-            EL.PROPERTY: PropertyEntity(),
-            EL.PROPERTY_PART: PropertyPartEntity(),
-            EL.OBJECT: ObjectEntity(),
-            EL.TARGET_GROUP: TargetGroupEntity(),
-            EL.MATERIAL: MaterialEntity(),
-            EL.PAYMENT: PaymentEntity(),
-            EL.SHOP: ShopEntity(),
-            EL.TECHNOLOGY: TechnologyEntity(),
-            EL.TRANSPORT: TransportEntity(),
-            EL.VEHICLE: VehicleEntity(),
-        }.get(entity_label, None)
-
-
-
 

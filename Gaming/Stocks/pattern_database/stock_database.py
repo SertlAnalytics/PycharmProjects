@@ -236,7 +236,7 @@ class StockDatabase(BaseDatabase):
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
         if ticker in ['CSX']:
             self._file_log.log_message('exception - is not used {}'.format(ticker),
-                                     process='__update_stock_data_for_single_value__')
+                                       process='__update_stock_data_for_single_value__')
             return
         name = self._company_table.get_alternate_name(ticker, name)
         last_loaded_time_stamp = last_loaded_date_stamp_dic[ticker] if ticker in last_loaded_date_stamp_dic else 100000
