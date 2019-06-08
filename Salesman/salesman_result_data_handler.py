@@ -32,14 +32,17 @@ class SalesmanResultDataHandler:
         self.__assign_process_columns_to_data_frame__()
         self._sale_master = None
         self._df_for_sale_master = None
-        self._main_entity_value_label_dict = {}
+        self._entity_label_main_values_dict = {}
         self._df_for_grid = None
         self._df_for_plot = None
         self._outlier_for_selection = None
 
     @property
     def plot_categories(self) -> list:
-        category_list = ['{}#{}'.format(value, label) for value, label in self._main_entity_value_label_dict.items()]
+        category_list = []
+        for label, values in self._entity_label_main_values_dict.items():
+            for value in values:
+                category_list.append('{}#{}'.format(value, label))
         category_list.sort()
         return category_list
 
@@ -66,14 +69,17 @@ class SalesmanResultDataHandler:
         self._sale_master = sale_master
         self._df_for_sale_master = pd.DataFrame(self._df_base[self._df_base[SLDC.MASTER_ID] == sale_master.sale_id])
         self._df_for_sale_master.sort_values([SLDC.SALE_ID, SLDC.VERSION])
-        self._main_entity_value_label_dict = sale_master.main_entity_value_label_dict
+        self._entity_label_main_values_dict = sale_master.entity_label_main_values_dict
         self.__calculate_plot_categories_for_df_for_source__()
 
     def adjust_result_to_selected_entities(self, selected_entities: list):
         print('adjust_result_to_selected_entities: selected_entities={}'.format(selected_entities))
         df_result = pd.DataFrame(self._df_for_sale_master)
         print('...before adjustment: df_result.shape={}'.format(df_result.shape))
+        plot_categories = list(df_result[SLDC.PLOT_CATEGORY].unique())
+        print('plot_categories={}'.format(plot_categories))
         for selected_entity in selected_entities:
+            print('selected_entity={}'.format(selected_entity))
             df_result = df_result[df_result[SLDC.PLOT_CATEGORY].str.contains(selected_entity)]
             print('...after adjustment: df_result.shape={}'.format(df_result.shape))
         if df_result.shape[0] == 0:
@@ -116,10 +122,11 @@ class SalesmanResultDataHandler:
 
     def __calculate_plot_category_for_entity_label_dict_as_string__(self, entity_label_dict_str: str):
             entry_list = []
-            for value, label in self._main_entity_value_label_dict.items():
-                value_label_entry = '{} ({})'.format(value, label)
-                if entity_label_dict_str.find(value_label_entry) > -1:
-                    entry_list.append(self.__get_plot_category_for_label_and_value__(label, value))
+            for label, values in self._entity_label_main_values_dict.items():
+                for value in values:
+                    value_label_entry = '{} ({})'.format(value, label)
+                    if entity_label_dict_str.find(value_label_entry) > -1:
+                        entry_list.append(self.__get_plot_category_for_label_and_value__(label, value))
             return ', '.join(entry_list)
 
     def __identify_outliers_in_dataframe__(self, df: pd.DataFrame):

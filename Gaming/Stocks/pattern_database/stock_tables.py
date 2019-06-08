@@ -407,6 +407,16 @@ class TradeTable(MyTable, PredictionFeatureTable):
         return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_PCT]
 
     @staticmethod
+    def get_table_style_data_conditional():
+        column_id = DC.TRADE_RESULT_PCT
+        filter_green = '{{{}}}  > 0'.format(DC.TRADE_RESULT_PCT)
+        filter_red = '{{{}}}  < 0'.format(DC.TRADE_RESULT_PCT)
+        return [
+            {'if': {'column_id': column_id, 'filter': filter_green}, 'backgroundColor': 'green', 'color': 'white'},
+            {'if': {'column_id': column_id, 'filter': filter_red}, 'backgroundColor': 'red', 'color': 'white'},
+        ]
+
+    @staticmethod
     def get_columns_for_statistics_text_variable() -> list:
         return [DC.TRADE_STRATEGY, DC.PATTERN_TYPE, DC.BUY_TRIGGER, DC.SELL_TRIGGER, DC.TRADE_RESULT]
 

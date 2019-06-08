@@ -9,17 +9,15 @@ import pandas as pd
 from sertl_analytics.constants.pattern_constants import CN, SVC
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
-from pattern_wave_tick import WaveTick
 import numpy as np
 import math
 
 
 class ValueCategorizer:
-    __index_column = CN.TIMESTAMP
-
     def __init__(self, sys_config: SystemConfiguration, df: pd.DataFrame, f_upper, f_lower, h_upper, h_lower):
         # ToDo: To eliminate spikes we could take the extrema of the corpus of a candle - not the shadows
         self.sys_config = sys_config
+        self._index_column = CN.TIMESTAMP
         self._tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
         self._tolerance_pct_buying = self.sys_config.get_value_categorizer_tolerance_pct_buying()
         self._tolerance_pct_equal = self.sys_config.get_value_categorizer_tolerance_pct_equal()
@@ -30,7 +28,8 @@ class ValueCategorizer:
         self._h_upper = h_upper
         self._h_lower = h_lower
         self.value_category_dic_key_list = []
-        self.value_category_dic = {}  # list of value categories by position of each entry
+        self.value_category_dic = {}  # list of value categories by _index_column of each extrema entry
+        self.value_category_dic_for_pos = {}  # list of value categories by position of each extrema entry
         self.__set_f_upper_f_lower_values__()
         self.__set_h_upper_h_lower_values__()
         self.__calculate_value_categories__()
@@ -73,26 +72,19 @@ class ValueCategorizer:
                                             CN.HIGH, CN.LOW, CN.OPEN, CN.CLOSE])
         return df.iloc[0]
 
-    def print_data(self):
-        print('\nValue categories for u=({}) and l=({}):'.format(self._f_upper, self._f_lower), end='\n')
-        for ind, row in self.df.iterrows():
-            tick = WaveTick(row)
-            print('Pos: {}, Date: {}, H/L:{}/{}, Cat={}'.format(
-                tick.position, tick.date_str, tick.high, tick.low, self.value_category_dic[tick.position]))
-
     def are_helper_functions_available(self):
         if self._h_lower is None or self._h_upper is None:
             return False
         return self._h_upper != self._f_upper or self._h_lower != self._f_lower
 
     def __set_f_upper_f_lower_values__(self):
-        self.df = self.df.assign(F_UPPER=(self._f_upper(self.df[self.__index_column])))
-        self.df = self.df.assign(F_LOWER=(self._f_lower(self.df[self.__index_column])))
+        self.df = self.df.assign(F_UPPER=(self._f_upper(self.df[self._index_column])))
+        self.df = self.df.assign(F_LOWER=(self._f_lower(self.df[self._index_column])))
 
     def __set_h_upper_h_lower_values__(self):
         if self.are_helper_functions_available():
-            self.df = self.df.assign(H_UPPER=(self._h_upper(self.df[self.__index_column])))
-            self.df = self.df.assign(H_LOWER=(self._h_lower(self.df[self.__index_column])))
+            self.df = self.df.assign(H_UPPER=(self._h_upper(self.df[self._index_column])))
+            self.df = self.df.assign(H_LOWER=(self._h_lower(self.df[self._index_column])))
 
     def count_value_category(self, category: str, ts_start=0, ts_end=math.inf) -> int:
         filtered_list = [self.value_category_dic[key] for key in self.value_category_dic_key_list
@@ -111,8 +103,9 @@ class ValueCategorizer:
 
     def __calculate_value_categories__(self):
         for ind, row in self.df.iterrows():
-            self.value_category_dic_key_list.append(row[self.__index_column])
-            self.value_category_dic[row[self.__index_column]] = self.__get_value_categories_for_df_row__(row)
+            self.value_category_dic_key_list.append(row[self._index_column])
+            self.value_category_dic[row[self._index_column]] = self.__get_value_categories_for_df_row__(row)
+            self.value_category_dic_for_pos[row[CN.POSITION]] = self.value_category_dic[row[self._index_column]]
 
     def __print_value_range_for_category__(self, data_series, value_category: str):
         l_value, u_value = self.__get_value_range_for_category__(data_series, value_category)
@@ -152,6 +145,7 @@ class ValueCategorizer:
 
     def __get_value_categories_for_df_row__(self, row) -> list:  # the series is important
         return_list = []
+        # ToDo: M_in shouldn't be with U_on or L_on.... but to get this we have to redesign thr pattern ranges....
         if self.__is_row_value_equal_f_upper__(row):
             return_list.append(SVC.U_on)
         if self.__is_row_value_in_f_upper_range__(row):

@@ -5,15 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-04-29
 """
 
-import plotly.graph_objs as go
-from sertl_analytics.constants.salesman_constants import SLDC
-from sertl_analytics.my_numpy import MyNumpy
 from sertl_analytics.mydash.my_dash_components import MyDCC, DccGraphApi
 from salesman_dash.my_dash_colors import DashColorHandler
 import pandas as pd
-import itertools
-import numpy as np
-from sklearn.linear_model import LinearRegression
 
 
 class MyDashTabPlotter:

@@ -69,6 +69,10 @@ class DBTable:
         sorted_list = sorted(self._rows, reverse=sort_reverse)
         return [row.get_row_as_dict() for row in sorted_list]
 
+    @staticmethod
+    def get_table_style_cell_conditional() -> list:
+        return [{'if': {'column_id': c}, 'textAlign': 'left'} for c in ['Process', 'Comment']]
+
     def __fill_rows_for_selected_table__(self):
         self._rows = []
         if self._table_name != '':

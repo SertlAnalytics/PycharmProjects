@@ -8,7 +8,7 @@ Date: 2019-06-04
 
 from sertl_analytics.constants.salesman_constants import EL
 from entities.named_entity import NamedEntity
-from entities.salesman_named_entity import AnimalEntity, BlackListEntity
+from entities.salesman_named_entity import ActivityEntity, AnimalEntity, BlackListEntity
 from entities.salesman_named_entity import CompanyEntity, ClothesEntity, ColorEntity
 from entities.salesman_named_entity import JobEntity, EducationEntity, EnvironmentEntity
 from entities.salesman_named_entity import ProductEntity, PropertyEntity, PropertyPartEntity
@@ -113,12 +113,15 @@ class SalesmanEntityHandler:
             return 10
         elif entity_label in [EL.CLOTHES, EL.EDUCATION, EL.TARGET_GROUP]:
             return 5
+        elif entity_label in [EL.VEHICLE]:
+            return 3
         else:
             return 1
 
     @staticmethod
     def __get_entity_for_entity_label__(entity_label: str) -> NamedEntity:
         return {
+            EL.ACTIVITY: ActivityEntity(),
             EL.ANIMAL: AnimalEntity(),
             EL.BLACK_LIST: BlackListEntity(),
             EL.COMPANY: CompanyEntity(),

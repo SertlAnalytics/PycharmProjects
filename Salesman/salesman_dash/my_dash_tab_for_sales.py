@@ -176,6 +176,7 @@ class MyDashTab4Sales(MyDashBaseTab):
             if len(children) == 0 or len(self._similar_sale_grid_table.plot_categories) == 0:
                 return []
             print_category_options = [{'label': PRCAT.ALL, 'value': PRCAT.ALL}]
+            print('self._similar_sale_grid_table.plot_categories={}'.format(self._similar_sale_grid_table.plot_categories))
             for category in self._similar_sale_grid_table.plot_categories:
                 label = category.replace('#', ' - ')
                 value = category
@@ -312,7 +313,7 @@ class MyDashTab4Sales(MyDashBaseTab):
     def __get_sales_markdown_for_selected_sale__(self):
         data_handler = self._similar_sale_grid_table.result_data_handler
         title = '**Selected Sale**: {}'.format(self._selected_sale.title)
-        main_entities = '{}'.format(self._selected_sale.main_entity_value_label_dict)
+        main_entities = '{}'.format(self._selected_sale.get_entity_label_main_values_dict_as_string())
         prices = data_handler.outlier_for_selection.get_markdown_text()
         price_suggested = data_handler.outlier_for_selection.mean_values_without_outliers
         my_price = self._selected_sale.price_single
@@ -327,11 +328,15 @@ class MyDashTab4Sales(MyDashBaseTab):
         else:
             grid_table = self._sale_grid_table
         rows = grid_table.get_rows_for_selection(self._selection_api, False)
-        min_height = self._sale_grid_table.height_for_display
+        min_height = grid_table.height_for_display
         return MyDCC.data_table(
-            self._data_table_name, rows,
+            self._data_table_name,
+            rows=rows,
             selected_row_indices=self._selected_row_indices,
-            columns=grid_table.columns, min_height=min_height)
+            style_cell_conditional=grid_table.get_table_style_cell_conditional(),
+            style_data_conditional=grid_table.get_table_style_data_conditional(rows),
+            columns=grid_table.columns,
+            min_height=min_height)
 
     def __get_sales_regression_chart__(self, selected_row_indices=None):
         if selected_row_indices is None or len(selected_row_indices) == 0:
@@ -339,7 +344,8 @@ class MyDashTab4Sales(MyDashBaseTab):
         df_similar_without_outliers = self._similar_sale_grid_table.df_for_plot
         if df_similar_without_outliers is None:
             return ''
-        plotter = MyDashTabPlotter4Sales(df_similar_without_outliers, self._color_handler)
+        plotter = MyDashTabPlotter4Sales(
+            df_similar_without_outliers, self._color_handler, self.sys_config.entity_handler)
         regression_chart = plotter.get_chart_type_regression(self._similar_sale_grid_table.sale_master)
         return regression_chart
 
@@ -350,6 +356,13 @@ class MyDashTab4Sales(MyDashBaseTab):
         self._selection_api.entity_values = selected_entity_values
         self._selection_api.master_sale = self._sale_factory.get_sale_from_db_by_sale_id(master_id)
         rows = self._similar_sale_grid_table.get_rows_for_selection(self._selection_api, True)
+        if len(rows) == 0:
+            return 'Nothing found'
         return MyDCC.data_table(
-            self._my_sales_similar_sale_grid_table, rows, columns=self._similar_sale_grid_table.columns)
+            self._my_sales_similar_sale_grid_table,
+            rows=rows,
+            style_cell_conditional=self._similar_sale_grid_table.get_table_style_cell_conditional(),
+            style_data_conditional=self._similar_sale_grid_table.get_table_style_data_conditional(rows),
+            columns=self._similar_sale_grid_table.columns
+        )
 

@@ -39,7 +39,6 @@ class Tutti:
         self._sale_factory = SalesmanSaleFactory(self.sys_config, self._salesman_spacy)
         self._entity_factory = SalesmanEntityFactory(self.sys_config)
         self._browser = None
-        self._search_label_lists = []
         self._current_source_sale = None
         self._current_similar_sales = []  # will get the results for the search for ONE source
 
@@ -76,13 +75,12 @@ class Tutti:
         return self.sys_config.file_handler.get_file_path_for_file(
             '{}_{}'.format(self._sale_platform, self.sys_config.sales_result_file_name))
 
-    @property
-    def search_label_lists(self) -> list:
-        return self._search_label_lists
-
     def close_excel(self):
         if self.sys_config.write_to_excel:
             self._excel.close()
+
+    def get_entity_based_search_lists(self):
+        return self._current_source_sale.get_entity_based_search_lists()
 
     def get_sale_from_db_by_sale_id(self, sale_id: str):
         sale = self._sale_factory.get_sale_from_db_by_sale_id(sale_id)
@@ -147,7 +145,7 @@ class Tutti:
         self.__write_to_excel__(sales)
         entity_dict_summary = {}
         for sale in sales:
-            for value, label in sale.entity_label_dict.items():
+            for value, label in sale.entity_label_values_dict.items():
                 entity_dict_summary[value] = label
         print('entity_dict_summary={}'.format(entity_dict_summary))
 
@@ -421,62 +419,24 @@ class Tutti:
         return self._sale_factory.get_sales_by_search_label_list([])
 
     def __get_similar_sales_for_sale__(self, sale: SalesmanSale) -> list:
+        sale.compute_entity_based_search_lists()
         search_data = SalesmanSearchData(self.sys_config, sale)
         similar_sale_dict = {}
         for search_api in search_data.search_api_list:
             search_api.print_api_details('...looping')
             self._sale_factory.adjust_web_parser_by_search_api(search_api)
-            for search_label_list in sale.get_entity_based_search_lists():
-                self.__get_sales_from_platform_for_search_label_list__(similar_sale_dict, search_label_list, sale)
+            for level in sale.search_levels:
+                print('sale.get_entity_based_search_lists()={}'.format(sale.get_entity_based_search_lists(level)))
+                for search_label_list in sale.get_entity_based_search_lists(level):
+                    self.__get_sales_from_platform_for_search_label_list__(similar_sale_dict, search_label_list, sale)
+                print('Elements in similar_sale_dict: {} after level {}'.format(len(similar_sale_dict), level))
+                if len(similar_sale_dict) > 100:
+                    break
         self.__identify_outliers__(similar_sale_dict)
         similar_sales_summary = [sale for sale in similar_sale_dict.values()]
         if self.sys_config.print_details:
             self.__print_similar_sales__(sale, similar_sales_summary)
         return similar_sales_summary
-
-    # def __get_similar_sales_for_sale__(self, sale: SalesmanSale) -> list:
-    #     self._search_label_lists = sale.get_search_label_lists()
-    #     search_data = self.__get_search_data_adjusted__(sale)
-    #     self.__adjust_search_label_lists__(sale, search_data.max_number_found)
-    #     similar_sale_dict = {}
-    #     for search_api in search_data.search_api_list:
-    #         search_api.print_api_details('...looping')
-    #         self._sale_factory.adjust_web_parser_by_search_api(search_api)
-    #         for search_label_list in self._search_label_lists:
-    #             self.__get_sales_from_platform_for_search_label_list__(similar_sale_dict, search_label_list, sale)
-    #     self.__identify_outliers__(similar_sale_dict)
-    #     similar_sales_summary = [sale for sale in similar_sale_dict.values()]
-    #     if self.sys_config.print_details:
-    #         self.__print_similar_sales__(sale, similar_sales_summary)
-    #     return similar_sales_summary
-
-    def __adjust_search_label_lists__(self, sale: SalesmanSale, max_number_found: int):
-        if max_number_found <= self.sys_config.number_allowed_search_results:
-            return
-        lists_old = list(self._search_label_lists)
-        self._search_label_lists = sale.get_extended_base_search_label_lists(self._search_label_lists)
-        print('\nMax number {} is larger than allowed {}: {} -> {}'.format(
-            max_number_found, self.sys_config.number_allowed_search_results, lists_old, self._search_label_lists)
-        )
-
-    def __get_search_data_adjusted__(self, sale):
-        print('Checking search range...sale.category={}'.format(sale.product_category))
-        search_data = SalesmanSearchData(self.sys_config, sale)
-        api_list = search_data.search_api_list
-        if sale.product_category == '':
-            suggested_categories = self._entity_factory.get_suggested_categories(sale.entity_label_dict)
-            if len(suggested_categories) == 0:
-                self._sale_factory.fill_search_api_list_by_found_numbers(api_list, self._search_label_lists)
-                search_data.adjust_search_api_list_by_found_numbers()
-                self._entity_factory.change_entity_category_in_db(
-                    sale.entity_label_dict, search_data.get_api_categories())
-            else:
-                print('Use suggested categories={}'.format(suggested_categories))
-                search_data.adjust_search_api_list_by_suggested_categories(suggested_categories)
-                self._sale_factory.fill_search_api_list_by_found_numbers(api_list, self._search_label_lists)
-        else:
-            self._sale_factory.fill_search_api_list_by_found_numbers(api_list, self._search_label_lists)
-        return search_data
 
     def __get_sales_from_platform_for_search_label_list__(
             self, similar_sales_dict: dict, search_label_list: list, sale: SalesmanSale):
@@ -494,7 +454,8 @@ class Tutti:
         if not sale_similarity_check.are_sales_similar:
             print('\nSource sale {} "{}" is not similar to found sale {} "{}" - label: {}'.format(
                 sale.sale_id, sale.title, similar_sale.sale_id, similar_sale.title, sale_similarity_check.similar_label))
-            print('--> entity_dict: {} <--> {}'.format(sale.entity_label_dict, similar_sale.entity_label_dict))
+            print('--> entity_dict source: {}'.format(sale.get_entity_label_main_values_dict_as_string()))
+            print('--> entity_dict check: {}'.format(similar_sale.get_entity_label_main_values_dict_as_string()))
             return False
         if similar_sale.sale_id not in similar_dict:  # similar sale was not added so far
             return True

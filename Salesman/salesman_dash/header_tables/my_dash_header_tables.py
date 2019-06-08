@@ -62,9 +62,26 @@ class MyHTMLHeaderTable(MyHTMLTable):
         self.set_value(1, 1, MyHTML.div_embedded([my_user_div, my_login_div, my_http_connection_div]))
         self.set_value(1, 2, MyHTML.div_embedded([dash_board_title_div, dash_board_sub_title_div]))
         self.set_value(1, 3, MyHTML.div_embedded([time_div, next_refresh_div, last_refresh_div]))
-        self.set_value(2, 1, '')
+        self.set_value(2, 1, self.__get_timer__())
         self.set_value(2, 2, MyDCC.markdown('my_dashboard_markdown'))
         self.set_value(2, 3, MyHTML.div_embedded([online_div, trade_div]))
+
+    @staticmethod
+    def __get_timer__():
+        return MyHTML.div(
+            'my_timer',
+            [
+            MyHTML.h1(
+                datetime.now().strftime('%Y-%m-%d'),
+                style_input={'opacity': '1', 'color': 'black', 'fontSize': 12}
+            ),
+            MyHTML.h1(
+                datetime.now().strftime('%H:%M:%S'),
+                style_input={'font - family': 'Times New Roman', 'opacity': '0.5', 'color': 'black', 'fontSize': 12}
+            ),
+        ])
+        # , className = 'row gs-header gs-text-header'),
+        # MyHTML.br([]),
 
     def _get_cell_style_(self, row: int, col: int):
         width = ['20%', '60%', '20%'][col-1]

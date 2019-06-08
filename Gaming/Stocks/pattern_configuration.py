@@ -42,7 +42,7 @@ class PatternConfiguration:
         self.breakout_over_congestion_range = False
         self.breakout_range_pct = 0.05
         self.investment = 1000
-        self.max_pattern_range_length = 50
+        self.max_pattern_range_length = 70
         self.show_final_statistics = False
         self.statistics_excel_file_name = ''
         self.statistics_constraints_excel_file_name = ''  # ''../pattern_statistics/constraints.xlsx'

@@ -14,7 +14,7 @@ from pattern_detection_controller import PatternDetectionController
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.constants.pattern_constants import BT, PRD, INDICES
 from pattern_system_configuration import SystemConfiguration
-from sertl_analytics.mydates import MyDate
+from sertl_analytics.my_text import MyText
 from pattern_dash.my_dash_tools import MyGraphCache, MyDashStateHandler, MyGraphCacheObjectApi
 from sertl_analytics.mydash.my_dash_components import MyDCC, MyHTML, DccGraphApi, DccGraphSecondApi
 from pattern_dash.my_dash_tab_dd_for_pattern import PatternTabDropDownHandler, PDD
@@ -264,6 +264,7 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
             text_list = [wave_tick_list.get_markdown_text_for_second_last_wave_tick(),
                          wave_tick_list.get_markdown_text_for_last_wave_tick()]
             if annotation != '':
+                annotation = MyText.get_text_for_markdown(annotation)
                 text_list.append('**Annotations (next breakout)**: {}'.format(annotation))
             return '  \n'.join(text_list)
 

@@ -7,7 +7,6 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import CN, FT, PRD, PAT
 from sertl_analytics.mydates import MyDate
-from sertl_analytics.my_text import MyText
 from sertl_analytics.mymath import MyMath
 from pattern_function_container import PatternFunctionContainer
 from pattern_wave_tick import WaveTick
@@ -234,7 +233,7 @@ class PatternPart:
         else:
             return_dict['Breakout'] = '{}'.format(self.breakout.get_details_for_annotations())
         self.__add_expected_trading_end_to_dict__(return_dict)
-        return_dict['Range position'] = MyText.get_text_for_markdown('{}'.format(self.pattern_range.position_list))
+        return_dict['Range position'] = '{}'.format(self.pattern_range.position_list)
         return_dict[PAT.BEFORE_BREAKOUT] = prediction_text_dict[PAT.BEFORE_BREAKOUT]
         # return_dict[PAT.BEFORE_BREAKOUT_DETAILS] = prediction_text_dict[PAT.BEFORE_BREAKOUT_DETAILS]
         if self.breakout or PAT.AFTER_BREAKOUT in prediction_text_dict:

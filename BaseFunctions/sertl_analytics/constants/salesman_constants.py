@@ -12,6 +12,7 @@ class OUTHDL:  # outlier handling
 
 
 class EL:  # entity labels
+    ACTIVITY = 'ACTIVITY'
     ANIMAL = 'ANIMAL'
     BLACK_LIST = 'BLACK_LIST'
     CLOTHES = 'CLOTHES'
@@ -37,7 +38,8 @@ class EL:  # entity labels
 
     @staticmethod
     def get_all() -> list:
-        return [EL.ANIMAL, EL.BLACK_LIST, EL.COLOR, EL.CLOTHES, EL.COMPANY,
+        return [EL.ACTIVITY, EL.ANIMAL, EL.BLACK_LIST, 
+                EL.COLOR, EL.CLOTHES, EL.COMPANY,
                 EL.EDUCATION, EL.ENVIRONMENT, EL.JOB,
                 EL.LOC,
                 EL.MATERIAL,
@@ -67,7 +69,7 @@ class EL:  # entity labels
 
     @staticmethod
     def get_labels_relevant_for_entity_category_key() -> list:
-        return [EL.ANIMAL, EL.JOB, EL.EDUCATION, EL.ENVIRONMENT, EL.MATERIAL,
+        return [EL.ACTIVITY, EL.ANIMAL, EL.JOB, EL.EDUCATION, EL.ENVIRONMENT, EL.MATERIAL,
                 EL.OBJECT, EL.PAYMENT, EL.PROPERTY, EL.PROPERTY_PART, EL.SHOP,
                 EL.TARGET_GROUP, EL.TECHNOLOGY, EL.TRANSPORT, EL.VEHICLE]
 

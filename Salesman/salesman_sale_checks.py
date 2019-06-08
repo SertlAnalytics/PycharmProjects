@@ -17,29 +17,51 @@ class SaleInformationScore:
         self._sale_01 = sale_01
         self._sale_02 = sale_02
         self._intersection_labels = []
-        self._information_score = self.__get_information_score__()
+        self._information_score_01 = self.__get_information_score__(1)
+        self._information_score_intersection = self.__get_information_score__(0)
+        self._information_score_02_relative_to_01 = self.__get_information_score__(2)
 
     @property
-    def information_score(self):
-        return self._information_score
+    def information_score_intersection(self):
+        return self._information_score_intersection
+
+    @property
+    def information_score_01(self):
+        return self._information_score_01
+
+    @property
+    def information_score_02_relative_to_01(self):
+        return self._information_score_02_relative_to_01
 
     @property
     def intersection_labels(self):
         return self._intersection_labels
 
-    def __get_information_score__(self) -> int:
+    def __get_information_score__(self, target_flag: int) -> int:
         i_score = 0
-        for label, value_list in self.__get_label_value_list_dict__().items():
+        if target_flag == 1 and self._sale_01 is None:
+            return 0
+        if target_flag == 2 and self._sale_02 is None:
+            return 0
+        if target_flag == 0 and self._sale_01 is None or self._sale_02 is None:
+            return 0
+        for label, value_list in self.__get_label_value_list_dict__(target_flag).items():
             i_score += SalesmanEntityHandler.get_similarity_score_for_entity_label(label) * len(value_list)
         return i_score
 
-    def __get_label_value_list_dict__(self) -> dict:
-        if self._sale_02 is None:
-            return self._sale_01.get_entity_label_main_value_list_dict()
+    def __get_label_value_list_dict__(self, target_flag: int) -> dict:
+        if target_flag == 1:
+            return self._sale_01.entity_label_main_values_dict
+        elif target_flag == 2:
+            return_dict = {}
+            for label in self._sale_01.entity_label_main_values_dict:
+                if label in self._sale_02.entity_label_main_values_dict:
+                    return_dict[label] = self._sale_02.entity_label_main_values_dict[label]
+            return return_dict
 
         return_dict = {}
-        entity_label_main_value_list_dict_01 = self._sale_01.get_entity_label_main_value_list_dict()
-        entity_label_main_value_list_dict_02 = self._sale_02.get_entity_label_main_value_list_dict()
+        entity_label_main_value_list_dict_01 = self._sale_01.entity_label_main_values_dict
+        entity_label_main_value_list_dict_02 = self._sale_02.entity_label_main_values_dict
         for label_01, value_list_01 in entity_label_main_value_list_dict_01.items():
             if label_01 in entity_label_main_value_list_dict_02:
                 self._intersection_labels.append(label_01)
@@ -125,60 +147,13 @@ class SaleSimilarityCheck:
         return self._similar_score
 
     def __check_sales_for_similarity__(self):
-        i_s_source = SaleInformationScore(self._sale_source).information_score
-        i_s_check = SaleInformationScore(self._sale_to_be_checked).information_score
         intersection_score_obj = SaleInformationScore(self._sale_source, self._sale_to_be_checked)
-        i_s_intersection = intersection_score_obj.information_score
-        self._are_sales_similar = 0.5 * i_s_source <= i_s_intersection <= i_s_check <= 2 * i_s_source
-        self._similar_label = ' ,'.join(intersection_score_obj.intersection_labels)
+        i_s_source = intersection_score_obj.information_score_01
+        i_s_intersection = intersection_score_obj.information_score_intersection
+        i_s_check_relative_to_source = intersection_score_obj.information_score_02_relative_to_01
+        self._are_sales_similar = 0.5 * i_s_source <= i_s_intersection <= i_s_check_relative_to_source < 2 * i_s_source
+        self._similar_label = ', '.join(intersection_score_obj.intersection_labels)
         self._similar_score = i_s_intersection
-
-    def __check_sales_for_similarity_old__(self) -> tuple:
-        check_list = EL.get_all_for_similarity_check()
-        checker_dict = {label: SaleSimilarityCheck4EntityLabel(self._sale_source, self._sale_to_be_checked, label)
-                        for label in check_list}
-
-        self._source_length_dict = {label: checker.elements_sale_source for label, checker in checker_dict.items()}
-        self._to_check_length_dict = {label: checker.elements_sale_to_be_checked for label, checker in checker_dict.items()}
-
-        self._is_similar_dict = {
-            label: checker.is_sale_to_be_checked_similar_to_source for label, checker in checker_dict.items()}
-        self._is_identical_dict = {
-            label: checker.is_sale_to_be_checked_identical_to_source for label, checker in checker_dict.items()}
-        self._is_identical_or_similar_dict = {
-            label: self._is_similar_dict[label] or self._is_identical_dict[label] for label in checker_dict}
-
-        similar_label_list = [label for label in check_list if self._is_similar_dict[label]]
-
-        # if not self._is_identical_or_similar_dict[EL.PROPERTY]:
-        #     return False, EL.PROPERTY
-
-        if self._source_length_dict[EL.TARGET_GROUP] > 0 and not self._is_identical_or_similar_dict[EL.TARGET_GROUP]:
-            return False, EL.TARGET_GROUP
-
-        for label in similar_label_list:
-            if label == EL.ANIMAL:
-                return self._is_identical_or_similar_dict[EL.PROPERTY] \
-                       and self.__are_two_label_conditions_fulfilled__(EL.JOB, EL.OBJECT), label
-            elif label == EL.JOB:
-                return self.__are_two_label_conditions_fulfilled__(EL.ANIMAL, EL.COMPANY), label
-            elif label == EL.COMPANY:
-                if EL.PRODUCT in similar_label_list:
-                    return self.__are_two_label_conditions_fulfilled__(EL.PRODUCT, EL.OBJECT), label
-                else:
-                    return self._is_identical_or_similar_dict[EL.OBJECT], label
-            elif label == EL.PRODUCT:
-                return (self.__are_two_label_conditions_fulfilled__(EL.MATERIAL, EL.TARGET_GROUP)) or \
-                       (self.__are_two_label_conditions_fulfilled__(EL.PROPERTY, EL.OBJECT)), label
-            elif label in [EL.TARGET_GROUP, EL.COLOR]:
-                return self.__are_two_label_conditions_fulfilled__(EL.PROPERTY, EL.OBJECT), label
-        return False, ''
-
-    def __are_two_label_conditions_fulfilled__(self, label_01: str, label_02: str):
-        if self._is_identical_or_similar_dict[label_01] and self._is_identical_or_similar_dict[label_02]:
-            return max(self._source_length_dict[label_01], self._to_check_length_dict[label_01],
-                       self._source_length_dict[label_02], self._to_check_length_dict[label_02]) > 0
-        return False
 
 
 class SaleIdenticalCheck:
@@ -222,3 +197,4 @@ class SaleIdenticalCheck:
         if self._number_from_db > 0:
             base_list.append(SLDC.BOOK_MARKS)
         return base_list
+

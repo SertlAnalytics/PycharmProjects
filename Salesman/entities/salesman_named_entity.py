@@ -20,6 +20,21 @@ class BlackListEntity(NamedEntity):
         ]
 
 
+class ActivityEntity(NamedEntity):
+    @staticmethod
+    def __get_entity_names__():
+        return [
+            'Golf',
+            'Lesen',
+            'Wandern',
+        ]
+
+    @staticmethod
+    def __get_synonym_dict__():
+        return {
+        }
+
+
 class AnimalEntity(NamedEntity):
     @staticmethod
     def __get_entity_names__():
@@ -315,13 +330,14 @@ class TechnologyEntity(NamedEntity):
     def __get_entity_names__():
         return [
             'Aussentemperaturanzeige', 'ABS', 'automatischem Tor',
+            'Bewegungsmelder',
             'Batterie', 'Batterien', 'Breitband-Internet',
             'Elektrische Fensterheber', 'ESP',
             'Fahrlichtautomatik', 'Fernwärme',
             'GPS', 'Gasheizung',
             'höhenverstellbar',
             'Induktionskochfeld',
-            'Kollisionswarnung',
+            'Kollisionswarnung', 'Kippmechanik', 'Klettverschluss',
             'Minergie-Standard', 'Minergie', 'Massiv-Bauweise', 'Massivbauweise', 'Minergie-Zertifiziert',
             'mechanischem Schiebetor',
             'Notrufsystem',
@@ -331,6 +347,7 @@ class TechnologyEntity(NamedEntity):
             'Reiserechner', 'Reifendruck-Kontrollanzeige',
             'Seitenairbag', 'SAT/TV', 'Sickerleitungen',
             'Start-Stopp-Funktion',
+            'verchromt',
             'WiFi', 'WLAN', 'Wartungsintervall-Anzeige', 'Wäscheturm',
             'Zentralzeizung',
         ]
@@ -351,21 +368,23 @@ class CompanyEntity(NamedEntity):
             'Crumpler', 'CANON', 'Canon', 'Coop',
             'DeLonghi', 'Dyson', 'Diono', 'Denner',
             'Eames', 'Even&Odd',
+            'Fiat', 'Ford',
             'GoPro', 'Gucci', 'Grüezi-Bag', 'Grüezi Bag', 'Garmin',
             'Hape', 'Hansen', 'H&M', 'Huawei', 'Honda', 'Harley Davidson',
             'IKEA',
             'Jacobsen', 'Joop', 'J. Lindeberg',
             'Lowa', 'Louis Vuitton', 'Lladro', 'LUCAN', 'Lidl',
-            'Mercedes', 'Mercedes-Benz', 'Mango', 'Mexx',
+            'Mercedes', 'Mercedes-Benz', 'Mango', 'Mexx', 'Mazda',
             'Nespresso', 'name it', 'Navigon', 'Nike',
             'Omega',
             'Paidi', 'Playmobil', 'Puma',
-            'Risa', 'Range Rover', 'Ricardo',
+            'Risa', 'Range Rover', 'Ricardo', 'Renault',
             'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise', 'SBB', 'Schwörer',
-            'Tosca', 'Toyota', 'Tutti', 'TomTom',
+            'Tosca', 'Toyota', 'Tutti', 'TomTom', 'Triumph',
             'USM', 'Under Armour',
             'Waldmann', 'Wilde+Spieth',
             'Villiger',  'Vitra', 'VW', 'Volkswagen', 'Volg',
+            'Yamaha',
             'Zimstern', 'Zimtstern', 'Zanotti',
         ]
 
@@ -397,12 +416,13 @@ class ProductEntity(NamedEntity):
             'Booster',
             'Cameleon',
             'EOS 700D', 'EA107', 'EA 107', 'EA108', 'EA 108', 'EA 219',
+            'Fiesta',
             'gtx',
             'hero',
             'Kitos', 'Kid Cow',
             'Looking Good',
             'MacBook', 'meda', 'Monterey',
-            'Pixie', 'Panama', 'Purpose Chair', 'PrimaDonna',
+            'Pixie', 'Panama', 'Purpose Chair', 'PrimaDonna', 'Punto',
             'Roundabout',
             'sleepi', 'Silencio',
             'Velar', 'Vito',
@@ -412,6 +432,8 @@ class ProductEntity(NamedEntity):
     def __get_synonym_dict__():
         return {
             'alu chair': ['aluminum chair'],
+            'EA107': ['EA 107'],
+            'EA108': ['EA 108'],
         }
 
 
@@ -487,9 +509,9 @@ class ObjectEntity(NamedEntity):
             'Dusche', 'Drehstuhl', 'Drosselklappensensor', 'Drosselklappenschalter', 'Doppellavabo',
             'Digitalkamera', 'Drahtgitter', 'Deckelklappe', 'Drehteller', 'Dübelversteck',
             'Einstellwerkzeug', 'Endschalldämpfer', 'Entsorgung', 'Essbereich', 'Einstreu', 'Eckschrank',
-            'Felgen', 'Fenster', 'Futter',
+            'Felgen', 'Fenster', 'Futter', 'Fernseher',
             'Figur', 'Figuren', 'Frontspoiler', 'Frontlippe', 'Frontlippen', 'Foto',
-            'Flaschenhalter',
+            'Flaschenhalter', 'Fernbedienung',
             'Gartenlehnstuhl', 'Gestell', 'Geschwisterkinderwagen', 'Gewindefahrwerk', 'Grill', 'Gitter',
             'Golf-Bag', 'Glaskeramikkochfeld', 'Glaskeramik-Kochfeld', 'Gefrierfach', 'Gefrierschrank',
             'Garderobe', 'Geschirr', 'Geschirrspüler', 'Glaskäfig', 'Gehege',
@@ -516,7 +538,8 @@ class ObjectEntity(NamedEntity):
             'Öse',
             'Porzellanfigur', 'Porzellanfiguren', 'Puppe', 'Plexiglasscheibe', 'PC-Halterung',
             'Portemonnaie', 'Pizzaofen',
-            'Roman', 'Ratgeber', 'Router', 'Rückwand', 'Rückfahrkamera', 'Rückenlehne', 'Rücklehne',
+            'Radio',
+            'Roman', 'Ratgeber', 'Router', 'Rückwand', 'Rückfahrkamera', 'Rückenlehne', 'Rücklehne', 'Rollen',
             'Rollcontainer', 'Rollkorpus', 'Reifen', 'Räder', 'Regal', 'Regenschutz', 'Rucksack', 'Rock', 'Rahmen',
             'Schlafsack', 'Service', 'Scheibenwischer', 'Sachbuch', 'Schlafsofa', 'Sitzbank', 'Seitentaschen',
             'Schlüssel', 'Schlüsselanhänger', 'Scheibenbremsbeläge', 'Strickdecke', 'Stehleuchte', 'Ski',
@@ -526,10 +549,11 @@ class ObjectEntity(NamedEntity):
             'Spiegelschrank', 'Schraube', 'Streu', 'Sandbad', 'Starterset', 'Spielburg', 'Schaukel',
             'Sauerstoffboxen', 'Schale', 'Schlafhöhlen', 'Seitenschutz', 'Seitenblende', 'Sporttourer',
             'Schreibtischplatte', 'Sonderzubehör', 'SIM-Karte', 'Staubsauger', 'Steamer',
+            'Tankrucksack',
             'Tisch', 'Toilette', 'Tasche', 'Transport', 'Tumbler', 'Truhe', 'Tourer',
             'Tiefkühlfach', 'Trockenfutter', 'Terrarium', 'Terrarien',
             'Transportbox', 'Transport-Box', 'Transportboxen', 'Transportkiste', 'Transportkistli',
-            'Tür', 'Treppe',
+            'Tür', 'Treppe', 'TV',
             'Trinkflasche', 'Trinkflaschen', 'Terracottahaus',
             'Umzug', 'Unterbau', 'Unterschrank', 'Untergestell',
             'Vorderreifen',
@@ -546,6 +570,7 @@ class ObjectEntity(NamedEntity):
             'Glaskeramikkochfeld': ['Glaskeramik-Kochfeld'],
             'Corpus': ['Rollcontainer', 'Rollkorpus'],
             'Bürostuhl': ['Besucherstuhl', 'Bürodrehstuhl', 'Drehstuhl'],
+            'Fernseher': ['TV'],
             'Kindersitz': ['Autokindersitz', 'Auto-Kindersitz'],
             'Notebook': ['Laptop'],
             'Navi': ['Navigationsgerät'],

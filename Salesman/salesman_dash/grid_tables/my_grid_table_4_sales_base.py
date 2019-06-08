@@ -175,6 +175,29 @@ class MySaleBaseTable:
             self._selected_row_index = selected_row_indices[0]  # the latest selected is always on position 0
             self._selected_row = table_rows[self._selected_row_index]
 
+    @staticmethod
+    def get_table_style_cell_conditional() -> list:
+        # ['Sale_ID', 'Version', 'Sale_State', 'Source', 'Product_Category', 'Product_Category', 'Comment']
+        return [{'if': {'column_id': c}, 'textAlign': 'left'}
+                for c in ['Sale_State', 'Source', 'Product_Category', 'Product_SubCategory', 'Object_State', 'Title']]
+
+    # def get_table_style_data_conditional(self, rows: list):
+    #     print('{}.get_table_style_data_conditional...'.format(self.__class__.__name__))
+    #     idx_nearest_next = 1
+    #     style_list = []
+    #     style_list.append({'if': {'row_index': idx_nearest_next}, 'backgroundColor': 'yellow'})
+    #     return style_list
+
+    @staticmethod
+    def get_table_style_data_conditional(rows: list):
+        column_id = SLDC.OBJECT_STATE
+        filter_red = '{{{}}}  eq "used"'.format(column_id)
+        filter_green = '{{{}}}  eq "like new"'.format(column_id)
+        return [
+            {'if': {'column_id': column_id, 'filter': filter_green}, 'backgroundColor': 'green', 'color': 'white'},
+            {'if': {'column_id': column_id, 'filter': filter_red}, 'backgroundColor': 'red', 'color': 'white'},
+        ]
+
     def __fill_rows_for_selection__(self, api: GridTableSelectionApi, with_master_id: bool):
         self._selected_row_index = -1  # no entry selected
         print('__fill_rows_for_selection__:')

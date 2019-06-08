@@ -107,6 +107,9 @@ class PatternRange:
 
     def finalize_pattern_range(self):
         self.df_min_max_final = self.__get_actual_df_min_max__()
+        # if self.tick_breakout_successor is not None:
+        #     self.tick_list.append(self.tick_breakout_successor)
+        #     self.tick_last = self.tick_breakout_successor
         self.__fill_f_param_list__()
         self._f_param_parallel = self.__get_parallel_function__()
         self._f_param_const = self.__get_const_function__()

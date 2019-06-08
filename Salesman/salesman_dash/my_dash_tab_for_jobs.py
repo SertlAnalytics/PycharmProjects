@@ -115,6 +115,11 @@ class MyDashTab4Jobs(MyDashBaseTab):
         min_height = self._grid_table.height_for_display
         # return 'len={}, type={}, \n{}'.format(len(rows), type(rows), rows)
         df = pd.DataFrame.from_dict(rows)
-        df = df[self._grid_table.columns]
-        return MyDCC.data_table(self._data_table_name, rows, columns=self._grid_table.columns, min_height=min_height)
+        return MyDCC.data_table(
+            self._data_table_name,
+            rows=rows,
+            columns=self._grid_table.columns,
+            style_cell_conditional=self._grid_table.get_table_style_cell_conditional(),
+            style_data_conditional=self._grid_table.get_table_style_data_conditional(rows),
+            min_height=min_height)
 

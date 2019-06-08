@@ -61,11 +61,13 @@ api.search_string = 'haus zur miete'
 # api.search_string = 'Wir suchen Tiersitting für Hamster'
 # api.search_string = "Damen Hut von Risa, Grösse 56, etwas Besonderes"
 # api.search_string = 'Wilde+Spieth, Stuhl, SE 68 Multi Purpose Chair'
-api.search_string = 'Winterschuhe gore-tex'
+api.search_string = 'Winterschuhe gore-tex LOWA GTX'
+api.search_string = 'Hochwertige Stehleuchte mit Bewegungsmelder (Waldmann)'
+api.search_string = 'Wilde+Spieth, Stuhl, Sie haben ein ähnliches Design wie die Serie 7 von Jacobsen und Hansen'
 
 # api.print_api_details()
-# results = tutti.check_search_by_api_against_other_sale(api, sale_id)
-results = tutti.check_search_by_api_against_similar_sales(api)
+results = tutti.check_search_by_api_against_other_sale(api, '9285456')
+# results = tutti.check_search_by_api_against_similar_sales(api)
 
 print(results)
 # tutti.printing.print_sales_head()

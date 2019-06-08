@@ -138,6 +138,34 @@ class LogTable:
             return ''
         return LOGDC.PROCESS_STEP
 
+    def get_table_style_data_conditional(self, rows: list):
+        # ['Date', 'Time', 'Process Step', 'Symbol', 'Pattern', 'Trade type',
+        # 'Result', 'Start', 'End', 'Comment', 'Process]
+        if self._selected_log_type != LOGT.TRADES:
+            return None
+        idx_positive_list = []
+        idx_negative_list = []
+        for idx, row in enumerate(rows):
+            result = row['Result']
+            if result != '':
+                if result[0] == '-':
+                    idx_negative_list.append(idx)
+                else:
+                    idx_positive_list.append(idx)
+        style_list = []
+        for idx in idx_positive_list:
+            style_list.append({'if': {'row_index': idx}, 'backgroundColor': 'green', 'color': 'white'})
+        for idx in idx_negative_list:
+            style_list.append({'if': {'row_index': idx}, 'backgroundColor': 'red', 'color': 'white'})
+        return style_list
+
+    @staticmethod
+    def get_table_style_cell_conditional() -> list:
+        text_columns = ['Process', 'Process Step', 'Comment',
+                        'Ticker', 'Ticker_Name', 'Trigger', 'Type', 'Trade type',
+                        'Symbol', 'Wave_Structure']
+        return [{'if': {'column_id': c}, 'textAlign': 'left'} for c in text_columns]
+
     def __init_data_for_selected_items__(self):
         self._log_df = self._df_dict[self._selected_log_type]
         self._columns = self._log_df.columns

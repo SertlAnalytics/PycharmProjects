@@ -19,7 +19,11 @@ class SalesmanDataDictionary(DataDictionary):
     @staticmethod
     def __get_rounded_value__(key, value):
         if key in [SLDC.PRICE, SLDC.PRICE_SINGLE, SLDC.PRICE_ORIGINAL]:
-            return MyMath.round_smart(value)
+            try:
+                return MyMath.round_smart(value)
+            except:
+                print('SalesmanDataDictionary: Error for {}={}'.format(key, value))
+                return 0
         return value
 
     def is_data_dict_ready_for_sale_table(self):

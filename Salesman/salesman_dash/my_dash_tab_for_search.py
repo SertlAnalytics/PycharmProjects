@@ -49,6 +49,7 @@ class MyDashTab4Search(MyDashBaseTab):
         self._selected_search_result_row = None
         self._search_input = ''
         self._online_rows = None
+        self._entity_search_lists = []
         self._product_categorizer = ProductCategorizer()
         self._plot_category_list = []
         self._plot_category_options = []
@@ -247,9 +248,8 @@ class MyDashTab4Search(MyDashBaseTab):
     def __init_callback_for_search_markdown__(self):
         @self.app.callback(
             Output(self._header_table.my_search_markdown, DSHVT.CHILDREN),
-            [Input(self._elements.my_search_result_grid_table_div, DSHVT.CHILDREN),
-             Input(self._header_table.my_search_found_valid_value_div, DSHVT.CHILDREN)])
-        def handle_callback_for_search_markdown(search_result_grid_table, children):
+            [Input(self._elements.my_search_result_grid_table_div, DSHVT.CHILDREN)])
+        def handle_callback_for_search_markdown(search_result_grid_table):
             if self._search_input == '':
                 return '**Please enter search string**'
             return self.__get_search_markdown_for_online_search__()
@@ -267,7 +267,7 @@ class MyDashTab4Search(MyDashBaseTab):
         )
         def handle_callback_for_search_input(*params):
             self._callback_for_search_input.set_values(*params)
-            self._callback_for_search_input.print_details()
+            # self._callback_for_search_input.print_details()
             actual_search_value = self._callback_for_search_input.get_actual_search_value()
             if actual_search_value == '':
                 return self.sys_config.shelve_cache.get_value(CKEY.SEARCH_INPUT)
@@ -303,7 +303,7 @@ class MyDashTab4Search(MyDashBaseTab):
             Output(self._elements.my_search_result_graph_div, DSHVT.CHILDREN),
             [Input(self._elements.my_search_result_grid_table_div, DSHVT.CHILDREN)])
         def handle_callback_for_search_result_graph(children):
-            if self._online_rows is None:
+            if self._online_rows is None or len(self._online_rows) == 0:
                 return ''
             return self.__get_scatter_plot__()
 
@@ -329,22 +329,20 @@ class MyDashTab4Search(MyDashBaseTab):
         return scatter_chart
 
     def __get_search_markdown_for_online_search__(self):
-        my_sale_obj = self.tutti.current_source_sale
         my_sale = '**Searching for**: {}'.format(self._search_input)
-        my_sale_obj_text = '**Found entities:** {}'.format(my_sale_obj.get_value(SLDC.ENTITY_LABELS_DICT))
+        searching_by = '{}'.format(self._entity_search_lists)
+        my_entity_search_lists = '**Searching by**: {}'.format(MyText.get_text_for_markdown(searching_by))
         if self._online_rows is None or len(self._online_rows) == 0:
-            return '  \n'.join([my_sale, my_sale_obj_text, '**NO RESULTS FOUND**'])
+            return '  \n'.join([my_sale, my_entity_search_lists, '**NO RESULTS FOUND**'])
         outlier_online_search = self.__get_outlier_for_online_search__()
-        return self.__get_search_markdown_with_outlier__(my_sale, my_sale_obj_text, outlier_online_search)
+        return self.__get_search_markdown_with_outlier__(my_sale, my_entity_search_lists, outlier_online_search)
 
-    def __get_search_markdown_with_outlier__(self, my_sale: str, my_sale_obj_text: str, outlier_online_search: Outlier):
+    @staticmethod
+    def __get_search_markdown_with_outlier__(my_sale: str, my_entity_search_lists: str, outlier_online_search: Outlier):
         prices = outlier_online_search.get_markdown_text()
         price_suggested = outlier_online_search.mean_values_without_outliers
-        lists_as_string = '{}'.format(self.tutti.search_label_lists)
-        lists_as_string = MyText.get_text_for_markdown(lists_as_string)
-        start_search_labels = '**Search labels**: {}'.format(lists_as_string)
         my_price_suggested = '**Price suggested**: {:.2f}'.format(price_suggested)
-        return '  \n'.join([my_sale, my_sale_obj_text, prices, my_price_suggested, start_search_labels])
+        return '  \n'.join([my_sale, my_entity_search_lists, prices, my_price_suggested])
 
     def __get_outlier_for_online_search__(self) -> Outlier:
         df_results = pd.DataFrame.from_dict(self._online_rows)
@@ -373,6 +371,7 @@ class MyDashTab4Search(MyDashBaseTab):
         api.sub_category_value = '' if api.category_value == '' or sub_category_value == PRSUBCAT.ALL \
             else sub_category_value
         self._online_rows = self.tutti.get_search_results_by_search_api(api)
+        self._entity_search_lists = self.tutti.get_entity_based_search_lists()
         return self.__get_search_result_grid_table__()
 
     def __get_search_result_grid_table_by_db_search__(self, row_id: int):
@@ -386,5 +385,7 @@ class MyDashTab4Search(MyDashBaseTab):
         return self.__get_search_result_table_by_api__()
 
     def __get_search_result_grid_table__(self):
+        if len(self._online_rows) == 0:
+            return 'Nothing found - please adjust your query...'
         columns = SLDC.get_columns_for_search_results()
         return MyDCC.data_table(self._elements.my_search_result_grid_table, self._online_rows, columns=columns)

@@ -143,5 +143,11 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
     def __get_table_for_jobs__(self):
         self._grid_table = JobTable(self._job_handler)
         rows = self._grid_table.get_rows_for_selected_items()
-        return MyDCC.data_table(self._data_table_name, rows, columns=self._grid_table.columns, page_size=100)
+        return MyDCC.data_table(
+            self._data_table_name,
+            rows=rows,
+            columns=self._grid_table.columns,
+            style_cell_conditional=self._grid_table.get_table_style_cell_conditional(),
+            style_data_conditional=self._grid_table.get_table_style_data_conditional(rows),
+            page_size=100)
 

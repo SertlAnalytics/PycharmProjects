@@ -47,23 +47,18 @@ class SalesmanPrint:
         self._df_sale = self.__get_df_from_sale_dict_list__(dict_list)
 
     def __fill_sale_dict_list__(self):
-        for label_value, entity_label in self._sale_source.entity_label_dict.items():
-            print('__fill_sale_dict_list__: value={}, label={}'.format(label_value, entity_label))
-            if self.__can_entity_be_added_to_printing_list__(label_value, entity_label):
-                self.__add_to_sale_dict_list__(entity_label, label_value)
-
-    def __can_entity_be_added_to_printing_list__(self, value: str, label: str) -> bool:
-        return self._entity_handler.get_main_entity_name_for_entity_name(label, value) == value
+        for label, main_values in self._sale_source.entity_label_main_values_dict.items():
+            print('__fill_sale_dict_list__: label={}, values={}'.format(label, main_values))
+            for main_value in main_values:
+                self.__add_to_sale_dict_list__(label, main_value)
 
     def __add_to_sale_dict_list__(self, entity_label: str, label_value: str):
-        if entity_label == self._sale_source.entity_label_dict.get(label_value, ''):
-            if self._sale_source.location != 'online':
-                self._sale_source.set_value(SLDC.PLOT_CATEGORY, '{}_{}'.format(label_value, entity_label))
-                self._sale_dict_list.append(self._sale_source.get_data_dict_for_columns(self._columns))
+        if self._sale_source.location != 'online':
+            self._sale_source.set_value(SLDC.PLOT_CATEGORY, '{}_{}'.format(label_value, entity_label))
+            self._sale_dict_list.append(self._sale_source.get_data_dict_for_columns(self._columns))
         for sale in self._sales:
-            if entity_label == sale.entity_label_dict.get(label_value, ''):
-                sale.set_value(SLDC.PLOT_CATEGORY, '{}_{}'.format(label_value, entity_label))
-                self._sale_dict_list.append(sale.get_data_dict_for_columns(self._columns))
+            sale.set_value(SLDC.PLOT_CATEGORY, '{}_{}'.format(label_value, entity_label))
+            self._sale_dict_list.append(sale.get_data_dict_for_columns(self._columns))
 
     def __get_df_from_sale_dict_list__(self, sale_dict_list: list):
         return pd.DataFrame.from_dict(

@@ -1259,6 +1259,30 @@ class DC:  # Data Columns
                 DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_AMOUNT, DC.TRADE_RESULT_PCT]
 
 
+    @staticmethod
+    def get_column_readable(col: str) -> str:
+        return {
+            DC.FC_SUMMARY_AFTER_BREAKOUT: 'FC after Breakout',
+            DC.ID: 'ID',
+            DC.PATTERN_TYPE: 'Type',
+            DC.PATTERN_RANGE_BEGIN_DT: 'Begin Date',
+            DC.PATTERN_RANGE_BEGIN_TIME: 'Begin Time',
+            DC.PATTERN_RANGE_END_DT: 'End Date',
+            DC.PATTERN_RANGE_END_TIME: 'End Time',
+            DC.PERIOD: 'Period',
+            DC.PERIOD_AGGREGATION: 'Aggr.',
+            DC.TICKER_ID: 'Ticker',
+            DC.TRADE_STRATEGY: 'Strategy',
+            DC.TRADE_STATUS: 'Status',
+            DC.TRADE_IS_SIMULATION: 'Simul.',
+            DC.TRADE_RESULT: 'Result',
+            DC.TRADE_RESULT_PCT: 'Result%',
+        }.get(col, col)
+
+    @staticmethod
+    def get_column_list_readable(col_list: list) -> list:
+        return [DC.get_column_readable(col) for col in col_list]
+
 class MDC:  # Metric data column
     VALID_DT = 'Valid_Date'
     MODEL = 'Model'

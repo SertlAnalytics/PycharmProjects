@@ -5,6 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
+from sertl_analytics.constants.pattern_constants import DC
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
@@ -417,6 +418,11 @@ class MyHTML:
         return html.H3(element_text, style=style)
 
     @staticmethod
+    def h6(element_text: str, color='black', font_size=24, opacity='1'):
+        style = {'opacity': opacity, 'color': color, 'fontSize': font_size}
+        return html.H6(element_text, style=style)
+
+    @staticmethod
     def p(element_text: str):
         return html.P(element_text)
 
@@ -571,14 +577,16 @@ class MyDCC:
 
     @staticmethod
     def data_table(element_id: str, rows: list, selected_row_indices=None, filtering=False,
-                   columns=None, page_size=10, min_width=1200, min_height=1000):
+                   columns=None, style_data_conditional=None, style_cell_conditional=None,
+                   page_size=10, min_width=1200, min_height=1000):
         selected_row_indices = [] if selected_row_indices is None else selected_row_indices
-        df = pd.DataFrame.from_dict(rows)
+        df = pd.DataFrame.from_dict(rows)        
         if columns is not None:
             df = df[columns]
+        print('data_table.columns={}'.format(columns))
         return dash_table.DataTable(
             id=element_id,
-            columns=[{"name": i, "id": i} for i in df.columns],
+            columns=[{"name": DC.get_column_readable(col), "id": col} for col in df.columns],
             data=df.to_dict('records'),
             filtering=filtering,
             sorting=True,
@@ -590,6 +598,8 @@ class MyDCC:
                 'page_size': page_size
             },
             style_table={'overflowX': 'scroll'},
+            style_cell_conditional=[{}] if style_cell_conditional is None else style_cell_conditional,
+            style_data_conditional=[{}] if style_data_conditional is None else style_data_conditional,
         )
 
     @staticmethod

@@ -116,7 +116,11 @@ class MyDashTab4DB(MyPatternDashBaseTab):
         self._db_grid_table = DBTable(
             self._df_for_grid_table, self._selected_table_name, self._selected_date_range, column_sort)
         rows = self._db_grid_table.get_rows_for_selected_items()
-        return MyDCC.data_table(self._data_table_name, rows, columns=self._db_grid_table.columns)
+        return MyDCC.data_table(
+            self._data_table_name, rows,
+            columns=self._db_grid_table.columns,
+            style_cell_conditional=self._db_grid_table.get_table_style_cell_conditional(),
+        )
 
     def __get_query_for_table__(self):
         where_clause = self.__get_where_clause__()

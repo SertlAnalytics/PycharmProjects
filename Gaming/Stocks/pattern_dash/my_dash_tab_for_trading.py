@@ -526,9 +526,12 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
         rows = self.__get_table_rows_for_trades__()
         if len(rows) == 0:
             rows = self.__get_empty_data_row__()
-        columns = self.__get_columns_for_trading_table__()
         self._cached_trade_table = MyDCC.data_table(
-            self._data_table_name, rows, selected_row_indices=selected_row_indices, columns=columns)
+            self._data_table_name,
+            rows=rows,
+            selected_row_indices=selected_row_indices,
+            style_data_conditional=TradeTable.get_table_style_data_conditional(),
+            columns=self.__get_columns_for_trading_table__())
         return self._cached_trade_table
 
     def __get_table_rows_for_trades__(self):
@@ -549,3 +552,4 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
             return TradeTable.get_columns_for_online_trades()
         else:
             return TradeTable.get_columns_for_replay()
+

@@ -96,6 +96,7 @@ class SalesmanSpacy:
         self._keep_entity_labels = [EL.LOC, EL.ORG]
         self._keep_entity_label_replacement_dict = {EL.ORG: EL.COMPANY}
         # self._salesman_nlp.tokenizer = WhitespaceTokenizer(self._salesman_nlp.vocab)
+        self._matcher_activity = self.__get_matcher_for_entity_type__(EL.ACTIVITY)
         self._matcher_animal = self.__get_matcher_for_entity_type__(EL.ANIMAL)
         self._matcher_clothes = self.__get_matcher_for_entity_type__(EL.CLOTHES)
         self._matcher_color = self.__get_matcher_for_entity_type__(EL.COLOR)
@@ -116,7 +117,8 @@ class SalesmanSpacy:
         self._matcher_vehicle = self.__get_matcher_for_entity_type__(EL.VEHICLE)
         # self._salesman_nlp.add_pipe(self.replacement_component, name='CUSTOM_REPLACEMENT', before='tagger')
         self._nlp.add_pipe(self.keep_entity_component, name='CUSTOM_KEEP_ENTITY', after='ner')
-        self._nlp.add_pipe(self.animal_component, name='CUSTOM_ANIMAL', after='CUSTOM_KEEP_ENTITY')
+        self._nlp.add_pipe(self.activity_component, name='CUSTOM_ACTIVITY', after='CUSTOM_KEEP_ENTITY')
+        self._nlp.add_pipe(self.animal_component, name='CUSTOM_ANIMAL', after='CUSTOM_ACTIVITY')
         self._nlp.add_pipe(self.clothes_component, name='CUSTOM_CLOTHES', after='CUSTOM_ANIMAL')
         self._nlp.add_pipe(self.color_component, name='CUSTOM_COLOR', after='CUSTOM_CLOTHES')
         self._nlp.add_pipe(self.company_component, name='CUSTOM_COMPANY', after='CUSTOM_COLOR')
@@ -198,6 +200,11 @@ class SalesmanSpacy:
                 return False
         # print('Loc_text ok: {}'.format(ent.text))
         return True
+
+    def activity_component(self, doc):
+        matches = self._matcher_activity(doc)
+        spans = [Span(doc, start, end, label=EL.ACTIVITY) for match_id, start, end in matches]
+        return self.__get_doc_with_added_span_list_as_entities__(doc, spans)
 
     def animal_component(self, doc):
         matches = self._matcher_animal(doc)
@@ -320,7 +327,7 @@ class SalesmanSpacy:
         entity_label_dict = {}
         label_list = []
         for ent in doc.ents:
-            print('Label: {}, value: {}'.format(ent.label_, ent.text))
+            # print('Label: {}, value: {}'.format(ent.label_, ent.text))
             if ent.label_ not in label_list:
                 label_list.append(ent.label_)
                 entity_label_dict[ent.label_] = []

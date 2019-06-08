@@ -15,9 +15,14 @@ from sertl_analytics.my_numpy import MyNumpy
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from salesman_sale import SalesmanSale
+from salesman_dash.my_dash_colors import DashColorHandler
 
 
 class MyDashTabPlotter4Sales(MyDashTabPlotter):
+    def __init__(self, df_base: pd.DataFrame, color_handler: DashColorHandler, entity_handler: SalesmanEntityHandler):
+        self._entity_handler = entity_handler
+        MyDashTabPlotter.__init__(self, df_base, color_handler)
+
     def __init_parameter__(self):
         self._chart_id = 'sales_statistics_graph'
         self._chart_name = 'Statistics'
@@ -39,9 +44,9 @@ class MyDashTabPlotter4Sales(MyDashTabPlotter):
         y_data = self._df_base[self.y_variable]
         x_orig_predict = MyNumpy.get_date_values_as_number_for_date_time_array(list(x_orig))
         entity_name_list = []
-        for value, label in master_sale.entity_label_dict.items():
-            if SalesmanEntityHandler.get_main_entity_name_for_entity_name(label, value) == value:
-                entity_name_list.append(value)
+        print('master_sale.entity_label_values_dict={}'.format(master_sale.entity_label_values_dict))
+        for label, values in master_sale.entity_label_main_values_dict.items():
+            entity_name_list = entity_name_list + values
         x_dict, y_dict = self.__get_x_dict_and_y_dict_for_regression__(entity_name_list, self.y_variable)
         trace_list_regression = []
         color_all = self._color_handler.get_color_for_category('ALL')
@@ -58,6 +63,7 @@ class MyDashTabPlotter4Sales(MyDashTabPlotter):
     def __get_x_dict_and_y_dict_for_regression__(self, entity_name_list: list, metric_list: list):
         x_dict = {}
         y_dict = {}
+        print('entity_name_list={}'.format(entity_name_list))
         for entity_name in entity_name_list:
             df_cat = self._df_base[self._df_base[SLDC.ENTITY_LABELS_DICT].str.contains(entity_name)]
             if df_cat.shape[0] > 3:  # we need some for getting a correct regression
