@@ -45,7 +45,7 @@ sale_id = '18246884'  # Pixie: 27943008 Schlafsack: 27959857 Schöffel: 27960542
 # tutti.check_sale_on_platform_against_similar_sales_by_sale_id(sale_id)
 # tutti.inspect_sales_on_platform_for_api(api)
 
-# tutti.check_sales_for_similarity_by_sale_id('1558185369', '23623611')
+# tutti.check_sales_for_similarity_by_sale_id('27124330', '22735190')
 
 # api.search_string = 'Leder Handtasche von Gucci und Mango und Even&Odd und H&M, Wenig gebraucht. Für 100.- statt 200.-'
 # api.search_string = 'Fritz Hansen / Jacobsen - Serie 7 Stuhl / 6 Stk. / Original + neuwertig, Für 100.- statt 200.-'
@@ -64,12 +64,13 @@ api.search_string = 'haus zur miete'
 api.search_string = 'Winterschuhe gore-tex LOWA GTX'
 api.search_string = 'Hochwertige Stehleuchte mit Bewegungsmelder (Waldmann)'
 api.search_string = 'Wilde+Spieth, Stuhl, Sie haben ein ähnliches Design wie die Serie 7 von Jacobsen und Hansen'
+api.search_string = 'Rettungsweste für Kinder (20-30kg)'
 
 # api.print_api_details()
-results = tutti.check_search_by_api_against_other_sale(api, '9285456')
-# results = tutti.check_search_by_api_against_similar_sales(api)
+# results = tutti.check_search_by_api_against_other_sale(api, '9285456')
+results = tutti.check_search_by_api_against_similar_sales(api)
 
-print(results)
+# print(results)
 # tutti.printing.print_sales_head()
 tutti.close_excel()
 

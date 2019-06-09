@@ -264,6 +264,7 @@ class MaterialEntity(NamedEntity):
         return [
             'Aluminium', 'Akazienholz', 'Astholz',
             'Baumwolle',
+            'Corkx',
             'Glas', 'Gummi', 'Goretex',
             'Holz',
             'Kunstleder', 'Kork',
@@ -281,7 +282,8 @@ class MaterialEntity(NamedEntity):
     @staticmethod
     def __get_synonym_dict__():
         return {
-            'Goretex': ['Gore-Tex']
+            'Goretex': ['Gore-Tex'],
+            'Cork': ['Kork'],
         }
 
 
@@ -348,7 +350,7 @@ class TechnologyEntity(NamedEntity):
             'Seitenairbag', 'SAT/TV', 'Sickerleitungen',
             'Start-Stopp-Funktion',
             'verchromt',
-            'WiFi', 'WLAN', 'Wartungsintervall-Anzeige', 'Wäscheturm',
+            'WiFi', 'WLAN', 'Wartungsintervall-Anzeige', 'Wäscheturm', 'Widerstand',
             'Zentralzeizung',
         ]
 
@@ -415,6 +417,7 @@ class ProductEntity(NamedEntity):
             'alu chair', 'aluminium chair',
             'Booster',
             'Cameleon',
+            'Cork Family',
             'EOS 700D', 'EA107', 'EA 107', 'EA108', 'EA 108', 'EA 219',
             'Fiesta',
             'gtx',
@@ -499,7 +502,7 @@ class ObjectEntity(NamedEntity):
             'Alufelgen', 'Autokindersitz', 'Auto-Kindersitz', 'Anhänger', 'Akku',
             'Aufbewahrungstruhe', 'Aufbewahrungsmöbel', 'Aufbewahrungstisch', 'Absturzsicherung',
             'Besucherstuhl', 'Babywanne', 'Bremsbeläge', 'Bürotisch', 'Bürostuhl', 'Badesand', 'Badewanne',
-            'Bürodrehstuhl', 'Bild', 'Buch', 'Badehose', 'Bikini', 'Behälter',
+            'Bürodrehstuhl', 'Bild', 'Buch', 'Badehose', 'Bikini', 'Behälter', 'Beistelltisch',
             'Baumwolleinstreu', 'Baumhaus', 'Blüten', 'Blätter', 'Buddelbox', 'Bett', 'Bücherregal',
             'Badewanne/Dusche', 'Badewanne/Whirlpool',
             'Brillenfach', 'Bottleholder',
@@ -519,7 +522,7 @@ class ObjectEntity(NamedEntity):
             'Hängematte', 'Heu',
             'Harlekin', 'Heckspoiler', 'Hotspot', 'Hamsterrad', 'Holzbrücke', 'Hamsterburg', 'Holzschrank',
             'Holzkäfig', 'Hamsterkäfig', 'Hamsterhöhle', 'Holztreppe', 'Hasenstahl', 'Holzhäuschen', 'Hundematte',
-            'Hangenester', 'Hochbett', 'Hinterreifen',
+            'Hangenester', 'Hochbett', 'Hinterreifen', 'Hocker',
             'Inspektion',
             'Kaffeemaschine', 'Kindersitz', 'Kühlschrank',
             'Kinderbett', 'Kugelbahn',
@@ -559,7 +562,7 @@ class ObjectEntity(NamedEntity):
             'Vorderreifen',
             'Winterräder', 'Winterreifen', 'Winterkompletträder', 'Wanne', 'Wasserpumpe', 'Waschmaschine', 'WC',
             'Werkzeugkasten', 'Wohnmobil', 'Wasch-Trockenmaschine',
-            'Wasserflasche', 'Wasserflaschen', 'Wickeltisch', 'Widerstand',
+            'Wasserflasche', 'Wasserflaschen', 'Wickeltisch',
             'Zeitwerkzeug', 'Zeitsteuerung', 'Zubehör', 'Zwischenboden', 'Zahnriemen', 'Zimmerlampe',
         ]
 

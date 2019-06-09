@@ -184,7 +184,7 @@ class FibonacciWave:
 
     @property
     def wave_structure(self):
-        if not self.is_wave_complete():
+        if not self.is_wave_complete() or self.w_5.range_max == 0:
             return FWST.NONE
         if self.w_1.range_max > self.w_3.range_max > self.w_5.range_max:
             return FWST.L_M_S

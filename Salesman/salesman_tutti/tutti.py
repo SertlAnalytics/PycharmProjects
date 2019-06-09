@@ -425,8 +425,8 @@ class Tutti:
         for search_api in search_data.search_api_list:
             search_api.print_api_details('...looping')
             self._sale_factory.adjust_web_parser_by_search_api(search_api)
-            for level in sale.search_levels:
-                print('sale.get_entity_based_search_lists()={}'.format(sale.get_entity_based_search_lists(level)))
+            for level in sale.search_levels[-1:]:
+                print('sale.get_entity_based_search_lists({})={}'.format(level, sale.get_entity_based_search_lists(level)))
                 for search_label_list in sale.get_entity_based_search_lists(level):
                     self.__get_sales_from_platform_for_search_label_list__(similar_sale_dict, search_label_list, sale)
                 print('Elements in similar_sale_dict: {} after level {}'.format(len(similar_sale_dict), level))

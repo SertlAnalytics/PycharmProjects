@@ -530,6 +530,7 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
             self._data_table_name,
             rows=rows,
             selected_row_indices=selected_row_indices,
+            style_cell_conditional=TradeTable.get_table_style_cell_conditional(),
             style_data_conditional=TradeTable.get_table_style_data_conditional(),
             columns=self.__get_columns_for_trading_table__())
         return self._cached_trade_table

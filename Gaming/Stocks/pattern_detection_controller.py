@@ -191,7 +191,8 @@ class PatternDetectionController:
             sys_config: SystemConfiguration, ticker: str, and_clause='', limit=300) -> PatternDetector:
         sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit)
         print('\nProcessing {} ({}){}...\n'.format(
-            ticker, sys_config.runtime_config.actual_ticker_name, '' if and_clause == '' else ' for {}'.format(and_clause)))
+            ticker, sys_config.runtime_config.actual_ticker_name,
+            '' if and_clause == '' else ' for {}'.format(and_clause)))
         sys_config.init_predictors_without_condition_list()
         detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()

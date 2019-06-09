@@ -168,6 +168,8 @@ class PatternDataProvider:
             PatternLog().log_error()
         finally:
             if df is None:
+                PatternLog().log_message('Error with ticker_id={}'.format(ticker_id),
+                                         'init_pattern_data_handler_for_ticker_id')
                 self.pdh = None
             else:
                 self.pdh = PatternDataHandler(self.config, df)

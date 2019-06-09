@@ -407,6 +407,12 @@ class TradeTable(MyTable, PredictionFeatureTable):
         return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_PCT]
 
     @staticmethod
+    def get_table_style_cell_conditional() -> list:
+        # ['Status', 'Simul', 'Ticker', 'FC after Breakout', 'Strategy', 'Type', 'ID']
+        return [{'if': {'column_id': c}, 'textAlign': 'left'}
+                for c in ['Status', 'Simul', 'Ticker', 'FC after Breakout', 'Strategy', 'Type', 'ID']]
+
+    @staticmethod
     def get_table_style_data_conditional():
         column_id = DC.TRADE_RESULT_PCT
         filter_green = '{{{}}}  > 0'.format(DC.TRADE_RESULT_PCT)
