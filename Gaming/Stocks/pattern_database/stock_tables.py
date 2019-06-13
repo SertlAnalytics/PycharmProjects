@@ -380,8 +380,12 @@ class TradeTable(MyTable, PredictionFeatureTable):
     def get_columns_for_online_trades() -> list:
         return [DC.TRADE_STATUS, DC.TRADE_IS_SIMULATION, DC.TICKER_ID, DC.FC_SUMMARY_AFTER_BREAKOUT,
                 DC.TRADE_STRATEGY, DC.PATTERN_TYPE,
-                DC.PATTERN_RANGE_BEGIN_DT, DC.PATTERN_RANGE_BEGIN_TIME,
-                DC.PATTERN_RANGE_END_DT, DC.PATTERN_RANGE_END_TIME, DC.TRADE_RESULT, DC.TRADE_RESULT_PCT,
+                DC.BOUGHT_AT, DC.ACTUAL, DC.LIMIT, DC.STOP,
+                DC.TRADE_RESULT_PCT,
+                DC.PATTERN_RANGE_BEGIN_DT,
+                DC.PATTERN_RANGE_BEGIN_TIME,
+                DC.PATTERN_RANGE_END_DT,
+                DC.PATTERN_RANGE_END_TIME,
                 DC.PERIOD, DC.PERIOD_AGGREGATION, DC.ID]
 
     @staticmethod
@@ -410,7 +414,8 @@ class TradeTable(MyTable, PredictionFeatureTable):
     def get_table_style_cell_conditional() -> list:
         # ['Status', 'Simul', 'Ticker', 'FC after Breakout', 'Strategy', 'Type', 'ID']
         return [{'if': {'column_id': c}, 'textAlign': 'left'}
-                for c in ['Status', 'Simul', 'Ticker', 'FC after Breakout', 'Strategy', 'Type', 'ID']]
+                for c in [DC.TRADE_STATUS, DC.TRADE_IS_SIMULATION, DC.TICKER_ID,
+                          DC.FC_SUMMARY_AFTER_BREAKOUT, DC.TRADE_STRATEGY, DC.PATTERN_TYPE, DC.ID]]
 
     @staticmethod
     def get_table_style_data_conditional():

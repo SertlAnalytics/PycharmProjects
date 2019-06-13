@@ -5,16 +5,14 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-10
 """
 
-from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT, CN, PRD, FT
-from pattern_wave_tick import WaveTick, WaveTickList
+from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT, FT
+from sertl_analytics.mymath import MyMath
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mymath import MyMath
 from pattern_logging.pattern_log import PatternLog
 import math
 from scipy import stats
 import statistics
-import numpy as np
-import pandas as pd
 
 
 class TradingBoxApi:
@@ -40,7 +38,6 @@ class TradingBox:
         self._off_set_value = api.off_set_value  # basis for distance_top and _bottom
         self._buy_price = api.buy_price
         self._sma_value = 0  # simple moving average value for this strategy
-        self._round_decimals = 2 if self._off_set_value > 100 else 4
         self._trade_strategy = api.trade_strategy
         self._ticker_last_price_list = [api.off_set_value, api.buy_price]  # off_set is used to guarantee: max >= offset
         self._ticker_last_price = api.buy_price
@@ -72,8 +69,9 @@ class TradingBox:
     def current_result_pct(self) -> float:
         return round((self.last_price - self._buy_price) / self._buy_price * 100, 2) # we want to have full % numbers
 
-    def round(self, value: float):
-        return round(value, self._round_decimals)
+    @staticmethod
+    def round(value: float):
+        return MyMath.round_smart(value)
 
     @property
     def std(self):
@@ -155,11 +153,9 @@ class TradingBox:
         return ts_now + (self._data_dict.get(DC.BUY_TIME_STAMP) - self._data_dict.get(DC.TS_PATTERN_TICK_FIRST))
 
     def __get_value_dict__(self) -> dict:
-        dist_top_str = '{:.2f} ({:.2f})' if self._round_decimals == 2 else '{:.4f} ({:.4f})'
-        dist_bottom_str = '{:.2f} ({:.2f})' if self._round_decimals == 2 else '{:.4f} ({:.4f})'
         return {'Orig_height': self._height,
-                'dist_top': dist_top_str.format(self._distance_top, self.multiplier_positive),
-                'dist_bottom': dist_bottom_str.format(self._distance_bottom, self.multiplier_negative),
+                'dist_top': '{} ({:.2f})'.format(self._distance_top, self.multiplier_positive),
+                'dist_bottom': '{} ({:.2f})'.format(self._distance_bottom, self.multiplier_negative),
                 '_limit': self.limit, 'stop loss': self.stop_loss,
                 'dist_stepping': self.distance_stepping,
                 'dist_trailing_stop': self.distance_trailing_stop

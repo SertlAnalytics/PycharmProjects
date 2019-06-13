@@ -418,9 +418,10 @@ class ProductEntity(NamedEntity):
             'Booster',
             'Cameleon',
             'Cork Family',
+            'Drive Smart',
             'EOS 700D', 'EA107', 'EA 107', 'EA108', 'EA 108', 'EA 219',
             'Fiesta',
-            'gtx',
+            'gtx', 'GO BASIC', 'Go Essential',
             'hero',
             'Kitos', 'Kid Cow',
             'Looking Good',
@@ -429,6 +430,7 @@ class ProductEntity(NamedEntity):
             'Roundabout',
             'sleepi', 'Silencio',
             'Velar', 'Vito',
+            'Zümo',
         ]
 
     @staticmethod

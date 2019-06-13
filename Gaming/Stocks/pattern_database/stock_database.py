@@ -494,6 +494,7 @@ class StockDatabase(BaseDatabase):
     def get_trade_records_for_statistics_as_dataframe(self) -> pd.DataFrame:
         query = self._trade_table.get_query_select_for_records("Trade_Result_ID != 0")
         db_df = DatabaseDataFrame(self, query)
+        # print('query={}, found={}'.format(query, db_df.df.shape[0]))
         return db_df.df
 
     def get_trade_records_for_asset_statistics_as_dataframe(self) -> pd.DataFrame:

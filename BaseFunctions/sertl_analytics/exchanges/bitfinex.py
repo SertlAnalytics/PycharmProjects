@@ -302,17 +302,16 @@ class MyBitfinex(ExchangeInterface):
         return self.get_available_money_balance().amount_available
 
     def create_order(self, order: BitfinexOrder, is_order_simulation: bool) -> OrderStatus:
+        order.simulate_transaction = self.is_transaction_simulation(is_order_simulation)
         self.__init_actual_order_properties__(order)
-        is_transaction_simulation = self.is_transaction_simulation(is_order_simulation)
-        self.transaction_step = 'is_transaction_simulation or is_order_value_compliant'
-        if is_transaction_simulation or self.__is_enough_balance_available__(order):
+        self.transaction_step = 'is_transaction_simulation or is_enough_balance_available'
+        if self.__is_enough_balance_available__(order):
             self.transaction_step = 'is_transaction_simulation or not is_order_affected_by_hodl_config'
-            if is_transaction_simulation or not self.__is_order_affected_by_hodl_config__(order):
+            if not self.__is_order_affected_by_hodl_config__(order):
                 self.transaction_step = 'is_transaction_simulation or is_order_value_compliant'
-                if is_transaction_simulation or self.__is_order_value_compliant__(order):
+                if self.__is_order_value_compliant__(order):
                     self.transaction_step = 'create_order'
                     return self.__create_order__(order, is_order_simulation)
-
 
     def delete_order(self, order_id: int, is_order_simulation: bool):
         prefix = 'Delete order - executed{}'.format (self.get_simulation_suffix(is_order_simulation))
@@ -508,7 +507,7 @@ class MyBitfinex(ExchangeInterface):
         kw_args = {'symbol': symbol, 'period': period, 'aggregation': aggregation, 'section': section}
         if limit > 0:
             kw_args['limit'] = limit
-        print('get_candles: kw_args = {}'.format(kw_args))
+        # print('get_candles: kw_args = {}'.format(kw_args))
         self.bitfinex_crypto_fetcher.retrieve_data(**kw_args)
         df_data = self.bitfinex_crypto_fetcher.df_data
         if df_data is not None:
@@ -598,12 +597,13 @@ class MyBitfinex(ExchangeInterface):
         if order.actual_symbol_balance is None:
             order.actual_symbol_balance = self.get_balance_for_symbol(order.crypto)
         if order.side == OS.SELL and order.actual_symbol_balance.amount < order.amount:
-            print('Sell {}: Amount {:.4f} adjusted to available balance: {:.4f}'.format(
-                order.actual_ticker, order.amount, order.actual_symbol_balance.amount))
-            order.amount = order.actual_symbol_balance.amount
+            if not order.simulate_transaction:
+                print('Sell {}: Amount {:.4f} adjusted to available balance: {:.4f}'.format(
+                    order.actual_ticker.ticker_id, order.amount, order.actual_symbol_balance.amount))
+                order.amount = order.actual_symbol_balance.amount
 
     def __is_order_affected_by_hodl_config__(self, order: BitfinexOrder):
-        if order.side == OS.BUY or order.crypto not in self._hodl_dict:
+        if order.simulate_transaction or order.side == OS.BUY or order.crypto not in self._hodl_dict:
             return False
         amount_hodl = self._hodl_dict[order.crypto]
         if order.actual_balance_symbol_amount - order.amount < amount_hodl:
@@ -613,6 +613,8 @@ class MyBitfinex(ExchangeInterface):
         return False
 
     def __is_order_value_compliant__(self, order: BitfinexOrder):
+        if order.simulate_transaction:
+            return True
         return self.__is_buy_order_value_compliant__(order) if order.side == OS.BUY else True
 
     def __is_buy_order_value_compliant__(self, order):
@@ -628,6 +630,8 @@ class MyBitfinex(ExchangeInterface):
 
     @staticmethod
     def __is_enough_balance_available__(order: BitfinexOrder):
+        if order.simulate_transaction:
+            return True
         if order.side == OS.BUY:
             price = MyBitfinex.__get_price_for_order__(order)
             money_available = order.actual_money_balance.amount_available

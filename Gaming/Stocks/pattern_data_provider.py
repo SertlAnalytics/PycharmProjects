@@ -184,7 +184,8 @@ class PatternDataProvider:
         if df_from_cache is not None:
             return df_from_cache
         df = self.__get_df_from_original_source__(data_fetcher_cache_key)
-        self.__add_data_frame_to_cache__(df, data_fetcher_cache_key)
+        if df is not None:
+            self.__add_data_frame_to_cache__(df, data_fetcher_cache_key)
         return df
 
     def __get_ticker_name__(self):

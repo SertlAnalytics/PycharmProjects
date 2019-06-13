@@ -19,6 +19,8 @@ class MyDashBaseTab:
         self._dd_handler = self.__get_drop_down_handler__()
         self._button_handler = self.__get_button_handler__()
         self.__init_dash_element_ids__()
+        self._print_callback_start_details = False
+
 
     def init_callbacks(self):
         pass
@@ -43,4 +45,8 @@ class MyDashBaseTab:
 
     def __init_dash_element_ids__(self):
         pass
+
+    def __print_callback_details__(self, callback_name: str, *params):
+        if self._print_callback_start_details:
+            print('{}: Callback {} started...'.format(MyDate.get_time_str_from_datetime(), callback_name))
 

@@ -77,7 +77,7 @@ else:
         stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.NASDAQ100)
         stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.FOREX)
 
-    stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
+    stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY, 15)
     if MyDate.is_tuesday_till_saturday():
         stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.INDICES)
         stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.FOREX)

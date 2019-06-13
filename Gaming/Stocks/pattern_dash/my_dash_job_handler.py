@@ -80,7 +80,7 @@ class MyDashJobHandler:
         # weekdays=self._weekdays, start_times=['05:30'], stock_db_updater=self._db_updater))
 
     def __add_jobs_for_intraday_wave_update__(self):
-        start_times_crypto = ['04:30', '10:00', '16:00', '22:00']
+        start_times_crypto = ['04:00', '10:00', '16:00', '22:00']
         start_times_shares = ['18:00', '20:00', '23:00']
         start_times_currencies = ['06:00', '18:30']
         self._scheduler.add_job(MyIntradayWaveUpdateJobForCrypto(

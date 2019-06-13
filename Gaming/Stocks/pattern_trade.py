@@ -159,11 +159,13 @@ class PatternTrade:
 
     @property
     def stop_loss_current(self):
-        return self._trade_box.stop_loss if self._trade_box else self.wave_tick_actual.wrong_breakout_value
+        value = self._trade_box.stop_loss if self._trade_box else self.wave_tick_actual.wrong_breakout_value
+        return MyMath.round_smart(value)
 
     @property
     def limit_current(self):
-        return self._trade_box.limit if self._trade_box else self.wave_tick_actual.breakout_value
+        value = self._trade_box.limit if self._trade_box else self.wave_tick_actual.breakout_value
+        return MyMath.round_smart(value)
 
     @property
     def time_stamp_end(self):
@@ -273,6 +275,7 @@ class PatternTrade:
             return self._df_for_replay
 
     def add_ticker(self, wave_tick: WaveTick):
+        self.data_dict_obj.add(DC.ACTUAL, wave_tick.close)
         if wave_tick.time_stamp == self._wave_tick_list.last_wave_tick.time_stamp:
             wave_tick.position = self._wave_tick_list.last_wave_tick.position
             self._wave_tick_list.replace_last_wave_tick(wave_tick)
@@ -333,7 +336,8 @@ class PatternTrade:
                 if self._trade_box is not None:
                     wave_tick.limit_value = self._trade_box.limit_for_graph
             if wave_tick.stop_loss_value == 0:
-                wave_tick.stop_loss_value = self._trade_box.stop_loss
+                if self._trade_box is not None:
+                    wave_tick.stop_loss_value = self._trade_box.stop_loss
 
     def __get_default_value_for_breakout_active__(self):
         if self.buy_trigger == BT.BREAKOUT:
@@ -475,6 +479,9 @@ class PatternTrade:
             return SVC.U_out
 
     def verify_watching(self):
+        if self._is_breakout_active:
+            return
+
         ticker = self.ticker_actual
         last_tick = self.pattern.part_entry.tick_last
         value_tuple_list = [[ticker.last_price, ticker.time_stamp], [last_tick.low, last_tick.time_stamp]]
@@ -496,20 +503,22 @@ class PatternTrade:
             return
         wave_tick = self.wave_tick_actual
         ticker_id = self.pattern.ticker_id
+        simulation_auto_str = 'is_simulation={}, auto={}'.format(
+            self.is_simulation, self.bitfinex_config.automatic_trading_on)
         if self.status == PTS.NEW:
             counter_required = self.counter_required
             counter = self.__get_breakout_counter__(process)
             breakout_value = self.__get_breakout_value__(process, wave_tick)
-            print('{}: {} for {}-{}-{} ({}/{}): ticker.last_price={:.2f}, breakout value={:.2f}, date_time={}'.format(
+            print('{}: {} for {}-{}-{} ({}/{}): breakout value={}, last_price={}', '{}, date_time={}'.format(
                 self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
-                counter, counter_required, wave_tick.close, breakout_value, wave_tick.date_time_str))
+                counter, counter_required, breakout_value, wave_tick.close,
+                simulation_auto_str, wave_tick.date_time_str))
         else:
             print(
-                '{}: {} for {}-{}-{}: _limit={:.2f}, ticker.last_price={:.2f}, stop_loss={:.2f}, date_time={}, '
-                'bought_at={:.2f}'.format(
+                '{}: {} for {}-{}-{}: limit={}, last_price={}, stop_loss={}, bought_at={}, {}, date_time={}'.format(
                     self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
-                    self.limit_current, wave_tick.close, self.stop_loss_current, wave_tick.date_time_str,
-                    self.order_status_buy.avg_execution_price))
+                    self.limit_current, wave_tick.close, self.stop_loss_current,
+                    self.order_status_buy.avg_execution_price, simulation_auto_str, wave_tick.date_time_str))
 
     def __get_breakout_counter__(self, process: str):
         return self.wrong_breakout_counter if process == PTHP.HANDLE_WRONG_BREAKOUT else self.breakout_counter
@@ -599,6 +608,9 @@ class PatternTrade:
 
     def adjust_data_dict_to_actual_ticker(self):   # we need the current result in the trade table on the trading tab
         if self._status == PTS.EXECUTED:
+            self.data_dict_obj.add(DC.LIMIT, 'inf' if self._trade_box.limit == math.inf else self._trade_box.limit)
+            self.data_dict_obj.add(DC.STOP, self._trade_box.stop_loss)
+            self.data_dict_obj.add(DC.BOUGHT_AT, self.order_status_buy.avg_execution_price)
             self.data_dict_obj.add(DC.TRADE_RESULT_PCT, self._trade_box.current_result_pct)
             self.data_dict_obj.add(DC.TRADE_RESULT, 'open')
 
@@ -732,6 +744,11 @@ class PatternTrade:
         # overwrite some values from pattern (not valid set at that state)
         self.data_dict_obj.add(DC.BREAKOUT_DIRECTION, FD.ASC)
         self.data_dict_obj.add(DC.BREAKOUT_DIRECTION_ID, FD.get_id(FD.ASC))
+        self.data_dict_obj.add(DC.ACTUAL, 0)
+        self.data_dict_obj.add(DC.LIMIT, 0)
+        self.data_dict_obj.add(DC.STOP, 0)
+        self.data_dict_obj.add(DC.BOUGHT_AT, 0)
+        self.data_dict_obj.add(DC.TRADE_RESULT_PCT, 0)
 
     def __add_order_status_buy_to_data_dict__(self, order_status: OrderStatus):
         self.data_dict_obj.add(DC.BUY_ORDER_ID, order_status.order_id)

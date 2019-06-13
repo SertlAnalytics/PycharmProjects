@@ -19,6 +19,7 @@ import seaborn as sns
 class APIBaseFetcher:
     _last_request_ts = 0
     _request_interval_required = 0  # seconds - will be overwritten in sub classes if required
+    _latest_successful_df_dict = {}  # in case of problems, key= symbol_period_aggreation_limit
 
     def __init__(self):
         self._api_key = self._get_api_key_()
@@ -27,7 +28,6 @@ class APIBaseFetcher:
         self._df_data = None
         self._df_volume = None
         self._df_columns = []
-        self._latest_successful_request_data_dict = {}  # in case of a problem with the current request take these data
 
     @property
     def kw_symbol(self) -> str:
@@ -51,20 +51,48 @@ class APIBaseFetcher:
     def kw_limit(self) -> int:
         return self._kwargs.get('limit', 0)
 
+    def __get_key_for_latest_successful_df_dict__(self):
+        # key= symbol_period_aggreation_limit
+        return '{}_{}_{}_{}'.format(self.kw_symbol, self.kw_period, self.kw_aggregation, self.kw_limit)
+
     def retrieve_data(self, **kwargs): # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT, limit=400
         self.__sleep__()
         self._kwargs = kwargs
         url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
         self.__print_request_details__(url)
+        self._df = None
         try:
-            self._df = self.__get_data_frame__(request_data=requests.get(url))
+            request_data = requests.get(url)
+            self._df = self.__get_data_frame__(request_data=request_data)
         except:
-            print('PROBLEM with retrieving date from  {}'.format(url))
+            print('PROBLEM with retrieving data from  {}'.format(url))
         finally:
+            key = self.__get_key_for_latest_successful_df_dict__()
+            if self._df is None:
+                self._df = self.__get_latest_successful_retrieved_data_frame__(key)
+            else:
+                self.__set_latest_successful_retrieved_data_frame__(key, self._df)
+
             if self._df is not None:
                 self._df_columns = list(self._df.columns.values)
-                self.__format_columns__()
-                self.__round_df_column_values__()
+                try:
+                    self.__format_columns__()
+                    self.__round_df_column_values__()
+                except:
+                    self._df = None
+
+    def __get_latest_successful_retrieved_data_frame__(self, key: str):
+        df_last = self._latest_successful_df_dict.get(key, None)
+        if df_last is None:
+            print('No latest successfully retrieved data frame available as cache: {}'.format(key))
+        else:
+            print('Use latest successfully retrieved data frame from cache: {}'.format(key))
+            print(df_last.head())
+        return df_last
+
+    def __set_latest_successful_retrieved_data_frame__(self, key: str, df: pd.DataFrame):
+        # print('Cache latest successfully retrieved data frame: {}'.format(key))
+        self._latest_successful_df_dict[key] = df
 
     def retrieve_ticker(self, symbol: str):
         self.__sleep__()
@@ -228,8 +256,6 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
 
     def __get_data_frame__(self, request_data) -> pd.DataFrame:
         json_data = request_data.json()
-        meta_data = json_data["Meta Data"]
-        self.api_symbol = meta_data["2. Symbol"]
         time_series = json_data[self.get_json_data_key()]  # e.g. Time Series (Daily)
         df = pd.DataFrame.from_dict(time_series, orient="index")
         df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
@@ -242,7 +268,6 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         json_data = request_data.json()
         global_quote = json_data["Global Quote"]
         symbol = global_quote["01. symbol"]
-        open = float(global_quote["02. open"])
         high = float(global_quote['03. high'])
         low = float(global_quote['04. low'])
         price = float(global_quote["05. price"])
@@ -284,8 +309,6 @@ class AlphavantageForexFetcher (AlphavantageJSONFetcher):
 
     def __get_data_frame__(self, request_data) -> pd.DataFrame:
         json_data = request_data.json()
-        meta_data = json_data["Meta Data"]
-        self.api_symbol = '{}{}'.format(meta_data["2. From Symbol"], meta_data["3. To Symbol"])
         time_series = json_data[self.get_json_data_key()]  # e.g. Time Series (Daily)
         df = pd.DataFrame.from_dict(time_series, orient="index")
         df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
@@ -335,8 +358,6 @@ class AlphavantageCryptoFetcher(AlphavantageJSONFetcher):
 
     def __get_data_frame__(self, request_data) -> pd.DataFrame:
         json_data = request_data.json()
-        meta_data = json_data["Meta Data"]
-        self.api_symbol = meta_data["2. Digital Currency Code"]
         time_series = json_data[self.get_json_data_key()]
         df = pd.DataFrame.from_dict(time_series, orient="index")
         df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
@@ -417,7 +438,6 @@ class CryptoCompareCryptoFetcher(CryptoCompareJSONFetcher):
         # https://min-api.cryptocompare.com/data/histominute?fsym=BCH&tsym=USD&limit=300&aggregate=15
         # "time":1540070100,"close":448.07,"high":448.23,"low":447.44,"open":448.01,"volumefrom":184.81,"volumeto":81598.81
         json_data = request_data.json()
-        self.api_symbol = self._kwargs['symbol']
         time_series = json_data[self.get_json_data_key()]
         df = pd.DataFrame(time_series)
         df = df[['time', 'open', 'high', 'low', 'close', 'volumeto']]
@@ -462,23 +482,19 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         return ''
 
     def __get_data_frame__(self, request_data) -> pd.DataFrame:
-        json_data = request_data.json()
-        self.api_symbol = self._kwargs['symbol']
-        if self.__are_retrieved_data_correct__(json_data):
-            self._latest_successful_request_data_dict[self.api_symbol] = json_data
-        else:
-            if self.api_symbol in self._latest_successful_request_data_dict:
-                print('Use latest successfully retrieved data for {}'.format(self.api_symbol))
-                json_data = self._latest_successful_request_data_dict[self.api_symbol]
-            else:
-                return None
+        json_data = self.__get_json_data_from_request_data__(self.kw_symbol, request_data)
+        if json_data is not None:
+            return self.__get_data_frame_from_json__(json_data)
+
+    @staticmethod
+    def __get_data_frame_from_json__(json_data):
         if type(json_data[0]) is list:
             df = pd.DataFrame(json_data)
         else:
             series = pd.Series(json_data).values.reshape(1, len(json_data))
             df = pd.DataFrame(series)
         for ind, row in df.iterrows():  # the values are delivered with ms instead of seconds
-            df.at[ind, 0] = row[0]/1000
+            df.at[ind, 0] = row[0] / 1000
         df[0] = df[0].apply(int)
         # (1)Open, (2)Close, (3)High, (4)Low -> standard: # [CN.OPEN, CN.HIGH, CN.LOW, CN.CLOSE, CN.VOL]
         df = df[[0, 1, 3, 4, 2, 5]]
@@ -487,6 +503,12 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         df = df.sort_index()
         # _df.sort_index(inplace=True)
         return df
+
+    def __get_json_data_from_request_data__(self, symbol, request_data):
+        json_data = request_data.json()
+        if self.__are_retrieved_data_correct__(json_data):
+            return json_data
+        return None
 
     def __are_retrieved_data_correct__(self, json_data):
         # JSON in error case: ["error", 11010, "ratelimit: error"] or []

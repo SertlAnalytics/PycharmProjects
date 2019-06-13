@@ -235,6 +235,8 @@ class MyMath:
 
     @staticmethod
     def round_smart(value: float) -> float:
+        if value == math.inf or value == -math.inf:
+            return value
         if value == 0:
             return 0
         decimals = int(math.ceil(math.log10(abs(value))))

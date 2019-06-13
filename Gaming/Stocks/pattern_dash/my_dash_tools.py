@@ -55,9 +55,14 @@ class MyGraphCacheObject(MyCacheObject):
 
 
 class MyGraphCache(MyCache):
-    def __init__(self):
+    def __init__(self, graph_id: str):
         MyCache.__init__(self)
+        self._graph_id = graph_id
         self.__cached_and_under_observation_play_sound_list = []
+
+    @property
+    def graph_id(self) -> str:
+        return self._graph_id
 
     @property
     def number_of_finished_fibonacci_waves_since_last_refresh(self) -> int:
@@ -67,9 +72,8 @@ class MyGraphCache(MyCache):
                 number_return += 1
         return number_return
 
-    @staticmethod
-    def get_cache_key(graph_id: str, ticker: str, days=0, aggregation=0):
-        return '{}_{}_{}_{}'.format(graph_id, ticker, days, aggregation)
+    def get_cache_key(self, ticker: str, days=0, aggregation=0):
+        return '{}_{}_{}_{}'.format(self._graph_id, ticker, days, aggregation)
 
     def add_cache_object(self, cache_api: MyGraphCacheObjectApi):
         self._cached_object_dict[cache_api.key] = MyGraphCacheObject(cache_api)

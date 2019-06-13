@@ -43,8 +43,8 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
         self._time_stamp_next_refresh = None
         self._graph_first_data_provider_api = None
         self._graph_second_data_provider_api = None
-        self._graph_first_cache = MyGraphCache()
-        self._graph_second_cache = MyGraphCache()
+        self._graph_first_cache = MyGraphCache('my_graph_first')
+        self._graph_second_cache = MyGraphCache('my_graph_second')
         self._state_handler = MyDashStateHandler(self._ticker_options)
         self._graph_key_first = ''
         self._detector_first = None
@@ -108,8 +108,8 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
             Output('my_position_markdown', 'children'),
             [Input('my_interval_refresh', 'n_intervals')])
         def handle_callback_for_position_markdown(n_intervals: int):
-            self.__add_fibonacci_waves_to_news__()
-            self.__add_bollinger_band_breaks_to_news__()
+            # self.__add_fibonacci_waves_to_news__()
+            # self.__add_bollinger_band_breaks_to_news__()
             markdown_text = self.__get_position_markdown__(n_intervals)
             self.__save_balances_to_database__()  # this must be after __get_position_markdown__ !!!
             return markdown_text
@@ -299,7 +299,7 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
             for element_dict in self._ticker_options:
                 ticker = element_dict['value']
                 if ticker != ticker_selected:
-                    self.__get_graph_first__(ticker, '', True)
+                    self.__add_cache_object_for_ticker_to_graph_first_cache__(ticker)
 
     def __init_callback_for_graph_second__(self):
         @self.app.callback(
@@ -388,31 +388,31 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
         def handle_ticker_selection_callback_for_days_selection(ticker_selected, second_days_selection):
             return second_days_selection if second_days_selection == 1 else 0  # we want to keep Intraday
 
-    def __get_graph_first__(self, ticker: str, and_clause='', for_caching=False):
-        graph_id = 'my_graph_first'
-        aggregation = self.sys_config.period_aggregation
-        graph_title = self.__get_graph_title__(ticker, self.sys_config.period, aggregation)
-        graph_key = MyGraphCache.get_cache_key(graph_id, ticker, 0)
+    def __get_graph_first__(self, ticker: str, and_clause=''):
+        self.__add_cache_object_for_ticker_to_graph_first_cache__(ticker, and_clause)
+        graph_key = self._graph_first_cache.get_cache_key(ticker, 0)
         cached_graph = self._graph_first_cache.get_cached_object_by_key(graph_key)
-        if cached_graph is not None:
-            if not for_caching:
-                self._detector_first = self._graph_first_cache.get_detector(graph_key)
-                self._pattern_data_first = self._graph_first_cache.get_pattern_data(graph_key)
-            print('...return cached graph_first: {}'.format(graph_key))
-            return cached_graph, graph_key
+        self._detector_first = self._graph_first_cache.get_detector(graph_key)
+        self._pattern_data_first = self._graph_first_cache.get_pattern_data(graph_key)
+        return cached_graph, graph_key
 
-        detector = self._pattern_controller.get_detector_for_dash(self.sys_config, ticker, and_clause)
-        pattern_data = detector.pdh.pattern_data
-        if not for_caching:
-            self._detector_first = detector
-            self._pattern_data_first = pattern_data
-        graph_api = DccGraphApi(graph_id, graph_title)
-        graph_api.ticker_id = ticker
-        graph_api.df = detector.pdh.pattern_data.df
-        graph = self.__get_dcc_graph_element__(detector, graph_api)
-        cache_api = self.__get_cache_api__(graph_key, graph, detector, pattern_data)
-        self._graph_first_cache.add_cache_object(cache_api)
-        return graph, graph_key
+    def __add_cache_object_for_ticker_to_graph_first_cache__(self, ticker: str, and_clause=''):
+        graph_id = self._graph_first_cache.graph_id
+        cache_key = self._graph_first_cache.get_cache_key(ticker, 0)
+        if self._graph_first_cache.get_cached_object_by_key(cache_key) is None:
+            aggregation = self.sys_config.period_aggregation
+            graph_title = self.__get_graph_title__(ticker, self.sys_config.period, aggregation)
+            detector = self._pattern_controller.get_detector_for_dash(self.sys_config, ticker, and_clause)
+            pattern_data = detector.pdh.pattern_data
+            graph_api = DccGraphApi(graph_id, graph_title)
+            graph_api.ticker_id = ticker
+            graph_api.df = detector.pdh.pattern_data.df
+            graph = self.__get_dcc_graph_element__(detector, graph_api)
+            cache_api = self.__get_cache_api__(cache_key, graph, detector, pattern_data)
+            self._graph_first_cache.add_cache_object(cache_api)
+            print('{}: Cached into graph_first_cache: {}'.format(MyDate.get_time_str_from_datetime(), cache_key))
+        else:
+            print('{}: Already cached by graph_first_cache: {}'.format(MyDate.get_time_str_from_datetime(), cache_key))
 
     @staticmethod
     def __get_graph_title__(ticker, period: str, aggregation: int, days: int=0):
@@ -421,11 +421,11 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
         return '{} {} ({}min)'.format(ticker, period, aggregation)
 
     def __get_graph_second__(self, ticker: str, days: int):
-        graph_id = 'my_graph_second'
+        graph_id = self._graph_second_cache.graph_id
         period = PRD.DAILY if days > 1 else PRD.INTRADAY
         aggregation_second_graph = self.__get_period_aggregation_for_second_graph__()
         graph_title = self.__get_graph_title__(ticker, period, aggregation_second_graph, days)
-        graph_key = MyGraphCache.get_cache_key(graph_id, ticker, days, aggregation_second_graph)
+        graph_key = self._graph_second_cache.get_cache_key(ticker, days, aggregation_second_graph)
         cached_graph = self._graph_second_cache.get_cached_object_by_key(graph_key)
         if cached_graph is not None:
             # print('...return cached graph_second: {}'.format(graph_key))

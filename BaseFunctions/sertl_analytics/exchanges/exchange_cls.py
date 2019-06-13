@@ -8,6 +8,7 @@ Date: 2018-08-28
 
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mystring import MyString
+from sertl_analytics.mymath import MyMath
 from sertl_analytics.constants.pattern_constants import BT, TSTR, TP
 
 
@@ -121,12 +122,12 @@ class Ticker:
     def __init__(self, ticker_id: str,
                  bid: float, ask: float, last_price: float, low: float, high: float, vol: float, ts: int):
         self.ticker_id = ticker_id
-        self.bid = round(bid, 4)
-        self.ask = round(ask, 4)
-        self.last_price = round(last_price, 4)
-        self.low = round(low, 4)
-        self.high = round(high, 4)
-        self.vol = round(vol, 2)
+        self.bid = MyMath.round_smart(bid)
+        self.ask = MyMath.round_smart(ask)
+        self.last_price = MyMath.round_smart(last_price)
+        self.low = MyMath.round_smart(low)
+        self.high = MyMath.round_smart(high)
+        self.vol = MyMath.round_smart(vol)
         self.time_stamp = round(ts)        
 
     @property
@@ -164,6 +165,7 @@ class Order:
         self.actual_ticker = api.actual_ticker
         self.actual_symbol_balance = api.actual_symbol_balance
         self.actual_money_balance = api.actual_money_balance
+        self.simulate_transaction = True  # default
 
     @property
     def side_type(self):
@@ -216,13 +218,13 @@ class OrderStatus:
     def set_fee_amount(self, fee_value: float, as_pct=False):
         amount = self.original_amount if self.executed_amount == 0 else self.executed_amount
         if as_pct:
-            self._fee_amount = round(self.price * amount * fee_value/100, 2)
+            self._fee_amount = MyMath.round_smart(self.price * amount * fee_value/100)
         else:
             self._fee_amount = fee_value
 
     @property
     def value_total(self):
-        return round(self.price * self.executed_amount + self.fee_amount, 2)
+        return MyMath.round_smart(self.price * self.executed_amount + self.fee_amount)
 
     def print_order_status(self, prefix = ''):
         if prefix != '':

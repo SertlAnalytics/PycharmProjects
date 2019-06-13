@@ -583,7 +583,7 @@ class MyDCC:
         df = pd.DataFrame.from_dict(rows)        
         if columns is not None:
             df = df[columns]
-        print('data_table.columns={}'.format(columns))
+        # print('data_table.columns={}'.format(columns))
         return dash_table.DataTable(
             id=element_id,
             columns=[{"name": DC.get_column_readable(col), "id": col} for col in df.columns],

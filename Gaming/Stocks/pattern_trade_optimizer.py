@@ -18,7 +18,7 @@ class TradeOptimizer:
         self.db_stock = db_stock
         self._expected_win_pct = expected_win_pct
         self.df_trades = self.db_stock.get_trade_records_for_trading_optimizer_dataframe()
-        self.expected_relation_pos_neg = 1.8
+        self.expected_relation_pos_neg = 1.0
         self._pattern_type_pos_neg_result_dict = self.__get_pattern_type_pos_neg_result_relation_as_dict__()
         self._optimal_pattern_type_dict_for_long_trading = self.__get_optimal_pattern_type_dict_for_long_trading__()
         self._optimal_last_price_mean_aggregation_dict = self.__get_optimal_last_price_mean_aggregation_dict__()
@@ -90,7 +90,7 @@ class TradeOptimizer:
     def __get_optimal_pattern_type_dict_for_long_trading__(self):
         opt_dict = {}
         for pattern_type in FT.get_long_trade_able_types():
-            if self._pattern_type_pos_neg_result_dict[pattern_type] > self.expected_relation_pos_neg:
+            if self._pattern_type_pos_neg_result_dict[pattern_type] >= self.expected_relation_pos_neg:
                 opt_dict[pattern_type] = self._pattern_type_pos_neg_result_dict[pattern_type]
         return opt_dict
 

@@ -143,20 +143,17 @@ class LogTable:
         # 'Result', 'Start', 'End', 'Comment', 'Process]
         if self._selected_log_type != LOGT.TRADES:
             return None
-        idx_positive_list = []
-        idx_negative_list = []
-        for idx, row in enumerate(rows):
-            result = row['Result']
-            if result != '':
-                if result[0] == '-':
-                    idx_negative_list.append(idx)
-                else:
-                    idx_positive_list.append(idx)
+        column_id = 'Result'
+        # we do the following since the 'Result' column contains % values (not only numbers) - ToDo
+        positive_value_list = [row[column_id] for row in rows if row[column_id] != '' and row[column_id][0] != '-']
+        negative_value_list = [row[column_id] for row in rows if row[column_id] != '' and row[column_id][0] == '-']
         style_list = []
-        for idx in idx_positive_list:
-            style_list.append({'if': {'row_index': idx}, 'backgroundColor': 'green', 'color': 'white'})
-        for idx in idx_negative_list:
-            style_list.append({'if': {'row_index': idx}, 'backgroundColor': 'red', 'color': 'white'})
+        for value in positive_value_list:
+            style_list.append({'if': {'column_id': column_id, 'filter': '{{{}}} eq "{}"'.format(column_id, value)},
+                               'backgroundColor': 'green', 'color': 'white'})
+        for value in negative_value_list:
+            style_list.append({'if': {'column_id': column_id, 'filter': '{{{}}} eq "{}"'.format(column_id, value)},
+                               'backgroundColor': 'red', 'color': 'white'})
         return style_list
 
     @staticmethod

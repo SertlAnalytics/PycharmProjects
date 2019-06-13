@@ -161,6 +161,7 @@ class MyDashTabStatisticsPlotter4Models(MyDashTabStatisticsPlotter):
         for model_type in model_type_list:
             df_metric = self._predictor_optimizer.get_metrics_for_model_and_label_as_data_frame_for_regression(
                 model_type, self.predictor, self.x_variable, self.pattern_type)
+            # print('__get_x_dict_and_y_dict_for_regression__: df.head={}'.format(df_metric.head()))
             distinct_values = df_metric[MDC.VALUE].unique()
             for value in distinct_values:
                 df_metric_specific_value = df_metric[

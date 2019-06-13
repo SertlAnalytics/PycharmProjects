@@ -141,6 +141,7 @@ class PatternTradeHandler:
         self.__process_trade_candidates__()  # take care of old patterns in queue
         if self.trade_numbers == 0:
             return
+        self.__print_details_for_check_actual_trades__()
         self.process = 'Ticker'
         self.__add_tickers_for_actual_time_stamp_to_pattern_trades__()
         self.__adjust_stops_and_limits__()
@@ -151,6 +152,12 @@ class PatternTradeHandler:
         self.__calculate_xy_values__()
         self.__update_ticker_lists__()  # some entries could be deleted
         self.process = ''
+
+    def __print_details_for_check_actual_trades__(self):
+        print('check_actual_trades: {}'.format(self.trade_numbers))
+        for pattern_trade in self.pattern_trade_dict.values():
+            print('...pattern_trade.id = {}'.format(pattern_trade.id))
+        print('')
 
     def check_actual_trades_for_replay(self, wave_tick: WaveTick):
         self._last_wave_tick_for_test = wave_tick
@@ -263,8 +270,9 @@ class PatternTradeHandler:
             self.__print_details_after_adding_to_trade_dict__(pattern_trade, 'Add')
 
     def __print_details_after_adding_to_trade_dict__(self, pattern_trade: PatternTrade, scope: str):
+        time_now = MyDate.get_time_str_from_datetime()
         prefix = 'Adding to trade_dict' if scope == 'Add' else 'Replacing in trade_dict'
-        print('{}{}...: {}'.format(prefix, pattern_trade.id_suffix, pattern_trade.id))
+        print('{}: {}{}...: {}'.format(time_now, prefix, pattern_trade.id_suffix, pattern_trade.id))
         self.sys_config.file_log.log_trade(pattern_trade.id_for_logging, process='Trade_Handler', process_step=scope)
 
     def __remove_outdated_pattern_trades_in_status_new__(self):
@@ -387,22 +395,18 @@ class PatternTradeHandler:
         buying_deletion_key_list = []
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
             pattern_trade.correct_simulation_flag_according_to_forecast()
-
-            print('{}: handle_buy_triggers for {}: pattern_trade.is_simulation={}, auto={}'.format(
-                MyDate.get_time_from_datetime(), pattern_trade.ticker_id,
-                pattern_trade.is_simulation, self.exchange_config.automatic_trading_on))
-
-            if pattern_trade.is_breakout_active:
-                if pattern_trade.is_actual_ticker_breakout(PTHP.HANDLE_BUY_TRIGGERS):
-                    if pattern_trade.are_preconditions_for_breakout_buy_fulfilled():
-                        self.__set_breakout_after_checks__(pattern_trade)
-                        if pattern_trade.pattern.breakout is not None:
-                            pattern_trade.pattern.add_part_entry(self.__get_pattern_entry_part(pattern_trade))
-                            self.__handle_buy_trigger_for_pattern_trade__(pattern_trade)
-                            if pattern_trade.order_status_buy is None:  # there were problems with buying...
-                                buying_deletion_key_list.append(key)
-                    else:
-                        deletion_key_list.append(key)
+            pattern_trade.data_dict_obj.add(DC.LIMIT, pattern_trade.limit_current)
+            pattern_trade.data_dict_obj.add(DC.STOP, pattern_trade.stop_loss_current)
+            if pattern_trade.is_actual_ticker_breakout(PTHP.HANDLE_BUY_TRIGGERS):
+                if pattern_trade.are_preconditions_for_breakout_buy_fulfilled():
+                    self.__set_breakout_after_checks__(pattern_trade)
+                    if pattern_trade.pattern.breakout is not None:
+                        pattern_trade.pattern.add_part_entry(self.__get_pattern_entry_part(pattern_trade))
+                        self.__handle_buy_trigger_for_pattern_trade__(pattern_trade)
+                        if pattern_trade.order_status_buy is None:  # there were problems with buying...
+                            buying_deletion_key_list.append(key)
+                else:
+                    deletion_key_list.append(key)
             else:
                 pattern_trade.verify_watching()
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.BUYING_PRECONDITION_PROBLEM)
@@ -412,7 +416,7 @@ class PatternTradeHandler:
         self.sys_config.runtime_config.actual_pattern_type = pattern_trade.pattern.pattern_type
         self.sys_config.runtime_config.actual_breakout = pattern_trade.pattern.breakout
         self.sys_config.runtime_config.actual_pattern_range = pattern_trade.pattern.pattern_range
-        return PatternEntryPart(self.sys_config, pattern_trade.pattern.function_cont)
+        return PatternEntryPart(pattern_trade.sys_config, pattern_trade.pattern.function_cont)
 
     def __set_breakout_after_checks__(self, pattern_trade: PatternTrade):
         wave_tick_list = self.__get_latest_tickers_as_wave_ticks__(pattern_trade.ticker_id, pattern_trade)
@@ -421,6 +425,7 @@ class PatternTradeHandler:
         check_dict = pattern_trade.pattern.set_breakout_after_checks(tick_previous, tick_current, True)
         if pattern_trade.pattern.breakout is None:
             breakout_problems = ', '.join([key for key in check_dict])
+            breakout_problems = '{}: {}'.format(pattern_trade.ticker_id, breakout_problems)
             self.news_handler.add_news('Breakout problems', breakout_problems)
             print('Breakout problems: {}'.format(breakout_problems))
         else:

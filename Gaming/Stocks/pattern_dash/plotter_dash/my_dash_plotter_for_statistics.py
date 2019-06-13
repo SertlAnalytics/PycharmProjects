@@ -433,7 +433,7 @@ class MyDashTabStatisticsPlotter:
             return {'title': graph_api.figure_layout_yaxis_title, 'type': 'log', 'autorange': True}
 
     def __get_figure_layout_x_axis_dict__(self):
-        if self.__can_axis_be_scaled_log_for_selected_variable__(self.x_variable):
+        if self.__can_axis_be_scaled_log_for_selected_variable__(self.x_variable) and False:
             return {'type': 'log', 'autorange': True}
 
     def __can_axis_be_scaled_log_for_selected_variable__(self, variable_for_axis: str) -> bool:

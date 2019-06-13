@@ -130,7 +130,11 @@ class PatternPredictor:
             # if label == DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF:
             #     print(label)
             if self.is_ready_for_prediction:
-                prediction = self._predictor_dict[label].predict(np_array)[0]
+                try:
+                    prediction = self._predictor_dict[label].predict(np_array)[0]
+                except ValueError:
+                    print('Prediction problem with label {} and array {} - set to 0...'.format(label, np_array))
+                    prediction = 0
                 dist, ind = self._predictor_dict[label].kneighbors(np_array)
                 self._neighbor_collector.add_dist_ind_array(ind, dist)
                 if self._use_optimizer:

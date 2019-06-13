@@ -1246,6 +1246,12 @@ class DC:  # Data Columns
     VALUE_TOTAL = 'Value_Total'
     CURRENCY = 'Currency'
 
+    # Additional columns for trading table
+    ACTUAL = 'Actual'
+    LIMIT = 'Limit'
+    STOP = 'Stop'
+    BOUGHT_AT = 'Bought at'
+
     @staticmethod
     def get_columns_for_agent_environment():
         return [DC.TS_PATTERN_TICK_FIRST, DC.TS_PATTERN_TICK_LAST,

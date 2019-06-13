@@ -124,9 +124,13 @@ class MyIntradayWaveUpdateJob(MyDashPatternJob):
     def index_list(self):
         return [INDICES.CRYPTO_CCY, INDICES.FOREX, INDICES.DOW_JONES, INDICES.NASDAQ100]
 
+    @property
+    def period_aggregation(self):
+        return 30
+
     def __perform_task__(self):
         for index in self.index_list:
-            self._db_updater.update_wave_data_by_index_for_intraday(index)
+            self._db_updater.update_wave_data_by_index_for_intraday(index, self.period_aggregation)
         self._db_updater.add_wave_end_data_to_wave_records(symbol='', ts_start=0, ts_end=0, scheduled_job=True)
 
 
@@ -138,6 +142,10 @@ class MyIntradayWaveUpdateJobForCrypto(MyIntradayWaveUpdateJob):
     @property
     def process_name(self):
         return PPR.UPDATE_WAVE_INTRADAY_CRYPTO
+
+    @property
+    def period_aggregation(self):
+        return 15  # we use the same aggregation as normal for cryptos
 
 
 class MyIntradayWaveUpdateJobForShares(MyIntradayWaveUpdateJob):
