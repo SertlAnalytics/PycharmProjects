@@ -32,7 +32,6 @@ class MyDashTab4Log(MyPatternDashBaseTab):
         MyPatternDashBaseTab.__init__(self, app, sys_config)
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.exchange_config = self.sys_config.exchange_config
-        self._pattern_controller = PatternDetectionController(self.sys_config)
         self._dd_handler = LogTabDropDownHandler()
         self._log_data_frame_dict = {}
         self._access_layer_process = AccessLayer4Process(self.sys_config.db_stock)
@@ -169,9 +168,8 @@ class MyDashTab4Log(MyPatternDashBaseTab):
         @self.app.callback(
             Output(self._my_log_entry_markdown, DSHVT.CHILDREN),
             [Input(self._data_table_name, DSHVT.ROWS),
-             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)],
-            [State(self._my_log_type_selection, DSHVT.VALUE)])
-        def handle_callback_for_graph_first(rows: list, selected_row_indices: list, log_type: str):
+             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
+        def handle_callback_for_log_entry_selection(rows: list, selected_row_indices: list):
             if selected_row_indices is None or len(selected_row_indices) == 0:
                 return ''
             selected_row = rows[selected_row_indices[0]]
@@ -208,6 +206,8 @@ class MyDashTab4Log(MyPatternDashBaseTab):
             return
         if os.path.getsize(file_path) == 0:
             print('Note: {} was empty. Skipping.'.format(file_path))
+            if log_type in self._log_data_frame_dict:
+                del self._log_data_frame_dict[log_type]
         else:
             # print('filepath={}'.format(file_path))
             df = pd.read_csv(file_path, header=None)
@@ -279,6 +279,6 @@ class MyDashTab4Log(MyPatternDashBaseTab):
     @staticmethod
     def __get_columns_for_log_type__(log_type: str) -> list:
         # Example: Scheduler: 2019-02-24,00:10:24,Scheduler,Start,__check_scheduled_jobs__
-        if log_type in [LOGT.ERRORS, LOGT.SCHEDULER, LOGT.MESSAGE_LOG, LOGT.TRADES]:
+        if log_type in [LOGT.ERRORS, LOGT.SCHEDULER, LOGT.MESSAGE_LOG, LOGT.TRADES, LOGT.TRANSACTIONS]:
             return [LOGDC.DATE, LOGDC.TIME, LOGDC.PROCESS, LOGDC.PROCESS_STEP, LOGDC.COMMENT]
         return []

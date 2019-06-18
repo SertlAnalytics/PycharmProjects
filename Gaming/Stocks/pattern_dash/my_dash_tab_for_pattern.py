@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-06-17
 """
 
-from sertl_analytics.constants.pattern_constants import DC, EQUITY_TYPE
+from sertl_analytics.constants.pattern_constants import TP
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from datetime import datetime, timedelta
@@ -33,7 +33,7 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
         self.trade_handler_online = trade_handler_online
         self.sys_config_second = sys_config.get_semi_deep_copy()
         self.sys_config_fibonacci = self.sys_config.get_semi_deep_copy()
-        self._pattern_controller = PatternDetectionController(self.sys_config)
+        self._pattern_controller = PatternDetectionController(self.sys_config, TP.ONLINE)
         self.detector = None
         self._index_options = self.sys_config.index_config.get_indices_as_options()
         self._ticker_options = []

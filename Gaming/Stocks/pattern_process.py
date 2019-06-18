@@ -119,6 +119,16 @@ class ProcessUpdateStockDataDaily(PatternProcess):
         return [STBL.STOCKS]
 
 
+class ProcessHandleTransactionProblems(PatternProcess):
+    @property
+    def process_name(self):
+        return PPR.HANDLE_TRANSACTION_PROBLEMS
+
+    @staticmethod
+    def __get_table_names__():
+        return STBL.get_all()
+
+
 class ProcessUpdateStockDataDailyForCrypto(ProcessUpdateStockDataDaily):
     @property
     def process_name(self):

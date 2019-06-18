@@ -29,9 +29,7 @@ class MyDashTab4Jobs(MyPatternDashBaseTab):
         self._job_handler = MyDashJobHandler(sys_config.process_manager)
         self.sys_config = sys_config
         self._db = self.sys_config.db_stock
-        self._pattern_controller = PatternDetectionController(self.sys_config)
         self._dd_handler = JobsTabDropDownHandler()
-        self._access_layer_process = AccessLayer4Process(self.sys_config.db_stock)
         self._n_clicks_start = 0
         self._n_clicks_activate = 0
         self._selected_table_name = STBL.PROCESS

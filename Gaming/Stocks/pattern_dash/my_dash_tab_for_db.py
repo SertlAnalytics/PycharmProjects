@@ -15,6 +15,7 @@ from pattern_detection_controller import PatternDetectionController
 from pattern_database.stock_access_layer import AccessLayer4Process, AccessLayer4Wave, AccessLayer4Pattern
 from dash import Dash
 from sertl_analytics.constants.pattern_constants import LOGT, LOGDC, DC, PRDC, STBL, DTRG
+from sertl_analytics.constants.my_constants import DSHVT
 from pattern_news_handler import NewsHandler
 from pattern_dash.my_dash_tab_table_for_db import DBTable
 
@@ -27,7 +28,6 @@ class MyDashTab4DB(MyPatternDashBaseTab):
         MyPatternDashBaseTab.__init__(self, app, sys_config)
         self.sys_config = sys_config
         self._db = self.sys_config.db_stock
-        self._pattern_controller = PatternDetectionController(self.sys_config)
         self._dd_handler = DBTabDropDownHandler()
         self._access_layer_process = AccessLayer4Process(self.sys_config.db_stock)
         self._access_layer_wave = AccessLayer4Wave(self.sys_config.db_stock)
@@ -98,12 +98,11 @@ class MyDashTab4DB(MyPatternDashBaseTab):
 
     def __init_callback_for_db_markdown__(self):
         @self.app.callback(
-            Output(self._my_db_entry_markdown, 'children'),
-            [Input(self._data_table_name, 'rows'),
-             Input(self._data_table_name, 'selected_row_indices')],
-            [State(self._my_db_table_selection, 'value')])
-        def handle_callback_for_db_markdown(rows: list, selected_row_indices: list, table: str):
-            if len(selected_row_indices) == 0 or len(rows) == len(selected_row_indices) != 1:
+            Output(self._my_db_entry_markdown, DSHVT.CHILDREN),
+            [Input(self._data_table_name, DSHVT.ROWS),
+             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
+        def handle_callback_for_db_markdown(rows: list, selected_row_indices: list):
+            if selected_row_indices is None or len(selected_row_indices) == 0:
                 return ''
             selected_row = rows[selected_row_indices[0]]
             column_value_list = ['_**{}**_: {}'.format(col, selected_row[col]) for col in self._db_grid_table.columns]

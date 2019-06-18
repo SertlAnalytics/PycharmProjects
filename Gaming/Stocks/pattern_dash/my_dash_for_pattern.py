@@ -36,23 +36,44 @@ class MyDash4Pattern(MyDashBase):
     def __init__(self, sys_config: SystemConfiguration):
         MyDashBase.__init__(self, MyAPPS.PATTERN_DETECTOR_DASH())
         self.sys_config = sys_config
+        self.__print_actual_trade_process__(0)
         self.bitfinex_config = self.sys_config.exchange_config
         self.trade_handler_online = PatternTradeHandler(sys_config)
+        print('MyDash4Pattern.sys_config.config.save_trade_data={}'.format(sys_config.config.save_trade_data))
         self.color_handler = DashColorHandler()
         self.tab_pattern = MyDashTab4Pattern(self.app, self.sys_config, self.trade_handler_online)
+        self.__print_actual_trade_process__(1)
         self.tab_portfolio = MyDashTab4Portfolio(self.app, self.sys_config, self.trade_handler_online)
+        self.__print_actual_trade_process__(2)
         self.tab_recommender = MyDashTab4Recommender(self.app, self.sys_config, self.trade_handler_online)
+        self.__print_actual_trade_process__(3)
         self.tab_trading = MyDashTab4Trading(self.app, self.sys_config, self.trade_handler_online)
+        self.__print_actual_trade_process__(4)
         self.tab_waves = MyDashTab4Waves(self.app, self.sys_config, self.color_handler)
+        self.__print_actual_trade_process__(5)
         self.tab_trade_statistics = MyDashTab4TradeStatistics(self.app, self.sys_config, self.color_handler)
+        self.__print_actual_trade_process__(6)
         self.tab_pattern_statistics = MyDashTab4PatternStatistics(self.app, self.sys_config, self.color_handler)
+        self.__print_actual_trade_process__(7)
         self.tab_asset_statistics = MyDashTab4AssetStatistics(self.app, self.sys_config,
                                                               self.color_handler, self.trade_handler_online)
+        self.__print_actual_trade_process__(8)
         self.tab_models_statistics = MyDashTab4ModelStatistics(self.app, self.sys_config, self.color_handler)
+        self.__print_actual_trade_process__(9)
         self.tab_log = MyDashTab4Log(self.app, self.sys_config)
+        self.__print_actual_trade_process__(10)
         self.tab_db = MyDashTab4DB(self.app, self.sys_config)
+        self.__print_actual_trade_process__(11)
         self.tab_jobs = MyDashTab4Jobs(self.app, self.sys_config)
+        self.__print_actual_trade_process__(12)
         self.tab_configuration = MyDashTab4Configuration(self.app, self.sys_config, self.trade_handler_online)
+        self.__print_actual_trade_process__(13)
+
+    def __print_actual_trade_process__(self, number: int):
+        pass
+        # print('MyDash4Pattern.self.sys_config.runtime_config.actual_trade_process({})={}'.format(
+        #     number, self.sys_config.runtime_config.actual_trade_process
+        # ))
 
     def get_pattern(self):
         self.__set_app_layout__()

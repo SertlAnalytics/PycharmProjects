@@ -1,5 +1,5 @@
 """
-Description: This module is the central modul for optimizing prediction by taking the predictor with the
+Description: This module is the central modul for optimizing prediction by taking the master_predictor with the
 best precision for a certain label.
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com

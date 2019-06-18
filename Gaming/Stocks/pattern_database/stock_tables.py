@@ -7,8 +7,10 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC
+from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC, TP
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mymath import MyMath
+import math
 
 
 class PredictionFeatureTable:
@@ -411,21 +413,52 @@ class TradeTable(MyTable, PredictionFeatureTable):
         return [DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_PCT]
 
     @staticmethod
-    def get_table_style_cell_conditional() -> list:
+    def get_table_style_cell_conditional(selected_trade_type: str) -> list:
         # ['Status', 'Simul', 'Ticker', 'FC after Breakout', 'Strategy', 'Type', 'ID']
         return [{'if': {'column_id': c}, 'textAlign': 'left'}
                 for c in [DC.TRADE_STATUS, DC.TRADE_IS_SIMULATION, DC.TICKER_ID,
                           DC.FC_SUMMARY_AFTER_BREAKOUT, DC.TRADE_STRATEGY, DC.PATTERN_TYPE, DC.ID]]
 
     @staticmethod
-    def get_table_style_data_conditional():
+    def get_table_style_data_conditional(selected_trade_type: str, rows: list):
         column_id = DC.TRADE_RESULT_PCT
         filter_green = '{{{}}}  > 0'.format(DC.TRADE_RESULT_PCT)
+        filter_ivory = '{{{}}} = 0'.format(DC.TRADE_RESULT_PCT)
         filter_red = '{{{}}}  < 0'.format(DC.TRADE_RESULT_PCT)
-        return [
+        table_style_data = [
             {'if': {'column_id': column_id, 'filter': filter_green}, 'backgroundColor': 'green', 'color': 'white'},
+            {'if': {'column_id': column_id, 'filter': filter_ivory}, 'backgroundColor': 'ivory', 'color': 'black'},
             {'if': {'column_id': column_id, 'filter': filter_red}, 'backgroundColor': 'red', 'color': 'white'},
         ]
+        if selected_trade_type == TP.ONLINE:
+            TradeTable.add_row_specific_styles_to_table_style_data(rows, table_style_data)
+        return table_style_data
+
+    @staticmethod
+    def add_row_specific_styles_to_table_style_data(rows, table_style_data):
+        column_id = DC.ACTUAL
+        fractions = 5
+        color_dict = {1: 'orange', 2: 'bisque', 3: 'ivory', 4: 'lightgreen', 5: 'lime'}
+        for row in rows:
+            if row[DC.ID] != '':
+                actual_price = MyMath.get_float_for_string(row[DC.ACTUAL])
+                stop = MyMath.get_float_for_string(row[DC.STOP])
+                limit = stop * 1.05 if row[DC.LIMIT] == 'inf' else MyMath.get_float_for_string(row[DC.LIMIT])
+                if actual_price <= stop:
+                    bg_color = 'red'
+                else:
+                    bg_color = 'green'
+                    value_range = limit - stop
+                    value_range_fraction = value_range/fractions
+                    for i in range(1, fractions + 1):
+                        if actual_price <= stop + i * value_range_fraction:
+                            bg_color = color_dict[i]
+                            break
+                filter_color = '{{{}}}  eq "{}"'.format(DC.ID, row[DC.ID])
+                table_style_data.append(
+                    {'if': {'column_id': column_id, 'filter': filter_color}, 'backgroundColor': bg_color}
+                )
+        # print('table_style_data={}'.format(table_style_data))
 
     @staticmethod
     def get_columns_for_statistics_text_variable() -> list:

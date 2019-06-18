@@ -5,7 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-03-01
 """
 
-from sertl_analytics.constants.pattern_constants import DC, LOGDC, PRDC, DTRG, TPMDC, EDC, MDC, STBL
+from sertl_analytics.constants.pattern_constants import DC, STBL, EDC, MDC
+from pattern_database.stock_database import StockDatabase
 import pandas as pd
 
 
@@ -44,6 +45,7 @@ class DBTable:
     def __init__(self, df: pd.DataFrame, table: str, date_range: str, column_sort: str):
         self._df = df
         self._table_name = table
+        self._table = StockDatabase().get_table_by_name(self._table_name)
         self._date_range = date_range
         self._columns = self._df.columns
         self._sort_column = column_sort
@@ -69,9 +71,9 @@ class DBTable:
         sorted_list = sorted(self._rows, reverse=sort_reverse)
         return [row.get_row_as_dict() for row in sorted_list]
 
-    @staticmethod
-    def get_table_style_cell_conditional() -> list:
-        return [{'if': {'column_id': c}, 'textAlign': 'left'} for c in ['Process', 'Comment']]
+    def get_table_style_cell_conditional(self) -> list:
+        cols_left = self._table.get_string_column_names()
+        return [{'if': {'column_id': c}, 'textAlign': 'left'} for c in cols_left]
 
     def __fill_rows_for_selected_table__(self):
         self._rows = []

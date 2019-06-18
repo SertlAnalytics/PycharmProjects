@@ -38,7 +38,7 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
         self._df_pattern_for_replay = self._df_pattern[PatternTable.get_columns_for_replay()]
         self._pattern_rows_for_data_table = MyDCC.get_rows_from_df_for_data_table(self._df_pattern_for_replay)
         self.__init_selected_row__()
-        self.__init_trade_handler_for_replay__()
+        self.__init_replay_handlers__()
         self._selected_pattern_trade = None
         self._selected_buy_trigger = None
         self._selected_trade_strategy = None
@@ -53,7 +53,7 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
         self._cached_trade_table = None
         self._time_stamp_last_ticker_refresh = MyDate.time_stamp_now()
         self._check_actual_trades_for_trade_handler_online_n_intervals = -1
-        self._print_callback_start_details = True
+        self._print_callback_start_details = False
 
     @staticmethod
     def __get_news_handler__():
@@ -73,11 +73,11 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
         self._selected_row = None
         self._selected_pattern_trade = None
 
-    def __init_trade_handler_for_replay__(self):
-        self._trade_replay_handler = ReplayHandler(TP.TRADE_REPLAY, self.sys_config)
-        self._pattern_replay_handler = ReplayHandler(TP.PATTERN_REPLAY, self.sys_config)
-        self._trade_replay_handler_online = ReplayHandler(TP.ONLINE, self.sys_config)
-        self._trade_replay_handler_online.trade_handler = self._trade_handler_online
+    def __init_replay_handlers__(self):
+        self._replay_handler_for_trades = ReplayHandler(TP.TRADE_REPLAY, self.sys_config)
+        self._replay_handler_for_patterns = ReplayHandler(TP.PATTERN_REPLAY, self.sys_config)
+        self._replay_handler_for_online_trades = ReplayHandler(TP.ONLINE, self.sys_config)
+        self._replay_handler_for_online_trades.trade_handler = self._trade_handler_online
 
     @property
     def trade_handler_online(self):
@@ -118,9 +118,8 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
     def __init_callback_for_trade_markdown__(self):
         @self.app.callback(
             Output('my_trade_markdown', DSHVT.CHILDREN),
-            [Input('my_graph_trade_replay_div', DSHVT.CHILDREN),
-             Input('my_interval_timer', DSHVT.N_INTERVALS)])
-        def handle_callback_for_ticket_markdown(children, n_intervals: int):
+            [Input('my_graph_trade_replay_div', DSHVT.CHILDREN)])
+        def handle_callback_for_ticket_markdown(children):
             self.__print_callback_details__('handle_callback_for_ticket_markdown')
             if self._selected_row_index == -1 or self._selected_pattern_trade is None:
                 return ''
@@ -137,9 +136,8 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
     def __init_callback_for_trade_news_markdown__(self):
         @self.app.callback(
             Output('my_trade_news_markdown', DSHVT.CHILDREN),
-            [Input('my_graph_trade_replay_div', DSHVT.CHILDREN),
-             Input('my_interval_timer', DSHVT.N_INTERVALS)])
-        def handle_callback_for_news_markdown(children, n_intervals: int):
+            [Input('my_graph_trade_replay_div', DSHVT.CHILDREN)])
+        def handle_callback_for_news_markdown(children):
             self.__print_callback_details__('handle_callback_for_news_markdown')
             if self._selected_row_index == -1 or self._selected_pattern_trade is None:
                 return ''
@@ -158,10 +156,10 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
 
     def __get_actual_replay_handler__(self):
         if self._selected_trade_type == TP.ONLINE:
-            return self._trade_replay_handler_online
+            return self._replay_handler_for_online_trades
         elif self._selected_trade_type == TP.PATTERN_REPLAY:
-            return self._pattern_replay_handler
-        return self._trade_replay_handler
+            return self._replay_handler_for_patterns
+        return self._replay_handler_for_trades
 
     def __init_callback_for_trade_numbers__(self):
         """
@@ -175,14 +173,14 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
             [Input('my_interval_timer', DSHVT.N_INTERVALS)])
         def handle_callback_for_online_trade_all_numbers(n_intervals: int):
             self.__print_callback_details__('handle_callback_for_online_trade_all_numbers')
-            return str(self._trade_replay_handler_online.trade_handler.trade_numbers)
+            return str(self._replay_handler_for_online_trades.trade_handler.trade_numbers)
 
         @self.app.callback(
             Output('my_online_trade_active_div', DSHVT.CHILDREN),
             [Input('my_interval_timer', DSHVT.N_INTERVALS)])
         def handle_callback_for_online_trade_active_numbers(n_intervals: int):
             self.__print_callback_details__('handle_callback_for_online_trade_active_numbers')
-            return str(self._trade_replay_handler_online.trade_handler.trade_numbers_active)
+            return str(self._replay_handler_for_online_trades.trade_handler.trade_numbers_active)
 
         @self.app.callback(
             Output('my_stored_trade_div', DSHVT.CHILDREN),
@@ -203,14 +201,14 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
             [Input('my_interval_timer', DSHVT.N_INTERVALS)])
         def handle_callback_for_real_online_trade_numbers(n_intervals: int):
             self.__print_callback_details__('handle_callback_for_real_online_trade_numbers')
-            return self._trade_replay_handler_online.trade_handler.get_real_trade_numbers_active_for_dashboard()
+            return self._replay_handler_for_online_trades.trade_handler.get_real_trade_numbers_active_for_dashboard()
 
         @self.app.callback(
             Output('my_simulation_online_trade_div', DSHVT.CHILDREN),
             [Input('my_interval_timer', DSHVT.N_INTERVALS)])
         def handle_callback_for_simulation_online_trade_numbers(n_intervals: int):
             self.__print_callback_details__('handle_callback_for_simulation_online_trade_numbers')
-            return self._trade_replay_handler_online.trade_handler.get_simulation_trade_numbers_active_for_dashboard()
+            return self._replay_handler_for_online_trades.trade_handler.get_simulation_trade_numbers_active_for_dashboard()
 
     def __init_callback_for_trade_table__(self):
         @self.app.callback(
@@ -230,7 +228,7 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
             self.__print_callback_details__('handle_callback_for_trade_table')
             if n_clicks_reset != self._n_click_reset:
                 self._n_click_reset = n_clicks_reset
-                self._selected_row_index = -1
+                self.__init_selected_row__(trade_type)
                 self.__get_table_for_trades__()
             elif self._selected_trade_type != trade_type:
                 self._trades_online_active_number = online_active
@@ -238,7 +236,7 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
                 self._trades_stored_number = trades
                 self._pattern_stored_number = pattern
                 self.__init_selected_row__(trade_type)
-                self.__init_trade_handler_for_replay__()
+                self.__init_replay_handlers__()
                 return self.__get_table_for_trades__()
             elif self._selected_trade_type == TP.ONLINE and self._n_click_cancel_trade != cancel_n_clicks:
                 self._n_click_cancel_trade = cancel_n_clicks
@@ -249,6 +247,7 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
             elif self._selected_trade_type == TP.ONLINE: # we refresh each time (since we calculate the result...
                     # and \
                     # (self._trades_online_active_number != online_active or self._trades_online_all_number != online_all):
+                self.__check_actual_trades_for_trade_handler_online__(n_intervals)
                 self._trades_online_active_number = online_active
                 self._trades_online_all_number = online_all
                 return self.__get_table_for_trades__()
@@ -313,21 +312,24 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
             [State(self._data_table_name, DSHVT.ROWS)])
         def handle_callback_for_trades_remove_button(trade_type: str, selected_row_indices: list, rows: list):
             self.__print_callback_details__('handle_callback_for_trades_remove_button')
-            if trade_type == TP.ONLINE and selected_row_indices is not None \
-                    and len(selected_row_indices) > 0 and len(rows) > 0:
+            if trade_type == TP.ONLINE and self.__is_existing_trade_row_selected__(selected_row_indices, rows):
                 return self._button_handler.get_style_display(TBTN.CANCEL_TRADE)
             return {'display': 'none'}
+
+    @staticmethod
+    def __is_existing_trade_row_selected__(selected_row_indices: list, rows: list):
+        if selected_row_indices is not None and len(selected_row_indices) > 0 and len(rows) > 0:
+            return rows[selected_row_indices[0]][DC.ID] != ''
+        return False
 
     def __init_callback_for_reset_trade_button__(self):
         @self.app.callback(
             Output('my_trades_reset_button_div', DSHVT.STYLE),
             [Input('my_trade_type_selection', DSHVT.VALUE),
-             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)],
-            [State(self._data_table_name, DSHVT.ROWS)])
-        def handle_callback_for_trades_reset_button(trade_type: str, selected_row_indices: list, rows: list):
+             Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
+        def handle_callback_for_trades_reset_button(trade_type: str, selected_row_indices: list):
             self.__print_callback_details__('handle_callback_for_trades_reset_button')
-            if trade_type == TP.ONLINE and selected_row_indices is not None \
-                    and len(selected_row_indices) > 0 and len(rows) > 0:
+            if trade_type == TP.ONLINE and selected_row_indices is not None and len(selected_row_indices) > 0:
                 return self._button_handler.get_style_display(TBTN.RESET_TRADE_SELECTION)
             return {'display': 'none'}
 
@@ -370,21 +372,26 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
             Output('my_graph_trade_replay_div', DSHVT.CHILDREN),
             [Input(self._data_table_name, DSHVT.ROWS),
              Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES),
-             Input('my_interval_timer', DSHVT.N_INTERVALS),
              Input('my_trade_type_selection', DSHVT.VALUE),
              Input('my_replay_restart_button', DSHVT.N_CLICKS)],
             [State('my_pattern_buy_trigger_selection', DSHVT.VALUE),
-             State('my_pattern_trade_strategy_selection', DSHVT.VALUE)])
-        def handle_callback_for_graph_trade(rows: list, selected_row_indices: list, n_intervals: int,
+             State('my_pattern_trade_strategy_selection', DSHVT.VALUE),
+             State('my_interval_timer', DSHVT.N_INTERVALS)])
+        def handle_callback_for_graph_trade(rows: list, selected_row_indices: list,
                                             trade_type: str, n_click_restart: int,
-                                            buy_trigger: str, trade_strategy: str):
+                                            buy_trigger: str, trade_strategy: str, n_intervals: int):
             self.__print_callback_details__('handle_callback_for_graph_trade')
+            # print('rows={}, selected_row_indices={}, n_intervals={}, trade_type={}, n_click_restart={}, '
+            #       'buy_trigger={}, trade_strategy={}'.format(
+            #     0 if rows is None else len(rows),
+            #     0 if selected_row_indices is None else len(selected_row_indices), n_intervals,
+            #     trade_type, n_click_restart, buy_trigger, trade_strategy))
             self._time_stamp_last_refresh = MyDate.time_stamp_now()
             self.__handle_trade_type_selection__(trade_type)
             self.__handle_trade_restart_selection__(n_click_restart)
             self._selected_buy_trigger = buy_trigger
             self._selected_trade_strategy = trade_strategy
-            self.__check_actual_trades_for_trade_handler_online__(n_intervals)
+            # self.__check_actual_trades_for_trade_handler_online__(n_intervals)
             if selected_row_indices is None or len(selected_row_indices) == 0:
                 self._selected_row_index = -1
                 return ''
@@ -394,9 +401,11 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
                 else:
                     graph = self.__get_graph_for_replay_refreshed__()
             else:
-                self.__init_trade_handler_for_replay__()
+                self.__init_replay_handlers__()
                 self._selected_row_index = selected_row_indices[0]
                 self._selected_row = rows[self._selected_row_index]
+                if self._selected_row[DC.ID] == '':
+                    return ''
                 if self._selected_trade_type == TP.ONLINE:
                     graph, graph_key = self.__get_graph_for_trade_online__()
                 else:
@@ -418,12 +427,12 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
         return replay_handler.graph
 
     def __get_graph_for_trade_online_refreshed__(self, n_intervals: int):
-        if self._trade_replay_handler_online.trade_test is None:
+        if self._replay_handler_for_online_trades.trade_test is None:
             return ''
-        self._trade_replay_handler_online.refresh_api_df_from_pattern_trade()
-        self._trade_replay_handler_online.graph_api.pattern_trade.calculate_wave_tick_values_for_trade_subprocess()
-        self._trade_replay_handler_online.graph_api.pattern_trade.calculate_xy_for_replay()
-        return self.__get_dcc_graph_element__(None, self._trade_replay_handler_online.graph_api)
+        self._replay_handler_for_online_trades.refresh_api_df_from_pattern_trade()
+        self._replay_handler_for_online_trades.graph_api.pattern_trade.calculate_wave_tick_values_for_trade_subprocess()
+        self._replay_handler_for_online_trades.graph_api.pattern_trade.calculate_xy_for_replay()
+        return self.__get_dcc_graph_element__(None, self._replay_handler_for_online_trades.graph_api)
 
     def __check_actual_trades_for_trade_handler_online__(self, n_intervals: int):
         if self._selected_trade_type == TP.ONLINE:
@@ -470,19 +479,19 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
 
     def __get_trade_handler_for_selected_trade_type__(self):
         if self._selected_trade_type == TP.TRADE_REPLAY:
-            return self._trade_replay_handler
+            return self._replay_handler_for_trades
         elif self._selected_trade_type == TP.PATTERN_REPLAY:
-            return self._pattern_replay_handler
+            return self._replay_handler_for_patterns
         return self._trade_handler_online
 
     def __get_graph_for_trade_online__(self):
-        self._trade_replay_handler_online.set_trade_test_api_by_selected_trade_row(self._selected_row)
-        self._trade_replay_handler_online.set_trade_test()
-        self._trade_replay_handler_online.set_graph_api()
-        self._selected_pattern_trade = self._trade_replay_handler_online.pattern_trade
-        self._trade_replay_handler_online.graph = self.__get_dcc_graph_element__(
-            None, self._trade_replay_handler_online.graph_api)
-        return self._trade_replay_handler_online.graph, self._trade_replay_handler_online.graph_id
+        self._replay_handler_for_online_trades.set_trade_test_api_by_selected_trade_row(self._selected_row)
+        self._replay_handler_for_online_trades.set_trade_test()
+        self._replay_handler_for_online_trades.set_graph_api()
+        self._selected_pattern_trade = self._replay_handler_for_online_trades.pattern_trade
+        self._replay_handler_for_online_trades.graph = self.__get_dcc_graph_element__(
+            None, self._replay_handler_for_online_trades.graph_api)
+        return self._replay_handler_for_online_trades.graph, self._replay_handler_for_online_trades.graph_id
 
     def __get_ticker_refresh_seconds__(self):
         if self._selected_trade_type == TP.TRADE_REPLAY:
@@ -529,8 +538,8 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
             self._data_table_name,
             rows=rows,
             selected_row_indices=selected_row_indices_for_table,
-            style_cell_conditional=TradeTable.get_table_style_cell_conditional(),
-            style_data_conditional=TradeTable.get_table_style_data_conditional(),
+            style_cell_conditional=TradeTable.get_table_style_cell_conditional(self._selected_trade_type),
+            style_data_conditional=TradeTable.get_table_style_data_conditional(self._selected_trade_type, rows),
             columns=self.__get_columns_for_trading_table__())
         return self._cached_trade_table
 
@@ -549,7 +558,7 @@ class MyDashTab4Trading(MyPatternDashBaseTab):
         elif self._selected_trade_type == TP.PATTERN_REPLAY:
             return self._pattern_rows_for_data_table
         elif self._selected_trade_type == TP.ONLINE:
-            return self._trade_replay_handler_online.trade_handler.get_rows_for_dash_data_table()
+            return self._replay_handler_for_online_trades.trade_handler.get_rows_for_dash_data_table()
         return []
 
     def __get_empty_data_row__(self):

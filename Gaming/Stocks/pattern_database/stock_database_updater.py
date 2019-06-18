@@ -5,10 +5,12 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-12-10
 """
 
-from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE, TRC
+from sertl_analytics.constants.pattern_constants import BT, TSTR, FT, DC, PRD, TRT, EQUITY_TYPE, TRC, LOGT
 from sertl_analytics.constants.pattern_constants import INDICES, EDC, EST, FD
 from sertl_analytics.constants.pattern_constants import TPMDC
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.myfile import MyFile
+from sertl_analytics.my_text import MyText
 from fibonacci.fibonacci_wave import FibonacciWave
 from pattern_system_configuration import SystemConfiguration
 from pattern_detection_controller import PatternDetectionController
@@ -21,6 +23,7 @@ from pattern_reinforcement.trade_policy import TradePolicyFactory
 from pattern_reinforcement.trade_policy_handler import TradePolicyHandler
 from pattern_database.stock_wave_entity import WaveEntity
 from pattern_scheduling.pattern_job_result import StockDatabaseUpdateJobResult
+from sertl_analytics.myfilelog import FileLogLine
 from time import sleep
 import numpy as np
 
@@ -276,6 +279,33 @@ class StockDatabaseUpdater:
                                        }
                         access_layer.insert_data([insert_dict])
         print("END 'update_trade_policy_metric_for_today'\n")
+
+    def handle_transaction_problems(self):
+        print("\nSTARTING 'handle_transaction_problems'")
+        line_to_keep_list = []
+        file_path = self.sys_config.file_log.get_file_path_for_log_type(LOGT.TRANSACTIONS)
+        file_with_transactions = MyFile(file_path)
+        lines_as_list = file_with_transactions.get_lines_as_list()
+        for line in lines_as_list:
+            log_line = FileLogLine(line)
+            # line_to_keep_list.append(line)
+            if log_line.is_valid:
+                table_name = log_line.process
+                data_str_dict_list_as_string = log_line.step
+                data_str_dict_list_as_string = data_str_dict_list_as_string.replace('#', ',')
+                data_str_dict_list = MyText.get_list_from_text(data_str_dict_list_as_string)
+                data_dict_list = [MyText.get_dict_from_text(dict_str) for dict_str in data_str_dict_list]
+                print('Handle_transaction_problem for table {}: {}'.format(table_name, data_dict_list))
+                self.db_stock.correct_data_types_withing_data_dict_list(table_name, data_dict_list)
+                data_dict_list = self.db_stock.remove_existing_entries_from_data_dict_list(table_name, data_dict_list)
+                if len(data_dict_list) > 0:
+                    inserted = self.db_stock.insert_data_into_table(table_name, data_dict_list)
+                    if inserted <= 0:
+                        line_to_keep_list.append(line)
+            else:
+                print('{}: Line not valid in log file: {}'.format(file_path, line))
+        file_with_transactions.replace_file_when_changed(line_to_keep_list)
+        print("END 'handle_transaction_problems'\n")
 
     def fill_asset_gaps(self, ts_last: int, ts_to: int, ts_interval: int):
         access_layer_stocks = AccessLayer4Stock(self.db_stock)

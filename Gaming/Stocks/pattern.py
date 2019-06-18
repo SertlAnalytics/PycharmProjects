@@ -401,7 +401,7 @@ class Pattern:
             # 'Expected_win_sufficient': self.__is_expected_win_sufficient__()
         }
         if not check_dict['Long_trade_able']:
-            print('\n{}: Pattern is not long trade-able.'.format(self.id))
+            print('\n{}: Pattern "{}" is not long trade-able.'.format(self.pattern_type, self.id))
         elif not check_dict['Breakout_direction']:
             print('\n{}: No trade possible: expected_breakout_direction: {}'.format(
                 self.id, self.expected_breakout_direction))

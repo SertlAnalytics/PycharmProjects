@@ -53,7 +53,7 @@ class PatternFeaturesSelector:
 
 class PatternPredictor:
     """
-    This class is not only one predictor but a collection of predictors for a dedicated pattern type and
+    This class is not only one master_predictor but a collection of predictors for a dedicated pattern type and
     several labels. As a result: the method predict returns a value for each of this labels.
     """
     def __init__(self, optimizer: PatternPredictorOptimizer, pattern_type: str, skip_condition_list=None):
@@ -73,7 +73,10 @@ class PatternPredictor:
         self._feature_columns = self.__get_feature_columns_by_information_gain__()
         self._neighbor_collector = None
         self._is_ready_for_prediction = True  # default
-        self.__train_models__(False)
+        if self._df_features_with_labels_and_id.shape[0] == 0:
+            self._is_ready_for_prediction = False
+        else:
+            self.__train_models__(False)
         # print('self.x_data.shape={}'.format(self._x_data.shape))
 
     @property
@@ -133,7 +136,7 @@ class PatternPredictor:
                 try:
                     prediction = self._predictor_dict[label].predict(np_array)[0]
                 except ValueError:
-                    print('Prediction problem with label {} and array {} - set to 0...'.format(label, np_array))
+                    print('ERROR: Prediction problem with label {} and array {} - set to 0...'.format(label, np_array))
                     prediction = 0
                 dist, ind = self._predictor_dict[label].kneighbors(np_array)
                 self._neighbor_collector.add_dist_ind_array(ind, dist)
@@ -182,7 +185,7 @@ class PatternPredictor:
             self._is_ready_for_prediction = False
             return
         predictor = self._predictor_dict[label_column]
-        self.__train_predictor_for_label_column__( predictor, label_column, x_train, y_train, perform_test)
+        self.__train_predictor_for_label_column__(predictor, label_column, x_train, y_train, perform_test)
 
         if self._use_optimizer:
             self._optimizer.retrain_trained_models(

@@ -32,6 +32,7 @@ class ExchangeConfiguration:
     def __init__(self):
         self.exchange_name = self.get_exchange_name()
         self.default_currency = 'USD'
+        self.delete_vanished_patterns_from_trade_dict = True
         self.hodl_dict = {}  # currency in upper characters
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
@@ -44,14 +45,13 @@ class ExchangeConfiguration:
         self.finish_vanished_trades = False  # True <=> if a pattern is vanished after buying sell the position (market)
         self.trade_strategy_dict = {BT.BREAKOUT: [TSTR.LIMIT, TSTR.TRAILING_STOP, TSTR.TRAILING_STEPPED_STOP],
                                     BT.TOUCH_POINT: [TSTR.LIMIT]}
-        self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP,
-                                    BT.TOUCH_POINT: TSTR.LIMIT}
+        self.default_trade_strategy_dict = {BT.BREAKOUT: TSTR.TRAILING_STOP, BT.TOUCH_POINT: TSTR.LIMIT}
         self.fibonacci_indicators = {}
         self.bollinger_band_indicators = {}
         self.massive_breakout_pct = 10  # = 10%
         self.ticker_id_list = self.__get_ticker_id_list__()
         self.ticker_id_excluded_from_trade_list = []  # in case we have some issues the datas...
-        self.__set_values__()
+        self.__set_exchange_default_values__()
 
     def get_exchange_name(self):
         return 'N.N.'
@@ -68,7 +68,7 @@ class ExchangeConfiguration:
     def __get_ticker_id_list__() -> list:
         return []  # we want to track only these symbols...
 
-    def __set_values__(self):
+    def __set_exchange_default_values__(self):
         pass
 
     def print_actual_mode(self, mode_was_changed=False):

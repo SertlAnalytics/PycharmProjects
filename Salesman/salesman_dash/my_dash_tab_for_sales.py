@@ -363,6 +363,6 @@ class MyDashTab4Sales(MyDashBaseTab):
             rows=rows,
             style_cell_conditional=self._similar_sale_grid_table.get_table_style_cell_conditional(),
             style_data_conditional=self._similar_sale_grid_table.get_table_style_data_conditional(rows),
-            columns=self._similar_sale_grid_table.columns
+            columns=self._similar_sale_grid_table.columns,
         )
 

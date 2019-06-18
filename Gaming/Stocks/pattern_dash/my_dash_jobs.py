@@ -24,8 +24,7 @@ class MyDashPatternJob(MyPatternJob):
 
 class MyDashTradePolicyUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
-        self._db_updater.update_trade_policy_metric_for_today(
-            [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
+        self._db_updater.update_trade_policy_metric_for_today(FT.get_long_trade_able_types())
 
     @property
     def process_name(self):
@@ -189,6 +188,15 @@ class MyTradeRecordsUpdateJob(MyDashPatternJob):
     @property
     def process_name(self):
         return PPR.UPDATE_TRADE_RECORDS
+
+
+class MyWaitingTransactionsUpdateJob(MyDashPatternJob):
+    def __perform_task__(self):
+        self._db_updater.handle_transaction_problems()
+
+    @property
+    def process_name(self):
+        return PPR.HANDLE_TRANSACTION_PROBLEMS
 
 
 class MyDashOptimizeLogFilesJob(MyDashPatternJob):

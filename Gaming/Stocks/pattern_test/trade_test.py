@@ -33,12 +33,13 @@ class TradeTest:
         pass
 
     def __adjust_sys_config__(self):
+        print('TradeTest.__adjust_sys_config__')
         self.sys_config.runtime_config.actual_trade_process = self.trade_process
+        self.sys_config.config.plot_data = False
         if self.trade_process == TP.BACK_TESTING:
             self.sys_config.config.pattern_type_list = FT.get_long_trade_able_types()
-        self.sys_config.config.plot_data = False
-        self.sys_config.config.save_pattern_data = False
-        self.sys_config.config.save_trade_data = False
+            self.sys_config.config.save_pattern_data = False
+            self.sys_config.config.save_trade_data = False
 
     def __adjust_data_provider_parameters__(self):
         self.sys_config.data_provider.from_db = self.api.from_db

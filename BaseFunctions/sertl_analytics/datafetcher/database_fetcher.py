@@ -38,8 +38,24 @@ class MyTableColumn:
         return self._name
 
     @property
+    def type(self):
+        return self._type
+
+    @property
     def is_numeric(self):
         return self._type in [CDT.FLOAT, CDT.INTEGER, CDT.BOOLEAN]
+
+    @property
+    def is_float(self):
+        return self._type == CDT.FLOAT
+
+    @property
+    def is_integer(self):
+        return self._type == CDT.INTEGER
+
+    @property
+    def is_boolean(self):
+        return self._type == CDT.BOOLEAN
 
     @property
     def is_string(self):
@@ -47,6 +63,14 @@ class MyTableColumn:
 
     @property
     def is_date(self):
+        return self._type == CDT.DATE
+
+    @property
+    def is_time(self):
+        return self._type == CDT.TIME
+
+    @property
+    def is_string_date(self):
         return self.is_string and self._name.lower().find('date') > -1
 
     @property
@@ -142,6 +166,9 @@ class MyTable:
         columns = ', '.join(self._key_column_name_list)
         return "select {}, oid from {};".format(columns, self._name)
 
+    def get_column(self, column_name: str):
+        return self._column_dict.get(column_name, None)
+
     def get_query_select_by_data_dict(self, data_dict: dict, target_columns=None, sort_columns=None)  -> str:
         columns = '*' if target_columns is None else ','.join(target_columns)
         and_clause = self.__get_where_clause_for_data_dict__(data_dict)
@@ -164,9 +191,15 @@ class MyTable:
 
     def __get_column_date__(self):
         for column in self._columns:
-            if column.is_date:
+            if column.is_string_date:
                 return column.name
         return ''
+
+    def get_string_column_names(self) -> list:
+        return self.__get_column_names_by_type__(CDT.STRING)
+
+    def __get_column_names_by_type__(self, column_type: str):
+        return [col.name for col in self._columns if col.type == column_type]
 
     def __get_column_time_stamp__(self):
         for column in self._columns:
@@ -251,7 +284,7 @@ class BaseDatabase:
     def __get_db_name__(self):
         pass  # will be overwritten by sub classes
 
-    def __get_db_path__(self):
+    def __get_db_path__(self) -> str:
         pass  # will be overwritten by sub classes
 
     def __get_table_dict__(self) -> dict:
@@ -275,7 +308,7 @@ class BaseDatabase:
     def delete_records(self, query: str) -> int:
         if not self.database_activated:
             print('database_deactivated for delete_records')
-            return
+            return 0
         connection = self.engine.connect()
         counter = -1
         loop_counter = 0
@@ -342,6 +375,8 @@ class BaseDatabase:
         stmt = insert(table_object)
         try:
             counter = self.__handle_connection_execution__(connection, stmt, insert_data_dic_list)
+            if counter <= 0:
+                self._file_log.log_waiting_db_transaction(table_name, insert_data_dic_list)
         finally:
             connection.close()
         if counter > 1:  # we don't want to have single entries in the log

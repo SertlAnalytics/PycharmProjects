@@ -20,6 +20,8 @@ import math
 from datetime import datetime
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentFetcher
 from sertl_analytics.datafetcher.database_fetcher import MyTable
+from sertl_analytics.my_text import MyText
+from sertl_analytics.mymath import MyMath
 from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, OPS, FT, TRT, TSTR, SVW, EDC
 import os
 import time
@@ -137,6 +139,7 @@ class StockDatabase(BaseDatabase):
 
     def __get_table_dict__(self) -> dict:
         return {STBL.STOCKS: self._stocks_table,
+                STBL.COMPANY: self._company_table,
                 STBL.PROCESS: self._process_table,
                 STBL.WAVE: self._wave_table,
                 STBL.EQUITY: self._entity_table,
@@ -149,7 +152,7 @@ class StockDatabase(BaseDatabase):
     def __get_db_name__(self):
         return 'MyStocks.sqlite'
 
-    def __get_db_path__(self):
+    def __get_db_path__(self) -> str:
         package_dir = os.path.abspath(os.path.dirname(__file__))
         return os.path.join(package_dir, self.__get_db_name__())
 
@@ -230,7 +233,53 @@ class StockDatabase(BaseDatabase):
             self.__insert_data_into_table__(STBL.ASSET, [input_dict])
 
     def insert_data_into_table(self, table_name: str, input_dict_list: list):
-        self.__insert_data_into_table__(table_name, input_dict_list)
+        return self.__insert_data_into_table__(table_name, input_dict_list)
+
+    def remove_existing_entries_from_data_dict_list(self, table_name: str, input_dict_list) -> list:
+        return_list = []
+        for data_dict in input_dict_list:
+            is_existing = self.is_record_for_data_dict_already_available(table_name, data_dict)
+            if not is_existing:
+                return_list.append(data_dict)
+        return return_list
+
+    def correct_data_types_withing_data_dict_list(self, table_name: str, input_dict_list):
+        table = self.get_table_by_name(table_name)
+        for data_dict in input_dict_list:
+            for column_name, value in data_dict.items():
+                column = table.get_column(column_name)
+                if column is not None:
+                    if column.is_integer:
+                        data_dict[column_name] = int(MyMath.get_float_for_string(value))
+                    elif column.is_boolean:
+                        if value == 'True':
+                            data_dict[column_name] = True
+                        elif value == 'False':
+                            data_dict[column_name] = False
+                    elif column.is_float:
+                        if MyText.is_number(value):
+                            data_dict[column_name] = MyMath.get_float_for_string(value)
+                    elif column.is_date:
+                        if MyText.is_date_time_date(value):
+                            data_dict[column_name] = MyText.get_date_time_date(value)
+                    elif column.is_time:
+                        if MyText.is_date_time_time(value):
+                            data_dict[column_name] = MyText.get_date_time_time(value)
+
+    def is_record_for_data_dict_already_available(self, table_name, data_dict: dict) -> bool:
+        if table_name == STBL.ASSET:
+            return self.is_asset_already_available(data_dict)
+        elif table_name == STBL.STOCKS:
+            return self.is_stock_data_already_available(
+                data_dict[DC.SYMBOL], data_dict[DC.TIMESTAMP], data_dict[DC.PERIOD], data_dict[DC.PERIOD_AGGREGATION]
+            )
+        elif table_name == STBL.WAVE:
+            return self.is_wave_already_available(data_dict)
+        elif table_name == STBL.TRADE:
+            return self.is_trade_already_available(data_dict[DC.ID])
+        elif table_name == STBL.EQUITY:
+            return self.is_equity_already_available(data_dict)
+        return False
 
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str, index: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
@@ -430,6 +479,12 @@ class StockDatabase(BaseDatabase):
 
     def is_any_asset_already_available_for_timestamp(self, time_stamp: int):
         query = self._asset_table.get_query_select_for_records('Validity_Timestamp={}'.format(time_stamp))
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.shape[0] > 0
+
+    def is_equity_already_available(self, input_data_dict: dict):
+        query = self._entity_table.get_query_select_for_unique_record_by_dict(input_data_dict)
+        # print('is_equity_already_available: query={}'.format(query))
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
 

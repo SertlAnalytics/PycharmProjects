@@ -262,7 +262,8 @@ class PatternTrade:
         else:
             self._is_simulation = True
         if is_simulation_old != self._is_simulation:
-            print('Simulation flag changed: {} -> {}'.format(is_simulation_old, self._is_simulation))
+            print('Simulation flag changed for "{}": {} -> {}'.format(
+                self.ticker_id, is_simulation_old, self._is_simulation))
 
     def set_status_in_execution(self):  # to avoid a second execution
         self._status = PTS.IN_EXECUTION
@@ -509,13 +510,13 @@ class PatternTrade:
             counter_required = self.counter_required
             counter = self.__get_breakout_counter__(process)
             breakout_value = self.__get_breakout_value__(process, wave_tick)
-            print('{}: {} for {}-{}-{} ({}/{}): breakout value={}, last_price={}', '{}, date_time={}'.format(
+            print('{}: {} for {}-{}-{} ({}/{}): breakout={}, last_price={}, {}, time={}'.format(
                 self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
                 counter, counter_required, breakout_value, wave_tick.close,
                 simulation_auto_str, wave_tick.date_time_str))
         else:
             print(
-                '{}: {} for {}-{}-{}: limit={}, last_price={}, stop_loss={}, bought_at={}, {}, date_time={}'.format(
+                '{}: {} for {}-{}-{}: limit={}, last_price={}, stop_loss={}, bought_at={}, {}, time={}'.format(
                     self.trade_process, process, ticker_id, self.buy_trigger, self.trade_strategy,
                     self.limit_current, wave_tick.close, self.stop_loss_current,
                     self.order_status_buy.avg_execution_price, simulation_auto_str, wave_tick.date_time_str))
@@ -559,6 +560,10 @@ class PatternTrade:
                 self.order_status_buy.avg_execution_price))
 
     def save_trade(self):
+        self.sys_config.file_log.log_message(
+            log_message='Trade.ID={}, sys_config.config.save_trade_data={}'.format(
+                self.id, self.sys_config.config.save_trade_data),
+            process='Save trade', process_step='Before is_data_dict_ready_for_trade_table')
         if not self.sys_config.config.save_trade_data:
             return
         if self.data_dict_obj.is_data_dict_ready_for_trade_table():
@@ -858,29 +863,30 @@ class PatternTrade:
             last_price, date_time, ticker_refresh, self._volume_mean_for_breakout)
 
     def __add_process_data_to_markdown_text_list__(self, text_list: list, last_price, ticks_to_go: int):
-        limit = self.limit_current
-        stop_loss = self.stop_loss_current
+        last_price = MyMath.round_smart(last_price)
+        limit = MyMath.round_smart(self.limit_current)
+        stop_loss = MyMath.round_smart(self.stop_loss_current)
         if self._status == PTS.NEW:
             if not self.is_breakout_active:
-                limit = self.wave_tick_actual.watch_breakout_value
-                stop_loss = self.wave_tick_actual.watch_wrong_breakout_value
-            text_list.append('**Process**: {} **Breakout**: {:2.2f} **Current**: {:2.2f} **Wrong breakout**: {:2.2f}'.
+                limit = MyMath.round_smart(self.wave_tick_actual.watch_breakout_value)
+                stop_loss = MyMath.round_smart(self.wave_tick_actual.watch_wrong_breakout_value)
+            text_list.append('**Process**: {} **Breakout**: {} **Current**: {} **Wrong breakout**: {}'.
                              format(self.current_trade_process, limit, last_price, stop_loss))
         elif self._status == PTS.EXECUTED:
-            trailing_stop_distance = self.trailing_stop_distance
-            bought_at = self._order_status_buy.avg_execution_price
+            trailing_stop_distance = MyMath.round_smart(self.trailing_stop_distance)
+            bought_at = MyMath.round_smart(self._order_status_buy.avg_execution_price)
             current_win_pct = self.__get_current_win_pct__(last_price)
-            text_list.append('**Process**: {} **Bought at**: {:2.2f} **Limit**: {:2.2f} **Current**: {:2.2f}'
-                             ' **Stop**: {:2.2f} **Trailing**: {:2.2f} **Result**: {:.2f}%'.format(
+            text_list.append('**Process**: {} **Bought at**: {} **Limit**: {} **Current**: {}'
+                             ' **Stop**: {} **Trailing**: {} **Result**: {:.2f}%'.format(
                                 self.current_trade_process, bought_at, limit, last_price, stop_loss,
                                 trailing_stop_distance, current_win_pct))
         else:
             bought_at = self._order_status_buy.avg_execution_price
             sold_at = self._order_status_sell.avg_execution_price
             win_pct = round(((sold_at - bought_at) / bought_at * 100), 2)
-            text_list.append('**Bought at**: {:2.2f} **Sold at**: {:2.2f} **Result**: {:.2f}%'.format(
+            text_list.append('**Bought at**: {} **Sold at**: {} **Result**: {:.2f}%'.format(
                 bought_at, sold_at, win_pct))
-            text_list.append('**Process**: {} **Breakout**: {:2.2f} **Current**: {:2.2f}  **Wrong breakout**: {:2.2f}'.
+            text_list.append('**Process**: {} **Breakout**: {} **Current**: {}  **Wrong breakout**: {}'.
                 format(self.current_trade_process, limit, last_price, stop_loss))
         if self.trade_process != TP.ONLINE:
             text_list.append('**Ticks to end**: {}'.format(ticks_to_go))

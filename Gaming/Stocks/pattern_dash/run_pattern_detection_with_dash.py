@@ -23,6 +23,7 @@ sys_config.exchange_config.deactivate_automatic_trading()
 sys_config.exchange_config.trade_strategy_dict = {
     BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP]
 }
+sys_config.exchange_config.delete_vanished_patterns_from_trade_dict = False
 sys_config.exchange_config.massive_breakout_pct = 5
 sys_config.config.simple_moving_average_number = 20
 sys_config.config.trading_last_price_mean_aggregation = 4
@@ -33,7 +34,7 @@ sys_config.config.pattern_type_list = FT.get_all()
 sys_config.config.with_trading = True
 sys_config.config.save_pattern_data = True
 sys_config.config.save_trade_data = True
-sys_config.config.save_wave_data = False
+sys_config.config.save_wave_data = False  # they are saved within other threads
 # sys_config.config.pattern_type_list = [FT.TRIANGLE]
 sys_config.config.pattern_type_list = FT.get_all()
 sys_config.config.plot_data = True

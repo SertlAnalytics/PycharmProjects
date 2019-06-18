@@ -248,6 +248,8 @@ class MyMath:
 
     @staticmethod
     def get_float_for_string(value_str: str, delimiter='.'):
+        if type(value_str) is not str:
+            return value_str
         value_str = value_str.replace("'", "")  # remove thousand separators
         value_str = value_str.replace("´", "")  # remove thousand separators
         value_str = value_str.replace("-", "")  # remove -- signs
@@ -257,7 +259,7 @@ class MyMath:
         if value_str[-1] == delimiter:
             value_str = value_str[:-1]
         if value_str.isnumeric():
-            return float(value_str)
+            return int(value_str)
         if value_str.find(delimiter) < 0:
             print('Wrong price {}'.format(value_str))
             return 0
@@ -265,6 +267,14 @@ class MyMath:
         integer_part = price_components[0] if price_components[0].isnumeric() else 0
         fractional_part = price_components[1] if price_components[1].isnumeric() else 0
         return float('{}.{}'.format(integer_part, fractional_part))
+
+    @staticmethod
+    def is_number(value):
+        try:
+            float(value)  # for int, long and float
+        except ValueError:
+            return False
+        return True
 
 
 class MyMathTest(MyMath, TestInterface):

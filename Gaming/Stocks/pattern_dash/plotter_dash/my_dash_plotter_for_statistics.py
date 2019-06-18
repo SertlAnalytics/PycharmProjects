@@ -115,7 +115,7 @@ class MyDashTabStatisticsPlotter:
         return [MyDCC.graph(graph_api_all), MyDCC.graph(graph_api_winner), MyDCC.graph(graph_api_loser)]
 
     def __get_chart_type_predictor__(self):
-        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'predictor'))
+        graph_api = DccGraphApi(self._chart_id, '{} ({})'.format(self._chart_name, 'master_predictor'))
         graph_api.figure_data = self.__get_scatter_figure_data_for_predictor__()
         return [MyDCC.graph(graph_api)]
 

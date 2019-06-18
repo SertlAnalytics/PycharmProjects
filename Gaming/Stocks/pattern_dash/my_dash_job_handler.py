@@ -11,6 +11,7 @@ from pattern_dash.my_dash_jobs import MyEquityUpdateJob, MyPatternUpdateJob, MyD
 from pattern_dash.my_dash_jobs import MyDailyWaveUpdateJob, MyDashTradePolicyUpdateJob
 from pattern_dash.my_dash_jobs import MyDashPredictorOptimizerJob, MyIntradayWaveUpdateJobForShares
 from pattern_dash.my_dash_jobs import MyIntradayWaveUpdateJobForCrypto, MyIntradayWaveUpdateJobForCurrencies
+from pattern_dash.my_dash_jobs import MyWaitingTransactionsUpdateJob
 from pattern_process_manager import PatternProcessManager
 from pattern_scheduling.pattern_scheduler import MyPatternScheduler
 from pattern_database.stock_database_updater import StockDatabaseUpdater
@@ -76,6 +77,8 @@ class MyDashJobHandler:
             weekdays=self._weekday_sunday, start_times=['05:30'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashOptimizeLogFilesJob(
             weekdays=self._weekday_sunday, start_times=['23:00'], db_updater=self._db_updater))
+        self._scheduler.add_job(MyWaitingTransactionsUpdateJob(
+            weekdays=self._weekdays_all, start_times=['07:00', '12:00', '18:00', '23:00'], db_updater=self._db_updater))
         # self._scheduler.add_job(MyTradeRecordsUpdateJob(
         # weekdays=self._weekdays, start_times=['05:30'], stock_db_updater=self._db_updater))
 

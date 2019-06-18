@@ -313,7 +313,8 @@ class SLDC:  # Sale data column
     def get_columns_for_sales_tab_table():
         return [SLDC.SALE_ID, SLDC.VERSION, SLDC.SALE_STATE,
                 SLDC.SOURCE, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
-                SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.TITLE]
+                SLDC.START_DATE, SLDC.OBJECT_STATE,
+                SLDC.PRICE_SINGLE, SLDC.PRICE, SLDC.PRICE_ORIGINAL, SLDC.TITLE]
 
     @staticmethod
     def get_columns_for_similar_sales_tab_table():

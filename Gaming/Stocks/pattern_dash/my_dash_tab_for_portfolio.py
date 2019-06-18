@@ -15,8 +15,10 @@ from pattern_dash.my_dash_header_tables import MyHTMLTabPortfolioHeaderTable
 from pattern_dash.my_dash_tab_dd_for_portfolio import PortfolioTabDropDownHandler, PODD
 from pattern_detection_controller import PatternDetectionController
 from pattern_trade_handler import PatternTradeHandler
+from pattern_dash.my_dash_tab_button_for_portfolio import PFBTN, PortfolioButtonHandler
 from dash import Dash
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mymath import MyMath
 from sertl_analytics.constants.pattern_constants import PRD, INDI
 from pattern_news_handler import NewsHandler
 
@@ -45,6 +47,8 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
         self.sys_config = self.__get_adjusted_sys_config_copy__(sys_config)
         self.exchange_config = self.sys_config.exchange_config
         self._table_rows = []
+        self._reset_portfolio_selection_clicks = 0
+        self._refresh_portfolio_selection_clicks = 0
         self._active_manage_button_clicks = 0
         self._selected_indicator = INDI.NONE
         self._selected_row_index = -1
@@ -59,6 +63,10 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
     def columns(self) -> list:
         return [PDC.EXCHANGE, PDC.ASSET, PDC.AMOUNT, PDC.AMOUNT_AVAILABLE,
                 PDC.CURRENT_PRICE, PDC.CURRENT_TOTAL, PDC.ACTIVELY_MANAGED]
+
+    @staticmethod
+    def __get_button_handler__():
+        return PortfolioButtonHandler()
 
     @staticmethod
     def __get_adjusted_sys_config_copy__(sys_config: SystemConfiguration) -> SystemConfiguration:
@@ -93,6 +101,7 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
                 PODD.REFRESH_INTERVAL, default_value=900)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PODD.SECOND_GRAPH_RANGE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(PODD.INDICATOR)),
+            MyHTML.div_with_button(**self._button_handler.get_button_parameters(PFBTN.RESET_PORTFOLIO_SELECTION)),
             MyHTML.div_with_html_button_submit('my_portfolio_refresh_button', 'Refresh'),
             MyHTML.div_with_html_button_submit('my_portfolio_active_manage_button',
                                                self.__get_position_manage_button_text__()),
@@ -110,6 +119,7 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
         self.__init_callback_for_portfolio_table__()
         self.__init_callback_for_graph_for_selected_position__()
         self.__init_callback_for_selected_row_indices__()
+        self.__init_callback_for_reset_portfolio_button__()
 
     def __init_callbacks_for_portfolio_refresh_button__(self):
         @self.app.callback(
@@ -160,8 +170,12 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
             [State('my_portfolio_aggregation', DSHVT.VALUE),
              State('my_portfolio_refresh_interval_selection', DSHVT.VALUE),
              State('my_portfolio_indicator_selection', DSHVT.VALUE)])
-        def handle_callback_for_graph_first(rows: list, selected_row_indices: list, refresh_n_clicks: int,
+        def handle_callback_for_graph_first(rows: list, selected_row_indices: list,
+                                            refresh_n_clicks: int,
                                             aggregation: int, refresh_interval: int, indicator: str):
+            if self._refresh_portfolio_selection_clicks != refresh_n_clicks:
+                self._refresh_portfolio_selection_clicks = refresh_n_clicks
+                selected_row_indices = []
             self.__init_selected_row__(selected_row_indices)
             if self._selected_ticker_id == '':
                 return ''
@@ -207,9 +221,13 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
         @self.app.callback(
             Output(self._data_table_div, DSHVT.CHILDREN),
             [Input('my_position_markdown', DSHVT.CHILDREN),
+             Input(self._button_handler.my_portfolio_reset_button, DSHVT.N_CLICKS),
              Input('my_portfolio_active_manage_button', DSHVT.N_CLICKS)])
-        def handle_callback_for_positions_options(children, n_clicks: int):
-            if n_clicks > self._active_manage_button_clicks:
+        def handle_callback_for_positions_options(children, reset_n_clicks: int, n_clicks: int):
+            if self._reset_portfolio_selection_clicks != reset_n_clicks:
+                self._reset_portfolio_selection_clicks = reset_n_clicks
+                self.__init_selected_row__([])
+            elif n_clicks > self._active_manage_button_clicks:
                 self._active_manage_button_clicks = n_clicks
                 self.__toggle_flag_for_active_managed__()
             return self.__get_table_for_portfolio__()
@@ -224,6 +242,15 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
                 return []
             self.__update_selected_row_number_after_refresh__(rows)
             return [self._selected_row_index]
+
+    def __init_callback_for_reset_portfolio_button__(self):
+        @self.app.callback(
+            Output(self._button_handler.my_portfolio_reset_button_div, DSHVT.STYLE),
+            [Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
+        def handle_callback_for_reset_portfolio_button(selected_row_indices: list):
+            if selected_row_indices is not None and len(selected_row_indices) > 0:
+                return self._button_handler.get_style_display(PFBTN.RESET_PORTFOLIO_SELECTION)
+            return {'display': 'none'}
 
     def __get_graph__(self, ticker_id: str, refresh_interval: int, limit=0, indicator=INDI.NONE):
         period = self.sys_config.period
@@ -271,7 +298,44 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
 
     def __get_table_for_portfolio__(self):
         self.__set_portfolio_rows_for_data_table__()
-        return MyDCC.data_table(self._data_table_name, self._table_rows, columns=self.columns)
+        return MyDCC.data_table(
+            self._data_table_name,
+            rows=self._table_rows,
+            selected_row_indices=[] if self._selected_row_index == -1 else [self._selected_row_index],
+            style_cell_conditional=self.get_table_style_cell_conditional(),
+            style_data_conditional=self.get_table_style_data_conditional(self._table_rows),
+            columns=self.columns,
+        )
+
+    @staticmethod
+    def get_table_style_cell_conditional() -> list:
+        return [{'if': {'column_id': c}, 'textAlign': 'left'}
+                for c in [PDC.EXCHANGE, PDC.ASSET]]
+
+    def get_table_style_data_conditional(self, rows: list):
+        column_id = PDC.CURRENT_TOTAL
+        filter_green = '{{{}}}  > 1000'.format(column_id)
+        filter_ivory = '{{{}}} < 1000'.format(column_id)
+        table_style_data = [
+            {'if': {'column_id': column_id, 'filter': filter_green}, 'backgroundColor': 'green', 'color': 'white'},
+            {'if': {'column_id': column_id, 'filter': filter_ivory}, 'backgroundColor': 'ivory', 'color': 'black'},
+        ]
+        self.add_row_specific_styles_to_table_style_data(rows, table_style_data)
+        return table_style_data
+
+    @staticmethod
+    def add_row_specific_styles_to_table_style_data(rows, table_style_data):
+        column_id = PDC.AMOUNT_AVAILABLE
+        for row in rows:
+            if row[PDC.EXCHANGE] != '':
+                amount = MyMath.get_float_for_string(row[PDC.AMOUNT])
+                amount_available = MyMath.get_float_for_string(row[PDC.AMOUNT_AVAILABLE])
+                if amount != amount_available:
+                    bg_color = 'bisque'
+                    filter_color = '{{{}}}  eq "{}"'.format(PDC.ASSET, row[PDC.ASSET])
+                    table_style_data.append(
+                        {'if': {'column_id': column_id, 'filter': filter_color}, 'backgroundColor': bg_color}
+                    )
 
     def __set_portfolio_rows_for_data_table__(self):
         if self._trade_handler_online.balances is None:

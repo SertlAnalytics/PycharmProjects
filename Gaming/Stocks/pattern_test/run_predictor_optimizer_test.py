@@ -1,5 +1,5 @@
 """
-Description: This module contains the test cases for the pattern predictor optimizer
+Description: This module contains the test cases for the pattern master_predictor optimizer
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-12-12

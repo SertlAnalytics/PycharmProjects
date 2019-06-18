@@ -578,15 +578,19 @@ class MyDCC:
     @staticmethod
     def data_table(element_id: str, rows: list, selected_row_indices=None, filtering=False,
                    columns=None, style_data_conditional=None, style_cell_conditional=None,
-                   page_size=10, min_width=1200, min_height=1000):
+                   hidden_columns=None, page_size=10, min_width=1200, min_height=1000):
         selected_row_indices = [] if selected_row_indices is None else selected_row_indices
         df = pd.DataFrame.from_dict(rows)        
         if columns is not None:
             df = df[columns]
+        hidden_columns = [] if hidden_columns is None else hidden_columns
         # print('data_table.columns={}'.format(columns))
+        # print('hidden_columns={}'.format(hidden_columns))
         return dash_table.DataTable(
             id=element_id,
-            columns=[{"name": DC.get_column_readable(col), "id": col} for col in df.columns],
+            columns=[{"name": DC.get_column_readable(col),
+                      "id": col,
+                      'hidden': True if col in hidden_columns else False} for col in columns],
             data=df.to_dict('records'),
             filtering=filtering,
             sorting=True,

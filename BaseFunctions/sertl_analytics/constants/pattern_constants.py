@@ -25,6 +25,7 @@ class PPR:  # PatternProcesses
     UPDATE_TRADE_POLICY_METRIC = 'Update_Trade_Policy_Metric'
     UPDATE_TRADE_RECORDS = 'Update_Trade_Records'
     UPDATE_PREDICTORS = 'Update_Predictors'
+    HANDLE_TRANSACTION_PROBLEMS = 'Handle'
 
 
 class TFOP:
@@ -566,6 +567,7 @@ class ITV:  # Interval
 class LOGT:  # Log Types (corresponds with the columns in the overview table for logs
     DATE_RANGE = 'date_range'
     ERRORS = 'errors'
+    TRANSACTIONS = 'transactions'
     PROCESSES = 'processes'
     SCHEDULER = 'scheduler'
     MESSAGE_LOG = 'message_log'
@@ -575,7 +577,8 @@ class LOGT:  # Log Types (corresponds with the columns in the overview table for
 
     @staticmethod
     def get_log_types_for_processing():
-        return [LOGT.ERRORS, LOGT.PROCESSES, LOGT.SCHEDULER, LOGT.MESSAGE_LOG, LOGT.PATTERNS, LOGT.WAVES, LOGT.TRADES]
+        return [LOGT.ERRORS, LOGT.PROCESSES, LOGT.SCHEDULER, LOGT.MESSAGE_LOG,
+                LOGT.PATTERNS, LOGT.WAVES, LOGT.TRADES, LOGT.TRANSACTIONS]
 
     @staticmethod
     def get_first_log_type_for_processing():

@@ -16,6 +16,9 @@ class SalesmanLog(FileLog):
     def __get_file_path_for_errors__(self):
         return self.__get_file_path__('salesman_log_errors.csv')
 
+    def __get_file_path_for_waiting_db_transactions__(self):
+        return self.__get_file_path__('salesman_log_db_transactions.csv')
+
     def __get_file_path_for_scheduler__(self):
         return self.__get_file_path__('salesman_log_scheduler.csv')
 

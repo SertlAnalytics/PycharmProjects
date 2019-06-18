@@ -10,6 +10,7 @@ from sertl_analytics.constants.pattern_constants import LOGT
 import os
 import sys
 import traceback
+from sertl_analytics.myfile import MyFile
 
 
 class FileLogLine:
@@ -57,19 +58,20 @@ class FileLog:
         process = process.replace('\n', ' ').strip()
         runtime_info = runtime_info.replace(',', '#')  # runtime info can contain comma. Which is not allowed...
         self.__log_message__(self.__get_file_path_for_errors__(), message, process, runtime_info)
+        
+    def log_waiting_db_transaction(self, table_name: str, data_dict_list: list):
+        message = 'Transaction problem at {}'.format(MyDate.get_date_time_as_string_from_date_time())
+        data_dict_list_str = '{}'.format(data_dict_list)
+        data_dict_list_str = data_dict_list_str.replace(',', '#')        
+        self.__log_message__(
+            self.__get_file_path_for_waiting_db_transactions__(), message, table_name, data_dict_list_str)
 
     def count_rows_for_process_optimize_log_files(self):
         log_types_for_processing = self.__get_log_types_for_process_optimize_log_files__()
         num_lines = 0
         for log_type in log_types_for_processing:
             file_path = self.get_file_path_for_log_type(log_type)
-            num_lines += self.__get_line_number_for_file__(file_path)
-        return num_lines
-
-    def __get_line_number_for_file__(self, file_path):
-        num_lines = 0
-        with open(file_path) as file:
-            num_lines += sum(1 for line in file)
+            num_lines += MyFile(file_path).line_numbers
         return num_lines
 
     def process_optimize_log_files(self):
@@ -86,15 +88,7 @@ class FileLog:
                             line_to_keep_list.append(line)
                     else:
                         print('{}: Line not valid in log file: {}'.format(file_path, line))
-            self.__replace_file_when_changed__(file_path, line_to_keep_list)
-
-    def __replace_file_when_changed__(self, file_path, line_to_keep_list):
-        line_number = self.__get_line_number_for_file__(file_path)
-        if line_number > len(line_to_keep_list):
-            print('Update file: {}, old: {}, new={} lines'.format(file_path, line_number, len(line_to_keep_list)))
-            with open(file_path, 'w') as file:
-                for line_to_keep in line_to_keep_list:
-                    file.write(line_to_keep)
+            MyFile(file_path).replace_file_when_changed(line_to_keep_list)
 
     def log_message(self, log_message: str, process='', process_step='run'):
         self.__log_message__(self.__get_file_path_for_messages__(), log_message, process, process_step)
@@ -108,7 +102,8 @@ class FileLog:
     def log_test_message(self, log_message: str, process='', process_step='run'):
         self.__log_message__(self.__get_file_path_for_test__(), log_message, process, process_step)
 
-    def __get_log_types_for_process_optimize_log_files__(self):
+    @staticmethod
+    def __get_log_types_for_process_optimize_log_files__():
         return [LOGT.ERRORS, LOGT.SCHEDULER, LOGT.MESSAGE_LOG]
 
     def __log_message__(self, file_path, log_message: str, process='', process_step='run'):
@@ -130,6 +125,9 @@ class FileLog:
 
     def __get_file_path_for_errors__(self):
         return self.__get_file_path__('log_errors.csv')
+    
+    def __get_file_path_for_waiting_db_transactions__(self):
+        return self.__get_file_path__('log_db_transactions.csv')
 
     def __get_file_path_for_scheduler__(self):
         return self.__get_file_path__('log_scheduler.csv')
@@ -156,4 +154,6 @@ class FileLog:
             return ''
         elif log_type == LOGT.TRADES:
             return self.__get_file_path_for_trades__()
+        elif log_type == LOGT.TRANSACTIONS:
+            return self.__get_file_path_for_waiting_db_transactions__()
         return ''

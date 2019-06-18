@@ -35,6 +35,7 @@ class PatternProcessManager(MyProcessManager):
             PPR.UPDATE_CLASS_METRICS_FOR_PREDICTOR_AND_LABEL:
                 ppr.ProcessUpdateClassMetricForPredictorAndLabel(self._db),
             PPR.UPDATE_TRADE_POLICY_METRIC: ppr.ProcessUpdateTradePolicyMetric(self._db),
+            PPR.HANDLE_TRANSACTION_PROBLEMS: ppr.ProcessHandleTransactionProblems(self._db),
             MYPR.OPTIMIZE_LOG_FILES: ppr.ProcessOptimizeLogFiles(self._db),
             MYPR.RUN_UNDEFINED_PROCESS: ProcessRunUndefinedProcess(self._db)
         }

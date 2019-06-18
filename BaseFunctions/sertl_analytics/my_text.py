@@ -6,7 +6,9 @@ Date: 2019-04-14
 """
 import urllib.parse
 from sertl_analytics.test.my_test_abc import TestInterface
+from sertl_analytics.mymath import MyMath
 import re
+import datetime
 
 
 class MyText:
@@ -65,6 +67,111 @@ class MyText:
             for start_pos in start_list:
                 string_orig = string_orig[:start_pos] + string_new + string_orig[start_pos + len_old_value:]
         return string_orig
+
+    @staticmethod
+    def get_dict_from_text(text: str) -> dict:
+        # {'Validity_Datetime': '2019-06-15 12:00:00'# 'Validity_Timestamp': 1560592800# 'Location': 'Bitfinex'# 'Equity_Type': 'Crypto_Currencies'# 'Equity_Type_ID': 20# 'Equity_ID': 'XRP'# 'Equity_Name': 'XRP'# 'Quantity': 9980.0# 'Value_Unit': 0# 'Value_Total': 4031.92# 'Currency': 'USD'}
+        # {'Equity_Type': 'Crypto_Currencies'# 'Equity_Type_ID': 20# 'Period': 'INTRADAY'# 'Period_ID': 0# 'Aggregation': 15# 'Ticker_ID': 'BABUSD'# 'Ticker_Name': 'BABUSD'# 'Wave_Type': 'ascending'# 'Wave_Type_ID': 1# 'Wave_Structure': 'Short_long_short'# 'Wave_Structure_ID': 2# 'W1_Begin_Timestamp': 1560531600# 'W1_Begin_Datetime': '2019-06-14 19:00:00'# 'W1_Begin_Value': 400.3# 'W2_Begin_Timestamp': 1560536100# 'W2_Begin_Datetime': '2019-06-14 20:15:00'# 'W2_Begin_Value': 406.4# 'W3_Begin_Timestamp': 1560540600# 'W3_Begin_Datetime': '2019-06-14 21:30:00'# 'W3_Begin_Value': 403.0# 'W4_Begin_Timestamp': 1560555900# 'W4_Begin_Datetime': '2019-06-15 01:45:00'# 'W4_Begin_Value': 422.0# 'W5_Begin_Timestamp': 1560557700# 'W5_Begin_Datetime': '2019-06-15 02:15:00'# 'W5_Begin_Value': 417.4# 'Wave_End_Timestamp': 1560564900# 'Wave_End_Datetime': '2019-06-15 04:15:00'# 'Wave_End_Value': 424.0# 'W1_Range': 6.1# 'W2_Range': 3.4# 'W3_Range': 19.0# 'W4_Range': 4.6# 'W5_Range': 6.6# 'Parent_Wave_OID': 0# 'Wave_in_parent': ''# 'Wave_End_Flag': -1# 'Wave_Max_Retr_PCT': 0# 'Wave_Max_Retr_Timestamp_PCT': 0# 'FC_Timestamp': 0# 'FC_Datetime': ''# 'FC_C_Wave_End_Flag': -1# 'FC_C_Wave_Max_Retr_PCT': 0# 'FC_C_Wave_Max_Retr_Timestamp_PCT': 0# 'FC_R_Wave_End_Flag': -1# 'FC_R_Wave_Max_Retr_PCT': 0# 'FC_R_Wave_Max_Retr_Timestamp_PCT': 0}
+        dict_pairs = {'"': '"', "'": "'", '{': '}', '[': ']', '(': ')'}
+        cut_positions = []
+        pair_start = ''
+        pair_start_counter = 0
+        for i in range(0, len(text)):
+            i_char = text[i]
+            if i_char == '{' and len(cut_positions) == 0:
+                cut_positions.append(i)
+            else:
+                if len(cut_positions) > 0:
+                    if i_char in dict_pairs and pair_start == '':
+                            pair_start = i_char
+                            pair_start_counter = 1
+                    elif pair_start != '' and dict_pairs[pair_start] == i_char:
+                        pair_start = ''
+                        pair_start_counter = 0
+                    elif i_char == ',' and pair_start_counter == 0:
+                        cut_positions.append(i)
+                    elif i_char == '}' and pair_start_counter == 0:
+                        cut_positions.append(i)
+        return_dict = {}
+        for idx in range(0, len(cut_positions) - 1):
+            cut_start = cut_positions[idx]
+            cut_end = cut_positions[idx + 1]
+            entry = text[cut_start + 1:cut_end]
+            key_value_parts = entry.split(': ')
+            key = key_value_parts[0].strip()
+            key = MyText.get_string_without_hyphen(key)
+            value = key_value_parts[1].strip()
+            value = MyText.get_string_without_hyphen(value)
+            return_dict[key] = value
+        return return_dict
+
+    @staticmethod
+    def is_number(value):
+        try:
+            float(value)  # for int, long and float
+        except ValueError:
+            return False
+        return True
+
+    @staticmethod
+    def is_date_time_date(value: str):
+        return value.find('datetime.date') >= 0
+
+    @staticmethod
+    def get_date_time_date(value: str):
+        parameter_string = value[value.find('(')+1:value.find(')')]
+        parameters = parameter_string.split(',')
+        year, month, day = int(parameters[0]), int(parameters[1]), int(parameters[2])
+        return datetime.date(year=year, month=month, day=day)
+
+    @staticmethod
+    def is_date_time_time(value: str):
+        return value.find('datetime.time') >= 0
+
+    @staticmethod
+    def get_date_time_time(value: str):
+        parameter_string = value[value.find('(') + 1:value.find(')')]
+        parameters = parameter_string.split(',')
+        hour, minute = int(parameters[0]), int(parameters[1])
+        return datetime.time(hour=hour, minute=minute)
+
+    @staticmethod
+    def get_string_without_hyphen(text: str):
+        text = text.replace("'", "")
+        return text.replace('"', '')
+
+    @staticmethod
+    def get_list_from_text(text: str) -> list:
+        # [entry1, entry2, ...] where entryNN could be text, dict, list, ....
+        dict_pairs = {'"': '"', "'": "'", '{': '}', '[': ']'}
+        cut_positions = []
+        pair_start = ''
+        pair_start_counter = 0
+        for i in range(0, len(text)):
+            i_char = text[i]
+            if i_char == '[' and len(cut_positions) == 0:
+                cut_positions.append(i)
+            else:
+                if len(cut_positions) > 0:
+                    if i_char in dict_pairs:
+                        if pair_start == '':
+                            pair_start = i_char
+                            pair_start_counter = 1
+                        elif pair_start == i_char:
+                            pair_start_counter += 1
+                    elif pair_start != '' and dict_pairs[pair_start] == i_char:
+                        pair_start_counter -= 1
+                    elif i_char == ',' and pair_start_counter == 0:
+                        cut_positions.append(i)
+                    elif i_char == ']' and pair_start_counter == 0:
+                        cut_positions.append(i)
+        return_list = []
+        for idx in range(0, len(cut_positions) - 1):
+            cut_start = cut_positions[idx]
+            cut_end = cut_positions[idx + 1]
+            entry = text[cut_start + 1:cut_end]
+            return_list.append(entry.strip())
+        return return_list
 
 
 class MyTextTest(MyText, TestInterface):

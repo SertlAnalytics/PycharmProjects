@@ -29,7 +29,8 @@ if True:
     # stock_db.update_stock_data_for_symbol('FCEL')
     # stock_db.update_stock_data_for_symbol('TSLA')
     # stock_db.update_stock_data_for_symbol('GE')
-    stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
+    # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
+    stock_db_updater.handle_transaction_problems()
     # stock_db_updater.add_wave_prediction_data_to_wave_records(symbol='')
     # stock_db_updater.update_trade_records(4, 16)
     # stock_db_updater.update_trade_policy_metric_for_today(

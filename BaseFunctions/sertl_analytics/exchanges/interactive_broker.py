@@ -48,7 +48,7 @@ class SYM:
 
 
 class IBKRConfiguration(ExchangeConfiguration):
-    def __set_values__(self):
+    def __set_exchange_default_values__(self):
         self.hodl_dict = {'APPL': 10}  # currency in upper characters
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25

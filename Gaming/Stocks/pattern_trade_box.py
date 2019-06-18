@@ -229,15 +229,10 @@ class TradingBox:
             apex_value = self._data_dict.get(DC.APEX_VALUE)
             pattern_begin_high = self._data_dict.get(DC.PATTERN_BEGIN_HIGH)
             max_apex_and_high = max(apex_value, pattern_begin_high)
-            if last_price > max_apex_and_high > self._stop_loss:
+            if last_price > max_apex_and_high * 1.01 > max_apex_and_high > self._stop_loss:  # we want to have a close stop_loss
                 self.__log_stop_loss_adjustment__(module, self._pattern_type, max_apex_and_high)
                 self._stop_loss = max_apex_and_high
                 return True
-        if self._pattern_type == FT.TRIANGLE_DOWN:  # we want to have a close stop_loss
-            adjusted_price = self.buy_price * 0.99  # formerly 0.998 -- this was too close
-            if adjusted_price > self._stop_loss:
-                self.__log_stop_loss_adjustment__(module, self._pattern_type, adjusted_price)
-                self._stop_loss = adjusted_price
         return False
 
     def __log_stop_loss_adjustment__(self, module_name: str, reason: str, new_stop_loss: float):

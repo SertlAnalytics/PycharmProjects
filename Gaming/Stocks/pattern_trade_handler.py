@@ -133,6 +133,7 @@ class PatternTradeHandler:
         self.enforce_sell_at_end(tick_list[-1])
 
     def check_actual_trades(self, last_wave_tick=None):
+        print('check_actual_trades.sys_config.config.save_trade_data={}'.format(self.sys_config.config.save_trade_data))
         if last_wave_tick is not None:
             self._last_wave_tick_for_test = last_wave_tick
         self._time_stamp_for_actual_check = MyDate.get_epoch_seconds_from_datetime()
@@ -277,9 +278,10 @@ class PatternTradeHandler:
 
     def __remove_outdated_pattern_trades_in_status_new__(self):
         # remove trades which doesn't belong to an actual pattern anymore
-        deletion_key_list = [key for key, trades in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items()
-                             if trades.pattern.id not in self.trade_candidate_controller.actual_pattern_id_list]
-        self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.PATTERN_VANISHED)
+        if self.sys_config.exchange_config.delete_vanished_patterns_from_trade_dict:
+            deletion_key_list = [key for key, trades in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items()
+                                 if trades.pattern.id not in self.trade_candidate_controller.actual_pattern_id_list]
+            self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.PATTERN_VANISHED)
 
     def sell_on_fibonacci_cluster_top(self):
         self._trade_client_crypto.delete_all_orders()
@@ -310,6 +312,8 @@ class PatternTradeHandler:
         # ToDo - remove after checks
 
     def __handle_sell_triggers__(self):
+        print('__handle_sell_triggers__.sys_config.config.save_trade_data={}'.format(
+            self.sys_config.config.save_trade_data))
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
             ticker_last_price = pattern_trade.ticker_actual.last_price
             pattern_trade.print_state_details_for_actual_ticker(PTHP.HANDLE_SELL_TRIGGERS)
@@ -345,11 +349,17 @@ class PatternTradeHandler:
         sell_comment = pattern_trade.get_sell_comment(sell_trigger)
         print('Sell: {}'.format(sell_comment))
 
+        self.sys_config.file_log.log_message(
+            log_message='Trade.ID={}, self.trade_process={}, sys_config.config.save_trade_data={}'.format(
+                pattern_trade.id, self.trade_process, self.sys_config.config.save_trade_data),
+            process='Save trade', process_step='handle_sell_trigger')
+
         if self.trade_process == TP.ONLINE:
             order_status = pattern_trade.trade_client.create_sell_market_order(
                 pattern_trade.ticker_id, pattern_trade.executed_amount, pattern_trade.is_simulation)
         else:
             order_status = self.__get_order_status_testing__(PTHP.HANDLE_SELL_TRIGGERS, pattern_trade, sell_trigger)
+
         if order_status is None:
             self.__delete_entries_from_pattern_trade_dict__([pattern_trade.id], PDR.SELL_PROBLEM)
         else:
@@ -364,6 +374,9 @@ class PatternTradeHandler:
     def __handle_wrong_breakout__(self):
         deletion_key_list = []
         for key, pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.NEW).items():
+            # print('__handle_wrong_breakout__: pattern_trade.id={}, pattern_trade.trade_process={}'.format(
+            #     pattern_trade.id, pattern_trade.trade_process
+            # ))
             if pattern_trade.is_actual_ticker_wrong_breakout(PTHP.HANDLE_WRONG_BREAKOUT):
                 deletion_key_list.append(key)
                 self.news_handler.add_news('Wrong breakout', 'at {} on {}'.format(
@@ -449,9 +462,9 @@ class PatternTradeHandler:
     def __handle_buy_trigger_for_pattern_trade__(self, pattern_trade: PatternTrade):
         pattern_trade.set_status_in_execution()  # to avoid a second execution
         ticker = pattern_trade.ticker_actual
-        buy_comment = '{}-{}-{} at {:.2f} on {}'.format(ticker.ticker_id,
-                                                        pattern_trade.buy_trigger, pattern_trade.trade_strategy,
-                                                        ticker.last_price, ticker.date_time_str)
+        buy_comment = '{}-{}-{} at {} on {}'.format(
+            ticker.ticker_id, pattern_trade.buy_trigger,
+            pattern_trade.trade_strategy, ticker.last_price, ticker.date_time_str)
         print('Handle_buy_trigger_for_pattern_trade: {}'.format(buy_comment))
         self.sys_config.file_log.log_trade('{}'.format(
             pattern_trade.id_for_logging), process='Trade_Handler', process_step='Buy')

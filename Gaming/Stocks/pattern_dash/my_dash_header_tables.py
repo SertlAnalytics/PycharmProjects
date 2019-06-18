@@ -195,7 +195,8 @@ class MyHTMLTabLogHeaderTable(MyHTMLTabHeaderTable):
                 LOGT.MESSAGE_LOG: 'Pattern file_log',
                 LOGT.PATTERNS: 'Pattern',
                 LOGT.WAVES: 'Waves',
-                LOGT.TRADES: 'Trades (add/buy)'}
+                LOGT.TRADES: 'Trades (add/buy)',
+                LOGT.TRANSACTIONS: 'Transactions'}
 
     def _get_cell_style_(self, row: int, col: int):
         base_width = int(100/self._column_number)

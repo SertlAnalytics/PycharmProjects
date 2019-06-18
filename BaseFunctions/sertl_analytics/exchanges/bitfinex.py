@@ -54,7 +54,7 @@ class SYM:
 
 
 class BitfinexConfiguration(ExchangeConfiguration):
-    def __set_values__(self):
+    def __set_exchange_default_values__(self):
         self.hodl_dict = {'XRP': 10000, 'ETHx': 0}  # currency in upper characters
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25

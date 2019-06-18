@@ -64,9 +64,9 @@ class PatternDataFetcherCacheKey(DataFetcherCacheKey):
 
 
 class PatternDetectionController:
-    def __init__(self, sys_config: SystemConfiguration):
+    def __init__(self, sys_config: SystemConfiguration, trade_process=TP.BACK_TESTING):
         self.sys_config = sys_config
-        self.sys_config.runtime_config.actual_trade_process = TP.BACK_TESTING
+        self.sys_config.runtime_config.actual_trade_process = trade_process
         self.detector_statistics = DetectorStatistics(self.sys_config)
         self.pattern_statistics = PatternStatistics(self.sys_config)
         self.constraints_statistics = ConstraintsStatistics()
