@@ -241,10 +241,12 @@ class MyMath:
             return 0
         decimals = int(math.ceil(math.log10(abs(value))))
         if decimals > 3:
-            return round(value)
+            rounded_value = round(value)
+            # to avoid problems with an additional .0 in print statements...
+            return int(rounded_value) if rounded_value == int(rounded_value) else rounded_value
         elif decimals > 0:
             return round(value, 5 - decimals)
-        return round(value, min(5, -decimals + 3))  # not more then 5 decimals after comma
+        return round(value, min(5, -decimals + 3))  # not more than 5 decimals after comma
 
     @staticmethod
     def get_float_for_string(value_str: str, delimiter='.'):
@@ -315,8 +317,10 @@ class MyMathTest(MyMath, TestInterface):
         """
         test_case_dict = {
             'value=0': [self.round_smart(0), 0],
-            'decimals before comma > 3': [self.round_smart(1234.66666), 1235],
-            'decimals before comma = 3': [self.round_smart(234.66666), 234.67],
+            'decimals before comma > 3': [self.round_smart(9234.66666), 9235],
+            'decimals before comma > 3 (2)': [self.round_smart(1234.66666), 1235],
+            'decimals before comma = 3': [self.round_smart(999.66666), 999.67],
+            'decimals before comma = 3 (2)': [self.round_smart(234.66666), 234.67],
             'decimals before comma = 2': [self.round_smart(34.66666), 34.667],
             'decimals before comma = 1': [self.round_smart(4.66666), 4.6667],
             'number < 1 and zeros after comma=0 (like 0.55555555)': [self.round_smart(0.55555555), 0.556],

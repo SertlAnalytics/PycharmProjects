@@ -6,10 +6,10 @@ Date: 2019-01-18
 """
 
 from sertl_analytics.constants.pattern_constants import FT, PRD
-from pattern_database.stock_access_entity import TradeEntity
-from pattern_reinforcement.trade_environment import TradeEnvironment
-from pattern_reinforcement.trade_policy_handler import TradePolicyHandler
-from pattern_reinforcement.trade_policy_gradient import TradePolicyByPolicyGradient
+from pattern_database.stock_trade_entity import TradeEntity
+from pattern_trade_models.trade_environment import TradeEnvironment
+from pattern_trade_models.trade_policy_handler import TradePolicyHandler
+from pattern_trade_models.trade_policy_gradient import TradePolicyByPolicyGradient
 import tensorflow as tf
 import numpy as np
 import math

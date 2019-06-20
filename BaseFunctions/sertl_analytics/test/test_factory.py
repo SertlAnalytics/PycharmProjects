@@ -40,3 +40,4 @@ class TestFactory:
     def run_test_for_ibkr(self):
         test = MyIBKRTest(self._print_all_test_cases_for_units)
         test.run_test_for_all_units(test.class_name_tested)
+

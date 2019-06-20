@@ -6,9 +6,9 @@ Date: 2019-01-19
 """
 
 from sertl_analytics.models.policy_action import PolicyAction
-from pattern_reinforcement.trade_environment import TradeObservation
-from pattern_reinforcement.trade_policy_action import TradePolicySellAction
-from pattern_reinforcement.trade_policy_action import TradePolicyWaitAction, TradePolicyStopLossUpAction
+from pattern_trade_models.trade_environment import TradeObservation
+from pattern_trade_models.trade_policy_action import TradePolicySellAction
+from pattern_trade_models.trade_policy_action import TradePolicyWaitAction, TradePolicyStopLossUpAction
 import tensorflow as tf
 import numpy as np
 

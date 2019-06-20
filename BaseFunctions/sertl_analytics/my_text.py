@@ -176,6 +176,8 @@ class MyText:
 
 class MyTextTest(MyText, TestInterface):
     REPLACE_SUBSTRING = 'replace_substring'
+    GET_LIST_FROM_TEXT = 'get_list_from_text'
+    GET_DICT_FROM_TEXT = 'get_dict_from_text'
 
     def __init__(self, print_all_test_cases_for_units=False):
         TestInterface.__init__(self, print_all_test_cases_for_units)
@@ -200,12 +202,49 @@ class MyTextTest(MyText, TestInterface):
         }
         return self.__verify_test_cases__(self.REPLACE_SUBSTRING, test_case_dict)
 
+    def test_get_list_from_text(self):
+        test_case_dict = {
+            'Flat list': [self.get_list_from_text('[entry1, entry2, ...]'), ['entry1', 'entry2', '...']],
+            'Interleaved list': [
+                self.get_list_from_text('[{entry1, {entry2}, ...}, {entry1, entry2, ...}]'),
+                ['{entry1, {entry2}, ...}', '{entry1, entry2, ...}']]
+        }
+        return self.__verify_test_cases__(self.GET_LIST_FROM_TEXT, test_case_dict)
+
+    def test_get_dict_from_text(self):
+        test_case_dict = {
+            'Simple dict': [
+                self.get_dict_from_text(
+                    "{'Validity_Datetime': '2019-06-15 12:00:00', 'Validity_Timestamp': 1560592800, "
+                    "'Location': 'Bitfinex', 'Equity_Type': 'Crypto_Currencies', 'Equity_Type_ID': 20, "
+                    "'Equity_ID': 'XRP', 'Equity_Name': 'XRP', 'Quantity': 9980.0, 'Value_Unit': 0, "
+                    "'Value_Total': 4031.92, 'Currency': 'USD'}"),
+                {'Validity_Datetime': '2019-06-15 12:00:00', 'Validity_Timestamp': '1560592800', 'Location': 'Bitfinex',
+                 'Equity_Type': 'Crypto_Currencies', 'Equity_Type_ID': '20', 'Equity_ID': 'XRP', 'Equity_Name': 'XRP',
+                 'Quantity': '9980.0', 'Value_Unit': '0', 'Value_Total': '4031.92', 'Currency': 'USD'}
+            ],
+            'Complex dict': [
+                self.get_dict_from_text(
+                    "{'Period': 'INTRADAY', 'Aggregation': 15, 'Symbol': 'XRPUSD', 'Timestamp': 1560784500, "
+                    "'Date': datetime.date(2019, 6, 17), 'Time': datetime.time(17, 15), 'Open': 0.433, "
+                    "'High': 0.434, 'Low': 0.432, 'Close': 0.434, 'Volume': 169404.0, 'BigMove': False, 'Direction': 0}"),
+                {'Period': 'INTRADAY', 'Aggregation': '15', 'Symbol': 'XRPUSD', 'Timestamp': '1560784500',
+                 'Date': 'datetime.date(2019, 6, 17)', 'Time': 'datetime.time(17, 15)', 'Open': '0.433', 'High': '0.434',
+                 'Low': '0.432', 'Close': '0.434', 'Volume': '169404.0', 'BigMove': 'False', 'Direction': '0'}
+            ]
+        }
+        return self.__verify_test_cases__(self.GET_LIST_FROM_TEXT, test_case_dict)
+
     def __get_class_name_tested__(self):
         return MyText.__name__
 
     def __run_test_for_unit__(self, unit: str) -> bool:
         if unit == self.REPLACE_SUBSTRING:
             return self.test_replace_substring()
+        elif unit == self.GET_LIST_FROM_TEXT:
+            return self.test_get_list_from_text()
+        elif unit == self.GET_DICT_FROM_TEXT:
+            return self.test_get_dict_from_text()
 
     def __get_test_unit_list__(self):
-        return [self.REPLACE_SUBSTRING]
+        return [self.REPLACE_SUBSTRING, self.GET_LIST_FROM_TEXT, self.GET_DICT_FROM_TEXT]

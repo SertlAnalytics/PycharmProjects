@@ -406,6 +406,14 @@ class WaveTickList:
     def get_markdown_text_for_second_last_wave_tick(self, period=PRD.INTRADAY):
         prev_tick = self.tick_list[-2]
         prefix = prev_tick.time if period == PRD.INTRADAY else prev_tick.date
+        print('get_markdown_text_for_second_last_wave_tick: **{}:** open={}, close={}, volume={}'.format(
+            prefix, prev_tick.open, prev_tick.close, prev_tick.volume))
+        print(MyMath.round_smart(prev_tick.open))
+        print(prev_tick.open)
+
+        print(MyMath.round_smart(123456.23))
+        print(123456.23)
+        print('round_smart={}, orig={}'.format(MyMath.round_smart(prev_tick.open), prev_tick.open))
         return '**{}:** open={}, close={}, volume={}'.format(
             prefix, prev_tick.open, prev_tick.close, prev_tick.volume)
 

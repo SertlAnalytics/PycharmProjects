@@ -2,61 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f337eff7-2e2d-415d-b4ab-cf8d55a29aa3" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/myfile.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/run_test_for_my_text.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_button_for_portfolio.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/unit_tests/my_math_unit_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/pattern_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/constants/salesman_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/salesman_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datafetcher/database_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/datafetcher/database_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exchanges/bitfinex.py" beforeDir="false" afterPath="$PROJECT_DIR$/exchanges/bitfinex.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exchanges/exchange_cls.py" beforeDir="false" afterPath="$PROJECT_DIR$/exchanges/exchange_cls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exchanges/interactive_broker.py" beforeDir="false" afterPath="$PROJECT_DIR$/exchanges/interactive_broker.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my_text.py" beforeDir="false" afterPath="$PROJECT_DIR$/my_text.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mydash/my_dash_components.py" beforeDir="false" afterPath="$PROJECT_DIR$/mydash/my_dash_components.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myfilelog.py" beforeDir="false" afterPath="$PROJECT_DIR$/myfilelog.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/mymath.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/run_test_for_my_text.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/run_test_from_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/unit_tests/run_test_from_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_factory.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/fibonacci/fibonacci_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/fibonacci/fibonacci_predictor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_header_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_header_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_job_handler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_jobs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_jobs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_pattern.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_pattern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_portfolio.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_portfolio.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_statistics_base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_trading.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_for_trading.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_table_for_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_table_for_db.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_table_for_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_tab_table_for_log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/plotter_dash/my_dash_plotter_for_statistics.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/plotter_dash/my_dash_plotter_for_statistics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/run_pattern_detection_with_dash.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/run_pattern_detection_with_dash.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_dictionary.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_dictionary.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_tables.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_tables.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_detection_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_detection_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_logging/pattern_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_logging/pattern_log.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_predictor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_predictor_optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_predictor_optimizer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_process.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_process_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_process_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_predictor_optimizer_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_predictor_optimizer_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_predictors_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_predictors_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/trade_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/trade_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_box.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_box.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/MyStocks.sqlite-journal" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_wave_tick.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_wave_tick.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/grid_tables/my_grid_table_4_sales_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/grid_tables/my_grid_table_4_sales_base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_dash/my_dash_tab_for_sales.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/salesman_logging/salesman_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/salesman_logging/salesman_log.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -68,10 +23,10 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="run_test_from_factory.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
+        <entry file="file://$PROJECT_DIR$/unit_tests/run_test_from_factory.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="238">
-              <caret line="14" column="38" selection-start-line="14" selection-start-column="38" selection-end-line="14" selection-end-column="38" />
+              <caret line="14" column="37" lean-forward="true" selection-start-line="14" selection-start-column="37" selection-end-line="14" selection-end-column="37" />
             </state>
           </provider>
         </entry>
@@ -130,9 +85,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/environment/__init__.py" />
-        <option value="$PROJECT_DIR$/models/policy_action.py" />
-        <option value="$PROJECT_DIR$/models/models_abc.py" />
         <option value="$PROJECT_DIR$/datafetcher/file_name_fetcher.py" />
         <option value="$PROJECT_DIR$/datafetcher/web_data_fetcher.py" />
         <option value="$PROJECT_DIR$/../../Gaming/Stocks/pattern_test/run_indices_configuration_test.py" />
@@ -165,8 +117,6 @@
         <option value="$PROJECT_DIR$/my_excel.py" />
         <option value="$PROJECT_DIR$/constants/my_constants.py" />
         <option value="$PROJECT_DIR$/mydash/my_dash_callback.py" />
-        <option value="$PROJECT_DIR$/test/test_factory.py" />
-        <option value="$PROJECT_DIR$/test/run_test_from_factory.py" />
         <option value="$PROJECT_DIR$/my_httplib.py" />
         <option value="$PROJECT_DIR$/constants/salesman_constants.py" />
         <option value="$PROJECT_DIR$/playground/test_pd_frame_sets.py" />
@@ -178,14 +128,19 @@
         <option value="$PROJECT_DIR$/exchanges/bitfinex.py" />
         <option value="$PROJECT_DIR$/datafetcher/database_fetcher.py" />
         <option value="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" />
-        <option value="$PROJECT_DIR$/mymath.py" />
         <option value="$PROJECT_DIR$/test/run_test_for_my_text.py" />
+        <option value="$PROJECT_DIR$/unit_test/my_math_unit_test.py" />
+        <option value="$PROJECT_DIR$/unit_tests/test_factory.py" />
+        <option value="$PROJECT_DIR$/test/run_test_from_factory.py" />
+        <option value="$PROJECT_DIR$/test/test_factory.py" />
+        <option value="$PROJECT_DIR$/mymath.py" />
         <option value="$PROJECT_DIR$/my_text.py" />
+        <option value="$PROJECT_DIR$/unit_tests/run_test_from_factory.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-7" />
+    <option name="x" value="1273" />
     <option name="width" value="1294" />
     <option name="height" value="1407" />
   </component>
@@ -242,6 +197,12 @@
               <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
               <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
               <item name="test" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
+              <item name="sertl_analytics" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="sertl_analytics" type="462c0819:PsiDirectoryNode" />
+              <item name="unit_tests" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="sertl_analytics" type="b2602c69:ProjectViewProjectNode" />
@@ -309,16 +270,17 @@
     <property name="settings.editor.selected.configurable" value="vcs.Git" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\test" />
-      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\constants" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\processes" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\mydash" />
       <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\test" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\unit_tests" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\test" />
+      <recent name="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -333,8 +295,8 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run_test_for_my_text">
-    <configuration name="__test_models__" type="PythonConfigurationType" factoryName="Python" temporary="true">
+  <component name="RunManager" selected="Python.run_test_from_factory (1)">
+    <configuration name="my_math_unit_test" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="sertl_analytics" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -342,29 +304,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/models" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/unit_test" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/models/__test_models__.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-    </configuration>
-    <configuration name="file_name_fetcher" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="sertl_analytics" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/datafetcher" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/datafetcher/file_name_fetcher.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/unit_test/my_math_unit_test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -382,7 +326,25 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/run_test_for_my_text.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\unit_tests\run_test_for_my_text.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="run_test_from_factory (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="sertl_analytics" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/unit_tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/unit_tests/run_test_from_factory.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -400,7 +362,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/run_test_from_factory.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\josef\OneDrive\GitHub\PycharmProjects\BaseFunctions\sertl_analytics\unit_tests\run_test_from_factory.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -425,19 +387,19 @@
       <option name="MODULE_MODE" value="false" />
     </configuration>
     <list>
-      <item itemvalue="Python.file_name_fetcher" />
       <item itemvalue="Python.run_test_from_factory" />
-      <item itemvalue="Python.__test_models__" />
       <item itemvalue="Python.test_pd_frame_sets" />
       <item itemvalue="Python.run_test_for_my_text" />
+      <item itemvalue="Python.my_math_unit_test" />
+      <item itemvalue="Python.run_test_from_factory (1)" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.run_test_from_factory (1)" />
+        <item itemvalue="Python.my_math_unit_test" />
         <item itemvalue="Python.run_test_for_my_text" />
         <item itemvalue="Python.test_pd_frame_sets" />
         <item itemvalue="Python.run_test_from_factory" />
-        <item itemvalue="Python.__test_models__" />
-        <item itemvalue="Python.file_name_fetcher" />
       </list>
     </recent_temporary>
   </component>
@@ -455,17 +417,16 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-7" y="0" width="1294" height="1407" extended-state="0" />
+    <frame x="1273" y="0" width="1294" height="1407" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4392157" visible="true" weight="0.25" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.43843138" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.477707" side_tool="true" weight="0.32784313" />
-      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.4960191" weight="0.32784313" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.522293" weight="0.5294118" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49761146" weight="0.32784313" />
-      <window_info id="Structure" order="1" sideWeight="0.56078434" side_tool="true" visible="true" weight="0.25" />
+      <window_info id="Structure" order="1" sideWeight="0.5615686" side_tool="true" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" sideWeight="0.70616496" weight="0.24078432" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49761146" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -475,6 +436,7 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.4960191" weight="0.32784313" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
@@ -554,7 +516,7 @@
           <option name="timeStamp" value="35" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/test/run_test_for_my_text.py</url>
+          <url>file://$PROJECT_DIR$/unit_tests/run_test_for_my_text.py</url>
           <line>19</line>
           <option name="timeStamp" value="48" />
         </line-breakpoint>
@@ -570,13 +532,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/exchanges/interactive_broker_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="646">
-          <caret line="124" column="27" lean-forward="true" selection-start-line="124" selection-start-column="27" selection-end-line="124" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/exchanges/bitfinex_trade_client.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="170">
@@ -622,13 +577,6 @@
           <folding>
             <element signature="e#217#256#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test/my_test_case.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
         </state>
       </provider>
     </entry>
@@ -768,20 +716,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/my_test_abc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="527">
-          <caret line="42" column="8" selection-start-line="42" selection-start-column="8" selection-end-line="42" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test/test_factory.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="33" column="18" selection-start-line="33" selection-start-column="18" selection-end-line="33" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/mycache.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="119">
@@ -904,13 +838,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/mymath.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="629">
-          <caret line="276" column="19" selection-start-line="270" selection-start-column="4" selection-end-line="276" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/datafetcher/database_fetcher.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1020">
@@ -918,27 +845,68 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test/my_test_case.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="124">
+          <caret line="26" selection-start-line="26" selection-end-line="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/unit_tests/run_test_for_my_text.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" column="18" lean-forward="true" selection-start-line="17" selection-start-column="18" selection-end-line="17" selection-end-column="285" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/my_test_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-505">
+          <caret line="21" column="8" selection-start-line="21" selection-start-column="8" selection-end-line="21" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mymath.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="175">
+          <caret line="313" column="16" lean-forward="true" selection-start-line="313" selection-start-column="16" selection-end-line="313" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/unit_tests/my_math_unit_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="124">
+          <caret line="13" column="20" selection-start-line="13" selection-start-column="20" selection-end-line="13" selection-end-column="20" />
+          <folding>
+            <element signature="e#163#188#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/my_text.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="73" column="66" selection-start-line="73" selection-start-column="66" selection-end-line="73" selection-end-column="66" />
+        <state relative-caret-position="637">
+          <caret line="190" column="16" lean-forward="true" selection-start-line="190" selection-start-column="16" selection-end-line="190" selection-end-column="16" />
           <folding>
             <element signature="e#166#185#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/run_test_for_my_text.py">
+    <entry file="file://$PROJECT_DIR$/test/test_factory.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="17" column="14" selection-start-line="17" selection-start-column="14" selection-end-line="17" selection-end-column="14" />
+        <state relative-caret-position="283">
+          <caret line="32" column="20" selection-start-line="32" selection-start-column="20" selection-end-line="32" selection-end-column="20" />
+          <folding>
+            <element signature="e#182#211#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/run_test_from_factory.py">
+    <entry file="file://$PROJECT_DIR$/unit_tests/run_test_from_factory.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
-          <caret line="14" column="38" selection-start-line="14" selection-start-column="38" selection-end-line="14" selection-end-column="38" />
+          <caret line="14" column="37" lean-forward="true" selection-start-line="14" selection-start-column="37" selection-end-line="14" selection-end-column="37" />
         </state>
       </provider>
     </entry>

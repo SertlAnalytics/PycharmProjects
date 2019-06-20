@@ -161,6 +161,7 @@ class SaleIdenticalCheck:
         self._sale_01 = sale_01
         self._sale_02 = sale_02
         self._number_from_db = number_from_db
+        self._prefixes = self.__get_print_prefixes__()
         self._different_columns = []
         self._are_identical = self.__are_sales_identical__()
 
@@ -171,6 +172,9 @@ class SaleIdenticalCheck:
     @property
     def different_columns(self):
         return ', '.join(self._different_columns)
+
+    def __get_print_prefixes__(self):
+        return {0: ['a', 'b'], 1: ['DB', 'Online'], 2: ['Online', 'DB']}.get(self._number_from_db, ['a', 'b'])
 
     def __are_sales_identical__(self) -> bool:
         are_all_values_identical = True
@@ -188,7 +192,8 @@ class SaleIdenticalCheck:
                         are_single_values_identical = MyText.are_values_identical(value_01, value_02)
             if not are_single_values_identical:
                 self._different_columns.append(col)
-                print('\nNot identical "{}": \na) {} \nb) {}'.format(col, value_01, value_02))
+                print('\nNot identical "{}": \n{}) {} \n{}) {}'.format(
+                    col, self._prefixes[0], value_01, self._prefixes[1], value_02))
                 are_all_values_identical = False
         return are_all_values_identical
 
