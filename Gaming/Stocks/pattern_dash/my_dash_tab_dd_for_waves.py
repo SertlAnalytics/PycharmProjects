@@ -61,7 +61,7 @@ class WaveTabDropDownHandler(DropDownHandler):
 
     def __get_selected_value_dict__(self):
         return {WAVEDD.PERIOD: PRD.DAILY, WAVEDD.AGGREGATION: 30,
-                WAVEDD.RETROSPECTIVE_TICKS: 200, WAVEDD.INDICES: INDICES.ALL}
+                WAVEDD.RETROSPECTIVE_TICKS: 300, WAVEDD.INDICES: INDICES.ALL}
 
     def __get_div_text__(self, drop_down_type: str):
         value_dict = {

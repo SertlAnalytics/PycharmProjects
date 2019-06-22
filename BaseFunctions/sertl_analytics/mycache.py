@@ -41,6 +41,15 @@ class MyCache:
         self._cached_object_dict[cache_api.key] = MyCacheObject(cache_api)
         self._cached_object_dict[cache_api.key].print()
 
+    def is_valid_cached_object_available(self, cache_key) -> bool:
+        if cache_key in self._cached_object_dict:
+            cache_object = self._cached_object_dict[cache_key]
+            if cache_object.is_valid():
+                return True
+            else:
+                del cache_object
+        return False
+
     def get_cached_object_by_key(self, cache_key):
         if cache_key in self._cached_object_dict:
             cache_object = self._cached_object_dict[cache_key]

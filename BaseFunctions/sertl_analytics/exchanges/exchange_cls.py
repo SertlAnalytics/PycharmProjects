@@ -9,7 +9,7 @@ Date: 2018-08-28
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mystring import MyString
 from sertl_analytics.mymath import MyMath
-from sertl_analytics.constants.pattern_constants import BT, TSTR, TP
+from sertl_analytics.constants.pattern_constants import BT, TSTR, TP, FT
 
 
 class SmallProfitHandler:
@@ -37,8 +37,10 @@ class ExchangeConfiguration:
         self.buy_fee_pct = 0.25
         self.sell_fee_pct = 0.25
         self.ticker_refresh_rate_in_seconds = 5
-        self.small_profit_taking_parameters = [1.0, 0.8]  # 1. param: this limit reached => stop loss at 2. param,
-        # 2. param: when this stop loss is enabled
+        self.small_profit_distance_from_mean_pct = 20  # if we reach the expected_mean_pct for the pattern type the
+        # small profit stop loss is set 20% off this expected mean pct
+        self.small_profit_parameter_dict = {FT.ALL: [1.0, 0.8]}  # default - will be overwritten later...
+        # {pattern_type: [1.0, 0.8], ...}  # 1. param: this limit reached => stop loss at 2. param,
         self.cache_ticker_seconds = 30  # keep ticker in the cache
         self.cache_balance_seconds = 300  # keep balances in the cache (it's overwriten when changes happen)
         self.check_ticker_after_timer_intervals = 4  # currently the timer intervall is set to 5 sec, i.e. check each 20 sec.
@@ -63,6 +65,9 @@ class ExchangeConfiguration:
     def activate_automatic_trading(self):
         ExchangeConfiguration.automatic_trading_on = True
         self.print_actual_mode(mode_was_changed=True)
+
+    def get_small_profit_parameters_for_pattern_type(self, pattern_type: str) -> list:
+        return self.small_profit_parameter_dict.get(pattern_type, [1.0, 0.8])
 
     @staticmethod
     def __get_ticker_id_list__() -> list:

@@ -651,7 +651,8 @@ class PatternTrade:
         else:
             api.last_price_mean_aggregation = self.sys_config.config.trading_last_price_mean_aggregation
         api.small_profit_taking_active = self.sys_config.exchange_config.small_profit_taking_active
-        api.small_profit_taking_parameters = self.sys_config.exchange_config.small_profit_taking_parameters
+        api.small_profit_taking_parameters = \
+            self.sys_config.exchange_config.get_small_profit_parameters_for_pattern_type(self.pattern.pattern_type)
         if self.trade_box_type == TBT.EXPECTED_WIN:
             return ExpectedWinTradingBox(api)
         elif self.trade_box_type == TBT.TOUCH_POINT:

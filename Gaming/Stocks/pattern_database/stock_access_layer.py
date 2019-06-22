@@ -224,6 +224,18 @@ class AccessLayer4Trade(AccessLayer):
     def __get_table__(self):
         return TradeTable()
 
+    def get_df_for_calculating_small_profit_pct(self):
+        query = self.__get_query_for_calculating_small_profit_pct__()
+        # print('query={}'.format(query))
+        return self.select_data_by_query(query)
+
+    def __get_query_for_calculating_small_profit_pct__(self):
+        columns = [DC.PATTERN_TYPE, DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_PCT]
+        return "SELECT {} FROM {} WHERE {}='{}' and {}!=0 and {}<=10 ORDER BY {};".format(
+            ','.join(columns), self._table.name,
+            DC.PERIOD, PRD.INTRADAY, DC.TRADE_RESULT_ID, DC.TRADE_REACHED_PRICE_PCT, DC.PATTERN_TYPE
+        )
+
 
 class AccessLayer4Wave(AccessLayer):
     def __get_table__(self):

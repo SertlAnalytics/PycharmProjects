@@ -133,7 +133,6 @@ class PatternTradeHandler:
         self.enforce_sell_at_end(tick_list[-1])
 
     def check_actual_trades(self, last_wave_tick=None):
-        print('check_actual_trades.sys_config.config.save_trade_data={}'.format(self.sys_config.config.save_trade_data))
         if last_wave_tick is not None:
             self._last_wave_tick_for_test = last_wave_tick
         self._time_stamp_for_actual_check = MyDate.get_epoch_seconds_from_datetime()

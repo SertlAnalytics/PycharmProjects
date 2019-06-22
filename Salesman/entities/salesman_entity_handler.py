@@ -111,7 +111,7 @@ class SalesmanEntityHandler:
     def get_similarity_score_for_entity_label(entity_label: str) -> int:
         if entity_label in [EL.ANIMAL, EL.COMPANY, EL.PRODUCT]:
             return 10
-        elif entity_label in [EL.CLOTHES, EL.EDUCATION, EL.TARGET_GROUP]:
+        elif entity_label in [EL.EDUCATION, EL.TARGET_GROUP]:
             return 5
         elif entity_label in [EL.VEHICLE]:
             return 3

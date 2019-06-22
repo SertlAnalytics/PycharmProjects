@@ -27,16 +27,19 @@ from pattern_dash.my_dash_caches import MyGraphCache, MyDataFrameCache
 from pattern_index_configuration import IndexConfiguration
 from fibonacci.fibonacci_predictor import FibonacciPredictor
 from fibonacci.fibonacci_wave_data import FibonacciWaveDataHandler
+from pattern_trade_models.trade_small_profit import TradeSmallProfit
 
 
 class SystemConfiguration:
     is_http_connection_ok = MyHttpClient.do_we_have_internet_connection()  # class variable
 
     def __init__(self, for_semi_deep_copy=False):
+        # print('SystemConfiguration.__init__: for_semi_deep_copy={}'.format(for_semi_deep_copy))
         self.file_log = PatternLog()
         self.runtime_config = RuntimeConfiguration()
         self.crypto_config = BitfinexConfiguration()
         self.exchange_config = self.crypto_config
+        self.exchange_config.small_profit_parameter_dict = self.__get_small_profit_parameter_dict__()
         self.shares_config = IBKRConfiguration()
         self.sound_machine = PatternSoundMachine()
         self.process_manager = PatternProcessManager()
@@ -62,6 +65,10 @@ class SystemConfiguration:
         api = PatternPredictorApi(config, self.db_stock, self.pattern_table, self.trade_table)
         api.predictor_optimizer = self.predictor_optimizer
         return api
+
+    def __get_small_profit_parameter_dict__(self):
+        return TradeSmallProfit().get_small_profit_parameter_dict(
+            self.exchange_config.small_profit_distance_from_mean_pct)
 
     @property
     def pdh(self):

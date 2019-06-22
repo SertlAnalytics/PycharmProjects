@@ -236,8 +236,8 @@ class TradingBox:
         return False
 
     def __log_stop_loss_adjustment__(self, module_name: str, reason: str, new_stop_loss: float):
-        message = '{}: Stop loss adjusted for {}: old stop={}, new stop={}'.format(
-                self._ticker_id, reason, self._stop_loss, new_stop_loss)
+        message = '{}: Stop loss adjusted for {}: old stop={}, new stop={} (params: {})'.format(
+                self._ticker_id, reason, self._stop_loss, new_stop_loss, self._small_profit_taking_parameters)
         print(message)
         PatternLog().log_message(message, module_name)
 

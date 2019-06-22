@@ -19,6 +19,7 @@ from pattern_colors import PatternColorHandler
 from pattern_trade import PatternTrade
 from pattern_news_handler import NewsHandler
 from pattern_wave_tick import WaveTickList, WaveTick
+from concurrent.futures import ThreadPoolExecutor
 
 
 class MyPatternDashBaseTab(MyDashBaseTab):
@@ -27,6 +28,7 @@ class MyPatternDashBaseTab(MyDashBaseTab):
         self.sys_config = sys_config
         self._news_handler = self.__get_news_handler__()
         self._fibonacci_wave_data_handler = sys_config.fibonacci_wave_data_handler
+        self._thread_pool = ThreadPoolExecutor(max_workers=1)
 
     def init_callbacks(self):
         pass

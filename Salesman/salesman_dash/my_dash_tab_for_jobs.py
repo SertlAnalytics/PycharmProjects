@@ -19,6 +19,8 @@ from salesman_dash.my_dash_job_handler import MyDashJobHandler
 from salesman_scheduling.salesman_process_manager import SalesmanProcessManager
 from salesman_tutti.tutti import Tutti
 import pandas as pd
+from concurrent.futures import ThreadPoolExecutor
+from time import sleep
 
 
 class MyDashTab4Jobs(MyDashBaseTab):
@@ -38,6 +40,7 @@ class MyDashTab4Jobs(MyDashBaseTab):
         self._selected_limit = 10
         self._selected_date_range = DTRG.TODAY
         self._grid_table = None
+        self._print_callback_start_details = True
 
     def __init_dash_element_ids__(self):
         self._my_jobs_last_check_label_div = 'my_jobs_last_check_label_div'
@@ -70,6 +73,7 @@ class MyDashTab4Jobs(MyDashBaseTab):
             Output(self._my_jobs_last_check_value_div, DSHVT.CHILDREN),
             [Input('my_interval_refresh', DSHVT.N_INTERVALS)])
         def handle_callback_for_last_check_value_div(n_intervals: int):
+            self.__print_callback_details__('handle_callback_for_last_check_value_div', n_intervals)
             self._job_handler.check_scheduler_tasks()
             return self._job_handler.last_run_date_time
 
@@ -82,6 +86,7 @@ class MyDashTab4Jobs(MyDashBaseTab):
              State(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
         def handle_callback_for_jobs_table(last_check_value: str, n_clicks_refresh: int,
                                            rows: list, selected_row_indices: list):
+            self.__print_callback_details__('handle_callback_for_jobs_table', last_check_value)
             if self._n_clicks_refresh != n_clicks_refresh\
                     and selected_row_indices is not None and len(selected_row_indices) > 0:
                 selected_job_row = rows[selected_row_indices[0]]
@@ -96,6 +101,7 @@ class MyDashTab4Jobs(MyDashBaseTab):
             [Input(self._data_table_name, DSHVT.ROWS),
              Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
         def handle_callback_for_jobs_markdown(rows: list, selected_row_indices: list):
+            self.__print_callback_details__('handle_callback_for_jobs_markdown', selected_row_indices)
             if selected_row_indices is None or len(selected_row_indices) == 0:
                 return ''
             selected_row = rows[selected_row_indices[0]]
@@ -107,6 +113,7 @@ class MyDashTab4Jobs(MyDashBaseTab):
             Output(self._my_jobs_start_job_button, DSHVT.HIDDEN),
             [Input(self._data_table_name, DSHVT.SELECTED_ROW_INDICES)])
         def handle_callback_for_button_visibility(selected_row_indices: list):
+            self.__print_callback_details__('handle_callback_for_button_visibility', selected_row_indices)
             return 'hidden' if selected_row_indices is None or len(selected_row_indices) == 0 else ''
 
     def __get_table_for_jobs__(self):

@@ -19,8 +19,8 @@ from sertl_analytics.exchanges.exchange_cls import Balance
 from pattern_database.stock_access_layer import AccessLayer4Asset, AccessLayer4Stock, AccessLayer4Equity
 from pattern_database.stock_access_layer import AccessLayer4Wave
 from pattern_database.stock_access_layer import AccessLayer4TradePolicyMetric
-from pattern_reinforcement.trade_policy import TradePolicyFactory
-from pattern_reinforcement.trade_policy_handler import TradePolicyHandler
+from pattern_trade_models.trade_policy import TradePolicyFactory
+from pattern_trade_models.trade_policy_handler import TradePolicyHandler
 from pattern_database.stock_wave_entity import WaveEntity
 from pattern_scheduling.pattern_job_result import StockDatabaseUpdateJobResult
 from sertl_analytics.myfilelog import FileLogLine

@@ -58,6 +58,7 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
         self._pattern_controller = PatternDetectionController(self.sys_config)
         self._trade_handler_online = trade_handler_online
         self._dd_handler = PortfolioTabDropDownHandler()
+        self._selected_ticker_count_dict = {}
 
     @property
     def columns(self) -> list:
@@ -87,6 +88,9 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
             self._selected_row = self._table_rows[self._selected_row_index]
             self._selected_ticker_id = '{}{}'.format(self._selected_row[PDC.ASSET], 'USD')
             self._selected_ticker_id_management = self._selected_row[PDC.ACTIVELY_MANAGED]
+            if self._selected_ticker_id not in self._selected_ticker_count_dict:
+                self._selected_ticker_count_dict[self._selected_ticker_id] = 0
+            self._selected_ticker_count_dict[self._selected_ticker_id] += 1
 
     @staticmethod
     def __get_news_handler__():
@@ -118,7 +122,6 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
         self.__init_callback_for_portfolio_markdown__()
         self.__init_callback_for_portfolio_table__()
         self.__init_callback_for_graph_for_selected_position__()
-        self.__init_callback_for_selected_row_indices__()
         self.__init_callback_for_reset_portfolio_button__()
 
     def __init_callbacks_for_portfolio_refresh_button__(self):
@@ -173,6 +176,7 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
         def handle_callback_for_graph_first(rows: list, selected_row_indices: list,
                                             refresh_n_clicks: int,
                                             aggregation: int, refresh_interval: int, indicator: str):
+            self.__fill_thread_filled_graph_dict__(rows, refresh_interval, limit=300, indicator=indicator)
             if self._refresh_portfolio_selection_clicks != refresh_n_clicks:
                 self._refresh_portfolio_selection_clicks = refresh_n_clicks
                 selected_row_indices = []
@@ -232,17 +236,6 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
                 self.__toggle_flag_for_active_managed__()
             return self.__get_table_for_portfolio__()
 
-    def __init_callback_for_selected_row_indices__(self):
-        @self.app.callback(
-            Output(self._data_table_name, DSHVT.SELECTED_ROW_INDICES),
-            [Input(self._data_table_div, DSHVT.CHILDREN)],
-            [State(self._data_table_name, DSHVT.ROWS)])
-        def handle_callback_for_selected_row_indices(children, rows):
-            if self._selected_row_index == -1 or len(rows) == 0:
-                return []
-            self.__update_selected_row_number_after_refresh__(rows)
-            return [self._selected_row_index]
-
     def __init_callback_for_reset_portfolio_button__(self):
         @self.app.callback(
             Output(self._button_handler.my_portfolio_reset_button_div, DSHVT.STYLE),
@@ -252,15 +245,33 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
                 return self._button_handler.get_style_display(PFBTN.RESET_PORTFOLIO_SELECTION)
             return {'display': 'none'}
 
+    def __fill_thread_filled_graph_dict__(self, rows: list, refresh_interval: int, limit: int, indicator: str):
+        if rows is None:
+            return
+        for asset_name in [row[PDC.ASSET] for row in rows]:
+            ticker_id = '{}{}'.format(asset_name, 'USD')
+            if ticker_id in self._selected_ticker_count_dict:
+                if self._selected_ticker_count_dict[ticker_id] > 0:  # we pre-proceed only "used" symbols....
+                    print('\nStart thread: {}'.format(ticker_id))
+                    self._thread_pool.submit(self.__get_graph__, ticker_id, refresh_interval, limit, indicator)
+
     def __get_graph__(self, ticker_id: str, refresh_interval: int, limit=0, indicator=INDI.NONE):
         period = self.sys_config.period
         aggregation = self.sys_config.period_aggregation
-        kwargs = {} if indicator != INDI.NONE else {'Aggregation': aggregation, 'Indicator': indicator}
+        kwargs = {} if indicator == INDI.NONE else {'Aggregation': aggregation, 'Indicator': indicator}
         graph_cache_id = self.sys_config.graph_cache.get_cache_id(ticker_id, period, aggregation, limit, **kwargs)
+        if self.sys_config.graph_cache.is_valid_cached_object_available(graph_cache_id):
+            pass
+            # print('__get_graph__: get_from_cache: {}'.format(graph_cache_id))
+        else:
+            self.__add_calculated_graph_to_cache__(
+                graph_cache_id, ticker_id, period, aggregation, limit, indicator, refresh_interval)
         graph = self.sys_config.graph_cache.get_cached_object_by_key(graph_cache_id)
-        if graph is not None:
-            return graph, graph_cache_id
+        return graph, graph_cache_id
 
+    def __add_calculated_graph_to_cache__(
+            self, graph_cache_id: str, ticker_id: str, period: str, aggregation: int,
+            limit: int, indicator: str, refresh_interval: int):
         date_start = MyDate.adjust_by_days(MyDate.get_datetime_object().date(), -limit)
         and_clause = "Date > '{}'".format(date_start)
         graph_title = self.sys_config.graph_cache.get_cache_title(ticker_id, period, aggregation, limit)
@@ -273,7 +284,7 @@ class MyDashTab4Portfolio(MyPatternDashBaseTab):
         graph = self.__get_dcc_graph_element__(detector, graph_api)
         cache_api = self.sys_config.graph_cache.get_cache_object_api(graph_cache_id, graph, period, refresh_interval)
         self.sys_config.graph_cache.add_cache_object(cache_api)
-        return graph, graph_cache_id
+        return graph
 
     def __update_selected_row_number_after_refresh__(self, rows: list):
         selected_row_id = self._selected_row[PDC.ASSET]
