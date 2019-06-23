@@ -6,7 +6,7 @@ Date: 2018-11-14
 """
 
 from dash.dependencies import Input, Output, State
-from sertl_analytics.constants.my_constants import DSHVT
+from sertl_analytics.constants.my_constants import DSHVT, COLOR
 from calculation.outlier import Outlier
 from sertl_analytics.mydash.my_dash_base_tab import MyDashBaseTab
 from salesman_tutti.tutti_constants import PRCAT, PRSUBCAT
@@ -388,4 +388,41 @@ class MyDashTab4Search(MyDashBaseTab):
         if len(self._online_rows) == 0:
             return 'Nothing found - please adjust your query...'
         columns = SLDC.get_columns_for_search_results()
-        return MyDCC.data_table(self._elements.my_search_result_grid_table, self._online_rows, columns=columns)
+        return MyDCC.data_table(
+            self._elements.my_search_result_grid_table,
+            rows=self._online_rows,
+            style_cell_conditional=self.get_table_style_cell_conditional(),
+            style_data_conditional=self.get_table_style_data_conditional(self._online_rows),
+            columns=columns)
+
+    @staticmethod
+    def get_table_style_cell_conditional() -> list:
+        return [{'if': {'column_id': c}, 'textAlign': 'left'} for c in SLDC.get_text_columns_for_search_results()]
+
+    def get_table_style_data_conditional(self, rows: list):
+        column_id = SLDC.OBJECT_STATE
+        filter_used = '{{{}}}  eq "used"'.format(column_id)
+        filter_like_new = '{{{}}}  eq "like new"'.format(column_id)
+        filter_new = '{{{}}}  eq "new"'.format(column_id)
+        filter_price_equal = '{{{}}} < 100*{{{}}}'.format(SLDC.PRICE_SINGLE, SLDC.PRICE_ORIGINAL)
+        # print('filter_price_equal={}'.format(filter_price_equal))
+        table_style_data = [
+            {'if': {'column_id': column_id, 'filter': filter_like_new},
+             'backgroundColor': COLOR.GREEN_LIGHT, 'color': COLOR.WHITE},
+            {'if': {'column_id': column_id, 'filter': filter_new},
+             'backgroundColor': COLOR.GREEN, 'color': COLOR.WHITE},
+            {'if': {'column_id': column_id, 'filter': filter_used},
+             'backgroundColor': COLOR.RED, 'color': COLOR.WHITE},
+        ]
+        self.__add_row_specific_styles_to_table_style_data__(rows, table_style_data)
+        return table_style_data
+
+    @staticmethod
+    def __add_row_specific_styles_to_table_style_data__(rows, table_style_data):
+        for row in rows:
+            column_id = SLDC.PRICE_SINGLE
+            color = COLOR.GREEN if row[SLDC.IS_OUTLIER] == 0 else COLOR.RED
+            filter_color = '{{{}}}  eq "{}"'.format(SLDC.SALE_ID, row[SLDC.SALE_ID])
+            table_style_data.append(
+                {'if': {'column_id': column_id, 'filter': filter_color}, 'backgroundColor': color})
+

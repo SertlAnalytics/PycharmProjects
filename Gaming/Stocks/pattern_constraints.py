@@ -48,6 +48,7 @@ class Constraints:
         self.global_all_in = []
         self.global_count = []
         self.global_series = []
+        self.series_hit_details = []
         self.f_upper_percentage_bounds = self._get_f_upper_percentage_bounds_()
         self.f_lower_percentage_bounds = self._get_f_lower_percentage_bounds_()
         self.f_regression_percentage_bounds = self._get_f_regression_percentage_bounds_()
@@ -79,7 +80,7 @@ class Constraints:
                 return False
         return True
 
-    def are_constraints_fulfilled(self, pattern_range: PatternRange, f_cont) -> bool:
+    def are_constraints_fulfilled(self, pattern_range: PatternRange, f_cont):
         check_dict = {
             CT.F_UPPER: self.__is_f_upper_percentage_compliant__(f_cont.f_upper_percentage),
             CT.F_LOWER: self.__is_f_lower_percentage_compliant__(f_cont.f_lower_percentage),
@@ -203,11 +204,12 @@ class Constraints:
                 return False
         return False if conjunction == 'OR' else True
 
-    def __is_global_constraint_series_satisfied__(self, value_categorizer: ValueCategorizer):
+    def __is_global_constraint_series_satisfied__(self, value_categorizer: ValueCategorizer) -> bool:
         if len(self.global_series) == 0:
             return True
         conjunction = self.global_series[0]
         for k in range(1, len(self.global_series)):
+            self.series_hit_details = []
             series = self.global_series[k]
             check_ok = self.__is_series_constraint_check_done__(series, 0, value_categorizer)
             if check_ok and conjunction == 'OR':
@@ -222,6 +224,7 @@ class Constraints:
         if index == len(value_categorizer.value_category_dic_key_list):
             return False
         if series[0] in value_categorizer.value_category_dic[value_categorizer.value_category_dic_key_list[index]]:
+            self.series_hit_details.append([series[0], value_categorizer.value_pos_list[index]])
             series = series[1:]
         return self.__is_series_constraint_check_done__(series, index + 1, value_categorizer)
 

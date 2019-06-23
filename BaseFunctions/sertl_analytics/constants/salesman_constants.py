@@ -294,11 +294,11 @@ class SLDC:  # Sale data column
     IS_VALID_FOR_SELECTION = 'Is_Valid_For_Selection'
    
     @staticmethod
-    def get_columns_for_virtual_sales_in_file():
+    def get_columns_for_virtual_sales_in_file() -> list:
         return [SLDC.SALE_ID, SLDC.TITLE, SLDC.DESCRIPTION, SLDC.PRICE, SLDC.PRICE_ORIGINAL]
 
     @staticmethod
-    def get_columns_for_excel():
+    def get_columns_for_excel() -> list:
         return [SLDC.SALE_ID, SLDC.MASTER_ID, SLDC.SOURCE, SLDC.SALE_STATE, 
                 SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.LOCATION, SLDC.LOCATIONS_ALL, SLDC.COLORS, SLDC.OBJECT_STATE,
@@ -310,30 +310,29 @@ class SLDC:  # Sale data column
                 SLDC.ENTITY_LABELS, SLDC.ENTITY_LABELS_DICT_4_EXCEL, SLDC.FOUND_BY_LABELS, SLDC.HREF]
 
     @staticmethod
-    def get_columns_for_sales_tab_table():
+    def get_columns_for_sales_tab_table() -> list:
         return [SLDC.SALE_ID, SLDC.VERSION, SLDC.SALE_STATE,
                 SLDC.SOURCE, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.OBJECT_STATE,
                 SLDC.PRICE_SINGLE, SLDC.PRICE, SLDC.PRICE_ORIGINAL, SLDC.TITLE]
 
     @staticmethod
-    def get_columns_for_similar_sales_tab_table():
+    def get_columns_for_similar_sales_tab_table() -> list:
         return [SLDC.SALE_ID, SLDC.VERSION, SLDC.SALE_STATE,
                 SLDC.SOURCE, SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.IS_OUTLIER,
                 SLDC.TITLE, SLDC.HREF, SLDC.MASTER_ID]
 
     @staticmethod
-    def get_columns_for_sales_plotting():
+    def get_columns_for_sales_plotting() -> list:
         return [SLDC.SALE_ID, SLDC.VERSION, SLDC.MASTER_ID, SLDC.PLOT_CATEGORY,
                 SLDC.SOURCE, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.LOCATION,
                 SLDC.OBJECT_STATE, SLDC.PRICE_SINGLE, SLDC.NUMBER, SLDC.IS_OUTLIER, SLDC.TITLE,
                 SLDC.ENTITY_LABELS, SLDC.ENTITY_LABELS_DICT]
 
-    staticmethod
-
-    def get_columns_for_search_results():
+    @staticmethod
+    def get_columns_for_search_results() -> list:
         return [SLDC.SALE_ID,
                 SLDC.SOURCE, SLDC.REGION, SLDC.PRODUCT_CATEGORY, SLDC.PRODUCT_SUB_CATEGORY,
                 SLDC.START_DATE, SLDC.LOCATION, SLDC.IS_OUTLIER,
@@ -341,4 +340,11 @@ class SLDC:  # Sale data column
                 SLDC.MATERIAL, SLDC.PROPERTY_DICT,
                 SLDC.ENTITY_LABELS, SLDC.ENTITY_LABELS_DICT, SLDC.HREF]
 
+    @staticmethod
+    def get_text_columns_for_search_results() -> list:
+        list_base = SLDC.get_columns_for_search_results()
+        list_base.remove(SLDC.IS_OUTLIER)
+        list_base.remove(SLDC.PRICE_SINGLE)
+        list_base.remove(SLDC.NUMBER)
+        return list_base
 

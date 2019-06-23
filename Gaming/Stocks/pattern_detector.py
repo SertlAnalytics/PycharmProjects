@@ -87,6 +87,7 @@ class PatternDetector:
             pfcf_api.complementary_function = f_complementary
             pfcf_api.function_container = PatternFunctionContainerFactory.get_function_container_by_api(pfcf_api)
             if pfcf_api.constraints.are_constraints_fulfilled(pfcf_api.pattern_range, pfcf_api.function_container):
+                # print('series_hit_details={}'.format(pfcf_api.constraints.series_hit_details))
                 pattern = PatternFactory.get_pattern(self.sys_config, pfcf_api)
                 if len(self.sys_config.config.pattern_ids_to_find) == 0 \
                         or pattern.id in self.sys_config.config.pattern_ids_to_find:
@@ -187,7 +188,7 @@ class PatternDetector:
             if pattern.breakout is None and not can_be_added:
                 return
         self.sys_config.runtime_config.actual_breakout = pattern.breakout
-        pattern.add_part_entry(PatternEntryPart(self.sys_config, pattern.function_cont))
+        pattern.add_part_entry(PatternEntryPart(self.sys_config, pattern.function_cont, pattern.series_hit_details))
         pattern.add_data_dict_entries_after_part_entry()
         if pattern.are_pre_conditions_fulfilled():
             pattern.calculate_predictions_after_part_entry()

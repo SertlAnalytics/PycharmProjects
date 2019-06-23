@@ -81,6 +81,7 @@ class Pattern:
         # self.tick_distance = api.sys_config.pdh.pattern_data.tick_f_var_distance
         self.constraints = api.constraints
         self.pattern_range = api.pattern_range
+        self.series_hit_details = api.constraints.series_hit_details
         self._pattern_id = self.__get_pattern_id__()
         self.volume_mean_for_breakout = self.__get_volume_mean_for_breakout__()
         self.ticks_initial = 0

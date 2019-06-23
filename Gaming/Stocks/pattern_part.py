@@ -50,6 +50,7 @@ class PatternPart:
         self.bound_lower = 0
         self.distance_min = 0
         self.distance_max = 0
+        self._series_hit_details = []
         self.__xy = None
         self.__xy_pattern_range = None
         self.__xy_regression = None
@@ -234,6 +235,7 @@ class PatternPart:
             return_dict['Breakout'] = '{}'.format(self.breakout.get_details_for_annotations())
         self.__add_expected_trading_end_to_dict__(return_dict)
         return_dict['Range position'] = '{}'.format(self.pattern_range.position_list)
+        return_dict['Value series positions'] = self._series_hit_details
         return_dict[PAT.BEFORE_BREAKOUT] = prediction_text_dict[PAT.BEFORE_BREAKOUT]
         # return_dict[PAT.BEFORE_BREAKOUT_DETAILS] = prediction_text_dict[PAT.BEFORE_BREAKOUT_DETAILS]
         if self.breakout or PAT.AFTER_BREAKOUT in prediction_text_dict:
@@ -291,8 +293,10 @@ class PatternPart:
 
 
 class PatternEntryPart(PatternPart):
-    def __init__(self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer):
+    def __init__(
+            self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer, series_hit_details: list):
         PatternPart.__init__(self, sys_config, function_cont)
+        self._series_hit_details = series_hit_details
 
 
 class PatternWatchPart(PatternPart):

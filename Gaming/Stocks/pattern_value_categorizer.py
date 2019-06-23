@@ -30,6 +30,8 @@ class ValueCategorizer:
         self.value_category_dic_key_list = []
         self.value_category_dic = {}  # list of value categories by _index_column of each extrema entry
         self.value_category_dic_for_pos = {}  # list of value categories by position of each extrema entry
+        self.value_pos_list = []
+        # self.value_pos_list = []
         self.__set_f_upper_f_lower_values__()
         self.__set_h_upper_h_lower_values__()
         self.__calculate_value_categories__()
@@ -106,6 +108,7 @@ class ValueCategorizer:
             self.value_category_dic_key_list.append(row[self._index_column])
             self.value_category_dic[row[self._index_column]] = self.__get_value_categories_for_df_row__(row)
             self.value_category_dic_for_pos[row[CN.POSITION]] = self.value_category_dic[row[self._index_column]]
+            self.value_pos_list.append(row[CN.POSITION])
 
     def __print_value_range_for_category__(self, data_series, value_category: str):
         l_value, u_value = self.__get_value_range_for_category__(data_series, value_category)

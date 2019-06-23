@@ -644,7 +644,7 @@ class StockDatabase(BaseDatabase):
         return return_dict
 
     def get_pattern_differences_to_saved_version(self, pattern_dict: dict) -> dict:
-        query = self._pattern_table.get_query_for_unique_record_by_id(pattern_dict[DC.ID])
+        query = self._pattern_table.get_query_select_for_unique_record_by_id(pattern_dict[DC.ID])
         db_df = DatabaseDataFrame(self, query)
         df_first = db_df.df.iloc[0]
         return {key: [str(df_first[key]), str(pattern_dict[key])] for key, values in pattern_dict.items()

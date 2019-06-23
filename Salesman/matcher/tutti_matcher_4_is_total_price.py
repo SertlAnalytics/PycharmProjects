@@ -16,11 +16,13 @@ class TuttiMatcher4IsTotalPrice(TuttiMatcher):
             return {
                 'BIETEN_AUF': [{'LEMMA': 'bieten'}, {'POS': POS.ADP, 'OP': '?'}, {'POS': POS.NUM}],
                 'PREIS_FUER_ALLE': [{'LOWER': 'preis'}, {'LOWER': 'für'}, {'LOWER': 'alle'}],
+                'PREIS_PRO': [{'LOWER': 'preis'}, {'LOWER': 'pro'}],
+                'NEUPREIS_PRO': [{'LOWER': 'neupreis'}, {'LOWER': 'pro'}],
                 # 'ZUSAMMEN': [{'LOWER': 'zusammen'}],
                 'SET_PROPN': [{'LOWER': 'set', 'POS': POS.PROPN}],
                 'SET_NOUN': [{'LOWER': 'set', 'POS': POS.NOUN}],
                 'SET_X': [{'LOWER': 'set', 'POS': POS.X}],
-                'GESAMTPREIS': [{'LOWER': 'gesamtpreis'}]
+                'GESAMTPREIS': [{'LOWER': 'gesamtpreis'}],
         }
 
     def __get_pattern_type_test_case_dict__(self):
@@ -29,6 +31,8 @@ class TuttiMatcher4IsTotalPrice(TuttiMatcher):
                            'Sie bieten für 5 Top Design-Stühle': True},
             'PREIS_FUER_ALLE': {"2'500 Fr. Preis für alle 4 Stühle zusammen": True,
                                 'Preis pro Stück: 2000.-': False},
+            'PREIS_PRO': {"500 Fr. Preis pro Stuhl": True},
+            'NEUPREIS_PRO': {"500 Fr. Neupreis pro Stuhl": True},
             # 'ZUSAMMEN': {'Der Preis ist für alle Stücke zusammen': True},
             'SET_PROPN': {'Preis ist für 4 er Set': True},
             'SET_NOUN': {'Das Set kann in 4058 Basel besichtigt': True},
