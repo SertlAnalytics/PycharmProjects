@@ -21,7 +21,8 @@ sys_config.data_provider.limit = 200
 
 sys_config.exchange_config.deactivate_automatic_trading()
 sys_config.exchange_config.trade_strategy_dict = {
-    BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP]
+    BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP],
+    # BT.FC_TICKS: [TSTR.TRAILING_STOP]
 }
 sys_config.exchange_config.delete_vanished_patterns_from_trade_dict = False
 sys_config.exchange_config.massive_breakout_pct = 5

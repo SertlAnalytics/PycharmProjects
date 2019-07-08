@@ -118,7 +118,7 @@ class PatternDataDictionary(DataDictionary):
             self._data_dict[DC.TRADE_RESULT] = TR.LOSER
         self._data_dict[DC.TRADE_RESULT_ID] = TR.get_id(self._data_dict[DC.TRADE_RESULT])
 
-    def get_flag_for_false_breakout(self):
+    def get_flag_for_false_breakout(self):  # ToDo - new logic & logic into db entries
         is_positive_first = self._data_dict[DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF] < \
                             self._data_dict[DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF]
         is_positive_value_larger = self._data_dict[DC.NEXT_PERIOD_HALF_POSITIVE_PCT] > \

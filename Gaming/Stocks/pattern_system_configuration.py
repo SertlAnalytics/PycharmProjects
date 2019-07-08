@@ -56,7 +56,7 @@ class SystemConfiguration:
         self.graph_cache = MyGraphCache()
         self.data_provider = PatternDataProvider(self.config, self.index_config, self.db_stock, self.df_cache)
         self.predictor_optimizer = PatternPredictorOptimizer(self.db_stock)
-        self.fibonacci_predictor = FibonacciPredictor(self.db_stock, 5)
+        self.fibonacci_predictor = FibonacciPredictor(self.db_stock, 7)
         self.fibonacci_wave_data_handler = FibonacciWaveDataHandler(self.db_stock)
         self.master_predictor_handler = PatternMasterPredictorHandler(self.__get_pattern_predictor_api__(self.config))
         self.trade_strategy_optimizer = TradeOptimizer(self.db_stock, self.expected_win_pct)
@@ -148,28 +148,13 @@ class SystemConfiguration:
         self.config.bound_lower_value = CN.CLOSE
 
     def get_value_categorizer_tolerance_pct(self):
-        if self.period == PRD.INTRADAY:
-            if self.period_aggregation <= 5:
-                return 0.0005
-            else:
-                return 0.01  # old: 0.001
-        return 0.01  # orig: 0.005
+        return 0 if self.pdh is None else self.pdh.tolerance_pct
 
     def get_value_categorizer_tolerance_pct_buying(self):
-        if self.period == PRD.INTRADAY:
-            if self.period_aggregation <= 5:
-                return 0.0005
-            else:
-                return 0.003
-        return 0.005
+        return 0 if self.pdh is None else self.pdh.tolerance_pct_buying
 
     def get_value_categorizer_tolerance_pct_equal(self):
-        if self.period == PRD.INTRADAY:
-            if self.period_aggregation <= 5:
-                return 0.001
-            else:
-                return 0.01  # old: 0.002
-        return 0.01  # orig: 0.005
+        return 0 if self.pdh is None else self.pdh.tolerance_pct_equal
 
     @property
     def expected_win_pct(self):

@@ -18,6 +18,10 @@ class DataDictionary:
     def data_dict(self) -> dict:
         return self._data_dict
 
+    @property
+    def sorted_keys(self) -> list:
+        return sorted([key for key in self._data_dict])
+
     def add(self, key: str, value):
         # if key == DC.TRADE_IS_SIMULATION:
         #     value = str(value)
@@ -31,6 +35,13 @@ class DataDictionary:
 
     def get(self, key: str, default_value=None):
         return self._data_dict.get(key, default_value)
+
+    def print_data_dict(self, values_in_separate_lines=True):
+        if values_in_separate_lines:
+            for sorted_key in self.sorted_keys:
+                print('{}: {}'.format(sorted_key, self._data_dict[sorted_key]))
+        else:
+            print(self._data_dict)
 
     def __init_data_dict__(self):
         pass

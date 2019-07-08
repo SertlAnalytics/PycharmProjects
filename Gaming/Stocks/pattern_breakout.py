@@ -43,7 +43,7 @@ class PatternBreakout:
         self.sign = 1 if self.breakout_direction == FD.ASC else -1
         self.check_dict = {}
 
-    def is_breakout_a_signal(self) -> bool:
+    def is_breakout_a_signal(self) -> bool:  # ToDo is_breakout a signal by ML algorithm
         counter = 0
         if self.__is_breakout_over_limit__():
             counter += 1

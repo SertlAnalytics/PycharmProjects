@@ -76,6 +76,11 @@ class TradePolicyHandler:
         self.__print_episode_details__(self._trade_entity_collection.elements, 1, rewards, rewards_orig)
         return rewards, self._trade_entity_collection.elements
 
+    def are_enough_data_available(self):
+        if self._trade_entity_collection is None or self._trade_entity_collection.elements < 10:
+            return False
+        return True
+
     def __get_environment__(self) -> TradeEnvironment:
         pass
 
@@ -122,8 +127,9 @@ class TradePolicyHandler:
     def __fill_trade_entity_collection__(self):
         query = self.__get_query_for_original_trades__()
         df = self._trade_access_layer.select_data_by_query(query)
-        self._trade_entity_collection = TradeEntityCollection(df)
-        self._trade_entity_collection.add_wave_tick_lists()
+        if df.shape[0] > 0:
+            self._trade_entity_collection = TradeEntityCollection(df)
+            self._trade_entity_collection.add_wave_tick_lists()
 
     def __get_query_for_original_trades__(self):
         if self._pattern_id == '':

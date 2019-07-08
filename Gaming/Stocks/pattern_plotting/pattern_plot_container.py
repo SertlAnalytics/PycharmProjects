@@ -28,6 +28,11 @@ class PatternPlotContainer:
         self.annotation_param = None
         self.annotation = None
 
+    def add_buy_shape(self, buy_shape, buy_color: str):
+        self.index_list.append('buy')
+        self.shape_dic['buy'] = buy_shape
+        self.color_dic['buy'] = buy_color
+
     def add_trade_shape(self, trade_shape, trade_color: str):
         self.index_list.append('trade')
         self.shape_dic['trade'] = trade_shape
@@ -82,15 +87,18 @@ class PatternPlotContainer:
         self.annotation = self.annotation_param.get_annotation(axes)
 
     def add_elements_as_patches(self, axes):
-        for keys in self.index_list:
-            patch = self.shape_dic[keys]
-            self.patches_dic[keys] = patch
+        for key in self.index_list:
+            patch = self.shape_dic[key]
+            self.patches_dic[key] = patch
             patch.set_alpha(0.2)
-            if keys in ['top', 'bottom']:
+            if key in ['top', 'bottom']:
                 patch.set_color('None')
-                patch.set_edgecolor(self.color_dic[keys])
+                patch.set_edgecolor(self.color_dic[key])
+            elif key in ['buy']:
+                # patch.set_color(self.color_dic[key])
+                patch.set_alpha(0.2)
             else:
-                patch.set_color(self.color_dic[keys])
+                patch.set_color(self.color_dic[key])
             axes.add_patch(patch)
 
 

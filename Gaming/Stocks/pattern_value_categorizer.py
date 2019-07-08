@@ -18,15 +18,15 @@ class ValueCategorizer:
         # ToDo: To eliminate spikes we could take the extrema of the corpus of a candle - not the shadows
         self.sys_config = sys_config
         self._index_column = CN.TIMESTAMP
-        self._tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
-        self._tolerance_pct_buying = self.sys_config.get_value_categorizer_tolerance_pct_buying()
-        self._tolerance_pct_equal = self.sys_config.get_value_categorizer_tolerance_pct_equal()
         self.df = df
         self.df_length = self.df.shape[0]
         self._f_upper = f_upper
         self._f_lower = f_lower
         self._h_upper = h_upper
         self._h_lower = h_lower
+        self._tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
+        self._tolerance_pct_equal = self.sys_config.get_value_categorizer_tolerance_pct_equal()
+        self._tolerance_pct_buying = self.sys_config.get_value_categorizer_tolerance_pct_buying()
         self.value_category_dic_key_list = []
         self.value_category_dic = {}  # list of value categories by _index_column of each extrema entry
         self.value_category_dic_for_pos = {}  # list of value categories by position of each extrema entry
@@ -65,14 +65,12 @@ class ValueCategorizer:
         return is_in_category
 
     def __get_data_series_for_value__(self, time_stamp, value=0.0):
-        f_upper = self._f_upper(time_stamp)
-        h_upper = self._h_upper(time_stamp)
-        f_lower = self._f_lower(time_stamp)
-        h_lower = self._h_lower(time_stamp)
-        v_array = np.array([f_upper, h_upper, f_lower, h_lower, value, value, value, value]).reshape([1, 8])
-        df = pd.DataFrame(v_array, columns=[CN.F_UPPER, CN.H_UPPER, CN.F_LOWER, CN.H_LOWER,
-                                            CN.HIGH, CN.LOW, CN.OPEN, CN.CLOSE])
-        return df.iloc[0]
+        data_dict = {CN.F_UPPER: self._f_upper(time_stamp),
+                     CN.H_UPPER: self._h_upper(time_stamp),
+                     CN.F_LOWER: self._f_lower(time_stamp),
+                     CN.H_LOWER: self._h_lower(time_stamp),
+                     CN.HIGH: value, CN.LOW: value, CN.OPEN: value, CN.CLOSE: value}
+        return pd.Series(data_dict)
 
     def are_helper_functions_available(self):
         if self._h_lower is None or self._h_upper is None:
@@ -106,9 +104,16 @@ class ValueCategorizer:
     def __calculate_value_categories__(self):
         for ind, row in self.df.iterrows():
             self.value_category_dic_key_list.append(row[self._index_column])
-            self.value_category_dic[row[self._index_column]] = self.__get_value_categories_for_df_row__(row)
-            self.value_category_dic_for_pos[row[CN.POSITION]] = self.value_category_dic[row[self._index_column]]
             self.value_pos_list.append(row[CN.POSITION])
+            if row[CN.F_UPPER] >= row[CN.F_LOWER]:
+                self.value_category_dic[row[self._index_column]] = self.__get_value_categories_for_df_row__(row)
+                self.value_category_dic_for_pos[row[CN.POSITION]] = self.value_category_dic[row[self._index_column]]
+                # print('{}: f_upper={:.4f} / high={}, low={} / f_lower={:.4f}: {}'.format(
+                #     ind, row[CN.F_UPPER], row[CN.HIGH], row[CN.LOW], row[CN.F_LOWER],
+                #     self.value_category_dic_for_pos[row[CN.POSITION]]))
+            else:
+                self.value_category_dic[row[self._index_column]] = []
+                self.value_category_dic_for_pos[row[CN.POSITION]] = []
 
     def __print_value_range_for_category__(self, data_series, value_category: str):
         l_value, u_value = self.__get_value_range_for_category__(data_series, value_category)
@@ -159,7 +164,7 @@ class ValueCategorizer:
             return_list.append(SVC.L_on)
         if self.__is_row_value_in_f_lower_range__(row):
             return_list.append(SVC.L_in)
-        if self.__is_row_value_between_f_lower_f_upper__(row):
+        if not self.__is_any_high_or_low_in_list__(return_list) and self.__is_row_value_between_f_lower_f_upper__(row):
             return_list.append(SVC.M_in)
         if self.__is_row_value_smaller_f_lower__(row):
             return_list.append(SVC.L_out)
@@ -177,16 +182,16 @@ class ValueCategorizer:
             return_list.append(SVC.H_L_out)
 
     def __is_row_value_in_f_upper_range__(self, row):
-        return abs(row[CN.HIGH] - row[CN.F_UPPER])/np.mean([row[CN.HIGH], row[CN.F_UPPER]]) <= self._tolerance_pct
+        return abs(row[CN.HIGH] - row[CN.F_UPPER])/ row[CN.F_UPPER] <= self._tolerance_pct
 
     def __is_row_value_in_h_upper_range__(self, row):
-        return abs(row[CN.HIGH] - row[CN.H_UPPER])/np.mean([row[CN.HIGH], row[CN.H_UPPER]]) <= self._tolerance_pct
+        return abs(row[CN.HIGH] - row[CN.H_UPPER])/ row[CN.H_UPPER] <= self._tolerance_pct
 
     def __is_row_value_in_f_lower_range__(self, row):
-        return abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]]) <= self._tolerance_pct
+        return abs(row[CN.LOW] - row[CN.F_LOWER]) / row[CN.F_LOWER] <= self._tolerance_pct
 
     def __is_row_value_in_h_lower_range__(self, row):
-        return abs(row[CN.LOW] - row[CN.H_LOWER]) / np.mean([row[CN.LOW], row[CN.H_LOWER]]) <= self._tolerance_pct
+        return abs(row[CN.LOW] - row[CN.H_LOWER]) / row[CN.H_LOWER] <= self._tolerance_pct
 
     @staticmethod
     def __is_row_value_between_f_lower_f_upper__(row):
@@ -200,7 +205,7 @@ class ValueCategorizer:
         return row[CN.HIGH] > row[CN.H_UPPER] and not self.__is_row_value_in_h_upper_range__(row)
 
     def __is_row_value_equal_f_upper__(self, row):
-        value_pct = abs(row[CN.HIGH] - row[CN.F_UPPER]) / np.mean([row[CN.HIGH], row[CN.F_UPPER]])
+        value_pct = abs(row[CN.HIGH] - row[CN.F_UPPER]) / row[CN.F_UPPER]
         return value_pct <= self._tolerance_pct_equal
 
     def __is_row_value_larger_f_upper__(self, row):
@@ -211,12 +216,18 @@ class ValueCategorizer:
         return row[CN.HIGH] < row[CN.F_UPPER]
 
     def __is_row_value_equal_f_lower__(self, row):
-        value_pct = abs(row[CN.LOW] - row[CN.F_LOWER]) / np.mean([row[CN.LOW], row[CN.F_LOWER]])
+        value_pct = abs(row[CN.LOW] - row[CN.F_LOWER]) / row[CN.F_LOWER]
         return value_pct <= self._tolerance_pct_equal
 
     @staticmethod
     def __is_row_value_larger_f_lower__(row):
         return row[CN.LOW] > row[CN.F_LOWER]
+
+    @staticmethod
+    def __is_any_high_or_low_in_list__(check_list: list):
+        high_low_set = {SVC.U_in, SVC.U_on, SVC.L_in, SVC.L_on}
+        intersections = high_low_set.intersection(set(check_list))
+        return len(intersections) > 0
 
     def __is_row_value_smaller_f_lower__(self, row):
         return row[CN.LOW] < row[CN.F_LOWER] and not self.__is_row_value_in_f_lower_range__(row)

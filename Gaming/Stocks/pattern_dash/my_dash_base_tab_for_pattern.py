@@ -75,9 +75,9 @@ class MyPatternDashBaseTab(MyDashBaseTab):
             colors = self._color_handler.get_colors_for_pattern(pattern)
             return_list.append(DashInterface.get_pattern_part_entry_shape(pattern, colors[0]))
             if pattern.was_breakout_done() and pattern.is_part_trade_available():
-                return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors[1]))
+                return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors[2]))
             if pattern.is_fibonacci:
-                return_list.append(DashInterface.get_forecast_shape(pattern, colors[2]))
+                return_list.append(DashInterface.get_forecast_shape(pattern, colors[3]))
             # for shapes in return_list:
             #     print('x={}, \ny={}'.format(shapes.x, shapes.y))
         return return_list

@@ -169,6 +169,8 @@ class PatternPlotter:
         self.__reset_fibonacci_waves__(event)
 
     def __handle_visibility_for_fibonacci_waves__(self, event):
+        if self.fibonacci_patch_container is None:
+            return
         draw_canvas = False
         tolerance_range = self.__fib_wave_select_tolerance_range
         x, y = event.xdata, event.ydata
@@ -187,6 +189,8 @@ class PatternPlotter:
             event.canvas.draw()
 
     def __reset_fibonacci_waves__(self, event):
+        if self.fibonacci_patch_container is None:
+            return
         if self.fibonacci_patch_container.reset_selected_patches():
             event.canvas.draw()
 
@@ -400,9 +404,11 @@ class PatternPlotter:
         for pattern in self.detector.pattern_list:
             if not self.sys_config.config.plot_only_pattern_with_fibonacci_waves \
                     or pattern.intersects_with_fibonacci_wave:
-                color_pattern, color_trade, retr_color = color_handler.get_colors_for_pattern(pattern)
+                color_pattern, color_buy, color_trade, retr_color = color_handler.get_colors_for_pattern(pattern)
                 plot_container = PatternPlotContainer(
                     PlotterInterface.get_pattern_shape_part_main(pattern), color_pattern)
+                if pattern.is_part_buy_available():
+                    plot_container.add_buy_shape(PlotterInterface.get_pattern_shape_part_buy(pattern), color_buy)
                 if pattern.was_breakout_done() and pattern.is_part_trade_available():
                     plot_container.add_trade_shape(PlotterInterface.get_pattern_shape_part_trade(pattern), color_trade)
                 if pattern.is_fibonacci:
@@ -476,6 +482,11 @@ class PlotterInterface:
         return Polygon(np.array(xy), True)
 
     @staticmethod
+    def get_pattern_shape_part_buy(pattern: Pattern):
+        xy_buy = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern.xy_buy)
+        return Polygon(np.array(xy_buy), True)
+
+    @staticmethod
     def get_pattern_shape_part_trade(pattern: Pattern):
         xy_trade = PlotterInterface.get_xy_from_timestamp_to_date_number(pattern.xy_trade)
         return Polygon(np.array(xy_trade), True)
@@ -509,11 +520,11 @@ class PlotterInterface:
 
     @staticmethod
     def get_f_upper_shape(pattern_part: PatternPart):
-        return pattern_part.stock_df.get_f_upper_shape(pattern_part.function_cont)
+        return pattern_part.pattern_df.get_f_upper_shape(pattern_part.function_cont)
 
     @staticmethod
     def get_f_lower_shape(pattern_part: PatternPart):
-        return pattern_part.stock_df.get_f_lower_shape(pattern_part.function_cont)
+        return pattern_part.pattern_df.get_f_lower_shape(pattern_part.function_cont)
 
     @staticmethod
     def get_range_f_param_shape(pattern_range: PatternRange):

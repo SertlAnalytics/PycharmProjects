@@ -112,6 +112,9 @@ class MyDailyWaveUpdateJob(MyDashPatternJob):
             self._db_updater.add_wave_end_data_to_wave_records(
                 symbol='', ts_start=0, ts_end=0, scheduled_job=True)
         )
+        self.process.increment_deleted_records(
+            self._db_updater.delete_inconsistent_wave_records(scheduled_job=True)
+        )
 
     @property
     def process_name(self):
@@ -130,7 +133,12 @@ class MyIntradayWaveUpdateJob(MyDashPatternJob):
     def __perform_task__(self):
         for index in self.index_list:
             self._db_updater.update_wave_data_by_index_for_intraday(index, self.period_aggregation)
-        self._db_updater.add_wave_end_data_to_wave_records(symbol='', ts_start=0, ts_end=0, scheduled_job=True)
+        self.process.increment_updated_records(
+            self._db_updater.add_wave_end_data_to_wave_records(symbol='', ts_start=0, ts_end=0, scheduled_job=True)
+        )
+        self.process.increment_deleted_records(
+            self._db_updater.delete_inconsistent_wave_records(scheduled_job=True)
+        )
 
 
 class MyIntradayWaveUpdateJobForCrypto(MyIntradayWaveUpdateJob):

@@ -23,6 +23,8 @@ class WaveTick:
         self.is_desc_fibonacci_end = False
         self.watch_breakout_value = 0  # used for watching periods - currently used for touch_point
         self.watch_wrong_breakout_value = 0  # used for watching periods - currently used for touch_point
+        self.limit_upper = 0
+        self.limit_lower = 0
         self.breakout_value = 0
         self.wrong_breakout_value = 0
         self.limit_value = 0
@@ -122,6 +124,24 @@ class WaveTick:
         return MyMath.round_smart(self.tick[CN.CLOSE])
 
     @property
+    def body_high(self):
+        return max(self.open, self.close)
+
+    @property
+    def body_low(self):
+        return min(self.open, self.close)
+
+    @property
+    def high_buy_box(self):
+        # return self.close
+        return MyMath.round_smart((self.body_high + self.high)/2)
+
+    @property
+    def low_buy_box(self):
+        # return self.close
+        return MyMath.round_smart((self.body_low + self.low) / 2)
+
+    @property
     def mean(self):
         return MyMath.round_smart((self.high + self.low)/2)
 
@@ -162,9 +182,10 @@ class WaveTick:
         else:
             return round(self.volume * seconds_for_period/(actual_time_stamp - self.time_stamp), 2)
 
-    def print(self):
-        print('Pos: {}, Date: {}, Time: {}, High: {}, Low: {}, Close: {}, Volume: {}, Timestamp={}'.format(
-            self.position, self.date, self.time, self.high, self.low, self.close, self.volume, self.time_stamp))
+    def print(self, prefix=''):
+        prefix = '' if prefix == '' else '{}: '.format(prefix)
+        print('{}Pos: {}, Date: {}, Time: {}, High: {}, Low: {}, Close: {}, Volume: {}, Timestamp={}'.format(
+            prefix, self.position, self.date, self.time, self.high, self.low, self.close, self.volume, self.time_stamp))
 
     def get_date_or_time_for_f_var(self, for_time: False):
         if for_time:
@@ -414,7 +435,10 @@ class WaveTickList:
         actual_tick = self.tick_list[-1]
         prefix = actual_tick.time if period == PRD.INTRADAY else actual_tick.date
         forecast_volume = MyMath.round_smart(actual_tick.get_forecast_volume(self.tick_distance_in_seconds))
-        volume_change_against_last = MyMath.round_smart(forecast_volume / prev_tick.volume * 100 - 100)
+        if prev_tick.volume == 0:
+            volume_change_against_last = 0
+        else:
+            volume_change_against_last = MyMath.round_smart(forecast_volume / prev_tick.volume * 100 - 100)
         if volume_mean == 0:
             forecast_values = '{} ({:+.0f} %)'.format(forecast_volume, volume_change_against_last)
         else:

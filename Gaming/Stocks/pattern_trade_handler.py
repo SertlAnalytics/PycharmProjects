@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR
+from sertl_analytics.constants.pattern_constants import ST, DC, TP, PTS, PTHP, PDR, OS, OT, RST, BLR, FD
 from pattern_database.stock_tables_data_dictionary import AssetDataDictionary
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration
@@ -428,20 +428,24 @@ class PatternTradeHandler:
         self.sys_config.runtime_config.actual_pattern_type = pattern_trade.pattern.pattern_type
         self.sys_config.runtime_config.actual_breakout = pattern_trade.pattern.breakout
         self.sys_config.runtime_config.actual_pattern_range = pattern_trade.pattern.pattern_range
-        return PatternEntryPart(pattern_trade.sys_config, pattern_trade.pattern.function_cont)
+        return PatternEntryPart(
+            pattern_trade.sys_config, pattern_trade.pattern.function_cont, pattern_trade.pattern.series_hit_details
+        )
 
     def __set_breakout_after_checks__(self, pattern_trade: PatternTrade):
         wave_tick_list = self.__get_latest_tickers_as_wave_ticks__(pattern_trade.ticker_id, pattern_trade)
         tick_previous = wave_tick_list.tick_list[-2]
         tick_current = wave_tick_list.tick_list[-1]
-        check_dict = pattern_trade.pattern.set_breakout_after_checks(tick_previous, tick_current, True)
-        if pattern_trade.pattern.breakout is None:
-            breakout_problems = ', '.join([key for key in check_dict])
+        pattern_breakout = pattern_trade.pattern.get_pattern_breakout(tick_previous, tick_current, True)
+        if pattern_breakout.is_breakout_a_signal() or pattern_breakout.breakout_direction == FD.DESC:
+            pattern_trade.pattern.breakout = pattern_breakout
+            pattern_trade.pattern.function_cont.tick_for_breakout = tick_current
+            self.news_handler.add_news('Breakout', 'OK')
+        else:
+            breakout_problems = ', '.join([key for key in pattern_breakout.check_dict])
             breakout_problems = '{}: {}'.format(pattern_trade.ticker_id, breakout_problems)
             self.news_handler.add_news('Breakout problems', breakout_problems)
             print('Breakout problems: {}'.format(breakout_problems))
-        else:
-            self.news_handler.add_news('Breakout', 'OK')
 
     def __get_latest_tickers_as_wave_ticks__(self, ticker_id, pattern_trade: PatternTrade):
         trade_client = self.__get_trade_client_for_symbol__(ticker_id)

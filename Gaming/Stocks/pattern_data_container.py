@@ -11,6 +11,7 @@ from copy import deepcopy
 import itertools
 from sertl_analytics.constants.pattern_constants import CN, DIR, FT
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mymath import MyMath
 from pattern_wave_tick import WaveTick, ExtendedDictionary4WaveTicks, WaveTickList
 from pattern_configuration import PatternConfiguration
 
@@ -192,7 +193,7 @@ class PatternData:
         return wave_tick_list.get_list_without_hidden_ticks(for_high, 0.03)
 
     def __add_columns__(self):
-        self.df = self.df.assign(MeanHL=round((self.df.High + self.df.Low) / 2, 2))
+        self.df = self.df.assign(MeanHL=MyMath.round_smart_series((self.df.High + self.df.Low)/2))
         self.df = self.df.assign(Date=self.df.index.map(MyDate.get_date_from_epoch_seconds))
         self.df = self.df.assign(Time=self.df.index.map(MyDate.get_time_from_epoch_seconds))
         self.df = self.df.assign(Datetime=self.df.index.map(MyDate.get_date_time_from_epoch_seconds))

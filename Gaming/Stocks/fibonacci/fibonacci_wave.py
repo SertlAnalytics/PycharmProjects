@@ -19,7 +19,6 @@ from fibonacci.fibonacci_wave_component import FibonacciDescendingRetracementCom
 from fibonacci.fibonacci_helper import fibonacci_helper, FibonacciHelperApi
 from pattern_database.stock_tables_data_dictionary import WaveDataDictionary
 from fibonacci.fibonacci_wave_prediction import FibonacciClassifierPrediction, FibonacciRegressionPrediction
-from fibonacci.fibonacci_wave_prediction import FibonacciPrediction
 from pattern_wave_tick import WaveTick
 import math
 from copy import deepcopy

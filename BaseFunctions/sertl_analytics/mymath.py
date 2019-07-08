@@ -234,6 +234,12 @@ class MyMath:
         return round(std_y_changed_by_reg, rounding)
 
     @staticmethod
+    def round_smart_series(value_series: pd.Series) -> pd.Series:
+        for (key, value) in value_series.iteritems():
+            value_series[key] = MyMath.round_smart(value)
+        return value_series
+
+    @staticmethod
     def round_smart(value: float) -> float:
         if value == math.inf or value == -math.inf:
             return value

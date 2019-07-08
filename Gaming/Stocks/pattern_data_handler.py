@@ -6,7 +6,7 @@ Date: 2018-05-14
 """
 
 import pandas as pd
-import numpy as np
+from sertl_analytics.mymath import MyMath
 from sertl_analytics.constants.pattern_constants import CN, DIR
 from pattern_configuration import PatternConfiguration
 from pattern_data_container import PatternData, PatternDataFibonacci
@@ -19,6 +19,19 @@ class PatternDataHandler:
         self.pattern_data = PatternData(self.config, df)
         self.pattern_data_fibonacci = PatternDataFibonacci(self.config, df)
         self._pattern_data_matrix = PatternDataMatrix(self.pattern_data)
+        self._tolerance_pct, self._tolerance_pct_equal, self._tolerance_pct_buying = self.get_tolerance_pct_values()
+
+    @property
+    def tolerance_pct(self) -> float:
+        return self._tolerance_pct
+
+    @property
+    def tolerance_pct_equal(self) -> float:
+        return self._tolerance_pct_equal
+
+    @property
+    def tolerance_pct_buying(self) -> float:
+        return self._tolerance_pct_buying
 
     def get_x_y_off_set_for_shape_annotation(self, xy_center) -> list:
         return self._pattern_data_matrix.get_x_y_off_set_for_shape_annotation(xy_center)
@@ -51,6 +64,18 @@ class PatternDataHandler:
             elif high_series.values[k] > upper_band.values[k]:
                 return DIR.UP
         return ''
+
+    def get_tolerance_pct_values(self):
+        mean_hl = MyMath.round_smart(self.pattern_data.df[CN.MEAN_HL].mean())
+        std_dev_mean_hl = MyMath.round_smart(self.pattern_data.df[CN.MEAN_HL].std())
+        base_tolerance_pct = MyMath.round_smart(std_dev_mean_hl / mean_hl)
+        tolerance_pct = base_tolerance_pct / 5
+        tolerance_pct_equal = tolerance_pct / 2
+        tolerance_pct_buying = tolerance_pct / 2
+        print('tolerance_pct={:.2f}%, tolerance_pct_equal={:.2f}%, tolerance_pct_buying={:.2f}%'.format(
+            tolerance_pct*100, tolerance_pct_equal*100, tolerance_pct_buying*100
+        ))
+        return tolerance_pct, tolerance_pct_equal, tolerance_pct_buying
 
     def __get_reduced_position_list__(self, distance: int):
         pos_last_element = self.pattern_data.df_length - 1

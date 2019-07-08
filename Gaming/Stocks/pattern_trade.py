@@ -9,6 +9,7 @@ import pandas as pd
 from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, TSP
 from sertl_analytics.constants.pattern_constants import PTHP, TR, OT, SVC, TP, FT, CN
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.my_text import MyText
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import OrderStatus, Ticker
 from pattern_database.stock_tables import TradeTable
@@ -369,8 +370,8 @@ class PatternTrade:
         for tick in self._wave_tick_list.tick_list:
             l_value_b, u_value_b = self.pattern.value_categorizer.get_value_range_for_category(tick.time_stamp, vc_b)
             l_value_wb, u_value_wb = self.pattern.value_categorizer.get_value_range_for_category(tick.time_stamp, vc_wb)
-            tick.breakout_value = round(l_value_b, 4)
-            tick.wrong_breakout_value = round(u_value_wb, 4)
+            tick.breakout_value = MyMath.round_smart(l_value_b)
+            tick.wrong_breakout_value = MyMath.round_smart(u_value_wb)
 
     def set_limit_stop_loss_to_replay_values(self):
         last_wave_tick = self._wave_tick_list.last_wave_tick
@@ -852,7 +853,8 @@ class PatternTrade:
                      self._wave_tick_list.get_markdown_text_for_last_wave_tick(self._volume_mean_for_breakout, period)]
         self.__add_process_data_to_markdown_text_list__(text_list, last_price, ticks_to_go)
         self.__add_annotation_text_to_markdown_text_list__(text_list)
-        return '  \n'.join(text_list)
+        markdown_text = '  \n'.join(text_list)
+        return MyText.get_text_for_markdown(markdown_text)
 
     def __get_header_line_for_markdown_text__(self, last_price, ts_last_ticker_refresh: int, ticker_refresh):
         # date_time = self.ticker_actual.date_time_str

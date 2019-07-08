@@ -34,6 +34,26 @@ class StockDatabaseUpdater:
         self.db_stock = self.sys_config.db_stock
         self.pattern_controller = PatternDetectionController(self.sys_config)
 
+    def delete_inconsistent_wave_records(self, scheduled_job=False) -> int:
+        """
+        We have to take care that the waves are reasonable to avoid problems with the fibonacci predictions:
+        :param scheduled_job:
+        :return:
+        """
+        print('Delete inconsistent wave records..')
+        access_layer_wave = AccessLayer4Wave(self.db_stock)
+        df_wave_to_process = access_layer_wave.get_inconsistent_waves_as_data_frame()
+        delete_counter = 0
+        for wave_index, wave_row in df_wave_to_process.iterrows():
+            access_layer_wave.delete_record_by_rowid(wave_row[DC.ROWID])
+            delete_counter += 1
+        if scheduled_job:
+            self.sys_config.file_log.log_scheduler_process(
+                log_message='Deleted: {}/{}'.format(delete_counter, df_wave_to_process.shape[0]),
+                process='Update wave records',
+                process_step='delete_inconsistent_wave_records')
+        return delete_counter
+
     def add_wave_end_data_to_wave_records(self, symbol='', ts_start=0, ts_end=0, scheduled_job=False) -> int:
         """
         Some attributes have to be calculated AFTER the waves completes:
@@ -264,20 +284,21 @@ class StockDatabaseUpdater:
                 for mean_aggregation in mean_aggregation_list:
                     policy_handler = TradePolicyHandler(pattern_type=pattern_type, period=period,
                                                         mean_aggregation=mean_aggregation)
-                    for policy in policy_list:
-                        rewards, entity_counter = policy_handler.run_policy(policy, False)
-                        insert_dict = {TPMDC.VALID_DT: dt_today_str,
-                                       TPMDC.POLICY: policy.policy_name,
-                                       TPMDC.EPISODES: 1,
-                                       TPMDC.PERIOD: period,
-                                       TPMDC.AGGREGATION: 1,
-                                       TPMDC.TRADE_MEAN_AGGREGATION: mean_aggregation,
-                                       TPMDC.PATTERN_TYPE: pattern_type,
-                                       TPMDC.NUMBER_TRADES: entity_counter,
-                                       TPMDC.REWARD_PCT_TOTAL: round(rewards, 2),
-                                       TPMDC.REWARD_PCT_AVG: round(rewards/entity_counter, 2),
-                                       }
-                        access_layer.insert_data([insert_dict])
+                    if policy_handler.are_enough_data_available():
+                        for policy in policy_list:
+                            rewards, entity_counter = policy_handler.run_policy(policy, False)
+                            insert_dict = {TPMDC.VALID_DT: dt_today_str,
+                                           TPMDC.POLICY: policy.policy_name,
+                                           TPMDC.EPISODES: 1,
+                                           TPMDC.PERIOD: period,
+                                           TPMDC.AGGREGATION: 1,
+                                           TPMDC.TRADE_MEAN_AGGREGATION: mean_aggregation,
+                                           TPMDC.PATTERN_TYPE: pattern_type,
+                                           TPMDC.NUMBER_TRADES: entity_counter,
+                                           TPMDC.REWARD_PCT_TOTAL: round(rewards, 2),
+                                           TPMDC.REWARD_PCT_AVG: round(rewards/entity_counter, 2),
+                                           }
+                            access_layer.insert_data([insert_dict])
         print("END 'update_trade_policy_metric_for_today'\n")
 
     def handle_transaction_problems(self):

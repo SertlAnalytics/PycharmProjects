@@ -14,7 +14,7 @@ label = DC.WAVE_END_FLAG
 # label = DC.WAVE_MAX_RETR_PCT
 # label = DC.WAVE_MAX_RETR_TS_PCT
 fib_prediction = FibonacciPredictor(StockDatabase(), 5)
-# fib_prediction.train_models(label)
+# fib_prediction.train_models_for_label(label)
 # fib_prediction.perform_cross_validation(label)
 
 

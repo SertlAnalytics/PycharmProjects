@@ -278,3 +278,4 @@ class PatternDataProvider:
         if index_first_row < timestamp_one_day_before:
             return df.loc[timestamp_one_day_before:]
         return df
+

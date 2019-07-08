@@ -8,6 +8,15 @@ Date: 2018-05-14
 from sertl_analytics.pybase.loop_list import ExtendedDictionary
 
 
+class ENV:  # Environment variables
+    FIBONACCI_BEST_CLASSIFIER_MODEL_FOR_WAVE_END_FLAG = 'FIBONACCI_BEST_CLASSIFIER_MODEL_FOR_WAVE_END_FLAG'
+    FIBONACCI_BEST_CLASSIFIER_MODEL_FOR_WAVE_MAX_RETR_TS_PCT = 'FIBONACCI_BEST_CLASSIFIER_MODEL_FOR_WAVE_MAX_RETR_TS_PCT'
+    FIBONACCI_BEST_CLASSIFIER_MODEL_FOR_WAVE_MAX_RETR_PCT = 'FIBONACCI_BEST_CLASSIFIER_MODEL_FOR_WAVE_MAX_RETR_PCT'
+    FIBONACCI_BEST_REGRESSION_MODEL_FOR_WAVE_END_FLAG = 'FIBONACCI_BEST_REGRESSION_MODEL_FOR_WAVE_END_FLAG'
+    FIBONACCI_BEST_REGRESSION_MODEL_FOR_WAVE_MAX_RETR_TS_PCT = 'FIBONACCI_BEST_REGRESSION_MODEL_FOR_WAVE_MAX_RETR_TS_PCT'
+    FIBONACCI_BEST_REGRESSION_MODEL_FOR_WAVE_MAX_RETR_PCT = 'FIBONACCI_BEST_REGRESSION_MODEL_FOR_WAVE_MAX_RETR_PCT'
+
+
 class PPR:  # PatternProcesses
     UPDATE_PATTERN_INTRADAY = 'Update_Pattern_Intraday'
     UPDATE_PATTERN_DAILY = 'Update_Pattern_Daily'
@@ -153,6 +162,7 @@ class PRED:  # Predictors
     AFTER_BREAKOUT = 'After_Breakout'
     FOR_TRADE = 'For_Trade'
     BREAKOUT_LEVEL = 'Breakout_Level'
+    FIBONACCI = 'Fibonacci'
 
     @staticmethod
     def get_as_options():
@@ -361,6 +371,12 @@ class OS:  # Order side
 
     def get_id(key: str):
         return {OS.BUY: 1, OS.SELL: -1}.get(key)
+
+
+class MC:  # Model categories
+    UNKNOWN = 'Unknown'
+    REGRESSION = 'Regression'
+    CLASSIFIER = 'Classifier'
 
 
 class MT:  # Model Types
@@ -664,7 +680,7 @@ class PT:  # PredictorType
 class PAT:  # PredictionAnnotationType
     BEFORE_BREAKOUT = 'Prediction before breakout'
     BEFORE_BREAKOUT_DETAILS = '...details'
-    AFTER_BREAKOUT = 'Prediction after breakout'
+    AFTER_BREAKOUT = 'Prediction after breakout (ASC/DESC)'
     RETRACEMENT = 'Prediction retracement'
 
 
@@ -845,24 +861,25 @@ class TSP:  # TradeSubProcess
 
 class BT:  # Buy Trigger
     BREAKOUT = 'Breakout'
+    FC_TICKS = 'Forecast_Ticks'
     TOUCH_POINT = 'Touch_point'
     FIBONACCI_CLUSTER = 'Fibonacci_cluster'
 
     @staticmethod
     def get_id(key: str):
-        return {BT.BREAKOUT: 10, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}.get(key)
+        return {BT.BREAKOUT: 10, BT.FC_TICKS: 15, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}.get(key)
 
     @staticmethod
     def get_as_dict():
-        return {BT.BREAKOUT: 10, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}
+        return {BT.BREAKOUT: 10, BT.FC_TICKS: 15, BT.TOUCH_POINT: 20, BT.FIBONACCI_CLUSTER: 50}
 
     @staticmethod
     def get_as_list():
-        return [BT.BREAKOUT, BT.TOUCH_POINT]
+        return [BT.BREAKOUT, BT.FC_TICKS, BT.TOUCH_POINT]
 
     @staticmethod
     def get_as_options():
-        li = [BT.BREAKOUT, BT.TOUCH_POINT]
+        li = [BT.BREAKOUT, BT.FC_TICKS, BT.TOUCH_POINT]
         return [{'label': buy_trigger.replace('_', ' '), 'value': buy_trigger} for buy_trigger in li]
 
 
@@ -927,6 +944,16 @@ class PTHP:  # Pattern Trade Handler Processes
     HANDLE_WRONG_BREAKOUT = 'HANDLE_WRONG_BREAKOUT'
     HANDLE_BUY_TRIGGERS = 'HANDLE_BUY_TRIGGERS'
     HANDLE_WATCHING = 'HANDLE_WATCHING'
+
+
+class BBT:  # BuyBoxType
+    BREAKOUT = 'Breakout'
+    TOUCH_POINT = 'Touchpoint'
+    BOLLINGER_BAND = 'Bollinger Band'
+
+    @staticmethod
+    def get_id(key: str):
+        return {BBT.BREAKOUT: 10, BBT.TOUCH_POINT: 20,  BBT.BOLLINGER_BAND: 30}.get(key)
 
 
 class TBT:  # TradingBoxType
@@ -1099,6 +1126,10 @@ class DC:  # Data Columns
     PREVIOUS_PERIOD_FULL_TOP_OUT_PCT = 'Previous_Period_Full_Top_Out_PCT'
     PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT = 'Previous_Period_Half_Bottom_Out_PCT'
     PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT = 'Previous_Period_Full_Bottom_Out_PCT'
+    TICKS_PREVIOUS_PERIOD_HALF_TOP_OUT_TILL_PATTERN = 'Ticks_From_Previous_Period_Half_Top_Out_Till_Pattern'
+    TICKS_PREVIOUS_PERIOD_FULL_TOP_OUT_TILL_PATTERN = 'Ticks_From_Previous_Period_Full_Top_Out_Till_Pattern'
+    TICKS_PREVIOUS_PERIOD_HALF_BOTTOM_OUT_TILL_PATTERN = 'Ticks_From_Previous_Period_Half_Bottom_Out_Till_Pattern'
+    TICKS_PREVIOUS_PERIOD_FULL_BOTTOM_OUT_TILL_PATTERN = 'Ticks_From_Previous_Period_Full_Bottom_Out_Till_Pattern'
     NEXT_PERIOD_HALF_POSITIVE_PCT = 'Next_Period_Half_Positive_PCT'
     NEXT_PERIOD_FULL_POSITIVE_PCT= 'Next_Period_Full_Positive_PCT'
     NEXT_PERIOD_HALF_NEGATIVE_PCT= 'Next_Period_Half_Negative_PCT'

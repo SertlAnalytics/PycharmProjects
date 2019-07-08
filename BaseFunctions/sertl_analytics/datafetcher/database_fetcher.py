@@ -237,7 +237,7 @@ class MyTable:
         return "DELETE FROM {} where ID='{}';".format(self._name, id)
 
     def get_query_delete_by_row_id(self, row_id: int) -> str:
-        return 'DELETE FROM {} WHERE oid = {};'.format(self._table.name, row_id)
+        return 'DELETE FROM {} WHERE oid = {};'.format(self._name, row_id)
 
     def __get_column_name_list__(self) -> list:
         return [columns.name for columns in self._columns]

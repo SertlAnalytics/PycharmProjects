@@ -9,12 +9,12 @@ from sertl_analytics.constants.pattern_constants import FT, FD, DC, BT, EQUITY_T
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
-from pattern_part import PatternPart, PatternEntryPart, PatternWatchPart, PatternTradePart
+from pattern_part import PatternEntryPart, PatternBuyPart, PatternWatchPart, PatternTradePart
 from pattern import Pattern, PatternFactory
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
     , PatternRangeDetectorHeadShoulderBottom, PatternRange
 from pattern_range_fibonacci import PatternRangeDetectorFibonacciAsc, PatternRangeDetectorFibonacciDesc
-from pattern_breakout import PatternBreakoutApi, PatternBreakout
+from pattern_buy_box import BuyBoxApi, BuyBox
 from pattern_statistics import PatternDetectorStatisticsApi
 from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
 from pattern_constraints import ConstraintsFactory
@@ -192,6 +192,8 @@ class PatternDetector:
         pattern.add_data_dict_entries_after_part_entry()
         if pattern.are_pre_conditions_fulfilled():
             pattern.calculate_predictions_after_part_entry()
+            self.__add_part_buy__(pattern)
+            self.__add_box_buy__(pattern)
             if pattern.breakout is not None:
                 pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
                 self.__add_part_trade__(pattern)
@@ -199,6 +201,37 @@ class PatternDetector:
             # for nn_entry in pattern.nearest_neighbor_entry_list:
             #     pattern_id = self.pattern_id_factory.get_pattern_id_from_pattern_id_string(nn_entry.id)
             self.pattern_list.append(pattern)
+            # pattern.data_dict_obj.print_data_dict()
+
+    def __add_part_buy__(self, pattern: Pattern):
+        df = self.__get_buy_df__(pattern)
+        f_upper = pattern.get_f_upper_buy()
+        f_lower = pattern.get_f_lower_buy()
+        function_cont = PatternFunctionContainerFactory.get_function_container(
+            self.sys_config, pattern.pattern_type, df, f_lower, f_upper)
+        part = PatternBuyPart(self.sys_config, function_cont, pattern.value_categorizer)
+        pattern.add_part_buy(part)
+        pattern.fill_result_set()
+
+    def __add_box_buy__(self, pattern: Pattern):
+        pos_start = pattern.pattern_range.tick_last.position
+        wave_tick_candidate_list = [tick for tick in pattern.pdh.pattern_data.tick_list if tick.position >= pos_start]
+        buy_box_api = BuyBoxApi()
+        buy_box_api.pattern_series_hit_details = pattern.series_hit_details
+        buy_box_api.tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
+        buy_box_api.tolerance_pct_buying = self.sys_config.get_value_categorizer_tolerance_pct_buying()
+        buy_box_api.data_dict = pattern.data_dict_obj.data_dict
+        buy_box_api.f_upper = pattern.get_f_upper_buy()
+        buy_box_api.f_lower = pattern.get_f_lower_buy()
+        buy_box_api.wave_tick_latest = wave_tick_candidate_list[0]
+        buy_box = BuyBox(buy_box_api)
+        for wave_tick in wave_tick_candidate_list[1:]:
+            buy_box.adjust_to_next_tick(wave_tick)
+            if buy_box.is_wave_tick_breakout(wave_tick):
+                wave_tick.print(prefix='Breakout')
+                pattern.add_box_buy(buy_box)
+                pattern.fill_result_set()
+                break
 
     def __add_part_trade__(self, pattern: Pattern):
         if not pattern.was_breakout_done():
@@ -211,6 +244,19 @@ class PatternDetector:
         part = PatternTradePart(self.sys_config, function_cont)
         pattern.add_part_trade(part)
         pattern.fill_result_set()
+
+    def __get_buy_df__(self, pattern: Pattern):
+        left_pos = pattern.position_start_for_part_buy
+
+        if FT.is_pattern_type_any_fibonacci(pattern.pattern_type):
+            right_pos_max = left_pos + pattern.function_cont.max_positions_after_tick_for_helper
+        else:
+            right_pos_max = left_pos + int(pattern.get_maximal_trade_position_size() / 2)
+        right_pos = min(right_pos_max, self.df_length)
+        if right_pos - left_pos <= 1:
+            left_pos += -2 + (right_pos - left_pos)  # we need at least 2 ticks for the buy_df...
+        right_pos = pattern.part_entry.tick_last.position
+        return self.df.loc[left_pos:right_pos]
 
     def __get_trade_df__(self, pattern: Pattern):
         left_pos = pattern.function_cont.tick_for_breakout.position
@@ -235,12 +281,18 @@ class PatternDetector:
             break_loop = self.__check_for_loop_break__(pattern, counter, number_of_positions, next_tick)
             if break_loop:
                 can_pattern_be_added = False
-                tick_last = next_tick
+                if pattern.breakout is None:  # we want to have the last tick before breakout
+                    tick_last = next_tick
                 break
             if pattern.breakout is None:
                 pattern.function_cont.adjust_functions_when_required(next_tick)
-                pattern.set_breakout_after_checks(tick_last, next_tick)
-            tick_last = next_tick
+                if pattern.function_cont.is_tick_breakout(next_tick):  # online we have other checks... ToDo...
+                    pattern_breakout = pattern.get_pattern_breakout(tick_last, next_tick, False)
+                    if pattern_breakout.is_breakout_a_signal() or pattern_breakout.breakout_direction == FD.DESC:
+                        pattern.function_cont.tick_for_breakout = next_tick
+                        pattern.breakout = pattern_breakout
+            if pattern.breakout is None:  # we want to have the last tick before breakout
+                tick_last = next_tick
         pattern.function_cont.add_tick_from_main_df_to_df(self.df, tick_last)
         return can_pattern_be_added
 

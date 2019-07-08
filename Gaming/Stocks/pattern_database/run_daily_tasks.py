@@ -4,7 +4,7 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-11-05
 """
-from sertl_analytics.constants.pattern_constants import PRD
+from sertl_analytics.constants.pattern_constants import PRD, FT
 from pattern_database.stock_database_updater import StockDatabaseUpdater
 from pattern_predictor_optimizer import PatternPredictorOptimizer
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
@@ -30,12 +30,12 @@ if True:
     # stock_db.update_stock_data_for_symbol('TSLA')
     # stock_db.update_stock_data_for_symbol('GE')
     # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
-    stock_db_updater.handle_transaction_problems()
+    # stock_db_updater.handle_transaction_problems()
     # stock_db_updater.add_wave_prediction_data_to_wave_records(symbol='')
     # stock_db_updater.update_trade_records(4, 16)
-    # stock_db_updater.update_trade_policy_metric_for_today(
-    #     [FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
-    # stock_db_updater.update_trade_policy_metric_for_today([FT.TRIANGLE, FT.TRIANGLE_DOWN, FT.CHANNEL, FT.FIBONACCI_DESC])
+    # stock_db_updater.update_trade_policy_metric_for_today([FT.CHANNEL])
+    # stock_db_updater.delete_inconsistent_wave_records(False)
+    stock_db_updater.update_trade_policy_metric_for_today([FT.TRIANGLE_TOP])
     # stock_db_updater.update_equity_records()
     # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
     # stock_db_updater.update_wave_records_for_daily_period('AAPL', 400)

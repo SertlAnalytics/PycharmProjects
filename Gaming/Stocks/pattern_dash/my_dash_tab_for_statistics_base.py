@@ -173,9 +173,8 @@ class MyDashTab4StatisticsBase(MyPatternDashBaseTab):
             # print('handle_callback_for_x_variable_options ({}-{}): {}'.format(chart_type, master_predictor, value_list))
             return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
 
-    def __get_value_list_for_category_options__(self, chart_type: str):
-        return self.sys_config.db_stock.trade_table.get_columns_for_statistics_category(
-            with_trade_process=chart_type==CHT.MY_TRADES)
+    def __get_value_list_for_category_options__(self, chart_type: str) -> list:
+        return []
 
     @staticmethod
     def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):

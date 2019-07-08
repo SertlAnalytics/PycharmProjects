@@ -37,6 +37,9 @@ class MyDashTab4PatternStatistics(MyDashTab4StatisticsBase):
     def __get_statistic_plotter__(self):
         return MyDashTabStatisticsPlotter4Pattern(self._df_base, self._color_handler)
 
+    def __get_value_list_for_category_options__(self, chart_type: str) -> list:
+        return self.sys_config.db_stock.pattern_table.get_columns_for_statistics_category()
+
     @staticmethod
     def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):
         if chart_type == CHT.PREDICTOR:

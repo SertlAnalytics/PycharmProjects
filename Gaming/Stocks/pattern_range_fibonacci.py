@@ -5,11 +5,11 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, CN, FD, TP
+from sertl_analytics.constants.pattern_constants import FT, TP
+from sertl_analytics.mymath import MyMath
 from pattern_wave_tick import WaveTick
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_range import PatternRangeMax, PatternRangeMin, PatternRangeDetectorMax, PatternRangeDetectorMin
-import numpy as np
 import statistics
 
 
@@ -22,6 +22,13 @@ class FibonacciFormation:
         self.mean_forecast_retracement_pct = self.__get_mean_forecast_retracement_pct__()
         self.mean_forecast_timestamp_retracement_pct = self.__get_mean_forecast_timestamp_retracement_pct__()
         self.valid_wave = self.valid_wave_list[0] if self.valid_wave_list else None
+        self.retracement_start_parameters = []
+        self.retracement_end_parameters_classifier = []
+        self.retracement_end_parameters_regression = []
+        self.__fill_retracement_parameters__()
+        self.retracement_predictor_value = self.__get_retracement_predictor_value__()
+        self.target_retracement_value = self.retracement_predictor_value  # self.__get_target_retracement_value__()
+        self.target_retracement_date_time_str = self.__get_target_retracement_date_time_str__()
 
     @property
     def tick_start(self) -> WaveTick:
@@ -56,23 +63,34 @@ class FibonacciFormation:
     @property
     def height(self):  # distance from start to end
         if self.pattern_type == FT.FIBONACCI_ASC:
-            return self.tick_start.low - self.tick_end.high
+            return MyMath.round_smart(self.tick_end.high - self.tick_start.low)
         else:
-            return self.tick_start.high - self.tick_end.low
+            return MyMath.round_smart(self.tick_start.high - self.tick_end.low)
+
+    @property
+    def value_start(self):
+        return self.tick_start.low if self.pattern_type == FT.FIBONACCI_ASC else self.tick_start.high
+
+    @property
+    def value_end(self):
+        return self.tick_end.high if self.pattern_type == FT.FIBONACCI_ASC else self.tick_end.low
 
     def __get_mean_forecast_wave_end_pct__(self):
         if self.are_valid_waves_available:
-            return statistics.mean([wave.forecast_wave_end_pct for wave in self.valid_wave_list]) * 100
+            return MyMath.round_smart(
+                statistics.mean([wave.forecast_wave_end_pct for wave in self.valid_wave_list]) * 100)
         return 0
 
     def __get_mean_forecast_retracement_pct__(self) -> float:
         if self.are_valid_waves_available:
-            return statistics.mean([wave.forecast_value_retracement_pct for wave in self.valid_wave_list])
+            retracement_pct_list = [wave.forecast_value_retracement_pct for wave in self.valid_wave_list]
+            return MyMath.round_smart(statistics.mean(retracement_pct_list))
         return 0
 
     def __get_mean_forecast_timestamp_retracement_pct__(self) -> float:
         if self.are_valid_waves_available:
-            return statistics.mean([wave.forecast_timestamp_retracement_pct for wave in self.valid_wave_list])
+            timestamp_retracement_pct_list = [wave.forecast_timestamp_retracement_pct for wave in self.valid_wave_list]
+            return MyMath.round_smart(statistics.mean(timestamp_retracement_pct_list))
         return 0
 
     def __get_valid_wave__(self):
@@ -86,17 +104,72 @@ class FibonacciFormation:
     def get_minimal_retracement_range_after_wave_finishing(self):
         return self.valid_wave.get_minimal_retracement_range_after_finishing()
 
+    def get_forecast_retracement_range_after_wave_finishing(self):
+        return abs(self.target_retracement_value - self.value_end)
+
     def get_retracement_annotation_for_prediction(self) -> str:
         if not self.are_valid_waves_available:
             return ''
-        target_retracement = self.valid_wave.get_value_for_retracement_pct(self.mean_forecast_retracement_pct)
-        target_date_time_retracement = self.valid_wave.get_date_time_for_retracement_pct(
-            self.mean_forecast_timestamp_retracement_pct)
         return '{:.2f}%: {:.2f} on {} (probability for wave end reached: {:.0f}%)'.format(
-            self.mean_forecast_retracement_pct, target_retracement,
-            target_date_time_retracement, self.mean_forecast_wave_end_pct)
+            self.mean_forecast_retracement_pct, self.target_retracement_value,
+            self.target_retracement_date_time_str, self.mean_forecast_wave_end_pct)
+
+    def __get_retracement_predictor_value__(self) -> float:
+        if self.valid_wave is None:
+            return 0
+        return MyMath.round_smart(
+            (self.retracement_end_parameters_regression[1] + self.retracement_end_parameters_classifier[1])/2)
+
+    def __get_target_retracement_value__(self) -> float:
+        if self.valid_wave is None:
+            return 0
+        return self.valid_wave.get_value_for_retracement_pct(self.mean_forecast_retracement_pct)
+
+    def __get_target_retracement_date_time_str__(self) -> str:
+        if self.valid_wave is None:
+            return ''
+        return self.valid_wave.get_date_time_for_retracement_pct(self.mean_forecast_timestamp_retracement_pct)
+
+    def __fill_retracement_parameters__(self):
+        if self.valid_wave is None:
+            return
+        # we get: [xy_classifier[0], xy_classifier[1], xy_regression[1], xy_regression[0]]
+        if len(self.wave_list) == 1:
+            xy_parameters = self.valid_wave.get_xy_parameter_for_prediction_shape()
+            self.retracement_start_parameters = xy_parameters[0]
+            self.retracement_end_parameters_classifier = xy_parameters[1]
+            self.retracement_end_parameters_regression = xy_parameters[2]
+        else:
+            xy_parameters_list = []
+            for wave in self.wave_list:
+                xy_parameters_list.append(wave.get_xy_parameter_for_prediction_shape())
+            xy_mean_parameters = self.__get_mean_parameters_from_xy_parameter_list__(xy_parameters_list)
+            self.retracement_start_parameters = xy_mean_parameters[0]
+            self.retracement_end_parameters_classifier = xy_mean_parameters[1]
+            self.retracement_end_parameters_regression = xy_mean_parameters[2]
+
+    @staticmethod
+    def __get_mean_parameters_from_xy_parameter_list__(xy_parameters_list: list):
+        # we get a list of ...[(1556661600, 215.3), (1557375012, 154.46), (1559296128, 181.64), (1556661600, 215.3)]
+        xy_parameters_return = []
+        for idx in (0, 1, 2):
+            ts_list = [xy_parameters[idx][0] for xy_parameters in xy_parameters_list]
+            value_list = [xy_parameters[idx][1] for xy_parameters in xy_parameters_list]
+            ts_mean = int(statistics.mean(ts_list))
+            value_mean = MyMath.round_smart(statistics.mean(value_list))
+            xy_parameters_return.append((ts_mean, value_mean))
+        # print('xy_parameters_return={}'.format(xy_parameters_return))
+        return xy_parameters_return
 
     def get_xy_parameter_for_prediction_shape(self):
+        #  return [xy_classifier[0], xy_classifier[1], xy_regression[1], xy_regression[0]]
+        return [self.retracement_start_parameters,
+                self.retracement_end_parameters_classifier,
+                self.retracement_end_parameters_regression,
+                self.retracement_start_parameters]
+
+    def get_xy_parameter_valid_wave_for_prediction_shape(self):
+        # this was the original one - we use now the mean of all existing waves - see above
         return self.valid_wave.get_xy_parameter_for_prediction_shape()
 
     def __get_valid_wave_list__(self):

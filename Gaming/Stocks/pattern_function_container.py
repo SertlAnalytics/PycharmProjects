@@ -527,11 +527,9 @@ class PatternFunctionContainerFactory:
     def get_function_container_by_api(api: PatternFunctionContainerFactoryApi):
         pattern_type = api.pattern_type
         sys_config = api.sys_config
-        pdh = api.pdh
         df = api.pattern_range.get_related_part_from_data_frame(api.df_min_max)
         f_upper = api.get_f_upper()
         f_lower = api.get_f_lower()
-
         f_cont = PatternFunctionContainerFactory.get_function_container(sys_config, pattern_type, df, f_lower, f_upper)
         if FT.is_pattern_type_any_head_shoulder(api.pattern_type):
             f_cont.set_tick_for_helper(api.pattern_range.hsf.tick_shoulder_left)

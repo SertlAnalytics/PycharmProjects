@@ -5,6 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-03-11
 """
 
+from sertl_analytics.constants.pattern_constants import MC, MT
 import numpy as np
 from keras.layers import Dense
 from keras.models import Sequential
@@ -15,7 +16,7 @@ from sklearn.svm import SVC
 from sklearn import neighbors
 from sklearn import ensemble
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import confusion_matrix, classification_report, mean_squared_error, r2_score
 from sklearn.model_selection import cross_val_predict, cross_val_score
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
@@ -38,7 +39,11 @@ class ModelType:
     LINEAR_REGRESSION = "Model: Linear, Type: Regression"
     LINEAR_CLASSIFICATION = "Model: Linear, Type: Classification"
     TREE_CLASSIFICATION = "Model: DecisionTree, Type: Classification"
+    NEIGHBORS_CLASSIFICATION = "Model: NearestNeighbors, Type: Classification"
+    RANDOM_FOREST_CLASSIFICATION = "Model: RandomForest, Type: Classification"
+    SVM_CLASSIFICATION = "Model: SVM, Type: Classification"
     MLP_CLASSIFICATION = "Model: Multi-layer Perceptron, Type: Classification"
+    MLP_REGRESSION = "Model: Multi-layer Perceptron, Type: Regression"
 
 
 class LearningMachine:
@@ -46,7 +51,6 @@ class LearningMachine:
         self.scaler = StandardScaler()
         self.hidden_layers = hidden_layers
         self.model = None
-        self.model_type = None
         self.optimizer = optimizer
         self.loss = loss
         self.np_predictors = None
@@ -55,6 +59,16 @@ class LearningMachine:
         self.prediction = None
         self.prediction_pct = None  # percentage for classification
         self.accuracy = 0
+        self._x_train = None
+        self._y_train = None
+
+    @property
+    def model_type(self):
+        return ''
+
+    @property
+    def model_category(self):
+        return MC.CLASSIFIER
 
     @property
     def x_col(self):
@@ -64,11 +78,13 @@ class LearningMachine:
     def y_col(self):
         return self.np_target.shape[1]
 
-    def fit(self, x_train: np.array, y_train: np.array):
+    def fit(self, x_train: np.array, y_train: np.array, with_prediction=False):
         if self.model is None:
             self.model = self.get_model()
-        x_train_scaled = self.__get_newly_scaled_data__(x_train)
-        self.model.fit(x_train_scaled, y_train)
+        self._x_train = self.__get_newly_scaled_data__(x_train)
+        self._y_train = y_train
+        self.model.fit(self._x_train, self._y_train)
+        self.__calculate_accuracy__()
 
     def __get_newly_scaled_data__(self, x_train):
         self.scaler.fit(x_train)
@@ -124,8 +140,30 @@ class LearningMachine:
         self.accuracy = accuracy_score(self.prediction, test_set_target)
         self.__print_statistical_data__(test_set_target)
 
+    def __calculate_accuracy__(self):
+        self.prediction = self.model.predict(self._x_train)
+        if self.model_category == MC.CLASSIFIER:
+            self.accuracy = accuracy_score(self.prediction, self._y_train)
+        else:
+            distinct_y_values = list(set(self._y_train))
+            prediction_as_classifiction = self.__get_linear_prediction_as_classification__(
+                self.prediction, distinct_y_values)
+            self.accuracy = accuracy_score(prediction_as_classifiction, self._y_train)
+            # m_squared_error = mean_squared_error(self._y_train, self.prediction)
+            # variance_score = r2_score(self._y_train, self.prediction)
+            # self.accuracy = variance_score
+        # print('{}: accuracy={:.2f}'.format(self.model_type, self.accuracy))
+
+    def __get_linear_prediction_as_classification__(self, prediction: np.array, distinct_y_values: list):
+        return_array = np.array(prediction)
+        for ind, value in np.ndenumerate(return_array):
+            distinct_y_values_distances = [abs(y_value - value) for y_value in distinct_y_values]
+            ind_min = distinct_y_values_distances.index(min(distinct_y_values_distances))
+            return_array[ind] = distinct_y_values[ind_min]
+        return return_array
+
     def __print_statistical_data__(self, np_test_set_target: np.array):
-        self.accuracy = self.model.score(self.prediction, np_test_set_target)
+        # self.accuracy = self.model.score(self.prediction, np_test_set_target)
         print(confusion_matrix(np_test_set_target, self.prediction))
         print(classification_report(np_test_set_target, self.prediction))
 
@@ -143,6 +181,10 @@ class LmKNeighborsClassifier(LearningMachine):
     def get_model(self):
         return neighbors.KNeighborsClassifier(n_neighbors=self._n_neighbors, weights=self._weights)
 
+    @property
+    def model_type(self):
+        return ModelType.NEIGHBORS_CLASSIFICATION
+
 
 class LmSVM(LearningMachine):
     def __init__(self, gamma='auto'):
@@ -152,6 +194,10 @@ class LmSVM(LearningMachine):
     def get_model(self):
         return SVC(gamma=self._gamma)
 
+    @property
+    def model_type(self):
+        return ModelType.SVM_CLASSIFICATION
+
 
 class LmDecisionTreeClassifier(LearningMachine):
     def __init__(self, random_state=0):
@@ -160,6 +206,10 @@ class LmDecisionTreeClassifier(LearningMachine):
 
     def get_model(self):
         return tree.DecisionTreeClassifier(random_state=self._random_state)
+
+    @property
+    def model_type(self):
+        return ModelType.TREE_CLASSIFICATION
 
 
 class LmRandomForestClassifier(LearningMachine):
@@ -173,10 +223,22 @@ class LmRandomForestClassifier(LearningMachine):
         return ensemble.RandomForestClassifier(
             n_estimators=self._n_estimators, max_depth=self._max_depth, random_state=self._random_state)
 
+    @property
+    def model_type(self):
+        return ModelType.RANDOM_FOREST_CLASSIFICATION
+
 
 class LmLinearRegression(LearningMachine):
     def get_model(self):
         return linear_model.LinearRegression()
+
+    @property
+    def model_type(self):
+        return ModelType.LINEAR_REGRESSION
+
+    @property
+    def model_category(self):
+        return MC.REGRESSION
 
 
 class LmLogisticRegression(LearningMachine):
@@ -190,6 +252,10 @@ class LmLogisticRegression(LearningMachine):
         # pipeline = make_pipeline(scaler, linear_model.LogisticRegression())
         return linear_model.LogisticRegression()
 
+    @property
+    def model_type(self):
+        return ModelType.LINEAR_CLASSIFICATION
+
     def __print_statistical_data__(self, np_test_set_target : np.array):
         self.accuracy = self.model.score(self.np_prediction_data, np_test_set_target)
         print(confusion_matrix(np_test_set_target, self.prediction))
@@ -201,6 +267,10 @@ class LmLogisticRegression(LearningMachine):
 class LmMLPClassifier(LearningMachine):
     def get_model(self):
         return MLPClassifier(hidden_layer_sizes=(30,30,30))
+
+    @property
+    def model_type(self):
+        return ModelType.MLP_CLASSIFICATION
 
 
 class LmSequential(LearningMachine):
@@ -217,6 +287,10 @@ class LmSequential(LearningMachine):
         self.__add_output_layer__(model)
         self.__compile_model__(model)
         return model
+
+    @property
+    def model_type(self):
+        return ModelType.MLP_CLASSIFICATION
 
     def __add_hidden_layers__(self, model: Sequential):
         pass
@@ -265,12 +339,24 @@ class LmSequentialRegression(LmSequential):
     def __add_output_layer__(self, model: Sequential):
         model.add(Dense(self.y_col))  # output layer
 
+    @property
+    def model_type(self):
+        return ModelType.MLP_REGRESSION
+
+    @property
+    def model_category(self):
+        return MC.REGRESSION
+
 
 class LmSequentialClassification(LmSequential):
     def __init__(self, hidden_layers=None, optimizer=Optimizer.ADAM, loss=LossFunction.CAT_CROSS):
         if hidden_layers is None:
             hidden_layers = [10, 100, 10]
         LearningMachine.__init__(self, hidden_layers, optimizer, loss)
+
+    @property
+    def model_type(self):
+        return ModelType.MLP_CLASSIFICATION
 
     def __manipulate_model_prediction__(self):
         self.prediction_pct = np.max(self.prediction, axis=1).round(2)

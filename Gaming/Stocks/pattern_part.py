@@ -11,6 +11,7 @@ from sertl_analytics.mymath import MyMath
 from pattern_function_container import PatternFunctionContainer
 from pattern_wave_tick import WaveTick
 from pattern_system_configuration import SystemConfiguration, debugger
+from pattern_value_categorizer import ValueCategorizer
 from pattern_data_frame import PatternDataFrame
 import numpy as np
 
@@ -35,6 +36,7 @@ class PatternPart:
         self.pdh = sys_config.pdh
         self.function_cont = function_cont
         self.df = self.pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
+        self.value_categorizer = None
         self.tick_list = []
         self.pattern_type = self.sys_config.runtime_config.actual_pattern_type
         self.breakout = self.sys_config.runtime_config.actual_breakout
@@ -56,7 +58,7 @@ class PatternPart:
         self.__xy_regression = None
         self.__xy_center = ()
         if self.df.shape[0] > 0:
-            self.stock_df = PatternDataFrame(self.df)
+            self.pattern_df = PatternDataFrame(self.df)
             self.__calculate_values__()
             self.__set_xy_parameter__()
             self.__set_xy_pattern_range_parameter__()
@@ -111,19 +113,19 @@ class PatternPart:
             self.height = (self.distance_min + self.distance_max) / 2
 
     def __set_xy_parameter__(self):
-        self.__xy = self.stock_df.get_xy_parameter(self.function_cont)
+        self.__xy = self.pattern_df.get_xy_parameter(self.function_cont)
 
     def __set_xy_pattern_range_parameter__(self):
-        # print('__set_xy_pattern_range_parameter__: self.stock_df.tick_first:')
-        # self.stock_df.tick_first.print()
-        self.__xy_pattern_range = self.stock_df.get_xy_parameter(self.function_cont, self.pattern_range.tick_last)
+        # print('__set_xy_pattern_range_parameter__: self.pattern_df.tick_first:')
+        # self.pattern_df.tick_first.print()
+        self.__xy_pattern_range = self.pattern_df.get_xy_parameter(self.function_cont, self.pattern_range.tick_last)
         # print('self.__xy_pattern_range={}'.format(self.__xy_pattern_range))
 
     def __set_xy_regression__(self):
-        self.__xy_regression = self.stock_df.get_xy_regression(self.function_cont)
+        self.__xy_regression = self.pattern_df.get_xy_regression(self.function_cont)
 
     def __set_xy_center__(self):
-        self.__xy_center = self.stock_df.get_xy_center(self.function_cont.f_regression)
+        self.__xy_center = self.pattern_df.get_xy_center(self.function_cont.f_regression)
 
     @property
     def xy(self):
@@ -171,9 +173,10 @@ class PatternPart:
 
     @property
     def diff_max_min_till_breakout(self) -> float:
-        position_last = self.breakout.tick_breakout.position if self.breakout else self.tick_last.position
+        # position_last = self.breakout.tick_breakout.position if self.breakout else self.tick_last.position
+        position_last = self.tick_last.position
         df_part = self.df.loc[self.tick_first.position:position_last]
-        return df_part[CN.HIGH].max() - df_part[CN.LOW].min()
+        return MyMath.round_smart(df_part[CN.HIGH].max() - df_part[CN.LOW].min())
 
     @property
     def max(self):
@@ -297,6 +300,13 @@ class PatternEntryPart(PatternPart):
             self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer, series_hit_details: list):
         PatternPart.__init__(self, sys_config, function_cont)
         self._series_hit_details = series_hit_details
+
+
+class PatternBuyPart(PatternPart):
+    def __init__(self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer,
+                 value_categorizer: ValueCategorizer):
+        self._value_categorizer = value_categorizer
+        PatternPart.__init__(self, sys_config, function_cont)
 
 
 class PatternWatchPart(PatternPart):

@@ -75,6 +75,10 @@ class MyDashTab4TradeStatistics(MyDashTab4StatisticsBase):
                 self._df_ext_for_error_log.numbers_loser_simulation[1]
             )
 
+    def __get_value_list_for_category_options__(self, chart_type: str) -> list:
+        return self.sys_config.db_stock.trade_table.get_columns_for_statistics_category(
+            with_trade_process=chart_type==CHT.MY_TRADES)
+
     @staticmethod
     def __get_value_list_for_x_variable_options__(chart_type: str, predictor: str):
         if chart_type == CHT.PREDICTOR:

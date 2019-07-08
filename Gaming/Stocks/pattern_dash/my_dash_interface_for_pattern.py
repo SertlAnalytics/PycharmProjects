@@ -162,11 +162,11 @@ class DashInterface:
 
     @staticmethod
     def get_f_upper_shape(pattern_part: PatternPart):
-        return pattern_part.stock_df.get_f_upper_shape(pattern_part.function_cont)
+        return pattern_part.pattern_df.get_f_upper_shape(pattern_part.function_cont)
 
     @staticmethod
     def get_f_lower_shape(pattern_part: PatternPart):
-        return pattern_part.stock_df.get_f_lower_shape(pattern_part.function_cont)
+        return pattern_part.pattern_df.get_f_lower_shape(pattern_part.function_cont)
 
     @staticmethod
     def get_range_f_param_shape(pattern_range: PatternRange):

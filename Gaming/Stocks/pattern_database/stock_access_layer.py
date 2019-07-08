@@ -15,7 +15,8 @@ import pandas as pd
 import math
 import numpy as np
 from sertl_analytics.datafetcher.database_fetcher import MyTable
-from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, EDC, TRC, TPMDC, PRDC, FD, WPDT
+from sertl_analytics.constants.pattern_constants import INDICES, CN, DC, PRD, MDC, MC, MT
+from sertl_analytics.constants.pattern_constants import EDC, TRC, TPMDC, PRDC, FD, WPDT, PRED
 
 
 class AccessLayer:
@@ -151,6 +152,39 @@ class AccessLayer4Metric(AccessLayer):
         dt_today = MyDate.get_date_as_string_from_date_time()
         # dt_today = '2018-12-22'
         return self.select_data_by_data_dict({MDC.VALID_DT: dt_today})
+
+    def get_best_trained_classifier_model_name_for_label(self, label: str):
+        return self.__get_best_trained_model_name_for_label__(label, MC.CLASSIFIER)
+
+    def get_best_trained_regression_model_name_for_label(self, label: str):
+        return self.__get_best_trained_model_name_for_label__(label, MC.REGRESSION)
+
+    def __get_best_trained_model_name_for_label__(self, label: str, model_category: str):
+        dt_today = MyDate.get_date_as_string_from_date_time()
+        data_dict = {MDC.VALID_DT: dt_today, MDC.PREDICTOR: PRED.FIBONACCI,
+                     MDC.LABEL: label, MDC.PATTERN_TYPE: model_category}
+        df = self.select_data_by_data_dict(data_dict)
+        if df.shape[0] == 0:
+            return ''
+        return df.iloc[0][MDC.MODEL]
+
+    def set_best_trained_classifier_model_name_for_label(self, label: str, model_name: str, value: float):
+        self.__set_best_trained_model_name_for_label__(label, MC.CLASSIFIER, model_name, value)
+
+    def set_best_trained_regression_model_name_for_label(self, label: str, model_name: str, value: float):
+        self.__set_best_trained_model_name_for_label__(label, MC.REGRESSION, model_name, value)
+
+    def __set_best_trained_model_name_for_label__(self, label: str, model_category: str, model_name: str, value: float):
+        existing_best_model = self.__get_best_trained_model_name_for_label__(label, model_category)
+        if existing_best_model != '':
+            return  # nothing to do - we already have one entry for today
+        dt_today = MyDate.get_date_as_string_from_date_time()
+        value = round(value, 2)
+        data_dict = {MDC.VALID_DT: dt_today, MDC.MODEL: model_name, MDC.TABLE: self.table_name,
+                     MDC.PREDICTOR: PRED.FIBONACCI,
+                     MDC.LABEL: label, MDC.PATTERN_TYPE: model_category,
+                     MDC.VALUE: value, MDC.PRECISION: 0, MDC.RECALL: 0, MDC.F1_SCORE: 0, MDC.ROC_AUC: 0}
+        self.insert_data([data_dict])
 
 
 class AccessLayer4TradePolicyMetric(AccessLayer):
@@ -341,6 +375,23 @@ class AccessLayer4Wave(AccessLayer):
                 " WHERE Period_ID = 1 AND {} in (0, 1){}" \
                 " ORDER by Ticker_ID, W1_Begin_Timestamp, Wave_End_Timestamp".format(
             DC.WAVE_END_FLAG, symbol_part)
+        return self.select_data_by_query(query)
+
+    def get_inconsistent_waves_as_data_frame(self) -> pd.DataFrame:
+        seconds_for_6_days = MyDate.get_seconds_for_period(days=6)
+        period_daily_too_short_clause = "({} = '{}' and {} - {} < {})".format(
+            DC.PERIOD, PRD.DAILY, DC.WAVE_END_TS, DC.W1_BEGIN_TS, seconds_for_6_days
+        )
+        period_intraday_too_long_clause = "({} = '{}' and {} - {} > {})".format(
+            DC.PERIOD, PRD.INTRADAY, DC.WAVE_END_TS, DC.W1_BEGIN_TS, seconds_for_6_days
+        )
+        wave_max_retr_pct_too_large_clause = "({} > {})".format(DC.WAVE_MAX_RETR_PCT, 300)
+        query = "SELECT {}, * FROM {} WHERE {} or {} or {} ORDER BY {}".format(
+            DC.ROWID, self.table_name,
+            period_daily_too_short_clause,
+            period_intraday_too_long_clause,
+            wave_max_retr_pct_too_large_clause, DC.TICKER_ID)
+        # print('query={}'.format(query))
         return self.select_data_by_query(query)
 
     def get_wave_data_frame_without_end_data(self, symbol='', ts_start=0, ts_end=0) -> pd.DataFrame:
