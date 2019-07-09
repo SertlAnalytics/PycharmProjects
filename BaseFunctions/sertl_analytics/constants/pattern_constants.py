@@ -116,6 +116,7 @@ class TPA:  # TradePolicyAction
 
 class SVW:  # stocks views
     V_WAVE = 'v_wave'
+    V_PATTERN = 'v_pattern'
 
 class STBL:  # stocks tables
     EQUITY = 'Equity'
@@ -1093,6 +1094,8 @@ class DC:  # Data Columns
     TS_PATTERN_TICK_LAST = 'Timestamp_Pattern_Tick_Last'
     TS_BREAKOUT = 'Timestamp_Breakout'
     TICKS_TILL_PATTERN_FORMED = 'Ticks_Till_Pattern_Formed'
+    # the following pct value is related to TICKS_TILL_PATTERN_FORMED + TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT
+    TICKS_TILL_PATTERN_FORMED_PCT = 'Ticks_Till_Pattern_Formed_PCT'
     TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT = 'Ticks_From_Pattern_Formed_Till_Breakout'
     PATTERN_RANGE_BEGIN_DT = 'Pattern_Range_Begin_Date'
     PATTERN_RANGE_BEGIN_TIME = 'Pattern_Range_Begin_Time'
@@ -1130,6 +1133,12 @@ class DC:  # Data Columns
     TICKS_PREVIOUS_PERIOD_FULL_TOP_OUT_TILL_PATTERN = 'Ticks_From_Previous_Period_Full_Top_Out_Till_Pattern'
     TICKS_PREVIOUS_PERIOD_HALF_BOTTOM_OUT_TILL_PATTERN = 'Ticks_From_Previous_Period_Half_Bottom_Out_Till_Pattern'
     TICKS_PREVIOUS_PERIOD_FULL_BOTTOM_OUT_TILL_PATTERN = 'Ticks_From_Previous_Period_Full_Bottom_Out_Till_Pattern'
+
+    TICKS_PREVIOUS_PERIOD_HALF_TOP_OUT_TILL_PATTERN_PCT = 'Ticks_From_Previous_Period_Half_Top_Out_Till_Pattern_PCT'
+    TICKS_PREVIOUS_PERIOD_FULL_TOP_OUT_TILL_PATTERN_PCT = 'Ticks_From_Previous_Period_Full_Top_Out_Till_Pattern_PCT'
+    TICKS_PREVIOUS_PERIOD_HALF_BOTTOM_OUT_TILL_PATTERN_PCT = 'Ticks_From_Previous_Period_Half_Bottom_Out_Till_Pattern_PCT'
+    TICKS_PREVIOUS_PERIOD_FULL_BOTTOM_OUT_TILL_PATTERN_PCT = 'Ticks_From_Previous_Period_Full_Bottom_Out_Till_Pattern_PCT'
+
     NEXT_PERIOD_HALF_POSITIVE_PCT = 'Next_Period_Half_Positive_PCT'
     NEXT_PERIOD_FULL_POSITIVE_PCT= 'Next_Period_Full_Positive_PCT'
     NEXT_PERIOD_HALF_NEGATIVE_PCT= 'Next_Period_Half_Negative_PCT'
@@ -1138,6 +1147,12 @@ class DC:  # Data Columns
     TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL = 'Ticks_From_Breakout_Till_Positive_Full'
     TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF = 'Ticks_From_Breakout_Till_Negative_Half'
     TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL = 'Ticks_From_Breakout_Till_Negative_Full'
+
+    TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF_PCT = 'Ticks_From_Breakout_Till_Positive_Half_PCT'
+    TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL_PCT = 'Ticks_From_Breakout_Till_Positive_Full_PCT'
+    TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF_PCT = 'Ticks_From_Breakout_Till_Negative_Half_PCT'
+    TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL_PCT = 'Ticks_From_Breakout_Till_Negative_Full_PCT'
+
     AVAILABLE_FIBONACCI_TYPE = 'Available_Fibonacci_Type'  # '', Min, Max
     AVAILABLE_FIBONACCI_TYPE_ID = 'Available_Fibonacci_Type_ID'  # 0 = No, -1 = Min, 1 = Max
     EXPECTED_WIN = 'Expected_Win'
@@ -1181,6 +1196,7 @@ class DC:  # Data Columns
 
     FC_TOUCH_POINTS_TILL_BREAKOUT_TOP = 'Forecast_Touch_Points_Till_Breakout_Top'
     FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM = 'Forecast_Touch_Points_Till_Breakout_Bottom'
+    FC_TICKS_TILL_PATTERN_FORMED_PCT = 'Forecast_Ticks_Till_Pattern_Formed_PCT'
     FC_TICKS_TILL_BREAKOUT = 'Forecast_Ticks_Till_Breakout'
     FC_BREAKOUT_DIRECTION = 'Forecast_Breakout_Direction'
     FC_BREAKOUT_DIRECTION_ID = 'Forecast_Breakout_Direction_ID'
@@ -1297,6 +1313,22 @@ class DC:  # Data Columns
                 DC.FC_TICKS_TO_NEGATIVE_HALF, DC.FC_TICKS_TO_NEGATIVE_FULL,
                 DC.BUY_DT, DC.BUY_PRICE,
                 DC.TRADE_REACHED_PRICE_PCT, DC.TRADE_RESULT_AMOUNT, DC.TRADE_RESULT_PCT]
+
+    @staticmethod
+    def get_column_dict_for_tick_columns():
+        return {
+            DC.TICKS_TILL_PATTERN_FORMED: DC.TICKS_TILL_PATTERN_FORMED_PCT,
+            DC.TICKS_PREVIOUS_PERIOD_HALF_TOP_OUT_TILL_PATTERN: DC.TICKS_PREVIOUS_PERIOD_HALF_TOP_OUT_TILL_PATTERN_PCT,
+            DC.TICKS_PREVIOUS_PERIOD_FULL_TOP_OUT_TILL_PATTERN: DC.TICKS_PREVIOUS_PERIOD_FULL_TOP_OUT_TILL_PATTERN_PCT,
+            DC.TICKS_PREVIOUS_PERIOD_HALF_BOTTOM_OUT_TILL_PATTERN:
+                DC.TICKS_PREVIOUS_PERIOD_HALF_BOTTOM_OUT_TILL_PATTERN_PCT,
+            DC.TICKS_PREVIOUS_PERIOD_FULL_BOTTOM_OUT_TILL_PATTERN:
+                DC.TICKS_PREVIOUS_PERIOD_FULL_BOTTOM_OUT_TILL_PATTERN_PCT,
+            DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF: DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF_PCT,
+            DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL: DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL_PCT,
+            DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF: DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF_PCT,
+            DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL: DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_FULL_PCT
+        }
 
 
     @staticmethod

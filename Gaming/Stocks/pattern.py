@@ -169,8 +169,11 @@ class Pattern:
     def relative_width_to_full_data_frame(self):
         return (self.part_entry.tick_last.position - self.part_entry.tick_first.position) / self.df_length
 
-    def get_value(self, idx: str):
-        return self.data_dict_obj.data_dict.get(idx, None)
+    def get_value(self, idx: str, default=None):
+        return self.data_dict_obj.data_dict.get(idx, default)
+
+    def set_value(self, idx: str, value):
+        self.data_dict_obj.data_dict[idx] = value
 
     def get_center_shape_height(self):
         if self.pattern_type in [FT.TKE_BOTTOM, FT.TKE_TOP, FT.FIBONACCI_ASC, FT.FIBONACCI_DESC]:
@@ -500,12 +503,16 @@ class Pattern:
             return 'sorry - not enough previous data'
         points_top = self.data_dict_obj.get(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_TOP)
         points_bottom = self.data_dict_obj.get(DC.FC_TOUCH_POINTS_TILL_BREAKOUT_BOTTOM)
-        ticks = self.data_dict_obj.get(DC.FC_TICKS_TILL_BREAKOUT)
+        ticks_till_breakout = self.data_dict_obj.get(DC.FC_TICKS_TILL_BREAKOUT)
+        ticks_till_pattern_formed_pct = self.data_dict_obj.get(DC.FC_TICKS_TILL_PATTERN_FORMED_PCT)
+        ticks_till_breakout_by_range_calculation = \
+            int(self.pattern_range.length * (100 - ticks_till_pattern_formed_pct) / 100)
         direction_id = self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID)
         direction_str = 'ASC' if direction_id == 1 else 'DESC'
         false_breakout_str = self.__get_false_breakout_string__(direction_id)
-        return '{}-Breakout after {} ticks and {}/{} touches - {}'.format(
-            direction_str, ticks, points_top, points_bottom, false_breakout_str)
+        return '{}-Breakout after {} ({}) ticks and {}/{} touches - {}'.format(
+            direction_str, ticks_till_breakout, ticks_till_breakout_by_range_calculation,
+            points_top, points_bottom, false_breakout_str)
 
     def __get_false_breakout_string__(self, direction_id: int):
         is_in_favour = self.is_prediction_in_favour_of_ascending_breakout(direction_id)
@@ -604,6 +611,8 @@ class Pattern:
                                self.y_predict_touch_points[DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM])
         self.data_dict_obj.add(DC.FC_TICKS_TILL_BREAKOUT,
                                self.y_predict_before_breakout[DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT])
+        self.data_dict_obj.add(DC.FC_TICKS_TILL_PATTERN_FORMED_PCT,
+                               self.y_predict_before_breakout[DC.TICKS_TILL_PATTERN_FORMED_PCT])
         self.data_dict_obj.add(DC.FC_BREAKOUT_DIRECTION_ID, self.y_predict_before_breakout[DC.BREAKOUT_DIRECTION_ID])
         self.data_dict_obj.add(DC.FC_BREAKOUT_DIRECTION,
                                FD.ASC if self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID) == 1 else FD.DESC)
@@ -932,13 +941,23 @@ class Pattern:
         self.data_dict_obj.add(DC.AVAILABLE_FIBONACCI_TYPE, self.available_fibonacci_end_type)
         self.data_dict_obj.add(DC.AVAILABLE_FIBONACCI_TYPE_ID, EXTREMA.get_id(self.available_fibonacci_end_type))
         self.data_dict_obj.add(DC.EXPECTED_WIN, self.get_expected_win())
-        self.data_dict_obj.add(DC.TRADE_TYPE, '')  # this will be changed by a backend process
+        self.data_dict_obj.add(DC.TRADE_TYPE, '')  # this will be changed by a backend process (update_trade_records)
         apex_parameters = self.get_apex_parameters()
         # if apex_parameters[1] > 0:
         #     print('Apex_parameters: {:.2f} at {}'.format(
         #         apex_parameters[0], MyDate.get_date_time_from_epoch_seconds(apex_parameters[1])))
         self.data_dict_obj.add(DC.APEX_VALUE, apex_parameters[0])
         self.data_dict_obj.add(DC.APEX_TS, apex_parameters[1])
+        self.__add_pct_columns_for_tick_columns__()
+
+    def __add_pct_columns_for_tick_columns__(self):
+        tick_columns_dict = DC.get_column_dict_for_tick_columns()
+        divisor = self.get_value(DC.TICKS_TILL_PATTERN_FORMED, 0) + \
+                  self.get_value(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT, 0)
+        for tick_col, tick_pct_col in tick_columns_dict.items():
+            value = self.get_value(tick_col, 0)
+            pct_value_rounded = round(value * 20) * 5  # we round down to 5er steps
+            self.set_value(tick_pct_col, pct_value_rounded)
 
     def __add_data_dict_entries_after_filling_trade_result__(self):
         self.data_dict_obj.add(DC.EXPECTED_WIN, self.trade_result.expected_win)

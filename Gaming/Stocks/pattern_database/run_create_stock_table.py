@@ -10,8 +10,9 @@ from pattern_database.stock_database import StockDatabase
 
 stock_db = StockDatabase()
 # stock_db.create_pattern_feature_table()
-stock_db.create_process_table()
+# stock_db.create_pattern_table()
+stock_db.create_pattern_view()
 # stock_db.create_wave_view()
-symbol_list = ['MMM', 'NVDA', 'EURUSD', 'BTCUSD']
-for symbol in symbol_list:
-    print('Index for {}: {}'.format(symbol, stock_db.get_index_for_symbol(symbol)))
+# symbol_list = ['MMM', 'NVDA', 'EURUSD', 'BTCUSD']
+# for symbol in symbol_list:
+#     print('Index for {}: {}'.format(symbol, stock_db.get_index_for_symbol(symbol)))

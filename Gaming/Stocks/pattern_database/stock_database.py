@@ -13,7 +13,7 @@ from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFet
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
     CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable, TradePolicyMetricTable, ProcessTable
-from pattern_database.stock_views import WaveView
+from pattern_database.stock_views import WaveView, PatternView
 from pattern_logging.pattern_log import PatternLog
 import pandas as pd
 import math
@@ -442,6 +442,9 @@ class StockDatabase(BaseDatabase):
     def create_wave_view(self):
         self.__create_view__(SVW.V_WAVE)
 
+    def create_pattern_view(self):
+        self.__create_view__(SVW.V_PATTERN)
+
     def __insert_pattern_in_pattern_table__(self, ticker: str, input_dic: dict):
         try:
             self.__insert_data_into_table__(STBL.PATTERN, [input_dic])
@@ -458,6 +461,9 @@ class StockDatabase(BaseDatabase):
         query = self._pattern_table.get_query_select_for_unique_record_by_id(pattern_id)
         db_df = DatabaseDataFrame(self, query)
         return db_df.df.shape[0] > 0
+
+    def delete_existing_pattern_by_pattern_id(self, pattern_id: str):
+        self.delete_records("DELETE from {} WHERE Id = '{}'".format(STBL.PATTERN, pattern_id))
 
     def is_wave_already_available(self, wave_data_dict: dict) -> bool:
         query = self._wave_table.get_query_select_for_unique_record_by_dict(wave_data_dict)
@@ -650,9 +656,22 @@ class StockDatabase(BaseDatabase):
         return {key: [str(df_first[key]), str(pattern_dict[key])] for key, values in pattern_dict.items()
                 if str(df_first[key]) != str(pattern_dict[key])}
 
+    def is_saved_pattern_version_without_ticks_previous_period(self, pattern_id: str) -> bool:
+        query = self._pattern_table.get_query_select_for_unique_record_by_id(pattern_id)
+        db_df = DatabaseDataFrame(self, query)
+        df_first = db_df.df.iloc[0]
+        ticks_previous_period_columns = [DC.TICKS_PREVIOUS_PERIOD_HALF_TOP_OUT_TILL_PATTERN,
+                                         DC.TICKS_PREVIOUS_PERIOD_FULL_TOP_OUT_TILL_PATTERN,
+                                         DC.TICKS_PREVIOUS_PERIOD_HALF_BOTTOM_OUT_TILL_PATTERN,
+                                         DC.TICKS_PREVIOUS_PERIOD_FULL_BOTTOM_OUT_TILL_PATTERN]
+        for ticks_columns in ticks_previous_period_columns:
+            if df_first[ticks_columns] != 0:
+                return False
+        return True
+
     @staticmethod
     def __get_view_by_name__(view_name: str):
-        return {SVW.V_WAVE: WaveView()}.get(view_name, None)
+        return {SVW.V_WAVE: WaveView(), SVW.V_PATTERN: PatternView()}.get(view_name, None)
 
 
 class StockDatabaseDataFrame(DatabaseDataFrame):

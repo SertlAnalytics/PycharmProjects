@@ -384,14 +384,18 @@ class PatternDetector:
     def save_pattern_data(self):
         if not self.sys_config.config.save_pattern_data:
             return
+        db_stock = self.sys_config.db_stock
         input_list = []
         for pattern in self.pattern_list:
             if pattern.is_pattern_ready_for_pattern_table():
-                pattern_dict = pattern.data_dict_obj.get_data_dict_for_features_table()
+                pattern_dict = pattern.data_dict_obj.get_data_dict_for_pattern_table()
                 if pattern_dict is not None:
                     # print('save_pattern_data: {}'.format(feature_dict))
                     if self.sys_config.db_stock.is_pattern_already_available(pattern_dict[DC.ID]):
                         self.__print_difference_to_stored_version__(pattern_dict)
+                        if db_stock.is_saved_pattern_version_without_ticks_previous_period(pattern_dict[DC.ID]):
+                            self.sys_config.db_stock.delete_existing_pattern_by_pattern_id(pattern_dict[DC.ID])
+                            input_list.append(pattern_dict)
                     else:
                         input_list.append(pattern_dict)
         if len(input_list) > 0:
@@ -415,17 +419,17 @@ class PatternDetector:
         if len(input_list) > 0:
             self.sys_config.db_stock.insert_wave_data(input_list)
 
-    def __print_difference_to_stored_version__(self, feature_dict: dict):
+    def __print_difference_to_stored_version__(self, pattern_data_dict: dict):
         if not self.sys_config.config.show_differences_to_stored_features:
             return
-        dict_diff = self.sys_config.db_stock.get_pattern_differences_to_saved_version(feature_dict)
+        dict_diff = self.sys_config.db_stock.get_pattern_differences_to_saved_version(pattern_data_dict)
         if len(dict_diff) > 0:
             print('Difference for Pattern {} [{}, {}]:'.format(
-                feature_dict[DC.PATTERN_TYPE],
-                feature_dict[DC.PATTERN_BEGIN_TIME] if self.sys_config.period == PRD.INTRADAY
-                else feature_dict[DC.PATTERN_BEGIN_DT],
-                feature_dict[DC.PATTERN_END_TIME] if self.sys_config.period == PRD.INTRADAY
-                else feature_dict[DC.PATTERN_END_DT]
+                pattern_data_dict[DC.PATTERN_TYPE],
+                pattern_data_dict[DC.PATTERN_BEGIN_TIME] if self.sys_config.period == PRD.INTRADAY
+                else pattern_data_dict[DC.PATTERN_BEGIN_DT],
+                pattern_data_dict[DC.PATTERN_END_TIME] if self.sys_config.period == PRD.INTRADAY
+                else pattern_data_dict[DC.PATTERN_END_DT]
             ))
             for key, values in dict_diff.items():
                 print('Different {}: old = {} <> {} = new'.format(key, values[0], values[1]))

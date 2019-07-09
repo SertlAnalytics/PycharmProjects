@@ -6,7 +6,7 @@ Date: 2018-03-11
 """
 
 import pandas as pd
-from sqlalchemy import MetaData, Table, insert, exc, text, Column, String, Float, Boolean, Integer, create_engine
+from sqlalchemy import MetaData, Table, insert, exc, text, Column, String, Float, Boolean, Integer, Date, create_engine
 from sqlalchemy_views import CreateView, DropView
 import os
 import sys
@@ -112,6 +112,7 @@ class MyView:
 class MyTable:
     def __init__(self):
         self._name = self._get_name_()
+        self._view_name = self.__get_view_name__()
         self._columns = []
         self._add_columns_()
         self._column_dict = {column.name: column for column in self._columns}
@@ -254,6 +255,9 @@ class MyTable:
     def _get_name_():
         return 'MyTable'
 
+    def __get_view_name__(self):  # in most cases we don't have a separate view => we use the table
+        return self._name
+
     def _add_columns_(self):
         pass
 
@@ -345,6 +349,7 @@ class BaseDatabase:
         print('table_name={}'.format(table_name))
         metadata = MetaData()
         table = self.get_table_by_name(table_name)
+        print('table.description={}'.format(table.description))
         exec(table.description)
         self.create_database_elements(metadata)
         table_obj = metadata.tables.get(table_name)

@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC, TP
+from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC, TP, SVW
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mymath import MyMath
 import math
@@ -603,15 +603,23 @@ class PatternTable(MyTable, PredictionFeatureTable):
         self._columns.append(MyTableColumn(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION, CDT.STRING, 10))
         self._columns.append(MyTableColumn(DC.BREAKOUT_DIRECTION_ID, CDT.INTEGER))
+
         self._columns.append(MyTableColumn(DC.VOLUME_CHANGE_AT_BREAKOUT_PCT, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT, CDT.FLOAT))
+
+        self._columns.append(MyTableColumn(DC.TICKS_PREVIOUS_PERIOD_HALF_TOP_OUT_TILL_PATTERN, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKS_PREVIOUS_PERIOD_FULL_TOP_OUT_TILL_PATTERN, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKS_PREVIOUS_PERIOD_HALF_BOTTOM_OUT_TILL_PATTERN, CDT.INTEGER))
+        self._columns.append(MyTableColumn(DC.TICKS_PREVIOUS_PERIOD_FULL_BOTTOM_OUT_TILL_PATTERN, CDT.INTEGER))
+
         self._columns.append(MyTableColumn(DC.NEXT_PERIOD_HALF_POSITIVE_PCT, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.NEXT_PERIOD_FULL_POSITIVE_PCT, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.NEXT_PERIOD_HALF_NEGATIVE_PCT, CDT.FLOAT))
         self._columns.append(MyTableColumn(DC.NEXT_PERIOD_FULL_NEGATIVE_PCT, CDT.FLOAT))
+
         self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_HALF, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_NEGATIVE_HALF, CDT.INTEGER))
         self._columns.append(MyTableColumn(DC.TICKS_FROM_BREAKOUT_TILL_POSITIVE_FULL, CDT.INTEGER))
@@ -644,14 +652,20 @@ class PatternTable(MyTable, PredictionFeatureTable):
     def _get_name_():
         return STBL.PATTERN
 
+    def __get_view_name__(self):  # in most cases we don't have a separate view => we use the table
+        return SVW.V_PATTERN
+
     def __get_query_for_feature_and_label_data_touch_points__(self) -> str:
-        return "SELECT {} FROM {}".format(self.__get_concatenated_feature_label_columns_touch_points__(), self._name)
+        return "SELECT {} FROM {}".format(
+            self.__get_concatenated_feature_label_columns_touch_points__(), self._view_name)
 
     def __get_query_for_feature_and_label_data_before_breakout__(self) -> str:
-        return "SELECT {} FROM {}".format(self.__get_concatenated_feature_label_columns_before_breakout__(), self._name)
+        return "SELECT {} FROM {}".format(
+            self.__get_concatenated_feature_label_columns_before_breakout__(), self._view_name)
 
     def __get_query_for_feature_and_label_data_after_breakout__(self):
-        return "SELECT {} FROM {}".format(self.__get_concatenated_feature_label_columns_after_breakout__(), self._name)
+        return "SELECT {} FROM {}".format(
+            self.__get_concatenated_feature_label_columns_after_breakout__(), self._view_name)
 
     def __get_concatenated_feature_label_columns_touch_points__(self):
         return ', '.join(self.id_columns + self._feature_columns_touch_points + self._label_columns_touch_points)
@@ -676,7 +690,7 @@ class PatternTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def __get_feature_columns_after_breakout__(for_statistics=False):
-        return [DC.TICKS_TILL_PATTERN_FORMED, DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT,
+        return [DC.TICKS_TILL_PATTERN_FORMED_PCT,
                 DC.SLOPE_UPPER_PCT, DC.SLOPE_LOWER_PCT, DC.SLOPE_REGRESSION_PCT,
                 DC.SLOPE_BREAKOUT_PCT,
                 DC.SLOPE_VOLUME_REGRESSION_PCT,
@@ -684,14 +698,23 @@ class PatternTable(MyTable, PredictionFeatureTable):
                 DC.TOUCH_POINTS_TILL_BREAKOUT_TOP, DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM,
                 DC.BREAKOUT_DIRECTION if for_statistics else DC.BREAKOUT_DIRECTION_ID,
                 DC.VOLUME_CHANGE_AT_BREAKOUT_PCT,
-                DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT,
-                DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT, DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT,
+
+                DC.PREVIOUS_PERIOD_HALF_TOP_OUT_PCT,
+                DC.PREVIOUS_PERIOD_FULL_TOP_OUT_PCT,
+                DC.PREVIOUS_PERIOD_HALF_BOTTOM_OUT_PCT,
+                DC.PREVIOUS_PERIOD_FULL_BOTTOM_OUT_PCT,
+
+                DC.TICKS_PREVIOUS_PERIOD_HALF_TOP_OUT_TILL_PATTERN_PCT,
+                DC.TICKS_PREVIOUS_PERIOD_FULL_TOP_OUT_TILL_PATTERN_PCT,
+                DC.TICKS_PREVIOUS_PERIOD_HALF_BOTTOM_OUT_TILL_PATTERN_PCT,
+                DC.TICKS_PREVIOUS_PERIOD_FULL_BOTTOM_OUT_TILL_PATTERN_PCT,
+
                 DC.AVAILABLE_FIBONACCI_TYPE if for_statistics else DC.AVAILABLE_FIBONACCI_TYPE_ID]
 
     @staticmethod
     def __get_feature_columns_before_breakout__(for_statistics=False):
         base_list = PatternTable.__get_feature_columns_after_breakout__(for_statistics)
-        del base_list[base_list.index(DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT)]
+        del base_list[base_list.index(DC.TICKS_TILL_PATTERN_FORMED_PCT)]
         del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_TOP)]
         del base_list[base_list.index(DC.TOUCH_POINTS_TILL_BREAKOUT_BOTTOM)]
         if for_statistics:
@@ -739,7 +762,10 @@ class PatternTable(MyTable, PredictionFeatureTable):
 
     @staticmethod
     def __get_label_columns_before_breakout__(for_statistics=False):
-        return [DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT, DC.BREAKOUT_DIRECTION_ID, DC.FALSE_BREAKOUT]
+        return [DC.TICKS_FROM_PATTERN_FORMED_TILL_BREAKOUT,
+                DC.TICKS_TILL_PATTERN_FORMED_PCT,
+                DC.BREAKOUT_DIRECTION_ID,
+                DC.FALSE_BREAKOUT]
 
     @staticmethod
     def __get_label_columns_touch_points__(for_statistics=False):

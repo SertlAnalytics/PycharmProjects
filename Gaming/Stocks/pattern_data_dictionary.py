@@ -74,7 +74,7 @@ class PatternDataDictionary(DataDictionary):
     def get_data_list_for_columns(self, columns: list):
         return [self._data_dict[col] for col in columns]
 
-    def get_data_dict_for_features_table(self):
+    def get_data_dict_for_pattern_table(self):
         return {col: self._data_dict[col] for col in self.sys_config.pattern_table.column_name_list}
 
     def get_data_dict_for_trade_table(self):
