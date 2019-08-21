@@ -20,11 +20,24 @@ from pattern_logging.pattern_log import PatternLog
 class PatternDataDictionary(DataDictionary):
     def __init__(self, sys_config: SystemConfiguration, pdh: PatternDataHandler):
         self.sys_config = sys_config
-        self.pdh = pdh
-        self.df = self.pdh.pattern_data.df
-        self.df_length = self.df.shape[0]
-        self.df_min_max = self.pdh.pattern_data.df_min_max
+        self.df = pdh.pattern_data.df
+        self.df_min_max = pdh.pattern_data.df_min_max
         DataDictionary.__init__(self)
+
+    @property
+    def df_length(self) -> int:
+        return self.df.shape[0]
+
+    def update_pdh(self, pdh: PatternDataHandler):
+        self.__compare_old_pdh_with_extended_pdh__(extended_pdh=pdh)
+        self.df = pdh.pattern_data.df
+        self.df_min_max = pdh.pattern_data.df_min_max
+
+    def __compare_old_pdh_with_extended_pdh__(self, extended_pdh: PatternDataHandler):
+        print('\nOLD pdh.pattern_data.df.iloc[0]={}'.format(self.df.iloc[0]))
+        print('\nNEW pdh.pattern_data.df.iloc[0]={}'.format(extended_pdh.pattern_data.df.iloc[0]))
+        print('\nOLD pdh.pattern_data.df.iloc[-1]={}'.format(self.df.iloc[-1]))
+        print('\nNEW pdh.pattern_data.df.iloc[-1]={}'.format(extended_pdh.pattern_data.df.iloc[-1]))
 
     @staticmethod
     def __get_rounded_value__(key, value):
@@ -132,11 +145,14 @@ class PatternDataDictionary(DataDictionary):
 
     def get_slope(self, pos_start: int, pos_end: int, df_col: str = CN.CLOSE):
         df_part = self.df.iloc[pos_start:pos_end + 1]
+        print('get_slope: pos_start={}, pos_end={}, df_col={}, df_part.shape[0]={}'.format(
+            pos_start, pos_end, df_col, df_part.shape[0]))
         tick_first = WaveTick(df_part.iloc[0])
         tick_last = WaveTick(df_part.iloc[-1])
         stock_df = PatternDataFrame(df_part)
         func = stock_df.get_f_regression(df_col)
-        return MyMath.get_change_in_percentage(func(tick_first.f_var), func(tick_last.f_var), 1)
+        offset_value = df_part[df_col].mean()
+        return MyMath.get_change_in_percentage(func(tick_first.f_var), func(tick_last.f_var), offset_value=offset_value)
 
     def get_min_max_value_dict(self, tick_first: WaveTick, tick_last: WaveTick, pattern_length: int):
         # the height at the start is the relative comparison value

@@ -12,7 +12,7 @@ from scipy import stats
 from sertl_analytics.plotter.my_plot import MyPlotHelper
 
 
-class BuyBoxApi:
+class BoxBuyApi:
     def __init__(self):
         self.tolerance_pct = 0
         self.tolerance_pct_buying = 0
@@ -21,12 +21,10 @@ class BuyBoxApi:
         self.wave_tick_latest = None
         self.f_upper = None
         self.f_lower = None
-        self.h_upper = None
-        self.h_lower = None
 
 
-class BuyBox:
-    def __init__(self, api: BuyBoxApi):
+class BoxBuy:
+    def __init__(self, api: BoxBuyApi):
         self.box_type = ''
         self._api = api
         self._tolerance_pct = api.tolerance_pct
@@ -46,10 +44,8 @@ class BuyBox:
         self._wave_tick_list = [self._wave_tick_latest]
         self._wave_tick_upper_breakout = None
         self._wave_tick_lower_breakout = None
-        self.f_upper = api.f_upper
-        self.f_lower = api.f_lower
-        self.h_upper = api.h_upper
-        self.h_lower = api.h_lower
+        self._f_upper = api.f_upper
+        self._f_lower = api.f_lower
         self._buy_limit_upper = self.__get_f_upper_value_for_wave_tick__(self._wave_tick_latest)  # default
         self._buy_limit_lower = self.__get_f_lower_value_for_wave_tick__(self._wave_tick_latest)  # default
         self.__adjust_buy_limit_upper_by_wave_tick__(self._wave_tick_latest)
@@ -58,6 +54,32 @@ class BuyBox:
         self._ticker_last_price_list = []
         self._ticker_last_price = 0
         self._init_parameters_()
+
+    @property
+    def buy_limit_upper(self) -> float:
+        return self._buy_limit_upper
+
+    @property
+    def buy_limit_lower(self) -> float:
+        return self._buy_limit_lower
+
+    @property
+    def forecast_breakout_direction(self) -> str:
+        return self._forecast_breakout_direction
+
+    @property
+    def breakout_direction(self) -> str:
+        if self._wave_tick_upper_breakout is not None:
+            if self._wave_tick_lower_breakout is not None:  # we have breakouts in one tick in both directions
+                if abs(self._wave_tick_lower_breakout.low - self._wave_tick_lower_breakout.wrong_breakout_value) <\
+                        abs(self._wave_tick_lower_breakout.high - self._wave_tick_lower_breakout.breakout_value):
+                    return FD.ASC
+                return FD.DESC
+            else:
+                return FD.ASC
+        elif self._wave_tick_lower_breakout is not None:
+            return FD.DESC
+        return self._forecast_breakout_direction
 
     def __get_forecast_breakout_direction__(self):
         fc_breakout_direction = self._data_dict[DC.FC_BREAKOUT_DIRECTION]
@@ -97,7 +119,11 @@ class BuyBox:
 
     def is_wave_tick_breakout(self, wave_tick: WaveTick) -> bool:
         high, low = wave_tick.body_high, wave_tick.body_low
-        return self.__is_last_price_upper_breakout__(high) or self.__is_last_price_lower_breakout__(low)
+        is_upper_breakout = self.__is_last_price_upper_breakout__(high)
+        is_lower_breakout = self.__is_last_price_lower_breakout__(low)
+        self._wave_tick_upper_breakout = wave_tick if is_upper_breakout else None
+        self._wave_tick_lower_breakout = wave_tick if is_lower_breakout else None
+        return is_upper_breakout or is_lower_breakout
 
     def __is_last_price_upper_breakout__(self, price: float) -> bool:
         is_buy_limit_upper_broken = price > self._buy_limit_upper and self.__is_forecast_ticks_for_breakout_fulfilled__()
@@ -129,10 +155,10 @@ class BuyBox:
         return self._wave_tick_latest.low <= self.__get_f_lower_value_for_wave_tick__(self._wave_tick_latest)
 
     def __get_f_upper_value_for_wave_tick__(self, wave_tick: WaveTick):
-        return MyMath.round_smart(self.f_upper(wave_tick.time_stamp))  # * (1 + self._tolerance_pct_buying))
+        return MyMath.round_smart(self._f_upper(wave_tick.time_stamp))  # * (1 + self._tolerance_pct_buying))
 
     def __get_f_lower_value_for_wave_tick__(self, wave_tick: WaveTick):
-        return MyMath.round_smart(self.f_lower(wave_tick.time_stamp))  # * (1 - self._tolerance_pct_buying))
+        return MyMath.round_smart(self._f_lower(wave_tick.time_stamp))  # * (1 - self._tolerance_pct_buying))
 
     def __adjust_buy_limit_upper_by_wave_tick__(self, wave_tick: WaveTick):
         if self._forecast_breakout_direction == FD.ASC:
@@ -187,17 +213,17 @@ class BuyBox:
         wave_tick.wrong_breakout_value = self._buy_limit_lower
 
 
-class BreakoutBuyBox(BuyBox):
+class BreakoutBoxBuy(BoxBuy):
     def _init_parameters_(self):
         self.box_type = BBT.BREAKOUT
 
 
-class BollingerBandBuyBox(BuyBox):
+class BollingerBandBoxBuy(BoxBuy):
     def _init_parameters_(self):
         self.box_type = BBT.BOLLINGER_BAND
 
 
-class TouchPointBuyBox(BuyBox):
+class TouchPointBoxBuy(BoxBuy):
     def _init_parameters_(self):
         self.box_type = BBT.TOUCH_POINT
 

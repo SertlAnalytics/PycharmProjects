@@ -44,7 +44,11 @@ class WaveTick:
 
     @property
     def time_str(self):
-        return self.tick[CN.TIME].strftime("%H:%M")
+        # print('time_str for {}'.format(self.tick))
+        if CN.TIME in self.tick:
+            return self.tick[CN.TIME].strftime("%H:%M")
+        else:
+            return self.time.strftime("%H:%M")
 
     @property
     def date_time(self):
@@ -81,6 +85,7 @@ class WaveTick:
 
     @position.setter
     def position(self, value: int):
+        self.tick[CN.POSITION] = value
         self._position = value
 
     @property
@@ -134,7 +139,7 @@ class WaveTick:
     @property
     def high_buy_box(self):
         # return self.close
-        return MyMath.round_smart((self.body_high + self.high)/2)
+        return MyMath.round_smart((self.body_high + self.high) / 2)
 
     @property
     def low_buy_box(self):
@@ -143,7 +148,7 @@ class WaveTick:
 
     @property
     def mean(self):
-        return MyMath.round_smart((self.high + self.low)/2)
+        return MyMath.round_smart((self.high + self.low) / 2)
 
     @property
     def volume(self):
@@ -180,7 +185,7 @@ class WaveTick:
         if actual_time_stamp >= self.time_stamp + seconds_for_period:
             return self.volume
         else:
-            return round(self.volume * seconds_for_period/(actual_time_stamp - self.time_stamp), 2)
+            return round(self.volume * seconds_for_period / (actual_time_stamp - self.time_stamp), 2)
 
     def print(self, prefix=''):
         prefix = '' if prefix == '' else '{}: '.format(prefix)
@@ -338,7 +343,7 @@ class WaveTickList:
         if max_number == min_number:
             factor = 1
         else:
-            factor = 0.3 + 0.7 * (number_waves - min_number)/(max_number - min_number)
+            factor = 0.3 + 0.7 * (number_waves - min_number) / (max_number - min_number)
         return height_value * factor, head_length * factor, head_width * factor
 
     def get_circle_shape_parameters_for_wave_peak(self, tick: WaveTick, wave_type: str):
@@ -408,7 +413,7 @@ class WaveTickList:
     def replace_last_wave_tick(self, wave_tick: WaveTick):
         self.tick_list[-1] = wave_tick
 
-    def get_simple_moving_average(self, elements: int=0, ts_breakout=0, default_value=0):
+    def get_simple_moving_average(self, elements: int = 0, ts_breakout=0, default_value=0):
         """
         The simple moving average is calculated in this way:
         a) For all ticks before the breakout we take the lower bound value = default_value

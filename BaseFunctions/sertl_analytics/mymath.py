@@ -203,18 +203,22 @@ class MyMath:
         return round(dividend/divisor, round_decimals)
 
     @staticmethod
-    def get_change_in_percentage(value_from: float, value_to: float, decimal_round=1) -> float:
+    def get_change_in_percentage(value_from: float, value_to: float, offset_value=0, decimal_round=1) -> float:
         value_change = value_to - value_from
-        value_mean = (value_from + value_to)/2
-        if value_mean == 0:
+        if offset_value == 0:
+            offset_value = value_from
+        if offset_value == 0:
             return 0
-        return round(value_change/value_mean * 100, decimal_round)
+        return round(value_change/offset_value * 100, decimal_round)
 
     @staticmethod
-    def get_change_in_pct(value_from: float, value_to: float, decimal_round=3) -> float:
+    def get_change_in_pct(value_from: float, value_to: float, offset_value=0, decimal_round=3) -> float:
         value_change = value_to - value_from
-        value_mean = (value_from + value_to) / 2
-        return round(value_change / value_mean, decimal_round)
+        if offset_value == 0:
+            offset_value = value_from
+        if offset_value == 0:
+            return 0
+        return round(value_change / offset_value, decimal_round)
 
     @staticmethod
     def get_value_from_percentage_on_base_value(value_pct: float, value_base: float, decimal_round=2) -> float:

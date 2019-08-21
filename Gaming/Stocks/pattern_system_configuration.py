@@ -186,6 +186,21 @@ class SystemConfiguration:
         ac_trades = self.data_provider.and_clause_for_trade
         self.master_predictor_handler.init_predictors_without_condition_list(ticker_id, ac_pattern, ac_trades)
 
+    def get_extended_pdh(self, ticker_id: str, limit: int):
+        """
+        This method is used to get the data from the source after certain online processes - like breakout, sell, ...
+        :param ticker_id:
+        :param and_clause:
+        :param limit: The limit value was adjusted to the current tick with respect to the beginning limit
+        :return: adjusted self.data_provider.pdh (=self.pdh)
+        """
+        limit_old = self.pdh.pattern_data.df.iloc[-1][CN.POSITION]
+        if limit_old < limit:
+            print('{}: get_extended_pdh: limit_old={}, limit_new={}'.format(
+                ticker_id, limit_old, limit))
+            self.init_pattern_data_handler_for_ticker_id(ticker_id=ticker_id, and_clause='', limit=limit)
+        return self.pdh
+
     def init_pattern_data_handler_for_ticker_id(self, ticker_id: str, and_clause: str, limit=300):
         self.data_provider.init_pattern_data_handler_for_ticker_id(ticker_id, and_clause, limit)
         self.__update_runtime_parameters__()
@@ -289,7 +304,6 @@ class SystemConfiguration:
         date_from_adjusted = MyDate.adjust_by_days(pattern_id_obj.date_start, -range_adjusting)
         date_to_adjusted = MyDate.adjust_by_days(pattern_id_obj.date_end, 2*range_adjusting)
         self.data_provider.and_clause = "Date BETWEEN '{}' AND '{}'".format(date_from_adjusted, date_to_adjusted)
-        self.runtime_config.actual_pattern_range = None
         self.runtime_config.actual_pattern_range_from_time_stamp = pattern_id_obj.ts_from
         self.runtime_config.actual_pattern_range_to_time_stamp = pattern_id_obj.ts_to
 

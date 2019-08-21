@@ -311,8 +311,8 @@ class PatternTradeHandler:
         # ToDo - remove after checks
 
     def __handle_sell_triggers__(self):
-        print('__handle_sell_triggers__.sys_config.config.save_trade_data={}'.format(
-            self.sys_config.config.save_trade_data))
+        # print('__handle_sell_triggers__.sys_config.config.save_trade_data={}'.format(
+        #     self.sys_config.config.save_trade_data))
         for pattern_trade in self.__get_pattern_trade_dict_by_status__(PTS.EXECUTED).values():
             ticker_last_price = pattern_trade.ticker_actual.last_price
             pattern_trade.print_state_details_for_actual_ticker(PTHP.HANDLE_SELL_TRIGGERS)
@@ -322,6 +322,8 @@ class PatternTradeHandler:
                 self.__handle_sell_trigger__(pattern_trade, ST.STOP_LOSS)
             elif pattern_trade.limit_current < ticker_last_price:
                 self.__handle_sell_trigger__(pattern_trade, ST.LIMIT)
+            elif pattern_trade.was_sell_limit_already_broken():
+                self.__handle_sell_trigger__(pattern_trade, ST.PEAK_LIMIT)
             elif pattern_trade.time_stamp_end < self._time_stamp_for_actual_check:
                 self.__handle_sell_trigger__(pattern_trade, ST.PATTERN_END)
             elif not self.trade_candidate_controller.is_pattern_id_in_actual_pattern_id_list(pattern_trade.pattern.id):
@@ -413,7 +415,11 @@ class PatternTradeHandler:
                 if pattern_trade.are_preconditions_for_breakout_buy_fulfilled():
                     self.__set_breakout_after_checks__(pattern_trade)
                     if pattern_trade.pattern.breakout is not None:
-                        pattern_trade.pattern.add_part_entry(self.__get_pattern_entry_part(pattern_trade))
+                        ticker_id = pattern_trade.pattern.ticker_id
+                        limit_for_extended_pdh = pattern_trade.wave_tick_actual.position + 1
+                        extended_pdh = pattern_trade.pattern.sys_config.get_extended_pdh(
+                            ticker_id=ticker_id, limit=limit_for_extended_pdh)
+                        pattern_trade.pattern.add_part_entry(extended_pdh)
                         self.__handle_buy_trigger_for_pattern_trade__(pattern_trade)
                         if pattern_trade.order_status_buy is None:  # there were problems with buying...
                             buying_deletion_key_list.append(key)
@@ -423,14 +429,6 @@ class PatternTradeHandler:
                 pattern_trade.verify_watching()
         self.__delete_entries_from_pattern_trade_dict__(deletion_key_list, PDR.BUYING_PRECONDITION_PROBLEM)
         self.__delete_entries_from_pattern_trade_dict__(buying_deletion_key_list, PDR.BUYING_PROBLEM)
-
-    def __get_pattern_entry_part(self, pattern_trade: PatternTrade):
-        self.sys_config.runtime_config.actual_pattern_type = pattern_trade.pattern.pattern_type
-        self.sys_config.runtime_config.actual_breakout = pattern_trade.pattern.breakout
-        self.sys_config.runtime_config.actual_pattern_range = pattern_trade.pattern.pattern_range
-        return PatternEntryPart(
-            pattern_trade.sys_config, pattern_trade.pattern.function_cont, pattern_trade.pattern.series_hit_details
-        )
 
     def __set_breakout_after_checks__(self, pattern_trade: PatternTrade):
         wave_tick_list = self.__get_latest_tickers_as_wave_ticks__(pattern_trade.ticker_id, pattern_trade)

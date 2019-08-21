@@ -42,7 +42,7 @@ class Constraints:
         self.sys_config = sys_config
         self.period = self.sys_config.period
         self.period_aggregation = self.sys_config.period_aggregation
-        self.period_related_divisor = 10 if self.period == PRD.INTRADAY else 1
+        self.period_related_divisor = self.__get_period_related_divisor__()
         self.tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
         self.tolerance_pct_equal = self.sys_config.get_value_categorizer_tolerance_pct_equal()
         self.global_all_in = []
@@ -56,6 +56,11 @@ class Constraints:
         self.previous_period_top_out_pct_bounds = self.__get_previous_period_top_out_pct_bounds__()
         self.previous_period_bottom_out_pct_bounds = self.__get_previous_period_bottom_out_pct_bounds__()
         self._fill_global_constraints__()
+
+    def __get_period_related_divisor__(self):
+        if self.period == PRD.INTRADAY:
+            return 10 if self.period_aggregation < 60 else 1
+        return 1
 
     def get_value_dict(self):
         return dict(tolerance_pct=self.tolerance_pct,
@@ -233,8 +238,8 @@ class TKEBottomConstraints(Constraints):
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
-        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
-        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the _f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the _f_lower)
         """
         self.global_all_in = [SVC.U_on, SVC.U_in, SVC.M_in, SVC.L_in, SVC.L_on, SVC.H_on, SVC.H_in]  # , SVC.H_M_in
         self.global_count = ['OR', CountConstraint(SVC.U_in, '>=', 3)]
@@ -266,8 +271,8 @@ class TKETopConstraints(Constraints):
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
-        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
-        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the _f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the _f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_M_in, SVC.H_on, SVC.H_in]
         self.global_count = ['OR', CountConstraint(SVC.L_in, '>=', 3)]
@@ -299,8 +304,8 @@ class ChannelConstraints(Constraints):
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
-        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
-        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the _f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the _f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_on, SVC.H_in]
         self.global_count = ['OR',
@@ -351,8 +356,8 @@ class HeadShoulderConstraints(Constraints):
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
-        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
-        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the _f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the _f_lower)
         """
         self.global_all_in = []
         self.global_count = []
@@ -390,8 +395,8 @@ class HeadShoulderBottomConstraints(Constraints):
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
-        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
-        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the _f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the _f_lower)
         """
         self.global_all_in = []
         self.global_count = []
@@ -430,8 +435,8 @@ class TriangleConstraints(Constraints):
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
-        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
-        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the _f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the _f_lower)
         """
         self.global_all_in = [SVC.L_on, SVC.L_in, SVC.M_in, SVC.U_in, SVC.U_on, SVC.H_on, SVC.H_in]
         self.global_count = ['OR',
@@ -520,11 +525,15 @@ class TriangleDownConstraints(TriangleConstraints):
 
 
 class FibonacciConstraints(Constraints):  # TODO
+    @property
+    def max_percentage_bound(self) -> int:
+        return 400  # was 400
+
     def _fill_global_constraints__(self):
         """
         1. All values have to be in a range (channel)
-        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the f_upper)
-        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the f_lower)
+        2. There must be at least 3 variables with domain value = SPD.U_in (incl the ticks for the _f_upper)
+        3. There must be at least 3 variables with domain value = SPD.L_in (incl the ticks for the _f_lower)
         """
         self.global_all_in = []
         self.global_count = ['AND',
@@ -543,21 +552,19 @@ class FibonacciConstraints(Constraints):  # TODO
 
 
 class FibonacciAscConstraints(FibonacciConstraints):
-    @staticmethod
-    def _get_f_upper_percentage_bounds_():
-        return [1.0, 400.0]
+    def _get_f_upper_percentage_bounds_(self):
+        return [1.0, self.max_percentage_bound]
 
     def _get_f_lower_percentage_bounds_(self):
-        return [1.0, 400.0]
+        return [1.0, self.max_percentage_bound]
 
 
 class FibonacciDescConstraints(FibonacciConstraints):
-    @staticmethod
-    def _get_f_upper_percentage_bounds_():
-        return [-400.0, -1.0]
+    def _get_f_upper_percentage_bounds_(self):
+        return [-self.max_percentage_bound, -1.0]
 
     def _get_f_lower_percentage_bounds_(self):
-        return [-400.0, -1.0]
+        return [-self.max_percentage_bound, -1.0]
 
 
 class ConstraintsFactory:

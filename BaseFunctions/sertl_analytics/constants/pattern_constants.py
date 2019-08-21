@@ -537,6 +537,8 @@ class WPDT:  # WavePeakDateType
     INTRADAY_DATE = 'Intraday_Date'
     INTRADAY_15_TS = 'Intraday_15_Timestamp'
     INTRADAY_30_TS = 'Intraday_30_Timestamp'
+    INTRADAY_60_TS = 'Intraday_60_Timestamp'
+    INTRADAY_120_TS = 'Intraday_120_Timestamp'
 
     @staticmethod
     def get_period_for_wave_period_key(wave_period_key: str):
@@ -554,7 +556,7 @@ class WPDT:  # WavePeakDateType
 class PRD:  # Periods
     WEEKLY = 'WEEKLY'
     DAILY = 'DAILY'
-    INTRADAY = 'INTRADAY'
+    INTRADAY = 'INTRADAY'  # is minutely
     ALL = 'ALL'
 
     @staticmethod
@@ -681,7 +683,7 @@ class PT:  # PredictorType
 class PAT:  # PredictionAnnotationType
     BEFORE_BREAKOUT = 'Prediction before breakout'
     BEFORE_BREAKOUT_DETAILS = '...details'
-    AFTER_BREAKOUT = 'Prediction after breakout (ASC/DESC)'
+    AFTER_BREAKOUT = 'Prediction after breakout'
     RETRACEMENT = 'Prediction retracement'
 
 
@@ -947,7 +949,7 @@ class PTHP:  # Pattern Trade Handler Processes
     HANDLE_WATCHING = 'HANDLE_WATCHING'
 
 
-class BBT:  # BuyBoxType
+class BBT:  # BoxBuyType
     BREAKOUT = 'Breakout'
     TOUCH_POINT = 'Touchpoint'
     BOLLINGER_BAND = 'Bollinger Band'
@@ -957,14 +959,14 @@ class BBT:  # BuyBoxType
         return {BBT.BREAKOUT: 10, BBT.TOUCH_POINT: 20,  BBT.BOLLINGER_BAND: 30}.get(key)
 
 
-class TBT:  # TradingBoxType
+class BTT:  # BoxTradeType
     EXPECTED_WIN = 'Expected_win'
     TOUCH_POINT = 'Touchpoint'
     BOLLINGER_BAND = 'Bollinger Band'
 
     @staticmethod
     def get_id(key: str):
-        return {TBT.EXPECTED_WIN: 10, TBT.TOUCH_POINT: 20,  TBT.BOLLINGER_BAND: 30}.get(key)
+        return {BTT.EXPECTED_WIN: 10, BTT.TOUCH_POINT: 20,  BTT.BOLLINGER_BAND: 30}.get(key)
 
 
 class PDR:  # Pattern Deletion Reasons
@@ -983,6 +985,7 @@ class PDR:  # Pattern Deletion Reasons
 
 class ST:  # Sell Trigger
     LIMIT = 'Limit'
+    PEAK_LIMIT = 'Peak_Limit'
     STOP_LOSS = 'Stop_loss'
     CANCEL = 'Cancellation'
     PATTERN_VANISHED = 'Pattern_vanished'
@@ -990,7 +993,8 @@ class ST:  # Sell Trigger
     FORECAST_TICKS = 'Forecast_ticks_reached'
 
     def get_id(key: str):
-        return {ST.LIMIT: 10, ST.STOP_LOSS: 20, ST.CANCEL: 25, ST.PATTERN_END: 40, ST.PATTERN_END: 50}.get(key)
+        return {ST.LIMIT: 10, ST.PEAK_LIMIT: 15, ST.STOP_LOSS: 20,
+                ST.CANCEL: 25, ST.PATTERN_END: 40, ST.PATTERN_END: 50}.get(key)
 
 
 class TR:  # Trade Result

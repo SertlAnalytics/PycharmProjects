@@ -5,20 +5,21 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, FD, DC, BT, EQUITY_TYPE, EXTREMA, PRD
+from sertl_analytics.constants.pattern_constants import FT, FD, DC, BT, EQUITY_TYPE, EXTREMA, PRD, SVC
 from sertl_analytics.mydates import MyDate
 from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_wave_tick import WaveTick
-from pattern_part import PatternEntryPart, PatternBuyPart, PatternWatchPart, PatternTradePart
+from pattern_part import PatternEntryPart, PatternBuyPart, PatternWatchPart, PatternTradePart, PatternPartApi
 from pattern import Pattern, PatternFactory
 from pattern_range import PatternRangeDetectorMax, PatternRangeDetectorMin, PatternRangeDetectorHeadShoulder\
     , PatternRangeDetectorHeadShoulderBottom, PatternRange
 from pattern_range_fibonacci import PatternRangeDetectorFibonacciAsc, PatternRangeDetectorFibonacciDesc
-from pattern_buy_box import BuyBoxApi, BuyBox
+from pattern_buy_box import BoxBuyApi, BoxBuy
 from pattern_statistics import PatternDetectorStatisticsApi
 from fibonacci.fibonacci_wave_tree import FibonacciWaveTree
 from pattern_constraints import ConstraintsFactory
 from pattern_function_container import PatternFunctionContainerFactoryApi, PatternFunctionContainerFactory
+import pandas as pd
 
 
 class PatternDetector:
@@ -71,9 +72,6 @@ class PatternDetector:
         return self.__get_pattern_range_list_dict__(possible_pattern_range_list)
 
     def __check_pattern_range_for_pattern_type__(self, pattern_type: str, pattern_range: PatternRange):
-        self.sys_config.runtime_config.actual_pattern_type = pattern_type
-        self.sys_config.runtime_config.actual_pattern_range = pattern_range
-
         pfcf_api = PatternFunctionContainerFactoryApi(self.sys_config, pattern_type)
         pfcf_api.pattern_type = pattern_type
         pfcf_api.pattern_range = pattern_range
@@ -187,87 +185,18 @@ class PatternDetector:
             can_be_added = self.__can_pattern_be_added_to_list_after_checking_next_ticks__(pattern)
             if pattern.breakout is None and not can_be_added:
                 return
-        self.sys_config.runtime_config.actual_breakout = pattern.breakout
-        pattern.add_part_entry(PatternEntryPart(self.sys_config, pattern.function_cont, pattern.series_hit_details))
-        pattern.add_data_dict_entries_after_part_entry()
+        pattern.add_part_entry()
         if pattern.are_pre_conditions_fulfilled():
             pattern.calculate_predictions_after_part_entry()
-            self.__add_part_buy__(pattern)
-            self.__add_box_buy__(pattern)
+            pattern.add_part_buy()
+            # pattern.add_box_buy()
             if pattern.breakout is not None:
-                pattern.function_cont.breakout_direction = pattern.breakout.breakout_direction
-                self.__add_part_trade__(pattern)
+                pattern.add_part_trade()
             # pattern.print_nearest_neighbor_collection()
             # for nn_entry in pattern.nearest_neighbor_entry_list:
             #     pattern_id = self.pattern_id_factory.get_pattern_id_from_pattern_id_string(nn_entry.id)
             self.pattern_list.append(pattern)
             # pattern.data_dict_obj.print_data_dict()
-
-    def __add_part_buy__(self, pattern: Pattern):
-        df = self.__get_buy_df__(pattern)
-        f_upper = pattern.get_f_upper_buy()
-        f_lower = pattern.get_f_lower_buy()
-        function_cont = PatternFunctionContainerFactory.get_function_container(
-            self.sys_config, pattern.pattern_type, df, f_lower, f_upper)
-        part = PatternBuyPart(self.sys_config, function_cont, pattern.value_categorizer)
-        pattern.add_part_buy(part)
-        pattern.fill_result_set()
-
-    def __add_box_buy__(self, pattern: Pattern):
-        pos_start = pattern.pattern_range.tick_last.position
-        wave_tick_candidate_list = [tick for tick in pattern.pdh.pattern_data.tick_list if tick.position >= pos_start]
-        buy_box_api = BuyBoxApi()
-        buy_box_api.pattern_series_hit_details = pattern.series_hit_details
-        buy_box_api.tolerance_pct = self.sys_config.get_value_categorizer_tolerance_pct()
-        buy_box_api.tolerance_pct_buying = self.sys_config.get_value_categorizer_tolerance_pct_buying()
-        buy_box_api.data_dict = pattern.data_dict_obj.data_dict
-        buy_box_api.f_upper = pattern.get_f_upper_buy()
-        buy_box_api.f_lower = pattern.get_f_lower_buy()
-        buy_box_api.wave_tick_latest = wave_tick_candidate_list[0]
-        buy_box = BuyBox(buy_box_api)
-        for wave_tick in wave_tick_candidate_list[1:]:
-            buy_box.adjust_to_next_tick(wave_tick)
-            if buy_box.is_wave_tick_breakout(wave_tick):
-                wave_tick.print(prefix='Breakout')
-                pattern.add_box_buy(buy_box)
-                pattern.fill_result_set()
-                break
-
-    def __add_part_trade__(self, pattern: Pattern):
-        if not pattern.was_breakout_done():
-            return None
-        df = self.__get_trade_df__(pattern)
-        f_upper_trade = pattern.get_f_upper_trade()
-        f_lower_trade = pattern.get_f_lower_trade()
-        function_cont = PatternFunctionContainerFactory.get_function_container(
-            self.sys_config, pattern.pattern_type, df, f_lower_trade, f_upper_trade)
-        part = PatternTradePart(self.sys_config, function_cont)
-        pattern.add_part_trade(part)
-        pattern.fill_result_set()
-
-    def __get_buy_df__(self, pattern: Pattern):
-        left_pos = pattern.position_start_for_part_buy
-
-        if FT.is_pattern_type_any_fibonacci(pattern.pattern_type):
-            right_pos_max = left_pos + pattern.function_cont.max_positions_after_tick_for_helper
-        else:
-            right_pos_max = left_pos + int(pattern.get_maximal_trade_position_size() / 2)
-        right_pos = min(right_pos_max, self.df_length)
-        if right_pos - left_pos <= 1:
-            left_pos += -2 + (right_pos - left_pos)  # we need at least 2 ticks for the buy_df...
-        right_pos = pattern.part_entry.tick_last.position
-        return self.df.loc[left_pos:right_pos]
-
-    def __get_trade_df__(self, pattern: Pattern):
-        left_pos = pattern.function_cont.tick_for_breakout.position
-        if FT.is_pattern_type_any_fibonacci(pattern.pattern_type):
-            right_pos_max = left_pos + pattern.function_cont.max_positions_after_tick_for_helper
-        else:
-            right_pos_max = left_pos + int(pattern.get_maximal_trade_position_size() / 2)
-        right_pos = min(right_pos_max, self.df_length)
-        if right_pos - left_pos <= 1:
-            left_pos += -2 + (right_pos - left_pos)  # we need at least 2 ticks for the trade_df...
-        return self.df.loc[left_pos:right_pos]
 
     def __can_pattern_be_added_to_list_after_checking_next_ticks__(self, pattern: Pattern):
         tick_last = pattern.function_cont.tick_last

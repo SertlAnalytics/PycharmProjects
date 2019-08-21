@@ -17,9 +17,6 @@ class RuntimeConfiguration:
         self.actual_ticker_equity_type = EQUITY_TYPE.NONE
         self.actual_ticker_name = ''
         self.actual_and_clause = ''
-        self.actual_pattern_type = FT.NONE
-        self.actual_breakout = None
-        self.actual_pattern_range = None
         self.actual_expected_win_pct = 0  # pct in this case is 10 for 10%
         self.actual_trade_process = TP.ONLINE
         self.actual_pattern_range_from_time_stamp = 0

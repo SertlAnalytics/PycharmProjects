@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import CN, FT, PRD, PAT
+from sertl_analytics.constants.pattern_constants import CN, FT, PRD, PAT, FD
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mymath import MyMath
 from pattern_function_container import PatternFunctionContainer
@@ -30,17 +30,29 @@ class AnnotationParameter:
         return annotation
 
 
-class PatternPart:
-    def __init__(self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer):
+class PatternPartApi:
+    def __init__(self, sys_config: SystemConfiguration):
         self.sys_config = sys_config
-        self.pdh = sys_config.pdh
-        self.function_cont = function_cont
-        self.df = self.pdh.pattern_data.df.iloc[function_cont.position_first:function_cont.position_last + 1]
+        self.pattern_type = ''
+        self.pattern_range = None
+        self.breakout = None
+        self.function_cont = None
+        self.series_hit_details = []
         self.value_categorizer = None
+
+
+class PatternPart:
+    def __init__(self, api: PatternPartApi):
+        self.sys_config = api.sys_config
+        self._api = api
+        self.pdh = api.sys_config.pdh
+        self.function_cont = api.function_cont
+        self.df = self.pdh.pattern_data.df.iloc[api.function_cont.position_first:api.function_cont.position_last + 1]
+        self.value_categorizer = api.value_categorizer
         self.tick_list = []
-        self.pattern_type = self.sys_config.runtime_config.actual_pattern_type
-        self.breakout = self.sys_config.runtime_config.actual_breakout
-        self.pattern_range = self.sys_config.runtime_config.actual_pattern_range
+        self.pattern_type = api.pattern_type
+        self.breakout = api.breakout
+        self.pattern_range = api.pattern_range
         self.tick_first = None
         self.tick_last = None
         self.tick_high = None
@@ -52,11 +64,11 @@ class PatternPart:
         self.bound_lower = 0
         self.distance_min = 0
         self.distance_max = 0
-        self._series_hit_details = []
-        self.__xy = None
-        self.__xy_pattern_range = None
-        self.__xy_regression = None
-        self.__xy_center = ()
+        self._series_hit_details = api.series_hit_details
+        self._xy = None
+        self._xy_pattern_range = None
+        self._xy_regression = None
+        self._xy_center = ()
         if self.df.shape[0] > 0:
             self.pattern_df = PatternDataFrame(self.df)
             self.__calculate_values__()
@@ -67,10 +79,10 @@ class PatternPart:
 
     def get_annotation_parameter(self, prediction_text_dict: dict, color: str = 'blue') -> AnnotationParameter:
         annotation_param = AnnotationParameter()
-        offset = self.pdh.get_x_y_off_set_for_shape_annotation(self.__xy_center)
+        offset = self.pdh.get_x_y_off_set_for_shape_annotation(self._xy_center)
         annotation_param.text = self.__get_text_for_annotation__(prediction_text_dict)
-        annotation_param.xy = self.__xy_center
-        annotation_param.xy_text = (self.__xy_center[0] + offset[0], self.__xy_center[1] + offset[1])
+        annotation_param.xy = self._xy_center
+        annotation_param.xy_text = (self._xy_center[0] + offset[0], self._xy_center[1] + offset[1])
         annotation_param.visible = False
         annotation_param.arrow_props = {'color': color, 'width': 0.2, 'headwidth': 4}
         return annotation_param
@@ -113,35 +125,35 @@ class PatternPart:
             self.height = (self.distance_min + self.distance_max) / 2
 
     def __set_xy_parameter__(self):
-        self.__xy = self.pattern_df.get_xy_parameter(self.function_cont)
+        self._xy = self.pattern_df.get_xy_parameter(self.function_cont)
 
     def __set_xy_pattern_range_parameter__(self):
         # print('__set_xy_pattern_range_parameter__: self.pattern_df.tick_first:')
         # self.pattern_df.tick_first.print()
-        self.__xy_pattern_range = self.pattern_df.get_xy_parameter(self.function_cont, self.pattern_range.tick_last)
-        # print('self.__xy_pattern_range={}'.format(self.__xy_pattern_range))
+        self._xy_pattern_range = self.pattern_df.get_xy_parameter(self.function_cont, self.pattern_range.tick_last)
+        # print('self._xy_pattern_range={}'.format(self._xy_pattern_range))
 
     def __set_xy_regression__(self):
-        self.__xy_regression = self.pattern_df.get_xy_regression(self.function_cont)
+        self._xy_regression = self.pattern_df.get_xy_regression(self.function_cont)
 
     def __set_xy_center__(self):
-        self.__xy_center = self.pattern_df.get_xy_center(self.function_cont.f_regression)
+        self._xy_center = self.pattern_df.get_xy_center(self.function_cont.f_regression)
 
     @property
     def xy(self):
-        return self.__xy
+        return self._xy
 
     @property
     def xy_pattern_range(self):
-        return self.__xy_pattern_range
+        return self._xy_pattern_range
 
     @property
     def xy_center(self):
-        return self.__xy_center
+        return self._xy_center
 
     @property
     def xy_regression(self):
-        return self.__xy_regression
+        return self._xy_regression
 
     @property
     def movement(self):
@@ -296,25 +308,21 @@ class PatternPart:
 
 
 class PatternEntryPart(PatternPart):
-    def __init__(
-            self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer, series_hit_details: list):
-        PatternPart.__init__(self, sys_config, function_cont)
-        self._series_hit_details = series_hit_details
+    def __init__(self, api: PatternPartApi):
+        PatternPart.__init__(self, api)
 
 
 class PatternBuyPart(PatternPart):
-    def __init__(self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer,
-                 value_categorizer: ValueCategorizer):
-        self._value_categorizer = value_categorizer
-        PatternPart.__init__(self, sys_config, function_cont)
+    def __init__(self, api: PatternPartApi):
+        PatternPart.__init__(self, api)
 
 
 class PatternWatchPart(PatternPart):
-    def __init__(self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer):
-        PatternPart.__init__(self, sys_config, function_cont)
+    def __init__(self, api: PatternPartApi):
+        PatternPart.__init__(self, api)
 
 
 class PatternTradePart(PatternPart):
-    def __init__(self, sys_config: SystemConfiguration, function_cont: PatternFunctionContainer):
-        PatternPart.__init__(self, sys_config, function_cont)
+    def __init__(self, api: PatternPartApi):
+        PatternPart.__init__(self, api)
 

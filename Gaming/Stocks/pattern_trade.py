@@ -6,7 +6,7 @@ Date: 2018-09-10
 """
 
 import pandas as pd
-from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, TBT, PTS, TSP
+from sertl_analytics.constants.pattern_constants import TSTR, BT, ST, FD, DC, BTT, PTS, TSP
 from sertl_analytics.constants.pattern_constants import PTHP, TR, OT, SVC, TP, FT, CN
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.my_text import MyText
@@ -29,7 +29,7 @@ class PatternTradeApi:
         self.exchange_config = None
         self.pattern = pattern
         self.buy_trigger = buy_trigger
-        self.box_type = TBT.TOUCH_POINT if buy_trigger == BT.TOUCH_POINT else TBT.EXPECTED_WIN
+        self.box_type = BTT.TOUCH_POINT if buy_trigger == BT.TOUCH_POINT else BTT.EXPECTED_WIN
         self.trade_strategy = trade_strategy
         self.last_price_mean_aggregation = 4  # will be overwritten
 
@@ -253,6 +253,11 @@ class PatternTrade:
         sell_price = self.get_actual_sell_price(sell_trigger, ticker.last_price)
         return 'Sell_{} at {:.2f} on {}'.format(sell_trigger, sell_price, ticker.date_time_str)
 
+    def was_sell_limit_already_broken(self) -> bool:
+        # sometimes the peak values are not checked by ticker prices - do this here to avoid missing peaks
+        tick_list = self.__get_tick_list_for_current_sub_process__()
+        return True if True in [tick.high > tick.limit_value for tick in tick_list] else False
+
     def correct_simulation_flag_according_to_forecast(self):
         is_simulation_old = self._is_simulation
         direction_id = self.data_dict_obj.get(DC.FC_BREAKOUT_DIRECTION_ID)  # ASC == 1
@@ -284,21 +289,22 @@ class PatternTrade:
         else:
             wave_tick.position = self._wave_tick_list.last_wave_tick.position + 1
             self._wave_tick_list.add_wave_tick(wave_tick)
+        # print('{}: add_ticker.wave_tick.tick={}'.format(self.pattern.ticker_id, wave_tick.tick))
         self.__set_ticker_actual__()  # we need this to work with a ticker alone in some cases
         self._df_for_replay = self._wave_tick_list.get_tick_list_as_data_frame_for_replay()
 
     def get_actual_buy_price(self, buy_trigger: str, last_price: float):
         if buy_trigger == BT.BREAKOUT:
-            return round(self._wave_tick_list.last_wave_tick.breakout_value, 2)
+            return MyMath.round_smart(self._wave_tick_list.last_wave_tick.breakout_value)
         return last_price
 
     def get_actual_sell_price(self, sell_trigger: str, last_price: float):
         if sell_trigger == ST.LIMIT:
-            return round(self.limit_current, 2)
+            return MyMath.round_smart(self.limit_current)
         elif sell_trigger == ST.STOP_LOSS:
-            return round(self.stop_loss_current, 2)
+            return MyMath.round_smart(self.stop_loss_current)
         elif sell_trigger == ST.CANCEL:
-            return round(self.stop_loss_current, 2)
+            return MyMath.round_smart(self.stop_loss_current)
         return last_price
 
     def __set_ticker_actual__(self):
@@ -318,19 +324,26 @@ class PatternTrade:
             pass  # ToDo - for re-buying
 
     def calculate_xy_for_replay(self):
-        tick_list_base = self._wave_tick_list.tick_list
+        tick_list = self.__get_tick_list_for_current_sub_process__()
         if self.trade_sub_process == TSP.WATCHING:
-            tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_start.position]
             self._xy_for_watching = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, TSP.WATCHING)
         elif self.trade_sub_process == TSP.BUYING:
-            tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_watch_end.position]
             self._xy_for_buying = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, TSP.BUYING)
         elif self.trade_sub_process == TSP.SELLING:
-            tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_buying.position - 1]
             self._xy_for_selling = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, TSP.SELLING)
         elif self.trade_sub_process == TSP.RE_BUYING:
-            tick_list = [tick for tick in tick_list_base if tick.position >= self._wave_tick_at_selling.position]
             self._xy_after_selling = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, TSP.RE_BUYING)
+
+    def __get_tick_list_for_current_sub_process__(self) -> list:
+        tick_list = self._wave_tick_list.tick_list
+        if self.trade_sub_process == TSP.WATCHING:
+            return [tick for tick in tick_list if tick.position >= self._wave_tick_at_start.position]
+        elif self.trade_sub_process == TSP.BUYING:
+            return [tick for tick in tick_list if tick.position >= self._wave_tick_at_watch_end.position]
+        elif self.trade_sub_process == TSP.SELLING:
+            return [tick for tick in tick_list if tick.position >= self._wave_tick_at_buying.position - 1]
+        elif self.trade_sub_process == TSP.RE_BUYING:
+            return [tick for tick in tick_list if tick.position >= self._wave_tick_at_selling.position]
 
     def __initialize_limit_and_stop_loss_values_for_tick_list__(self, tick_list: list):
         for wave_tick in tick_list:
@@ -361,8 +374,8 @@ class PatternTrade:
         for tick in self._wave_tick_list.tick_list:
             l_value_b, u_value_b = self.pattern.value_categorizer.get_value_range_for_category(tick.time_stamp, vc_b)
             l_value_wb, u_value_wb = self.pattern.value_categorizer.get_value_range_for_category(tick.time_stamp, vc_wb)
-            tick.watch_breakout_value = round(u_value_b, 4)
-            tick.watch_wrong_breakout_value = round(l_value_wb, 4)
+            tick.watch_breakout_value = MyMath.round_smart(u_value_b)
+            tick.watch_wrong_breakout_value = MyMath.round_smart(l_value_wb)
 
     def __initialize_breakout_values_for_tick_list__(self):
         vc_b = self.__get_value_category_for_breakout__()
@@ -654,9 +667,9 @@ class PatternTrade:
         api.small_profit_taking_active = self.sys_config.exchange_config.small_profit_taking_active
         api.small_profit_taking_parameters = \
             self.sys_config.exchange_config.get_small_profit_parameters_for_pattern_type(self.pattern.pattern_type)
-        if self.trade_box_type == TBT.EXPECTED_WIN:
+        if self.trade_box_type == BTT.EXPECTED_WIN:
             return ExpectedWinTradingBox(api)
-        elif self.trade_box_type == TBT.TOUCH_POINT:
+        elif self.trade_box_type == BTT.TOUCH_POINT:
             return TouchPointTradingBox(api)
         return None
 
@@ -681,20 +694,27 @@ class PatternTrade:
         upper_value = self.pattern.get_upper_value(ticker.time_stamp)
         lower_value = self.pattern.get_lower_value(ticker.time_stamp)
         off_set_value = upper_value  # if self.trade_strategy == TSTR.LIMIT_FIX else buy_price
-        height = abs(upper_value - lower_value)
+        height = self.__get_height_for_trading_box__(buy_price, lower_value, upper_value)
         if self.buy_trigger == BT.TOUCH_POINT:
-            distance_bottom = round(buy_price - lower_value, 4)
+            distance_bottom = MyMath.round_smart(buy_price - lower_value)
         else:
-            height = MyMath.round_smart(max(height, self.pattern.part_entry.distance_for_trading_box))
-            std_regression = self.pattern.part_entry.std_regression
-            # print('__set_properties_after_buy__: height={:.4f}, {:.4f}=str_regression'.format(height, std_regression))
-            height = 2 * std_regression
-            if height < buy_price/100:
-                height = buy_price/100  # at least one percent
             distance_bottom = MyMath.round_smart(height)
         distance_bottom = self.__get_corrected_distance_bottom__(distance_bottom, off_set_value)
         self._trade_box = self.__get_trade_box__(off_set_value, buy_price, height, distance_bottom)
         self._trade_box.print_box()
+
+    def __get_height_for_trading_box__(self, buy_price: float, lower_value: float, upper_value: float) -> float:
+        height_default = abs(upper_value - lower_value)
+        if self.buy_trigger == BT.TOUCH_POINT:
+            return height_default
+        height = MyMath.round_smart(max(height_default, self.pattern.part_entry.distance_for_trading_box))
+        std_regression = self.pattern.part_entry.std_regression
+        # print('__set_properties_after_buy__: height={:.4f}, {:.4f}=str_regression'.format(height, std_regression))
+        height = 2 * std_regression
+        height = self.pattern.get_expected_win()
+        if height < buy_price / 100:
+            height = buy_price / 100  # at least one percent
+        return height
 
     @staticmethod
     def __get_corrected_distance_bottom__(distance_bottom: float, off_set_value: float) -> float:
@@ -745,7 +765,7 @@ class PatternTrade:
         self.data_dict_obj.add(DC.TRADE_STRATEGY, self.trade_strategy)
         self.data_dict_obj.add(DC.TRADE_STRATEGY_ID, TSTR.get_id(self.trade_strategy))
         self.data_dict_obj.add(DC.TRADE_BOX_TYPE, self.trade_box_type)
-        self.data_dict_obj.add(DC.TRADE_BOX_TYPE_ID, TBT.get_id(self.trade_box_type))
+        self.data_dict_obj.add(DC.TRADE_BOX_TYPE_ID, BTT.get_id(self.trade_box_type))
         self.data_dict_obj.add(DC.BUY_TRIGGER, self.buy_trigger)
         self.data_dict_obj.add(DC.BUY_TRIGGER_ID, BT.get_id(self.buy_trigger))
         # overwrite some values from pattern (not valid set at that state)

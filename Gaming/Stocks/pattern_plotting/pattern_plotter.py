@@ -404,10 +404,14 @@ class PatternPlotter:
         for pattern in self.detector.pattern_list:
             if not self.sys_config.config.plot_only_pattern_with_fibonacci_waves \
                     or pattern.intersects_with_fibonacci_wave:
-                color_pattern, color_buy, color_trade, retr_color = color_handler.get_colors_for_pattern(pattern)
+                colors = color_handler.get_colors_for_pattern(pattern)
+                color_pattern = colors.for_main_part
+                color_buy = colors.for_buy_part
+                color_trade = colors.for_sell_part
+                retr_color = colors.for_retracement
                 plot_container = PatternPlotContainer(
                     PlotterInterface.get_pattern_shape_part_main(pattern), color_pattern)
-                if pattern.is_part_buy_available():
+                if pattern.is_part_buy_available() or pattern.is_box_buy_available():
                     plot_container.add_buy_shape(PlotterInterface.get_pattern_shape_part_buy(pattern), color_buy)
                 if pattern.was_breakout_done() and pattern.is_part_trade_available():
                     plot_container.add_trade_shape(PlotterInterface.get_pattern_shape_part_trade(pattern), color_trade)
@@ -424,7 +428,9 @@ class PatternPlotter:
     def __fill_trade_plot_container_list__(self):
         color_handler = PatternColorHandler()
         for pattern_trade in self.detector.trade_handler.pattern_trade_dict.values():
-            c_watching, c_buying, c_selling, c_after = color_handler.get_colors_for_pattern_trade(pattern_trade)
+            colors = color_handler.get_colors_for_pattern_trade(pattern_trade)
+            c_watching, c_buying, c_selling, c_after = \
+                colors.for_main_part, colors.for_buy_part, colors.for_sell_part, colors.for_after_selling
             plot_container = PatternPlotContainer(
                 PlotterInterface.get_pattern_trade_shape_for_buying(pattern_trade), c_buying)
             if pattern_trade.xy_for_selling is not None:

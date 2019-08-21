@@ -108,7 +108,7 @@ class ValueCategorizer:
             if row[CN.F_UPPER] >= row[CN.F_LOWER]:
                 self.value_category_dic[row[self._index_column]] = self.__get_value_categories_for_df_row__(row)
                 self.value_category_dic_for_pos[row[CN.POSITION]] = self.value_category_dic[row[self._index_column]]
-                # print('{}: f_upper={:.4f} / high={}, low={} / f_lower={:.4f}: {}'.format(
+                # print('{}: _f_upper={:.4f} / high={}, low={} / _f_lower={:.4f}: {}'.format(
                 #     ind, row[CN.F_UPPER], row[CN.HIGH], row[CN.LOW], row[CN.F_LOWER],
                 #     self.value_category_dic_for_pos[row[CN.POSITION]]))
             else:

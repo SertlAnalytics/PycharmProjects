@@ -23,18 +23,22 @@ class PatternFunctionContainer:
         self._tick_for_breakout = None
         self._tick_first = WaveTick(self.df.iloc[0])
         self._tick_last = WaveTick(self.df.iloc[-1])
+        self._df_part = self.df[np.logical_and(
+            self.df[CN.POSITION] >= self.tick_first.position,
+            self.df[CN.POSITION] <= self.tick_last.position)]
+        self._slope_offset_value = self._df_part[CN.HIGH].mean()
         self._f_lower = f_lower
         self._f_upper = f_upper
         self._h_lower = f_lower
         self._h_upper = f_upper
         self._f_breakout = None
+        self._forecast_f_breakout = None
         self._f_regression = self.__get_f_regression__()
         self._f_upper_percentage = 0
         self._f_lower_percentage = 0
         self._f_regression_percentage = 0
         self._f_var_cross_f_upper_f_lower = 0
         self._position_cross_f_upper_f_lower = 0
-        self._breakout_direction = None
         self._max_positions_after_tick_for_helper = 0
         if self.is_valid():
             self.__init_tick_for_helper__()
@@ -116,6 +120,10 @@ class PatternFunctionContainer:
         return self._f_breakout
 
     @property
+    def forecast_f_breakout(self):
+        return self._forecast_f_breakout
+
+    @property
     def f_upper_percentage(self):
         return self._f_upper_percentage
 
@@ -127,13 +135,31 @@ class PatternFunctionContainer:
     def f_regression_percentage(self):
         return self._f_regression_percentage
 
+    def get_additional_expected_win_for_forecast(self, offset: float, forecast_breakout_direction: str) -> float:
+        if forecast_breakout_direction == FD.DESC:
+            return self.__get_additional_expected_win_for_forecast_desc__(offset)
+        return self.__get_additional_expected_win_for_forecast_asc__(offset)
+
+    def __get_additional_expected_win_for_forecast_asc__(self, offset: float) -> float:
+        upper_value_breakout = self.get_upper_value(self._tick_for_breakout.f_var, True)
+        if upper_value_breakout > offset:
+            return upper_value_breakout - offset
+        return 0
+
+    def __get_additional_expected_win_for_forecast_desc__(self, offset: float) -> float:
+        lower_value_breakout = self.get_lower_value(self._tick_for_breakout.f_var, True)
+        if lower_value_breakout < offset:
+            return offset - lower_value_breakout
+        return 0
+
     def __init_percentage_values__(self):
         self._f_upper_percentage = self.__get_slope_in_decimal_percentage__(self._f_upper)
         self._f_lower_percentage = self.__get_slope_in_decimal_percentage__(self._f_lower)
         self._f_regression_percentage = self.__get_slope_in_decimal_percentage__(self._f_regression)
 
     def __get_slope_in_decimal_percentage__(self, func: np.poly1d):
-        return MyMath.get_change_in_percentage(func(self._tick_first.f_var), func(self.tick_last.f_var), 1)
+        return MyMath.get_change_in_percentage(
+            func(self._tick_first.f_var), func(self.tick_last.f_var), offset_value=self._slope_offset_value)
 
     def is_regression_value_in_pattern_for_f_var(self, f_var: int):
         return self._f_lower(f_var) <= self._f_regression(f_var) <= self._f_upper(f_var)
@@ -191,6 +217,7 @@ class PatternFunctionContainer:
 
     def __set_tick_for_breakout__(self, tick):
         self._tick_for_breakout = tick
+
         if tick.close > self.get_upper_value(tick.f_var):
             self._f_breakout = np.poly1d([0, self.get_upper_value(tick.f_var, True)])
         else:
@@ -280,7 +307,7 @@ class FibonacciAscPatternFunctionContainer(FibonacciPatternFunctionContainer):
         return None, None
 
     def get_upper_value(self, f_var: int, with_smart_rounding=False):
-        if with_smart_rounding:
+        if with_smart_rounding or True:
             if f_var < self.tick_for_helper.f_var:
                 return MyMath.round_smart(self._f_upper(f_var))
             return MyMath.round_smart(self._h_upper(f_var))
@@ -289,7 +316,7 @@ class FibonacciAscPatternFunctionContainer(FibonacciPatternFunctionContainer):
         return round(self._h_upper(f_var), 4)
 
     def get_lower_value(self, f_var: float, with_smart_rounding=False):
-        if with_smart_rounding:
+        if with_smart_rounding or True:
             return MyMath.round_smart(min(self._f_lower(f_var), self._h_lower(f_var)))
         return round(min(self._f_lower(f_var), self._h_lower(f_var)), 4)
 
@@ -473,7 +500,7 @@ class HeadShoulderPatternFunctionContainer(PatternFunctionContainer):
     def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
         return tick.close > self.get_upper_value(tick.f_var)
 
-    def set_tick_for_helper(self, tick: WaveTick):  # parallel to neckline = f_lower through left shoulder
+    def set_tick_for_helper(self, tick: WaveTick):  # parallel to neckline = _f_lower through left shoulder
         self._tick_for_helper = tick
         self._h_upper = MyPoly1d.get_parallel_through_point(self._f_lower, tick.f_var, tick.high)
         self._h_lower = self._h_upper
@@ -490,7 +517,7 @@ class HeadShoulderBottomPatternFunctionContainer(PatternFunctionContainer):
     def is_tick_breakout_on_wrong_side(self, tick: WaveTick) -> bool:
         return tick.close < self.get_lower_value(tick.f_var)
 
-    def set_tick_for_helper(self, tick: WaveTick):  # parallel to neckline = f_upper through left shoulder
+    def set_tick_for_helper(self, tick: WaveTick):  # parallel to neckline = _f_upper through left shoulder
         self._tick_for_helper = tick
         self._h_upper = MyPoly1d.get_parallel_through_point(self._f_upper, tick.f_var, tick.low)
         self._h_lower = self._h_upper

@@ -19,6 +19,7 @@ class PatternBreakoutApi:
         self.volume_mean_for_breakout = 0
         self.volume_forecast = 0
         self.constraints = None
+        self.forecast_breakout_direction = FD.NONE
 
 
 class PatternBreakout:
@@ -39,7 +40,10 @@ class PatternBreakout:
         self.tolerance_range = MyMath.round_smart(self.pattern_breadth * self.tolerance_pct)
         self.limit_upper = MyMath.round_smart(self.bound_upper + self.tolerance_range)
         self.limit_lower = MyMath.round_smart(self.bound_lower - self.tolerance_range)
-        self.breakout_direction = self.__get_breakout_direction__()
+        if api.forecast_breakout_direction == FD.NONE:
+            self.breakout_direction = self.__get_breakout_direction__()
+        else:
+            self.breakout_direction = api.forecast_breakout_direction
         self.sign = 1 if self.breakout_direction == FD.ASC else -1
         self.check_dict = {}
 
@@ -81,7 +85,9 @@ class PatternBreakout:
         return '{} ({}) - Volume change: {}%'.format(date_str, self.tick_breakout.position, round(vol_change, 0))
 
     def __get_breakout_direction__(self) -> str:
-        return FD.ASC if self.tick_breakout.close > self.bound_upper else FD.DESC
+        if self.tick_breakout.breakout_value == 0:
+            return FD.ASC if self.tick_breakout.close > self.bound_upper else FD.DESC
+        return FD.ASC if self.tick_breakout.high > self.tick_breakout.breakout_value else FD.DESC
 
     def __is_breakout_powerful__(self) -> bool:
         return self.tick_breakout.is_sustainable() or (

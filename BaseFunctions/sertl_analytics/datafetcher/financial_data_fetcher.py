@@ -526,7 +526,7 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         # HIGH	float	Highest execution during the time frame
         # LOW	float	Lowest execution during the timeframe
         # VOLUME	float	Quantity of _symbol traded within the timeframe
-        url_t_f = '{}m'.format(self.kw_aggregation) if self.kw_period == PRD.INTRADAY else '1D'
+        url_t_f = self.__get_url_time_frame__(self.kw_period, self.kw_aggregation)
         symbol = 't{}'.format(self.kw_symbol)
         if self.kw_section == 'last':
             url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/last'.format(url_t_f, symbol)
@@ -535,6 +535,14 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         else:
             url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/hist?limit={}'.format(url_t_f, symbol, self.kw_limit)
         return url
+
+    def __get_url_time_frame__(self, period: str, aggregation: int):
+        if period == PRD.DAILY:
+            return '1D'
+        hours = int(aggregation/60)
+        if hours > 0:
+            return '{}h'.format(hours)
+        return '{}m'.format(aggregation)
 
 
 class CorrelationHandler:

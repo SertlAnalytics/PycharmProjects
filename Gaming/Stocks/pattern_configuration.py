@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import FT, CN, PDP, BT, TSTR, TBT
+from sertl_analytics.constants.pattern_constants import FT, CN, PDP, BT, TSTR, BTT
 
 
 class PatternConfiguration:
@@ -88,7 +88,7 @@ class PatternConfiguration:
         trade_id_parts_01 = trade_id.split('-')
         trade_id_parts_02 = trade_id.split('_')
         buy_trigger_id = BT.get_id(trade_id_parts_01[0])
-        trade_box_type_id = TBT.get_id(trade_id_parts_01[1])
+        trade_box_type_id = BTT.get_id(trade_id_parts_01[1])
         trade_strategy_id = TSTR.get_id(trade_id_parts_01[2])
         symbol = trade_id_parts_02[4]
         pattern_type_id = FT.get_id(trade_id_parts_02[5])

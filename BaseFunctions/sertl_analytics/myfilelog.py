@@ -56,6 +56,7 @@ class FileLog:
         message = lines[-2]
         process = lines[-1]
         process = process.replace('\n', ' ').strip()
+        process = process.replace(',', '#')  # process can contain comma. Which is not allowed...
         runtime_info = runtime_info.replace(',', '#')  # runtime info can contain comma. Which is not allowed...
         self.__log_message__(self.__get_file_path_for_errors__(), message, process, runtime_info)
         

@@ -664,8 +664,10 @@ class PatternTable(MyTable, PredictionFeatureTable):
             self.__get_concatenated_feature_label_columns_before_breakout__(), self._view_name)
 
     def __get_query_for_feature_and_label_data_after_breakout__(self):
-        return "SELECT {} FROM {}".format(
-            self.__get_concatenated_feature_label_columns_after_breakout__(), self._view_name)
+        # where_clause = ' WHERE {}=-1'.format(DC.BREAKOUT_DIRECTION_ID)
+        where_clause = ''
+        return "SELECT {} FROM {}{}".format(
+            self.__get_concatenated_feature_label_columns_after_breakout__(), self._view_name, where_clause)
 
     def __get_concatenated_feature_label_columns_touch_points__(self):
         return ', '.join(self.id_columns + self._feature_columns_touch_points + self._label_columns_touch_points)

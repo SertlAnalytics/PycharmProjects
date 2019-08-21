@@ -73,11 +73,11 @@ class MyPatternDashBaseTab(MyDashBaseTab):
         return_list = []
         for pattern in pattern_list:
             colors = self._color_handler.get_colors_for_pattern(pattern)
-            return_list.append(DashInterface.get_pattern_part_entry_shape(pattern, colors[0]))
+            return_list.append(DashInterface.get_pattern_part_entry_shape(pattern, colors.for_main_part))
             if pattern.was_breakout_done() and pattern.is_part_trade_available():
-                return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors[2]))
+                return_list.append(DashInterface.get_pattern_part_trade_shape(pattern, colors.for_sell_part))
             if pattern.is_fibonacci:
-                return_list.append(DashInterface.get_forecast_shape(pattern, colors[3]))
+                return_list.append(DashInterface.get_forecast_shape(pattern, colors.for_retracement))
             # for shapes in return_list:
             #     print('x={}, \ny={}'.format(shapes.x, shapes.y))
         return return_list
@@ -85,10 +85,10 @@ class MyPatternDashBaseTab(MyDashBaseTab):
     def __get_pattern_trade_shape_list__(self, pattern_trade: PatternTrade):
         return_list = []
         colors = self._color_handler.get_colors_for_pattern_trade(pattern_trade)
-        shape_watching = DashInterface.get_pattern_trade_watching_shape(pattern_trade, colors[0])
-        shape_buying = DashInterface.get_pattern_trade_buying_shape(pattern_trade, colors[1])
-        shape_selling = DashInterface.get_pattern_trade_selling_shape(pattern_trade, colors[2])
-        shape_after_selling = DashInterface.get_pattern_trade_after_selling_shape(pattern_trade, colors[3])
+        shape_watching = DashInterface.get_pattern_trade_watching_shape(pattern_trade, colors.for_main_part)
+        shape_buying = DashInterface.get_pattern_trade_buying_shape(pattern_trade, colors.for_buy_part)
+        shape_selling = DashInterface.get_pattern_trade_selling_shape(pattern_trade, colors.for_sell_part)
+        shape_after_selling = DashInterface.get_pattern_trade_after_selling_shape(pattern_trade, colors.for_after_selling)
         if shape_watching:
             return_list.append(shape_watching)
         if shape_buying:

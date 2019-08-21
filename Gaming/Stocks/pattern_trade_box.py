@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-09-10
 """
 
-from sertl_analytics.constants.pattern_constants import TSTR, DC, TBT, FT
+from sertl_analytics.constants.pattern_constants import TSTR, DC, BTT, FT
 from sertl_analytics.mymath import MyMath
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mymath import MyMath
@@ -300,7 +300,7 @@ class TradingBox:
 
 class ExpectedWinTradingBox(TradingBox):
     def _init_parameters_(self):
-        self.box_type = TBT.EXPECTED_WIN
+        self.box_type = BTT.EXPECTED_WIN
         self._height = self.round(self._data_dict[DC.EXPECTED_WIN])
         self._distance_top = self.round(self._height * self.multiplier_positive)
         # self._distance_bottom = self.round(self._height * self.multiplier_negative)
@@ -308,7 +308,7 @@ class ExpectedWinTradingBox(TradingBox):
 
 class BollingerBandTradingBox(TradingBox):
     def _init_parameters_(self):
-        self.box_type = TBT.BOLLINGER_BAND
+        self.box_type = BTT.BOLLINGER_BAND
         self._height = self.round(self._data_dict[DC.EXPECTED_WIN])
         self._distance_top = self.round(self._height * self.multiplier_positive)
         # self._distance_bottom = self.round(self._height * self.multiplier_negative)
@@ -316,7 +316,7 @@ class BollingerBandTradingBox(TradingBox):
 
 class TouchPointTradingBox(TradingBox):
     def _init_parameters_(self):
-        self.box_type = TBT.TOUCH_POINT
+        self.box_type = BTT.TOUCH_POINT
         self._distance_top = self.round(self._height - self._distance_bottom)
         self._distance_bottom = self.round(self._distance_bottom)
 

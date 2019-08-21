@@ -71,7 +71,7 @@ class PatternDataHandler:
         base_tolerance_pct = MyMath.round_smart(std_dev_mean_hl / mean_hl)
         tolerance_pct = base_tolerance_pct / 5
         tolerance_pct_equal = tolerance_pct / 2
-        tolerance_pct_buying = tolerance_pct / 2
+        tolerance_pct_buying = 0  # tolerance_pct / 2
         print('tolerance_pct={:.2f}%, tolerance_pct_equal={:.2f}%, tolerance_pct_buying={:.2f}%'.format(
             tolerance_pct*100, tolerance_pct_equal*100, tolerance_pct_buying*100
         ))
