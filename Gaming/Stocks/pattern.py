@@ -1241,7 +1241,7 @@ class FibonacciPattern(Pattern):
         forecast_retracement_range = self.pattern_range.fib_form.get_forecast_retracement_range_after_wave_finishing()
         expected_win_old = MyMath.round_smart(max(expected_retracement - high_end, high_end))
         expected_win_new = MyMath.round_smart(max(forecast_retracement_range - high_end, high_end))
-        print('FibonacciPattern: expected_win_old={}, new={}'.format(expected_win_old, expected_win_new))
+        # print('FibonacciPattern: expected_win_old={}, new={}'.format(expected_win_old, expected_win_new))
         return expected_win_new
 
     def __get_annotation_text_for_retracement_prediction__(self):

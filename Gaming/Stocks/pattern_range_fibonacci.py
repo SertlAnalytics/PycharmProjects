@@ -117,8 +117,14 @@ class FibonacciFormation:
     def __get_retracement_predictor_value__(self) -> float:
         if self.valid_wave is None:
             return 0
-        return MyMath.round_smart(
-            (self.retracement_end_parameters_regression[1] + self.retracement_end_parameters_classifier[1])/2)
+        fc_value_regression = self.retracement_end_parameters_regression[1]
+        fc_value_classifier = self.retracement_end_parameters_classifier[1]
+        min_fc_value = min(fc_value_regression, fc_value_classifier)
+        max_fc_value = max(fc_value_regression, fc_value_classifier)
+        # print('min_fc_value={}, max_fc_value={}'.format(min_fc_value, max_fc_value))
+        return MyMath.round_smart(min_fc_value) if self.pattern_type == FT.FIBONACCI_DESC \
+            else MyMath.round_smart(max_fc_value)
+        # return MyMath.round_smart((fc_value_regression + fc_value_classifier)/2)  # old
 
     def __get_target_retracement_value__(self) -> float:
         if self.valid_wave is None:

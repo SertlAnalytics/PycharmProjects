@@ -145,8 +145,8 @@ class PatternDataDictionary(DataDictionary):
 
     def get_slope(self, pos_start: int, pos_end: int, df_col: str = CN.CLOSE):
         df_part = self.df.iloc[pos_start:pos_end + 1]
-        print('get_slope: pos_start={}, pos_end={}, df_col={}, df_part.shape[0]={}'.format(
-            pos_start, pos_end, df_col, df_part.shape[0]))
+        # print('get_slope: pos_start={}, pos_end={}, df_col={}, df_part.shape[0]={}'.format(
+        #     pos_start, pos_end, df_col, df_part.shape[0]))
         tick_first = WaveTick(df_part.iloc[0])
         tick_last = WaveTick(df_part.iloc[-1])
         stock_df = PatternDataFrame(df_part)

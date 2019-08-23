@@ -329,6 +329,7 @@ class PatternTrade:
             self._xy_for_watching = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, TSP.WATCHING)
         elif self.trade_sub_process == TSP.BUYING:
             self._xy_for_buying = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, TSP.BUYING)
+            # print('{}: self._xy_for_buying='.format(self.ticker_id, self._xy_for_buying))
         elif self.trade_sub_process == TSP.SELLING:
             self._xy_for_selling = MyPlotHelper.get_xy_parameter_for_replay_list(tick_list, TSP.SELLING)
         elif self.trade_sub_process == TSP.RE_BUYING:

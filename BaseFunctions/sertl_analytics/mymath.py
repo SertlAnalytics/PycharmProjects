@@ -256,7 +256,7 @@ class MyMath:
             return int(rounded_value) if rounded_value == int(rounded_value) else rounded_value
         elif decimals > 0:
             return round(value, 5 - decimals)
-        return round(value, min(5, -decimals + 3))  # not more than 5 decimals after comma
+        return round(value, min(5, -decimals + 5))  # not more than 5 decimals after comma
 
     @staticmethod
     def get_float_for_string(value_str: str, delimiter='.'):
