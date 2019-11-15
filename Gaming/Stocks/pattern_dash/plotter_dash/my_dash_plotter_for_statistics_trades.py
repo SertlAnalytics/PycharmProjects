@@ -7,6 +7,7 @@ Date: 2018-06-17
 
 import plotly.graph_objs as go
 from pattern_logging.pattern_log import PatternLog
+from pattern_database.stock_database import StockDatabase
 from sertl_analytics.constants.pattern_constants import DC, CHT, FT
 import pandas as pd
 from pattern_dash.plotter_dash.my_dash_plotter_for_statistics import MyDashTabStatisticsPlotter
@@ -26,6 +27,7 @@ class MyDashTabStatisticsPlotter4Trades(MyDashTabStatisticsPlotter):
 
     @staticmethod
     def __get_df_secondary__():
+        # return StockDatabase().get_trade_records_for_statistics_as_dataframe()
         return PatternLog().get_data_frame_for_trades()
 
     @staticmethod

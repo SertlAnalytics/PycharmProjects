@@ -4,13 +4,13 @@ Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-11-05
 """
-from sertl_analytics.constants.pattern_constants import PRD, FT
+from sertl_analytics.constants.pattern_constants import PRD, FT, INDICES
 from pattern_database.stock_database_updater import StockDatabaseUpdater
 from pattern_predictor_optimizer import PatternPredictorOptimizer
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from pattern_system_configuration import SystemConfiguration
 
-sys_config = SystemConfiguration()
+sys_config = SystemConfiguration(with_predictor=False)
 stock_db = sys_config.db_stock
 exchange_config = BitfinexConfiguration()
 predictor_optimizer = PatternPredictorOptimizer(stock_db)
@@ -19,6 +19,7 @@ stock_db_updater = StockDatabaseUpdater(sys_config)
 # stock_db_updater.update_trade_records(4, 16, pattern_end_date='')  # 2018-10-31
 
 if True:
+    # stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.NASDAQ100, 400)
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
     # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
     # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)
@@ -30,7 +31,13 @@ if True:
     # stock_db.update_stock_data_for_symbol('TSLA')
     # stock_db.update_stock_data_for_symbol('GE')
     # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
-    stock_db_updater.handle_transaction_problems()
+    # stock_db_updater.handle_transaction_problems()
+    # stock_db.update_stock_data_by_index(INDICES.DOW_JONES, PRD.DAILY)
+    # stock_db.update_stock_data_for_symbol('ADS')
+    stock_db.update_stock_data_by_index(INDICES.DAX, PRD.DAILY)
+    # stock_db.update_stock_data_by_index(INDICES.NASDAQ100, PRD.DAILY)
+    # pattern_type_list = sys_config.trade_strategy_optimizer.optimal_pattern_type_list_for_long_trading
+    # predictor_optimizer.calculate_class_metrics_for_predictor_and_label_for_today(pattern_type_list)
     # stock_db_updater.add_wave_prediction_data_to_wave_records(symbol='')
     # stock_db_updater.update_trade_records(4, 16)
     # stock_db_updater.update_trade_policy_metric_for_today([FT.CHANNEL])

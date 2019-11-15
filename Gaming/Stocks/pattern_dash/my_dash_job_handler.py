@@ -72,7 +72,7 @@ class MyDashJobHandler:
             weekdays=self._weekdays_all, start_times=['04:00'], db_updater=self._db_updater))
         self.__add_jobs_for_intraday_wave_update__()
         self._scheduler.add_job(MyDashTradePolicyUpdateJob(
-            weekdays=self._weekdays_all, start_times=['04:30'], db_updater=self._db_updater))
+            weekdays=self._weekday_saturday, start_times=['04:30'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashPredictorOptimizerJob(
             weekdays=self._weekday_sunday, start_times=['05:30'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashOptimizeLogFilesJob(

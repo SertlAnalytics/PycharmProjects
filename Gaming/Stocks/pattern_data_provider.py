@@ -121,6 +121,17 @@ class PatternDataProvider:
         self.period = PRD.DAILY
         self.aggregation = 1
 
+    def init_and_clause(self):
+        if self.period == PRD.INTRADAY:
+            minutes = self.aggregation * self.limit
+            days = int(minutes / (60 * 24)) + 1
+            dt_start = MyDate.get_date_from_datetime()
+            dt_start = MyDate.adjust_by_days(dt_start, -days)
+            dt_end = MyDate.get_date_from_datetime()
+            dt_end = MyDate.adjust_by_days(dt_end, 1)
+            self._and_clause = self.get_and_clause(dt_start, dt_end)
+            print('data_provider.and_clause={}'.format(self.and_clause))
+
     def use_index(self, index: str):
         self.index_used = index
         if index == INDICES.ALL_DATABASE:

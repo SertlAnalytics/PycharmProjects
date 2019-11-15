@@ -119,6 +119,7 @@ class PatternDetectionController:
         return True
 
     def __run_pattern_detector__(self):
+        self.sys_config.data_provider.init_and_clause()
         self.__init_loop_list_for_ticker__()
         limit = self.sys_config.data_provider.limit
         self.sys_config.fibonacci_wave_data_handler.load_data(self.period, self.period_aggregation)

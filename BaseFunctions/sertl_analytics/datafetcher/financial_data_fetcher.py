@@ -13,7 +13,10 @@ from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import CN, PRD, OPS
 from sertl_analytics.exchanges.exchange_cls import Ticker
 import time
+import quandl
 import seaborn as sns
+from datetime import datetime
+import math
 
 
 class APIBaseFetcher:
@@ -51,26 +54,34 @@ class APIBaseFetcher:
     def kw_limit(self) -> int:
         return self._kwargs.get('limit', 0)
 
-    def __get_key_for_latest_successful_df_dict__(self):
-        # key= symbol_period_aggreation_limit
+    def __get_key_for_latest_successful_df_dict__(self):  # key= symbol_period_aggreation_limit
         return '{}_{}_{}_{}'.format(self.kw_symbol, self.kw_period, self.kw_aggregation, self.kw_limit)
 
     def retrieve_data(self, **kwargs): # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT, limit=400
         self.__sleep__()
         self._kwargs = kwargs
-        url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
-        self.__print_request_details__(url)
+        is_for_quandl = ('collapse' in kwargs)
+        if not is_for_quandl:  # for Quandl we use an API call instead of URL
+            url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
+            self.__print_request_details__(url)
         self._df = None
         try:
-            request_data = requests.get(url)
-            self._df = self.__get_data_frame__(request_data=request_data)
+            if is_for_quandl:
+                self._df = self.__get_data_frame__()
+            else:
+                request_data = requests.get(url)
+                self._df = self.__get_data_frame__(request_data=request_data)
         except:
-            print('PROBLEM with retrieving data from  {}'.format(url))
+            if is_for_quandl:
+                print('PROBLEM with retrieving data from Quandl for {}'.format(kwargs['symbol']))
+            else:
+                print('PROBLEM with retrieving data from  {}'.format(url))
         finally:
             key = self.__get_key_for_latest_successful_df_dict__()
             if self._df is None:
                 self._df = self.__get_latest_successful_retrieved_data_frame__(key)
             else:
+                self.__correct_missing_data__()
                 self.__set_latest_successful_retrieved_data_frame__(key, self._df)
 
             if self._df is not None:
@@ -80,6 +91,17 @@ class APIBaseFetcher:
                     self.__round_df_column_values__()
                 except:
                     self._df = None
+
+    def __correct_missing_data__(self): # sometimes we have no Open data - take the last close data
+        last_close = 0
+        last_volume = 0
+        for ind, row in self._df.iterrows():  # the values are delivered with ms instead of seconds
+            if row.Open is None or math.isnan(row.Open):
+                row.Open = row.Low if last_close == 0 else last_close
+            if row.Volume is None or math.isnan(row.Volume):
+                row.Volume = last_volume
+            last_close = row.Close
+            last_volume = row.Volume
 
     def __get_latest_successful_retrieved_data_frame__(self, key: str):
         df_last = self._latest_successful_df_dict.get(key, None)
@@ -180,6 +202,39 @@ class APIBaseFetcher:
             return 1
         return 0
 
+class QuandlFetcher (APIBaseFetcher):
+    """
+     quandl.ApiConfig.api_key = os.environ["quandl_apikey"]
+     mydata = quandl.get('FSE/BEI_X', start_date='2019-09-30', end_date='2019-12-31', collapse='daily')
+    """
+    _request_interval_required = 0  # ??? we dont know the intervall - let's try...
+
+    def __init__(self):
+        APIBaseFetcher.__init__(self)
+        quandl.ApiConfig.api_key = self._api_key
+
+    def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL):
+        symbol = 'FSE/{}_X'.format(ticker.upper())
+        limit = 2000 if output_size==OPS.FULL else 100
+        start_date = MyDate.get_date_str_from_datetime(MyDate.adjust_by_days(datetime.now(), -limit))
+        end_date = MyDate.today_str()
+        collapse = 'daily'
+        return {'period': period, 'symbol': symbol, 'aggregation': aggregation, 'limit': limit,
+                'start_date': start_date, 'end_date': end_date, 'collapse': collapse}
+
+    def __get_data_frame__(self) -> pd.DataFrame:
+        df = quandl.get(self._kwargs['symbol'], start_date=self._kwargs['start_date'],
+                        end_date=self._kwargs['end_date'], collapse=self._kwargs['collapse'])
+        if df is not None:
+            df = df[['Open', 'High', 'Low', 'Close', 'Traded Volume']]
+            df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
+            df[CN.TIMESTAMP] = df[CN.TIMESTAMP].apply(int)
+            df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
+            df.columns = CN.get_standard_column_names()
+        return df
+
+    def _get_api_key_(self):
+        return os.environ["quandl_apikey"]
 
 class AlphavantageJSONFetcher (APIBaseFetcher):
     _request_interval_required = 15  # we have only 5 _request per minute for free api-key, 15 instead of 12 for security
@@ -192,7 +247,6 @@ class AlphavantageJSONFetcher (APIBaseFetcher):
         APIBaseFetcher.retrieve_data(self, **kwargs)
         if self._df is not None:
             self._df_data = self._df[self._get_column_list_for_data_()]
-            column_for_volume = self._get_column_for_volume_()
             self._df_volume = self._df[self._get_column_for_volume_()]
 
     @property
@@ -250,7 +304,7 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
 
     def get_json_data_key(self):
         dict = {PRD.DAILY: 'Time Series (Daily)',
-                PRD.WEEKLY: 'Time Series (Weekly)',
+                PRD.WEEKLY: 'Weekly Time Series', # OLD 'Time Series (Weekly)',
                 PRD.INTRADAY: 'Time Series ({}min)'.format(self.kw_aggregation)}
         return dict[self.kw_period]
 

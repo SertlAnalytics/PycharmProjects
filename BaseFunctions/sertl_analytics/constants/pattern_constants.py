@@ -471,7 +471,7 @@ class FT:
     def get_long_trade_able_types():
         return [FT.TRIANGLE, FT.TRIANGLE_TOP, FT.TRIANGLE_BOTTOM, FT.TRIANGLE_DOWN,
                 FT.CHANNEL, FT.CHANNEL_DOWN,
-                FT.TKE_BOTTOM,
+                # FT.TKE_BOTTOM,
                 FT.FIBONACCI_DESC,
                 FT.HEAD_SHOULDER_BOTTOM, FT.HEAD_SHOULDER_BOTTOM_DESC]
 
@@ -610,10 +610,13 @@ class WAVEST:  # Waves Types (corresponds with the columns in the overview table
     INTRADAY_DESC = 'intraday_descending'
     DAILY_ASC = 'daily_ascending'
     DAILY_DESC = 'daily_descending'
+    WEEKLY_ASC = 'weekly_ascending'
+    WEEKLY_DESC = 'weekly_descending'
 
     @staticmethod
     def get_waves_types():
-        return [WAVEST.INDICES, WAVEST.INTRADAY_ASC, WAVEST.DAILY_ASC, WAVEST.INTRADAY_DESC, WAVEST.DAILY_DESC]
+        return [WAVEST.INDICES, WAVEST.INTRADAY_ASC, WAVEST.DAILY_ASC, WAVEST.WEEKLY_ASC,
+                WAVEST.INTRADAY_DESC, WAVEST.DAILY_DESC, WAVEST.WEEKLY_DESC]
 
     @staticmethod
     def get_waves_types_for_processing(period_list: list):
@@ -621,20 +624,28 @@ class WAVEST:  # Waves Types (corresponds with the columns in the overview table
             return [WAVEST.DAILY_ASC, WAVEST.INTRADAY_ASC, WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC]
         elif period_list[0] == PRD.INTRADAY:
             return [WAVEST.INTRADAY_ASC, WAVEST.INTRADAY_DESC]
+        elif period_list[0] == PRD.WEEKLY:
+            return [WAVEST.WEEKLY_ASC, WAVEST.WEEKLY_DESC]
 
     @staticmethod
     def get_waves_types_for_period(period: str):
         if period == PRD.INTRADAY:
             return [WAVEST.INTRADAY_DESC, WAVEST.INTRADAY_ASC]
+        elif period == PRD.WEEKLY:
+            return [WAVEST.WEEKLY_DESC, WAVEST.WEEKLY_ASC]
         return [WAVEST.DAILY_DESC, WAVEST.DAILY_ASC]
 
     @staticmethod
     def get_period_for_wave_type(wave_type: str):
-        return PRD.INTRADAY if wave_type in [WAVEST.INTRADAY_ASC, WAVEST.INTRADAY_DESC] else PRD.DAILY
+        if wave_type in [WAVEST.INTRADAY_ASC, WAVEST.INTRADAY_DESC]:
+            return PRD.INTRADAY
+        elif wave_type in [WAVEST.WEEKLY_ASC, WAVEST.WEEKLY_DESC]:
+            return PRD.WEEKLY
+        return PRD.DAILY
 
     @staticmethod
     def get_direction_for_wave_type(wave_type: str):
-        return FD.DESC if wave_type in [WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC] else FD.ASC
+        return FD.DESC if wave_type in [WAVEST.WEEKLY_DESC, WAVEST.DAILY_DESC, WAVEST.INTRADAY_DESC] else FD.ASC
 
     @staticmethod
     def get_period_and_direction_for_wave_type(wave_type: str):
@@ -692,6 +703,8 @@ class INDICES:
     NASDAQ100 = 'Nasdaq 100'
     NASDAQ = 'Nasdaq (all)'
     SP500 = 'S&P 500'
+    DAX = 'Dax'
+    MDAX = 'MDax'
     FOREX = 'Forex'
     MIXED = 'Mixed'
     CRYPTO_CCY = 'Crypto Currencies'

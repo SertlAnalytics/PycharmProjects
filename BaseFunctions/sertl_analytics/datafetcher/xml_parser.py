@@ -57,12 +57,24 @@ class XMLParser:
                 td_list = sub_tag.findAll('td')
                 element = [td_list[self.__sub_tag_dic[column]].text for column in self.__sub_tag_dic]
                 element = self.__remove_ending_line_break__(element)
+                element = self.__remove_prefix__(element)
                 self.__result_list.append(element)
         else:
             raise MyException('No XML parser defined for tag "{}"'.format(self.__tag))
 
     def __remove_ending_line_break__(self, element_list: list):
         return_list = [element[:-1] if  element[-1] == '\n' else element for element in element_list]
+        return return_list
+
+    def __remove_prefix__(self, element_list: list):
+        # Sometimes we get a prefix for the element like NYSE: MMM
+        return_list = []
+        for element in element_list:
+            return_element = ' '.join(element.split())
+            position = return_element.find(' ')
+            if position > - 1:
+                return_element = return_element[position+1:]
+            return_list.append(return_element)
         return return_list
 
 
@@ -111,6 +123,25 @@ class XMLParser4Nasdaq100Old(XMLParser):
         api.sub_tag_dic = {'ticker': 2, 'name': 0}
         XMLParser.__init__(self, api)
 
+class XMLParser4Dax(XMLParser):
+    def __init__(self):
+        api = XMLParserApi()
+        api.url = 'https://de.wikipedia.org/wiki/DAX'
+        api.tag = 'table'
+        api.tag_attribute_dic = {'class': 'wikitable sortable'}
+        api.sub_tag = 'tr'
+        api.sub_tag_dic = {'ticker': 1, 'name': 0}
+        XMLParser.__init__(self, api)
+
+class XMLParser4MDax(XMLParser):
+    def __init__(self):
+        api = XMLParserApi()
+        api.url = 'https://de.wikipedia.org/wiki/MDAX'
+        api.tag = 'table'
+        api.tag_attribute_dic = {'class': 'wikitable sortable'}
+        api.sub_tag = 'tr'
+        api.sub_tag_dic = {'ticker': 1, 'name': 0}
+        XMLParser.__init__(self, api)
 
 def save_sp500_tickers():
     resp = requests.get('http://en.wikipedia.org/wiki/List_of_S%26P_500_companies')

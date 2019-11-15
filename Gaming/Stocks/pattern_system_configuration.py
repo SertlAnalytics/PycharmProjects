@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, PRD, PDP, CN, BT, TSTR, FT
+from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, PRD, PDP, CN, BT, TSTR, FT, OPS
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from sertl_analytics.my_http import MyHttpClient
@@ -33,7 +33,7 @@ from pattern_trade_models.trade_small_profit import TradeSmallProfit
 class SystemConfiguration:
     is_http_connection_ok = MyHttpClient.do_we_have_internet_connection()  # class variable
 
-    def __init__(self, for_semi_deep_copy=False):
+    def __init__(self, for_semi_deep_copy=False, with_predictor=True):
         # print('SystemConfiguration.__init__: for_semi_deep_copy={}'.format(for_semi_deep_copy))
         self.file_log = PatternLog()
         self.runtime_config = RuntimeConfiguration()
@@ -55,11 +55,12 @@ class SystemConfiguration:
         self.df_cache = MyDataFrameCache()
         self.graph_cache = MyGraphCache()
         self.data_provider = PatternDataProvider(self.config, self.index_config, self.db_stock, self.df_cache)
-        self.predictor_optimizer = PatternPredictorOptimizer(self.db_stock)
-        self.fibonacci_predictor = FibonacciPredictor(self.db_stock, 7)
-        self.fibonacci_wave_data_handler = FibonacciWaveDataHandler(self.db_stock)
-        self.master_predictor_handler = PatternMasterPredictorHandler(self.__get_pattern_predictor_api__(self.config))
-        self.trade_strategy_optimizer = TradeOptimizer(self.db_stock, self.expected_win_pct)
+        if with_predictor:
+            self.predictor_optimizer = PatternPredictorOptimizer(self.db_stock)
+            self.fibonacci_predictor = FibonacciPredictor(self.db_stock, 7)
+            self.fibonacci_wave_data_handler = FibonacciWaveDataHandler(self.db_stock)
+            self.master_predictor_handler = PatternMasterPredictorHandler(self.__get_pattern_predictor_api__(self.config))
+            self.trade_strategy_optimizer = TradeOptimizer(self.db_stock, self.expected_win_pct)
 
     def __get_pattern_predictor_api__(self, config: PatternConfiguration):
         api = PatternPredictorApi(config, self.db_stock, self.pattern_table, self.trade_table)
@@ -184,6 +185,8 @@ class SystemConfiguration:
         ticker_id = self.data_provider.ticker_id
         ac_pattern = self.data_provider.and_clause_for_pattern
         ac_trades = self.data_provider.and_clause_for_trade
+        print('init_predictors_without_condition_list: self.data_provider.and_clause={}'.format(self.data_provider.and_clause))
+        print('init_predictors_without_condition_list: ac_pattern={}'.format(ac_pattern))
         self.master_predictor_handler.init_predictors_without_condition_list(ticker_id, ac_pattern, ac_trades)
 
     def get_extended_pdh(self, ticker_id: str, limit: int):
@@ -236,6 +239,12 @@ class SystemConfiguration:
         sys_config_copy.graph_cache = self.graph_cache
         sys_config_copy.data_provider = PatternDataProvider(
             sys_config_copy.config, sys_config_copy.index_config, self.db_stock, self.df_cache)
+        sys_config_copy.data_provider.period = self.data_provider.period
+        sys_config_copy.data_provider.aggregation = self.data_provider.aggregation
+        sys_config_copy.data_provider.output_size = self.data_provider.output_size
+        sys_config_copy.data_provider.limit = self.data_provider.limit
+        sys_config_copy.data_provider.init_and_clause()
+        print('get_semi_deep_copy: sys_config_copy.data_provider.and_clause={}'.format(sys_config_copy.data_provider.and_clause))
         sys_config_copy.data_provider.ticker_dict = self.data_provider.ticker_dict  # we have to copy this as well
         sys_config_copy.predictor_optimizer = self.predictor_optimizer  # we use the same optimizer  !!!
         sys_config_copy.fibonacci_predictor = self.fibonacci_predictor

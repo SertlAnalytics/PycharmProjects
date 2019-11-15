@@ -440,11 +440,14 @@ class MyPlotly:
                                 date={'gte': '2016-01-01', 'lte': '2019-12-31'})
         # mydata = quandl.get('FSE/EON_X', start_date='2016-01-01', end_date='2019-12-31', collapse='daily',
         #                     transformation='rdiff', rows=2000)
-        mydata = quandl.get('FSE/EON_X', start_date='2016-01-01', end_date='2019-12-31', collapse='daily')
+        # mydata = quandl.get('FSE/EON_X', start_date='2019-09-30', end_date='2019-12-31', collapse='daily')
+        mydata = quandl.get('FSE/BEI_X', start_date='2019-09-30', end_date='2019-12-31', collapse='daily')
+
 
         print(mydata.info())
         print(mydata)
 
 
 my_plotly = MyPlotly()
-my_plotly.box_plot()
+# my_plotly.box_plot()
+my_plotly.read_stock_data_from_quandl()

@@ -1013,6 +1013,8 @@ class Pattern:
         pos_brk = tick_breakout.position
         time_stamp_brk = tick_breakout.time_stamp
 
+        # print('__add_data_dict_entries_after_part_entry__: pos_first={}, pos_brk={}'.format(pos_first, pos_brk))
+
         slope_upper, slope_lower, slope_regression = self.part_entry.get_slope_values()
         self.data_dict_obj.add(DC.ID, self.id)
         self.data_dict_obj.add(DC.PATTERN_TYPE, self.pattern_type)
@@ -1045,7 +1047,7 @@ class Pattern:
         self.data_dict_obj.add(DC.SLOPE_LOWER_PCT, slope_lower)
         self.data_dict_obj.add(DC.SLOPE_REGRESSION_PCT, slope_regression)
         self.data_dict_obj.add(DC.SLOPE_VOLUME_REGRESSION_PCT,
-                               self.data_dict_obj.get_slope(pos_first, tick_breakout.position, CN.VOL))
+                               self.data_dict_obj.get_slope(pos_first, pos_brk, CN.VOL))
         self.data_dict_obj.add(DC.SLOPE_BREAKOUT_PCT, self.data_dict_obj.get_slope_breakout(pos_brk))
         self.data_dict_obj.add(DC.SLOPE_VOLUME_REGRESSION_AFTER_PATTERN_FORMED_PCT,
                                    self.data_dict_obj.get_slope_breakout(pos_brk, CN.VOL))

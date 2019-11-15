@@ -18,7 +18,6 @@ sys_config.data_provider.period = PRD.INTRADAY
 sys_config.data_provider.aggregation = 15  # ToDo: Back to 15
 sys_config.data_provider.output_size = OPS.COMPACT
 sys_config.data_provider.limit = 200
-
 sys_config.exchange_config.deactivate_automatic_trading()
 sys_config.exchange_config.trade_strategy_dict = {
     BT.BREAKOUT: [TSTR.LIMIT, TSTR.LIMIT_FIX, TSTR.TRAILING_STEPPED_STOP, TSTR.TRAILING_STOP],

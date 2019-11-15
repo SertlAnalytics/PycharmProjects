@@ -10,6 +10,7 @@ from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn,
 from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC, TP, SVW
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mymath import MyMath
+from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, EST
 import math
 
 
@@ -51,6 +52,15 @@ class EquityTable(MyTable):
         self._columns.append(MyTableColumn(EDC.VALID_FROM_DT, CDT.STRING, 20))
         self._columns.append(MyTableColumn(EDC.VALID_TO_DT, CDT.STRING, 20))
         self._columns.append(MyTableColumn(EDC.EQUITY_STATUS, CDT.STRING, 20))
+
+    @staticmethod
+    def get_insert_dict_for_equity(symbol: str, name: str, index: str) -> dict:
+        index_equity_type_dict = {INDICES.CRYPTO_CCY: EQUITY_TYPE.CRYPTO,
+                                  INDICES.FOREX: EQUITY_TYPE.CURRENCY}
+        equity_type = index_equity_type_dict.get(index, EQUITY_TYPE.SHARE)
+        return {EDC.EQUITY_KEY: symbol, EDC.EQUITY_NAME: name, EDC.EQUITY_TYPE: equity_type,
+                EDC.EXCHANGE: index, EDC.VALID_FROM_DT: MyDate.today_str(), EDC.VALID_TO_DT: '',
+                EDC.EQUITY_STATUS: EST.ACTIVE}
 
 
 class MetricTable(MyTable):

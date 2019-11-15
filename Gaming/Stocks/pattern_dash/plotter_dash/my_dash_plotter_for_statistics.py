@@ -8,8 +8,10 @@ Date: 2018-06-17
 import plotly.graph_objs as go
 from sertl_analytics.constants.pattern_constants import DC, CHT, FT, WAVEST, FD
 from sertl_analytics.my_numpy import MyNumpy
+from pattern_database.stock_database import StockDatabase
 from sertl_analytics.mydash.my_dash_components import MyDCC, DccGraphApi
 from pattern_dash.my_dash_colors import DashColorHandler
+from pattern_logging.pattern_log import PatternLog
 import pandas as pd
 import itertools
 import numpy as np
@@ -41,7 +43,9 @@ class MyDashTabStatisticsPlotter:
 
     @staticmethod
     def __get_df_secondary__():
-        pass
+        # ToDo - this should only be available at the deferred class...
+        return StockDatabase().get_trade_records_for_statistics_as_dataframe()
+        # return PatternLog().get_data_frame_for_trades()
 
     def __print_df_base__(self):
         columns = self._df_base.columns[:2]
@@ -185,7 +189,10 @@ class MyDashTabStatisticsPlotter:
             return 0.97, 1
 
     def __get_df_for_selection__(self):
-        df_base = self.__get_df_secondary__() if self.chart_type == CHT.MY_TRADES else self._df_base
+        if self.chart_type == CHT.MY_TRADES or self.category == "Trade":  # ToDo: get rid of this string - use constant
+            df_base = self.__get_df_secondary__()
+        else:
+            df_base = self._df_base
         if self.pattern_type in [FT.ALL, '']:
             df = df_base
         else:

@@ -112,6 +112,7 @@ class AccessLayerPrediction:
             query = self._trade_table.query_for_feature_and_label_data_for_trades
         query = self.__get_query_with_skip_condition_list__(query, skip_condition_list)
         df = DatabaseDataFrame(self._db_stock, query).df
+        # print('Query for prediction data frame={}'.format(query))
         if pattern_type != FT.ALL:
             df = df[df[DC.PATTERN_TYPE] == pattern_type]
         return df

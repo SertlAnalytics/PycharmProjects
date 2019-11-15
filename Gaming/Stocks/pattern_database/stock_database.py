@@ -8,7 +8,7 @@ Date: 2018-05-14
 from sertl_analytics.test.my_test_abc import TestInterface
 from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageForexFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageForexFetcher, QuandlFetcher
 from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher
 from sertl_analytics.mydates import MyDate
 from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
@@ -113,6 +113,7 @@ class StockDatabase(BaseDatabase):
         self._alphavantage_crypto_fetcher = AlphavantageCryptoFetcher()
         self._alphavantage_stock_fetcher = AlphavantageStockFetcher()
         self._alphavantage_forex_fetcher = AlphavantageForexFetcher()
+        self._quandl_fetcher = QuandlFetcher()
         self._sleep_seconds = 5
 
     @property
@@ -181,6 +182,7 @@ class StockDatabase(BaseDatabase):
             if key not in company_dict:
                 name = company_dict_by_web[key]
                 self.__insert_company_in_company_table__(key, name, True)
+                self.__insert_ticker_in_equity_table__(key, name, index)
                 new_dict = self.__get_company_dict__(key)
                 company_dict[key] = new_dict[key]
 
@@ -209,7 +211,7 @@ class StockDatabase(BaseDatabase):
 
     def update_stock_data_for_symbol(self, symbol: str, name_input='', period=PRD.DAILY, aggregation=1):
         company_dic = self.__get_company_dict__(symbol)
-        name = company_dic[symbol] if symbol in company_dic else name_input
+        name = company_dic[symbol].Name if symbol in company_dic else name_input
         last_loaded_dict = self.__get_last_loaded_time_stamp_dic__(symbol)
         self.__update_stock_data_for_single_value__(
             period, aggregation, symbol, name, INDICES.UNDEFINED, company_dic, last_loaded_dict)
@@ -309,6 +311,10 @@ class StockDatabase(BaseDatabase):
                 fetcher = self._alphavantage_forex_fetcher
                 output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
                 kw_args = self._alphavantage_forex_fetcher.get_kw_args(period, aggregation, ticker, output_size)
+            elif index in [INDICES.DAX, INDICES.MDAX]:
+                fetcher = self._quandl_fetcher
+                output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
+                kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size)
             else:
                 fetcher = self._alphavantage_stock_fetcher
                 output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
@@ -329,6 +335,7 @@ class StockDatabase(BaseDatabase):
         if ticker not in company_dic:
             to_be_loaded = df[CN.VOL].mean() > 10000
             self.__insert_company_in_company_table__(ticker, name, to_be_loaded)
+            self.__insert_ticker_in_equity_table__(ticker, name, index)
             company_dic[ticker] = to_be_loaded
             if not to_be_loaded:
                 time.sleep(self._sleep_seconds)
@@ -385,6 +392,14 @@ class StockDatabase(BaseDatabase):
         except Exception:
             self.error_handler.catch_exception(__name__)
             print('{} - {}: problem inserting into {} table.'.format(ticker, name, STBL.COMPANY))
+
+    def __insert_ticker_in_equity_table__(self, ticker: str, name: str, index: str):
+        input_dic = self._entity_table.get_insert_dict_for_equity(ticker, name, index)
+        try:
+            self.__insert_data_into_table__(STBL.EQUITY, [input_dic])
+        except Exception:
+            self.error_handler.catch_exception(__name__)
+            print('{} - {}: problem inserting into {} table.'.format(ticker, name, STBL.EQUITY))
 
     @staticmethod
     def __get_index_list__(index: str):

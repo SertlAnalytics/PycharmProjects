@@ -281,6 +281,12 @@ class PatternTrade:
         else:
             return self._df_for_replay
 
+    def print_details_for_data_frame_for_replay(self):
+        df_for_replay = self.get_data_frame_for_replay()
+        print('df_for_replay.shape={}'.format(df_for_replay.shape))
+        print('df_for_replay.iloc[0]={}'.format(df_for_replay.iloc[0]))
+        print('df_for_replay.iloc[-1]={}'.format(df_for_replay.iloc[-1]))
+
     def add_ticker(self, wave_tick: WaveTick):
         self.data_dict_obj.add(DC.ACTUAL, wave_tick.close)
         if wave_tick.time_stamp == self._wave_tick_list.last_wave_tick.time_stamp:

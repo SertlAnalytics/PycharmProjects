@@ -415,6 +415,7 @@ class PatternTradeHandler:
                 if pattern_trade.are_preconditions_for_breakout_buy_fulfilled():
                     self.__set_breakout_after_checks__(pattern_trade)
                     if pattern_trade.pattern.breakout is not None:
+                        # pattern_trade.print_details_for_data_frame_for_replay()  # ToDo remove this after check
                         ticker_id = pattern_trade.pattern.ticker_id
                         limit_for_extended_pdh = pattern_trade.wave_tick_actual.position + 1
                         extended_pdh = pattern_trade.pattern.sys_config.get_extended_pdh(
