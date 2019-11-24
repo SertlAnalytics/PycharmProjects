@@ -171,10 +171,22 @@ class StockDatabase(BaseDatabase):
             print('\nUpdating {}...\n'.format(index))
             ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(index)
             for ticker in ticker_dic:
-                name = ticker_dic[ticker]
-                self.__update_stock_data_for_single_value__(period, aggregation, ticker, name, index,
-                                                            company_dict, last_loaded_date_stamp_dic)
+                # this condition is only for Q_FSE required since we have different lists...
+                if index != INDICES.Q_FSE or \
+                        self.is_stock_data_for_single_value_available(period, aggregation, ticker, index):
+                    name = ticker_dic[ticker]
+                    self.__update_stock_data_for_single_value__(period, aggregation, ticker, name, index,
+                                                                company_dict, last_loaded_date_stamp_dic)
         self.__handle_error_cases__()
+
+    def check_stock_data_by_index(self, index: str, period=PRD.DAILY, aggregation=1):
+        print('\nChecking {}...\n'.format(index))
+        ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(index)
+        for ticker in ticker_dic:
+            if self.is_stock_data_for_single_value_available(period, aggregation, ticker, index):
+                print('Data available for {}/{} on {}'.format(ticker, ticker_dic[ticker], index))
+            else:
+                print('NO data available for {}/{} on {}'.format(ticker, ticker_dic[ticker], index))
 
     def __check_company_dic_against_web__(self, index: str, company_dict: dict):
         company_dict_by_web = IndicesComponentFetcher.get_ticker_name_dic(index)
@@ -283,6 +295,10 @@ class StockDatabase(BaseDatabase):
             return self.is_equity_already_available(data_dict)
         return False
 
+    def is_stock_data_for_single_value_available(self, period: str, aggregation: int, ticker: str, index: str):
+        df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, OPS.CHECK, True)
+        return df is not None
+
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str, index: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
         if ticker in ['CSX']:
@@ -291,46 +307,19 @@ class StockDatabase(BaseDatabase):
             return
         name = self._company_table.get_alternate_name(ticker, name)
         last_loaded_time_stamp = last_loaded_date_stamp_dic[ticker] if ticker in last_loaded_date_stamp_dic else 100000
-        process_type = self._stocks_table.get_process_type_for_update(
+        output_size = self._stocks_table.get_output_size_for_update(
             period, aggregation, self._dt_now_time_stamp, last_loaded_time_stamp)
-        if process_type == 'NONE':
+        if output_size == OPS.NONE:
             print('{} - {} is already up-to-date - no load required.'.format(ticker, name))
             return
         if ticker in company_dic and not company_dic[ticker].ToBeLoaded:
             return  # must not be loaded
-        try:
-            if index == INDICES.UNDEFINED:
-                index = self.get_index_for_symbol(ticker)
-                if index == INDICES.UNDEFINED:
-                    return
-            if index == INDICES.CRYPTO_CCY:
-                # fetcher = self._alphavantage_crypto_fetcher
-                fetcher = self._bitfinex_crypto_fetcher
-                kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker)
-            elif index == INDICES.FOREX:
-                fetcher = self._alphavantage_forex_fetcher
-                output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
-                kw_args = self._alphavantage_forex_fetcher.get_kw_args(period, aggregation, ticker, output_size)
-            elif index in [INDICES.DAX, INDICES.MDAX]:
-                fetcher = self._quandl_fetcher
-                output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
-                kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size)
-            else:
-                fetcher = self._alphavantage_stock_fetcher
-                output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
-                kw_args = self._alphavantage_stock_fetcher.get_kw_args(period, aggregation, ticker, output_size)
-            fetcher.retrieve_data(**kw_args)
-        except KeyError:
-            self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
-            self.error_handler.add_to_retry_dic(ticker, [name, period])
+
+        df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, output_size)
+        if df is None:
+            print('{} - {}: Error with some processing - nothing loaded.'.format(ticker, name))
             time.sleep(self._sleep_seconds)
             return
-        except:
-            self.error_handler.catch_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
-            self.error_handler.add_to_retry_dic(ticker, [name, period])
-            time.sleep(self._sleep_seconds)
-            return
-        df = fetcher.df
 
         if ticker not in company_dic:
             to_be_loaded = df[CN.VOL].mean() > 10000
@@ -347,6 +336,38 @@ class StockDatabase(BaseDatabase):
             self.__insert_data_into_table__(STBL.STOCKS, input_list)
             print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
         time.sleep(self._sleep_seconds)
+
+    def __get_dataframe_for_single_value__(self, period: str, aggregation: int, ticker: str, index: str,
+                                           output_size: str, is_check=False):
+        try:
+            if index == INDICES.UNDEFINED:
+                index = self.get_index_for_symbol(ticker)
+                if index == INDICES.UNDEFINED:
+                    return None
+            if index == INDICES.CRYPTO_CCY:
+                # fetcher = self._alphavantage_crypto_fetcher
+                fetcher = self._bitfinex_crypto_fetcher
+                kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker)
+            elif index == INDICES.FOREX:
+                fetcher = self._alphavantage_forex_fetcher
+                kw_args = self._alphavantage_forex_fetcher.get_kw_args(period, aggregation, ticker, output_size)
+            elif index in [INDICES.Q_FSE]:
+                fetcher = self._quandl_fetcher
+                kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size)
+            else:
+                fetcher = self._alphavantage_stock_fetcher
+                kw_args = self._alphavantage_stock_fetcher.get_kw_args(period, aggregation, ticker, output_size)
+            kw_args['is_check'] = is_check
+            fetcher.retrieve_data(**kw_args)
+        except KeyError:
+            self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
+            time.sleep(self._sleep_seconds)
+            return None
+        except:
+            self.error_handler.catch_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
+            time.sleep(self._sleep_seconds)
+            return None
+        return fetcher.df
 
     def get_index_for_symbol(self, symbol: str) -> str:
         if symbol in ['FCEL', 'GE']:

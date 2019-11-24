@@ -255,7 +255,7 @@ class StockDatabaseUpdater:
     def __get_configured_ticker_dict_for_index__(self, index):
         if index == INDICES.CRYPTO_CCY:
             ticker_dic = self.sys_config.index_config.get_ticker_dict_for_index(
-                index, self.sys_config.exchange_config.ticker_id_list)
+                index, ticker_id_list=self.sys_config.exchange_config.ticker_id_list)
         else:
             ticker_dic = self.sys_config.index_config.get_ticker_dict_for_index(index)
         return ticker_dic

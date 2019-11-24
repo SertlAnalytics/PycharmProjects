@@ -8,7 +8,7 @@ Date: 2018-05-14
 from sertl_analytics.constants.pattern_constants import INDICES
 from sertl_analytics.myexceptions import MyException
 from sertl_analytics.datafetcher.xml_parser import XMLParser4DowJones, XMLParser4Nasdaq100, XMLParser4SP500
-from sertl_analytics.datafetcher.xml_parser import XMLParser4Dax, XMLParser4MDax
+from sertl_analytics.datafetcher.xml_parser import XMLParser4Dax, XMLParser4MDax, WebParser4FSE
 from sertl_analytics.datafetcher.file_fetcher import NasdaqFtpFileFetcher
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
@@ -31,12 +31,15 @@ class IndicesComponentFetcher:
             ftp_fetcher = NasdaqFtpFileFetcher()
             df = ftp_fetcher.get_data_frame()
             return PyBaseDataFrame.get_rows_as_dictionary(df, 'Symbol', ['Security Name'], {'Market Category': 'Q'})
-        elif index == INDICES.DAX:
-            parser = XMLParser4Dax()
+        elif index == INDICES.Q_FSE:
+            parser = WebParser4FSE()
             return parser.get_result_dic()
-        elif index == INDICES.MDAX:
-            parser = XMLParser4MDax()
-            return parser.get_result_dic()
+        # elif index == INDICES.DAX:
+        #     parser = XMLParser4Dax()
+        #     return parser.get_result_dic()
+        # elif index == INDICES.MDAX:
+        #     parser = XMLParser4MDax()
+        #     return parser.get_result_dic()
         elif index == INDICES.CRYPTO_CCY:
             client = MyBitfinexTradeClient(BitfinexConfiguration())
             return client.get_trading_pair_name_dict()

@@ -23,6 +23,21 @@ class MyText:
         return '{}{}'.format(text[:max_length+1], suffix)
 
     @staticmethod
+    def trim(input_string: str):
+        output_string = input_string.strip()
+        while '  ' in output_string:
+            output_string = output_string.replace('  ', ' ')
+        return output_string
+
+    @staticmethod
+    def split_at_first(input_string: str, delimiter: str) -> list:
+        position = input_string.find(delimiter)
+        if position <= 0:
+            return [MyText.trim(input_string), '']
+        else:
+            return [MyText.trim(input_string[:position]), MyText.trim(input_string[position+1:])]
+
+    @staticmethod
     def get_url_encode_plus(input_string):
         return urllib.parse.quote_plus(input_string)
 

@@ -5,7 +5,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-11-20
 """
 
-from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE
+from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, PRD
 from pattern_database.stock_database import StockDatabase
 from pattern_database.stock_access_layer import AccessLayer4Equity
 from sertl_analytics.datafetcher.web_data_fetcher import IndicesComponentFetcher
@@ -25,9 +25,9 @@ class IndexConfiguration:
     def index_list(self):
         return self._index_list
 
-    def get_ticker_dict_for_index(self, index: str, ticker_id_list=None):
+    def get_ticker_dict_for_index(self, index: str, period=PRD.DAILY, ticker_id_list=None):
         if index not in self._index_list:
-            self.__init_variables_for_index__(index)
+            self.__init_variables_for_index__(index, period)
         if ticker_id_list is None:
             return self._index_ticker_dict[index]
         return self.__get_ticker_dict_for_index_and_ticker_id_list__(index, ticker_id_list)
@@ -36,7 +36,7 @@ class IndexConfiguration:
         dict_all = self._index_ticker_dict[index]
         return {ticker_id: dict_all[ticker_id] for ticker_id in ticker_id_list if ticker_id in dict_all}
 
-    def __init_variables_for_index__(self, index):
+    def __init_variables_for_index__(self, index: str, period: str):
         index_dict = self._equity_access_layer.get_index_dict(index)
         if len(index_dict) == 0:
             index_dict = IndicesComponentFetcher.get_ticker_name_dic(index)
@@ -78,9 +78,9 @@ class IndexConfiguration:
                 option_list.append({'label': values, 'value': key})
         return option_list
 
-    def __init_by_indices__(self, indices: list):
+    def __init_by_indices__(self, indices: list, period=PRD.DAILY):
         for index in indices:
-            self.__init_variables_for_index__(index)
+            self.__init_variables_for_index__(index, period)
 
     def __fill_ticker_dictionaries_for_index__(self, index):
         for symbol, name in self._index_ticker_dict[index].items():

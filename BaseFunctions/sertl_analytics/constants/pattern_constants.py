@@ -678,8 +678,10 @@ class TRC:  # Trade Clients
 
 
 class OPS:  # Outputsize
+    CHECK = 'check'
     COMPACT = 'compact'
     FULL = 'full'
+    NONE = 'NONE'
 
 
 class PT:  # PredictorType
@@ -703,8 +705,10 @@ class INDICES:
     NASDAQ100 = 'Nasdaq 100'
     NASDAQ = 'Nasdaq (all)'
     SP500 = 'S&P 500'
-    DAX = 'Dax'
-    MDAX = 'MDax'
+    # FSE = 'FSE'  # Frankfurt Stock Exchange see also  https://stooq.com/db/l/?g=29
+    Q_FSE = 'Q_FSE' # https://stooq.com/db/l/?g=29 + https://www.quandl.com/data/FSE-Frankfurt-Stock-Exchange
+    # DAX = 'Dax'
+    # MDAX = 'MDax'
     FOREX = 'Forex'
     MIXED = 'Mixed'
     CRYPTO_CCY = 'Crypto Currencies'

@@ -185,8 +185,8 @@ class SystemConfiguration:
         ticker_id = self.data_provider.ticker_id
         ac_pattern = self.data_provider.and_clause_for_pattern
         ac_trades = self.data_provider.and_clause_for_trade
-        print('init_predictors_without_condition_list: self.data_provider.and_clause={}'.format(self.data_provider.and_clause))
-        print('init_predictors_without_condition_list: ac_pattern={}'.format(ac_pattern))
+        # print('init_predictors_without_condition_list: self.data_provider.and_clause={}'.format(self.data_provider.and_clause))
+        # print('init_predictors_without_condition_list: ac_pattern={}'.format(ac_pattern))
         self.master_predictor_handler.init_predictors_without_condition_list(ticker_id, ac_pattern, ac_trades)
 
     def get_extended_pdh(self, ticker_id: str, limit: int):
@@ -244,7 +244,7 @@ class SystemConfiguration:
         sys_config_copy.data_provider.output_size = self.data_provider.output_size
         sys_config_copy.data_provider.limit = self.data_provider.limit
         sys_config_copy.data_provider.init_and_clause()
-        print('get_semi_deep_copy: sys_config_copy.data_provider.and_clause={}'.format(sys_config_copy.data_provider.and_clause))
+        # print('get_semi_deep_copy: sys_config_copy.data_provider.and_clause={}'.format(sys_config_copy.data_provider.and_clause))
         sys_config_copy.data_provider.ticker_dict = self.data_provider.ticker_dict  # we have to copy this as well
         sys_config_copy.predictor_optimizer = self.predictor_optimizer  # we use the same optimizer  !!!
         sys_config_copy.fibonacci_predictor = self.fibonacci_predictor

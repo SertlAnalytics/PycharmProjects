@@ -45,6 +45,7 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
         graph_list = []
         if self._index in ['', INDICES.ALL]:
             index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+            # ToDo Add INDICES.DAX when we have intraday
         else:
             index_list = [self._index]
         for index in index_list:
@@ -92,6 +93,7 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
         graph_list = []
         if self._index in ['', INDICES.ALL]:
             index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
+            # ToDo Add INDICES.DAX when we have intraday
         else:
             index_list = [self._index]
         for index in index_list:

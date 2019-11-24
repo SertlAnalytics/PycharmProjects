@@ -8,7 +8,51 @@ Date: 2018-06-05
 import bs4 as bs
 import requests
 from sertl_analytics.myexceptions import MyException
+from sertl_analytics.my_text import MyText
 
+
+class WebParser:
+    def __init__(self, url: str):
+        self._url = url
+        self._result_list = []
+        self.__fill_result_list__()
+
+    def get_result_list(self):
+        return self._result_list
+
+    def get_result_dic(self):
+        return {x[0]: x[1] for x in self._result_list}
+
+    def __fill_result_list__(self):
+        resp = requests.get(self._url)
+        for ind, line in enumerate(resp.text.splitlines()):
+            if ind > 0:
+                element = MyText.split_at_first(line, ' ')
+                self._result_list.append(element)
+
+    def __remove_ending_line_break__(self, element_list: list):
+        return_list = [element[:-1] if  element[-1] == '\n' else element for element in element_list]
+        return return_list
+
+    def __remove_prefix__(self, element_list: list):
+        # Sometimes we get a prefix for the element like NYSE: MMM
+        return_list = []
+        for element in element_list:
+            return_element = ' '.join(element.split())
+            position = return_element.find(' ')
+            if position > - 1:
+                return_element = return_element[position+1:]
+            return_list.append(return_element)
+        return return_list
+
+class WebParser4FSE(WebParser):
+    def __init__(self):
+        WebParser.__init__(self, 'https://stooq.com/db/l/?g=29')
+
+    def __fill_result_list__(self):
+        WebParser.__fill_result_list__(self)
+        for element in self._result_list:
+            element[0] = element[0][:len(element[0])-3]
 
 class XMLParserApi:
     def __init__(self):
@@ -20,47 +64,47 @@ class XMLParserApi:
         self.sub_tag = ''
         self.sub_tag_dic = {}
 
-class XMLParser:
+class XMLParser(WebParser):
     def __init__(self, api: XMLParserApi):
-        self.__url = api.url
-        self.__parent_tag = api.parent_tag
-        self.__parent_tag_attribute_dic = api.parent_tag_attribute_dic
-        self.__tag = api.tag
-        self.__tag_attribute_dic = api.tag_attribute_dic
-        self.__sub_tag = api.sub_tag
-        self.__sub_tag_dic = api.sub_tag_dic
+        self._url = api.url
+        self._parent_tag = api.parent_tag
+        self._parent_tag_attribute_dic = api.parent_tag_attribute_dic
+        self._tag = api.tag
+        self._tag_attribute_dic = api.tag_attribute_dic
+        self._sub_tag = api.sub_tag
+        self._sub_tag_dic = api.sub_tag_dic
         self.__result_list = []
         self.__fill_result_list__()
 
     def get_result_list(self):
-        return self.__result_list
+        return self._result_list
 
     def get_result_dic(self):
-        return {x[0]:x[1] for x in self.__result_list}
+        return {x[0]:x[1] for x in self._result_list}
 
     def __fill_result_list__(self):
-        resp = requests.get(self.__url)
+        resp = requests.get(self._url)
         soup = bs.BeautifulSoup(resp.text, 'lxml')
-        if self.__parent_tag != '':
-            parent_tag_object = soup.find(self.__parent_tag, self.__parent_tag_attribute_dic)
-            tag_object = parent_tag_object.findNext(self.__tag, self.__tag_attribute_dic)
+        if self._parent_tag != '':
+            parent_tag_object = soup.find(self._parent_tag, self._parent_tag_attribute_dic)
+            tag_object = parent_tag_object.findNext(self._tag, self._tag_attribute_dic)
         else:
-            tag_object = soup.find(self.__tag, self.__tag_attribute_dic)
+            tag_object = soup.find(self._tag, self._tag_attribute_dic)
 
-        if self.__tag in ['ol', 'ul']:
-            for li in tag_object.findAll(self.__sub_tag):
+        if self._tag in ['ol', 'ul']:
+            for li in tag_object.findAll(self._sub_tag):
                 anchor = li.find('a')
                 ticker = li.text.replace('(', ' ').replace(')', '').split()[-1]
-                self.__result_list.append([ticker, anchor.text])
-        elif self.__tag == 'table':
-            for sub_tag in tag_object.findAll(self.__sub_tag)[1:]:
+                self._result_list.append([ticker, anchor.text])
+        elif self._tag == 'table':
+            for sub_tag in tag_object.findAll(self._sub_tag)[1:]:
                 td_list = sub_tag.findAll('td')
-                element = [td_list[self.__sub_tag_dic[column]].text for column in self.__sub_tag_dic]
+                element = [td_list[self._sub_tag_dic[column]].text for column in self._sub_tag_dic]
                 element = self.__remove_ending_line_break__(element)
                 element = self.__remove_prefix__(element)
                 self.__result_list.append(element)
         else:
-            raise MyException('No XML parser defined for tag "{}"'.format(self.__tag))
+            raise MyException('No XML parser defined for tag "{}"'.format(self._tag))
 
     def __remove_ending_line_break__(self, element_list: list):
         return_list = [element[:-1] if  element[-1] == '\n' else element for element in element_list]

@@ -249,7 +249,10 @@ class MyMath:
             return value
         if value == 0:
             return 0
-        decimals = int(math.ceil(math.log10(abs(value))))
+        try:
+            decimals = int(math.ceil(math.log10(abs(value))))
+        except:
+            print('Error')
         if decimals > 3:
             rounded_value = round(value)
             # to avoid problems with an additional .0 in print statements...
