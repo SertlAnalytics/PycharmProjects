@@ -24,7 +24,8 @@ from pattern_plotting.patch_helper import PatchHelper
 from pattern_plotting.fibonacci_patches import FibonacciWavePatch, FibonacciWavePatchContainer
 from pattern_plotting.pattern_plot_container import PatternPlotContainer, PatternPlotContainerLoopList
 from matplotlib.widgets import Cursor
-
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
 
 class PatternPlotter:
     def __init__(self, sys_config: SystemConfiguration, detector: PatternDetector):
