@@ -40,11 +40,7 @@ if True:
     # stock_db.update_stock_data_for_symbol('ADS')
     # stock_db.update_stock_data_by_index(INDICES.Q_FSE, PRD.DAILY)
     # stock_db.check_stock_data_by_index(INDICES.Q_FSE, PRD.DAILY)
-<<<<<<< HEAD
     # stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.Q_FSE, 500)
-=======
-    stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.Q_FSE, 500)
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
     # stock_db.update_stock_data_by_index(INDICES.NASDAQ100, PRD.DAILY)
     # pattern_type_list = sys_config.trade_strategy_optimizer.optimal_pattern_type_list_for_long_trading
     # predictor_optimizer.calculate_class_metrics_for_predictor_and_label_for_today(pattern_type_list)

@@ -823,17 +823,12 @@ class StocksTable(MyTable):
         return query.format(self._name)
 
     @staticmethod
-<<<<<<< HEAD
     def get_output_size_limit_for_data_update(period: str, aggregation: int, dt_now_time_stamp, last_loaded_time_stamp):
-=======
-    def get_output_size_for_update(period: str, aggregation: int, dt_now_time_stamp, last_loaded_time_stamp):
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         delta_time_stamp = dt_now_time_stamp - last_loaded_time_stamp
         delta_time_stamp_min = int(delta_time_stamp / 60)
         delta_time_stamp_days = int(delta_time_stamp_min / (24 * 60))
         if period == PRD.DAILY:
             if delta_time_stamp_days < 2:
-<<<<<<< HEAD
                 return OPS.NONE, delta_time_stamp_days
             elif delta_time_stamp_days < 50:
                 return OPS.COMPACT, delta_time_stamp_days
@@ -844,18 +839,6 @@ class StocksTable(MyTable):
                 return OPS.NONE, 0
             else:
                 return OPS.FULL, math.ceil(delta_time_stamp_min/aggregation)
-=======
-                return OPS.NONE
-            elif delta_time_stamp_days < 50:
-                return OPS.COMPACT
-            else:
-                return OPS.FULL
-        else:
-            if delta_time_stamp_min < aggregation:
-                return OPS.NONE
-            else:
-                return OPS.FULL
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
 
 
 class CompanyTable(MyTable):

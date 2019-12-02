@@ -99,10 +99,7 @@ class APIBaseFetcher:
     def __get_data_frame_by_kwargs__(self, print_message=True):
         try:
             url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
-<<<<<<< HEAD
             print('url={}'.format(url))
-=======
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
             request_data = requests.get(url)
             self._df = self.__get_data_frame__(request_data=request_data)
         except:
@@ -238,12 +235,9 @@ class QuandlFetcher (APIBaseFetcher):
 
     def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL, limit=0):
         symbol = 'FSE/{}_X'.format(ticker.upper())
-<<<<<<< HEAD
         if limit==0:
             limit = {OPS.FULL: 2000, OPS.CHECK: 2}.get(output_size, 100)
-=======
         limit = {OPS.FULL: 2000, OPS.CHECK: 2}.get(output_size, 100)
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         collapse = 'daily'
         return {'period': period, 'symbol': symbol, 'aggregation': aggregation, 'limit': limit, 'collapse': collapse}
 
@@ -252,7 +246,6 @@ class QuandlFetcher (APIBaseFetcher):
             self._df = self.__get_data_frame__()
         except:
             if print_message:
-<<<<<<< HEAD
                 print('PROBLEM with retrieving data from Quandl for {}'.format(self.kw_symbol))
 
     def __get_data_frame__(self) -> pd.DataFrame:
@@ -260,15 +253,13 @@ class QuandlFetcher (APIBaseFetcher):
         end_date = MyDate.today_str()
         start_date = MyDate.adjust_by_days(MyDate.get_datetime_object(), -limit)
         df = quandl.get(self.kw_symbol, start_date=start_date, end_date=end_date, collapse=self.kw_collapse)
-=======
-                print('PROBLEM with retrieving data from Quandl for {}'.format(self._kwargs['symbol']))
+        # print('PROBLEM with retrieving data from Quandl for {}'.format(self._kwargs['symbol']))
 
     def __get_data_frame__(self) -> pd.DataFrame:
         limit = self._kwargs['limit'] * 2
         end_date = MyDate.today_str()
         start_date = MyDate.adjust_by_days(MyDate.get_datetime_object(), -limit)
         df = quandl.get(self._kwargs['symbol'], start_date=start_date, end_date=end_date, collapse=self._kwargs['collapse'])
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         # df = quandl.get(self._kwargs['symbol'], limit=self._kwargs['limit'], collapse=self._kwargs['collapse'])
         if df is not None:
             df = df[['Open', 'High', 'Low', 'Close', 'Traded Volume']]

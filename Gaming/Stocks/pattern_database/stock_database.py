@@ -299,11 +299,7 @@ class StockDatabase(BaseDatabase):
         return False
 
     def is_stock_data_for_single_value_available(self, period: str, aggregation: int, ticker: str, index: str):
-<<<<<<< HEAD
         df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, OPS.CHECK, is_check=True)
-=======
-        df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, OPS.CHECK, True)
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         return df is not None
 
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str, index: str,
@@ -314,11 +310,7 @@ class StockDatabase(BaseDatabase):
             return
         name = self._company_table.get_alternate_name(ticker, name)
         last_loaded_time_stamp = last_loaded_date_stamp_dic[ticker] if ticker in last_loaded_date_stamp_dic else 100000
-<<<<<<< HEAD
         output_size, limit = self._stocks_table.get_output_size_limit_for_data_update(
-=======
-        output_size = self._stocks_table.get_output_size_for_update(
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
             period, aggregation, self._dt_now_time_stamp, last_loaded_time_stamp)
         if output_size == OPS.NONE:
             print('{} - {} is already up-to-date - no load required.'.format(ticker, name))
@@ -326,11 +318,7 @@ class StockDatabase(BaseDatabase):
         if ticker in company_dic and not company_dic[ticker].ToBeLoaded:
             return  # must not be loaded
 
-<<<<<<< HEAD
         df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, output_size, limit=limit)
-=======
-        df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, output_size)
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         if df is None:
             print('{} - {}: Error with some processing - nothing loaded.'.format(ticker, name))
             time.sleep(self._sleep_seconds)
@@ -345,27 +333,17 @@ class StockDatabase(BaseDatabase):
                 time.sleep(self._sleep_seconds)
                 return
         if ticker in last_loaded_date_stamp_dic:
-<<<<<<< HEAD
             df.sort_index(inplace=True)
-=======
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
             df = df.loc[last_loaded_time_stamp:].iloc[1:]
         if df.shape[0] > 0:
             input_list = self.__get_df_data_for_insert_statement__(df, period, ticker)
             self.__insert_data_into_table__(STBL.STOCKS, input_list)
             print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
-<<<<<<< HEAD
         if index != INDICES.Q_FSE:
             time.sleep(self._sleep_seconds)
 
     def __get_dataframe_for_single_value__(self, period: str, aggregation: int, ticker: str, index: str,
                                            output_size: str, limit=0, is_check=False):
-=======
-        time.sleep(self._sleep_seconds)
-
-    def __get_dataframe_for_single_value__(self, period: str, aggregation: int, ticker: str, index: str,
-                                           output_size: str, is_check=False):
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         try:
             if index == INDICES.UNDEFINED:
                 index = self.get_index_for_symbol(ticker)
@@ -377,7 +355,6 @@ class StockDatabase(BaseDatabase):
                 kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker, limit=limit)
             elif index == INDICES.FOREX:
                 fetcher = self._alphavantage_forex_fetcher
-<<<<<<< HEAD
                 kw_args = self._alphavantage_forex_fetcher.get_kw_args(
                     period, aggregation, ticker, output_size, limit=limit)
             elif index in [INDICES.Q_FSE]:
@@ -385,17 +362,7 @@ class StockDatabase(BaseDatabase):
                 kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size, limit=limit)
             else:
                 fetcher = self._alphavantage_stock_fetcher
-                kw_args = self._alphavantage_stock_fetcher.get_kw_args(
-                    period, aggregation, ticker, output_size, limit=limit)
-=======
-                kw_args = self._alphavantage_forex_fetcher.get_kw_args(period, aggregation, ticker, output_size)
-            elif index in [INDICES.Q_FSE]:
-                fetcher = self._quandl_fetcher
-                kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size)
-            else:
-                fetcher = self._alphavantage_stock_fetcher
                 kw_args = self._alphavantage_stock_fetcher.get_kw_args(period, aggregation, ticker, output_size)
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
             kw_args['is_check'] = is_check
             fetcher.retrieve_data(**kw_args)
         except KeyError:

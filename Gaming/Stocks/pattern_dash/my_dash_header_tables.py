@@ -2,7 +2,7 @@
 Description: This module contains the html header tables for the dash application.
 Author: Josef Sertl
 Copyright: SERTL Analytics, https://sertl-analytics.com
-Date: 2018-10-03
+Date: 2018-10-03  test update
 """
 
 from sertl_analytics.constants.pattern_constants import LOGT, WAVEST, INDICES
@@ -19,11 +19,7 @@ class MyHTMLHeaderTable(MyHTMLTable):
     def _init_cells_(self):
         user_label_div = MyHTML.div('my_user_label_div', 'Username:', True)
         user_div = MyHTML.div('my_user_name_div', 'Josef Sertl', False)
-<<<<<<< HEAD
         date_str = MyDate.get_date_str_from_datetime(datetime.now())
-=======
-        date_str = MyDate.get_date_time_as_string_from_date_time(datetime.now())
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         time_str = MyDate.get_time_from_datetime(datetime.now())
         login_label_div = MyHTML.div('my_login_label_div', 'Last login:', True, True)
         login_date_time_div = MyHTML.div('my_login_div', '{} {}'.format(date_str, time_str), False)

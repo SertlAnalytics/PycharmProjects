@@ -153,9 +153,5 @@ class WaveTabDropDownHandler(DropDownHandler):
             {'label': INDICES.CRYPTO_CCY, 'value': INDICES.CRYPTO_CCY},
             {'label': INDICES.DOW_JONES, 'value': INDICES.DOW_JONES},
             {'label': INDICES.NASDAQ100, 'value': INDICES.NASDAQ100},
-<<<<<<< HEAD
             {'label': INDICES.Q_FSE, 'value': INDICES.Q_FSE}
-=======
-            {'label': INDICES.DAX, 'value': INDICES.DAX}
->>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         ]
