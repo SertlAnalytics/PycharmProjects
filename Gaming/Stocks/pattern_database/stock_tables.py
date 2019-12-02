@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC, TP, SVW
+from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC, TP, SVW, OPS
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mymath import MyMath
 from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, EST
@@ -823,22 +823,39 @@ class StocksTable(MyTable):
         return query.format(self._name)
 
     @staticmethod
-    def get_process_type_for_update(period: str, aggregation: int, dt_now_time_stamp, last_loaded_time_stamp):
+<<<<<<< HEAD
+    def get_output_size_limit_for_data_update(period: str, aggregation: int, dt_now_time_stamp, last_loaded_time_stamp):
+=======
+    def get_output_size_for_update(period: str, aggregation: int, dt_now_time_stamp, last_loaded_time_stamp):
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         delta_time_stamp = dt_now_time_stamp - last_loaded_time_stamp
         delta_time_stamp_min = int(delta_time_stamp / 60)
         delta_time_stamp_days = int(delta_time_stamp_min / (24 * 60))
         if period == PRD.DAILY:
             if delta_time_stamp_days < 2:
-                return 'NONE'
+<<<<<<< HEAD
+                return OPS.NONE, delta_time_stamp_days
             elif delta_time_stamp_days < 50:
-                return 'COMPACT'
+                return OPS.COMPACT, delta_time_stamp_days
             else:
-                return 'FULL'
+                return OPS.FULL, delta_time_stamp_days
         else:
             if delta_time_stamp_min < aggregation:
-                return 'NONE'
+                return OPS.NONE, 0
             else:
-                return 'FULL'
+                return OPS.FULL, math.ceil(delta_time_stamp_min/aggregation)
+=======
+                return OPS.NONE
+            elif delta_time_stamp_days < 50:
+                return OPS.COMPACT
+            else:
+                return OPS.FULL
+        else:
+            if delta_time_stamp_min < aggregation:
+                return OPS.NONE
+            else:
+                return OPS.FULL
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
 
 
 class CompanyTable(MyTable):

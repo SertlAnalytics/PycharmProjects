@@ -128,9 +128,12 @@ class StockDatabase(BaseDatabase):
     def wave_table(self):
         return self._wave_table
 
-    def is_symbol_loaded(self, symbol: str):
-        last_loaded_time_stamp_dic = self.__get_last_loaded_time_stamp_dic__(symbol)
-        return len(last_loaded_time_stamp_dic) == 1
+    def is_symbol_loaded(self, symbol: str, and_clause='', period=PRD.DAILY, aggregation=1):
+        query = "SELECT * from {} WHERE Symbol = '{}' and Period = '{}' and Aggregation = {}".format(
+            STBL.STOCKS, symbol, period, aggregation)
+        query += '' if and_clause=='' else ' and {}'.format(and_clause)
+        db_df = DatabaseDataFrame(self, query)
+        return db_df.df.shape[0] > 0
 
     def get_name_for_symbol(self, symbol: str):
         if symbol[-3:] == 'USD':
@@ -171,10 +174,22 @@ class StockDatabase(BaseDatabase):
             print('\nUpdating {}...\n'.format(index))
             ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(index)
             for ticker in ticker_dic:
-                name = ticker_dic[ticker]
-                self.__update_stock_data_for_single_value__(period, aggregation, ticker, name, index,
-                                                            company_dict, last_loaded_date_stamp_dic)
+                # this condition is only for Q_FSE required since we have different lists...
+                if index != INDICES.Q_FSE or \
+                        self.is_stock_data_for_single_value_available(period, aggregation, ticker, index):
+                    name = ticker_dic[ticker]
+                    self.__update_stock_data_for_single_value__(period, aggregation, ticker, name, index,
+                                                                company_dict, last_loaded_date_stamp_dic)
         self.__handle_error_cases__()
+
+    def check_stock_data_by_index(self, index: str, period=PRD.DAILY, aggregation=1):
+        print('\nChecking {}...\n'.format(index))
+        ticker_dic = IndicesComponentFetcher.get_ticker_name_dic(index)
+        for ticker in ticker_dic:
+            if self.is_stock_data_for_single_value_available(period, aggregation, ticker, index):
+                print('Data available for {}/{} on {}'.format(ticker, ticker_dic[ticker], index))
+            else:
+                print('NO data available for {}/{} on {}'.format(ticker, ticker_dic[ticker], index))
 
     def __check_company_dic_against_web__(self, index: str, company_dict: dict):
         company_dict_by_web = IndicesComponentFetcher.get_ticker_name_dic(index)
@@ -283,6 +298,14 @@ class StockDatabase(BaseDatabase):
             return self.is_equity_already_available(data_dict)
         return False
 
+    def is_stock_data_for_single_value_available(self, period: str, aggregation: int, ticker: str, index: str):
+<<<<<<< HEAD
+        df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, OPS.CHECK, is_check=True)
+=======
+        df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, OPS.CHECK, True)
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
+        return df is not None
+
     def __update_stock_data_for_single_value__(self, period: str, aggregation: int, ticker: str, name: str, index: str,
                                                company_dic: dict, last_loaded_date_stamp_dic: dict):
         if ticker in ['CSX']:
@@ -291,46 +314,27 @@ class StockDatabase(BaseDatabase):
             return
         name = self._company_table.get_alternate_name(ticker, name)
         last_loaded_time_stamp = last_loaded_date_stamp_dic[ticker] if ticker in last_loaded_date_stamp_dic else 100000
-        process_type = self._stocks_table.get_process_type_for_update(
+<<<<<<< HEAD
+        output_size, limit = self._stocks_table.get_output_size_limit_for_data_update(
+=======
+        output_size = self._stocks_table.get_output_size_for_update(
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
             period, aggregation, self._dt_now_time_stamp, last_loaded_time_stamp)
-        if process_type == 'NONE':
+        if output_size == OPS.NONE:
             print('{} - {} is already up-to-date - no load required.'.format(ticker, name))
             return
         if ticker in company_dic and not company_dic[ticker].ToBeLoaded:
             return  # must not be loaded
-        try:
-            if index == INDICES.UNDEFINED:
-                index = self.get_index_for_symbol(ticker)
-                if index == INDICES.UNDEFINED:
-                    return
-            if index == INDICES.CRYPTO_CCY:
-                # fetcher = self._alphavantage_crypto_fetcher
-                fetcher = self._bitfinex_crypto_fetcher
-                kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker)
-            elif index == INDICES.FOREX:
-                fetcher = self._alphavantage_forex_fetcher
-                output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
-                kw_args = self._alphavantage_forex_fetcher.get_kw_args(period, aggregation, ticker, output_size)
-            elif index in [INDICES.DAX, INDICES.MDAX]:
-                fetcher = self._quandl_fetcher
-                output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
-                kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size)
-            else:
-                fetcher = self._alphavantage_stock_fetcher
-                output_size = OPS.FULL if process_type == 'FULL' else OPS.COMPACT
-                kw_args = self._alphavantage_stock_fetcher.get_kw_args(period, aggregation, ticker, output_size)
-            fetcher.retrieve_data(**kw_args)
-        except KeyError:
-            self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
-            self.error_handler.add_to_retry_dic(ticker, [name, period])
+
+<<<<<<< HEAD
+        df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, output_size, limit=limit)
+=======
+        df = self.__get_dataframe_for_single_value__(period, aggregation, ticker, index, output_size)
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
+        if df is None:
+            print('{} - {}: Error with some processing - nothing loaded.'.format(ticker, name))
             time.sleep(self._sleep_seconds)
             return
-        except:
-            self.error_handler.catch_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
-            self.error_handler.add_to_retry_dic(ticker, [name, period])
-            time.sleep(self._sleep_seconds)
-            return
-        df = fetcher.df
 
         if ticker not in company_dic:
             to_be_loaded = df[CN.VOL].mean() > 10000
@@ -341,12 +345,68 @@ class StockDatabase(BaseDatabase):
                 time.sleep(self._sleep_seconds)
                 return
         if ticker in last_loaded_date_stamp_dic:
+<<<<<<< HEAD
+            df.sort_index(inplace=True)
+=======
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
             df = df.loc[last_loaded_time_stamp:].iloc[1:]
         if df.shape[0] > 0:
             input_list = self.__get_df_data_for_insert_statement__(df, period, ticker)
             self.__insert_data_into_table__(STBL.STOCKS, input_list)
             print('{} - {}: inserted {} new ticks.'.format(ticker, name, df.shape[0]))
+<<<<<<< HEAD
+        if index != INDICES.Q_FSE:
+            time.sleep(self._sleep_seconds)
+
+    def __get_dataframe_for_single_value__(self, period: str, aggregation: int, ticker: str, index: str,
+                                           output_size: str, limit=0, is_check=False):
+=======
         time.sleep(self._sleep_seconds)
+
+    def __get_dataframe_for_single_value__(self, period: str, aggregation: int, ticker: str, index: str,
+                                           output_size: str, is_check=False):
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
+        try:
+            if index == INDICES.UNDEFINED:
+                index = self.get_index_for_symbol(ticker)
+                if index == INDICES.UNDEFINED:
+                    return None
+            if index == INDICES.CRYPTO_CCY:
+                # fetcher = self._alphavantage_crypto_fetcher
+                fetcher = self._bitfinex_crypto_fetcher
+                kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker, limit=limit)
+            elif index == INDICES.FOREX:
+                fetcher = self._alphavantage_forex_fetcher
+<<<<<<< HEAD
+                kw_args = self._alphavantage_forex_fetcher.get_kw_args(
+                    period, aggregation, ticker, output_size, limit=limit)
+            elif index in [INDICES.Q_FSE]:
+                fetcher = self._quandl_fetcher
+                kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size, limit=limit)
+            else:
+                fetcher = self._alphavantage_stock_fetcher
+                kw_args = self._alphavantage_stock_fetcher.get_kw_args(
+                    period, aggregation, ticker, output_size, limit=limit)
+=======
+                kw_args = self._alphavantage_forex_fetcher.get_kw_args(period, aggregation, ticker, output_size)
+            elif index in [INDICES.Q_FSE]:
+                fetcher = self._quandl_fetcher
+                kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size)
+            else:
+                fetcher = self._alphavantage_stock_fetcher
+                kw_args = self._alphavantage_stock_fetcher.get_kw_args(period, aggregation, ticker, output_size)
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
+            kw_args['is_check'] = is_check
+            fetcher.retrieve_data(**kw_args)
+        except KeyError:
+            self.error_handler.catch_known_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
+            time.sleep(self._sleep_seconds)
+            return None
+        except:
+            self.error_handler.catch_exception(__name__, 'Ticker={}. Continue with next...'.format(ticker))
+            time.sleep(self._sleep_seconds)
+            return None
+        return fetcher.df
 
     def get_index_for_symbol(self, symbol: str) -> str:
         if symbol in ['FCEL', 'GE']:
@@ -371,6 +431,7 @@ class StockDatabase(BaseDatabase):
         return company_dict
 
     def __get_last_loaded_time_stamp_dic__(self, symbol_input: str = '', like_input: str = '', period=PRD.DAILY):
+        print('Loading last_loaded_time_stamp_dict...(takes a while)')
         last_loaded_time_stamp_dic = {}
         query = self._stocks_table.get_distinct_symbol_query(symbol_input, like_input)
         db_df = DatabaseDataFrame(self, query)

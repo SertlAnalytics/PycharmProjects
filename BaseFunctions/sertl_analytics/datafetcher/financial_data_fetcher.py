@@ -12,6 +12,7 @@ import io
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.constants.pattern_constants import CN, PRD, OPS
 from sertl_analytics.exchanges.exchange_cls import Ticker
+from sertl_analytics.my_pandas import MyPandas
 import time
 import quandl
 import seaborn as sns
@@ -33,6 +34,10 @@ class APIBaseFetcher:
         self._df_columns = []
 
     @property
+    def kw_is_check(self) -> bool:
+        return self._kwargs.get('is_check', False)
+
+    @property
     def kw_symbol(self) -> str:
         return self._kwargs.get('symbol', 'xxx')
 
@@ -51,46 +56,58 @@ class APIBaseFetcher:
         return self._kwargs.get('output_size', OPS.COMPACT)
 
     @property
+    def kw_collapse(self) -> str:
+        return self._kwargs.get('collapse', 'daily')
+
+    @property
     def kw_limit(self) -> int:
         return self._kwargs.get('limit', 0)
+
+    @property
+    def kw_offset(self) -> int:
+        return self._kwargs.get('offset', 0)
+
+    @property
+    def kw_filepath(self) -> str:
+        return self._kwargs.get('filepath', '')
 
     def __get_key_for_latest_successful_df_dict__(self):  # key= symbol_period_aggreation_limit
         return '{}_{}_{}_{}'.format(self.kw_symbol, self.kw_period, self.kw_aggregation, self.kw_limit)
 
     def retrieve_data(self, **kwargs): # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT, limit=400
+        self._df = None
         self.__sleep__()
         self._kwargs = kwargs
-        is_for_quandl = ('collapse' in kwargs)
-        if not is_for_quandl:  # for Quandl we use an API call instead of URL
-            url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
-            self.__print_request_details__(url)
-        self._df = None
-        try:
-            if is_for_quandl:
-                self._df = self.__get_data_frame__()
-            else:
-                request_data = requests.get(url)
-                self._df = self.__get_data_frame__(request_data=request_data)
-        except:
-            if is_for_quandl:
-                print('PROBLEM with retrieving data from Quandl for {}'.format(kwargs['symbol']))
-            else:
-                print('PROBLEM with retrieving data from  {}'.format(url))
-        finally:
-            key = self.__get_key_for_latest_successful_df_dict__()
-            if self._df is None:
-                self._df = self.__get_latest_successful_retrieved_data_frame__(key)
-            else:
+        self.__get_data_frame_by_kwargs__(print_message=not self.kw_is_check)
+        if self.kw_is_check:
+            return
+        key = self.__get_key_for_latest_successful_df_dict__()
+        if self._df is None:
+            self._df = self.__get_latest_successful_retrieved_data_frame__(key)
+        else:
+            try:
+                self.__format_columns__()
+                self.__round_df_column_values__()
                 self.__correct_missing_data__()
                 self.__set_latest_successful_retrieved_data_frame__(key, self._df)
+            except:
+                self._df = None
 
-            if self._df is not None:
-                self._df_columns = list(self._df.columns.values)
-                try:
-                    self.__format_columns__()
-                    self.__round_df_column_values__()
-                except:
-                    self._df = None
+        if self._df is not None:
+            self._df_columns = list(self._df.columns.values)
+
+    def __get_data_frame_by_kwargs__(self, print_message=True):
+        try:
+            url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
+<<<<<<< HEAD
+            print('url={}'.format(url))
+=======
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
+            request_data = requests.get(url)
+            self._df = self.__get_data_frame__(request_data=request_data)
+        except:
+            if print_message:
+                print('PROBLEM with retrieving data from  {}'.format(url))
 
     def __correct_missing_data__(self): # sometimes we have no Open data - take the last close data
         last_close = 0
@@ -98,6 +115,12 @@ class APIBaseFetcher:
         for ind, row in self._df.iterrows():  # the values are delivered with ms instead of seconds
             if row.Open is None or math.isnan(row.Open):
                 row.Open = row.Low if last_close == 0 else last_close
+            if row.High is None or math.isnan(row.High):
+                row.High = row.Open
+            if row.Low is None or math.isnan(row.Low):
+                row.Low = row.Open
+            if row.Close is None or math.isnan(row.Close):
+                row.Close = row.Open
             if row.Volume is None or math.isnan(row.Volume):
                 row.Volume = last_volume
             last_close = row.Close
@@ -172,7 +195,7 @@ class APIBaseFetcher:
         pass
 
     def __format_columns__(self):
-        for col in self._df_columns:
+        for col in self._df.columns:
             self._df[col] = pd.to_numeric(self._df[col])
 
     def _get_api_key_(self):
@@ -213,18 +236,40 @@ class QuandlFetcher (APIBaseFetcher):
         APIBaseFetcher.__init__(self)
         quandl.ApiConfig.api_key = self._api_key
 
-    def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL):
+    def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL, limit=0):
         symbol = 'FSE/{}_X'.format(ticker.upper())
-        limit = 2000 if output_size==OPS.FULL else 100
-        start_date = MyDate.get_date_str_from_datetime(MyDate.adjust_by_days(datetime.now(), -limit))
-        end_date = MyDate.today_str()
+<<<<<<< HEAD
+        if limit==0:
+            limit = {OPS.FULL: 2000, OPS.CHECK: 2}.get(output_size, 100)
+=======
+        limit = {OPS.FULL: 2000, OPS.CHECK: 2}.get(output_size, 100)
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
         collapse = 'daily'
-        return {'period': period, 'symbol': symbol, 'aggregation': aggregation, 'limit': limit,
-                'start_date': start_date, 'end_date': end_date, 'collapse': collapse}
+        return {'period': period, 'symbol': symbol, 'aggregation': aggregation, 'limit': limit, 'collapse': collapse}
+
+    def __get_data_frame_by_kwargs__(self, print_message=True):
+        try:
+            self._df = self.__get_data_frame__()
+        except:
+            if print_message:
+<<<<<<< HEAD
+                print('PROBLEM with retrieving data from Quandl for {}'.format(self.kw_symbol))
 
     def __get_data_frame__(self) -> pd.DataFrame:
-        df = quandl.get(self._kwargs['symbol'], start_date=self._kwargs['start_date'],
-                        end_date=self._kwargs['end_date'], collapse=self._kwargs['collapse'])
+        limit = self.kw_limit * 2
+        end_date = MyDate.today_str()
+        start_date = MyDate.adjust_by_days(MyDate.get_datetime_object(), -limit)
+        df = quandl.get(self.kw_symbol, start_date=start_date, end_date=end_date, collapse=self.kw_collapse)
+=======
+                print('PROBLEM with retrieving data from Quandl for {}'.format(self._kwargs['symbol']))
+
+    def __get_data_frame__(self) -> pd.DataFrame:
+        limit = self._kwargs['limit'] * 2
+        end_date = MyDate.today_str()
+        start_date = MyDate.adjust_by_days(MyDate.get_datetime_object(), -limit)
+        df = quandl.get(self._kwargs['symbol'], start_date=start_date, end_date=end_date, collapse=self._kwargs['collapse'])
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
+        # df = quandl.get(self._kwargs['symbol'], limit=self._kwargs['limit'], collapse=self._kwargs['collapse'])
         if df is not None:
             df = df[['Open', 'High', 'Low', 'Close', 'Traded Volume']]
             df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))
@@ -236,11 +281,59 @@ class QuandlFetcher (APIBaseFetcher):
     def _get_api_key_(self):
         return os.environ["quandl_apikey"]
 
+
+class StooqIntradayFetcher(APIBaseFetcher):
+    """
+     Origianal data: https://stooq.com/db/h/
+     They are downloaded to D:\PD_Intraday_Data\5_min
+     mydata = quandl.get('FSE/BEI_X', start_date='2019-09-30', end_date='2019-12-31', collapse='daily')
+    """
+    _request_interval_required = 0
+
+    def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL, limit=0, offset=0):
+        symbol = ticker.upper()
+        limit = 300 if limit == 0 else limit
+        file_path = 'D:/PD_Intraday_Data/5_min/{}.de.txt'.format(ticker.lower())
+        return {'period': period, 'symbol': symbol, 'aggregation': aggregation,
+                'limit': limit, 'filepath': file_path, 'offset': offset}
+
+    def __get_data_frame_by_kwargs__(self, print_message=True):
+        try:
+            self._df = self.__get_data_frame__()
+            if self._df is not None:
+                self._df_data = self._df[self._df.columns]
+                start_dt = MyDate.get_date_time_from_epoch_seconds(self._df_data.index[0])
+                end_dt = MyDate.get_date_time_from_epoch_seconds(self._df_data.index[-1])
+                print('\n{} (offset: {}) - Retrieved from {}: {} - {}'.format(
+                    self.kw_symbol, self.kw_offset, self.kw_filepath, start_dt, end_dt))
+        except:
+            if print_message:
+                print('PROBLEM with retrieving data from StooqIntraday for {}'.format(self.kw_symbol))
+
+    def __get_data_frame__(self) -> pd.DataFrame:
+        df = pd.read_csv(self.kw_filepath, sep=',', header=0)
+        if df is not None:
+            if self.kw_offset > 0:
+                offset_value = df['Date'].unique()[-self.kw_offset]
+                df = df[df['Date']<offset_value]
+            if df.shape[0] > self.kw_limit:
+                df = df[-self.kw_limit:]
+            df[CN.TIMESTAMP] = df.apply(self.__get_time_stamp_for_data_frame__, axis=1)
+            df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
+            df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
+            df.columns = CN.get_standard_column_names()
+        return df
+
+    def __get_time_stamp_for_data_frame__(self, row) -> int:
+        return int(MyDate.get_epoch_seconds_for_date_time_strings(row['Date'], row['Time']))
+
+
 class AlphavantageJSONFetcher (APIBaseFetcher):
     _request_interval_required = 15  # we have only 5 _request per minute for free api-key, 15 instead of 12 for security
 
-    def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL):
-        return {'symbol': ticker, 'period': period, 'aggregation': aggregation, 'output_size': output_size}
+    def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL, limit=400):
+        return {'symbol': ticker, 'period': period, 'aggregation': aggregation,
+                'output_size': output_size, 'limit': limit}
 
     def retrieve_data(self, **kwargs):
         # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT):

@@ -20,6 +20,10 @@ stock_db_updater = StockDatabaseUpdater(sys_config)
 
 if True:
     # stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.NASDAQ100, 400)
+    # stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.Q_FSE, 400, start_after='GLJ')
+    stock_db.update_stock_data_by_index(INDICES.Q_FSE, PRD.DAILY)
+    # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.Q_FSE, offset_day_range=40, start_after='GLJ')
+    # stock_db_updater.update_wave_records_for_daily_period('GLJ', 400)
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
     # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
     # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)
@@ -32,9 +36,15 @@ if True:
     # stock_db.update_stock_data_for_symbol('GE')
     # stock_db.update_crypto_currencies(PRD.DAILY, symbol_list=exchange_config.ticker_id_list)
     # stock_db_updater.handle_transaction_problems()
-    # stock_db.update_stock_data_by_index(INDICES.DOW_JONES, PRD.DAILY)
+    # stock_db.update_stock_data_by_index(INDICES.Q_FSE, PRD.DAILY)
     # stock_db.update_stock_data_for_symbol('ADS')
-    stock_db.update_stock_data_by_index(INDICES.DAX, PRD.DAILY)
+    # stock_db.update_stock_data_by_index(INDICES.Q_FSE, PRD.DAILY)
+    # stock_db.check_stock_data_by_index(INDICES.Q_FSE, PRD.DAILY)
+<<<<<<< HEAD
+    # stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.Q_FSE, 500)
+=======
+    stock_db_updater.update_wave_data_by_index_for_daily_period(INDICES.Q_FSE, 500)
+>>>>>>> c77ef10532f4aba0a02e95161d215a80963f9523
     # stock_db.update_stock_data_by_index(INDICES.NASDAQ100, PRD.DAILY)
     # pattern_type_list = sys_config.trade_strategy_optimizer.optimal_pattern_type_list_for_long_trading
     # predictor_optimizer.calculate_class_metrics_for_predictor_and_label_for_today(pattern_type_list)
