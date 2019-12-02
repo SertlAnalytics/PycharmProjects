@@ -199,9 +199,13 @@ class PatternData:
         self.df = self.df.assign(Datetime=self.df.index.map(MyDate.get_date_time_from_epoch_seconds))
         self.df = self.df.assign(DateAsNumber=self.df.index.map(MyDate.get_date_as_number_from_epoch_seconds))
         self.df = self.df.assign(Position=self.df.index.map(self.df.index.get_loc))
-        # print(self._df.head())
-        # print(self._df[CN.POSITION])
+        # print(self.df.head())
+        # print(self.df[CN.POSITION])
         self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)
+        # try:
+        #     self.df[CN.POSITION] = self.df[CN.POSITION].apply(int)
+        # except:
+        #     print('Error with add columns')
         if CN.TIMESTAMP not in self.df.columns:
             self.df[CN.TIMESTAMP] = self.df.index
         self.df.reset_index(drop=True, inplace=True)  # get position index

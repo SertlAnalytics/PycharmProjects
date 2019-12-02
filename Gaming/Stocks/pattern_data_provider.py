@@ -11,7 +11,7 @@ Date: 2018-05-14
 import pandas as pd
 import numpy as np
 from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageStockFetcher, AlphavantageCryptoFetcher
-from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageForexFetcher
+from sertl_analytics.datafetcher.financial_data_fetcher import AlphavantageForexFetcher, StooqIntradayFetcher
 from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFetcher, CryptoCompareCryptoFetcher
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.user_input.confirmation import UserInput
@@ -42,11 +42,13 @@ class PatternDataFetcherCacheKey(DataFetcherCacheKey):
         self.output_size = ''
         self.limit = 0
         self.and_clause = ''
+        self.offset = 0
 
     @property
     def key(self):
-        return 'from_db={}_ticker={}_period={}_aggregation={}_output_size={}_limit={}_and_clause={}'.format(
-            self.from_db, self.ticker_id, self.period, self.aggregation, self.output_size, self.limit, self.and_clause)
+        return 'from_db={}_ticker={}_period={}_aggregation={}_output_size={}_limit={}_and_clause={}_offset={}'.format(
+            self.from_db, self.ticker_id, self.period,
+            self.aggregation, self.output_size, self.limit, self.and_clause, self.offset)
 
     def get_kw_args(self):
         return {
@@ -55,7 +57,8 @@ class PatternDataFetcherCacheKey(DataFetcherCacheKey):
             'aggregation': self.aggregation,
             'section': 'hist',
             'limit': self.limit,
-            'output_size': self.output_size
+            'output_size': self.output_size,
+            'offset': self.offset
         }
 
 
@@ -74,6 +77,7 @@ class PatternDataProvider:
         self.aggregation = 1
         self.output_size = OPS.COMPACT
         self.limit = 400
+        self.offset = 0
         self._and_clause = ''
         self.ticker_id = ''
         self.ticker_name = ''
@@ -130,7 +134,7 @@ class PatternDataProvider:
             dt_end = MyDate.get_date_from_datetime()
             dt_end = MyDate.adjust_by_days(dt_end, 1)
             self._and_clause = self.get_and_clause(dt_start, dt_end)
-            print('data_provider.and_clause={}'.format(self.and_clause))
+            # print('data_provider.and_clause={}'.format(self.and_clause))
 
     def use_index(self, index: str):
         self.index_used = index
@@ -141,7 +145,7 @@ class PatternDataProvider:
         elif index == INDICES.INDICES:
             self.ticker_dict = {"DJI": "Dow", "NDX": "Nasdaq"}
         else:
-            self.ticker_dict = self.index_config.get_ticker_dict_for_index(index)
+            self.ticker_dict = self.index_config.get_ticker_dict_for_index(index, self.period)
 
     def use_indices(self, indices: list):
         self.index_used = ''
@@ -157,6 +161,17 @@ class PatternDataProvider:
             if name_from_db != '':
                 self.ticker_dict[symbol] = name_from_db
 
+    def start_after(self, ticker: str):  # to restart after an error
+        ticker_dict_new = {}
+        add_ticker = False
+        for symbol in self.ticker_dict:
+            if add_ticker:
+                ticker_dict_new[symbol] = self.ticker_dict[symbol]
+            else:
+                if symbol == ticker:
+                    add_ticker = True
+        self.ticker_dict = ticker_dict_new
+
     def get_index_members_as_dict(self, index: str):
         return self.index_config.get_ticker_dict_for_index(index)
 
@@ -169,10 +184,10 @@ class PatternDataProvider:
         db_data_frame = DatabaseDataFrame(self._db_stock, query=query)
         return PyBaseDataFrame.get_rows_as_dictionary(db_data_frame.df, 'Symbol', ['Symbol'])
 
-    def init_pattern_data_handler_for_ticker_id(self, ticker_id: str, and_clause: str, limit=400):
+    def init_pattern_data_handler_for_ticker_id(self, ticker_id: str, and_clause: str, limit=400, offset: int=0):
         df = None
         try:
-            df = self.__get_df_for_ticker_id__(ticker_id, and_clause, limit)
+            df = self.__get_df_for_ticker_id__(ticker_id, and_clause, limit, offset=offset)
         except IndexError:
             PatternLog().log_message('Error with ticker_id={}'.format(ticker_id),
                                      'init_pattern_data_handler_for_ticker_id')
@@ -185,11 +200,12 @@ class PatternDataProvider:
             else:
                 self.pdh = PatternDataHandler(self.config, df)
 
-    def __get_df_for_ticker_id__(self, ticker_id: str, and_clause: str, limit: int):
+    def __get_df_for_ticker_id__(self, ticker_id: str, and_clause: str, limit: int, offset: int=0):
         self.ticker_id = ticker_id
         self.ticker_name = self.__get_ticker_name__()
         self.and_clause = and_clause
         self.limit = limit
+        self.offset = offset
         data_fetcher_cache_key = self.__get_data_fetcher_cache_key__()  # ToDo replace this kind of cache key...
         df_from_cache = self._df_cache.get_cached_object_by_key(data_fetcher_cache_key.key)
         if df_from_cache is not None:
@@ -233,7 +249,11 @@ class PatternDataProvider:
             fetcher.retrieve_data(**kw_args)
             return fetcher.df_data
         else:
-            if self.index_config.is_symbol_currency(ticker_id):
+            if self.index_config.get_index_for_symbol(ticker_id) == INDICES.Q_FSE and self.period==PRD.INTRADAY:
+                offset = data_fetcher_cache_key.offset
+                fetcher = StooqIntradayFetcher()
+                kw_args = fetcher.get_kw_args(self.period, self.aggregation, ticker_id, offset=offset)
+            elif self.index_config.is_symbol_currency(ticker_id):
                 fetcher = AlphavantageForexFetcher()
             else:
                 fetcher = AlphavantageStockFetcher()
@@ -248,6 +268,7 @@ class PatternDataProvider:
         cache_key_obj.output_size = self.output_size
         cache_key_obj.and_clause = self.and_clause
         cache_key_obj.limit = self.limit
+        cache_key_obj.offset = self.offset
         return cache_key_obj
 
     def __handle_not_available_symbol__(self, ticker):

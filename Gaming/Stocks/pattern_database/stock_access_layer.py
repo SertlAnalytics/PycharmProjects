@@ -210,8 +210,9 @@ class AccessLayer4Stock(AccessLayer):
         else:
             where_clause_new = " WHERE symbol = '{}'".format(symbol)
             where_clause_new += '' if where_clause == '' else ' AND {}'.format(where_clause)
-        return self.select_data_by_query("SELECT * from {}{} ORDER BY {}".format(
-            self._table.name, where_clause_new, DC.TIMESTAMP))
+        column_selection = '*' if columns is None else ','.join(columns)
+        return self.select_data_by_query("SELECT {} from {}{} ORDER BY {}".format(
+            column_selection, self._table.name, where_clause_new, DC.TIMESTAMP))
 
     def get_actual_price_for_symbol(self, symbol: str, ts_from: int) -> float:
         query = "SELECT * FROM {} WHERE symbol='{}' AND Timestamp >= {} LIMIT 1".format(

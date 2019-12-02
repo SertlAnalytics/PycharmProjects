@@ -184,7 +184,7 @@ class Pattern:
         if self.sys_config.period == PRD.DAILY:
             days_in_chart = self.df_length
         else:  # 1 is identical to 1 day  !!!
-            min_in_chart = self.sys_config.period_aggregation * 60 * self.sys_config.data_provider.limit
+            min_in_chart = self.sys_config.period_aggregation * 60 * self.sys_config.data_provider.limit / 2
             days_in_chart = math.ceil(min_in_chart/(24 * 60 * 60))
         width = days_in_chart * self.relative_width_to_full_data_frame / 3
         return width

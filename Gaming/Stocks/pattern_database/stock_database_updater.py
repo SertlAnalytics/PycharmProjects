@@ -229,10 +229,13 @@ class StockDatabaseUpdater:
         pattern_controller = PatternDetectionController(self.sys_config)
         pattern_controller.run_pattern_detector()
 
-    def update_wave_data_by_index_for_daily_period(self, index: str, limit: int):
+    def update_wave_data_by_index_for_daily_period(self, index: str, limit: int, start_after=''):
         ticker_dic = self.__get_configured_ticker_dict_for_index__(index)
         for ticker in ticker_dic:
-            self.update_wave_records_for_daily_period(ticker, limit)
+            if start_after == '' or ticker > start_after:
+                self.update_wave_records_for_daily_period(ticker, limit)
+            else:
+                print('Excluded from current run: {}'.format(ticker))
 
     def update_wave_records_for_daily_period(self, ticker_id: str, limit: int):
         self.sys_config.config.save_wave_data = True
@@ -240,33 +243,42 @@ class StockDatabaseUpdater:
         self.sys_config.data_provider.from_db = True
         date_start = MyDate.adjust_by_days(MyDate.get_datetime_object().date(), -limit)
         and_clause = "Date > '{}'".format(date_start)
-        detector = self.pattern_controller.get_detector_for_fibonacci(self.sys_config, ticker_id, and_clause, limit)
-        detector.save_wave_data()
+        if self.sys_config.db_stock.is_symbol_loaded(ticker_id, and_clause=and_clause):
+            detector = self.pattern_controller.get_detector_for_fibonacci(self.sys_config, ticker_id, and_clause, limit)
+            detector.save_wave_data()
+        else:
+            print('No data available for {} and {}'.format(ticker_id, and_clause))
 
-    def update_wave_data_by_index_for_intraday(self, index: str, aggregation: int=30):
+    def update_wave_data_by_index_for_intraday(
+            self, index: str, aggregation: int=30, offset_day_range: int=0, start_after=""):
+        if index == INDICES.Q_FSE:
+            aggregation = 5  # we use the data from  https://stooq.com/db/h/ which are only available in 5 min steps
         print('Update wave data for index: {} ({}min)'.format(index, aggregation))
-        ticker_dic = self.__get_configured_ticker_dict_for_index__(index)
-        for ticker in ticker_dic:
+        ticker_dict = self.__get_configured_ticker_dict_for_index__(index)
+        for ticker in ticker_dict:
             try:
-                self.update_wave_records_for_intraday(ticker, aggregation)
+                if start_after == '' or ticker > start_after:
+                    self.update_wave_records_for_intraday(ticker, aggregation, offset_day_range)
             except:
                 self.sys_config.file_log.log_error()
+            # break  # ToDo get rid when test finished
 
     def __get_configured_ticker_dict_for_index__(self, index):
         if index == INDICES.CRYPTO_CCY:
             ticker_dic = self.sys_config.index_config.get_ticker_dict_for_index(
-                index, self.sys_config.exchange_config.ticker_id_list)
+                index, ticker_id_list=self.sys_config.exchange_config.ticker_id_list)
         else:
             ticker_dic = self.sys_config.index_config.get_ticker_dict_for_index(index)
         return ticker_dic
 
-    def update_wave_records_for_intraday(self, ticker_id: str, aggregation: int):
+    def update_wave_records_for_intraday(self, ticker_id: str, aggregation: int, offset_day_range: int):
         self.sys_config.config.save_wave_data = True
         self.sys_config.data_provider.period = PRD.INTRADAY
         self.sys_config.data_provider.aggregation = aggregation
         self.sys_config.data_provider.from_db = False
-        detector = self.pattern_controller.get_detector_for_fibonacci(self.sys_config, ticker_id)
-        detector.save_wave_data()
+        for offset in range(0, offset_day_range + 1):
+            detector = self.pattern_controller.get_detector_for_fibonacci(self.sys_config, ticker_id, offset=offset)
+            detector.save_wave_data()
 
     def update_trade_policy_metric_for_today(self, pattern_type_list: list):
         print("\nSTARTING 'update_trade_policy_metric_for_today' for {}...".format(pattern_type_list))

@@ -75,6 +75,7 @@ class MyDashStockDataUpdateJobForShares(MyDashPatternJob):
         db_stock.update_stock_data_for_symbol('TSLA')
         db_stock.update_stock_data_for_symbol('GE')
         db_stock.update_stock_data_by_index(INDICES.NASDAQ100, PRD.DAILY)
+        db_stock.update_stock_data_by_index(INDICES.Q_FSE, PRD.DAILY)
 
     @property
     def process_name(self):
