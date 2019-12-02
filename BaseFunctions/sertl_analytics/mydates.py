@@ -105,10 +105,15 @@ class MyDate:
         return epoch_seconds_01 - epoch_seconds_02
 
     @staticmethod
-    def get_epoch_seconds_for_current_day_time(time: str) -> int:
-        time = time if len(time) == 8 else '{}:00'.format(time)
+    def get_epoch_seconds_for_date_time_strings(date_str: str, time_str: str) -> int:
+        time_str = time_str if len(time_str) == 8 else '{}:00'.format(time_str)
+        return MyDate.get_epoch_seconds_from_datetime('{} {}'.format(date_str, time_str))
+
+    @staticmethod
+    def get_epoch_seconds_for_current_day_time(time_str: str) -> int:
+        time_str = time_str if len(time_str) == 8 else '{}:00'.format(time_str)
         dt_str = MyDate.get_date_as_string_from_date_time()
-        return MyDate.get_epoch_seconds_from_datetime('{} {}'.format(dt_str, time))
+        return MyDate.get_epoch_seconds_for_date_time_strings(dt_str, time_str)
 
     @staticmethod
     def get_epoch_seconds_for_date(date_time=None) -> int:

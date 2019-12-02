@@ -385,6 +385,7 @@ class BaseDatabase:
         finally:
             connection.close()
         if counter > 1:  # we don't want to have single entries in the log
+            print('Loaded into {}: {} records.'.format(table_name, counter))
             self._file_log.log_message('Loaded into {}: {} records.'.format(table_name, counter), 'Insert')
         return counter
 

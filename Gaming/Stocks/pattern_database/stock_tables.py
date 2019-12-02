@@ -7,7 +7,7 @@ Date: 2018-05-14
 
 
 from sertl_analytics.datafetcher.database_fetcher import MyTable, MyTableColumn, CDT
-from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC, TP, SVW, OPS
+from sertl_analytics.constants.pattern_constants import DC, PRD, STBL, MDC, PRED, EDC, TPMDC, PRDC, TP, SVW
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mymath import MyMath
 from sertl_analytics.constants.pattern_constants import INDICES, EQUITY_TYPE, EST
@@ -823,22 +823,22 @@ class StocksTable(MyTable):
         return query.format(self._name)
 
     @staticmethod
-    def get_output_size_for_update(period: str, aggregation: int, dt_now_time_stamp, last_loaded_time_stamp):
+    def get_process_type_for_update(period: str, aggregation: int, dt_now_time_stamp, last_loaded_time_stamp):
         delta_time_stamp = dt_now_time_stamp - last_loaded_time_stamp
         delta_time_stamp_min = int(delta_time_stamp / 60)
         delta_time_stamp_days = int(delta_time_stamp_min / (24 * 60))
         if period == PRD.DAILY:
             if delta_time_stamp_days < 2:
-                return OPS.NONE
+                return 'NONE'
             elif delta_time_stamp_days < 50:
-                return OPS.COMPACT
+                return 'COMPACT'
             else:
-                return OPS.FULL
+                return 'FULL'
         else:
             if delta_time_stamp_min < aggregation:
-                return OPS.NONE
+                return 'NONE'
             else:
-                return OPS.FULL
+                return 'FULL'
 
 
 class CompanyTable(MyTable):

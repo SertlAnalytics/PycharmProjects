@@ -19,10 +19,9 @@ class MyHTMLHeaderTable(MyHTMLTable):
     def _init_cells_(self):
         user_label_div = MyHTML.div('my_user_label_div', 'Username:', True)
         user_div = MyHTML.div('my_user_name_div', 'Josef Sertl', False)
-        date_str = MyDate.get_date_time_as_string_from_date_time(datetime.now())
         time_str = MyDate.get_time_from_datetime(datetime.now())
         login_label_div = MyHTML.div('my_login_label_div', 'Last login:', True, True)
-        login_date_time_div = MyHTML.div('my_login_div', '{} {}'.format(date_str, time_str), False)
+        login_time_div = MyHTML.div('my_login_div', '{}'.format(time_str), False)
         sound_label_div = MyHTML.div('my_sound_label_div', 'Sound:', True, True)
         sound_div = MyHTML.div('my_sound_div', '', False)
         mode_label_div = MyHTML.div('my_mode_label_div', 'Mode:', True, True)
@@ -33,7 +32,7 @@ class MyHTMLHeaderTable(MyHTMLTable):
         small_profit_div = MyHTML.div('my_small_profit_div', '', False)
 
         my_user_div = MyHTML.div_embedded([user_label_div, MyHTML.span(' '), user_div])
-        my_login_div = MyHTML.div_embedded([login_label_div, MyHTML.span(' '), login_date_time_div])
+        my_login_div = MyHTML.div_embedded([login_label_div, MyHTML.span(' '), login_time_div])
         my_sound_div = MyHTML.div_embedded([sound_label_div, MyHTML.span(' '), sound_div])
         my_mode_div = MyHTML.div_embedded([mode_label_div, MyHTML.span(' '), mode_div])
         my_max_buy_div = MyHTML.div_embedded([max_buy_label_div, MyHTML.span(' '), max_buy_div])

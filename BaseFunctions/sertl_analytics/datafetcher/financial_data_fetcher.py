@@ -33,10 +33,6 @@ class APIBaseFetcher:
         self._df_columns = []
 
     @property
-    def kw_is_check(self) -> bool:
-        return self._kwargs.get('is_check', False)
-
-    @property
     def kw_symbol(self) -> str:
         return self._kwargs.get('symbol', 'xxx')
 
@@ -62,35 +58,39 @@ class APIBaseFetcher:
         return '{}_{}_{}_{}'.format(self.kw_symbol, self.kw_period, self.kw_aggregation, self.kw_limit)
 
     def retrieve_data(self, **kwargs): # symbol: str, period=PRD.DAILY, aggregation=1, output_size=OPS.COMPACT, limit=400
-        self._df = None
         self.__sleep__()
         self._kwargs = kwargs
-        self.__get_data_frame_by_kwargs__(print_message=not self.kw_is_check)
-        if self.kw_is_check:
-            return
-        key = self.__get_key_for_latest_successful_df_dict__()
-        if self._df is None:
-            self._df = self.__get_latest_successful_retrieved_data_frame__(key)
-        else:
-            try:
-                self.__format_columns__()
-                self.__round_df_column_values__()
+        is_for_quandl = ('collapse' in kwargs)
+        if not is_for_quandl:  # for Quandl we use an API call instead of URL
+            url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
+            self.__print_request_details__(url)
+        self._df = None
+        try:
+            if is_for_quandl:
+                self._df = self.__get_data_frame__()
+            else:
+                request_data = requests.get(url)
+                self._df = self.__get_data_frame__(request_data=request_data)
+        except:
+            if is_for_quandl:
+                print('PROBLEM with retrieving data from Quandl for {}'.format(kwargs['symbol']))
+            else:
+                print('PROBLEM with retrieving data from  {}'.format(url))
+        finally:
+            key = self.__get_key_for_latest_successful_df_dict__()
+            if self._df is None:
+                self._df = self.__get_latest_successful_retrieved_data_frame__(key)
+            else:
                 self.__correct_missing_data__()
                 self.__set_latest_successful_retrieved_data_frame__(key, self._df)
-            except:
-                self._df = None
 
-        if self._df is not None:
-            self._df_columns = list(self._df.columns.values)
-
-    def __get_data_frame_by_kwargs__(self, print_message=True):
-        try:
-            url = self._get_url_()  # like the _symbol of a stock, e.g. MSFT
-            request_data = requests.get(url)
-            self._df = self.__get_data_frame__(request_data=request_data)
-        except:
-            if print_message:
-                print('PROBLEM with retrieving data from  {}'.format(url))
+            if self._df is not None:
+                self._df_columns = list(self._df.columns.values)
+                try:
+                    self.__format_columns__()
+                    self.__round_df_column_values__()
+                except:
+                    self._df = None
 
     def __correct_missing_data__(self): # sometimes we have no Open data - take the last close data
         last_close = 0
@@ -98,12 +98,6 @@ class APIBaseFetcher:
         for ind, row in self._df.iterrows():  # the values are delivered with ms instead of seconds
             if row.Open is None or math.isnan(row.Open):
                 row.Open = row.Low if last_close == 0 else last_close
-            if row.High is None or math.isnan(row.High):
-                row.High = row.Open
-            if row.Low is None or math.isnan(row.Low):
-                row.Low = row.Open
-            if row.Close is None or math.isnan(row.Close):
-                row.Close = row.Open
             if row.Volume is None or math.isnan(row.Volume):
                 row.Volume = last_volume
             last_close = row.Close
@@ -178,7 +172,7 @@ class APIBaseFetcher:
         pass
 
     def __format_columns__(self):
-        for col in self._df.columns:
+        for col in self._df_columns:
             self._df[col] = pd.to_numeric(self._df[col])
 
     def _get_api_key_(self):
@@ -221,23 +215,16 @@ class QuandlFetcher (APIBaseFetcher):
 
     def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL):
         symbol = 'FSE/{}_X'.format(ticker.upper())
-        limit = {OPS.FULL: 2000, OPS.CHECK: 2}.get(output_size, 100)
+        limit = 2000 if output_size==OPS.FULL else 100
+        start_date = MyDate.get_date_str_from_datetime(MyDate.adjust_by_days(datetime.now(), -limit))
+        end_date = MyDate.today_str()
         collapse = 'daily'
-        return {'period': period, 'symbol': symbol, 'aggregation': aggregation, 'limit': limit, 'collapse': collapse}
-
-    def __get_data_frame_by_kwargs__(self, print_message=True):
-        try:
-            self._df = self.__get_data_frame__()
-        except:
-            if print_message:
-                print('PROBLEM with retrieving data from Quandl for {}'.format(self._kwargs['symbol']))
+        return {'period': period, 'symbol': symbol, 'aggregation': aggregation, 'limit': limit,
+                'start_date': start_date, 'end_date': end_date, 'collapse': collapse}
 
     def __get_data_frame__(self) -> pd.DataFrame:
-        limit = self._kwargs['limit'] * 2
-        end_date = MyDate.today_str()
-        start_date = MyDate.adjust_by_days(MyDate.get_datetime_object(), -limit)
-        df = quandl.get(self._kwargs['symbol'], start_date=start_date, end_date=end_date, collapse=self._kwargs['collapse'])
-        # df = quandl.get(self._kwargs['symbol'], limit=self._kwargs['limit'], collapse=self._kwargs['collapse'])
+        df = quandl.get(self._kwargs['symbol'], start_date=self._kwargs['start_date'],
+                        end_date=self._kwargs['end_date'], collapse=self._kwargs['collapse'])
         if df is not None:
             df = df[['Open', 'High', 'Low', 'Close', 'Traded Volume']]
             df = df.assign(Timestamp=df.index.map(MyDate.get_epoch_seconds_from_datetime))

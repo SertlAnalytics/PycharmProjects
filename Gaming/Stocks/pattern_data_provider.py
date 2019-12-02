@@ -130,7 +130,7 @@ class PatternDataProvider:
             dt_end = MyDate.get_date_from_datetime()
             dt_end = MyDate.adjust_by_days(dt_end, 1)
             self._and_clause = self.get_and_clause(dt_start, dt_end)
-            # print('data_provider.and_clause={}'.format(self.and_clause))
+            print('data_provider.and_clause={}'.format(self.and_clause))
 
     def use_index(self, index: str):
         self.index_used = index
@@ -141,7 +141,7 @@ class PatternDataProvider:
         elif index == INDICES.INDICES:
             self.ticker_dict = {"DJI": "Dow", "NDX": "Nasdaq"}
         else:
-            self.ticker_dict = self.index_config.get_ticker_dict_for_index(index, self.period)
+            self.ticker_dict = self.index_config.get_ticker_dict_for_index(index)
 
     def use_indices(self, indices: list):
         self.index_used = ''
@@ -156,17 +156,6 @@ class PatternDataProvider:
             name_from_db = self._db_stock.get_name_for_symbol(symbol)
             if name_from_db != '':
                 self.ticker_dict[symbol] = name_from_db
-
-    def start_after(self, ticker: str):  # to restart after an error
-        ticker_dict_new = {}
-        add_ticker = False
-        for symbol in self.ticker_dict:
-            if add_ticker:
-                ticker_dict_new[symbol] = self.ticker_dict[symbol]
-            else:
-                if symbol == ticker:
-                    add_ticker = True
-        self.ticker_dict = ticker_dict_new
 
     def get_index_members_as_dict(self, index: str):
         return self.index_config.get_ticker_dict_for_index(index)
