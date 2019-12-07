@@ -48,7 +48,7 @@ class IndicesComponentFetcher:
         elif index == INDICES.MIXED:
             return {"TSLA": "Tesla", "FCEL": "Full Cell", "ONVO": "Organovo", "MRAM": "MRAM"}
         elif index == INDICES.INDICES:
-            return {"DJI": "Dow", "NDX": "Nasdaq"}
+            return {"DJI": "Dow"}
         else:
             raise MyException('No index fetcher defined for "{}"'.format(index))
 

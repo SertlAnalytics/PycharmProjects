@@ -398,19 +398,18 @@ class StockDatabase(BaseDatabase):
         return company_dict
 
     def __get_last_loaded_time_stamp_dic__(self, symbol_input: str = '', like_input: str = '', period=PRD.DAILY):
-        print('Loading last_loaded_time_stamp_dict...(takes a while)')
         last_loaded_time_stamp_dic = {}
         query = self._stocks_table.get_distinct_symbol_query(symbol_input, like_input)
         db_df = DatabaseDataFrame(self, query)
         loaded_symbol_list = [rows.Symbol for index, rows in db_df.df.iterrows()]
+        query = "SELECT Symbol, MAX(Timestamp) as Max_ts FROM {} GROUP BY Symbol".format(STBL.STOCKS)
+        db_df = DatabaseDataFrame(self, query)
+        symbol_timestamp_dict_list = db_df.df.to_dict('records')
+        symbol_timestamp_dict = {}
+        for dict_entries in symbol_timestamp_dict_list:
+            symbol_timestamp_dict[dict_entries['Symbol']] = dict_entries['Max_ts']
         for symbol in loaded_symbol_list:
-            query = "SELECT * FROM {} WHERE Symbol = '{}' and Period = '{}' ORDER BY Timestamp Desc LIMIT 1".format(
-                STBL.STOCKS, symbol, period)
-            db_df = DatabaseDataFrame(self, query)
-            try:
-                last_loaded_time_stamp_dic[symbol] = db_df.df[CN.TIMESTAMP].values[0]
-            except:
-                print('Problem with __get_last_loaded_time_stamp_dic__ for {}'.format(symbol))
+            last_loaded_time_stamp_dic[symbol] = symbol_timestamp_dict.get(symbol, 0)
         return last_loaded_time_stamp_dic
 
     def __insert_company_in_company_table__(self, ticker: str, name: str, to_be_loaded: bool):

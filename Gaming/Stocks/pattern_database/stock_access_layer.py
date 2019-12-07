@@ -222,6 +222,43 @@ class AccessLayer4Stock(AccessLayer):
             return 0
         return df_result.iloc[0][DC.CLOSE]
 
+    def get_sorted_date_list_for_index(self, index: str) -> list:
+        query = "SELECT DISTINCT(S.Date) FROM {} AS S " \
+                "JOIN Equity as E ON S.Symbol = E.Key AND E.Exchange = '{}' " \
+                "ORDER BY S.Date;".format(self._table.name, index)
+        df_result = self.select_data_by_query(query)
+        if df_result.empty:
+            return []
+        return list(df_result[DC.DATE])
+
+    def get_date_range_for_index(self, index: str) -> list:
+        return_list = []
+        for entries in [['MIN', 'min_Date'], ['MAX', 'max_Date']]:
+            query = "SELECT {}, count(*) as number " \
+                    "FROM (SELECT S.Symbol, {}(S.Date) as {} FROM {} AS S" \
+                    " JOIN Equity as E ON S.Symbol = E.Key AND E.Exchange = '{}'" \
+                    " GROUP BY S.Symbol) " \
+                    "GROUP BY {} ORDER BY number DESC LIMIT 1;".format(
+                entries[1], entries[0], entries[1], self._table.name, index, entries[1])
+            df_result = self.select_data_by_query(query)
+            if df_result.empty:
+                return []
+            return_list.append(df_result.iloc[0][entries[1]])
+        return return_list
+
+    def get_symbol_list_for_index_in_date_range(self, index: str, date_start: str, date_end: str) -> list:
+        query = "SELECT S.Symbol, MIN(S.Date) as min_Date, MAX(S.Date) as max_Date FROM {} AS S" \
+                " JOIN Equity as E ON S.Symbol = E.Key AND E.Exchange = '{}'" \
+                "GROUP BY S.Symbol;".format(self._table.name, index)
+        df_result = self.select_data_by_query(query)
+        if df_result.empty:
+            return []
+        return_list = []
+        for index, row in df_result.iterrows():
+            if row['min_Date']<=date_start and row['max_Date']>=date_end:  # the list must contains these limits
+                return_list.append(row['Symbol'])
+        return return_list
+
     def get_wave_tick_list_for_time_stamp_interval(self, symbol: str, ts_from: int, ts_to: int):
         df = self.select_data_by_query(
             "SELECT * from {} WHERE symbol = '{}' AND {} BETWEEN {} and {} ORDER BY {}".format(

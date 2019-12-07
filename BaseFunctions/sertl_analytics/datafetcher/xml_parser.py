@@ -73,7 +73,7 @@ class XMLParser(WebParser):
         self._tag_attribute_dic = api.tag_attribute_dic
         self._sub_tag = api.sub_tag
         self._sub_tag_dic = api.sub_tag_dic
-        self.__result_list = []
+        self._result_list = []
         self.__fill_result_list__()
 
     def get_result_list(self):
@@ -102,7 +102,7 @@ class XMLParser(WebParser):
                 element = [td_list[self._sub_tag_dic[column]].text for column in self._sub_tag_dic]
                 element = self.__remove_ending_line_break__(element)
                 element = self.__remove_prefix__(element)
-                self.__result_list.append(element)
+                self._result_list.append(element)
         else:
             raise MyException('No XML parser defined for tag "{}"'.format(self._tag))
 
