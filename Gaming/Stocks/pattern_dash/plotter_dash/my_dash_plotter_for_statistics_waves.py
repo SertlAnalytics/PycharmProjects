@@ -44,8 +44,8 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
     def __get_chart_type_heatmap__(self):
         graph_list = []
         if self._index in ['', INDICES.ALL]:
-            index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
-            # ToDo Add INDICES.DAX when we have intraday
+            index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.Q_FSE]
+            # ToDo Check if Q_FSE works...
         else:
             index_list = [self._index]
         for index in index_list:
@@ -92,8 +92,8 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
     def __get_chart_type_mood__(self):
         graph_list = []
         if self._index in ['', INDICES.ALL]:
-            index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100]
-            # ToDo INDICES.Q_FSE
+            index_list = [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.Q_FSE]
+            # ToDo Check INDICES.Q_FSE
         else:
             index_list = [self._index]
         for index in index_list:

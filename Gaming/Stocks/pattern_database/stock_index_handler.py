@@ -60,6 +60,8 @@ class IndexHandler:
         if self.date_str_end < self.date_str_start:
             print('\n****The data for the index {} are already up-to-date. No calculation required.****'.format(
                 self._index))
+        elif len(self._date_list) <= 1:
+            print('\n****We does not have enough data to calculate the index {}.****'.format(self._index))
         else:
             self.__get_member_data__()
             self.__calculate_adjusted_member_symbol_df_dict__()

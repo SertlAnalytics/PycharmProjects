@@ -37,7 +37,7 @@ class StockDatabaseUpdater:
 
     def calculate_index_list(self, index_list: list, save_to_database=False):
         for index in index_list:
-            print('calculate_index_list: {}'.format(index))
+            print('\nCalculate index values for {}...'.format(index))
             index_handler = IndexHandler(index, self.db_stock, save_to_database=save_to_database)
             index_handler.calculate_index_data_frame()
 
