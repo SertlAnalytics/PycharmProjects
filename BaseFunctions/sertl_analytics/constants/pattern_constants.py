@@ -706,7 +706,7 @@ class INDICES:
     NASDAQ = 'Nasdaq (all)'
     SP500 = 'S&P 500'
     # FSE = 'FSE'  # Frankfurt Stock Exchange see also  https://stooq.com/db/l/?g=29
-    Q_FSE = 'Q_FSE' # https://stooq.com/db/l/?g=29 + https://www.quandl.com/data/FSE-Frankfurt-Stock-Exchange
+    Q_FSE = 'QFSE' # https://stooq.com/db/l/?g=29 + https://www.quandl.com/data/FSE-Frankfurt-Stock-Exchange
     # DAX = 'Dax'
     # MDAX = 'MDax'
     FOREX = 'Forex'

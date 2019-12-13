@@ -96,6 +96,7 @@ ENV/
 /site
 
 # mypy
+.idea
 .mypy_cache/
 BaseFunctions/sertl_analytics/environment/__init__.py
 

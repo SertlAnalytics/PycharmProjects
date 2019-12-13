@@ -231,6 +231,9 @@ class StockDatabase(BaseDatabase):
         self.__update_stock_data_for_single_value__(
             period, aggregation, symbol, name, INDICES.UNDEFINED, company_dic, last_loaded_dict)
 
+    def insert_stocks_data(self, input_dict_list: list):
+        self.__insert_data_into_table__(STBL.STOCKS, input_dict_list)
+
     def insert_pattern_data(self, input_dict_list: list):
         self.__insert_data_into_table__(STBL.PATTERN, input_dict_list)
 
@@ -357,9 +360,8 @@ class StockDatabase(BaseDatabase):
                 fetcher = self._alphavantage_forex_fetcher
                 kw_args = self._alphavantage_forex_fetcher.get_kw_args(
                     period, aggregation, ticker, output_size, limit=limit)
-            elif index in [INDICES.Q_FSE]:
-                fetcher = self._quandl_fetcher
-                kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size, limit=limit)
+            elif index in [INDICES.NASDAQ100, INDICES.Q_FSE]:  # is handled differently by calculation - not loading
+                return None
             else:
                 fetcher = self._alphavantage_stock_fetcher
                 kw_args = self._alphavantage_stock_fetcher.get_kw_args(period, aggregation, ticker, output_size)
@@ -723,6 +725,7 @@ class StockDatabaseDataFrame(DatabaseDataFrame):
             STBL.STOCKS, symbol, period, aggregation)
         if and_clause != '':
             self.statement += ' and ' + and_clause
+        self.statement += ' ORDER BY {}'.format(DC.TIMESTAMP)
         DatabaseDataFrame.__init__(self, db, self.statement)
         if self.df.shape[0] == 0:
             self.df_data = None

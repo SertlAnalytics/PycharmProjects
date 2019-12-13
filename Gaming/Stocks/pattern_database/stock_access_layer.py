@@ -5,12 +5,12 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.datafetcher.database_fetcher import BaseDatabase, DatabaseDataFrame
+from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
 from sertl_analytics.mydates import MyDate
-from pattern_database.stock_tables import MyTable, PatternTable, TradeTable, StocksTable, \
-    CompanyTable, STBL, WaveTable, AssetTable, MetricTable, EquityTable, TradePolicyMetricTable, ProcessTable
+from pattern_database.stock_tables import PatternTable, TradeTable, StocksTable, \
+    STBL, WaveTable, AssetTable, MetricTable, EquityTable, TradePolicyMetricTable, ProcessTable
 from pattern_database.stock_database import StockDatabase
-from pattern_wave_tick import WaveTick, WaveTickList
+from pattern_wave_tick import WaveTickList
 import pandas as pd
 import math
 import numpy as np
@@ -223,13 +223,13 @@ class AccessLayer4Stock(AccessLayer):
         return df_result.iloc[0][DC.CLOSE]
 
     def get_sorted_date_list_for_index(self, index: str) -> list:
-        query = "SELECT DISTINCT(S.Date) FROM {} AS S " \
+        query = "SELECT DISTINCT S.Date, S.Timestamp FROM {} AS S " \
                 "JOIN Equity as E ON S.Symbol = E.Key AND E.Exchange = '{}' " \
                 "ORDER BY S.Date;".format(self._table.name, index)
         df_result = self.select_data_by_query(query)
         if df_result.empty:
             return []
-        return list(df_result[DC.DATE])
+        return [list(df_result[DC.DATE]), list(df_result[DC.TIMESTAMP])]
 
     def get_date_range_for_index(self, index: str) -> list:
         return_list = []

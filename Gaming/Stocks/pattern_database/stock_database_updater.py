@@ -25,6 +25,7 @@ from pattern_database.stock_wave_entity import WaveEntity
 from pattern_scheduling.pattern_job_result import StockDatabaseUpdateJobResult
 from sertl_analytics.myfilelog import FileLogLine
 from time import sleep
+from pattern_database.stock_index_handler import IndexHandler
 import numpy as np
 
 
@@ -33,6 +34,12 @@ class StockDatabaseUpdater:
         self.sys_config = SystemConfiguration() if sys_config is None else sys_config
         self.db_stock = self.sys_config.db_stock
         self.pattern_controller = PatternDetectionController(self.sys_config)
+
+    def calculate_index_list(self, index_list: list, save_to_database=False):
+        for index in index_list:
+            print('calculate_index_list: {}'.format(index))
+            index_handler = IndexHandler(index, self.db_stock, save_to_database=save_to_database)
+            index_handler.calculate_index_data_frame()
 
     def delete_inconsistent_wave_records(self, scheduled_job=False) -> int:
         """
