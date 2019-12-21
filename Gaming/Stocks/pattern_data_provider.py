@@ -19,6 +19,7 @@ from sertl_analytics.constants.pattern_constants import CN, PRD, OPS, INDICES, D
 from pattern_database import stock_database
 from sertl_analytics.mycache import MyCacheObjectApi
 from sertl_analytics.mydates import MyDate
+from sertl_analytics.mymath import MyMath
 from pattern_database.stock_database import StockDatabase
 from sertl_analytics.pybase.df_base import PyBaseDataFrame
 from sertl_analytics.datafetcher.database_fetcher import DatabaseDataFrame
@@ -27,6 +28,7 @@ from pattern_configuration import PatternConfiguration
 from pattern_index_configuration import IndexConfiguration
 from pattern_dash.my_dash_caches import MyDataFrameCache
 from pattern_logging.pattern_log import PatternLog
+import copy
 
 
 class DP:  # DataProvider
@@ -143,7 +145,7 @@ class PatternDataProvider:
         elif index == INDICES.MIXED:
             self.ticker_dict = self.get_mixed_dic()
         elif index == INDICES.INDICES:
-            self.ticker_dict = {"DJI": "Dow", "NDX": "Nasdaq"}
+            self.ticker_dict = {"DJI": "Dow"}  # , "NDX": "Nasdaq"
         else:
             self.ticker_dict = self.index_config.get_ticker_dict_for_index(index, self.period)
 
@@ -188,6 +190,8 @@ class PatternDataProvider:
         df = None
         try:
             df = self.__get_df_for_ticker_id__(ticker_id, and_clause, limit, offset=offset)
+            if self.period == PRD.INTRADAY:
+                df = self.__get_df_adjusted_to_aggregation__(df)
         except IndexError:
             PatternLog().log_message('Error with ticker_id={}'.format(ticker_id),
                                      'init_pattern_data_handler_for_ticker_id')
@@ -214,6 +218,35 @@ class PatternDataProvider:
         if df is not None:
             self.__add_data_frame_to_cache__(df, data_fetcher_cache_key)
         return df
+
+    def __get_df_adjusted_to_aggregation__(self, df: pd.DataFrame):  # is called only for PRD.INTRADAY
+        source_aggregation = int((df.index[1] - df.index[0])/60)
+        if source_aggregation == self.aggregation:
+            return df
+        source_rows_per_aggregation = int(self.aggregation/source_aggregation)
+        row_list = []
+        value_dict = {CN.OPEN: 0, CN.LOW: 0, CN.HIGH: 0, CN.CLOSE: 0, CN.VOL: 0}
+        row_for_aggregation = {}
+        row_counter_per_aggregation = 0
+        for index, row in df.iterrows():
+                if row_counter_per_aggregation == 0:
+                    row_for_aggregation = copy.deepcopy(row)
+                    for value_index in value_dict:
+                        value_dict[value_index] = row[value_index]  # default values for new aggretation
+                else:
+                    value_dict[CN.LOW] = min(value_dict[CN.LOW], row[CN.LOW])
+                    value_dict[CN.HIGH] = max(value_dict[CN.HIGH], row[CN.HIGH])
+                    value_dict[CN.CLOSE] = row[CN.CLOSE]
+                    value_dict[CN.VOL] += row[CN.VOL]
+                row_counter_per_aggregation += 1
+                if row_counter_per_aggregation == source_rows_per_aggregation or index == df.index[-1]:
+                    for value_index, value in value_dict.items():
+                        row_for_aggregation[value_index] = round(value, 0) \
+                            if value_index == CN.VOL else MyMath.round_smart(value)
+                    row_list.append(row_for_aggregation)
+                    row_counter_per_aggregation = 0
+        df_new = pd.DataFrame(row_list)
+        return df_new
 
     def __get_ticker_name__(self):
         ticker_name = self._db_stock.get_name_for_symbol(self.ticker_id)

@@ -11,6 +11,7 @@ from sertl_analytics.constants.pattern_constants import CN, DIR
 from pattern_configuration import PatternConfiguration
 from pattern_data_container import PatternData, PatternDataFibonacci
 from pattern_data_matrix import PatternDataMatrix
+import math
 
 
 class PatternDataHandler:
@@ -66,7 +67,12 @@ class PatternDataHandler:
         return ''
 
     def get_tolerance_pct_values(self):
+        if self.pattern_data.df.shape[0] <= 1:
+            print('get_tolerance_pct_values: we have only one row - returning 0, 0, 0')
+            return 0, 0, 0
         mean_hl = MyMath.round_smart(self.pattern_data.df[CN.MEAN_HL].mean())
+        if mean_hl == 0 or mean_hl == math.nan:
+            return 0, 0, 0
         std_dev_mean_hl = MyMath.round_smart(self.pattern_data.df[CN.MEAN_HL].std())
         base_tolerance_pct = MyMath.round_smart(std_dev_mean_hl / mean_hl)
         tolerance_pct = base_tolerance_pct / 5

@@ -10,7 +10,7 @@ from pattern_predictor_optimizer import PatternPredictorOptimizer
 from sertl_analytics.exchanges.bitfinex import BitfinexConfiguration
 from pattern_system_configuration import SystemConfiguration
 
-sys_config = SystemConfiguration(with_predictor=False)
+sys_config = SystemConfiguration(with_predictor=True)
 stock_db = sys_config.db_stock
 exchange_config = BitfinexConfiguration()
 predictor_optimizer = PatternPredictorOptimizer(stock_db)
@@ -26,8 +26,10 @@ if True:
     # stock_db_updater.calculate_index_list([INDICES.NASDAQ100], save_to_database=True)
     # stock_db.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
     # stock_db.update_stock_data_by_index(INDICES.NASDAQ100, PRD.DAILY)
-    stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.Q_FSE, offset_day_range=15, start_after='000')
+    # stock_db.update_stock_data_by_index(INDICES.CRYPTO_CCY, PRD.DAILY)
+    # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.Q_FSE, offset_day_range=15, start_after='000COM')
     # stock_db_updater.update_wave_records_for_daily_period('GLJ', 400)
+    stock_db_updater.update_pattern_data_by_index_for_daily_period(INDICES.CRYPTO_CCY, start_after='')
     # stock_db_updater.fill_asset_gaps(1545498000, 1546297200, 21600)
     # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.CRYPTO_CCY)
     # stock_db_updater.update_wave_data_by_index_for_intraday(INDICES.DOW_JONES)

@@ -205,8 +205,8 @@ class PatternDetectionController:
     @staticmethod
     def get_detector_for_fibonacci(
             sys_config: SystemConfiguration, ticker: str, and_clause='', limit=300, offset: int=0) -> PatternDetector:
-        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit, offset=offset)
         print('\nProcessing for Fibonacci: {} ({})\n'.format(ticker, sys_config.runtime_config.actual_ticker_name))
+        sys_config.init_pattern_data_handler_for_ticker_id(ticker, and_clause, limit, offset=offset)
         detector = PatternDetector(sys_config)
         detector.parse_for_fibonacci_waves()
         return detector

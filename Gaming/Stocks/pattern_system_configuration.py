@@ -160,9 +160,9 @@ class SystemConfiguration:
     @property
     def expected_win_pct(self):
         if self.data_provider.equity_type == EQUITY_TYPE.CRYPTO:
-            return 1.0
+            return 0.8
         else:
-            return 1.0 if self.period == PRD.INTRADAY else 1.0
+            return 0.8 if self.period == PRD.INTRADAY else 0.8
 
     @property
     def master_predictor_touch_points(self):
@@ -205,8 +205,6 @@ class SystemConfiguration:
         return self.pdh
 
     def init_pattern_data_handler_for_ticker_id(self, ticker_id: str, and_clause: str, limit=300, offset: int=0):
-        if self.index_config.get_index_for_symbol(ticker_id) == INDICES.Q_FSE and self.period == PRD.INTRADAY:
-            self.data_provider.aggregation = 5
         self.data_provider.init_pattern_data_handler_for_ticker_id(ticker_id, and_clause, limit, offset=offset)
         self.__update_runtime_parameters__()
 

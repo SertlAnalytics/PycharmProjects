@@ -16,21 +16,21 @@ class FWDHTC:  # FibonacciWaveDataHandler TestCase
 
 
 fibonacci_wave_data_handler = FibonacciWaveDataHandler(StockDatabase())
-fibonacci_wave_data_handler.load_data(period=PRD.INTRADAY, aggregation=30)
+fibonacci_wave_data_handler.load_data(period=PRD.DAILY, aggregation=1)
 
 test_case = FWDHTC.HEAT_MAP
 
 if test_case == FWDHTC.RELOAD:
     fibonacci_wave_data_handler.reload_data_when_outdated()
 elif test_case == FWDHTC.HEAT_MAP:
-    period = PRD.INTRADAY
-    aggregation = 30
-    index = INDICES.CRYPTO_CCY
+    period = PRD.DAILY
+    aggregation = 1
+    index = INDICES.Q_FSE
     fibonacci_wave_data_handler.init_tick_key_list_for_retrospection(100, period=period, aggregation=aggregation)
     x_data = fibonacci_wave_data_handler.tick_key_list_for_retrospection
     y_data = WAVEST.get_waves_types_for_processing([fibonacci_wave_data_handler.period_for_retrospection])
     z_data = [fibonacci_wave_data_handler.get_waves_number_list_for_wave_type_and_index(wt, index) for wt in y_data]
-    print('__get_data_for_heatmap_figure__: {}: \n{}\n{}'.format(index, x_data, y_data))
+    # print('__get_data_for_heatmap_figure__: {}: \n{}\n{}\n{}'.format(index, x_data, y_data, z_data))
     for index_z, z_data_list in enumerate(z_data):
         z_data_list_with_numbers = []
         for index, key in enumerate(x_data):

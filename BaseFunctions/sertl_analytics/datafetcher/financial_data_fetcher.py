@@ -198,7 +198,7 @@ class APIBaseFetcher:
     def _get_api_key_(self):
         pass
 
-    def _get_url_(self):
+    def _get_url_(self) -> str:
         pass
 
     def plot_data_frame(self):
@@ -243,19 +243,12 @@ class QuandlFetcher (APIBaseFetcher):
 
     def __get_data_frame_by_kwargs__(self, print_message=True):
         try:
-            self._df = self.__get_data_frame__()
+            self._df = self.__get_data_frame__(None)
         except:
             if print_message:
                 print('PROBLEM with retrieving data from Quandl for {}'.format(self.kw_symbol))
 
-    def __get_data_frame__(self) -> pd.DataFrame:
-        limit = self.kw_limit * 2
-        end_date = MyDate.today_str()
-        start_date = MyDate.adjust_by_days(MyDate.get_datetime_object(), -limit)
-        df = quandl.get(self.kw_symbol, start_date=start_date, end_date=end_date, collapse=self.kw_collapse)
-        # print('PROBLEM with retrieving data from Quandl for {}'.format(self._kwargs['symbol']))
-
-    def __get_data_frame__(self) -> pd.DataFrame:
+    def __get_data_frame__(self, request_data) -> pd.DataFrame:
         limit = self._kwargs['limit'] * 2
         end_date = MyDate.today_str()
         start_date = MyDate.adjust_by_days(MyDate.get_datetime_object(), -limit)
@@ -283,14 +276,14 @@ class StooqIntradayFetcher(APIBaseFetcher):
 
     def get_kw_args(self, period: str, aggregation: int, ticker: str, output_size=OPS.FULL, limit=0, offset=0):
         symbol = ticker.upper()
-        limit = 300 if limit == 0 else limit
+        limit = int(300 * aggregation/5) if limit == 0 else 300  # we have 5 min intervals in the data
         file_path = 'D:/PD_Intraday_Data/5_min/{}.de.txt'.format(ticker.lower())
         return {'period': period, 'symbol': symbol, 'aggregation': aggregation,
                 'limit': limit, 'filepath': file_path, 'offset': offset}
 
     def __get_data_frame_by_kwargs__(self, print_message=True):
         try:
-            self._df = self.__get_data_frame__()
+            self._df = self.__get_data_frame__(None)
             if self._df is not None:
                 self._df_data = self._df[self._df.columns]
                 start_dt = MyDate.get_date_time_from_epoch_seconds(self._df_data.index[0])
@@ -301,7 +294,9 @@ class StooqIntradayFetcher(APIBaseFetcher):
             if print_message:
                 print('PROBLEM with retrieving data from StooqIntraday for {}'.format(self.kw_symbol))
 
-    def __get_data_frame__(self) -> pd.DataFrame:
+    def __get_data_frame__(self, request_data) -> pd.DataFrame:
+        if not os.path.isfile(self.kw_filepath):
+            return None
         df = pd.read_csv(self.kw_filepath, sep=',', header=0)
         if df is not None:
             if self.kw_offset > 0:
@@ -315,7 +310,8 @@ class StooqIntradayFetcher(APIBaseFetcher):
             df.columns = CN.get_standard_column_names()
         return df
 
-    def __get_time_stamp_for_data_frame__(self, row) -> int:
+    @staticmethod
+    def __get_time_stamp_for_data_frame__(row) -> int:
         return int(MyDate.get_epoch_seconds_for_date_time_strings(row['Date'], row['Time']))
 
 
@@ -413,7 +409,7 @@ class AlphavantageStockFetcher (AlphavantageJSONFetcher):
         return Ticker(ticker_id=symbol, bid=price, ask=price, last_price=price,
                       low=low, high=high, vol=volume, ts=MyDate.time_stamp_now())
 
-    def _get_url_(self):
+    def _get_url_(self) -> str:
         symbol = self._kwargs['symbol']
         url = 'https://www.alphavantage.co/query?function={}&symbol={}'.format(self.get_url_function(), symbol)
         if self.kw_output_size == OPS.FULL:

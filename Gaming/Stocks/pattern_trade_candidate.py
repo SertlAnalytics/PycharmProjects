@@ -6,7 +6,7 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2018-05-14
 """
 
-from sertl_analytics.constants.pattern_constants import DC, BLR, TP, PDR, FT
+from sertl_analytics.constants.pattern_constants import DC, BLR, TP, PDR, FT, TSTR
 from pattern import Pattern
 from sertl_analytics.exchanges.exchange_cls import ExchangeConfiguration
 from pattern_system_configuration import TradeOptimizer
@@ -156,22 +156,25 @@ class TradeCandidateController:
             self.__add_to_black_buy_pattern_id_readable_list__(key, BLR.NO_BEST_STRATEGY)
             return
 
-        key_buy_and_strategy = self.__get_key_for_black_buy_and_strategy_pattern_id_readable_list(
-            pattern, buy_trigger, best_strategy)
+        # we want to have limit fix strategy for all trades - for statistics reasons
+        trade_strategy_list = [best_strategy] if best_strategy == TSTR.LIMIT_FIX else [best_strategy, TSTR.LIMIT_FIX]
+        for trade_strategy in trade_strategy_list:
+            key_buy_and_strategy = self.__get_key_for_black_buy_and_strategy_pattern_id_readable_list(
+                pattern, buy_trigger, trade_strategy)
 
-        if key_buy_and_strategy in self._black_buy_and_strategy_pattern_id_readable_list:
-            pass
-            # print('Already in black_buy_trigger_trade_strategy_pattern_id_list: {}'.format(key_buy_and_strategy))
-        else:
-            print('Add_to_candidate_list: Checking trade strategy: {}'.format(key_buy_and_strategy))
-            if pattern.are_conditions_for_trade_strategy_fulfilled(best_strategy):
-                trade_api = PatternTradeApi(pattern, buy_trigger, best_strategy)
-                trade_api.exchange_config = self.exchange_config
-                trade_api.last_price_mean_aggregation = self.__get_optimal_last_price_mean_aggregation__(pattern)
-                self.__add_trade_candidate_entry_to_ticker_id_dict__(TradeCandidate(PatternTrade(trade_api)))
+            if key_buy_and_strategy in self._black_buy_and_strategy_pattern_id_readable_list:
+                pass
+                # print('Already in black_buy_trigger_trade_strategy_pattern_id_list: {}'.format(key_buy_and_strategy))
             else:
-                self.__add_to_black_buy_strategy_pattern_id_readable_list__(
-                    key_buy_and_strategy, BLR.TRADE_STRATEGY_CONDITIONS)
+                print('Add_to_candidate_list: Checking trade strategy: {}'.format(key_buy_and_strategy))
+                if pattern.are_conditions_for_trade_strategy_fulfilled(trade_strategy):
+                    trade_api = PatternTradeApi(pattern, buy_trigger, trade_strategy)
+                    trade_api.exchange_config = self.exchange_config
+                    trade_api.last_price_mean_aggregation = self.__get_optimal_last_price_mean_aggregation__(pattern)
+                    self.__add_trade_candidate_entry_to_ticker_id_dict__(TradeCandidate(PatternTrade(trade_api)))
+                else:
+                    self.__add_to_black_buy_strategy_pattern_id_readable_list__(
+                        key_buy_and_strategy, BLR.TRADE_STRATEGY_CONDITIONS)
 
     def __get_optimal_last_price_mean_aggregation__(self, pattern: Pattern):
         return self.trade_optimizer.get_optimal_last_price_mean_aggregation_for_pattern_type(pattern.pattern_type)

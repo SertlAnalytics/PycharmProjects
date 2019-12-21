@@ -352,7 +352,9 @@ class StockDatabase(BaseDatabase):
                 index = self.get_index_for_symbol(ticker)
                 if index == INDICES.UNDEFINED:
                     return None
-            if index == INDICES.CRYPTO_CCY:
+            if ticker in [INDICES.NASDAQ100, INDICES.Q_FSE]:  # is handled differently by calculation - not loading
+                return None
+            elif index == INDICES.CRYPTO_CCY:
                 # fetcher = self._alphavantage_crypto_fetcher
                 fetcher = self._bitfinex_crypto_fetcher
                 kw_args = self._bitfinex_crypto_fetcher.get_kw_args(period, aggregation, ticker, limit=limit)
@@ -360,8 +362,9 @@ class StockDatabase(BaseDatabase):
                 fetcher = self._alphavantage_forex_fetcher
                 kw_args = self._alphavantage_forex_fetcher.get_kw_args(
                     period, aggregation, ticker, output_size, limit=limit)
-            elif index in [INDICES.NASDAQ100, INDICES.Q_FSE]:  # is handled differently by calculation - not loading
-                return None
+            elif index in [INDICES.Q_FSE]:
+                fetcher = self._quandl_fetcher
+                kw_args = self._quandl_fetcher.get_kw_args(period, aggregation, ticker, output_size, limit=limit)
             else:
                 fetcher = self._alphavantage_stock_fetcher
                 kw_args = self._alphavantage_stock_fetcher.get_kw_args(period, aggregation, ticker, output_size)

@@ -245,14 +245,14 @@ class MyMath:
 
     @staticmethod
     def round_smart(value: float) -> float:
-        if value == math.inf or value == -math.inf:
+        if value == math.inf or value == -math.inf or value == 0:
             return value
-        if value == 0:
+        if value == math.nan:
             return 0
         try:
             decimals = int(math.ceil(math.log10(abs(value))))
         except:
-            print('Error')
+            print('round_smart: Error with value {}'.format(value))
         if decimals > 3:
             rounded_value = round(value)
             # to avoid problems with an additional .0 in print statements...

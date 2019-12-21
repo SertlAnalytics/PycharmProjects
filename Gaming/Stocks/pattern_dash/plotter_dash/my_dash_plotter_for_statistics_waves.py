@@ -96,6 +96,7 @@ class MyDashTabStatisticsPlotter4Waves(MyDashTabStatisticsPlotter):
             # ToDo Check INDICES.Q_FSE
         else:
             index_list = [self._index]
+
         for index in index_list:
             index_for_key = index.replace(' ', '_').lower()
             index_for_key = index_for_key if self._index == '' else '{}_{}'.format(index_for_key, 'single')

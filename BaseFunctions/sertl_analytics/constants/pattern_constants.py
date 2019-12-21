@@ -535,6 +535,7 @@ class FT:
 class WPDT:  # WavePeakDateType
     DAILY_DATE = 'Daily_Date'
     INTRADAY_DATE = 'Intraday_Date'
+    INTRADAY_05_TS = 'Intraday_05_Timestamp'
     INTRADAY_15_TS = 'Intraday_15_Timestamp'
     INTRADAY_30_TS = 'Intraday_30_Timestamp'
     INTRADAY_60_TS = 'Intraday_60_Timestamp'
@@ -545,11 +546,11 @@ class WPDT:  # WavePeakDateType
         return {WPDT.DAILY_DATE: PRD.DAILY}.get(wave_period_key, PRD.INTRADAY)
 
     @staticmethod
-    def get_types_for_period(period: str) -> list:
+    def get_types_for_period(period: str, aggregation=30) -> list:
         if period == PRD.DAILY:
             return [WPDT.DAILY_DATE, WPDT.INTRADAY_DATE]
         elif period == PRD.INTRADAY:
-            return [WPDT.INTRADAY_30_TS]
+            return {5: [WPDT.INTRADAY_05_TS], 15: [WPDT.INTRADAY_15_TS]}.get(aggregation, [WPDT.INTRADAY_30_TS])
         return [WPDT.DAILY_DATE, WPDT.INTRADAY_DATE, WPDT.INTRADAY_30_TS]
 
 
@@ -721,23 +722,23 @@ class INDICES:
 
     @staticmethod
     def get_index_list_for_waves_tab():
-        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.FOREX]
+        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.FOREX, INDICES.Q_FSE]
 
     @staticmethod
     def get_index_list_for_index_configuration():
-        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.FOREX]
+        return [INDICES.CRYPTO_CCY, INDICES.DOW_JONES, INDICES.NASDAQ100, INDICES.FOREX, INDICES.Q_FSE]
 
     @staticmethod
     def get_ticker_for_index(index: str):
         if index == INDICES.DOW_JONES:
             return 'DJI'
         elif index == INDICES.NASDAQ100:
-            return 'NDX'
+            return INDICES.NASDAQ100
         elif index == INDICES.CRYPTO_CCY:
             return 'BTCUSD'
         elif index == INDICES.FOREX:
             return 'USDEUR'
-        return ''
+        return index
 
 
 class FD:

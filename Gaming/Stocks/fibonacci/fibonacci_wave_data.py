@@ -76,13 +76,14 @@ class FibonacciWaveDataHandler:
 
     def fill_wave_type_number_dict_for_ticks_in_wave_tick_list(
             self, wave_tick_list: WaveTickList, index: str, period: str):
-        for wave_peak_date_type in WPDT.get_types_for_period(period):
+        for wave_peak_date_type in WPDT.get_types_for_period(period, self._aggregation):
             self._fibonacci_wave_data_dict[wave_peak_date_type].\
                 fill_wave_type_number_dict_for_ticks_in_wave_tick_list(wave_tick_list, index)
         wave_tick_list.fill_wave_type_number_dicts()  # we need some min max values for the wave numbers
 
     def get_waves_number_list_for_wave_type_and_index(self, wave_type: str, index: str):
-        for wave_period_key in WPDT.get_types_for_period(self._period_for_retrospection):
+        for wave_period_key in WPDT.get_types_for_period(
+                self._period_for_retrospection, self._aggregation_for_retrospection):
             fibonacci_wave_data = self._fibonacci_wave_data_dict[wave_period_key]
             index_wave_type_key = '{}_{}'.format(index, wave_type)
             if index_wave_type_key in fibonacci_wave_data.index_wave_type_number_dict:
@@ -112,11 +113,14 @@ class FibonacciWaveDataHandler:
         return offset_time_stamp
 
     def __get_fibonacci_wave_data_dict__(self):
-        return {key: self.__get_new_fibonacci_wave_data_by_key__(key) for key in WPDT.get_types_for_period(self._period)}
+        return {key: self.__get_new_fibonacci_wave_data_by_key__(key)
+                for key in WPDT.get_types_for_period(self._period, self._aggregation)}
 
     def __get_new_fibonacci_wave_data_by_key__(self, wave_peak_date_type: str):
         if wave_peak_date_type == WPDT.INTRADAY_DATE:
             return FibonacciWaveDataIntradayDate(self._access_layer_wave, self._index_config)
+        elif wave_peak_date_type == WPDT.INTRADAY_05_TS:
+            return FibonacciWaveDataIntraday05Timestamp(self._access_layer_wave, self._index_config)
         elif wave_peak_date_type == WPDT.INTRADAY_15_TS:
             return FibonacciWaveDataIntraday15Timestamp(self._access_layer_wave, self._index_config)
         elif wave_peak_date_type == WPDT.INTRADAY_30_TS:
@@ -250,6 +254,16 @@ class FibonacciWaveDataIntradayTimestamp(FibonacciWaveDataBase):
         if type(wave_object) is WaveTick:
             return wave_object.time_stamp
         return wave_object[DC.WAVE_END_TS]
+
+
+class FibonacciWaveDataIntraday05Timestamp(FibonacciWaveDataIntradayTimestamp):
+    @property
+    def wave_peak_date_type(self):
+        return WPDT.INTRADAY_05_TS
+
+    @staticmethod
+    def __get_aggregation__():
+        return 5
 
 
 class FibonacciWaveDataIntraday15Timestamp(FibonacciWaveDataIntradayTimestamp):

@@ -229,10 +229,12 @@ class StockDatabaseUpdater:
                 if trade_type == '':
                     self.db_stock.update_trade_type_for_pattern(pattern_id, TRT.LONG)
 
-    def update_pattern_data_by_index_for_daily_period(self, index: str):
+    def update_pattern_data_by_index_for_daily_period(self, index: str, start_after=''):
         print('Update pattern data for index: {}'.format(index))
         self.sys_config.init_detection_process_for_automated_pattern_update()
         self.sys_config.data_provider.use_index(index)
+        if start_after != '':
+            self.sys_config.data_provider.start_after(start_after)
         pattern_controller = PatternDetectionController(self.sys_config)
         pattern_controller.run_pattern_detector()
 
@@ -259,7 +261,7 @@ class StockDatabaseUpdater:
     def update_wave_data_by_index_for_intraday(
             self, index: str, aggregation: int=30, offset_day_range: int=0, start_after=""):
         if index == INDICES.Q_FSE:
-            aggregation = 5  # we use the data from  https://stooq.com/db/h/ which are only available in 5 min steps
+            aggregation = 30  # we use the data from  https://stooq.com/db/h/ which are only available in 5 min steps
         print('Update wave data for index: {} ({}min)'.format(index, aggregation))
         ticker_dict = self.__get_configured_ticker_dict_for_index__(index)
         for ticker in ticker_dict:

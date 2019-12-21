@@ -383,6 +383,7 @@ class CompanyEntity(NamedEntity):
             'Paidi', 'Playmobil', 'Puma', 'Paglie', 'Poivre Blanc', 'Paul Green',
             'Risa', 'Range Rover', 'Ricardo', 'Renault', 'Review',
             'Stokke', 'Samsung', 'Schöffel', 'Sunshine', 'Schuco', 'Skoda', 'Seat', 'Sunrise', 'SBB', 'Schwörer',
+            'Spin Master',
             'Tosca', 'Toyota', 'Tutti', 'TomTom', 'Triumph', 'Terranova', 'Typhoon',
             'USM', 'Under Armour',
             'Waldmann', 'Wilde+Spieth',
@@ -431,7 +432,7 @@ class ProductEntity(NamedEntity):
             'Roundabout', 'Rufus',
             'sleepi', 'Silencio',
             'Velar', 'Vito',
-            'Zümo',
+            'Zümo', 'Zoomer'
         ]
 
     @staticmethod
