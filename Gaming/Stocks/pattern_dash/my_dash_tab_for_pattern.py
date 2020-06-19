@@ -106,12 +106,15 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
     def __init_callback_for_position_markdown__(self):
         @self.app.callback(
             Output('my_position_markdown', 'children'),
-            [Input('my_interval_refresh', 'n_intervals')])
-        def handle_callback_for_position_markdown(n_intervals: int):
+            [Input('my_interval_refresh', 'n_intervals'),
+             Input('my_reset_total_result_button', 'n_clicks')])
+        def handle_callback_for_position_markdown(n_intervals: int, reset_n_clicks: int):
             # self.__add_fibonacci_waves_to_news__()
             # self.__add_bollinger_band_breaks_to_news__()
-            markdown_text = self.__get_position_markdown__(n_intervals)
-            self.__save_balances_to_database__()  # this must be after __get_position_markdown__ !!!
+            reset_button_clicked = self._state_handler.change_for_my_reset_total_result_button(reset_n_clicks)
+            markdown_text = self.__get_position_markdown__(n_intervals, reset_button_clicked)
+            if not reset_button_clicked:  # we don't want to save the data when the reset button is clicked
+                self.__save_balances_to_database__()  # this must be after __get_position_markdown__ !!!
             return markdown_text
 
     def __save_balances_to_database__(self):
@@ -148,16 +151,18 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
         text = '- _**News**_: {}\n- _**Trades**_: {}\n - _**Daily statistics**_: {}'.format(news, trades, statistics)
         return text
 
-    def __get_position_markdown__(self, n_intervals: int):
-        text = dedent('''{}''').format(self.__get_position_markdown_for_active_positions__())
+    def __get_position_markdown__(self, n_intervals: int, reset_button_clicked: bool):
+        text = dedent('''{}''').format(self.__get_position_markdown_for_active_positions__(reset_button_clicked))
         return text
 
-    def __get_position_markdown_for_active_positions__(self):
+    def __get_position_markdown_for_active_positions__(self, reset_button_clicked: bool):
         balances = self.trade_handler_online.get_balances_with_current_values()
         self.trade_handler_online.balances = balances
         text_list = ['_**{}**_: {:.2f} ({:.2f}): {:.2f}$'.format(
                 b.asset, b.amount, b.amount_available, b.current_value) for b in balances]
         total_value = sum([balance.current_value for balance in balances])
+        if reset_button_clicked:  # reset the value_total_start
+            self.trade_handler_online.value_total_start = total_value
         text_list.append(self.__get_position_total__(total_value))
         return '  \n'.join(text_list)
 

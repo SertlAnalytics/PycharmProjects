@@ -297,13 +297,19 @@ class StooqIntradayFetcher(APIBaseFetcher):
     def __get_data_frame__(self, request_data) -> pd.DataFrame:
         if not os.path.isfile(self.kw_filepath):
             return None
-        df = pd.read_csv(self.kw_filepath, sep=',', header=0)
+        # NEW: < TICKER >, < PER >, < DATE >, < TIME >, < OPEN >, < HIGH >, < LOW >, < CLOSE >, < VOL >, < OPENINT >
+        # OLD: Date, Time, Open, High, Low, Close, Volume, OpenInt
+        headers = ['Ticker','Per','Date','Time','Open','High','Low','Close','Volume','OpenInt']
+        types = {'Date': str, 'Time': str}
+        df = pd.read_csv(self.kw_filepath, sep=',', header=0, names=headers, dtype=types)
         if df is not None:
             if self.kw_offset > 0:
                 offset_value = df['Date'].unique()[-self.kw_offset]
                 df = df[df['Date']<offset_value]
             if df.shape[0] > self.kw_limit:
                 df = df[-self.kw_limit:]
+            df[CN.DATE] = df.apply(self.__get_date_string_with_minus_separator__, axis=1)
+            df[CN.TIME] = df.apply(self.__get_time_string_with_colon_separator__, axis=1)
             df[CN.TIMESTAMP] = df.apply(self.__get_time_stamp_for_data_frame__, axis=1)
             df.set_index(CN.TIMESTAMP, drop=True, inplace=True)
             df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
@@ -313,6 +319,20 @@ class StooqIntradayFetcher(APIBaseFetcher):
     @staticmethod
     def __get_time_stamp_for_data_frame__(row) -> int:
         return int(MyDate.get_epoch_seconds_for_date_time_strings(row['Date'], row['Time']))
+
+    @staticmethod
+    def __get_date_string_with_minus_separator__(row) -> str:
+        row_value = row['Date']
+        if row_value.find('-') == -1:
+            row_value = row_value[0:4]+'-'+row_value[4:6]+'-'+row_value[6:8]
+        return row_value
+
+    @staticmethod
+    def __get_time_string_with_colon_separator__(row) -> str:
+        row_value = row['Time']
+        if row_value.find(':') == -1:
+            row_value = row_value[0:2] + ':' + row_value[2:4] + ':' + row_value[4:6]
+        return row_value
 
 
 class AlphavantageJSONFetcher (APIBaseFetcher):

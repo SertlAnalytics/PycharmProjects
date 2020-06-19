@@ -2,26 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f337eff7-2e2d-415d-b4ab-cf8d55a29aa3" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/josef.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/constants/pattern_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/pattern_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/datafetcher/financial_data_fetcher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mymath.py" beforeDir="false" afterPath="$PROJECT_DIR$/mymath.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/fibonacci/fibonacci_wave_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/fibonacci/fibonacci_wave_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/fibonacci/run_fibonacci_wave_handler_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/fibonacci/run_fibonacci_wave_handler_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/plotter_dash/my_dash_plotter_for_statistics_waves.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/plotter_dash/my_dash_plotter_for_statistics_waves.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_dash/my_dash_jobs.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_provider.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_data_provider.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/run_daily_tasks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_database/stock_database_updater.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_detection_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_detection_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_runtime_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_runtime_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_system_configuration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_candidate.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_trade_candidate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../Salesman/entities/salesman_named_entity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Salesman/entities/salesman_named_entity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../Gaming/Stocks/pattern_detector.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -56,8 +44,8 @@
       <file leaf-file-name="financial_data_fetcher.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/datafetcher/financial_data_fetcher.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="143">
-              <caret line="275" selection-start-line="275" selection-end-line="275" />
+            <state relative-caret-position="58">
+              <caret line="270" column="44" lean-forward="true" selection-start-line="270" selection-start-column="44" selection-end-line="270" selection-end-column="44" />
               <folding>
                 <element signature="e#204#223#0" expanded="true" />
               </folding>
@@ -933,8 +921,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/datafetcher/financial_data_fetcher.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="143">
-          <caret line="275" selection-start-line="275" selection-end-line="275" />
+        <state relative-caret-position="58">
+          <caret line="270" column="44" lean-forward="true" selection-start-line="270" selection-start-column="44" selection-end-line="270" selection-end-column="44" />
           <folding>
             <element signature="e#204#223#0" expanded="true" />
           </folding>

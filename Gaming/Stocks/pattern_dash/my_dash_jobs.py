@@ -71,6 +71,7 @@ class MyDashStockDataUpdateJobForShares(MyDashPatternJob):
         db_stock = StockDatabase()
         db_stock.update_stock_data_by_index(INDICES.INDICES, PRD.DAILY)
         db_stock.update_stock_data_by_index(INDICES.DOW_JONES, PRD.DAILY)
+        db_stock.update_stock_data_for_symbol('MRAM')
         db_stock.update_stock_data_for_symbol('FCEL')
         db_stock.update_stock_data_for_symbol('TSLA')
         db_stock.update_stock_data_for_symbol('GE')

@@ -381,7 +381,7 @@ class StockDatabase(BaseDatabase):
         return fetcher.df
 
     def get_index_for_symbol(self, symbol: str) -> str:
-        if symbol in ['FCEL', 'GE']:
+        if symbol in ['FCEL', 'GE', 'MRAM']:
             return INDICES.SHARES_GENERAL
         query = "SELECT {} FROM {} WHERE {}='{}'".format(EDC.EXCHANGE, self._entity_table.name, EDC.EQUITY_KEY, symbol)
         df = self.select_data_by_query(query)
@@ -407,7 +407,8 @@ class StockDatabase(BaseDatabase):
         query = self._stocks_table.get_distinct_symbol_query(symbol_input, like_input)
         db_df = DatabaseDataFrame(self, query)
         loaded_symbol_list = [rows.Symbol for index, rows in db_df.df.iterrows()]
-        query = "SELECT Symbol, MAX(Timestamp) as Max_ts FROM {} GROUP BY Symbol".format(STBL.STOCKS)
+        query = 'SELECT Symbol, MAX(Timestamp) as Max_ts FROM {} WHERE Period = "{}" GROUP BY Symbol'.format(
+            STBL.STOCKS, period)
         db_df = DatabaseDataFrame(self, query)
         symbol_timestamp_dict_list = db_df.df.to_dict('records')
         symbol_timestamp_dict = {}

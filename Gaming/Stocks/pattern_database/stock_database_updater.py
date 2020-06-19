@@ -238,25 +238,28 @@ class StockDatabaseUpdater:
         pattern_controller = PatternDetectionController(self.sys_config)
         pattern_controller.run_pattern_detector()
 
-    def update_wave_data_by_index_for_daily_period(self, index: str, limit: int, start_after=''):
+    def update_wave_data_by_index_for_daily_period(self, index: str, limit: int, start_after='', last_days=0):
         ticker_dic = self.__get_configured_ticker_dict_for_index__(index)
         for ticker in ticker_dic:
             if start_after == '' or ticker > start_after:
-                self.update_wave_records_for_daily_period(ticker, limit)
+                self.update_wave_records_for_daily_period(ticker, limit, last_days)
             else:
                 print('Excluded from current run: {}'.format(ticker))
 
-    def update_wave_records_for_daily_period(self, ticker_id: str, limit: int):
+    def update_wave_records_for_daily_period(self, ticker_id: str, limit: int, last_days: int):
         self.sys_config.config.save_wave_data = True
         self.sys_config.data_provider.period = PRD.DAILY
         self.sys_config.data_provider.from_db = True
-        date_start = MyDate.adjust_by_days(MyDate.get_datetime_object().date(), -limit)
-        and_clause = "Date > '{}'".format(date_start)
-        if self.sys_config.db_stock.is_symbol_loaded(ticker_id, and_clause=and_clause):
-            detector = self.pattern_controller.get_detector_for_fibonacci(self.sys_config, ticker_id, and_clause, limit)
-            detector.save_wave_data()
-        else:
-            print('No data available for {} and {}'.format(ticker_id, and_clause))
+        for k in range(0, last_days + 1):
+            date_end = MyDate.adjust_by_days(MyDate.get_datetime_object().date(), -k)
+            date_start = MyDate.adjust_by_days(MyDate.get_datetime_object().date(), -limit-k)
+            and_clause = "Date > '{}' AND Date <= '{}'".format(date_start, date_end)
+            print('update_wave_records_for_daily_period: {} for {}'.format(ticker_id, and_clause))
+            if self.sys_config.db_stock.is_symbol_loaded(ticker_id, and_clause=and_clause):
+                detector = self.pattern_controller.get_detector_for_fibonacci(self.sys_config, ticker_id, and_clause, limit)
+                detector.save_wave_data()
+            else:
+                print('No data available for {} and {}'.format(ticker_id, and_clause))
 
     def update_wave_data_by_index_for_intraday(
             self, index: str, aggregation: int=30, offset_day_range: int=0, start_after=""):

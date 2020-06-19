@@ -58,6 +58,8 @@ class MyDashTab4Configuration(MyPatternDashBaseTab):
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(CDD.ORDER_MAXIMUM)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(CDD.SOUND_MACHINE)),
             MyHTML.div_with_dcc_drop_down(**self._dd_handler.get_drop_down_parameters(CDD.SMALL_PROFIT)),
+            MyHTML.div_with_html_button_submit('my_reset_total_result_button',
+                                               self.__get_reset_total_result_button_text__(), hidden=''),
             self.get_div_for_tables()
         ]
         return MyHTML.div('my_configuration_div', children_list)
@@ -87,6 +89,10 @@ class MyDashTab4Configuration(MyPatternDashBaseTab):
 
     def __get_switch_mode_button_text__(self):
         return SSBT.SWITCH_TO_TRADING if self._trade_handler_online.is_simulation else SSBT.SWITCH_TO_SIMULATION
+
+    @staticmethod
+    def __get_reset_total_result_button_text__():
+        return 'Reset Total Results'
 
     def __init_callback_for_dash_board_sub_title__(self):
         @self.app.callback(
@@ -186,9 +192,3 @@ class MyDashTab4Configuration(MyPatternDashBaseTab):
                 self.sys_config.shares_config.activate_automatic_trading()
                 return SSBT.SWITCH_TO_SIMULATION
             return button_text
-
-
-
-
-
-

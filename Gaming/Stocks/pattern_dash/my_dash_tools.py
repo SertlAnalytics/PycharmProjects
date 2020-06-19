@@ -127,6 +127,7 @@ class MyGraphCache(MyCache):
 class MyDashStateHandler:
     def __init__(self, ticker_list: list):
         self._my_refresh_button_clicks = 0
+        self._my_reset_total_result_clicks = 0
         self._my_interval_n_intervals = 0
         self._my_interval_selection = 0
         self._my_period_aggregation = 0
@@ -154,6 +155,12 @@ class MyDashStateHandler:
     def change_for_my_refresh_button(self, n_clicks: int) -> bool:
         if n_clicks > self._my_refresh_button_clicks:
             self._my_refresh_button_clicks = n_clicks
+            return True
+        return False
+
+    def change_for_my_reset_total_result_button(self, n_clicks: int) -> bool:
+        if n_clicks > self._my_reset_total_result_clicks:
+            self._my_reset_total_result_clicks = n_clicks
             return True
         return False
 

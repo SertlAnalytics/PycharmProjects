@@ -141,6 +141,10 @@ class PatternDetector:
 
     def was_massive_movement_since_last_tick(self) -> bool:
         symbol = self.sys_config.runtime_config.actual_ticker
+        if len(self.pdh.pattern_data.tick_list) < 2:  # ToDo - why can this happen?
+            print('Error in was_massive_movement_since_last_tick for {}: len(tick_list)={}'.format(
+                symbol, len(self.pdh.pattern_data.tick_list)))
+            return False
         tick_previous = self.pdh.pattern_data.tick_list[-2]
         tick_last = self.pdh.pattern_data.tick_list[-1]
         if tick_previous.high == 0:  # ToDo - why can this happen?
