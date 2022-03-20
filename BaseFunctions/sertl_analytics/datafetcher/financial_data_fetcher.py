@@ -635,6 +635,12 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
     def _get_api_key_(self):
         return ''
 
+    @staticmethod
+    def get_corrected_symbol_for_url(symbol: str):
+        if len(symbol) <= 6 or symbol.find(':') > 0:
+            return symbol
+        return '{}:{}'.format(symbol[0:(len(symbol)-3)],symbol[-3:])
+
     def __get_data_frame__(self, request_data) -> pd.DataFrame:
         json_data = self.__get_json_data_from_request_data__(self.kw_symbol, request_data)
         if json_data is not None:
@@ -681,7 +687,8 @@ class BitfinexCryptoFetcher(APIBaseFetcher):
         # LOW	float	Lowest execution during the timeframe
         # VOLUME	float	Quantity of _symbol traded within the timeframe
         url_t_f = self.__get_url_time_frame__(self.kw_period, self.kw_aggregation)
-        symbol = 't{}'.format(self.kw_symbol)
+        symbol = self.get_corrected_symbol_for_url(self.kw_symbol)
+        symbol = 't{}'.format(symbol)
         if self.kw_section == 'last':
             url = 'https://api.bitfinex.com/v2/candles/trade:{}:{}/last'.format(url_t_f, symbol)
         elif self.kw_limit == 0:

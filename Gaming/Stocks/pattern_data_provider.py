@@ -66,7 +66,8 @@ class PatternDataFetcherCacheKey(DataFetcherCacheKey):
 
 class PatternDataProvider:
     def __init__(self, config: PatternConfiguration, index_config: IndexConfiguration,
-                 db_stock: StockDatabase, df_cache: MyDataFrameCache):
+                 db_stock: StockDatabase, df_cache: MyDataFrameCache, run_on_server=False):
+        self.run_on_server = run_on_server
         self.config = config
         self.index_config = index_config
         self.provider_crypto = DP.BITFINEX
@@ -148,6 +149,7 @@ class PatternDataProvider:
             self.ticker_dict = {"DJI": "Dow"}  # , "NDX": "Nasdaq"
         else:
             self.ticker_dict = self.index_config.get_ticker_dict_for_index(index, self.period)
+        # print('use_index: {}'.format(self.ticker_dict))
 
     def use_indices(self, indices: list):
         self.index_used = ''
@@ -269,10 +271,15 @@ class PatternDataProvider:
         ticker_id = data_fetcher_cache_key.ticker_id
         # print('__get_df_from_original_source__: ticker={}'.format(ticker))
         if self.from_db:
+            if not self._db_stock.is_symbol_loaded(ticker_id):
+                if self.run_on_server:
+                    return
+                else:
+                    self.__handle_not_available_symbol__(ticker_id)
             and_clause = data_fetcher_cache_key.and_clause
-            self.__handle_not_available_symbol__(ticker_id)
             stock_db_df_obj = stock_database.StockDatabaseDataFrame(self._db_stock, ticker_id, and_clause)
             return stock_db_df_obj.df_data
+
         elif self.index_config.is_symbol_crypto(ticker_id):
             if self.provider_crypto == DP.BITFINEX:
                 fetcher = BitfinexCryptoFetcher()

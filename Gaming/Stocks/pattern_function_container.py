@@ -7,6 +7,7 @@ Date: 2018-05-14
 
 from sertl_analytics.constants.pattern_constants import CN, FD, FT
 from sertl_analytics.mymath import MyMath, MyPoly1d
+from sertl_analytics.my_pandas import MyPandas
 from pattern_wave_tick import WaveTick
 import numpy as np
 import pandas as pd
@@ -187,7 +188,16 @@ class PatternFunctionContainer:
             self.df = pd.concat([self.df, df_main.loc[tick.position:tick.position]])
 
     def __get_f_regression__(self) -> np.poly1d:
-        np_array = np.polyfit(self.df[CN.TIMESTAMP], self.df[CN.CLOSE], 1)
+        # MyPandas.print_df_details(self.df)
+        try:
+            np_array = np.polyfit(self.df[CN.TIMESTAMP], self.df[CN.CLOSE], 1)
+        except:  # Todo
+            # print(self.df[CN.TIMESTAMP])
+            # print(self.df[CN.CLOSE])
+            # print('[np_array[0]={}, [np_array[0]={}'.format(np_array[0],np_array[1]))
+            # MyPandas.print_df_details(self.df)
+            print("Error - suppressed - ToDo...")
+            return np.poly1d(0, False)
         return np.poly1d([np_array[0], np_array[1]])
 
     def __set_f_var_cross_f_upper_f_lower__(self):

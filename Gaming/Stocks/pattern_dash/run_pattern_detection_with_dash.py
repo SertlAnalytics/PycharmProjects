@@ -11,7 +11,7 @@ from pattern_system_configuration import SystemConfiguration, debugger
 from pattern_dash.my_dash_for_pattern import MyDash4Pattern
 
 my_profiler = MyProfiler()
-sys_config = SystemConfiguration()
+sys_config = SystemConfiguration(run_on_server=True)
 
 sys_config.data_provider.from_db = False
 sys_config.data_provider.period = PRD.INTRADAY

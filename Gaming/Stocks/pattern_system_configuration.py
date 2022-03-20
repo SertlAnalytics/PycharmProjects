@@ -33,8 +33,9 @@ from pattern_trade_models.trade_small_profit import TradeSmallProfit
 class SystemConfiguration:
     is_http_connection_ok = MyHttpClient.do_we_have_internet_connection()  # class variable
 
-    def __init__(self, for_semi_deep_copy=False, with_predictor=True):
+    def __init__(self, for_semi_deep_copy=False, with_predictor=True, run_on_server=False):
         # print('SystemConfiguration.__init__: for_semi_deep_copy={}'.format(for_semi_deep_copy))
+        self.run_on_server=run_on_server
         self.file_log = PatternLog()
         self.runtime_config = RuntimeConfiguration()
         self.crypto_config = BitfinexConfiguration()
@@ -54,7 +55,8 @@ class SystemConfiguration:
         self.asset_table = AssetTable()
         self.df_cache = MyDataFrameCache()
         self.graph_cache = MyGraphCache()
-        self.data_provider = PatternDataProvider(self.config, self.index_config, self.db_stock, self.df_cache)
+        self.data_provider = PatternDataProvider(self.config, self.index_config,
+                                                 self.db_stock, self.df_cache, self.run_on_server)
         if with_predictor:
             self.predictor_optimizer = PatternPredictorOptimizer(self.db_stock)
             self.fibonacci_predictor = FibonacciPredictor(self.db_stock, 7)

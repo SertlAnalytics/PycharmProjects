@@ -99,6 +99,7 @@ class MyDashTab4StatisticsBase(MyPatternDashBaseTab):
     def __manipulate_ptc_columns__(self):
         for column in self._df_base.columns:
             if column[-4:] == '_PCT':
+                # print("Column={}".format(column))
                 self._df_base[column] = self._df_base[column].apply(round)
 
     def init_callbacks(self):

@@ -25,7 +25,8 @@ from sertl_analytics.datafetcher.financial_data_fetcher import BitfinexCryptoFet
 from sertl_analytics.datafetcher.data_fetcher_cache import DataFetcherCacheKey
 from sertl_analytics.mydates import MyDate
 from sertl_analytics.mycache import MyCacheObjectApi, MyCache
-from pattern_logging.pattern_log import PatternLog
+# C:/Users/josef/OneDrive/GitHub/PycharmProjects/Gaming/Stocks
+# from pattern_log import PatternLog
 
 
 class TP:  # trading pairs - they are all put to lowercase when sent to Bitfinex
@@ -39,6 +40,8 @@ class TP:  # trading pairs - they are all put to lowercase when sent to Bitfinex
     NEO_USD = 'NEOUSD'
     ZEC_USD = 'ZECUSD'
     XRP_USD = 'XRPUSD'
+    DOGE_USD = 'DOGEUSD'
+    LINK_USD = 'LINKUSD'
 
 
 class SYM:
@@ -51,6 +54,8 @@ class SYM:
     LTC = 'LTC'
     NEO = 'NEO'
     XRP = 'XRP'
+    DOGE = 'DOGE'
+    LINK = 'LINK'
 
 
 class BitfinexConfiguration(ExchangeConfiguration):
@@ -77,6 +82,7 @@ class BitfinexConfiguration(ExchangeConfiguration):
     def __get_ticker_id_list__() -> list:
         ticker_id_list = ['BABUSD', 'BTCUSD', 'DSHUSD', 'EOSUSD', 'ETHUSD', 'LTCUSD',
                           'NEOUSD', 'XMRUSD', 'ZECUSD', 'IOTUSD', 'XRPUSD']
+        # ticker_id_list = ['XRPUSD', 'LINKUSD', 'DOGEUSD']
         return ticker_id_list
 
 
@@ -87,7 +93,7 @@ class BitfinexOrder(Order):
 
     @property
     def crypto(self):
-        return self.symbol[:-3].upper()
+        return self.symbol[:-(len(self.symbol)-3)].upper()
 
     @property
     def currency(self):
@@ -373,7 +379,7 @@ class MyBitfinex(ExchangeInterface):
         if available_money < 10:
             message = '{}: Not enough (>{}$) balance for {} available'.format(symbol, 10, self.base_currency)
             print('\n{}'.format(message))
-            PatternLog().log_message(message, 'Bitfinex.buy_available')
+            # PatternLog().log_message(message, 'Bitfinex.buy_available')
         else:
             ticker = self.get_ticker(symbol) if last_price == 0 else None
             last_price = ticker.last_price if ticker else last_price
@@ -471,6 +477,8 @@ class MyBitfinex(ExchangeInterface):
         ticker_from_cache = self.ticker_cache.get_cached_object_by_key(symbol)
         if ticker_from_cache:
             return ticker_from_cache
+        # print('get_ticker: {}'.format(symbol))
+        symbol = self.bitfinex_crypto_fetcher.get_corrected_symbol_for_url(symbol)
         data = self.__get_requests_result__(self.__get_full_url__('ticker/{}'.format(symbol)))
         data_converted = self.__convert_to_floats__(data)
         ticker = BitfinexFactory.get_ticker_by_json_dict(symbol, data_converted)
@@ -507,7 +515,7 @@ class MyBitfinex(ExchangeInterface):
         kw_args = {'symbol': symbol, 'period': period, 'aggregation': aggregation, 'section': section}
         if limit > 0:
             kw_args['limit'] = limit
-        # print('get_candles: kw_args = {}'.format(kw_args))
+        # print('bitfinex.get_candles: kw_args = {}'.format(kw_args))
         self.bitfinex_crypto_fetcher.retrieve_data(**kw_args)
         df_data = self.bitfinex_crypto_fetcher.df_data
         if df_data is not None:

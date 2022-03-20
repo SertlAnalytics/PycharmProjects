@@ -27,6 +27,7 @@ from matplotlib.widgets import Cursor
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
+
 class PatternPlotter:
     def __init__(self, sys_config: SystemConfiguration, detector: PatternDetector):
         self.sys_config = sys_config
@@ -46,6 +47,7 @@ class PatternPlotter:
 
     def plot_data_frame(self):
         with_close_plot = self.sys_config.config.plot_close
+        with_close_plot = False
         with_volume_plot = self.sys_config.config.plot_volume
         with_breakout_plot = self.sys_config.config.plot_breakouts
 
@@ -70,7 +72,9 @@ class PatternPlotter:
 
         # self.axes_for_candlesticks.set_yscale('file_log')
         self.axes_for_candlesticks.set_ylim(self.__get_y_dlim_for_candlestick_plot__())
+
         self.__plot_candlesticks__()
+
         if self.sys_config.config.plot_min_max:
             self.__plot_min_max__()
             self.__plot_ranges__()
@@ -78,6 +82,7 @@ class PatternPlotter:
         self.__plot_patterns__()
         if self.sys_config.config.with_trading and self.detector.trade_handler is not None:
             self.__plot_pattern_trades__()
+
         self.__plot_fibonacci_waves__()
         self.__plot_bollinger_band__()
 

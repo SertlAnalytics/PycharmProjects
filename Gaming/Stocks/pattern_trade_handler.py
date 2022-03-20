@@ -292,6 +292,7 @@ class PatternTradeHandler:
             return self._last_wave_tick_for_test
         else:
             trade_client = self.__get_trade_client_for_symbol__(ticker_id)
+            print('__get_current_wave_tick_for_ticker_id__: ticker_id='.format(ticker_id))
             return trade_client.get_current_wave_tick(
                 ticker_id, self.sys_config.period, self.sys_config.period_aggregation)
 

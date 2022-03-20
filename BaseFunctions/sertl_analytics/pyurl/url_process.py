@@ -144,6 +144,49 @@ class MyUrlBrowser4WM2018(MyUrlBrowser):
         return {'EBUserName': self._user_name, 'EBPassword': self._password}
 
 
+class MyUrlBrowser4EM2021(MyUrlBrowser):
+    def __init__(self, user_name: str, password: str):
+        MyUrlBrowser.__init__(self, 'https://rs-systems.de/', user_name, password, False)
+
+    def add_results(self, result_list: list):
+        self.__switch_to_sub_frame__('Fnavigate')
+        self.__click_anmelden__()
+        self.__switch_to_sub_frame__('Fcontent')
+        self.__enter_and_submit_credentials__()
+        self.__switch_to_sub_frame__('Fnavigate')
+        self.__click_tippen__()
+        self.__switch_to_sub_frame__('Fcontent')
+        self.__add_and_submit_results__(result_list)
+
+    def __add_and_submit_results__(self, result_list):
+        for results in result_list:
+            self.__add_match_result__(results[0], results[1], results[2])
+        self.__click_submit__()
+
+    def __add_match_result__(self, match_id: int, goal_1: int, goal_2: int):
+        dic = {'USERA' + str(match_id): goal_1, 'USERB' + str(match_id): goal_2}
+        for fields in dic:
+            field_obj = self.driver.find_element_by_name(fields)
+            field_obj.clear()
+            field_obj.send_keys(dic[fields])
+
+    def __click_tippen__(self):
+        link_tippen = self.driver.find_element_by_xpath('//a[@href="results.php"]')
+        link_tippen.click()
+
+    def __click_anmelden__(self):
+        link_anmelden = self.driver.find_element_by_xpath('//a[@href="login.php?info=logon"]')
+        link_anmelden.click()
+
+    def __switch_to_sub_frame__(self, sub_frame_name: str):
+        self.driver.switch_to.default_content()
+        self.driver.switch_to.frame('Fmain')
+        self.driver.switch_to.frame(sub_frame_name)
+
+    def __get_credential_values__(self) -> dict:
+        return {'EBUserName': self._user_name, 'EBPassword': self._password}
+
+
 class MyUrlBrowser4WM2018Watson(MyUrlBrowser4WM2018):
     def __init__(self):
         MyUrlBrowser4WM2018.__init__(self,  WebPasswords.WM2018_WATSON[0],  WebPasswords.WM2018_WATSON[1])
@@ -152,6 +195,16 @@ class MyUrlBrowser4WM2018Watson(MyUrlBrowser4WM2018):
 class MyUrlBrowser4WM2018Wladimir(MyUrlBrowser4WM2018):
     def __init__(self):
         MyUrlBrowser4WM2018.__init__(self, WebPasswords.WM2018_WLADIMIR[0], WebPasswords.WM2018_WLADIMIR[1])
+
+
+class MyUrlBrowser4EM2021Odyssee(MyUrlBrowser4EM2021):
+    def __init__(self):
+        MyUrlBrowser4EM2021.__init__(self,  WebPasswords.EM2021_ODYSSEE[0],  WebPasswords.EM2021_ODYSSEE[1])
+
+
+class MyUrlBrowser4EM2021Helmut(MyUrlBrowser4EM2021):
+    def __init__(self):
+        MyUrlBrowser4EM2021.__init__(self, WebPasswords.EM2021_HELMUT[0], WebPasswords.EM2021_HELMUT[1])
 
 
 class MyUrlBrowser4CB(MyUrlBrowser):

@@ -100,11 +100,12 @@ class WorldCup:
     def __fill_match_list__(self):
         for ind, row in self.df_match.iterrows():
             if row[FC.HOME_TEAM] not in ['', pd.np.nan]:
+                # if row[FC.STATUS] == 'open':     # ToDo ??? This was not there in the old versions...
                 match = WorldCupMatch(self.team_list, row)
                 self.match_list.add_match(match)
 
 
-class WorldCup4Training(WorldCup):
+class WorldCup4Training2014(WorldCup):
     def __get_file_name_for_data__(self):
         return config.get_excel_2014_file_name()
 
@@ -115,15 +116,26 @@ class WorldCup4Training(WorldCup):
         return config.excel_2014_tabs[1]
 
 
-class WorldCup4Test(WorldCup):
+class WorldCup4Training2014ff(WorldCup):
     def __get_file_name_for_data__(self):
-        return config.get_excel_2018_file_name()
+        return config.get_excel_training_file_name()
 
     def __get_sheet_name_with_matches__(self):
-        return config.excel_2018_tabs[0]
+        return config.excel_training_tabs[0]
 
     def __get_sheet_name_with_ranking__(self):
-        return config.excel_2018_tabs[1]
+        return config.excel_training_tabs[1]
+
+
+class WorldCup4Test(WorldCup):
+    def __get_file_name_for_data__(self):
+        return config.get_excel_2021_file_name()
+
+    def __get_sheet_name_with_matches__(self):
+        return config.excel_2021_tabs[0]
+
+    def __get_sheet_name_with_ranking__(self):
+        return config.excel_2021_tabs[1]
 
     def __update_data_in_source__(self):
         excel = WorldCupExcel(self._file_name_with_data, self._sheet_name_matches)

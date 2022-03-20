@@ -158,7 +158,7 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
     def __get_position_markdown_for_active_positions__(self, reset_button_clicked: bool):
         balances = self.trade_handler_online.get_balances_with_current_values()
         self.trade_handler_online.balances = balances
-        text_list = ['_**{}**_: {:.2f} ({:.2f}): {:.2f}$'.format(
+        text_list = ['_**{}**_: {:,.0f} ({:,.0f}): {:,.0f}$'.format(
                 b.asset, b.amount, b.amount_available, b.current_value) for b in balances]
         total_value = sum([balance.current_value for balance in balances])
         if reset_button_clicked:  # reset the value_total_start
@@ -171,7 +171,7 @@ class MyDashTab4Pattern(MyPatternDashBaseTab):
             self.trade_handler_online.value_total_start = total_value
         diff_value = total_value - self.trade_handler_online.value_total_start
         diff_pct = diff_value/self.trade_handler_online.value_total_start*100
-        return '_**Total**_: {:.2f}$ ({:+.2f}$ / {:+.2f}%)'.format(total_value, diff_value, diff_pct)
+        return '_**Total**_: {:,.0f}$ ({:+,.0f}$ / {:+.2f}%)'.format(total_value, diff_value, diff_pct)
 
     def __get_markdown_news__(self):
         return self._news_handler.get_news_for_markdown_since_last_refresh(self._time_stamp_last_refresh)

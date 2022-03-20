@@ -66,6 +66,7 @@ api.search_string = 'Hochwertige Stehleuchte mit Bewegungsmelder (Waldmann)'
 api.search_string = 'Wilde+Spieth, Stuhl, Sie haben ein ähnliches Design wie die Serie 7 von Jacobsen und Hansen'
 api.search_string = 'Rettungsweste für Kinder (20-30kg)'
 api.search_string = 'Jeans - Shorts von Terranova - Grösse 34'
+api.search_string = 'Hamsterkäfig'
 
 # api.print_api_details()
 # results = tutti.check_search_by_api_against_other_sale(api, '9285456')

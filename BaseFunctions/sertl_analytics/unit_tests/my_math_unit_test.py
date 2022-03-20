@@ -5,8 +5,8 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-03-13
 """
 
-from mymath import MyMath
-from test.my_test_case import MyTestCaseHandler
+from sertl_analytics.mymath import MyMath
+from sertl_analytics.test.my_test_case import MyTestCaseHandler
 import unittest
 
 

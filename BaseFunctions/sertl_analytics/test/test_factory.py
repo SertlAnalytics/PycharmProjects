@@ -5,9 +5,9 @@ Copyright: SERTL Analytics, https://sertl-analytics.com
 Date: 2019-03-13
 """
 
-from mymath import MyMathTest
-from mydates import MyDateTest
-from my_text import MyTextTest
+from sertl_analytics.mymath import MyMathTest
+from sertl_analytics.mydates import MyDateTest
+from sertl_analytics.my_text import MyTextTest
 from sertl_analytics.exchanges.bitfinex_trade_client import MyBitfinexTest
 from sertl_analytics.exchanges.interactive_broker_trade_client import MyIBKRTest
 from pattern_database.stock_database import StockDatabaseTest

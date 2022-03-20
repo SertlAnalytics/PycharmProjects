@@ -93,6 +93,7 @@ class MyDashTab4Log(MyPatternDashBaseTab):
         )
         def handle_callback_for_process_options(log_type: str):
             value_list = self.__get_value_list_for_process_options__(log_type)
+            print('__init_callback_for_process_options__: value_list={}'.format(value_list))
             return [{'label': value.replace('_', ' '), 'value': value} for value in value_list]
 
     def __init_callback_for_process_step_options__(self):

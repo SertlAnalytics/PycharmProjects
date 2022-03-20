@@ -7,7 +7,7 @@ Date: 2018-06-13
 """
 
 from world_cup_constants import FC, PP
-from word_cup import WorldCup4Test, WorldCup4Training
+from word_cup import WorldCup4Test, WorldCup4Training2014, WorldCup4Training2014ff
 from world_cup_match import WorldCupMatch, WorldCupMatchPrediction, WorldCupMatchPredictionList
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -15,7 +15,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import linear_model
 from scipy.optimize import basinhopping
 from sklearn.linear_model import LogisticRegression
-from sertl_analytics.pyurl.url_process import MyUrlBrowser4WM2018Watson
+from sertl_analytics.pyurl.url_process import MyUrlBrowser4EM2021Odyssee
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import train_test_split
 from random import randrange
@@ -187,9 +187,9 @@ class PolicyList:
 
     def __prepare_policy_list_for_next_run__(self, offspring_number: int):
         self.policy_list = []
-        for policy in self.best_policy_list:
-            self.policy_list.append(policy)
-            self.policy_list = self.policy_list + policy.get_offsprings(offspring_number)
+        for best_policy_entity in self.best_policy_list:
+            self.policy_list.append(best_policy_entity)
+            self.policy_list = self.policy_list + best_policy_entity.get_offsprings(offspring_number)
 
     def __get_best_policies__(self, remaining_percent: int):
         data_list = [[index, policy.reward] for index, policy in enumerate(self.policy_list)]
@@ -239,9 +239,10 @@ class PolicyList:
 
 class WorldCupModel:
     def __init__(self):
-        self.world_cup_2014 = WorldCup4Training(2014, 'Brasil')
-        self.world_cup_2018 = WorldCup4Test(2018, 'Russia')
-        self.first_open_match_number = self.world_cup_2018.first_open_match_number
+        # self.world_cup_training = WorldCup4Training2014(2014, 'Brasil')
+        self.world_cup_training = WorldCup4Training2014ff(2014, 'Brasil')
+        self.world_cup_test = WorldCup4Test(2021, 'EURO')
+        self.first_open_match_number = self.world_cup_test.first_open_match_number
         self.df_train = pd.DataFrame
         self.df_test = pd.DataFrame
         self.forest_clf = None
@@ -281,18 +282,18 @@ class WorldCupModel:
         self.__fill_match_test_list__(off_set)
 
     def __fill_match_train_list__(self, off_set: int):
-        for number in self.world_cup_2014.match_list.index_list:
-            self.match_train_list.append(self.world_cup_2014.match_list.get_match(number))
+        for number in self.world_cup_training.match_list.index_list:
+            self.match_train_list.append(self.world_cup_training.match_list.get_match(number))
         for number in range(1, off_set):
-            self.match_train_list.append(self.world_cup_2018.match_list.get_match(number))
+            self.match_train_list.append(self.world_cup_test.match_list.get_match(number))
 
     def __fill_match_test_list__(self, off_set: int):
-        for number in range(off_set, self.world_cup_2018.match_list.length + 1):
-            self.match_test_list.append(self.world_cup_2018.match_list.get_match(number))
+        for number in range(off_set, self.world_cup_test.match_list.length + 1):
+            self.match_test_list.append(self.world_cup_test.match_list.get_match(number))
 
     def __init_world_cups_by_red_enh_factor__(self, red_factor: float, enh_factor: float):
-        self.world_cup_2014.init_by_red_enh_factor(red_factor, enh_factor)
-        self.world_cup_2018.init_by_red_enh_factor(red_factor, enh_factor)
+        self.world_cup_training.init_by_red_enh_factor(red_factor, enh_factor)
+        self.world_cup_test.init_by_red_enh_factor(red_factor, enh_factor)
 
     def check_policy(self, policy_number: int, policy: Policy):
         self.__init_models__(policy)
@@ -303,7 +304,7 @@ class WorldCupModel:
             x_data = self.get_x_test(1, policy.col_id)
             predict_probability = self.__get_predict_probability__(x_data)
             knn_neighbours = list(self.knn_clf.kneighbors(x_data, return_distance=False))
-            match = self.world_cup_2018.match_list.get_match(k)
+            match = self.world_cup_test.match_list.get_match(k)
             neighbours_match_list = self.get_knn_neighbour_match_list(knn_neighbours[0])
             match.simulate_by_probabilities(predict_probability[0], neighbours_match_list)
             policy.check_match_for_reward(match)
@@ -334,7 +335,7 @@ class WorldCupModel:
         predict_probability = self.__get_predict_probability__(x_test_data)
         knn_neighbours = list(self.knn_clf.kneighbors(x_test_data, return_distance=False))
         for number in range(offset_number, offset_number + matches):
-            match = self.world_cup_2018.match_list.get_match(number)
+            match = self.world_cup_test.match_list.get_match(number)
             index = offset_number - number
             neighbours_match_list = self.get_knn_neighbour_match_list(knn_neighbours[index])
             match.simulate_by_probabilities(predict_probability[number - offset_number], neighbours_match_list)
@@ -352,7 +353,7 @@ class WorldCupModel:
     @staticmethod
     def __write_to_web_page__(match_list: list):
         result_list = [[match.number, match.goal_team_1_simulation, match.goal_team_2_simulation] for match in match_list]
-        browser = MyUrlBrowser4WM2018Watson()
+        browser = MyUrlBrowser4EM2021Odyssee()
         browser.add_results(result_list)
 
     def __train_models__(self, col_id: int, perform_test = False):
@@ -418,7 +419,7 @@ model = WorldCupModel()
 
 config.with_policy_list = False
 config.over_best_policy_list = True
-config.next_matches = 2
+config.next_matches = 1
 config.write_predictions_to_web_page = True
 
 if config.with_policy_list:

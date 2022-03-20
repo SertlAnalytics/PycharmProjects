@@ -64,15 +64,15 @@ class MyDashJobHandler:
             weekdays=self._weekdays_tu_sa, start_times=['01:30'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashStockDataUpdateJobForShares(
             weekdays=self._weekdays_tu_sa, start_times=['01:45'], db_updater=self._db_updater))
-        self._scheduler.add_job(MyEquityUpdateJob(
-            weekdays=self._weekdays_all, start_times=['02:45'], db_updater=self._db_updater))
+        # self._scheduler.add_job(MyEquityUpdateJob(
+        #     weekdays=self._weekdays_all, start_times=['02:45'], db_updater=self._db_updater))
         self._scheduler.add_job(MyPatternUpdateJob(
             weekdays=self._weekdays_all, start_times=['03:00'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDailyWaveUpdateJob(
             weekdays=self._weekdays_all, start_times=['04:00'], db_updater=self._db_updater))
         self.__add_jobs_for_intraday_wave_update__()
-        self._scheduler.add_job(MyDashTradePolicyUpdateJob(
-            weekdays=self._weekday_saturday, start_times=['04:30'], db_updater=self._db_updater))
+        # self._scheduler.add_job(MyDashTradePolicyUpdateJob(
+        #     weekdays=self._weekday_saturday, start_times=['04:30'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashPredictorOptimizerJob(
             weekdays=self._weekday_sunday, start_times=['05:30'], db_updater=self._db_updater))
         self._scheduler.add_job(MyDashOptimizeLogFilesJob(

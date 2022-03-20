@@ -67,9 +67,12 @@ class MyBitfinexTradeClient:
             if balance.asset == default_currency:
                 balance.current_value = balance.amount
             else:
-                ticker = self.get_ticker('{}{}'.format(balance.asset, default_currency))
+                if len(balance.asset)>3:
+                    ticker = self.get_ticker('{}:{}'.format(balance.asset, default_currency))
+                else:
+                    ticker = self.get_ticker('{}{}'.format(balance.asset, default_currency))
                 balance.current_value = round(ticker.last_price * balance.amount, 2)
-            # balance.print_balance('Test')
+            balance.print_balance('Test')
         return balances
 
     def print_order_status(self, order_id: int):

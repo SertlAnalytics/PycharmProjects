@@ -156,7 +156,7 @@ class StockDatabaseUpdater:
         result_obj.number_processed_records = len(exchange_equity_type_dict)
         for exchange, equity_type in exchange_equity_type_dict.items():
             value_dict = access_layer.get_index_dict(exchange)
-            if not access_layer.are_any_records_available_for_date(dt_today, exchange, equity_type):
+            if access_layer.are_any_records_available_for_date(dt_today, exchange, equity_type):
                 result_obj.number_deleted_records += access_layer.delete_existing_equities(equity_type, exchange)
                 sleep(2)
                 self.__update_equity_records_for_equity_type__(
